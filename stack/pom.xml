@@ -19,17 +19,17 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>org.sonatype.oss</groupId>
-    <artifactId>oss-parent</artifactId>
-    <version>7</version>
+    <groupId>org.apache</groupId>
+    <artifactId>apache</artifactId>
+    <version>10</version>
     <relativePath></relativePath>
   </parent>
 
   <groupId>org.apache.usergrid</groupId>
   <artifactId>usergrid</artifactId>
-  <version>0.0.29-SNAPSHOT</version>
+  <version>1.0.0</version>
   <name>Usergrid Parent</name>
-  <description>Usergrid Project</description>
+  <description>Parent module for the Apache Usergrid Project</description>
   <packaging>pom</packaging>
 
   <properties>
@@ -85,8 +85,9 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <!-- you can override these via MAVEN_OPTS -->
-    <ug.heapmax>1024m</ug.heapmax>
-    <ug.heapmin>1024m</ug.heapmin>
+    <ug.heapmax>2048m</ug.heapmax>
+    <ug.heapmin>2048m</ug.heapmin>
+	<ug.argline>-Djava.awt.headless=true</ug.argline>
 
     <usergrid-custom-spring-properties>classpath:/usergrid-custom.properties</usergrid-custom-spring-properties>
     <usergrid-custom-spring-test-properties>classpath:/usergrid-custom-test.properties</usergrid-custom-spring-test-properties>
@@ -162,11 +163,6 @@
     </developer>
   </developers>
 
-  <scm>
-    <connection>scm:git:git@github.com:usergrid/usergrid.git</connection>
-    <developerConnection>scm:git:git@github.com:usergrid/usergrid.git</developerConnection>
-    <url>https://github.com/usergrid/usergrid</url>
-  </scm>
 
   <distributionManagement>
     <!-- Versioned (non-snapshot) releases are published to this repository -->
@@ -185,6 +181,7 @@
   </distributionManagement>
 
   <modules>
+    <module>java-sdk-old</module>
     <module>config</module>
     <module>core</module>
     <module>services</module>
@@ -837,9 +834,8 @@
       </dependency>
 
       <dependency>
-        <groupId>net.tanesha.recaptcha4j</groupId>
+        <groupId>com.google.code.maven-play-plugin.net.tanesha.recaptcha4j</groupId>
         <artifactId>recaptcha4j</artifactId>
-        <!-- included as local dependency -->
         <version>0.0.8</version>
       </dependency>
 
@@ -1304,7 +1300,7 @@
         <groupId>com.apple</groupId>
         <artifactId>AppleJavaExtensions</artifactId>
         <!-- from local-depedendencies -->
-        <version>1.5.4</version>
+        <version>1.4</version>
       </dependency>
 
       <dependency>
@@ -1613,7 +1609,7 @@
           <artifactId>maven-surefire-plugin</artifactId>
           <version>2.15</version>
           <configuration>
-            <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar</argLine>
+            <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}</argLine>
           </configuration>
         </plugin>
 
@@ -1765,6 +1761,7 @@
                     <exclude>**/CHANGES.txt</exclude>
                     <exclude>**/*.json</exclude>
                     <exclude>**/*.log</exclude>
+                    <exclude>**/*.md5</exclude>
 
                     <!-- git and IDE project files -->
                     <exclude>**/.git/**</exclude>
@@ -1794,7 +1791,8 @@
                     <exclude>**/*.asc</exclude>
                     <exclude>**/src/test/resources/**</exclude>
                     <exclude>**/cloudbees.xml</exclude>
-		            <exclude>**/awscluster/**</exclude>
+                  <exclude>**/doc/**</exclude>
+                  <exclude>**/awscluster/**</exclude>
                     <exclude>**/aws.properties</exclude>
                     <exclude>**/launcher-vagrant/**</exclude>
                     <exclude>**/usergrid-custom.properties</exclude>
@@ -1897,4 +1895,10 @@
         </repository>
     </repositories>
 
+    <scm>
+    	<url>https://git-wip-us.apache.org/repos/asf/incubator-usergrid.git</url>
+    	<connection>scm:git:http://git-wip-us.apache.org/repos/asf/incubator-usergrid.git</connection>
+    	<tag>HEAD</tag>
+    	<developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-usergrid.git</developerConnection>
+    </scm>
 </project>

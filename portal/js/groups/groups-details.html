@@ -1,29 +1,66 @@
 <div class="content-page" ng-controller="GroupsDetailsCtrl">
-
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+  
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
   <div>
-      <form name="updateGroupDetailForm" ng-submit="saveSelectedGroup()" novalidate>
-          <div style="float: left; padding-right: 30px;">
-              <h4 class="ui-dform-legend">Group Information</h4>
-              <label for="group-title" class="ui-dform-label">Group Title</label>
-              <input type="text" id="group-title" ng-pattern="titleRegex" ng-attr-title="{{titleRegexDescription}}" required class="ui-dform-text" ng-model="group.title" ug-validate>
-                  <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('group title box')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_details_title}}" tooltip-placement="right">(?)</a>
-              <br/>
-            <label for="group-path" class="ui-dform-label">Group Path</label>
-            <input type="text" id="group-path" required ng-attr-title="{{pathRegexDescription}}" placeholder="ex: /mydata" ng-pattern="pathRegex" class="ui-dform-text" ng-model="group.path" ug-validate>
-                <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('group path box')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_details_path}}" tooltip-placement="right">(?)</a>
-            <br/>
-          </div>
-          <br style="clear:both"/>
+    <form name="updateGroupDetailForm" ng-submit="saveSelectedGroup()"
+      novalidate>
+      <div style="float: left; padding-right: 30px;">
+        <h4 class="ui-dform-legend">Group Information</h4>
+        <label for="group-title" class="ui-dform-label">Group
+          Title</label> <input type="text" id="group-title"
+          ng-pattern="titleRegex"
+          ng-attr-title="{{titleRegexDescription}}" required
+          class="ui-dform-text" ng-model="group.title" ug-validate>
+        <a class="help_tooltip"
+          ng-mouseover="help.sendTooltipGA('group title box')"
+          ng-show="help.helpTooltipsEnabled" href="#"
+          ng-attr-tooltip="{{tooltip_details_title}}"
+          tooltip-placement="right">(?)</a> <br /> <label
+          for="group-path" class="ui-dform-label">Group Path</label> <input
+          type="text" id="group-path" required
+          ng-attr-title="{{pathRegexDescription}}"
+          placeholder="ex: /mydata" ng-pattern="pathRegex"
+          class="ui-dform-text" ng-model="group.path" ug-validate>
+        <a class="help_tooltip"
+          ng-mouseover="help.sendTooltipGA('group path box')"
+          ng-show="help.helpTooltipsEnabled" href="#"
+          ng-attr-tooltip="{{tooltip_details_path}}"
+          tooltip-placement="right">(?)</a> <br />
+      </div>
+      <br style="clear: both" />
 
-          <div style="width:100%;float:left;padding: 20px 0">
-              <input type="submit" value="Save Group" style="margin-right: 15px;" ng-disabled="!updateGroupDetailForm.$valid" class="btn btn-primary" />
-          </div>
+      <div style="width: 100%; float: left; padding: 20px 0">
+        <input type="submit" value="Save Group"
+          style="margin-right: 15px;"
+          ng-disabled="!updateGroupDetailForm.$valid"
+          class="btn btn-primary" />
+      </div>
 
-          <div class="content-container">
-              <h4>JSON Group Object <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('group json object')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_groups_json_object}}" tooltip-placement="right">(?)</a></h4>
-              <pre id="{{help.showJsonId}}">{{json}}</pre>
-          </div>
-      </form>
+      <div class="content-container">
+        <h4>
+          JSON Group Object <a class="help_tooltip"
+            ng-mouseover="help.sendTooltipGA('group json object')"
+            ng-show="help.helpTooltipsEnabled" href="#"
+            ng-attr-tooltip="{{tooltip_groups_json_object}}"
+            tooltip-placement="right">(?)</a>
+        </h4>
+        <pre id="{{help.showJsonId}}">{{json}}</pre>
+      </div>
+    </form>
   </div>
 
 

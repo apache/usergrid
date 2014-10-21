@@ -1,96 +1,116 @@
-
-
 <bsmodal id="deleteEntities"
-         title="Are you sure you want to delete the entities(s)?"
-         close="hideModal"
-         closelabel="Cancel"
-         extrabutton="deleteEntitiesDialog"
-         extrabuttonlabel="Delete"
-         buttonid="del-entity"
-         ng-cloak>
-    <fieldset>
-        <div class="control-group">
-        </div>
-    </fieldset>
+  title="Are you sure you want to delete the entities(s)?"
+  close="hideModal" closelabel="Cancel"
+  extrabutton="deleteEntitiesDialog" extrabuttonlabel="Delete"
+  buttonid="del-entity" ng-cloak>
+  <!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+  
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<fieldset>
+  <div class="control-group"></div>
+</fieldset>
 </bsmodal>
 
-<span class="button-strip">
-  <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('data entities list')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_entities_list}}" tooltip-placement="left">(?)</a>
-  <button class="btn btn-primary" ng-disabled="!valueSelected(queryCollection._list) || deleteLoading" ng-click="deleteEntitiesDialog()">{{deleteLoading ? loadingText : 'Delete Entity(s)'}}</button>
+<span class="button-strip"> <a class="help_tooltip"
+  ng-mouseover="help.sendTooltipGA('data entities list')"
+  ng-show="help.helpTooltipsEnabled" href="#"
+  ng-attr-tooltip="{{tooltip_entities_list}}" tooltip-placement="left">(?)</a>
+  <button class="btn btn-primary"
+    ng-disabled="!valueSelected(queryCollection._list) || deleteLoading"
+    ng-click="deleteEntitiesDialog()">{{deleteLoading ?
+    loadingText : 'Delete Entity(s)'}}</button>
 </span>
 <table class="table table-striped collection-list">
   <thead>
-  <tr class="table-header">
-    <th><input type="checkbox" ng-show="queryCollection._list.length > 0" id="selectAllCheckbox" ng-model="queryBoxesSelected" ng-click="selectAllEntities(queryCollection._list,$parent,'queryBoxesSelected',true)"></th>
-    <th ng-if="hasProperty('name')">Name</th>
-    <th>UUID</th>
-    <th></th>
-  </tr>
+    <tr class="table-header">
+      <th><input type="checkbox"
+        ng-show="queryCollection._list.length > 0"
+        id="selectAllCheckbox" ng-model="queryBoxesSelected"
+        ng-click="selectAllEntities(queryCollection._list,$parent,'queryBoxesSelected',true)"></th>
+      <th ng-if="hasProperty('name')">Name</th>
+      <th>UUID</th>
+      <th></th>
+    </tr>
   </thead>
   <tbody ng-repeat="entity in queryCollection._list">
-  <tr class="zebraRows" >
-    <td>
-      <input
-        type="checkbox"
+    <tr class="zebraRows">
+      <td><input type="checkbox"
         id="entity-{{entity._data.name}}-cb"
-        ng-value="entity._data.uuid"
-        ng-model="entity.checked"
-        >
-    </td>
-    <td ng-if="hasProperty('name')">{{entity._data.name}}</td>
-    <td>{{entity._data.uuid}}</td>
-    <td><a href="javaScript:void(0)" ng-click="entitySelected[$index] = !entitySelected[$index]; selectEntity(entity._data.uuid, entitySelected[$index]);">{{entitySelected[$index] ? 'Hide' : 'View'}} Details</a></td>
-  </tr>
-  <tr ng-if="entitySelected[$index]">
-    <td colspan="5">
+        ng-value="entity._data.uuid" ng-model="entity.checked">
+      </td>
+      <td ng-if="hasProperty('name')">{{entity._data.name}}</td>
+      <td>{{entity._data.uuid}}</td>
+      <td><a href="javaScript:void(0)"
+        ng-click="entitySelected[$index] = !entitySelected[$index]; selectEntity(entity._data.uuid, entitySelected[$index]);">{{entitySelected[$index]
+          ? 'Hide' : 'View'}} Details</a></td>
+    </tr>
+    <tr ng-if="entitySelected[$index]">
+      <td colspan="5">
 
 
-      <h4 style="margin: 0 0 20px 0">Entity Detail</h4>
+        <h4 style="margin: 0 0 20px 0">Entity Detail</h4>
 
 
-      <ul class="formatted-json">
-        <li ng-repeat="(k,v) in entity._data track by $index">
-          <span class="key">{{k}} :</span>
-          <!--todo - doing manual recursion to get this out the door for launch, please fix-->
-          <span ng-switch on="isDeep(v)">
-            <ul ng-switch-when="true">
-              <li ng-repeat="(k2,v2) in v"><span class="key">{{k2}} :</span>
-
-                <span ng-switch on="isDeep(v2)">
-                  <ul ng-switch-when="true">
-                    <li ng-repeat="(k3,v3) in v2"><span class="key">{{k3}} :</span><span class="value">{{v3}}</span></li>
-                  </ul>
-                  <span ng-switch-when="false">
-                    <span class="value">{{v2}}</span>
+        <ul class="formatted-json">
+          <li ng-repeat="(k,v) in entity._data track by $index"><span
+            class="key">{{k}} :</span> <!--todo - doing manual recursion to get this out the door for launch, please fix-->
+            <span ng-switch on="isDeep(v)">
+              <ul ng-switch-when="true">
+                <li ng-repeat="(k2,v2) in v"><span class="key">{{k2}}
+                    :</span> <span ng-switch on="isDeep(v2)">
+                    <ul ng-switch-when="true">
+                      <li ng-repeat="(k3,v3) in v2"><span
+                        class="key">{{k3}} :</span><span class="value">{{v3}}</span></li>
+                    </ul> <span ng-switch-when="false"> <span
+                      class="value">{{v2}}</span>
                   </span>
-                </span>
-              </li>
-            </ul>
-            <span ng-switch-when="false">
-              <span class="value">{{v}}</span>
+                </span></li>
+              </ul> <span ng-switch-when="false"> <span class="value">{{v}}</span>
             </span>
-          </span>
-        </li>
-      </ul>
+          </span></li>
+        </ul>
 
-    <div class="control-group">
-      <h4 style="margin: 20px 0 20px 0">Edit Entity <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('data edit entity')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_edit_entity}}" tooltip-placement="right">(?)</a></h4>
-      <div class="controls">
-        <textarea ng-model="entity._json" class="span12" rows="12"></textarea>
-        <br>
-        <a class="btn btn-primary toolbar pull-left" ng-click="validateJson();">Validate JSON</a><button type="button" class="btn btn-primary pull-right" id="button-query" ng-click="saveEntity(entity);">Save</button>
-      </div>
-    </div>
-  </td>
-  </tr>
+        <div class="control-group">
+          <h4 style="margin: 20px 0 20px 0">
+            Edit Entity <a class="help_tooltip"
+              ng-mouseover="help.sendTooltipGA('data edit entity')"
+              ng-show="help.helpTooltipsEnabled" href="#"
+              ng-attr-tooltip="{{tooltip_edit_entity}}"
+              tooltip-placement="right">(?)</a>
+          </h4>
+          <div class="controls">
+            <textarea ng-model="entity._json" class="span12" rows="12"></textarea>
+            <br> <a class="btn btn-primary toolbar pull-left"
+              ng-click="validateJson();">Validate JSON</a>
+            <button type="button" class="btn btn-primary pull-right"
+              id="button-query" ng-click="saveEntity(entity);">Save</button>
+          </div>
+        </div>
+      </td>
+    </tr>
 
-  <tr ng-show="queryCollection._list.length == 0">
-    <td colspan="4">No data found</td>
-  </tr>
+    <tr ng-show="queryCollection._list.length == 0">
+      <td colspan="4">No data found</td>
+    </tr>
   </tbody>
 </table>
 <div style="padding: 10px 5px 10px 5px">
-  <button class="btn btn-primary toolbar" ng-click="getPrevious()" style="display:{{previous_display}}">< Previous</button>
-  <button class="btn btn-primary toolbar" ng-click="getNext()" style="display:{{next_display}}; float:right;">Next ></button>
+  <button class="btn btn-primary toolbar" ng-click="getPrevious()"
+    style="display: {{previous_display">< Previous</button>
+  <button class="btn btn-primary toolbar" ng-click="getNext()"
+    style="display: {{next_display">Next ></button>
 </div>
 

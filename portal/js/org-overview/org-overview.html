@@ -1,121 +1,166 @@
 <div class="org-overview-content" ng-show="activeUI">
-
+  <!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+  
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
   <page-title title=" Org Administration" icon="&#128362;"></page-title>
 
   <section class="row-fluid">
 
-  <div class="span6">
-  	<bsmodal id="introjs"
-             title="Welcome to the API BaaS Admin Portal"
-             close="hideModal"
-             closelabel="Skip"
-             extrabutton="startFirstTimeUser"
-             extrabuttonlabel="Take the tour"
-             ng-cloak>
-      <p>To get started, click 'Take the tour' for a full walkthrough of the admin portal, or click 'Skip' to start working right away.</p>
-    </bsmodal>
-		<div id="intro-4-current-org">	
-	    <h2 class="title">Current Organization <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('current org')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_current_org}}" tooltip-placement="right">(?)</a></h2>
-	    <table class="table table-striped">
-	      <tr>
-	        <td id="org-overview-name">{{currentOrganization.name}}</td>
-	        <td style="text-align: right">{{currentOrganization.uuid}}</td>
-	      </tr>
-	    </table>
-		</div>
+    <div class="span6">
+      <bsmodal id="introjs" title="Welcome to the API BaaS Admin Portal"
+        close="hideModal" closelabel="Skip"
+        extrabutton="startFirstTimeUser"
+        extrabuttonlabel="Take the tour" ng-cloak>
+      <p>To get started, click 'Take the tour' for a full
+        walkthrough of the admin portal, or click 'Skip' to start
+        working right away.</p>
+      </bsmodal>
+      <div id="intro-4-current-org">
+        <h2 class="title">
+          Current Organization <a class="help_tooltip"
+            ng-mouseover="help.sendTooltipGA('current org')"
+            ng-show="help.helpTooltipsEnabled" href="#"
+            ng-attr-tooltip="{{tooltip_current_org}}"
+            tooltip-placement="right">(?)</a>
+        </h2>
+        <table class="table table-striped">
+          <tr>
+            <td id="org-overview-name">{{currentOrganization.name}}</td>
+            <td style="text-align: right">{{currentOrganization.uuid}}</td>
+          </tr>
+        </table>
+      </div>
 
-    <bsmodal id="newApplication"
-             title="Create New Application"
-             close="hideModal"
-             closelabel="Cancel"
-             extrabutton="newApplicationDialog"
-             extrabuttonlabel="Create"
-             ng-cloak>
-      <p>New application name: <input ng-model="$parent.newApp.name"  ug-validate required type="text" ng-pattern="appNameRegex" ng-attr-title="{{appNameRegexDescription}}" /></p>
-    </bsmodal>
-		<div id="intro-5-applications">		
-	    <h2 class="title" > Applications <a class="help_tooltip" ng-show="help.helpTooltipsEnabled" ng-mouseover="help.sendTooltipGA('applications')" href="#" ng-attr-tooltip="{{tooltip_applications}}" tooltip-placement="right">(?)</a>
-	      <div class="header-button btn-group pull-right">
-	        <a class="btn filter-selector" style="{{applicationsSize === 10 ? 'width:290px':''}}"  ng-click="showModal('newApplication')">
-	          <span class="filter-label">Add New App</span>
-	        </a>
-	      </div>
-	    </h2>
-		
-	    <table class="table table-striped">
-	      <tr ng-repeat="application in applications">
-	        <td>{{application.name}}</td>
-	        <td style="text-align: right">{{application.uuid}}</td>
-	      </tr>
-	    </table>
-		</div>
-    <bsmodal id="regenerateCredentials"
-             title="Confirmation"
-             close="hideModal"
-             closelabel="Cancel"
-             extrabutton="regenerateCredentialsDialog"
-             extrabuttonlabel="Yes"
-             ng-cloak>
-      Are you sure you want to regenerate the credentials?
-    </bsmodal>
-		<div id="intro-6-org-api-creds">
-	    <h2 class="title" >Organization API Credentials <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('api org credentials')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_org_api_creds}}" tooltip-placement="right">(?)</a>
-	      <div class="header-button btn-group pull-right">
-	        <a class="btn filter-selector" ng-click="showModal('regenerateCredentials')">
-	          <span class="filter-label">Regenerate Org Credentials</span>
-	        </a>
-	      </div>
-	    </h2>
-	
-	    <table class="table table-striped">
-	      <tr>
-	        <td >Client ID</td>
-	        <td style="text-align: right" >{{orgAPICredentials.client_id}}</td>
-	      </tr>
-	      <tr>
-	        <td>Client Secret</td>
-	        <td style="text-align: right">{{orgAPICredentials.client_secret}}</td>
-	      </tr>
-	    </table>
-		</div>
-    <bsmodal id="newAdministrator"
-             title="Create New Administrator"
-             close="hideModal"
-             closelabel="Cancel"
-             extrabutton="newAdministratorDialog"
-             extrabuttonlabel="Create"
-             ng-cloak>
-      <p>New administrator email: <input id="newAdminInput" ug-validate ng-model="$parent.admin.email" pattern="emailRegex" ng-attr-title="{{emailRegexDescription}}" required type="email" /></p>
-    </bsmodal>
-		<div id="intro-7-org-admins">
-	    <h2 class="title" >Organization Administrators <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('org admins')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_org_admins}}" tooltip-placement="right">(?)</a>
-	      <div class="header-button btn-group pull-right">
-	        <a class="btn filter-selector" ng-click="showModal('newAdministrator')">
-	          <span class="filter-label">Add New Administrator</span>
-	        </a>
-	      </div>
-	    </h2>
-	
-	    <table class="table table-striped">
-	      <tr ng-repeat="administrator in orgAdministrators">
-	        <td><img style="width:30px;height:30px;" ng-src="{{administrator.image}}"> {{administrator.name}}</td>
-	        <td style="text-align: right">{{administrator.email}}</td>
-	      </tr>
-	    </table>
-			</div>
-  </div>
+      <bsmodal id="newApplication" title="Create New Application"
+        close="hideModal" closelabel="Cancel"
+        extrabutton="newApplicationDialog" extrabuttonlabel="Create"
+        ng-cloak>
+      <p>
+        New application name: <input ng-model="$parent.newApp.name"
+          ug-validate required type="text" ng-pattern="appNameRegex"
+          ng-attr-title="{{appNameRegexDescription}}" />
+      </p>
+      </bsmodal>
+      <div id="intro-5-applications">
+        <h2 class="title">
+          Applications <a class="help_tooltip"
+            ng-show="help.helpTooltipsEnabled"
+            ng-mouseover="help.sendTooltipGA('applications')" href="#"
+            ng-attr-tooltip="{{tooltip_applications}}"
+            tooltip-placement="right">(?)</a>
+          <div class="header-button btn-group pull-right">
+            <a class="btn filter-selector" style=""
+              ng-click="showModal('newApplication')"> <span
+              class="filter-label">Add New App</span>
+            </a>
+          </div>
+        </h2>
 
-  <div class="span6">
-  	<div id="intro-8-activities">
-	    <h2 class="title">Activities <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('activities')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_activities}}" tooltip-placement="right">(?)</a></h2>
-	    <table class="table table-striped">
-	      <tr ng-repeat="activity in activities">
-	        <td>{{activity.title}}</td>
-	        <td style="text-align: right">{{activity.date}}</td>
-	      </tr>
-	    </table>
-	</div>
-  </div>
+        <table class="table table-striped">
+          <tr ng-repeat="application in applications">
+            <td>{{application.name}}</td>
+            <td style="text-align: right">{{application.uuid}}</td>
+          </tr>
+        </table>
+      </div>
+      <bsmodal id="regenerateCredentials" title="Confirmation"
+        close="hideModal" closelabel="Cancel"
+        extrabutton="regenerateCredentialsDialog" extrabuttonlabel="Yes"
+        ng-cloak> Are you sure you want to regenerate the
+      credentials? </bsmodal>
+      <div id="intro-6-org-api-creds">
+        <h2 class="title">
+          Organization API Credentials <a class="help_tooltip"
+            ng-mouseover="help.sendTooltipGA('api org credentials')"
+            ng-show="help.helpTooltipsEnabled" href="#"
+            ng-attr-tooltip="{{tooltip_org_api_creds}}"
+            tooltip-placement="right">(?)</a>
+          <div class="header-button btn-group pull-right">
+            <a class="btn filter-selector"
+              ng-click="showModal('regenerateCredentials')"> <span
+              class="filter-label">Regenerate Org Credentials</span>
+            </a>
+          </div>
+        </h2>
+
+        <table class="table table-striped">
+          <tr>
+            <td>Client ID</td>
+            <td style="text-align: right">{{orgAPICredentials.client_id}}</td>
+          </tr>
+          <tr>
+            <td>Client Secret</td>
+            <td style="text-align: right">{{orgAPICredentials.client_secret}}</td>
+          </tr>
+        </table>
+      </div>
+      <bsmodal id="newAdministrator" title="Create New Administrator"
+        close="hideModal" closelabel="Cancel"
+        extrabutton="newAdministratorDialog" extrabuttonlabel="Create"
+        ng-cloak>
+      <p>
+        New administrator email: <input id="newAdminInput" ug-validate
+          ng-model="$parent.admin.email" pattern="emailRegex"
+          ng-attr-title="{{emailRegexDescription}}" required
+          type="email" />
+      </p>
+      </bsmodal>
+      <div id="intro-7-org-admins">
+        <h2 class="title">
+          Organization Administrators <a class="help_tooltip"
+            ng-mouseover="help.sendTooltipGA('org admins')"
+            ng-show="help.helpTooltipsEnabled" href="#"
+            ng-attr-tooltip="{{tooltip_org_admins}}"
+            tooltip-placement="right">(?)</a>
+          <div class="header-button btn-group pull-right">
+            <a class="btn filter-selector"
+              ng-click="showModal('newAdministrator')"> <span
+              class="filter-label">Add New Administrator</span>
+            </a>
+          </div>
+        </h2>
+
+        <table class="table table-striped">
+          <tr ng-repeat="administrator in orgAdministrators">
+            <td><img style="width: 30px; height: 30px;"
+              ng-src="{{administrator.image}}">
+              {{administrator.name}}</td>
+            <td style="text-align: right">{{administrator.email}}</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="span6">
+      <div id="intro-8-activities">
+        <h2 class="title">
+          Activities <a class="help_tooltip"
+            ng-mouseover="help.sendTooltipGA('activities')"
+            ng-show="help.helpTooltipsEnabled" href="#"
+            ng-attr-tooltip="{{tooltip_activities}}"
+            tooltip-placement="right">(?)</a>
+        </h2>
+        <table class="table table-striped">
+          <tr ng-repeat="activity in activities">
+            <td>{{activity.title}}</td>
+            <td style="text-align: right">{{activity.date}}</td>
+          </tr>
+        </table>
+      </div>
+    </div>
 
 
   </section>

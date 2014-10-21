@@ -21,7 +21,8 @@
   <parent>
     <groupId>org.apache.usergrid</groupId>
     <artifactId>usergrid</artifactId>
-    <version>0.0.29-SNAPSHOT</version>
+    <version>1.0.0</version>
+    <relativePath>../</relativePath>
   </parent>
 
   <artifactId>usergrid-mongo-emulator</artifactId>
@@ -69,7 +70,7 @@
             <storage-config>${basedir}/src/test/conf</storage-config>
           </systemPropertyVariables>
           <forkMode>always</forkMode>
-          <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar</argLine>
+          <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}</argLine>
         </configuration>
       </plugin>
     </plugins>

@@ -21,7 +21,8 @@
   <parent>
     <groupId>org.apache.usergrid</groupId>
     <artifactId>usergrid</artifactId>
-    <version>0.0.29-SNAPSHOT</version>
+    <version>1.0.0</version>
+    <relativePath>../</relativePath>
   </parent>
 
   <artifactId>usergrid-rest</artifactId>
@@ -56,7 +57,7 @@
               </systemPropertyVariables>
               <forkMode>once</forkMode>
               <!-- TODO: make this into a small configuration but based on settings.xml -->
-              <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar</argLine>
+              <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}</argLine>
 
               <includes>
                 <include>**/RestTestSuite.java</include>
@@ -95,7 +96,7 @@
               <forkCount>${rest.it.forkCount}</forkCount>
               <reuseForks>false</reuseForks>
               <perCoreThreadCount>false</perCoreThreadCount>
-              <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar
+              <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}
               </argLine>
 
               <includes>
@@ -153,7 +154,7 @@
               <forkCount>${rest.it.forkCount}</forkCount>
               <reuseForks>false</reuseForks>
               <perCoreThreadCount>false</perCoreThreadCount>
-              <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar
+              <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}
               </argLine>
 
               <includes>
@@ -191,7 +192,7 @@
                 <target.directory>${project.build.directory}</target.directory>
               </systemPropertyVariables>
               <forkMode>once</forkMode>
-              <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar</argLine>
+              <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}</argLine>
 
               <includes>
                 <include>**/ConcurrentRestTestSuite.java</include>
@@ -228,7 +229,7 @@
                 <target.directory>${project.build.directory}</target.directory>
               </systemPropertyVariables>
               <forkMode>once</forkMode>
-              <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar</argLine>
+              <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}</argLine>
 
               <includes>
                 <include>**/ConcurrentRestITSuite.java</include>
@@ -277,7 +278,7 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar</argLine>
+          <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}</argLine>
         </configuration>
       </plugin>
 
@@ -352,25 +353,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-install-plugin</artifactId>
-        <version>2.3.1</version>
-        <executions>
-          <execution>
-            <id>install jar</id>
-            <phase>install</phase>
-            <goals>
-              <goal>install-file</goal>
-            </goals>
-            <configuration>
-              <packaging>jar</packaging>
-              <artifactId>${project.artifactId}</artifactId>
-              <groupId>${project.groupId}</groupId>
-              <version>${project.version}</version>
-              <file>
-                ${project.build.directory}/${project.artifactId}-${project.version}.jar
-              </file>
-            </configuration>
-          </execution>
-        </executions>
+        <version>2.5.1</version>
       </plugin>
     </plugins>
   </build>
@@ -445,10 +428,10 @@
       <artifactId>jersey-client</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>net.tanesha.recaptcha4j</groupId>
-      <artifactId>recaptcha4j</artifactId>
-    </dependency>
+      <dependency>
+        <groupId>com.google.code.maven-play-plugin.net.tanesha.recaptcha4j</groupId>
+        <artifactId>recaptcha4j</artifactId>
+      </dependency>
 
     <dependency>
       <groupId>com.sun.jersey</groupId>
@@ -478,8 +461,18 @@
       <groupId>org.slf4j</groupId>
       <artifactId>jul-to-slf4j</artifactId>
     </dependency>
+      <dependency>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-log4j12</artifactId>
+      </dependency>
 
-    <!-- Testing and Logging Dependencies -->
+      <dependency>
+          <groupId>log4j</groupId>
+          <artifactId>log4j</artifactId>
+      </dependency>
+
+
+      <!-- Testing and Logging Dependencies -->
 
     <dependency>
       <groupId>org.apache.usergrid</groupId>
@@ -586,7 +579,7 @@
     <dependency>
       <groupId>org.apache.usergrid</groupId>
       <artifactId>usergrid-services</artifactId>
-      <version>0.0.29-SNAPSHOT</version>
+      <version>${project.version}</version>
       <scope>test</scope>
       <classifier>tests</classifier>
     </dependency>

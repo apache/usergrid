@@ -1,84 +1,148 @@
 <div class="content-page">
-  <div id="intro-page" >
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+  
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+  <div id="intro-page">
     <page-title title=" Roles" icon="&#59170;"></page-title>
   </div>
 
-  <bsmodal id="newRole"
-           title="New Role"
-           close="hideModal"
-           closelabel="Cancel"
-           extrabutton="newRoleDialog"
-           extrabuttonlabel="Create"
-           buttonid="roles"
-           ng-cloak>
-          <fieldset>
-            <div class="control-group">
-              <label for="new-role-roletitle">Title</label>
-              <div class="controls">
-                <input type="text" ng-pattern="titleRegex" ng-attr-title="{{titleRegexDescription}}" required ng-model="$parent.newRole.title" name="roletitle" id="new-role-roletitle" class="input-xlarge" ug-validate/>
-                <p class="help-block hide"></p>
-              </div>
-            </div>
-            <div class="control-group">
-              <label for="new-role-rolename">Role Name</label>
-              <div class="controls">
-                <input type="text" required ng-pattern="roleNameRegex" ng-attr-title="{{roleNameRegexDescription}}" ng-model="$parent.newRole.name" name="rolename" id="new-role-rolename" class="input-xlarge" ug-validate/>
-                <p class="help-block hide"></p>
-              </div>
-            </div>
-          </fieldset>
+  <bsmodal id="newRole" title="New Role" close="hideModal"
+    closelabel="Cancel" extrabutton="newRoleDialog"
+    extrabuttonlabel="Create" buttonid="roles" ng-cloak>
+  <fieldset>
+    <div class="control-group">
+      <label for="new-role-roletitle">Title</label>
+      <div class="controls">
+        <input type="text" ng-pattern="titleRegex"
+          ng-attr-title="{{titleRegexDescription}}" required
+          ng-model="$parent.newRole.title" name="roletitle"
+          id="new-role-roletitle" class="input-xlarge" ug-validate />
+        <p class="help-block hide"></p>
+      </div>
+    </div>
+    <div class="control-group">
+      <label for="new-role-rolename">Role Name</label>
+      <div class="controls">
+        <input type="text" required ng-pattern="roleNameRegex"
+          ng-attr-title="{{roleNameRegexDescription}}"
+          ng-model="$parent.newRole.name" name="rolename"
+          id="new-role-rolename" class="input-xlarge" ug-validate />
+        <p class="help-block hide"></p>
+      </div>
+    </div>
+  </fieldset>
   </bsmodal>
 
-  <bsmodal id="deleteRole"
-           title="Delete Role"
-           close="hideModal"
-           closelabel="Cancel"
-           buttonid="deleteroles"
-           extrabutton="deleteRoleDialog"
-           extrabuttonlabel="Delete"
-           ng-cloak>
-    <p>Are you sure you want to delete the role(s)?</p>
+  <bsmodal id="deleteRole" title="Delete Role" close="hideModal"
+    closelabel="Cancel" buttonid="deleteroles"
+    extrabutton="deleteRoleDialog" extrabuttonlabel="Delete" ng-cloak>
+  <p>Are you sure you want to delete the role(s)?</p>
   </bsmodal>
 
   <section class="row-fluid">
     <div id="intro-list" class="span3 user-col">
 
       <div class="button-toolbar span12">
-        <a title="Select All" class="btn btn-primary select-all toolbar" ng-show="hasRoles" ng-click="selectAllEntities(rolesCollection._list,this,'rolesSelected',true)"> <i class="pictogram">&#8863;</i></a>
-        <button id="delete-role-btn" title="Delete" class="btn btn-primary toolbar"  ng-disabled="!hasRoles || !valueSelected(rolesCollection._list)" ng-click="showModal('deleteRole')"><i class="pictogram">&#9749;</i></button>
-        <button id="add-role-btn" title="Add" class="btn btn-primary toolbar" ng-click="showModal('newRole')"><i class="pictogram">&#57347;</i></button>
-        <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('users add remove buttons')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_roles_add_remove_buttons}}" tooltip-placement="right">(?)</a>      </div>
+        <a title="Select All" class="btn btn-primary select-all toolbar"
+          ng-show="hasRoles"
+          ng-click="selectAllEntities(rolesCollection._list,this,'rolesSelected',true)">
+          <i class="pictogram">&#8863;</i>
+        </a>
+        <button id="delete-role-btn" title="Delete"
+          class="btn btn-primary toolbar"
+          ng-disabled="!hasRoles || !valueSelected(rolesCollection._list)"
+          ng-click="showModal('deleteRole')">
+          <i class="pictogram">&#9749;</i>
+        </button>
+        <button id="add-role-btn" title="Add"
+          class="btn btn-primary toolbar"
+          ng-click="showModal('newRole')">
+          <i class="pictogram">&#57347;</i>
+        </button>
+        <a class="help_tooltip"
+          ng-mouseover="help.sendTooltipGA('users add remove buttons')"
+          ng-show="help.helpTooltipsEnabled" href="#"
+          ng-attr-tooltip="{{tooltip_roles_add_remove_buttons}}"
+          tooltip-placement="right">(?)</a>
+      </div>
 
       <ul class="user-list">
-        <li ng-class="selectedRole._data.uuid === role._data.uuid ? 'selected' : ''" ng-repeat="role in rolesCollection._list" ng-click="selectRole(role._data.uuid)">
-          <input
-              type="checkbox"
-              ng-value="role.get('uuid')"
-              ng-checked="master"
-              ng-model="role.checked"
-              id="role-{{role.get('title')}}-cb"
-              >
-          <a id="role-{{role.get('title')}}-link">{{role.get('title')}}</a>
-          <br/>
-          <span ng-if="role.get('name')" class="label">Role Name:</span>{{role.get('name')}}
-        </li>
+        <li
+          ng-class="selectedRole._data.uuid === role._data.uuid ? 'selected' : ''"
+          ng-repeat="role in rolesCollection._list"
+          ng-click="selectRole(role._data.uuid)"><input
+          type="checkbox" ng-value="role.get('uuid')"
+          ng-checked="master" ng-model="role.checked"
+          id="role-{{role.get('title')}}-cb"> <a
+          id="role-{{role.get('title')}}-link">{{role.get('title')}}</a>
+          <br /> <span ng-if="role.get('name')" class="label">Role
+            Name:</span>{{role.get('name')}}</li>
       </ul>
 
 
 
-  <div style="padding: 10px 5px 10px 5px">
-    <button class="btn btn-primary" ng-click="getPrevious()" style="display:{{previous_display}}">< Previous</button>
-    <button class="btn btn-primary" ng-click="getNext()" style="display:{{next_display}};float:right;">Next ></button>
-  </div>
+      <div style="padding: 10px 5px 10px 5px">
+        <button class="btn btn-primary" ng-click="getPrevious()"
+          style="display: {{previous_display">< Previous</button>
+        <button class="btn btn-primary" ng-click="getNext()"
+          style="display: {{next_display">Next ></button>
+      </div>
 
     </div>
-    
-    <div id="intro-information-tabs" class="span9 tab-content" ng-show="hasRoles">
+
+    <div id="intro-information-tabs" class="span9 tab-content"
+      ng-show="hasRoles">
       <div class="menu-toolbar">
         <ul class="inline">
-          <li class="tab" ng-class="currentRolesPage.route === '/roles/settings' ? 'selected' : ''"><div class="btn btn-primary toolbar" ><a class="btn-content" ng-click="selectRolePage('/roles/settings')"><i class="pictogram">&#59170;</i>Settings</a> <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('roles settings tab')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_roles_settings_tab}}" tooltip-placement="right">(?)</a></div></li>
-          <li class="tab" ng-class="currentRolesPage.route === '/roles/users' ? 'selected' : ''"><div class="btn btn-primary toolbar" ><a class="btn-content" ng-click="selectRolePage('/roles/users')"><i class="pictogram">&#128101;</i>Users</a> <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('roles users tab')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_roles_users_tab}}" tooltip-placement="right">(?)</a></div></li>
-          <li class="tab" ng-class="currentRolesPage.route === '/roles/groups' ? 'selected' : ''"><div class="btn btn-primary toolbar" ><a class="btn-content" ng-click="selectRolePage('/roles/groups')"><i class="pictogram">&#59194;</i>Groups</a> <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('roles groups tab')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_roles_groups_tab}}" tooltip-placement="right">(?)</a></div></li>
+          <li class="tab"
+            ng-class="currentRolesPage.route === '/roles/settings' ? 'selected' : ''"><div
+              class="btn btn-primary toolbar">
+              <a class="btn-content"
+                ng-click="selectRolePage('/roles/settings')"><i
+                class="pictogram">&#59170;</i>Settings</a> <a
+                class="help_tooltip"
+                ng-mouseover="help.sendTooltipGA('roles settings tab')"
+                ng-show="help.helpTooltipsEnabled" href="#"
+                ng-attr-tooltip="{{tooltip_roles_settings_tab}}"
+                tooltip-placement="right">(?)</a>
+            </div></li>
+          <li class="tab"
+            ng-class="currentRolesPage.route === '/roles/users' ? 'selected' : ''"><div
+              class="btn btn-primary toolbar">
+              <a class="btn-content"
+                ng-click="selectRolePage('/roles/users')"><i
+                class="pictogram">&#128101;</i>Users</a> <a
+                class="help_tooltip"
+                ng-mouseover="help.sendTooltipGA('roles users tab')"
+                ng-show="help.helpTooltipsEnabled" href="#"
+                ng-attr-tooltip="{{tooltip_roles_users_tab}}"
+                tooltip-placement="right">(?)</a>
+            </div></li>
+          <li class="tab"
+            ng-class="currentRolesPage.route === '/roles/groups' ? 'selected' : ''"><div
+              class="btn btn-primary toolbar">
+              <a class="btn-content"
+                ng-click="selectRolePage('/roles/groups')"><i
+                class="pictogram">&#59194;</i>Groups</a> <a
+                class="help_tooltip"
+                ng-mouseover="help.sendTooltipGA('roles groups tab')"
+                ng-show="help.helpTooltipsEnabled" href="#"
+                ng-attr-tooltip="{{tooltip_roles_groups_tab}}"
+                tooltip-placement="right">(?)</a>
+            </div></li>
         </ul>
       </div>
       <span ng-include="currentRolesPage.template"></span>
