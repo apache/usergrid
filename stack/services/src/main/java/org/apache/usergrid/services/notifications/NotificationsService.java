@@ -176,7 +176,7 @@ public class NotificationsService extends AbstractCollectionService {
             org.apache.usergrid.persistence.index.query.Query query = sp.getQuery();
             if (query == null) {
                 query = new Query();
-                if(collection == "devices" && sp.isName() && sp.getName().equals("notifications")) {
+                if(collection.equals("devices") && sp.isName() && sp.getName().equals("notifications")) {
                         //look for queries to /devices;ql=/notifications
                 }else{
                     query.addIdentifier(sp.getIdentifier());
