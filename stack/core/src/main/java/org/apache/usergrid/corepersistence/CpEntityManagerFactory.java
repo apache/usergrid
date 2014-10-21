@@ -95,13 +95,19 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     public static final UUID SYSTEM_APP_ID =
             UUID.fromString("b6768a08-b5d5-11e3-a495-10ddb1de66c3");
 
+    /**
+     * App where we store management info
+     */
     public static final  UUID MANAGEMENT_APPLICATION_ID =
             UUID.fromString("b6768a08-b5d5-11e3-a495-11ddb1de66c8");
 
+    /**
+     * TODO Dave what is this?
+     */
     public static final  UUID DEFAULT_APPLICATION_ID =
             UUID.fromString("b6768a08-b5d5-11e3-a495-11ddb1de66c9");
 
-    private static AtomicBoolean INIT_SYSTEM = new AtomicBoolean(  );
+    private AtomicBoolean init_indexes = new AtomicBoolean(  );
 
 
     // cache of already instantiated entity managers
@@ -146,8 +152,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                 Map sysAppProps = new HashMap<String, Object>();
                 sysAppProps.put( PROPERTY_NAME, "systemapp");
                 em.create( SYSTEM_APP_ID, TYPE_APPLICATION, sysAppProps );
-                em.createIndex();
                 em.getApplication();
+                em.createIndex();
                 em.refreshIndex();
             }
 
@@ -201,6 +207,11 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private EntityManager _getEntityManager( UUID applicationId ) {
         EntityManager em = new CpEntityManager();
         em.init( this, applicationId );
+        //TODO PERFORMANCE  Can we remove this?  Seems like we should fix our lifecycle instead...
+        //if this is the first time we've loaded this entity manager in the JVM, create it's indexes, it may be new
+        //not sure how to handle other than this if the system dies after the application em has been created
+        //but before the create call can create the index
+        em.createIndex();
         return em;
     }
 
@@ -285,7 +296,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         EntityManager appEm = getEntityManager( applicationId );
 
         //create our ES index since we're initializing this application
-        appEm.createIndex();
+//  TODO PERFORMANCE  pushed this down into the cache load can we do this here?
+//        appEm.createIndex();
 
         appEm.create( applicationId, TYPE_APPLICATION, properties );
         appEm.resetRoles();
@@ -628,7 +640,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     private void maybeCreateIndexes() {
         // system app
-        if ( INIT_SYSTEM.getAndSet( true ) ) {
+        if ( init_indexes.getAndSet( true ) ) {
             return;
         }
 
@@ -641,16 +653,16 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private List<EntityIndex> getManagementIndexes() {
 
         return Arrays.asList(
-                managerCache.getEntityIndex( new ApplicationScopeImpl( 
-                        new SimpleId( SYSTEM_APP_ID, "application" ) ) ),
+                getManagerCache().getEntityIndex(
+                        new ApplicationScopeImpl( new SimpleId( SYSTEM_APP_ID, "application" ) ) ),
 
                 // default app
-                managerCache.getEntityIndex( new ApplicationScopeImpl( 
-                        new SimpleId( getManagementAppId(), "application" ) ) ),
+               getManagerCache().getEntityIndex(
+                       new ApplicationScopeImpl( new SimpleId( getManagementAppId(), "application" ) ) ),
 
                 // management app
-                managerCache.getEntityIndex( new ApplicationScopeImpl( 
-                        new SimpleId( getDefaultAppId(), "application" ) ) ) );
+               getManagerCache().getEntityIndex(
+                       new ApplicationScopeImpl( new SimpleId( getDefaultAppId(), "application" ) ) ) );
     }
 
 
@@ -673,6 +685,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     @Override
     public void rebuildInternalIndexes( ProgressObserver po ) throws Exception {
         rebuildApplicationIndexes(SYSTEM_APP_ID, po);
+        rebuildApplicationIndexes( MANAGEMENT_APPLICATION_ID, po );
+        rebuildApplicationIndexes( DEFAULT_APPLICATION_ID, po );
     }
 
 
@@ -680,10 +694,12 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     public void rebuildApplicationIndexes( UUID appId, ProgressObserver po ) throws Exception {
 
         EntityManager em = getEntityManager( appId );
+
+        //explicitly invoke create index, we don't know if it exists or not in ES during a rebuild.
+        em.createIndex();
         Application app = em.getApplication();
 
-        ((CpEntityManager)em).reindex( po );
-        em.refreshIndex();
+        em.reindex( po );
 
         logger.info("\n\nRebuilt index for application {} id {}\n", app.getName(), appId );
     }

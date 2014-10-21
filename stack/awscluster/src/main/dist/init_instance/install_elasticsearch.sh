@@ -38,9 +38,12 @@ chown elasticsearch /mnt/log/elasticsearch
 # Configure ElasticSearch
 cd /usr/share/usergrid/scripts
 
+echo "vm.swappiness = 0" >> /etc/sysctl.conf
+sysctl -p
+
 # No need to do this, elasticsearch nodes are also cassandra nodes
-#groovy registry_register.groovy elasticsearch
-#groovy wait_for_instances.groovy elasticsearch ${CASSANDRA_NUM_SERVERS}
+groovy registry_register.groovy elasticsearch
+groovy wait_for_instances.groovy elasticsearch ${ES_NUM_SERVERS}
 
 # leave room for Cassandra: use about one half of RAM for heap
 case `(curl http://169.254.169.254/latest/meta-data/instance-type)` in
@@ -78,7 +81,7 @@ case `(curl http://169.254.169.254/latest/meta-data/instance-type)` in
 ;;
 'c3.4xlarge' )
     # total of 30g
-    export ES_HEAP_SIZE=15g
+    export ES_HEAP_SIZE=24g
 esac
 
 cat >> /etc/default/elasticsearch << EOF
@@ -91,6 +94,19 @@ EOF
 groovy ./configure_elasticsearch.groovy > /etc/elasticsearch/elasticsearch.yml
 
 update-rc.d elasticsearch defaults 95 10
+
+pushd /usr/share/elasticsearch/bin
+
+#Install kopf
+
+./plugin --install lmenezes/elasticsearch-kopf/1.2
+
+#Install bigdesk
+
+./plugin --install lukas-vlcek/bigdesk
+
+popd
+
 
 # Go!
 /etc/init.d/elasticsearch start

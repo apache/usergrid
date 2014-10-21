@@ -21,7 +21,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -47,9 +46,7 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
-import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.impl.EsEntityIndexImpl;
-import org.apache.usergrid.persistence.index.impl.IndexScopeImpl;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
@@ -60,17 +57,15 @@ import static org.junit.Assert.fail;
 //@RunWith(JukitoRunner.class)
 //@UseModules({ GuiceModule.class })
 @Concurrent()
-@Ignore("Temporary ignore")
 public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
     private static final Logger logger = LoggerFactory.getLogger(PerformanceEntityRebuildIndexTest.class );
 
     private static final MetricRegistry registry = new MetricRegistry();
     private Slf4jReporter reporter;
 
-    private static final long RUNTIME = TimeUnit.MINUTES.toMillis( 1 );
+    private static final long RUNTIME_MS = TimeUnit.SECONDS.toMillis( 5 );
 
-    private static final long writeDelayMs = 100;
-    //private static final long readDelayMs = 7;
+    private static final long WRITE_DELAY_MS = 10;
 
     @Rule
     public Application app = new CoreApplication( setup );
@@ -106,8 +101,6 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
         // ----------------- create a bunch of entities
 
-        final long stopTime = System.currentTimeMillis() + RUNTIME;
-
         Map<String, Object> entityMap = new HashMap<String, Object>() {{
             put("key1", 1000 );
             put("key2", 2000 );
@@ -130,6 +123,8 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
         Entity cat2 = em.create("cat", cat2map );
         Entity cat3 = em.create("cat", cat3map );
 
+        final long stopTime = System.currentTimeMillis() + RUNTIME_MS;
+
         List<EntityRef> entityRefs = new ArrayList<EntityRef>();
         int entityCount = 0;
         while ( System.currentTimeMillis() < stopTime ) {
@@ -151,12 +146,12 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
             }
 
             entityRefs.add(new SimpleEntityRef( entity.getType(), entity.getUuid() ) );
-            if ( entityCount % 100 == 0 ) {
+            if ( entityCount % 10 == 0 ) {
                 logger.info("Created {} entities", entityCount );
             }
 
             entityCount++;
-            try { Thread.sleep( writeDelayMs ); } catch (InterruptedException ignored ) {}
+            try { Thread.sleep( WRITE_DELAY_MS ); } catch (InterruptedException ignored ) {}
         }
 
         logger.info("Created {} entities", entityCount);
@@ -191,21 +186,31 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
         
         EntityManagerFactory.ProgressObserver po = new EntityManagerFactory.ProgressObserver() {
             int counter = 0;
+
             @Override
-            public void onProgress( EntityRef s, EntityRef t, String etype ) {
+               public void onProgress( final EntityRef entity ) {
+
                 meter.mark();
-                logger.debug("Indexing from {}:{} to {}:{} edgeType {}", new Object[] {
-                    s.getType(), s.getUuid(), t.getType(), t.getUuid(), etype });
+                logger.debug("Indexing {}:{}", entity.getType(), entity.getUuid());
                 if ( !logger.isDebugEnabled() && counter % 100 == 0 ) {
                     logger.info("Reindexed {} entities", counter );
                 }
                 counter++;
             }
+
+
+
+            @Override
+            public long getWriteDelayTime() {
+                return 0;
+            }
         };
 
         try {
+//            setup.getEmf().refreshIndex();
             setup.getEmf().rebuildAllIndexes( po );
 
+            reporter.report();
             registry.remove( meterName );
             logger.info("Rebuilt index");
 
@@ -229,20 +234,17 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
         Id appId = new SimpleId( appUuid, "application");
         ApplicationScope scope = new ApplicationScopeImpl( appId );
-        IndexScope is = new IndexScopeImpl( appId, "application");
         EntityIndex ei = eif.createEntityIndex(scope);
         EsEntityIndexImpl eeii = (EsEntityIndexImpl)ei;
 
         eeii.deleteIndex();
     }
 
-    private int readData( String collectionName ) throws Exception {
-        return readData( collectionName, -1 );
-    }
 
     private int readData( String collectionName, int expected ) throws Exception {
 
         EntityManager em = app.getEntityManager();
+        em.refreshIndex();
 
         Query q = Query.fromQL("select * where key1=1000");
         q.setLimit(40);

@@ -221,7 +221,7 @@ public class SQSQueueManagerImpl implements QueueManager {
                 @Override
                 public String getAWSAccessKeyId() {
                     String accessKey = System.getProperty(SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR);
-                    if(accessKey == null){
+                    if(StringUtils.isEmpty(accessKey)){
                         accessKey = System.getProperty(SDKGlobalConfiguration.ALTERNATE_ACCESS_KEY_ENV_VAR);
                     }
                     return StringUtils.trim(accessKey);
@@ -230,14 +230,17 @@ public class SQSQueueManagerImpl implements QueueManager {
                 @Override
                 public String getAWSSecretKey() {
                     String secret = System.getProperty(SDKGlobalConfiguration.SECRET_KEY_ENV_VAR);
-                    if(secret==null){
+                    if(StringUtils.isEmpty(secret)){
                         secret = System.getProperty(SDKGlobalConfiguration.ALTERNATE_SECRET_KEY_ENV_VAR);
                     }
                     return StringUtils.trim(secret);
                 }
             };
-            if(StringUtils.isEmpty(creds.getAWSAccessKeyId()) || StringUtils.isEmpty(creds.getAWSSecretKey()) ){
-                throw new AmazonClientException("could not retrieve credentials from system properties");
+            if(StringUtils.isEmpty(creds.getAWSAccessKeyId())){
+                throw new AmazonClientException("could not get aws access key from system properties");
+            }
+            if(StringUtils.isEmpty(creds.getAWSSecretKey())){
+                throw new AmazonClientException("could not get aws secret key from system properties");
             }
         }
 

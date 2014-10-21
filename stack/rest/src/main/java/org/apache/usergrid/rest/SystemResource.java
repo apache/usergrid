@@ -124,11 +124,17 @@ public class SystemResource extends AbstractContextResource {
 
 
         final ProgressObserver po = new ProgressObserver() {
+
+
             @Override
-            public void onProgress( EntityRef s, EntityRef t, String etype ) {
-                logger.info( "Indexing from {}:{} to {}:{} edgeType {}", new Object[] {
-                        s.getType(), s.getUuid(), t.getType(), t.getUuid(), etype
-                } );
+            public void onProgress( final EntityRef entity ) {
+                logger.info( "Indexing entity {}:{} ", entity.getType(), entity.getUuid() );
+            }
+
+
+            @Override
+            public long getWriteDelayTime() {
+                return 0;
             }
         };
 
@@ -140,9 +146,6 @@ public class SystemResource extends AbstractContextResource {
                 logger.info( "Rebuilding all indexes" );
 
                 try {
-                    emf.rebuildInternalIndexes( po );
-                    emf.refreshIndex();
-
                     emf.rebuildAllIndexes( po );
                 }
                 catch ( Exception e ) {
@@ -168,7 +171,8 @@ public class SystemResource extends AbstractContextResource {
     public JSONWithPadding rebuildIndexes( 
                 @Context UriInfo ui, 
                 @PathParam( "applicationId" ) String applicationIdStr,
-                @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+                @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback,
+                @QueryParam( "delay" ) @DefaultValue( "10" ) final long delay)
 
             throws Exception {
 
@@ -177,14 +181,6 @@ public class SystemResource extends AbstractContextResource {
         response.setAction( "rebuild indexes" );
 
 
-        final ProgressObserver po = new ProgressObserver() {
-            @Override
-            public void onProgress( EntityRef s, EntityRef t, String etype ) {
-                logger.info( "Indexing from {}:{} to {}:{} edgeType {}", new Object[] {
-                        s.getType(), s.getUuid(), t.getType(), t.getUuid(), etype
-                } );
-            }
-        };
 
 
         final EntityManager em = emf.getEntityManager( appId );
@@ -199,7 +195,7 @@ public class SystemResource extends AbstractContextResource {
 
 
                 {
-                    rebuildCollection( appId, collectionName );
+                    rebuildCollection( appId, collectionName, delay );
                 }
             }
         };
@@ -221,7 +217,8 @@ public class SystemResource extends AbstractContextResource {
                 @Context UriInfo ui,
                 @PathParam( "applicationId" ) final String applicationIdStr,
                 @PathParam( "collectionName" ) final String collectionName,
-                @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+                @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback,
+                @QueryParam( "delay" ) @DefaultValue( "10" ) final long delay )
             throws Exception {
 
         final UUID appId = UUIDUtils.tryExtractUUID( applicationIdStr );
@@ -232,7 +229,7 @@ public class SystemResource extends AbstractContextResource {
 
             public void run() {
 
-                rebuildCollection( appId, collectionName );
+                rebuildCollection( appId, collectionName, delay );
             }
         };
 
@@ -247,13 +244,18 @@ public class SystemResource extends AbstractContextResource {
     }
 
 
-    private void rebuildCollection( final UUID applicationId, final String collectionName ) {
+    private void rebuildCollection( final UUID applicationId, final String collectionName, final long delay ) {
         EntityManagerFactory.ProgressObserver po = new EntityManagerFactory.ProgressObserver() {
+
             @Override
-            public void onProgress( EntityRef s, EntityRef t, String etype ) {
-                logger.info( "Indexing from {}:{} to {}:{} edgeType {}", new Object[] {
-                        s.getType(), s.getUuid(), t.getType(), t.getUuid(), etype
-                } );
+            public void onProgress( final EntityRef entity ) {
+                logger.info( "Indexing entity {}:{}", entity.getType(), entity.getUuid());
+            }
+
+
+            @Override
+            public long getWriteDelayTime() {
+                return delay;
             }
         };
 

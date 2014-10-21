@@ -41,7 +41,7 @@ import org.apache.usergrid.persistence.index.query.Query.Level;
  */
 public interface EntityManager {
 
-    public void setApplicationId( UUID applicationId );
+//    public void setApplicationId( UUID applicationId );
 
     public GeoIndexManager getGeoIndexManager();
 

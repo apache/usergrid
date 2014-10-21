@@ -30,6 +30,7 @@ sudo apt-get update
 sudo apt-get install datastax-agent
 
 
+cd /usr/share/usergrid/scripts
 groovy configure_opscenter_agent.groovy > /var/lib/datastax-agent/conf/address.yaml
 
 sudo service datastax-agent start
