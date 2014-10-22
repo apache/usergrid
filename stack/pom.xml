@@ -1881,6 +1881,8 @@
                     <exclude>**/*.asc</exclude>
                     <exclude>**/dummy.txt</exclude>
                     <exclude>**/cloudbees.xml</exclude>
+                    <exlude>loadtests/gatling/lib/**</exlude>
+                    <exlude>loadtests/gatling/user-files/**</exlude>
 
                 </excludes>
             </configuration>
