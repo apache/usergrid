@@ -22,7 +22,7 @@ Or you can start by [downloading our latest code](https://github.com/apache/incu
 
 ## Building
 
-From the command line, navigate to stack directory and type the following:
+From the command line, navigate to `stack` directory and type the following:
 
     mvn clean package -DskipTests=true
 
@@ -41,14 +41,14 @@ Follow instructions, don't edit configuration files as we just want default valu
 Add Usergrid WAR to Tomcat
 ---
 
-Remove the existing tomcat/webapps/ROOT directory. 
+Remove the existing `tomcat/webapps/ROOT` directory. 
 
-Place the Usergrid ROOT.war file into the tomcat/webapps directory
+Place the Usergrid `ROOT.war` file into the `tomcat/webapps` directory
 
 Add Usergrid configuration file to Tomcat
 ---
 
-Create a __usergrid-deployment.properties__ file and place it in Tomcat's __lib__ directory. You can find an example properties file below  that should work well for a local Tomcat & Cassandra setup. You will probably only need to change the properties below to use your email address and preferred password for the install.
+Create a ____usergrid-custom.properties____ file and place it in Tomcat's __lib__ directory. You can find an example properties file below  that should work well for a local Tomcat & Cassandra setup. You will probably only need to change the properties below to use your email address and preferred password for the install.
 
 
     usergrid.sysadmin.login.allowed=true
@@ -67,7 +67,7 @@ Start Tomcat and use your web browser to visit the URLs below. While you do this
 
 Database setup URL - [http://localhost:8080/system/database/setup](http://localhost:8080/system/database/setup)
 
-When prompted to login use the sysadmin credentials that you specified in your usergrid-deployment.properties file. Based on the example above that would be superuser and pw123. If the operation is successful you should a message like the one below in your browser. If not, check your logs for clues about what went wrong.
+When prompted to login use the sysadmin credentials that you specified in your __usergrid-custom.properties__ file. Based on the example above that would be superuser and pw123. If the operation is successful you should a message like the one below in your browser. If not, check your logs for clues about what went wrong.
 
     {
       "action" : "cassandra setup",
@@ -87,16 +87,21 @@ You should not be prompted for login because you already logged into for the Dat
       "duration" : 2
     }
 
+Build the Usergrid Console
+---
+The Usergrid Console is an admin interface written in JavaScript that connects to your running Usergrid instance. For evaluation purposes, you can run it within Tomcat. Build it by following the steps [here](https://github.com/apache/incubator-usergrid/blob/master/portal/README.md). Once built, copy the directory _portal/build/usergrid-portal_ to _tomcat/webapps_.
+
+
 Login to the Usergrid Console & get started
 ---
 You should now be able to login to the Usergrid console and start configuring applications, users and more. 
 
 You can use an static version of the portal to get started:
 
-[http://apigee.github.io/usergrid-portal/?api_url=http://localhost:8080](http://apigee.github.io/usergrid-portal/?api_url=http://localhost:8080)
+http://localhost:8080/usergrid-portal/(http://localhost:8080/usergrid-portal)
 
 
-Example usergrid-deployment.properties file
+Example __usergrid-custom.properties__ file
 ---
 Here's a complete example properties file to get you started.
 
