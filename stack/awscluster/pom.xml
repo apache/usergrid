@@ -30,7 +30,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <aws.s3.release-bucket>ug-cloudformation-todd</aws.s3.release-bucket>
+        <aws.s3.release-bucket>ug-cloudformation</aws.s3.release-bucket>
         <stack.war>../rest/target/ROOT.war</stack.war>
         <portal.dir>../../portal/dist/usergrid-portal</portal.dir>
     </properties>

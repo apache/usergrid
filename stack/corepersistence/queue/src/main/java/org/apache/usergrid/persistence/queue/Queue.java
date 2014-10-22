@@ -28,4 +28,8 @@ public class Queue {
     public String getUrl(){
         return url;
     }
+
+    public boolean isEmpty(){
+        return url == null;
+    }
 }

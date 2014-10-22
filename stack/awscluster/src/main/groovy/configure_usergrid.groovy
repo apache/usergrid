@@ -117,8 +117,10 @@ usergrid.sysadmin.login.password=test
 usergrid.sysadmin.login.email=${superUserEmail}
 
 usergrid.sysadmin.email=${superUserEmail}
-usergrid.sysadmin.approve.users=true
-usergrid.sysadmin.approve.organizations=true
+#We don't want to require user approval so we can quickly create tests
+usergrid.sysadmin.approve.users=false
+#We dont want to require organizations to be approved so we can auto create them
+usergrid.sysadmin.approve.organizations=false
 
 # Base mailer account - default for all outgoing messages
 usergrid.management.mailer=Admin <${superUserEmail}>

@@ -1875,12 +1875,17 @@
                     <exclude>**/**QueryFilter.tokens</exclude>
                     <exclude>**/**QueryFilterLexer.java</exclude>
                     <exclude>**/**QueryFilterParser.java</exclude>
-
+                    <exclude>**/**.conf</exclude>
+                    <exclude>**/**.csv</exclude>
+                    <exclude>loadtests/loadtest_setup.sh</exclude>
+                    <exclude>loadtests/gatling/user-files/request-bodies/**</exclude>
                     <!-- other -->
                     <exclude>**/m2/**</exclude>
                     <exclude>**/*.asc</exclude>
                     <exclude>**/dummy.txt</exclude>
                     <exclude>**/cloudbees.xml</exclude>
+                    <exlude>loadtests/gatling/lib/**</exlude>
+                    <exlude>loadtests/gatling/user-files/**</exlude>
 
                 </excludes>
             </configuration>
