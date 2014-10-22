@@ -13,7 +13,8 @@ Organizations & Admins
 	concepts/activity
 	concepts/assets
 
-###### Organizations
+Organizations
+             
 
 An organization represents the highest level of the Apache Usergrid data
 hierarchy. It contains applications (and the entities and collections
@@ -22,20 +23,30 @@ organization can be representative of a company, team, or project. It
 allows multiple applications  to be shared within the organization with
 other administrators.
 
++----------------+----------+--------------------------------------------------------------------------------------+
+| Property       | Type     | Description                                                                          |
++================+==========+======================================================================================+
+| uuid           | UUID     | Organization’s unique entity ID                                                      |
++----------------+----------+--------------------------------------------------------------------------------------+
+| type           | string   | "organization"                                                                       |
++----------------+----------+--------------------------------------------------------------------------------------+
+| created        | long     | `UNIX timestamp <http://en.wikipedia.org/wiki/Unix_time>`__ of entity creation       |
++----------------+----------+--------------------------------------------------------------------------------------+
+| modified       | long     | `UNIX timestamp <http://en.wikipedia.org/wiki/Unix_time>`__ of entity modification   |
++----------------+----------+--------------------------------------------------------------------------------------+
+| organization   | string   | The name of the organization.                                                        |
++----------------+----------+--------------------------------------------------------------------------------------+
+| username       | string   | The username of the administrator.                                                   |
++----------------+----------+--------------------------------------------------------------------------------------+
+| name           | string   | The name of the administrator.                                                       |
++----------------+----------+--------------------------------------------------------------------------------------+
+| email          | string   | The email address of the administrator.                                              |
++----------------+----------+--------------------------------------------------------------------------------------+
+| password       | string   | The password of the administrator. (create-only)                                     |
++----------------+----------+--------------------------------------------------------------------------------------+
 
-Property                                Type      Description
---------------------------------------- --------- ---------------------------------------------------------------------
-uuid                                    UUID      Organization’s unique entity ID
-type                                    string    "organization"
-created                                 long      [UNIX timestamp](http://en.wikipedia.org/wiki/Unix_time) of entity creation
-modified                                long      [UNIX timestamp](http://en.wikipedia.org/wiki/Unix_time) of entity modification
-organization                            string    The name of the organization.
-username                                string    The username of the administrator.
-name                                    string    The name of the administrator.
-email                                   string    The email address of the administrator.
-password                                string    The password of the administrator. (create-only)
-
-###### Admins
+Admins
+      
 
 An admin user has full access to perform any operation on all
 organization accounts of which the admin user is a member. Using the App
