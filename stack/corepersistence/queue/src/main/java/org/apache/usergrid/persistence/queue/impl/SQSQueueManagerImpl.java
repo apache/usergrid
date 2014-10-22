@@ -54,13 +54,31 @@ public class SQSQueueManagerImpl implements QueueManager {
     private  ObjectMapper mapper;
     private static SmileFactory smileFactory = new SmileFactory();
 
-    private static LoadingCache<String, Queue> urlMap = CacheBuilder.newBuilder()
+    private static LoadingCache<SqsLoader, Queue> urlMap = CacheBuilder.newBuilder()
             .maximumSize(1000)
-            .build(new CacheLoader<String, Queue>() {
+            .build(new CacheLoader<SqsLoader, Queue>() {
                        @Override
-                       public Queue load(String queueLoader) throws Exception {
-                           //equals comparison wasn't working so
-                           return new Queue(null);
+                       public Queue load(SqsLoader queueLoader) throws Exception {
+                           Queue queue = null;
+                           try {
+                               GetQueueUrlResult result = queueLoader.getClient().getQueueUrl(queueLoader.getKey());
+                               queue = new Queue(result.getQueueUrl());
+                           } catch (QueueDoesNotExistException queueDoesNotExistException) {
+                               queue = null;
+                           } catch (Exception e) {
+                               LOG.error("failed to get queue from service", e);
+                               throw e;
+                           }
+                           if (queue == null) {
+                               String name = queueLoader.getKey();
+                               CreateQueueRequest createQueueRequest = new CreateQueueRequest()
+                                       .withQueueName(name);
+                               CreateQueueResult result = queueLoader.getClient().createQueue(createQueueRequest);
+                               String url = result.getQueueUrl();
+                               queue = new Queue(url);
+                               LOG.info("Created queue with url {}", url);
+                           }
+                           return queue;
                        }
                    }
             );
@@ -85,15 +103,6 @@ public class SQSQueueManagerImpl implements QueueManager {
         }
     }
 
-    public Queue createQueue(){
-        String name = getName();
-        CreateQueueRequest createQueueRequest = new CreateQueueRequest()
-                .withQueueName(name);
-        CreateQueueResult result = sqs.createQueue(createQueueRequest);
-        String url = result.getQueueUrl();
-        LOG.info("Created queue with url {}",url);
-        return new Queue(url);
-    }
 
     private String getName() {
         String name = scope.getApplication().getType() + "_"+ scope.getName() + "_"+ scope.getApplication().getUuid().toString();
@@ -102,22 +111,7 @@ public class SQSQueueManagerImpl implements QueueManager {
 
     public Queue getQueue() {
         try {
-            Queue queue = urlMap.get(getName());
-            if (queue.isEmpty()) {
-                try {
-                    GetQueueUrlResult result = sqs.getQueueUrl(getName());
-                    queue = new Queue(result.getQueueUrl());
-                } catch (QueueDoesNotExistException queueDoesNotExistException) {
-                    queue = null;
-                } catch (Exception e) {
-                    LOG.error("failed to get queue from service", e);
-                    throw e;
-                }
-                if (queue == null) {
-                    queue = createQueue();
-                }
-                urlMap.put(getName(), queue);
-            }
+            Queue queue = urlMap.get(new SqsLoader(getName(),sqs));
             return queue;
         } catch (ExecutionException ee) {
             throw new RuntimeException(ee);
@@ -230,6 +224,9 @@ public class SQSQueueManagerImpl implements QueueManager {
         return mapper.writeValueAsString(o);
     }
 
+
+
+
     public class UsergridAwsCredentialsProvider implements AWSCredentialsProvider {
 
         private AWSCredentials creds;
@@ -294,13 +291,26 @@ public class SQSQueueManagerImpl implements QueueManager {
         public String getKey() {
             return key;
         }
+
         @Override
-        public boolean equals(Object other) {
-            if (other instanceof SqsLoader) {
-                SqsLoader loader = (SqsLoader) other;
+        public boolean equals(Object o){
+            if(o instanceof  SqsLoader){
+                SqsLoader loader = (SqsLoader)o;
                 return loader.getKey().equals(this.getKey());
             }
             return false;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = getKey().hashCode();
+            return result;
+        }
+
+
+        @Override
+        public String toString() {
+            return getKey();
         }
 
     }
