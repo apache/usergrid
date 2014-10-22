@@ -87,13 +87,14 @@ public class SQSQueueManagerImpl implements QueueManager {
     }
     public Queue getQueue(){
         if(queue == null) {
-            ListQueuesResult result =  sqs.listQueues();
-            for (String queueUrl : result.getQueueUrls()) {
-                boolean found = queueUrl.contains(getName());
-                if (found) {
-                    queue = new Queue(queueUrl);
-                    break;
-                }
+            try {
+                GetQueueUrlResult result = sqs.getQueueUrl(getName());
+                queue = new Queue(result.getQueueUrl());
+            }catch (QueueDoesNotExistException queueDoesNotExistException){
+                queue=null;
+            }catch (Exception e){
+                LOG.error("failed to get queue from service",e);
+                throw e;
             }
         }
         if(queue == null) {
