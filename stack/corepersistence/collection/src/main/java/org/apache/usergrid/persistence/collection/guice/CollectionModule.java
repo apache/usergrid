@@ -18,11 +18,22 @@
 package org.apache.usergrid.persistence.collection.guice;
 
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.safehaus.guicyfig.GuicyFigModule;
 
+import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerSync;
+import org.apache.usergrid.persistence.collection.EntityVersionCleanupFactory;
+import org.apache.usergrid.persistence.collection.event.EntityDeleted;
+import org.apache.usergrid.persistence.collection.event.EntityVersionCreated;
+import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
+import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerImpl;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerSyncImpl;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
@@ -30,11 +41,14 @@ import org.apache.usergrid.persistence.collection.mvcc.changelog.ChangeLogGenera
 import org.apache.usergrid.persistence.collection.mvcc.changelog.ChangeLogGeneratorImpl;
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.impl.MvccEntitySerializationStrategyImpl;
+import org.apache.usergrid.persistence.collection.serialization.impl.MvccLogEntrySerializationStrategyImpl;
 import org.apache.usergrid.persistence.collection.serialization.impl.UniqueValueSerializationStrategyImpl;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteStart;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.serialization.impl.SerializationModule;
 import org.apache.usergrid.persistence.collection.service.impl.ServiceModule;
+import org.apache.usergrid.persistence.core.migration.Migration;
 import org.apache.usergrid.persistence.core.task.NamedTaskExecutorImpl;
 import org.apache.usergrid.persistence.core.task.TaskExecutor;
 
@@ -43,7 +57,9 @@ import com.google.inject.Inject;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
-
+import com.google.inject.multibindings.Multibinder;
+import java.util.List;
+import com.sun.tracing.dtrace.ModuleAttributes;
 
 
 /**
@@ -63,15 +79,33 @@ public class CollectionModule extends AbstractModule {
         install( new SerializationModule() );
         install( new ServiceModule() );
 
+        install ( new FactoryModuleBuilder()
+                .build( EntityVersionCleanupFactory.class ));
+
+        //bind empty list.  including modules can add impelmentations
+        Multibinder.newSetBinder( binder(), EntityVersionDeleted.class );
+        Multibinder.newSetBinder( binder(), EntityVersionCreated.class );
+        Multibinder.newSetBinder( binder(), EntityDeleted.class );
+
+
         // create a guice factor for getting our collection manager
         install( new FactoryModuleBuilder()
             .implement( EntityCollectionManager.class, EntityCollectionManagerImpl.class )
             .implement( EntityCollectionManagerSync.class, EntityCollectionManagerSyncImpl.class )
             .build( EntityCollectionManagerFactory.class ) );
 
+
+        //bind( EntityVersionDeleted.class).to( org.apache.usergrid.corepersistence.events.EntityVersionDeletedImpl.class );
         bind( UniqueValueSerializationStrategy.class ).to( UniqueValueSerializationStrategyImpl.class );
 
         bind( ChangeLogGenerator.class).to( ChangeLogGeneratorImpl.class);
+
+    }
+
+
+    @Provides
+    public List<EntityVersionDeleted> emptySetInitialization(){
+        return Collections.EMPTY_LIST;
 
     }
 

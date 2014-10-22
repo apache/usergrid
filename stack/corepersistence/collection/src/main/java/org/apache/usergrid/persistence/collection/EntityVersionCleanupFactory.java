@@ -18,15 +18,13 @@
 package org.apache.usergrid.persistence.collection;
 
 
-import com.google.inject.assistedinject.Assisted;
-import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
+
 import org.apache.usergrid.persistence.collection.impl.EntityVersionCleanupTask;
 import org.apache.usergrid.persistence.model.entity.Id;
 
-import java.util.List;
 import java.util.UUID;
 
 public interface EntityVersionCleanupFactory {
-    public EntityVersionCleanupTask getTask( final Id entityId, final UUID version );
+    public EntityVersionCleanupTask getTask( final CollectionScope scope, final Id entityId, final UUID version );
 
 }

@@ -20,6 +20,7 @@ package org.apache.usergrid.persistence.collection.impl;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import com.google.inject.Inject;
@@ -81,7 +82,7 @@ public class EntityVersionCleanupTask implements Task<Void> {
                                       final MvccEntitySerializationStrategy entitySerializationStrategy,
                                       final UniqueValueSerializationStrategy uniqueValueSerializationStrategy,
                                       final Keyspace keyspace,
-                                      final CollectionScope scope,
+                                     @Assisted final CollectionScope scope,
                                       final List<EntityVersionDeleted> listeners,
                                       @Assisted final Id entityId,@Assisted final UUID version ) {
 
@@ -208,6 +209,7 @@ public class EntityVersionCleanupTask implements Task<Void> {
 
         if ( listenerSize == 1 ) {
             listeners.get( 0 ).versionDeleted( scope, entityId, versions );
+            //listeners.iterator().next().versionDeleted( scope,entityId,versions );
             return;
         }
 

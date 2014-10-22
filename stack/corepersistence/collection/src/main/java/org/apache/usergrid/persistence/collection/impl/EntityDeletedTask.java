@@ -87,7 +87,7 @@ public class EntityDeletedTask implements Task<Void> {
 
     @Override
     public Void call() throws Exception {
-        entityVersionCleanupFactory.getTask(entityId,version).call();
+        entityVersionCleanupFactory.getTask(collectionScope,entityId,version).call();
         fireEvents();
         final MutationBatch entityDelete = entitySerializationStrategy.delete(collectionScope, entityId, version);
         final MutationBatch logDelete = logEntrySerializationStrategy.delete(collectionScope, entityId, version);

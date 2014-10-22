@@ -171,7 +171,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
             @Override
             public void call(final Entity entity) {
                 //TODO fire a task here
-                taskExecutor.submit(entityVersionCleanupFactory.getTask(entityId,entity.getVersion()));
+                taskExecutor.submit(entityVersionCleanupFactory.getTask(collectionScope, entityId,entity.getVersion()));
                 //post-processing to come later. leave it empty for now.
             }
         }).doOnError(rollback);

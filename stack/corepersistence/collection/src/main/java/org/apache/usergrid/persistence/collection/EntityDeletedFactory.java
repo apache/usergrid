@@ -26,7 +26,7 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import java.util.UUID;
 
 /**
- * Creats EntityDeletedTask instances
+ * Creates EntityDeletedTask instances
  */
 public interface EntityDeletedFactory {
     public EntityDeletedTask getTask( final Id entityId, final UUID version );
