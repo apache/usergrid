@@ -43,6 +43,9 @@ def testAdminUserEmail = System.getenv().get("TEST_ADMIN_USER_EMAIL")
 def cassThreads = System.getenv().get("TOMCAT_THREADS")
 def hystrixThreads = Integer.parseInt(cassThreads) / 100
 
+//if we end in -1, we remove it
+def ec2Region = System.getenv().get("EC2_REGION").replace("-1", "")
+
 
 NodeRegistry registry = new NodeRegistry();
 
@@ -66,7 +69,7 @@ for (item in selectResult) {
 }
 
 // cassandra nodes are also our elasticsearch nodes
-selectResult = registry.searchNode('cassandra')
+selectResult = registry.searchNode('elasticsearch')
 def esnodes = ""
 sep = ""
 for (item in selectResult) {
@@ -80,8 +83,8 @@ def usergridConfig = """
 
 cassandra.url=${cassandras}
 cassandra.cluster=${clusterName}
-cassandra.keyspace.strategy=org.apache.cassandra.locator.SimpleStrategy
-cassandra.keyspace.replication=${replFactor}
+cassandra.keyspace.strategy=org.apache.cassandra.locator.NetworkTopologyStrategy
+cassandra.keyspace.replication=${ec2Region}:${replFactor}
 
 cassandra.timeout=5000
 cassandra.connections=${cassThreads}
@@ -96,17 +99,14 @@ elasticsearch.port=9300
 ######################################################
 # Custom mail transport 
 
-mail.transport.protocol=smtps
-mail.smtps.host=smtp.gmail.com
-mail.smtps.port=465
-mail.smtps.auth=true
-mail.smtps.quitwait=false
+mail.transport.protocol=smtp
+mail.smtp.host=localhost
+mail.smtp.port=25
+mail.smtp.auth=false
+mail.smtp.quitwait=false
 
 # TODO: make all usernames and passwords configurable via Cloud Formation parameters.
 
-# CAUTION: THERE IS A PASSWORD HERE!
-mail.smtps.username=usergridtest@gmail.com
-mail.smtps.password=pw123
 
 ######################################################
 # Admin and test user setup

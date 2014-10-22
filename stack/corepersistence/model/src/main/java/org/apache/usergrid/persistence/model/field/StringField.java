@@ -32,4 +32,10 @@ public class StringField extends AbstractField<String> {
 
     public StringField() {
     }
+
+
+    @Override
+    public FieldTypeName getTypeName() {
+                return FieldTypeName.STRING;
+            }
 }

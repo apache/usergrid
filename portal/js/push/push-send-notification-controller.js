@@ -16,10 +16,11 @@
  specific language governing permissions and limitations
  under the License.
  */
- 'use strict'
+'use strict'
 
-AppServices.Controllers.controller('PushSendNotificationCtrl', ['ug', '$scope', '$rootScope', '$location',
-  function (ug, $scope, $rootScope, $location) {
+AppServices.Controllers.controller('PushSendNotificationCtrl', ['ug', '$scope',
+  '$rootScope', '$location',
+  function(ug, $scope, $rootScope, $location) {
 
     $scope.send = {};
     $scope.send.selectedNotifier = {};
@@ -34,7 +35,7 @@ AppServices.Controllers.controller('PushSendNotificationCtrl', ['ug', '$scope', 
 
     $scope.$on('notifiers-received', function(event, collection) {
       $scope.notifiersCollection = collection._list;
-      if(!$scope.$$phase) {
+      if (!$scope.$$phase) {
         $scope.$apply();
       }
     });
@@ -47,53 +48,62 @@ AppServices.Controllers.controller('PushSendNotificationCtrl', ['ug', '$scope', 
 
     $scope.scheduleNotification = function() {
 
-      if($scope.send.$valid){
+      if ($scope.send.$valid) {
 
         var optionList = '';
         var type = $scope.send.controlGroup;
-        var payload = {payloads:{},deliver:null};
-        payload.payloads[$scope.send.selectedNotifier._data.name] = $scope.send.notifierMessage;
+        var payload = {
+          payloads: {},
+          deliver: null,
+          debug: true
+        };
+        payload.payloads[$scope.send.selectedNotifier._data.name] =
+          $scope.send.notifierMessage;
 
 
-        if(type !== 'all'){
+        if (type !== 'all') {
           //get whatever is selected in the radio button options
           optionList = $scope.send[type]
-          angular.forEach(optionList, function(value, index){
+          angular.forEach(optionList, function(value, index) {
             var path = type + '/' + value + '/notifications';
             ug.sendNotification(path, payload);
           });
-        }else{
+        } else {
           ug.sendNotification('devices;ql=/notifications', payload);
         }
 
-        $rootScope.$broadcast('alert', 'success', 'Notifications have been queued.');
+        $rootScope.$broadcast('alert', 'success',
+          'Notifications have been queued.');
 
       }
 
 
     }
 
-//    todo - this is copied over from old portal for calendar component
+    //    todo - this is copied over from old portal for calendar component
 
     $('#notification-schedule-time-date').datepicker();
-    $('#notification-schedule-time-date').datepicker('setDate', Date.last().sunday());
+    $('#notification-schedule-time-date').datepicker('setDate', Date.last()
+      .sunday());
     $('#notification-schedule-time-time').val("12:00 AM");
     $('#notification-schedule-time-time').timepicker({
       showPeriod: true,
       showLeadingZero: false
     });
 
-    function pad(number, length){
+    function pad(number, length) {
       var str = "" + number
       while (str.length < length) {
-        str = '0'+str
+        str = '0' + str
       }
       return str
     }
 
     var offset = new Date().getTimezoneOffset();
-    offset = ((offset<0? '+':'-') + pad(parseInt(Math.abs(offset/60)), 2) + pad(Math.abs(offset%60), 2));
+    offset = ((offset < 0 ? '+' : '-') + pad(parseInt(Math.abs(offset / 60)),
+      2) + pad(Math.abs(offset % 60), 2));
 
     $('#gmt_display').html('GMT ' + offset);
 
-  }]);
+  }
+]);

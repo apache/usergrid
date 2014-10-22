@@ -17,24 +17,29 @@
  */
 package org.apache.usergrid.persistence.index.impl;
 
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
+import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequestBuilder;
 import org.elasticsearch.client.AdminClient;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.index.query.FilterBuilder;
+import org.elasticsearch.index.query.MatchAllQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
+import org.elasticsearch.indices.IndexMissingException;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.sort.FieldSortBuilder;
@@ -54,19 +59,17 @@ import org.apache.usergrid.persistence.index.query.CandidateResults;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ANALYZED_STRING_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.BOOLEAN_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.DOC_ID_SEPARATOR_SPLITTER;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ENTITYID_FIELDNAME;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.GEO_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.NUMBER_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.STRING_PREFIX;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createCollectionScopeTypeName;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createIndexName;
 
 
 /**
@@ -74,7 +77,9 @@ import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createInd
  */
 public class EsEntityIndexImpl implements EntityIndex {
 
-    private static final Logger log = LoggerFactory.getLogger(EsEntityIndexImpl.class);
+    private static final Logger log = LoggerFactory.getLogger( EsEntityIndexImpl.class );
+
+    private static final AtomicBoolean mappingsCreated = new AtomicBoolean( false );
 
     private final String indexName;
 
@@ -82,90 +87,164 @@ public class EsEntityIndexImpl implements EntityIndex {
 
     private final Client client;
 
-    // Keep track of what types we have already initialized to avoid cost 
-    // of attempting to init them again. Used in the initType() method.
-    private Set<String> knownTypes = new TreeSet<String>();
-
     private final int cursorTimeout;
 
     private final IndexFig config;
 
+    //number of times to wait for the index to refresh properly.
+    private static final int MAX_WAITS = 10;
+    //number of milliseconds to try again before sleeping
+    private static final int WAIT_TIME = 250;
+
+    private static final String VERIFY_TYPE = "verification";
+
+    private static final ImmutableMap<String, Object> DEFAULT_PAYLOAD =
+            ImmutableMap.<String, Object>of( "field", "test" );
+
+    private static final MatchAllQueryBuilder MATCH_ALL_QUERY_BUILDER = QueryBuilders.matchAllQuery();
+
+
     @Inject
-    public EsEntityIndexImpl(@Assisted final ApplicationScope applicationScope, 
-            final IndexFig config, final EsProvider provider) {
+    public EsEntityIndexImpl( @Assisted final ApplicationScope appScope, final IndexFig config,
+                              final EsProvider provider ) {
 
-        ValidationUtils.validateApplicationScope(applicationScope);
+        ValidationUtils.validateApplicationScope( appScope );
+
+        this.applicationScope = appScope;
+        this.client = provider.getClient();
+        this.config = config;
+        this.cursorTimeout = config.getQueryCursorTimeout();
+        this.indexName = IndexingUtils.createIndexName( config.getIndexPrefix(), appScope );
+    }
+
+
+    @Override
+    public void initializeIndex() {
 
         try {
-            this.applicationScope = applicationScope;
-
-            this.client = provider.getClient();
-
-            this.indexName = createIndexName(config.getIndexPrefix(), applicationScope);
-            this.cursorTimeout = config.getQueryCursorTimeout();
-
-            this.config = config;
-        } catch (Exception e) {
-            log.error("Error setting up index", e);
-            throw e;
-        }
-
-        AdminClient admin = client.admin();
-        try {
-            CreateIndexResponse r = admin.indices().prepareCreate(indexName).execute().actionGet();
-            log.debug("Created new Index Name [{}] ACK=[{}]", indexName, r.isAcknowledged());
-
-            client.admin().indices().prepareRefresh(indexName).execute().actionGet();
-
-            try {
-                // TODO: figure out what refresh above is not enough to ensure index is ready
-                Thread.sleep(500);
-            } catch (InterruptedException ex) {
+            if ( !mappingsCreated.getAndSet( true ) ) {
+                createMappings();
             }
-        } catch (IndexAlreadyExistsException ignored) {
-            // expected
+
+            AdminClient admin = client.admin();
+            CreateIndexResponse cir = admin.indices().prepareCreate( indexName ).execute().actionGet();
+            log.info( "Created new Index Name [{}] ACK=[{}]", indexName, cir.isAcknowledged() );
+
+
+            //create the document, this ensures the index is ready
+            /**
+             * Immediately create a document and remove it to ensure the entire cluster is ready to receive documents
+             * .  Occasionally we see
+             * errors.  See this post.
+             * http://elasticsearch-users.115913.n3.nabble.com/IndexMissingException-on-create-index-followed-by-refresh-td1832793.html
+             *
+             */
+            testNewIndex();
+        }
+        catch ( IndexAlreadyExistsException expected ) {
+            // this is expected to happen if index already exists, it's a no-op and swallow
+        }
+        catch ( IOException e ) {
+            throw new RuntimeException( "Unable to initialize index", e );
         }
     }
+
+
+    /**
+     * Tests writing a document to a new index to ensure it's working correctly.  Comes from email
+     *
+     * http://elasticsearch-users.115913.n3.nabble
+     * .com/IndexMissingException-on-create-index-followed-by-refresh-td1832793.html
+     */
+
+    private void testNewIndex() {
+
+
+        log.info( "Refreshing Created new Index Name [{}]", indexName );
+
+        final RetryOperation retryOperation = new RetryOperation() {
+            @Override
+            public boolean doOp() {
+                final String tempId = UUIDGenerator.newTimeUUID().toString();
+
+
+                client.prepareIndex( indexName, VERIFY_TYPE, tempId ).setSource( DEFAULT_PAYLOAD ).get();
+
+                log.info( "Successfully created new document with docId {} in index {} and type {}", tempId, indexName,
+                        VERIFY_TYPE );
+
+                //delete all types, this way if we miss one it will get cleaned up
+
+                client.prepareDeleteByQuery( indexName ).setTypes( VERIFY_TYPE ).setQuery( MATCH_ALL_QUERY_BUILDER )
+                      .get();
+
+                log.info( "Successfully deleted all documents in index {} and type {}", indexName, VERIFY_TYPE );
+
+                return true;
+            }
+        };
+
+        doInRetry( retryOperation );
+    }
+
+
+    /**
+     * Setup ElasticSearch type mappings as a template that applies to all new indexes. Applies to all indexes that
+     * start with our prefix.
+     */
+    private void createMappings() throws IOException {
+
+        XContentBuilder xcb =
+                IndexingUtils.createDoubleStringIndexMapping( XContentFactory.jsonBuilder(), "_default_" );
+
+        PutIndexTemplateResponse pitr = client.admin().indices().preparePutTemplate( "usergrid_template" )
+                                              .setTemplate( config.getIndexPrefix() + "*" ).addMapping( "_default_",
+                        xcb ) // set mapping as the default for all types
+                .execute().actionGet();
+    }
+
 
     @Override
     public EntityIndexBatch createBatch() {
-        return new EsEntityIndexBatchImpl(applicationScope, client, config, knownTypes, 1000);
+        return new EsEntityIndexBatchImpl( applicationScope, client, config, 1000 );
     }
 
-    @Override
-    public CandidateResults search(final IndexScope indexScope, final Query query) {
 
-        final String indexType = createCollectionScopeTypeName(indexScope);
+    @Override
+    public CandidateResults search( final IndexScope indexScope, final Query query ) {
+
+        final String indexType = IndexingUtils.createCollectionScopeTypeName( indexScope );
 
         QueryBuilder qb = query.createQueryBuilder();
 
-        if (log.isDebugEnabled()) {
-            log.debug("Searching index {}\n   type {}\n   query {} limit {}", new Object[]{
-                this.indexName, indexType, qb.toString().replace("\n", " "), query.getLimit()
-            });
+        if ( log.isDebugEnabled() ) {
+            log.debug( "Searching index {}\n   type {}\n   query {} limit {}", new Object[] {
+                    this.indexName, indexType, qb.toString().replace( "\n", " " ), query.getLimit()
+            } );
         }
 
         SearchResponse searchResponse;
-        if (query.getCursor() == null) {
+        if ( query.getCursor() == null ) {
 
-            SearchRequestBuilder srb
-                    = client.prepareSearch(indexName).setTypes(indexType).setScroll(cursorTimeout + "m")
-                    .setQuery(qb);
+            SearchRequestBuilder srb =
+                    client.prepareSearch( indexName ).setTypes( indexType ).setScroll( cursorTimeout + "m" )
+                          .setQuery( qb );
 
             FilterBuilder fb = query.createFilterBuilder();
-            if (fb != null) {
-                log.debug("   Filter: {} ", fb.toString());
-                srb = srb.setPostFilter(fb);
+            if ( fb != null ) {
+                log.debug( "   Filter: {} ", fb.toString() );
+                srb = srb.setPostFilter( fb );
             }
 
-            srb = srb.setFrom(0).setSize(query.getLimit());
+            srb = srb.setFrom( 0 ).setSize( query.getLimit() );
 
-            for (Query.SortPredicate sp : query.getSortPredicates()) {
+            for ( Query.SortPredicate sp : query.getSortPredicates() ) {
 
                 final SortOrder order;
-                if (sp.getDirection().equals(Query.SortDirection.ASCENDING)) {
+                if ( sp.getDirection().equals( Query.SortDirection.ASCENDING ) ) {
                     order = SortOrder.ASC;
-                } else {
+                }
+                else {
                     order = SortOrder.DESC;
                 }
 
@@ -174,154 +253,153 @@ public class EsEntityIndexImpl implements EntityIndex {
                 // that you can order by: string, number and boolean and we ask ElasticSearch 
                 // to ignore any fields that are not present.
                 final String stringFieldName = STRING_PREFIX + sp.getPropertyName();
-                final FieldSortBuilder stringSort
-                        = SortBuilders.fieldSort(stringFieldName).order(order).ignoreUnmapped(true);
-                srb.addSort(stringSort);
-                log.debug("   Sort: {} order by {}", stringFieldName, order.toString());
+                final FieldSortBuilder stringSort =
+                        SortBuilders.fieldSort( stringFieldName ).order( order ).ignoreUnmapped( true );
+                srb.addSort( stringSort );
+                log.debug( "   Sort: {} order by {}", stringFieldName, order.toString() );
 
                 final String numberFieldName = NUMBER_PREFIX + sp.getPropertyName();
-                final FieldSortBuilder numberSort
-                        = SortBuilders.fieldSort(numberFieldName).order(order).ignoreUnmapped(true);
-                srb.addSort(numberSort);
-                log.debug("   Sort: {} order by {}", numberFieldName, order.toString());
+                final FieldSortBuilder numberSort =
+                        SortBuilders.fieldSort( numberFieldName ).order( order ).ignoreUnmapped( true );
+                srb.addSort( numberSort );
+                log.debug( "   Sort: {} order by {}", numberFieldName, order.toString() );
 
                 final String booleanFieldName = BOOLEAN_PREFIX + sp.getPropertyName();
-                final FieldSortBuilder booleanSort
-                        = SortBuilders.fieldSort(booleanFieldName).order(order).ignoreUnmapped(true);
-                srb.addSort(booleanSort);
-                log.debug("   Sort: {} order by {}", booleanFieldName, order.toString());
+                final FieldSortBuilder booleanSort =
+                        SortBuilders.fieldSort( booleanFieldName ).order( order ).ignoreUnmapped( true );
+                srb.addSort( booleanSort );
+                log.debug( "   Sort: {} order by {}", booleanFieldName, order.toString() );
             }
 
             searchResponse = srb.execute().actionGet();
-        } else {
+        }
+        else {
             String scrollId = query.getCursor();
-            if (scrollId.startsWith("\"")) {
-                scrollId = scrollId.substring(1);
+            if ( scrollId.startsWith( "\"" ) ) {
+                scrollId = scrollId.substring( 1 );
             }
-            if (scrollId.endsWith("\"")) {
-                scrollId = scrollId.substring(0, scrollId.length() - 1);
+            if ( scrollId.endsWith( "\"" ) ) {
+                scrollId = scrollId.substring( 0, scrollId.length() - 1 );
             }
-            log.debug("Executing query with cursor: {} ", scrollId);
+            log.debug( "Executing query with cursor: {} ", scrollId );
 
-            SearchScrollRequestBuilder ssrb = client.prepareSearchScroll(scrollId).setScroll(cursorTimeout + "m");
+            SearchScrollRequestBuilder ssrb = client.prepareSearchScroll( scrollId ).setScroll( cursorTimeout + "m" );
             searchResponse = ssrb.execute().actionGet();
         }
 
         SearchHits hits = searchResponse.getHits();
-        log.debug("   Hit count: {} Total hits: {}", hits.getHits().length, hits.getTotalHits());
+        log.debug( "   Hit count: {} Total hits: {}", hits.getHits().length, hits.getTotalHits() );
 
         List<CandidateResult> candidates = new ArrayList<CandidateResult>();
 
-        for (SearchHit hit : hits.getHits()) {
+        for ( SearchHit hit : hits.getHits() ) {
 
-            String[] idparts = hit.getId().split(DOC_ID_SEPARATOR_SPLITTER);
+            String[] idparts = hit.getId().split( DOC_ID_SEPARATOR_SPLITTER );
             String id = idparts[0];
             String type = idparts[1];
             String version = idparts[2];
 
-            Id entityId = new SimpleId(UUID.fromString(id), type);
+            Id entityId = new SimpleId( UUID.fromString( id ), type );
 
-            candidates.add(new CandidateResult(entityId, UUID.fromString(version)));
+            candidates.add( new CandidateResult( entityId, UUID.fromString( version ) ) );
         }
 
-        CandidateResults candidateResults = new CandidateResults(query, candidates);
+        CandidateResults candidateResults = new CandidateResults( query, candidates );
 
-        if (candidates.size() >= query.getLimit()) {
-            candidateResults.setCursor(searchResponse.getScrollId());
-            log.debug("   Cursor = " + searchResponse.getScrollId());
+        if ( candidates.size() >= query.getLimit() ) {
+            candidateResults.setCursor( searchResponse.getScrollId() );
+            log.debug( "   Cursor = " + searchResponse.getScrollId() );
         }
 
         return candidateResults;
     }
 
-    /**
-     * Build mappings for data to be indexed. Setup String fields as not_analyzed and analyzed,
-     * where the analyzed field is named {name}_ug_analyzed
-     *
-     * @param builder Add JSON object to this builder.
-     * @param type ElasticSearch type of entity.
-     *
-     * @return Content builder with JSON for mapping.
-     *
-     * @throws java.io.IOException On JSON generation error.
-     */
-    public static XContentBuilder createDoubleStringIndexMapping( XContentBuilder builder, String type )
-            throws IOException {
-
-        builder = builder
-
-            .startObject()
-
-                .startObject( type )
-
-                    .startArray( "dynamic_templates" )
-
-                        // any string with field name that starts with sa_ gets analyzed
-                        .startObject()
-                            .startObject( "template_1" )
-                                .field( "match", ANALYZED_STRING_PREFIX + "*" )
-                                .field( "match_mapping_type", "string" )
-                                .startObject( "mapping" ).field( "type", "string" )
-                                    .field( "index", "analyzed" )
-                                .endObject()
-                            .endObject()
-                        .endObject()
-
-                            // all other strings are not analyzed
-                        .startObject()
-                            .startObject( "template_2" )
-                                .field( "match", "*" )
-                                .field( "match_mapping_type", "string" )
-                                .startObject( "mapping" )
-                                    .field( "type", "string" )
-                                    .field( "index", "not_analyzed" )
-                                .endObject()
-                            .endObject()
-                        .endObject()
-
-                        // fields names starting with go_ get geo-indexed
-                        .startObject()
-                            .startObject( "template_3" )
-                                .field( "match", GEO_PREFIX + "location" )
-                                .startObject( "mapping" )
-                                    .field( "type", "geo_point" )
-                                .endObject()
-                            .endObject()
-                        .endObject()
-
-                    .endArray()
-
-                .endObject()
-
-            .endObject();
-
-        return builder;
-    }
 
     public void refresh() {
-        client.admin().indices().prepareRefresh(indexName).execute().actionGet();
-        log.debug("Refreshed index: " + indexName);
+
+
+        log.info( "Refreshing Created new Index Name [{}]", indexName );
+
+        final RetryOperation retryOperation = new RetryOperation() {
+            @Override
+            public boolean doOp() {
+                try {
+                    client.admin().indices().prepareRefresh( indexName ).execute().actionGet();
+                    log.debug( "Refreshed index: " + indexName );
+                    return true;
+                }
+                catch ( IndexMissingException e ) {
+                    log.error( "Unable to refresh index after create. Waiting before sleeping.", e );
+                    throw e;
+                }
+            }
+        };
+
+        doInRetry( retryOperation );
+
+        log.debug( "Refreshed index: " + indexName );
     }
 
+
     @Override
-    public CandidateResults getEntityVersions(final IndexScope scope, final Id id) {
+    public CandidateResults getEntityVersions( final IndexScope scope, final Id id ) {
         Query query = new Query();
-        query.addEqualityFilter(ENTITYID_FIELDNAME, id.getUuid().toString());
-        CandidateResults results = search(scope, query);
+        query.addEqualityFilter( ENTITYID_FIELDNAME, id.getUuid().toString() );
+        CandidateResults results = search( scope, query );
         return results;
     }
+
 
     /**
      * For testing only.
      */
     public void deleteIndex() {
         AdminClient adminClient = client.admin();
-        DeleteIndexResponse response = adminClient.indices().prepareDelete(indexName).get();
-        if (response.isAcknowledged()) {
-            log.info("Deleted index: " + indexName);
-        } else {
-            log.info("Failed to delete index " + indexName);
+        DeleteIndexResponse response = adminClient.indices().prepareDelete( indexName ).get();
+        if ( response.isAcknowledged() ) {
+            log.info( "Deleted index: " + indexName );
+        }
+        else {
+            log.info( "Failed to delete index " + indexName );
         }
     }
 
+
+    /**
+     * Do the retry operation
+     * @param operation
+     */
+    private void doInRetry( final RetryOperation operation ) {
+        for ( int i = 0; i < MAX_WAITS; i++ ) {
+
+            try {
+                if(operation.doOp()){
+                    return;
+                }
+            }
+            catch ( Exception e ) {
+                log.error( "Unable to execute operation, retrying", e );
+            }
+
+
+            try {
+                Thread.sleep( WAIT_TIME );
+            }
+            catch ( InterruptedException e ) {
+                //swallow it
+            }
+        }
+    }
+
+
+    /**
+     * Interface for operations
+     */
+    private static interface RetryOperation {
+
+        /**
+         * Return true if done, false if there should be a retry
+         */
+        public boolean doOp();
+    }
 }

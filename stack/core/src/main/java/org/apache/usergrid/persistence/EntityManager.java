@@ -41,7 +41,7 @@ import org.apache.usergrid.persistence.index.query.Query.Level;
  */
 public interface EntityManager {
 
-    public void setApplicationId( UUID applicationId );
+//    public void setApplicationId( UUID applicationId );
 
     public GeoIndexManager getGeoIndexManager();
 
@@ -684,8 +684,15 @@ public interface EntityManager {
      */
     void refreshIndex();
 
+    /**
+     * Create the index, should ONLY ever be called the first time an application is created
+     */
+    void createIndex();
+
     public void init( EntityManagerFactory emf, UUID applicationId);
 
     /** For testing purposes */
     public void flushManagerCaches();
+
+    public void reindex( final EntityManagerFactory.ProgressObserver po ) throws Exception;
 }

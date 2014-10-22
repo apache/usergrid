@@ -30,6 +30,12 @@ import org.apache.usergrid.persistence.model.entity.Id;
 public interface EntityIndex {
 
     /**
+     * This should ONLY ever be called once on application create.  Otherwise we're introducing slowness into our system
+     *
+     */
+    public void initializeIndex();
+
+    /**
      * Create the index batch
      * @return
      */

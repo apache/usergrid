@@ -18,6 +18,8 @@
 #  directory of this distribution.
 #
 
+
+
 echo "${HOSTNAME}" > /etc/hostname
 echo "127.0.0.1 ${HOSTNAME}" >> /etc/hosts
 hostname `cat /etc/hostname`
@@ -42,6 +44,14 @@ ln -s /home/ubuntu/.groovy /root/.groovy
 # Build environment for Groovy scripts
 . /etc/profile.d/aws-credentials.sh
 . /etc/profile.d/usergrid-env.sh
+
+
+# tag last so we can see in the console so that we know what's running
+cd /usr/share/usergrid/scripts
+groovy tag_instance.groovy -BUILD-IN-PROGRESS
+
+
+
 chmod +x /usr/share/usergrid/update.sh
 
 cd /usr/share/usergrid/init_instance
@@ -104,6 +114,11 @@ export TOMCAT_CONNECTIONS=10000
 sed -i.bak "s/Xmx128m/Xmx${TOMCAT_RAM} -Xms${TOMCAT_RAM} -Dlog4j\.configuration=file:\/usr\/share\/usergrid\/lib\/log4j\.properties/g" /etc/default/tomcat7
 sed -i.bak "s/<Connector/<Connector maxThreads=\"${TOMCAT_THREADS}\" acceptCount=\"${TOMCAT_THREADS}\" maxConnections=\"${TOMCAT_CONNECTIONS}\"/g" /var/lib/tomcat7/conf/server.xml
 
+
+#Append our java opts for secret key
+echo "JAVA_OPTS=\"\${JAVA_OPTS} -DAWS_SECRET_KEY=${AWS_SECRET_KEY} -DAWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY}\"" >> /etc/default/tomcat7
+
+
 # set file limits
 sed -i.bak "s/# \/etc\/init\.d\/tomcat7 -- startup script for the Tomcat 6 servlet engine/ulimit -n ${NOFILE}/" /etc/init.d/tomcat7
 sed -i.bak "s/@student/a *\t\thard\tnofile\t\t${NOFILE}\n*\t\tsoft\tnofile\t\t${NOFILE}" /etc/security/limits.conf
@@ -123,6 +138,7 @@ EOF
 # wait for enough Cassandra nodes then delpoy and configure Usergrid 
 cd /usr/share/usergrid/scripts
 groovy wait_for_instances.groovy cassandra ${CASSANDRA_NUM_SERVERS}
+groovy wait_for_instances.groovy elasticsearch ${ES_NUM_SERVERS}
 groovy wait_for_instances.groovy graphite ${GRAPHITE_NUM_SERVERS}
 
 # link WAR and Portal into Tomcat's webapps dir
@@ -136,6 +152,14 @@ chown -R tomcat7 /var/lib/tomcat7/webapps
 mkdir -p /usr/share/tomcat7/lib 
 groovy configure_usergrid.groovy > /usr/share/tomcat7/lib/usergrid-deployment.properties 
 groovy configure_portal_new.groovy >> /var/lib/tomcat7/webapps/portal/config.js
+
+
+
+#Install postfix so that we can send mail
+echo "postfix postfix/mailname string your.hostname.com" | debconf-set-selections
+echo "postfix postfix/main_mailer_type string 'Internet Site'" | debconf-set-selections
+apt-get install -y postfix
+
 
 # Go
 sh /etc/init.d/tomcat7 start

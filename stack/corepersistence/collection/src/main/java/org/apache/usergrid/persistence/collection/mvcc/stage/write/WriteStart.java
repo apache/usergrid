@@ -9,8 +9,9 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.exception.WriteStartException;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
+import org.apache.usergrid.persistence.collection.MvccEntity;
+import org.apache.usergrid.persistence.collection.MvccLogEntry;
+import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
@@ -59,16 +60,16 @@ public class WriteStart implements Func1<CollectionIoEvent<Entity>, CollectionIo
             final CollectionScope collectionScope = ioEvent.getEntityCollection();
 
             final Id entityId = entity.getId();
-            final UUID version = UUIDGenerator.newTimeUUID();
+
+            final UUID newVersion = UUIDGenerator.newTimeUUID();
 
             //TODO update this when merged with George's changes
-            final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version,
-                    org.apache.usergrid.persistence.collection.mvcc.entity.Stage.ACTIVE, MvccLogEntry.State.COMPLETE);
+            final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, newVersion,
+                    Stage.ACTIVE, MvccLogEntry.State.COMPLETE);
 
             MutationBatch write = logStrategy.write( collectionScope, startEntry );
 
-            final MvccEntityImpl nextStage =
-                             new MvccEntityImpl( entityId, version, status, entity );
+            final MvccEntityImpl nextStage = new MvccEntityImpl( entityId, newVersion, status, entity );
 
 
             try {
@@ -86,7 +87,7 @@ public class WriteStart implements Func1<CollectionIoEvent<Entity>, CollectionIo
             }
 
 
-            //create the mvcc entity for the next stage
+          //create the mvcc entity for the next stage
             //todo, we need to create a complete or partial update here (or sooner)
 
             return new CollectionIoEvent<MvccEntity>( collectionScope, nextStage );

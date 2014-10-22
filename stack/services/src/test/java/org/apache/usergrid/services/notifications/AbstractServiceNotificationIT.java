@@ -41,11 +41,7 @@ import static org.junit.Assert.fail;
 
 public class AbstractServiceNotificationIT extends AbstractServiceIT {
     private NotificationsService ns;
-    @Autowired
-    private ServiceManagerFactory smf;
 
-    @Autowired
-    private EntityManagerFactory emf;
     @Rule
     public TestName name = new TestName();
 
@@ -62,6 +58,8 @@ public class AbstractServiceNotificationIT extends AbstractServiceIT {
         ns = (NotificationsService) app.getSm().getService("notifications");
         return ns;
     }
+
+
 
     protected Notification scheduleNotificationAndWait(Notification notification)
             throws Exception {
@@ -101,7 +99,7 @@ public class AbstractServiceNotificationIT extends AbstractServiceIT {
     protected void checkReceipts(Notification notification, int expected)
             throws Exception {
         List<EntityRef> receipts = getNotificationReceipts(notification);
-        long timeout = System.currentTimeMillis() + 60000;
+        long timeout = System.currentTimeMillis() + 10000;
         while (System.currentTimeMillis() < timeout) {
             Thread.sleep(200);
             receipts =getNotificationReceipts(notification);
@@ -122,7 +120,7 @@ public class AbstractServiceNotificationIT extends AbstractServiceIT {
 
     protected void checkStatistics(Notification notification, long sent,  long errors) throws Exception{
         Map<String, Long> statistics = null;
-        long timeout = System.currentTimeMillis() + 60000;
+        long timeout = System.currentTimeMillis() + 10000;
         while (System.currentTimeMillis() < timeout) {
             Thread.sleep(200);
             statistics = app.getEm().get(notification.getUuid(), Notification.class).getStatistics();

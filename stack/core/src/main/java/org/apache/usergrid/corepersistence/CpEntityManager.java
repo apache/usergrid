@@ -16,6 +16,7 @@
 package org.apache.usergrid.corepersistence;
 
 
+import com.google.common.base.Preconditions;
 import com.netflix.hystrix.exception.HystrixRuntimeException;
 import com.yammer.metrics.annotation.Metered;
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
@@ -33,7 +34,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -54,6 +54,9 @@ import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.SliceCounterQuery;
 import static org.apache.commons.lang.StringUtils.capitalize;
 import static org.apache.commons.lang.StringUtils.isBlank;
+
+import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.AggregateCounter;
 import org.apache.usergrid.persistence.AggregateCounterSet;
 import org.apache.usergrid.persistence.CollectionRef;
@@ -107,6 +110,7 @@ import static org.apache.usergrid.persistence.cassandra.Serializers.ue;
 import org.apache.usergrid.persistence.cassandra.util.TraceParticipant;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.exception.WriteOptimisticVerifyException;
 import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -119,11 +123,6 @@ import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsE
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
 import org.apache.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
-import org.apache.usergrid.persistence.graph.Edge;
-import org.apache.usergrid.persistence.graph.GraphManager;
-import org.apache.usergrid.persistence.graph.SearchByEdgeType;
-import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
-import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.apache.usergrid.persistence.index.IndexScope;
@@ -139,6 +138,7 @@ import org.apache.usergrid.persistence.map.impl.MapScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.Field;
+import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.schema.CollectionInfo;
 import org.apache.usergrid.utils.ClassUtils;
@@ -155,7 +155,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 import rx.Observable;
-import rx.functions.Action1;
 
 
 
@@ -193,6 +192,9 @@ public class CpEntityManager implements EntityManager {
     @Override
     public void init( EntityManagerFactory emf, UUID applicationId ) {
 
+        Preconditions.checkNotNull(emf, "emf must not be null");
+        Preconditions.checkNotNull( applicationId, "applicationId must not be null"  );
+
         this.emf = ( CpEntityManagerFactory ) emf;
         this.managerCache = this.emf.getManagerCache();
         this.applicationId = applicationId;
@@ -204,9 +206,6 @@ public class CpEntityManager implements EntityManager {
 
         // set to false for now
         this.skipAggregateCounters = false;
-
-
-        applicationScope = this.emf.getApplicationScope( applicationId );
     }
 
 
@@ -215,6 +214,9 @@ public class CpEntityManager implements EntityManager {
     }
 
 
+    public ApplicationScope getApplicationScope() {
+        return applicationScope;
+    }
 
 
     @Override
@@ -308,7 +310,7 @@ public class CpEntityManager implements EntityManager {
         String collectionName = CpNamingUtils.getCollectionScopeNameFromEntityType( entityRef.getType() );
 
         CollectionScope collectionScope = new CollectionScopeImpl( 
-                applicationScope.getApplication(), applicationScope.getApplication(), collectionName );
+                getApplicationScope().getApplication(), getApplicationScope().getApplication(), collectionName );
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
 
@@ -395,7 +397,7 @@ public class CpEntityManager implements EntityManager {
         String collectionName = CpNamingUtils.getCollectionScopeNameFromEntityType( type );
 
         CollectionScope collectionScope = new CollectionScopeImpl( 
-                applicationScope.getApplication(), applicationScope.getApplication(), collectionName );
+                getApplicationScope().getApplication(), getApplicationScope().getApplication(), collectionName );
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
 
@@ -461,9 +463,9 @@ public class CpEntityManager implements EntityManager {
 
         // first, update entity index in its own collection scope
         CollectionScope collectionScope = new CollectionScopeImpl( 
-            applicationScope.getApplication(), 
-            applicationScope.getApplication(),
-                CpNamingUtils.getCollectionScopeNameFromEntityType( entity.getType() ) );
+            getApplicationScope().getApplication(), 
+            getApplicationScope().getApplication(),
+            CpNamingUtils.getCollectionScopeNameFromEntityType( entity.getType() ) );
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
 
         Id entityId = new SimpleId( entity.getUuid(), entity.getType() );
@@ -494,9 +496,6 @@ public class CpEntityManager implements EntityManager {
                 cpEntity, entity.getProperties(), entity.getType(), true );
 
         try {
-            logger.debug("About to Write {}:{} version {}", new Object[] { 
-                cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion() });
-
             cpEntity = ecm.update( cpEntity ).toBlockingObservable().last();
             cpEntity = ecm.load( entityId ).toBlockingObservable().last();
 
@@ -516,21 +515,24 @@ public class CpEntityManager implements EntityManager {
 
         // update in all containing collections and connection indexes
         CpRelationManager rm = (CpRelationManager)getRelationManager( entity );
-        rm.updateContainingCollectionAndCollectionIndexes( entity, cpEntity );
+        rm.updateContainingCollectionAndCollectionIndexes( cpEntity );
     }
 
 
     @Override
     public void delete( EntityRef entityRef ) throws Exception {
-        deleteAsync( entityRef ).toBlockingObservable().lastOrDefault(null);
+        deleteAsync( entityRef ).toBlocking().lastOrDefault(null);
+        //delete from our UUID index
+        MapManager mm = getMapManagerForTypes();
+        mm.delete(entityRef.getUuid().toString() );
     }
 
 
     private Observable deleteAsync( EntityRef entityRef ) throws Exception {
 
         CollectionScope collectionScope = new CollectionScopeImpl( 
-            applicationScope.getApplication(), 
-            applicationScope.getApplication(),
+            getApplicationScope().getApplication(), 
+            getApplicationScope().getApplication(),
                 CpNamingUtils.getCollectionScopeNameFromEntityType( entityRef.getType() ) );
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
@@ -555,7 +557,7 @@ public class CpEntityManager implements EntityManager {
             logger.debug( "Deleting indexes of all {} collections owning the entity", 
                     owners.keySet().size() );
 
-            final  EntityIndex ei = managerCache.getEntityIndex( applicationScope );
+            final  EntityIndex ei = managerCache.getEntityIndex(getApplicationScope());
 
             final EntityIndexBatch batch = ei.createBatch();
 
@@ -582,13 +584,13 @@ public class CpEntityManager implements EntityManager {
 
             // deindex from default index scope
             IndexScope defaultIndexScope = new IndexScopeImpl(
-                    applicationScope.getApplication(),
+                    getApplicationScope().getApplication(),
                     CpNamingUtils.getCollectionScopeNameFromEntityType( entityRef.getType() ) );
 
             batch.deindex(defaultIndexScope,  entity );
 
             IndexScope allTypesIndexScope = new IndexScopeImpl(
-                applicationScope.getApplication(), 
+                getApplicationScope().getApplication(), 
                     CpNamingUtils.ALL_TYPES);
 
             batch.deindex( allTypesIndexScope,  entity );
@@ -642,11 +644,11 @@ public class CpEntityManager implements EntityManager {
         return getRelationManager( entityRef ).searchCollection( collectionName, query );
     }
 
-
-    @Override
-    public void setApplicationId( UUID applicationId ) {
-        this.applicationId = applicationId;
-    }
+//
+//    @Override
+//    public void setApplicationId( UUID applicationId ) {
+//        this.applicationId = applicationId;
+//    }
 
 
     @Override
@@ -806,12 +808,12 @@ public class CpEntityManager implements EntityManager {
 
         String propertyName = Schema.getDefaultSchema().aliasProperty( collName );
 
-        Map<String, EntityRef> results = new HashMap<String, EntityRef>();
+        Map<String, EntityRef> results = new HashMap<>();
 
         for ( String alias : aliases ) {
 
             Iterable<EntityRef> refs = 
-                    getEntityRefsForUniqueProperty( ownerRef, collName, propertyName, alias );
+                    getEntityRefsForUniqueProperty( collName, propertyName, alias );
 
             for ( EntityRef ref : refs ) {
                 results.put( alias, ref );
@@ -822,13 +824,18 @@ public class CpEntityManager implements EntityManager {
     }
 
 
-    private Iterable<EntityRef> getEntityRefsForUniqueProperty( 
-            EntityRef ownerRef, String collName, String propName, String alias ) throws Exception {
+    private Iterable<EntityRef> getEntityRefsForUniqueProperty( String collName, String propName,
+                                                                String alias ) throws Exception {
 
-        Results results = getRelationManager( ownerRef ).searchCollection( 
-                collName, Query.fromQL( "select * where " + propName + " = '" + alias + "'" ) );
 
-        return results.getRefs();
+        final Id id = getIdForUniqueEntityField( collName, propName, alias );
+
+        if ( id == null ) {
+            return Collections.emptyList();
+        }
+
+
+        return Collections.<EntityRef>singleton( new SimpleEntityRef( id.getType(), id.getUuid() ) );
     }
 
 
@@ -970,16 +977,16 @@ public class CpEntityManager implements EntityManager {
         String collectionName = CpNamingUtils.getCollectionScopeNameFromEntityType( entityRef.getType() );
 
         CollectionScope collectionScope = new CollectionScopeImpl( 
-                applicationScope.getApplication(), 
-                applicationScope.getApplication(), 
+                getApplicationScope().getApplication(), 
+                getApplicationScope().getApplication(), 
                 collectionName );
 
         IndexScope defaultIndexScope = new IndexScopeImpl(
-                applicationScope.getApplication(), 
+                getApplicationScope().getApplication(), 
                 CpNamingUtils.getCollectionScopeNameFromEntityType( entityRef.getType() ) );
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
-        EntityIndex ei = managerCache.getEntityIndex( applicationScope );
+        EntityIndex ei = managerCache.getEntityIndex(getApplicationScope());
 
         Id entityId = new SimpleId( entityRef.getUuid(), entityRef.getType() );
 
@@ -989,7 +996,7 @@ public class CpEntityManager implements EntityManager {
 //        }
 
         org.apache.usergrid.persistence.model.entity.Entity cpEntity =
-                ecm.load( entityId ).toBlockingObservable().last();
+                ecm.load( entityId ).toBlocking().last();
 
         cpEntity.removeField( propertyName );
 
@@ -1006,7 +1013,7 @@ public class CpEntityManager implements EntityManager {
 
         // update in all containing collections and connection indexes
         CpRelationManager rm = (CpRelationManager)getRelationManager( entityRef );
-        rm.updateContainingCollectionAndCollectionIndexes( get( entityRef ), cpEntity );
+        rm.updateContainingCollectionAndCollectionIndexes( cpEntity );
     }
 
 
@@ -1409,7 +1416,7 @@ public class CpEntityManager implements EntityManager {
 
 
     @Override
-    public ConnectionRef createConnection( EntityRef connectingEntity, String connectionType, 
+    public ConnectionRef createConnection( EntityRef connectingEntity, String connectionType,
             EntityRef connectedEntityRef ) throws Exception {
 
         return getRelationManager( connectingEntity )
@@ -2090,25 +2097,33 @@ public class CpEntityManager implements EntityManager {
         }
         if ( identifier.isEmail() ) {
 
-            Query query = new Query();
-            query.setEntityType( "user" );
-            query.addEqualityFilter( "email", identifier.getEmail() );
-            query.setLimit( 1 );
-            query.setResultsLevel( REFS );
 
-            Results r = getRelationManager( 
-                ref( Application.ENTITY_TYPE, applicationId ) ).searchCollection( "users", query );
+            final Iterable<EntityRef>
+                    emailProperty = getEntityRefsForUniqueProperty( Schema.defaultCollectionName( "user" ), "email", identifier.getEmail() );
 
-            if ( r != null && r.getRef() != null ) {
-                logger.debug("Got entity ref!");
-                return r.getRef();
+            for(EntityRef firstRef: emailProperty){
+                return firstRef;
             }
-            else {
+
+//            Query query = new Query();
+//            query.setEntityType( "user" );
+//            query.addEqualityFilter( "email", identifier.getEmail() );
+//            query.setLimit( 1 );
+//            query.setResultsLevel( REFS );
+//
+//            Results r = getRelationManager(
+//                ref( Application.ENTITY_TYPE, applicationId ) ).searchCollection( "users", query );
+//
+//            if ( r != null && r.getRef() != null ) {
+//                logger.debug("Got entity ref!");
+//                return r.getRef();
+//            }
+//            else {
                 // look-aside as it might be an email in the name field
                 logger.debug("return alias");
                 return this.getAlias( new SimpleEntityRef( 
                         Application.ENTITY_TYPE, applicationId ), "user", identifier.getEmail() );
-            }
+//            }
         }
         return null;
     }
@@ -2182,41 +2197,76 @@ public class CpEntityManager implements EntityManager {
             String entityType, String propertyName, Object propertyValue )
             throws Exception {
 
-        Results results= this.searchCollection(
-                getApplication(), 
-                Schema.defaultCollectionName( entityType), 
-                Query.searchForProperty(propertyName, propertyValue));
 
-        return results.isEmpty();
+
+        return getIdForUniqueEntityField( entityType, propertyName, propertyValue ) == null;
+    }
+
+
+    /**
+     * Load the unique property for the field
+     */
+    private Id getIdForUniqueEntityField( final String collectionName, final String propertyName,
+                                          final Object propertyValue ) {
+
+        CollectionScope collectionScope = new CollectionScopeImpl( 
+            applicationScope.getApplication(), 
+            applicationScope.getApplication(),
+            CpNamingUtils.getCollectionScopeNameFromEntityType( collectionName ) );
+
+
+        final EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
+
+        //convert to a string, that's what we store
+        final Id results = ecm.getIdField( 
+            new StringField( propertyName, propertyValue.toString() ) ).toBlocking() .lastOrDefault( null );
+
+        return results;
     }
 
 
     @Override
     public Entity get( UUID uuid ) throws Exception {
 
-        Id mapOwner = new SimpleId( applicationId, TYPE_APPLICATION );
-        MapScope ms = new MapScopeImpl( mapOwner, TYPES_BY_UUID_MAP );
-        MapManager mm = managerCache.getMapManager( ms );
+        MapManager mm = getMapManagerForTypes();
         String entityType = mm.getString(uuid.toString() );
 
         final Entity entity;
 
+        //this is the fall back, why isn't this writt
         if ( entityType == null ) {
 
+            //TODO, not sure we want this here any longer.  With 404's we'll hit elastic search every time
             Query q = Query.fromQL(
                 "select * where " + PROPERTY_UUID + " = '" + uuid.toString() + "'");
             q.setResultsLevel( Level.ALL_PROPERTIES );
             Results r = getRelationManager( getApplication() ).searchConnectedEntities( q );
             entity = r.getEntity();
 
-            mm.putString(uuid.toString(), entity.getType() );
+
+            //no gaurentee it even exists, ignore this
+            if(entity != null) {
+                mm.putString( uuid.toString(), entity.getType() );
+            }
         
         } else { 
             entity = get(new SimpleEntityRef( entityType, uuid ));
         }
 
         return entity;
-    } 
+    }
+
+
+    /**
+     * Get the map manager for uuid mapping
+     */
+    private MapManager getMapManagerForTypes() {
+        Id mapOwner = new SimpleId( applicationId, TYPE_APPLICATION );
+        MapScope ms = new MapScopeImpl( mapOwner, TYPES_BY_UUID_MAP );
+        MapManager mm = managerCache.getMapManager( ms );
+
+        return mm;
+    }
 
 
     @Override
@@ -2508,7 +2558,7 @@ public class CpEntityManager implements EntityManager {
                 entityToCpEntity( entity, importId );
 
         // prepare to write and index Core Persistence Entity into default scope
-        CollectionScope collectionScope = new CollectionScopeImpl( 
+        CollectionScope collectionScope = new CollectionScopeImpl(
                 applicationScope.getApplication(), 
                 applicationScope.getApplication(),
                 CpNamingUtils.getCollectionScopeNameFromEntityType( eType ) );
@@ -2575,6 +2625,10 @@ public class CpEntityManager implements EntityManager {
             // Invoke counters
             incrementEntityCollection( collectionName, timestamp );
         }
+
+        //write to our types map
+        MapManager mm = getMapManagerForTypes();
+        mm.putString( itemId.toString(), entity.getType() );
 
 
         return entity;
@@ -2775,8 +2829,15 @@ public class CpEntityManager implements EntityManager {
         emf.refreshIndex();
 
         // refresh this Entity Manager's application's index
-        EntityIndex ei = managerCache.getEntityIndex( applicationScope );
+        EntityIndex ei = managerCache.getEntityIndex(getApplicationScope());
         ei.refresh();
+    }
+
+
+    @Override
+    public void createIndex() {
+        EntityIndex ei = managerCache.getEntityIndex( applicationScope );
+        ei.initializeIndex();
     }
 
 
@@ -2798,6 +2859,7 @@ public class CpEntityManager implements EntityManager {
         return cpEntity;
     }
 
+
     @Override
     public void flushManagerCaches() {
         managerCache.flush();
@@ -2807,253 +2869,35 @@ public class CpEntityManager implements EntityManager {
     /** 
      * Completely reindex the application associated with this EntityManager.
      */
-    public void reindex( EntityManagerFactory.ProgressObserver po ) throws Exception {
+    public void reindex( final EntityManagerFactory.ProgressObserver po ) throws Exception {
 
-        Stack stack = new Stack();
-        stack.push( getApplication() );
+        CpWalker walker = new CpWalker(po.getWriteDelayTime());
 
-        indexEntityConnectionsAndCollections( getApplication(), po, stack );
-    }
-
-
-    /**
-     * Recursively index (or reindex) all of the collections and connections of a 
-     * specified entity, and all of the collected and connected entities as well.
-     */
-    private void indexEntityConnectionsAndCollections( final EntityRef entity, 
-            final EntityManagerFactory.ProgressObserver po, final Stack stack ) {
-
-        final GraphManager gm = managerCache.getGraphManager(applicationScope);
-
-        final Id fromEntityId = new SimpleId( entity.getUuid(), entity.getType() );
-
-        logger.debug("Loading edges types from {}:{}\n   scope {}:{}", 
-                new Object[] { entity.getType(), entity.getUuid(), 
-                applicationScope.getApplication().getType(), 
-                applicationScope.getApplication().getUuid() } );
-
-        Observable<String> edgeTypes = gm.getEdgeTypesFromSource( 
-                new SimpleSearchEdgeType( fromEntityId, null , null ));
-
-        edgeTypes.forEach( new Action1<String>() {
+        walker.walkCollections( this, application, new CpVisitor() {
 
             @Override
-            public void call( final String edgeType ) {
+            public void visitCollectionEntry(
+                    EntityManager em, String collName, Entity entity) {
 
-                logger.debug("Loading edges of edgeType {} from {}:{}\n   scope {}:{}", 
-                        new Object[] { edgeType, entity.getType(), entity.getUuid(),
-                        applicationScope.getApplication().getType(), 
-                        applicationScope.getApplication().getUuid() } );
-
-                Observable<Edge> edges = gm.loadEdgesFromSource( new SimpleSearchByEdgeType( 
-                        fromEntityId, edgeType, Long.MAX_VALUE, 
-                        SearchByEdgeType.Order.DESCENDING, null ));
-
-                edges.forEach( new Action1<Edge>() {
-
-                    @Override
-                    public void call( Edge edge ) {
-
-                        if ( CpNamingUtils.isCollectionEdgeType( edge.getType() )) {
-
-                            String collName = CpNamingUtils.getCollectionName( edgeType );
-                            String memberType = edge.getTargetNode().getType();
-
-                            CollectionScope collScope = new CollectionScopeImpl(
-                                applicationScope.getApplication(),
-                                applicationScope.getApplication(),
-                                CpNamingUtils.getCollectionScopeNameFromEntityType( entity.getType()));
-                            EntityCollectionManager collMgr = 
-                                managerCache.getEntityCollectionManager(collScope);
-
-                            org.apache.usergrid.persistence.model.entity.Entity collEntity = 
-                                collMgr.load( edge.getSourceNode() ).toBlockingObservable().last();
-
-                            if (collEntity == null) {
-                                logger.warn("(Empty collection?) Failed to load collection entity "
-                                        + "{}:{} from scope\n   app {}\n   owner {}\n   name {}",
-                                        new Object[]{
-                                            edge.getSourceNode().getType(), 
-                                            edge.getSourceNode().getUuid(),
-                                            collScope.getApplication(),
-                                            collScope.getOwner(),
-                                            collScope.getName()
-                                        });
-                                return;
-                            }
-
-                            CollectionScope memberScope = new CollectionScopeImpl(
-                                applicationScope.getApplication(),
-                                applicationScope.getApplication(),
-                                    CpNamingUtils.getCollectionScopeNameFromEntityType( memberType ));
-                            EntityCollectionManager memberMgr = 
-                                managerCache.getEntityCollectionManager(memberScope);
-
-                            org.apache.usergrid.persistence.model.entity.Entity memberEntity = 
-                                memberMgr.load( edge.getTargetNode()).toBlockingObservable().last();
-
-                            if (memberEntity == null) {
-                                logger.warn("(Empty collection?) Failed to load member entity "
-                                        + "{}:{} from scope\n   app {}\n   owner {}\n   name {}",
-                                        new Object[]{
-                                            edge.getTargetNode().getType(), 
-                                            edge.getTargetNode().getUuid(),
-                                            memberScope.getApplication(),
-                                            memberScope.getOwner(),
-                                            memberScope.getName()
-                                        });
-                                return;
-                            }
-
-                            indexEntityIntoCollections( collEntity, memberEntity, collName, true );
-
-                            EntityRef ref = new SimpleEntityRef( 
-                                    memberEntity.getId().getType(), memberEntity.getId().getUuid());
-                            po.onProgress( entity, ref, edge.getType());
-
-                            // recursion
-                            if ( !stack.contains( ref )) {
-                                stack.push( ref );
-                                indexEntityConnectionsAndCollections( ref, po, stack );
-                                stack.pop(); 
-                            }
-
-
-                        } else if ( CpNamingUtils.isConnectionEdgeType( edge.getType() )) {
-
-                            String connType = CpNamingUtils.getConnectionType( edgeType );
-                            String targetEntityType = edge.getTargetNode().getType();
-                            String sourceEntityType = entity.getType();
-
-                            CollectionScope sourceScope = new CollectionScopeImpl(
-                                applicationScope.getApplication(),
-                                applicationScope.getApplication(),
-                                CpNamingUtils.getCollectionScopeNameFromEntityType( sourceEntityType ));
-                            EntityCollectionManager sourceEcm = 
-                                managerCache.getEntityCollectionManager(sourceScope);
-
-                            org.apache.usergrid.persistence.model.entity.Entity sourceEntity = 
-                                sourceEcm.load( edge.getSourceNode() ).toBlockingObservable().last();
-
-                            if (sourceEntity == null) {
-                                logger.warn("(Empty connection?) Failed to load source entity "
-                                        + "{}:{} from scope\n   app {}\n   owner {}\n   name {}", 
-                                        new Object[]{
-                                            edge.getSourceNode().getType(), 
-                                            edge.getSourceNode().getUuid(),
-                                            sourceScope.getApplication(),
-                                            sourceScope.getOwner(),
-                                            sourceScope.getName()
-                                        });
-                                return;
-                            }
-
-                            CollectionScope targetScope = new CollectionScopeImpl(
-                                applicationScope.getApplication(),
-                                applicationScope.getApplication(),
-                                CpNamingUtils.getCollectionScopeNameFromEntityType( targetEntityType ));
-                            EntityCollectionManager targetEcm = 
-                                managerCache.getEntityCollectionManager(targetScope);
-
-                            org.apache.usergrid.persistence.model.entity.Entity targetEntity = 
-                                targetEcm.load( edge.getTargetNode() ).toBlockingObservable().last();
-
-                            if (targetEntity == null) {
-                                logger.warn("(Empty connection?) Failed to load target entity "
-                                        + "{}:{} from scope\n   app {}\n   owner {}\n   name {}",
-                                        new Object[]{
-                                            edge.getTargetNode().getType(), 
-                                            edge.getTargetNode().getUuid(),
-                                            targetScope.getApplication(),
-                                            targetScope.getOwner(),
-                                            targetScope.getName()
-                                        });
-                                return;
-                            }
-
-                            indexEntityIntoConnection( 
-                                    sourceEntity, targetEntity, targetEntityType, connType );
-
-                            EntityRef ref = new SimpleEntityRef( 
-                                targetEntity.getId().getType(), targetEntity.getId().getUuid());
-                            po.onProgress( entity, ref, edge.getType());
-
-                            // recursion
-                            if ( !stack.contains( ref )) {
-                                stack.push( ref );
-                                indexEntityConnectionsAndCollections( ref, po, stack );
-                                stack.pop(); 
-                            }
-                        }
-                    }
-
-                }); // end foreach on edges
-
+                try {
+                    em.update( entity);
+                    po.onProgress(entity);
+                }
+                catch(WriteOptimisticVerifyException wo ){
+                    //swallow this, it just means this was already updated, which accomplishes our task.  Just ignore.
+                    logger.warn( "Someone beat us to updating entity {} in collection {}.  Ignoring.", entity.getName(),
+                            collName );
+                }
+                catch (Exception ex) {
+                    logger.error("Error repersisting entity", ex);
+                }
             }
 
-        }); // end foreach on edgeTypes
 
+        });
     }
 
 
-    private void indexEntityIntoCollections( 
-            org.apache.usergrid.persistence.model.entity.Entity collectionEntity, 
-            org.apache.usergrid.persistence.model.entity.Entity memberEntity, 
-            String collName, 
-            boolean connectBack ) {
-
-        logger.debug("Indexing into collections {} {}:{} member {}:{}", new Object[] { 
-            collName, collectionEntity.getId().getType(), collectionEntity.getId().getUuid(),
-            memberEntity.getId().getType(), memberEntity.getId().getUuid() });
-
-        indexEntityIntoCollection( collectionEntity, memberEntity, collName);
-
-        CollectionInfo collection = getDefaultSchema()
-                .getCollection( memberEntity.getId().getType(), collName);
-
-        if (connectBack && collection != null && collection.getLinkedCollection() != null) {
-
-            logger.debug("Linking back from entity in collection {} to collection {}", 
-                collection.getName(), collection.getLinkedCollection());
-
-            indexEntityIntoCollections( 
-                memberEntity, collectionEntity, collection.getLinkedCollection(), false );
-        }
-    }
-
-
-    void indexEntityIntoConnection(
-            org.apache.usergrid.persistence.model.entity.Entity sourceEntity,
-            org.apache.usergrid.persistence.model.entity.Entity targetEntity,
-            String targetEntityType,
-            String connType) {
-
-        logger.debug("Indexing into connection {} source {}:{} target {}:{}", new Object[] { 
-            connType, sourceEntity.getId().getType(), sourceEntity.getId().getUuid(),
-            targetEntity.getId().getType(), targetEntity.getId().getUuid() });
-
-
-        final EntityIndex ei = getManagerCache().getEntityIndex( applicationScope );
-        final EntityIndexBatch batch = ei.createBatch();
-
-
-
-
-        // Index the new connection in app|source|type context
-        IndexScope indexScope = new IndexScopeImpl(
-                sourceEntity.getId(),
-                CpNamingUtils.getConnectionScopeName( targetEntityType, connType ));
-        batch.index(indexScope, targetEntity);
-        
-        // Index the new connection in app|scope|all-types context
-        IndexScope allTypesIndexScope = new IndexScopeImpl(
-                sourceEntity.getId(),
-                CpNamingUtils.ALL_TYPES);
-
-        batch.index(allTypesIndexScope, targetEntity);
-
-        batch.execute();
-    }
 
 
     void indexEntityIntoCollection(
@@ -3061,7 +2905,7 @@ public class CpEntityManager implements EntityManager {
             org.apache.usergrid.persistence.model.entity.Entity memberEntity, 
             String collName) {
 
-        final EntityIndex ei = getManagerCache().getEntityIndex( applicationScope );
+        final EntityIndex ei = getManagerCache().getEntityIndex(getApplicationScope());
         final EntityIndexBatch batch = ei.createBatch();
 
         // index member into entity collection | type scope
@@ -3080,13 +2924,14 @@ public class CpEntityManager implements EntityManager {
         
         // index member into application | all-types scope
         IndexScope appAllTypesScope = new IndexScopeImpl(
-                applicationScope.getApplication(),
+                getApplicationScope().getApplication(),
                 CpNamingUtils.ALL_TYPES);
 
         batch.index(appAllTypesScope, memberEntity);
 
         batch.execute();
     }
+
 }
 
 

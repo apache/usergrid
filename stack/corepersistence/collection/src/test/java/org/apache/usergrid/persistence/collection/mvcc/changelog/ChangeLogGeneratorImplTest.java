@@ -18,215 +18,260 @@
 package org.apache.usergrid.persistence.collection.mvcc.changelog;
 
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import java.util.Set;
 
-import org.jukito.JukitoModule;
-import org.jukito.UseModules;
-import org.junit.Assert;
-import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.EntityCollectionManager;
-import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
-import org.apache.usergrid.persistence.collection.guice.CollectionModule;
-import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
-import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
-import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
-import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
-import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
-import org.apache.usergrid.persistence.core.cassandra.ITRunner;
+import org.apache.usergrid.persistence.collection.MvccEntity;
+import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.model.field.BooleanField;
+import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.model.field.IntegerField;
 import org.apache.usergrid.persistence.model.field.StringField;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
-import com.google.inject.Inject;
+import com.google.common.base.Optional;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
-import rx.Observable;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 
 /**
  * Test basic operation of change log
  */
-@RunWith( ITRunner.class )
-@UseModules( TestCollectionModule.class )
 public class ChangeLogGeneratorImplTest {
     private static final Logger LOG = LoggerFactory.getLogger( ChangeLogGeneratorImplTest.class );
 
 
-    @Inject
-    @Rule
-    public MigrationManagerRule migrationManagerRule;
-
-    @Inject
-    private EntityCollectionManagerFactory factory;
-
-    @Inject
-    MvccEntitySerializationStrategy mvccEntitySerializationStrategy;
-
     /**
-     * Test that change log creation follows Todd's example.
-     * TODO, can we do this without doing serialization I/O on the entities?  
-     * This seems out of the scope of the changelog itself
+     * Test rolling up 3 versions, properties are added then deleted
      */
     @Test
     public void testBasicOperation() throws ConnectionException {
 
-        LOG.info("ChangeLogGeneratorImpl test");
+        LOG.info( "ChangeLogGeneratorImpl test" );
 
-        // create an entity and make a series of changes to it so that versions get created
-        CollectionScope context = new CollectionScopeImpl(
-                new SimpleId( "organization" ), new SimpleId( "test" ), "test" );
 
-        // Todd's example:
-        //
-        // V1 : { "name" : "name1" , "count": 1}
-        // V2:  { "name" : "name2" , "count": 2, "nickname" : "buddy"}
-        // V3:  { "name" : "name3" , "count": 2}
-        
-        EntityCollectionManager manager = factory.createCollectionManager( context );
-        Entity e1 = new Entity( new SimpleId( "test" ) );
+        final Id entityId = new SimpleId( "test" );
+
+        Entity e1 = new Entity( entityId );
         e1.setField( new StringField( "name", "name1" ) );
         e1.setField( new IntegerField( "count", 1 ) );
-        Observable<Entity> o1 = manager.write( e1 );
-        e1 = o1.toBlocking().lastOrDefault( null );
+        e1.setField( new BooleanField( "single", true ) );
 
-        Entity e2 = manager.load( e1.getId() ).toBlocking().lastOrDefault( null );
+        final MvccEntity mvccEntity1 =
+                new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(), MvccEntity.Status.COMPLETE, e1 );
+
+        Entity e2 = new Entity( entityId );
         e2.setField( new StringField( "name", "name2" ) );
         e2.setField( new IntegerField( "count", 2 ) );
         e2.setField( new StringField( "nickname", "buddy" ) );
-        Observable<Entity> o2 = manager.write( e2 );
-        e2 = o2.toBlocking().lastOrDefault( null );
+        e2.setField( new BooleanField( "cool", false ) );
 
-        Entity e3 = manager.load( e1.getId() ).toBlocking().lastOrDefault( null );
+        final MvccEntity mvccEntity2 =
+                new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(), MvccEntity.Status.PARTIAL, e2 );
+
+
+        Entity e3 = new Entity( entityId );
         e3.setField( new StringField( "name", "name3" ) );
         e3.setField( new IntegerField( "count", 2 ) );
-        e3.getFields().remove(new StringField( "nickname", "buddy"));
-        Observable<Entity> o3 = manager.write( e3 );
-        e3 = o3.toBlocking().lastOrDefault( null );
+        //appears in e1, since it's been added again, we want to make sure it doesn't appear in the delete list
+        e3.setField( new BooleanField( "single", true ) );
 
-        {
-            // test minVersion of e3
-            // 
-            // based on that data we expect something like this:
-            //
-            // Type = PROPERTY_WRITE, Property = count,     Value = 2, Versions = [560c7e10-a925-11e3-bf9d-10ddb1de66c4]
-            // Type = PROPERTY_WRITE, Property = name,      Value = name3, Versions = [560c7e10-a925-11e3-bf9d-10ddb1de66c4]
-            //
-            // Type = PROPERTY_DELETE, Property = nickname, Value = buddy, Versions = [560b6c9e-a925-11e3-bf9d-10ddb1de66c4]
-            // Type = PROPERTY_DELETE, Property = name,     Value = name2, Versions = [560b6c9e-a925-11e3-bf9d-10ddb1de66c4]
-            // Type = PROPERTY_DELETE, Property = count,    Value = 1, Versions = [55faa3bc-a925-11e3-bf9d-10ddb1de66c4]
-            // Type = PROPERTY_DELETE, Property = name,     Value = name1, Versions = [55faa3bc-a925-11e3-bf9d-10ddb1de66c4]
+        final MvccEntity mvccEntity3 =
+                new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(), MvccEntity.Status.PARTIAL, e3 );
 
-            Iterator<MvccEntity> versions = mvccEntitySerializationStrategy
-               .load( context, e1.getId(), e3.getVersion(), 10);
 
-            ChangeLogGeneratorImpl instance = new ChangeLogGeneratorImpl();
-            List<ChangeLogEntry> result = instance.getChangeLog( versions, e3.getVersion() ); // minVersion = e3
+        ChangeLogGeneratorImpl instance = new ChangeLogGeneratorImpl();
+        ChangeLog result =
+                instance.getChangeLog( Arrays.asList( mvccEntity1, mvccEntity2, mvccEntity3 ) ); // minVersion = e3
 
-            for (ChangeLogEntry cle : result) {
-                LOG.info( cle.toString() );
-                Assert.assertFalse( cle.getVersions().isEmpty() );
-            }
 
-            Assert.assertEquals( 6, result.size() );
-            Assert.assertTrue( isAscendingOrder( result ) );
+        assertEquals( "All changes not present", 2, result.getSize() );
 
-            Assert.assertEquals( ChangeLogEntry.ChangeType.PROPERTY_WRITE, result.get( 0 ).getChangeType() );
-            Assert.assertEquals( "count", result.get( 0 ).getField().getName() );
-            Assert.assertEquals( "2", result.get( 0 ).getField().getValue().toString() );
-            
-            Assert.assertEquals( ChangeLogEntry.ChangeType.PROPERTY_WRITE, result.get( 1 ).getChangeType() );
-            Assert.assertEquals( "name", result.get( 1 ).getField().getName() );
-            Assert.assertEquals( "name3", result.get( 1 ).getField().getValue() );
 
-            Assert.assertEquals( ChangeLogEntry.ChangeType.PROPERTY_DELETE, result.get( 2 ).getChangeType() );
-            Assert.assertEquals( "nickname", result.get( 2 ).getField().getName() );
-            Assert.assertEquals( "buddy", result.get( 2 ).getField().getValue() );
+        Collection<Field> changes = result.getWrites();
 
-            Assert.assertEquals( ChangeLogEntry.ChangeType.PROPERTY_DELETE, result.get( 3 ).getChangeType() );
-            Assert.assertEquals( "name", result.get( 3 ).getField().getName() );
-            Assert.assertEquals( "name2", result.get( 3 ).getField().getValue() );
+        assertEquals( 0, changes.size() );
 
-            Assert.assertEquals( ChangeLogEntry.ChangeType.PROPERTY_DELETE, result.get( 4 ).getChangeType() );
-            Assert.assertEquals( "count", result.get( 4 ).getField().getName() );
-            Assert.assertEquals( "1", result.get( 4 ).getField().getValue().toString() );
+        Set<String> deletes = result.getDeletes();
 
-            Assert.assertEquals( ChangeLogEntry.ChangeType.PROPERTY_DELETE, result.get( 5 ).getChangeType() );
-            Assert.assertEquals( "name", result.get( 5 ).getField().getName() );
-            Assert.assertEquals( "name1", result.get( 5 ).getField().getValue() );
-        }
-       
-        {
+        assertEquals( 2, deletes.size() );
 
-            // test minVersion of e2
-            // 
-            // based on that data we expect something like this:
-            //
-            // Type = PROPERTY_WRITE, Property = name, Value = name3, Versions = [c771f63f-a927-11e3-8bfc-10ddb1de66c4]
-            // Type = PROPERTY_WRITE, Property = count, Value = 2, Versions = [c770e4cd-a927-11e3-8bfc-10ddb1de66c4, c771f63f-a927-11e3-8bfc-10ddb1de66c4]
-            // Type = PROPERTY_WRITE, Property = nickname, Value = buddy, Versions = [c770e4cd-a927-11e3-8bfc-10ddb1de66c4]
-            // Type = PROPERTY_WRITE, Property = name, Value = name2, Versions = [c770e4cd-a927-11e3-8bfc-10ddb1de66c4]
-
-            // Type = PROPERTY_DELETE, Property = count, Value = 1, Versions = [c75f589b-a927-11e3-8bfc-10ddb1de66c4]
-            // Type = PROPERTY_DELETE, Property = name, Value = name1, Versions = [c75f589b-a927-11e3-8bfc-10ddb1de66c4]
-
-            Iterator<MvccEntity> versions = mvccEntitySerializationStrategy
-               .load( context, e1.getId(), e3.getVersion(), 10);
-
-            ChangeLogGeneratorImpl instance = new ChangeLogGeneratorImpl();
-            List<ChangeLogEntry> result = instance.getChangeLog( versions, e2.getVersion() ); // minVersion = e2
-
-            for (ChangeLogEntry cle : result) {
-                LOG.info( cle.toString() );
-                Assert.assertFalse( cle.getVersions().isEmpty() );
-            }
-            Assert.assertEquals(6, result.size() );
-            Assert.assertTrue( isAscendingOrder( result ) );
-
-            Assert.assertEquals( ChangeLogEntry.ChangeType.PROPERTY_WRITE, result.get( 2 ).getChangeType() );
-            Assert.assertEquals( "nickname", result.get( 2 ).getField().getName() );
-            Assert.assertEquals( "buddy", result.get( 2 ).getField().getValue() );
-
-            Assert.assertEquals( ChangeLogEntry.ChangeType.PROPERTY_DELETE, result.get( 4 ).getChangeType() );
-            Assert.assertEquals( "count", result.get( 4 ).getField().getName() );
-            Assert.assertEquals( "1", result.get( 4 ).getField().getValue().toString() );
-        }
-    }
-
-    public static boolean isAscendingOrder( Collection<ChangeLogEntry> col ) {
-        Comparable previous = null;
-        for ( Comparable item : col ) {
-            if ( previous == null ) {
-                previous = item;
-                continue;
-            } 
-            int comparedToPrevious = item.compareTo( previous );
-            if ( comparedToPrevious < 0 ) {
-                return false;
-            }
-        }
-        return true;
+        assertTrue( deletes.contains( "nickname" ) );
+        assertTrue( deletes.contains( "cool" ) );
     }
 
 
-    @SuppressWarnings( "UnusedDeclaration" )
-    public static class TestModule extends JukitoModule {
+    /**
+     * Test rolling up 3 versions, properties are added then deleted
+     */
+    @Test
+    public void testDeletedVersionFirst() throws ConnectionException {
 
-        @Override
-        protected void configureTest() {
-            install( new CollectionModule() );
-        }
+        LOG.info( "ChangeLogGeneratorImpl test" );
+
+
+        final Id entityId = new SimpleId( "test" );
+
+        final MvccEntity mvccEntity1 =
+                new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(), MvccEntity.Status.DELETED,
+                        Optional.<Entity>absent() );
+
+        Entity e2 = new Entity( entityId );
+        e2.setField( new StringField( "name", "name2" ) );
+        e2.setField( new IntegerField( "count", 2 ) );
+        e2.setField( new StringField( "nickname", "buddy" ) );
+        e2.setField( new BooleanField( "cool", false ) );
+
+        final MvccEntity mvccEntity2 =
+                new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(), MvccEntity.Status.PARTIAL, e2 );
+
+
+        Entity e3 = new Entity( entityId );
+        e3.setField( new StringField( "name", "name3" ) );
+        e3.setField( new IntegerField( "count", 2 ) );
+        //appears in e1, since it's been added again, we want to make sure it doesn't appear in the delete list
+        e3.setField( new BooleanField( "single", true ) );
+
+        final MvccEntity mvccEntity3 =
+                new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(), MvccEntity.Status.PARTIAL, e3 );
+
+
+        ChangeLogGeneratorImpl instance = new ChangeLogGeneratorImpl();
+        ChangeLog result =
+                instance.getChangeLog( Arrays.asList( mvccEntity1, mvccEntity2, mvccEntity3 ) ); // minVersion = e3
+
+
+        assertEquals( "All changes not present", 2, result.getSize() );
+
+
+        Collection<Field> changes = result.getWrites();
+
+        assertEquals( 0, changes.size() );
+
+
+
+        Set<String> deletes = result.getDeletes();
+
+        assertEquals( 2, deletes.size() );
+
+        assertTrue( deletes.contains( "nickname" ) );
+        assertTrue( deletes.contains( "cool" ) );
+    }
+
+
+    /**
+     * Test rolling up 3 versions, properties are added then deleted
+     */
+    @Test
+    public void testDeletedMiddle() throws ConnectionException {
+
+        LOG.info( "ChangeLogGeneratorImpl test" );
+
+
+        final Id entityId = new SimpleId( "test" );
+
+        Entity e1 = new Entity( entityId );
+        e1.setField( new StringField( "name", "name1" ) );
+        e1.setField( new IntegerField( "count", 1 ) );
+        e1.setField( new BooleanField( "single", true ) );
+
+        final MvccEntity mvccEntity1 =
+                new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(), MvccEntity.Status.COMPLETE, e1 );
+
+        Entity e2 = new Entity( entityId );
+        e2.setField( new StringField( "name", "name2" ) );
+        e2.setField( new IntegerField( "count", 2 ) );
+        e2.setField( new StringField( "nickname", "buddy" ) );
+        e2.setField( new BooleanField( "cool", false ) );
+
+        final MvccEntity mvccEntity2 =
+                new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(), MvccEntity.Status.DELETED, e2 );
+
+
+        Entity e3 = new Entity( entityId );
+        e3.setField( new StringField( "name", "name3" ) );
+        e3.setField( new IntegerField( "count", 2 ) );
+        //appears in e1, since it's been added again, we want to make sure it doesn't appear in the delete list
+        e3.setField( new BooleanField( "single", true ) );
+
+        final MvccEntity mvccEntity3 =
+                new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(), MvccEntity.Status.PARTIAL, e3 );
+
+
+        ChangeLogGeneratorImpl instance = new ChangeLogGeneratorImpl();
+        ChangeLog result =
+                instance.getChangeLog( Arrays.asList( mvccEntity1, mvccEntity2, mvccEntity3 ) ); // minVersion = e3
+
+
+        assertEquals( "All changes present", 0, result.getSize() );
+
+
+        Collection<Field> changes = result.getWrites();
+
+        assertEquals( 0, changes.size() );
+
+        Set<String> deletes = result.getDeletes();
+
+        assertEquals( 0, deletes.size() );
+    }
+
+
+    /**
+     * Test rolling up 3 versions, properties are added then deleted
+     */
+    @Test
+    public void testDeletedLast() throws ConnectionException {
+
+        final Id entityId = new SimpleId( "test" );
+
+        Entity e1 = new Entity( entityId );
+        e1.setField( new StringField( "name", "name1" ) );
+        e1.setField( new IntegerField( "count", 1 ) );
+        e1.setField( new BooleanField( "single", true ) );
+
+        final MvccEntity mvccEntity1 =
+                new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(), MvccEntity.Status.COMPLETE, e1 );
+
+        Entity e2 = new Entity( entityId );
+        e2.setField( new StringField( "name", "name2" ) );
+        e2.setField( new IntegerField( "count", 2 ) );
+        e2.setField( new StringField( "nickname", "buddy" ) );
+        e2.setField( new BooleanField( "cool", false ) );
+
+        final MvccEntity mvccEntity2 =
+                new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(), MvccEntity.Status.PARTIAL, e2 );
+
+
+        final MvccEntity mvccEntity3 =
+                new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(), MvccEntity.Status.DELETED,
+                        Optional.<Entity>absent() );
+
+
+        ChangeLogGeneratorImpl instance = new ChangeLogGeneratorImpl();
+        ChangeLog result =
+                instance.getChangeLog( Arrays.asList( mvccEntity1, mvccEntity2, mvccEntity3 ) ); // minVersion = e3
+
+
+        assertEquals( "All changes not present", 0, result.getSize() );
+
+
+        Collection<Field> changes = result.getWrites();
+
+        assertEquals( 0, changes.size() );
+
+        Set<String> deletes = result.getDeletes();
+
+        assertEquals( 0, deletes.size() );
     }
 }
 

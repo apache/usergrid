@@ -27,6 +27,9 @@ import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 import com.google.inject.assistedinject.Assisted;
@@ -39,34 +42,46 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 public class SQSQueueManagerImpl implements QueueManager {
     private static final Logger LOG = LoggerFactory.getLogger(SQSQueueManagerImpl.class);
 
-    private final AmazonSQSClient sqs;
-    private final QueueScope scope;
-    private final QueueFig fig;
-    private final ObjectMapper mapper;
-    private Queue queue;
+    private  AmazonSQSClient sqs;
+    private  QueueScope scope;
+    private  QueueFig fig;
+    private  ObjectMapper mapper;
     private static SmileFactory smileFactory = new SmileFactory();
 
+    private static LoadingCache<String, Queue> urlMap = CacheBuilder.newBuilder()
+            .maximumSize(1000)
+            .build(new CacheLoader<String, Queue>() {
+                       @Override
+                       public Queue load(String queueLoader) throws Exception {
+                           //equals comparison wasn't working so
+                           return new Queue(null);
+                       }
+                   }
+            );
 
     @Inject
     public SQSQueueManagerImpl(@Assisted QueueScope scope, QueueFig fig){
         this.fig = fig;
         this.scope = scope;
-        UsergridAwsCredentialsProvider ugProvider = new UsergridAwsCredentialsProvider();
-        this.sqs = new AmazonSQSClient(ugProvider.getCredentials());
-        Regions regions = Regions.fromName(fig.getRegion());
-        Region region = Region.getRegion(regions);
-        sqs.setRegion(region);
         try {
+            UsergridAwsCredentialsProvider ugProvider = new UsergridAwsCredentialsProvider();
+            this.sqs = new AmazonSQSClient(ugProvider.getCredentials());
+            Regions regions = Regions.fromName(fig.getRegion());
+            Region region = Region.getRegion(regions);
+            sqs.setRegion(region);
             smileFactory.delegateToTextual(true);
             mapper = new ObjectMapper( smileFactory );
             mapper.enable(SerializationFeature.INDENT_OUTPUT);
             mapper.enableDefaultTypingAsProperty(ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT, "@class");
         } catch ( Exception e ) {
-            throw new RuntimeException("Error setting up mapper", e);
+            LOG.warn("failed to setup SQS",e);
+//            throw new RuntimeException("Error setting up mapper", e);
         }
     }
 
@@ -81,28 +96,40 @@ public class SQSQueueManagerImpl implements QueueManager {
     }
 
     private String getName() {
-        String name = scope.getApplication().getType() + scope.getApplication().getUuid().toString() + scope.getName();
+        String name = scope.getApplication().getType() + "_"+ scope.getName() + "_"+ scope.getApplication().getUuid().toString();
         return name;
     }
-    public Queue getQueue(){
-        if(queue == null) {
-            ListQueuesResult result =  sqs.listQueues();
-            for (String queueUrl : result.getQueueUrls()) {
-                boolean found = queueUrl.contains(getName());
-                if (found) {
-                    queue = new Queue(queueUrl);
-                    break;
+
+    public Queue getQueue() {
+        try {
+            Queue queue = urlMap.get(getName());
+            if (queue.isEmpty()) {
+                try {
+                    GetQueueUrlResult result = sqs.getQueueUrl(getName());
+                    queue = new Queue(result.getQueueUrl());
+                } catch (QueueDoesNotExistException queueDoesNotExistException) {
+                    queue = null;
+                } catch (Exception e) {
+                    LOG.error("failed to get queue from service", e);
+                    throw e;
                 }
+                if (queue == null) {
+                    queue = createQueue();
+                }
+                urlMap.put(getName(), queue);
             }
+            return queue;
+        } catch (ExecutionException ee) {
+            throw new RuntimeException(ee);
         }
-        if(queue == null) {
-            queue = createQueue();
-        }
-        return queue;
     }
 
     @Override
     public List<QueueMessage> getMessages(int limit, int transactionTimeout, int waitTime, Class klass) {
+        if(sqs == null){
+            LOG.error("Sqs is null");
+            return new ArrayList<>();
+        }
         waitTime = waitTime/1000;
         String url = getQueue().getUrl();
         LOG.info("Getting {} messages from {}", limit, url);
@@ -130,8 +157,12 @@ public class SQSQueueManagerImpl implements QueueManager {
 
     @Override
     public void sendMessages(List bodies) throws IOException {
+        if(sqs == null){
+            LOG.error("Sqs is null");
+            return;
+        }
         String url = getQueue().getUrl();
-        LOG.info("Sending Messages...{} to {}",bodies.size(),url);
+        LOG.info("Sending Messages...{} to {}", bodies.size(), url);
 
         SendMessageBatchRequest request = new SendMessageBatchRequest(url);
         List<SendMessageBatchRequestEntry> entries = new ArrayList<>(bodies.size());
@@ -148,6 +179,10 @@ public class SQSQueueManagerImpl implements QueueManager {
 
     @Override
     public void sendMessage(Object body) throws IOException {
+        if(sqs == null){
+            LOG.error("Sqs is null");
+            return;
+        }
         String url = getQueue().getUrl();
         LOG.info("Sending Message...{} to {}",body.toString(),url);
         SendMessageRequest request = new SendMessageRequest(url,toString((Serializable)body));
@@ -207,16 +242,27 @@ public class SQSQueueManagerImpl implements QueueManager {
             creds = new AWSCredentials() {
                 @Override
                 public String getAWSAccessKeyId() {
-                    return StringUtils.trim(System.getProperty(SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR));
+                    String accessKey = System.getProperty(SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR);
+                    if(StringUtils.isEmpty(accessKey)){
+                        accessKey = System.getProperty(SDKGlobalConfiguration.ALTERNATE_ACCESS_KEY_ENV_VAR);
+                    }
+                    return StringUtils.trim(accessKey);
                 }
 
                 @Override
                 public String getAWSSecretKey() {
-                    return StringUtils.trim(System.getProperty(SDKGlobalConfiguration.SECRET_KEY_ENV_VAR));
+                    String secret = System.getProperty(SDKGlobalConfiguration.SECRET_KEY_ENV_VAR);
+                    if(StringUtils.isEmpty(secret)){
+                        secret = System.getProperty(SDKGlobalConfiguration.ALTERNATE_SECRET_KEY_ENV_VAR);
+                    }
+                    return StringUtils.trim(secret);
                 }
             };
-            if(StringUtils.isEmpty(creds.getAWSAccessKeyId()) || StringUtils.isEmpty(creds.getAWSSecretKey()) ){
-                throw new AmazonClientException("could not retrieve credentials from system properties");
+            if(StringUtils.isEmpty(creds.getAWSAccessKeyId())){
+                throw new AmazonClientException("could not get aws access key from system properties");
+            }
+            if(StringUtils.isEmpty(creds.getAWSSecretKey())){
+                throw new AmazonClientException("could not get aws secret key from system properties");
             }
         }
 
@@ -230,5 +276,32 @@ public class SQSQueueManagerImpl implements QueueManager {
         public void refresh() {
             init();
         }
+    }
+
+    public class SqsLoader {
+        private final String key;
+        private final AmazonSQSClient client;
+
+        public SqsLoader(String key, AmazonSQSClient client) {
+            this.key = key;
+            this.client = client;
+        }
+
+        public AmazonSQSClient getClient() {
+            return client;
+        }
+
+        public String getKey() {
+            return key;
+        }
+        @Override
+        public boolean equals(Object other) {
+            if (other instanceof SqsLoader) {
+                SqsLoader loader = (SqsLoader) other;
+                return loader.getKey().equals(this.getKey());
+            }
+            return false;
+        }
+
     }
 }

@@ -30,12 +30,15 @@ import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.exception.WriteOptimisticVerifyException;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
+import org.apache.usergrid.persistence.collection.MvccEntity;
+import org.apache.usergrid.persistence.collection.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.mvcc.stage.AbstractMvccEntityStageTest;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
+import org.apache.usergrid.persistence.collection.serialization.impl.UniqueValueImpl;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.StringField;
@@ -96,20 +99,10 @@ public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
         // Run the stage
         WriteOptimisticVerify newStage = new WriteOptimisticVerify( noConflictLog );
 
-        CollectionIoEvent<MvccEntity> result;
-        result = newStage.call( new CollectionIoEvent<MvccEntity>( collectionScope, mvccEntity ) );
 
-        assertSame("Context was correct", collectionScope, result.getEntityCollection()) ;
+        newStage.call( new CollectionIoEvent<>( collectionScope, mvccEntity ) );
 
-        // Verify the entity is correct
-        MvccEntity entry = result.getEvent();
 
-        // Verify UUID and version in both the MvccEntity and the entity itself. Here assertSame 
-        // is used on purpose as we want to make sure the same instance is used, not a copy.
-        // This way the caller's runtime type is retained.
-        assertSame( "Id correct", entity.getId(), entry.getId() );
-        assertSame( "Version did not not match entityId", entity.getVersion(), entry.getVersion() );
-        assertSame( "Entity correct", entity, entry.getEntity().get() );
     }
 
     @Test
@@ -143,13 +136,11 @@ public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
 
         // mock up unique values interface
         UniqueValueSerializationStrategy uvstrat = mock( UniqueValueSerializationStrategy.class);
-        UniqueValue uv1 = new UniqueValueImpl(
-            scope, entity.getField("name"), entity.getId(), entity.getVersion());
-        UniqueValue uv2 = new UniqueValueImpl(
-            scope, entity.getField("identifier"), entity.getId(), entity.getVersion());
+        UniqueValue uv1 = new UniqueValueImpl(entity.getField("name"), entity.getId(), entity.getVersion());
+        UniqueValue uv2 = new UniqueValueImpl(  entity.getField("identifier"), entity.getId(), entity.getVersion());
         MutationBatch mb = mock( MutationBatch.class );
-        when( uvstrat.delete(uv1) ).thenReturn(mb);
-        when( uvstrat.delete(uv2) ).thenReturn(mb);
+        when( uvstrat.delete(scope, uv1) ).thenReturn(mb);
+        when( uvstrat.delete(scope, uv2) ).thenReturn(mb);
 
         // Run the stage, conflict should be detected
         final MvccEntity mvccEntity = fromEntity( entity );
@@ -159,7 +150,7 @@ public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
         RollbackAction rollbackAction = new RollbackAction( mvccLog, uvstrat );
 
         try {
-            newStage.call( new CollectionIoEvent<MvccEntity>(scope, mvccEntity));
+            newStage.call( new CollectionIoEvent<>(scope, mvccEntity));
 
         } catch (WriteOptimisticVerifyException e) {
             log.info("Error", e);
@@ -169,8 +160,8 @@ public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
         assertTrue( conflictDetected );
 
         // check that unique values were deleted
-        verify( uvstrat, times(1) ).delete( uv1 );
-        verify( uvstrat, times(1) ).delete( uv2 );
+        verify( uvstrat, times(1) ).delete(scope,  uv1 );
+        verify( uvstrat, times(1) ).delete(scope,  uv2 );
     }
 
 }

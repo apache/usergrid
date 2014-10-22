@@ -18,12 +18,14 @@ package org.apache.usergrid.persistence.index.impl;/*
  */
 
 
+import java.io.IOException;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
+import org.elasticsearch.common.xcontent.XContentBuilder;
 
 
 public class IndexingUtils {
@@ -103,5 +105,69 @@ public class IndexingUtils {
         return sb.toString();
     }
 
+
+    /**
+     * Build mappings for data to be indexed. Setup String fields as not_analyzed and analyzed,
+     * where the analyzed field is named {name}_ug_analyzed
+     *
+     * @param builder Add JSON object to this builder.
+     * @param type ElasticSearch type of entity.
+     *
+     * @return Content builder with JSON for mapping.
+     *
+     * @throws java.io.IOException On JSON generation error.
+     */
+    public static XContentBuilder createDoubleStringIndexMapping( 
+            XContentBuilder builder, String type ) throws IOException {
+
+        builder = builder
+
+            .startObject()
+
+                .startObject( type )
+
+                    .startArray( "dynamic_templates" )
+
+                        // any string with field name that starts with sa_ gets analyzed
+                        .startObject()
+                            .startObject( "template_1" )
+                                .field( "match", ANALYZED_STRING_PREFIX + "*" )
+                                .field( "match_mapping_type", "string" )
+                                .startObject( "mapping" ).field( "type", "string" )
+                                    .field( "index", "analyzed" )
+                                .endObject()
+                            .endObject()
+                        .endObject()
+
+                            // all other strings are not analyzed
+                        .startObject()
+                            .startObject( "template_2" )
+                                .field( "match", "*" )
+                                .field( "match_mapping_type", "string" )
+                                .startObject( "mapping" )
+                                    .field( "type", "string" )
+                                    .field( "index", "not_analyzed" )
+                                .endObject()
+                            .endObject()
+                        .endObject()
+
+                        // fields names starting with go_ get geo-indexed
+                        .startObject()
+                            .startObject( "template_3" )
+                                .field( "match", GEO_PREFIX + "location" )
+                                .startObject( "mapping" )
+                                    .field( "type", "geo_point" )
+                                .endObject()
+                            .endObject()
+                        .endObject()
+
+                    .endArray()
+
+                .endObject()
+
+            .endObject();
+
+        return builder;
+    }
 
 }

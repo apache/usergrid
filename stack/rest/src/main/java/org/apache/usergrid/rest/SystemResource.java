@@ -43,6 +43,7 @@ import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
 
 import com.sun.jersey.api.json.JSONWithPadding;
+import org.apache.usergrid.persistence.EntityManagerFactory.ProgressObserver;
 
 
 @Path( "/system" )
@@ -66,7 +67,7 @@ public class SystemResource extends AbstractContextResource {
     @GET
     @Path( "database/setup" )
     public JSONWithPadding getSetup( @Context UriInfo ui,
-                                     @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+                             @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
 
         ApiResponse response = createApiResponse();
@@ -90,7 +91,7 @@ public class SystemResource extends AbstractContextResource {
     @GET
     @Path( "superuser/setup" )
     public JSONWithPadding getSetupSuperuser( @Context UriInfo ui,
-                                              @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+                             @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
 
         ApiResponse response = createApiResponse();
@@ -115,19 +116,25 @@ public class SystemResource extends AbstractContextResource {
     @PUT
     @Path( "index/rebuild" )
     public JSONWithPadding rebuildIndexes( @Context UriInfo ui,
-                                           @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+                             @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
 
         ApiResponse response = createApiResponse();
         response.setAction( "rebuild indexes" );
 
 
-        final EntityManagerFactory.ProgressObserver po = new EntityManagerFactory.ProgressObserver() {
+        final ProgressObserver po = new ProgressObserver() {
+
+
             @Override
-            public void onProgress( EntityRef s, EntityRef t, String etype ) {
-                logger.info( "Indexing from {}:{} to {}:{} edgeType {}", new Object[] {
-                        s.getType(), s.getUuid(), t.getType(), t.getUuid(), etype
-                } );
+            public void onProgress( final EntityRef entity ) {
+                logger.info( "Indexing entity {}:{} ", entity.getType(), entity.getUuid() );
+            }
+
+
+            @Override
+            public long getWriteDelayTime() {
+                return 0;
             }
         };
 
@@ -139,9 +146,6 @@ public class SystemResource extends AbstractContextResource {
                 logger.info( "Rebuilding all indexes" );
 
                 try {
-                    emf.rebuildInternalIndexes( po );
-                    emf.refreshIndex();
-
                     emf.rebuildAllIndexes( po );
                 }
                 catch ( Exception e ) {
@@ -164,8 +168,12 @@ public class SystemResource extends AbstractContextResource {
     @RequireSystemAccess
     @PUT
     @Path( "index/rebuild/" + RootResource.APPLICATION_ID_PATH )
-    public JSONWithPadding rebuildIndexes( @Context UriInfo ui, @PathParam( "applicationId" ) String applicationIdStr,
-                                           @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+    public JSONWithPadding rebuildIndexes( 
+                @Context UriInfo ui, 
+                @PathParam( "applicationId" ) String applicationIdStr,
+                @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback,
+                @QueryParam( "delay" ) @DefaultValue( "10" ) final long delay)
+
             throws Exception {
 
         final UUID appId = UUIDUtils.tryExtractUUID( applicationIdStr );
@@ -173,14 +181,6 @@ public class SystemResource extends AbstractContextResource {
         response.setAction( "rebuild indexes" );
 
 
-        final EntityManagerFactory.ProgressObserver po = new EntityManagerFactory.ProgressObserver() {
-            @Override
-            public void onProgress( EntityRef s, EntityRef t, String etype ) {
-                logger.info( "Indexing from {}:{} to {}:{} edgeType {}", new Object[] {
-                        s.getType(), s.getUuid(), t.getType(), t.getUuid(), etype
-                } );
-            }
-        };
 
 
         final EntityManager em = emf.getEntityManager( appId );
@@ -195,7 +195,7 @@ public class SystemResource extends AbstractContextResource {
 
 
                 {
-                    rebuildCollection( appId, collectionName );
+                    rebuildCollection( appId, collectionName, delay );
                 }
             }
         };
@@ -213,10 +213,12 @@ public class SystemResource extends AbstractContextResource {
     @RequireSystemAccess
     @PUT
     @Path( "index/rebuild/" + RootResource.APPLICATION_ID_PATH + "/{collectionName}" )
-    public JSONWithPadding rebuildIndexes( @Context UriInfo ui,
-                                           @PathParam( "applicationId" ) final String applicationIdStr,
-                                           @PathParam( "collectionName" ) final String collectionName,
-                                           @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+    public JSONWithPadding rebuildIndexes( 
+                @Context UriInfo ui,
+                @PathParam( "applicationId" ) final String applicationIdStr,
+                @PathParam( "collectionName" ) final String collectionName,
+                @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback,
+                @QueryParam( "delay" ) @DefaultValue( "10" ) final long delay )
             throws Exception {
 
         final UUID appId = UUIDUtils.tryExtractUUID( applicationIdStr );
@@ -227,11 +229,12 @@ public class SystemResource extends AbstractContextResource {
 
             public void run() {
 
-                rebuildCollection( appId, collectionName );
+                rebuildCollection( appId, collectionName, delay );
             }
         };
 
-        rebuild.setName( String.format( "Index rebuild for app %s and collection %s", appId, collectionName ) );
+        rebuild.setName( String.format( 
+                "Index rebuild for app %s and collection %s", appId, collectionName ) );
         rebuild.setDaemon( true );
         rebuild.start();
 
@@ -241,13 +244,18 @@ public class SystemResource extends AbstractContextResource {
     }
 
 
-    private void rebuildCollection( final UUID applicationId, final String collectionName ) {
+    private void rebuildCollection( final UUID applicationId, final String collectionName, final long delay ) {
         EntityManagerFactory.ProgressObserver po = new EntityManagerFactory.ProgressObserver() {
+
             @Override
-            public void onProgress( EntityRef s, EntityRef t, String etype ) {
-                logger.info( "Indexing from {}:{} to {}:{} edgeType {}", new Object[] {
-                        s.getType(), s.getUuid(), t.getType(), t.getUuid(), etype
-                } );
+            public void onProgress( final EntityRef entity ) {
+                logger.info( "Indexing entity {}:{}", entity.getType(), entity.getUuid());
+            }
+
+
+            @Override
+            public long getWriteDelayTime() {
+                return delay;
             }
         };
 

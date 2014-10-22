@@ -57,6 +57,10 @@ public class Notification extends TypedEntity {
     @EntityProperty
     protected Long queued;
 
+    /** Debug logging is on  */
+    @EntityProperty
+    protected boolean debug;
+
     /** Time send started */
     @EntityProperty
     protected Long started;
@@ -153,6 +157,15 @@ public class Notification extends TypedEntity {
 
     public void setCanceled(Boolean canceled) {
         this.canceled = canceled;
+    }
+
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    public boolean getDebug() {
+        return debug;
+    }
+
+    public void setDebug(boolean debug) {
+        this.debug = debug;
     }
 
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)

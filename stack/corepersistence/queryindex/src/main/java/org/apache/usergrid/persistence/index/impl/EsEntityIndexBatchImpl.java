@@ -18,7 +18,6 @@ package org.apache.usergrid.persistence.index.impl;/*
  */
 
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -30,10 +29,7 @@ import java.util.UUID;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.client.AdminClient;
 import org.elasticsearch.client.Client;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,7 +68,6 @@ import static org.apache.usergrid.persistence.index.impl.IndexingUtils.STRING_PR
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createCollectionScopeTypeName;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createIndexDocId;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createIndexName;
-import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 
 public class EsEntityIndexBatchImpl implements EntityIndexBatch {
@@ -82,10 +77,6 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
     private final ApplicationScope applicationScope;
 
     private final Client client;
-
-    // Keep track of what types we have already initialized to avoid cost
-    // of attempting to init them again. Used in the initType() method.
-    private final Set<String> knownTypes;
 
     private final boolean refresh;
 
@@ -98,12 +89,14 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
     private int count;
 
 
-    public EsEntityIndexBatchImpl( final ApplicationScope applicationScope, final Client client, final IndexFig config,
-                                   final Set<String> knownTypes, final int autoFlushSize ) {
+    public EsEntityIndexBatchImpl( 
+            final ApplicationScope applicationScope, 
+            final Client client, 
+            final IndexFig config,
+            final int autoFlushSize ) {
 
         this.applicationScope = applicationScope;
         this.client = client;
-        this.knownTypes = knownTypes;
         this.indexName = createIndexName( config.getIndexPrefix(), applicationScope );
         this.refresh = config.isForcedRefresh();
         this.autoFlushSize = autoFlushSize;
@@ -120,20 +113,23 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         final String indexType = createCollectionScopeTypeName( indexScope );
 
         if ( log.isDebugEnabled() ) {
-            log.debug( "Indexing entity {}:{} in scope\n   app {}\n   owner {}\n   name {}\n   type {}", new Object[] {
-                    entity.getId().getType(), entity.getId().getUuid(), applicationScope.getApplication(),
-                    indexScope.getOwner(), indexScope.getName(), indexType
-            } );
+            log.debug( "Indexing entity {}:{} in scope\n   app {}\n   "
+                + "owner {}\n   name {}\n   type {}", new Object[] {
+                    entity.getId().getType(), 
+                    entity.getId().getUuid(), 
+                    applicationScope.getApplication(), 
+                    indexScope.getOwner(), 
+                    indexScope.getName(), indexType
+            });
         }
 
         ValidationUtils.verifyEntityWrite( entity );
 
-        initType( indexScope, indexType );
-
         Map<String, Object> entityAsMap = entityToMap( entity );
 
         // need prefix here becuase we index UUIDs as strings
-        entityAsMap.put( STRING_PREFIX + ENTITYID_FIELDNAME, entity.getId().getUuid().toString().toLowerCase() );
+        entityAsMap.put( STRING_PREFIX + ENTITYID_FIELDNAME, 
+                entity.getId().getUuid().toString().toLowerCase() );
 
         // let caller add these fields if needed
         // entityAsMap.put("created", entity.getId().getUuid().timestamp();
@@ -143,7 +139,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
         log.debug( "Indexing entity id {} data {} ", indexId, entityAsMap );
 
-        bulkRequest.add( client.prepareIndex( indexName, indexType, indexId ).setSource( entityAsMap ) );
+        bulkRequest.add(client.prepareIndex( indexName, indexType, indexId).setSource(entityAsMap));
 
         maybeFlush();
 
@@ -159,16 +155,20 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         final String indexType = createCollectionScopeTypeName( indexScope );
 
         if ( log.isDebugEnabled() ) {
-            log.debug( "De-indexing entity {}:{} in scope\n   app {}\n   owner {}\n   name {} type {}", new Object[] {
-                    id.getType(), id.getUuid(), applicationScope.getApplication(), indexScope.getOwner(),
-                    indexScope.getName(), indexType
+            log.debug( "De-indexing entity {}:{} in scope\n   app {}\n   owner {}\n   "
+                + "name {} type {}", new Object[] {
+                    id.getType(), 
+                    id.getUuid(), 
+                    applicationScope.getApplication(), 
+                    indexScope.getOwner(),
+                    indexScope.getName(), 
+                    indexType
             } );
         }
 
         String indexId = createIndexDocId( id, version );
 
-        bulkRequest.add( client.prepareDelete( indexName, indexType, indexId ).setRefresh( refresh ) );
-
+        bulkRequest.add( client.prepareDelete( indexName, indexType, indexId ).setRefresh(refresh));
 
         log.debug( "Deindexed Entity with index id " + indexId );
 
@@ -212,8 +212,8 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
         for ( BulkItemResponse response : responses ) {
             if ( response.isFailed() ) {
-                throw new RuntimeException(
-                        "Unable to index documents.  Errors are :" + response.getFailure().getMessage() );
+                throw new RuntimeException("Unable to index documents.  Errors are :" 
+                        + response.getFailure().getMessage() );
             }
         }
 
@@ -238,48 +238,13 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
 
     /**
-     * Create ElasticSearch mapping for each type of Entity.
-     */
-    private void initType( final IndexScope indexScope, String typeName ) {
-
-        // no need for synchronization here, it's OK if we init attempt to init type multiple times
-        if ( knownTypes.contains( typeName ) ) {
-            return;
-        }
-
-        AdminClient admin = client.admin();
-        try {
-            XContentBuilder mxcb = EsEntityIndexImpl.createDoubleStringIndexMapping( jsonBuilder(), typeName );
-
-
-            //TODO Dave can this be collapsed into the build as well?
-            admin.indices().preparePutMapping( indexName ).setType( typeName ).setSource( mxcb ).execute().actionGet();
-
-            admin.indices().prepareGetMappings( indexName ).addTypes( typeName ).execute().actionGet();
-
-            //            log.debug("Created new type mapping");
-            //            log.debug("   Scope application: " + indexScope.getApplication());
-            //            log.debug("   Scope owner: " + indexScope.getOwner());
-            //            log.debug("   Type name: " + typeName);
-
-            knownTypes.add( typeName );
-        }
-        catch ( IndexAlreadyExistsException ignored ) {
-            // expected
-        }
-        catch ( IOException ex ) {
-            throw new RuntimeException(
-                    "Exception initializing type " + typeName + " in app " + applicationScope.getApplication()
-                                                                                             .toString() );
-        }
-    }
-
-
-    /**
-     * Convert Entity to Map. Adding prefixes for types:
-     *
-     * su_ - String unanalyzed field sa_ - String analyzed field go_ - Location field nu_ - Number field bu_ - Boolean
-     * field
+     * Convert Entity to Map and Adding prefixes for types:
+     * <pre>
+     * su_ - String unanalyzed field 
+     * sa_ - String analyzed field 
+     * go_ - Location field nu_ - Number field 
+     * bu_ - Boolean field
+     * </pre>
      */
     private static Map entityToMap( EntityObject entity ) {
 
@@ -291,7 +256,8 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
             if ( f instanceof ListField ) {
                 List list = ( List ) field.getValue();
-                entityMap.put( field.getName().toLowerCase(), new ArrayList( processCollectionForMap( list ) ) );
+                entityMap.put( field.getName().toLowerCase(), 
+                        new ArrayList( processCollectionForMap( list ) ) );
 
                 if ( !list.isEmpty() ) {
                     if ( list.get( 0 ) instanceof String ) {
@@ -304,18 +270,17 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
             }
             else if ( f instanceof ArrayField ) {
                 List list = ( List ) field.getValue();
-                entityMap.put( field.getName().toLowerCase(), new ArrayList( processCollectionForMap( list ) ) );
+                entityMap.put( field.getName().toLowerCase(), 
+                        new ArrayList( processCollectionForMap( list ) ) );
             }
             else if ( f instanceof SetField ) {
                 Set set = ( Set ) field.getValue();
-                entityMap.put( field.getName().toLowerCase(), new ArrayList( processCollectionForMap( set ) ) );
+                entityMap.put( field.getName().toLowerCase(), 
+                        new ArrayList( processCollectionForMap( set ) ) );
             }
             else if ( f instanceof EntityObjectField ) {
                 EntityObject eo = ( EntityObject ) field.getValue();
                 entityMap.put( field.getName().toLowerCase(), entityToMap( eo ) ); // recursion
-
-                // Add type information as field-name prefixes
-
             }
             else if ( f instanceof StringField ) {
 
@@ -334,7 +299,9 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
                 locMap.put( "lon", locField.getValue().getLongitude() );
                 entityMap.put( GEO_PREFIX + field.getName().toLowerCase(), locMap );
             }
-            else if ( f instanceof DoubleField || f instanceof FloatField || f instanceof IntegerField
+            else if ( f instanceof DoubleField 
+                    || f instanceof FloatField 
+                    || f instanceof IntegerField
                     || f instanceof LongField ) {
 
                 entityMap.put( NUMBER_PREFIX + field.getName().toLowerCase(), field.getValue() );
@@ -345,7 +312,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
             }
             else if ( f instanceof UUIDField ) {
 
-                entityMap.put( STRING_PREFIX + field.getName().toLowerCase(), field.getValue().toString() );
+                entityMap.put( STRING_PREFIX + field.getName().toLowerCase(), field.getValue().toString().toLowerCase() );
             }
             else {
                 entityMap.put( field.getName().toLowerCase(), field.getValue() );

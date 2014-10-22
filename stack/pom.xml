@@ -111,11 +111,11 @@
     <org.springframework.version>3.1.2.RELEASE</org.springframework.version>
     <shiro-version>1.2.0</shiro-version>
     <slf4j-version>1.6.1</slf4j-version>
-    <snakeyaml-version>1.6</snakeyaml-version>
+    <snakeyaml-version>1.8</snakeyaml-version>
     <tomcat-version>7.0.52</tomcat-version>
     <antlr.version>3.4</antlr.version>
     <tika.version>1.4</tika.version>
-    <elasticsearch.version>1.2.4</elasticsearch.version>
+    <elasticsearch.version>1.3.2</elasticsearch.version>
 
     <usergrid.it.forkCount>3</usergrid.it.forkCount>
     <usergrid.it.reuseForks>false</usergrid.it.reuseForks>
@@ -199,8 +199,10 @@
     <module>core</module>
     <module>services</module>
     <module>rest</module>
+    <!--
     <module>tools</module>
     <module>websocket</module>
+    -->
     <!--
     Re-enable when we have a fix for the AppleJavaExtensions jar issue
     https://issues.apache.org/jira/browse/USERGRID-224
@@ -353,7 +355,22 @@
             <groupId>org.antlr</groupId>
             <artifactId>antlr-runtime</artifactId>
           </exclusion>
-
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcomponents-client</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcomponents-core</artifactId>
+          </exclusion>
           <exclusion>
             <groupId>jline</groupId>
             <artifactId>jline</artifactId>
@@ -456,10 +473,6 @@
         <artifactId>cassandra-thrift</artifactId>
         <version>${cassandra-version}</version>
         <exclusions>
-          <exclusion>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-          </exclusion>
           <exclusion>
             <groupId>commons-lang</groupId>
             <artifactId>commons-lang</artifactId>
@@ -1247,7 +1260,7 @@
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit-dep</artifactId>
-        <version>4.11</version>
+        <version>4.10</version>
       </dependency>
 
       <dependency>
@@ -1862,12 +1875,17 @@
                     <exclude>**/**QueryFilter.tokens</exclude>
                     <exclude>**/**QueryFilterLexer.java</exclude>
                     <exclude>**/**QueryFilterParser.java</exclude>
-
+                    <exclude>**/**.conf</exclude>
+                    <exclude>**/**.csv</exclude>
+                    <exclude>loadtests/loadtest_setup.sh</exclude>
+                    <exclude>loadtests/gatling/user-files/request-bodies/**</exclude>
                     <!-- other -->
                     <exclude>**/m2/**</exclude>
                     <exclude>**/*.asc</exclude>
                     <exclude>**/dummy.txt</exclude>
                     <exclude>**/cloudbees.xml</exclude>
+                    <exlude>loadtests/gatling/lib/**</exlude>
+                    <exlude>loadtests/gatling/user-files/**</exlude>
 
                 </excludes>
             </configuration>
