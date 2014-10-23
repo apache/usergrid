@@ -12,5 +12,8 @@ public interface QueueFig extends GuicyFig {
     @Default("us-east-1")
     public String getRegion();
 
+    @Key( "queue.prefix" )
+    @Default("usergrid")
+    public String getPrefix();
 
 }

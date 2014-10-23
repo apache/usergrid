@@ -54,7 +54,6 @@ public class ApplicationQueueManager  {
 
     private static ExecutorService INACTIVE_DEVICE_CHECK_POOL = Executors.newFixedThreadPool(5);
     public static final String NOTIFIER_ID_POSTFIX = ".notifier.id";
-    public static final String QUEUE_PREFIX = "usergrid";
 
     private final EntityManager em;
     private final QueueManager qm;
