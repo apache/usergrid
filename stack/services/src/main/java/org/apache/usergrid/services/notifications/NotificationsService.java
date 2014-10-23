@@ -33,6 +33,7 @@ import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.queue.QueueManager;
 import org.apache.usergrid.persistence.queue.QueueManagerFactory;
 import org.apache.usergrid.persistence.queue.QueueScope;
+import org.apache.usergrid.persistence.queue.QueueScopeFactory;
 import org.apache.usergrid.persistence.queue.impl.QueueScopeImpl;
 import org.apache.usergrid.services.*;
 import org.slf4j.Logger;
@@ -99,13 +100,15 @@ public class NotificationsService extends AbstractCollectionService {
         super.init(info);
         smf = getApplicationContext().getBean(ServiceManagerFactory.class);
         emf = getApplicationContext().getBean(EntityManagerFactory.class);
+
         Properties props = (Properties)getApplicationContext().getBean("properties");
         metricsService = getApplicationContext().getBean(MetricsFactory.class);
         postMeter = metricsService.getMeter(NotificationsService.class, "requests");
         postTimer = metricsService.getTimer(this.getClass(), "execution_rest");
         JobScheduler jobScheduler = new JobScheduler(sm,em);
         String name = ApplicationQueueManager.getQueueNames(props);
-        QueueScope queueScope = new QueueScopeImpl(new SimpleId(smf.getManagementAppId(),ApplicationQueueManager.QUEUE_PREFIX),name);
+        QueueScopeFactory queueScopeFactory = CpSetup.getInjector().getInstance(QueueScopeFactory.class);
+        QueueScope queueScope = queueScopeFactory.getScope(smf.getManagementAppId(), name);
         queueManagerFactory = CpSetup.getInjector().getInstance(QueueManagerFactory.class);
         QueueManager queueManager = TEST_QUEUE_MANAGER !=null ? TEST_QUEUE_MANAGER : queueManagerFactory.getQueueManager(queueScope);
         notificationQueueManager = new ApplicationQueueManager(jobScheduler,em,queueManager,metricsService,props);
