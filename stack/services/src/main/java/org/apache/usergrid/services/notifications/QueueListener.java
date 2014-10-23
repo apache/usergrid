@@ -135,14 +135,14 @@ public class QueueListener  {
         LOG.info("QueueListener: Starting execute process.");
         Meter meter = metricsService.getMeter(QueueListener.class, "queue");
         com.codahale.metrics.Timer timer = metricsService.getTimer(QueueListener.class, "dequeue");
-
+        svcMgr = smf.getServiceManager(smf.getManagementAppId());
+        LOG.info("getting from queue {} ", queueName);
+        QueueScope queueScope = new QueueScopeImpl(new SimpleId(smf.getManagementAppId(),ApplicationQueueManager.QUEUE_PREFIX),queueName);
+        QueueManager queueManager = TEST_QUEUE_MANAGER != null ? TEST_QUEUE_MANAGER : queueManagerFactory.getQueueManager(queueScope);
         // run until there are no more active jobs
         while ( true ) {
             try {
-                svcMgr = smf.getServiceManager(smf.getManagementAppId());
-                LOG.info("getting from queue {} ", queueName);
-                QueueScope queueScope = new QueueScopeImpl(new SimpleId(smf.getManagementAppId(),ApplicationQueueManager.QUEUE_PREFIX),queueName);
-                QueueManager queueManager = TEST_QUEUE_MANAGER != null ? TEST_QUEUE_MANAGER : queueManagerFactory.getQueueManager(queueScope);
+
                 Timer.Context timerContext = timer.time();
                 List<QueueMessage> messages = queueManager.getMessages(getBatchSize(), MESSAGE_TRANSACTION_TIMEOUT, 5000, ApplicationQueueMessage.class);
                 LOG.info("retrieved batch of {} messages from queue {} ", messages.size(),queueName);

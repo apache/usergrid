@@ -27,6 +27,9 @@ import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 import com.google.inject.assistedinject.Assisted;
@@ -39,6 +42,8 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 public class SQSQueueManagerImpl implements QueueManager {
     private static final Logger LOG = LoggerFactory.getLogger(SQSQueueManagerImpl.class);
@@ -47,9 +52,36 @@ public class SQSQueueManagerImpl implements QueueManager {
     private  QueueScope scope;
     private  QueueFig fig;
     private  ObjectMapper mapper;
-    private Queue queue;
     private static SmileFactory smileFactory = new SmileFactory();
 
+    private static LoadingCache<SqsLoader, Queue> urlMap = CacheBuilder.newBuilder()
+            .maximumSize(1000)
+            .build(new CacheLoader<SqsLoader, Queue>() {
+                       @Override
+                       public Queue load(SqsLoader queueLoader) throws Exception {
+                           Queue queue = null;
+                           try {
+                               GetQueueUrlResult result = queueLoader.getClient().getQueueUrl(queueLoader.getKey());
+                               queue = new Queue(result.getQueueUrl());
+                           } catch (QueueDoesNotExistException queueDoesNotExistException) {
+                               queue = null;
+                           } catch (Exception e) {
+                               LOG.error("failed to get queue from service", e);
+                               throw e;
+                           }
+                           if (queue == null) {
+                               String name = queueLoader.getKey();
+                               CreateQueueRequest createQueueRequest = new CreateQueueRequest()
+                                       .withQueueName(name);
+                               CreateQueueResult result = queueLoader.getClient().createQueue(createQueueRequest);
+                               String url = result.getQueueUrl();
+                               queue = new Queue(url);
+                               LOG.info("Created queue with url {}", url);
+                           }
+                           return queue;
+                       }
+                   }
+            );
 
     @Inject
     public SQSQueueManagerImpl(@Assisted QueueScope scope, QueueFig fig){
@@ -71,35 +103,19 @@ public class SQSQueueManagerImpl implements QueueManager {
         }
     }
 
-    public Queue createQueue(){
-        String name = getName();
-        CreateQueueRequest createQueueRequest = new CreateQueueRequest()
-                .withQueueName(name);
-        CreateQueueResult result = sqs.createQueue(createQueueRequest);
-        String url = result.getQueueUrl();
-        LOG.info("Created queue with url {}",url);
-        return new Queue(url);
-    }
 
     private String getName() {
         String name = scope.getApplication().getType() + "_"+ scope.getName() + "_"+ scope.getApplication().getUuid().toString();
         return name;
     }
-    public Queue getQueue(){
-        if(queue == null) {
-            ListQueuesResult result =  sqs.listQueues();
-            for (String queueUrl : result.getQueueUrls()) {
-                boolean found = queueUrl.contains(getName());
-                if (found) {
-                    queue = new Queue(queueUrl);
-                    break;
-                }
-            }
+
+    public Queue getQueue() {
+        try {
+            Queue queue = urlMap.get(new SqsLoader(getName(),sqs));
+            return queue;
+        } catch (ExecutionException ee) {
+            throw new RuntimeException(ee);
         }
-        if(queue == null) {
-            queue = createQueue();
-        }
-        return queue;
     }
 
     @Override
@@ -140,7 +156,7 @@ public class SQSQueueManagerImpl implements QueueManager {
             return;
         }
         String url = getQueue().getUrl();
-        LOG.info("Sending Messages...{} to {}",bodies.size(),url);
+        LOG.info("Sending Messages...{} to {}", bodies.size(), url);
 
         SendMessageBatchRequest request = new SendMessageBatchRequest(url);
         List<SendMessageBatchRequestEntry> entries = new ArrayList<>(bodies.size());
@@ -208,6 +224,9 @@ public class SQSQueueManagerImpl implements QueueManager {
         return mapper.writeValueAsString(o);
     }
 
+
+
+
     public class UsergridAwsCredentialsProvider implements AWSCredentialsProvider {
 
         private AWSCredentials creds;
@@ -254,5 +273,45 @@ public class SQSQueueManagerImpl implements QueueManager {
         public void refresh() {
             init();
         }
+    }
+
+    public class SqsLoader {
+        private final String key;
+        private final AmazonSQSClient client;
+
+        public SqsLoader(String key, AmazonSQSClient client) {
+            this.key = key;
+            this.client = client;
+        }
+
+        public AmazonSQSClient getClient() {
+            return client;
+        }
+
+        public String getKey() {
+            return key;
+        }
+
+        @Override
+        public boolean equals(Object o){
+            if(o instanceof  SqsLoader){
+                SqsLoader loader = (SqsLoader)o;
+                return loader.getKey().equals(this.getKey());
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = getKey().hashCode();
+            return result;
+        }
+
+
+        @Override
+        public String toString() {
+            return getKey();
+        }
+
     }
 }

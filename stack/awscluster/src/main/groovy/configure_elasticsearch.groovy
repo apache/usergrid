@@ -63,7 +63,7 @@ threadpool.index.type: fixed
 threadpool.index.size: 160
 threadpool.index.queue_size: 401
 threadpool.bulk.type: fixed
-threadpool.bulk.size: 160
+threadpool.bulk.size: 320
 threadpool.bulk.queue_size: 800
 
 action.auto_create_index: false

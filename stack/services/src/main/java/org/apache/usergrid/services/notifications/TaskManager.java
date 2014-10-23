@@ -162,7 +162,6 @@ public class TaskManager {
             // refresh notification
             if (fetch)
                 notification = em.get(this.notification.getUuid(), Notification.class);
-            notification.setModified(System.currentTimeMillis());
 
             //and write them out again, this will produce the most accurate count
             Map<String, Long> stats = new HashMap<>(2);
@@ -172,13 +171,17 @@ public class TaskManager {
 
             long totals = (notification.getStatistics().get("sent") + notification.getStatistics().get("errors"));
             //none of this is known and should you ever do this
-            Map<String, Object> properties = new HashMap<>();
+            notification.setModified(System.currentTimeMillis());
             notification.setFinished(notification.getModified());
+
+            Map<String, Object> properties = new HashMap<>();
             properties.put("finished", notification.getModified());
             properties.put("state", notification.getState());
             notification.addProperties(properties);
+
             long latency = notification.getFinished() - notification.getStarted();
             LOG.info("notification finished batch: {} of {} devices in " + latency + "ms", notification.getUuid(), totals);
+
             em.update(notification);
 //        Set<Notifier> notifiers = new HashSet<>(proxy.getNotifierMap().values()); // remove dups
 //        proxy.asyncCheckForInactiveDevices(notifiers);
