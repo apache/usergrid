@@ -19,7 +19,8 @@
 package org.apache.usergrid.persistence.collection.impl;
 
 
-import org.apache.usergrid.persistence.collection.EntityVersionCleanupFactory;
+import org.apache.usergrid.persistence.collection.*;
+
 import java.net.ConnectException;
 import java.util.*;
 import java.util.Collection;
@@ -30,21 +31,17 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
+import org.apache.usergrid.persistence.core.task.Task;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.EntityCollectionManager;
-import org.apache.usergrid.persistence.collection.EntitySet;
-import org.apache.usergrid.persistence.collection.VersionSet;
 import org.apache.usergrid.persistence.collection.guice.CollectionTaskExecutor;
 import org.apache.usergrid.persistence.collection.guice.Write;
 import org.apache.usergrid.persistence.collection.guice.WriteUpdate;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
-import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccValidationUtils;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkCommit;
@@ -102,6 +99,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     private EntityVersionCleanupFactory entityVersionCleanupFactory;
     private final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy;
     private final MvccEntitySerializationStrategy entitySerializationStrategy;
+    private EntityDeletedFactory entityDeletedFactory;
     private UniqueValueSerializationStrategy uniqueValueSerializationStrategy;
 
 
@@ -116,11 +114,13 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                                        final MvccEntitySerializationStrategy entitySerializationStrategy,
                                        final UniqueValueSerializationStrategy uniqueValueSerializationStrategy,
                                        final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy,
+                                       final EntityDeletedFactory entityDeletedFactory,
                                        @CollectionTaskExecutor final TaskExecutor taskExecutor,
                                        @Assisted final CollectionScope collectionScope
     ) {
         this.uniqueValueSerializationStrategy = uniqueValueSerializationStrategy;
         this.entitySerializationStrategy = entitySerializationStrategy;
+        this.entityDeletedFactory = entityDeletedFactory;
 
 
         Preconditions.checkNotNull(uuidService, "uuidService must be defined");
@@ -190,13 +190,17 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull(entityId.getType(), "Entity type is required in this stage");
 
 
-        return Observable.from(new CollectionIoEvent<Id>(collectionScope, entityId)).map(markStart)
+        Observable<Void> o = Observable.from(new CollectionIoEvent<Id>(collectionScope, entityId)).map(markStart)
                 .doOnNext(markCommit).map(new Func1<CollectionIoEvent<MvccEntity>, Void>() {
                     @Override
                     public Void call(final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent) {
+                        MvccEntity entity = mvccEntityCollectionIoEvent.getEvent();
+                        Task<Void> task = entityDeletedFactory.getTask(entity.getId(),entity.getVersion());
+                        taskExecutor.submit(task);
                         return null;
                     }
                 });
+        return o;
     }
 
 
