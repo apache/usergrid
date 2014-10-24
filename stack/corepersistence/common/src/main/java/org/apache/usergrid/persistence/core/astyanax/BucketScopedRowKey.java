@@ -25,6 +25,11 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 
+/**
+ * A scoped row key that also includes an index, which can be used for consistent hashing.
+ *
+ * @param <K>
+ */
 public class BucketScopedRowKey< K> extends ScopedRowKey< K> {
 
     private final int bucketNumber;
@@ -100,13 +105,13 @@ public class BucketScopedRowKey< K> extends ScopedRowKey< K> {
     /**
      * Create a list of all buckets from [0,  totalBuckets}.  Note that this is an n-1 0 based system
      */
-    public static < K> List<BucketScopedRowKey< K>> fromRange( final Id scope, final K key, final int totalBuckets ) {
+    public static < K> List<BucketScopedRowKey< K>> fromRange( final Id scope, final K key, final int... buckets ) {
 
-        final List<BucketScopedRowKey< K>> results = new ArrayList<>( totalBuckets );
+        final List<BucketScopedRowKey< K>> results = new ArrayList<>( buckets.length );
 
 
-        for ( int i = 0; i < totalBuckets; i++ ) {
-            results.add( new BucketScopedRowKey<>( scope, key, i ) );
+        for ( int i = 0; i < buckets.length; i++ ) {
+            results.add( new BucketScopedRowKey<>( scope, key, buckets[i] ) );
         }
 
         return results;

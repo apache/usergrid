@@ -34,11 +34,12 @@ import com.netflix.astyanax.serializers.IntegerSerializer;
 
 
 /**
- * Serializer for serializing CollectionScope + any type into row keys
+ * Serializer for serializing CollectionScope + any type into row keys.
+ *
  *
  * @author tnine
  */
-public class OrganizationScopedBucketRowKeySerializer<K> extends AbstractSerializer<BucketScopedRowKey<K>> {
+public class BucketScopedRowKeySerializer<K> extends AbstractSerializer<BucketScopedRowKey<K>> {
 
 
     private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
@@ -52,7 +53,7 @@ public class OrganizationScopedBucketRowKeySerializer<K> extends AbstractSeriali
 
 
 
-    public OrganizationScopedBucketRowKeySerializer( final CompositeFieldSerializer<K> keySerializer ) {
+    public BucketScopedRowKeySerializer( final CompositeFieldSerializer<K> keySerializer ) {
         this.keySerializer = keySerializer;
     }
 

@@ -30,9 +30,8 @@ import org.apache.cassandra.db.marshal.DynamicCompositeType;
 import org.apache.usergrid.persistence.core.astyanax.ColumnTypes;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
-import org.apache.usergrid.persistence.core.astyanax.OrganizationScopedRowKeySerializer;
+import org.apache.usergrid.persistence.core.astyanax.ScopedRowKeySerializer;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEdge;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeColumnFamilies;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeRowKey;
@@ -78,17 +77,17 @@ public class SizebasedEdgeColumnFamilies implements EdgeColumnFamilies {
     //initialize the CF's from our implementation
     private static final MultiTennantColumnFamily<ScopedRowKey<RowKey>, DirectedEdge> SOURCE_NODE_EDGES =
             new MultiTennantColumnFamily<>( "Graph_Source_Node_Edges",
-                    new OrganizationScopedRowKeySerializer<>( ROW_SERIALIZER ), EDGE_SERIALIZER );
+                    new ScopedRowKeySerializer<>( ROW_SERIALIZER ), EDGE_SERIALIZER );
 
 
     private static final MultiTennantColumnFamily<ScopedRowKey<RowKey>, DirectedEdge> TARGET_NODE_EDGES =
             new MultiTennantColumnFamily<>( "Graph_Target_Node_Edges",
-                    new OrganizationScopedRowKeySerializer<>( ROW_SERIALIZER ), EDGE_SERIALIZER );
+                    new ScopedRowKeySerializer<>( ROW_SERIALIZER ), EDGE_SERIALIZER );
 
 
     private static final MultiTennantColumnFamily<ScopedRowKey<RowKeyType>, DirectedEdge> SOURCE_NODE_TARGET_TYPE =
             new MultiTennantColumnFamily<>( "Graph_Source_Node_Target_Type",
-                    new OrganizationScopedRowKeySerializer<>( ROW_TYPE_SERIALIZER ), EDGE_SERIALIZER );
+                    new ScopedRowKeySerializer<>( ROW_TYPE_SERIALIZER ), EDGE_SERIALIZER );
 
 
     /**
@@ -96,12 +95,12 @@ public class SizebasedEdgeColumnFamilies implements EdgeColumnFamilies {
      */
     private static final MultiTennantColumnFamily<ScopedRowKey<RowKeyType>, DirectedEdge> TARGET_NODE_SOURCE_TYPE =
             new MultiTennantColumnFamily<>( "Graph_Target_Node_Source_Type",
-                    new OrganizationScopedRowKeySerializer<>( ROW_TYPE_SERIALIZER ), EDGE_SERIALIZER );
+                    new ScopedRowKeySerializer<>( ROW_TYPE_SERIALIZER ), EDGE_SERIALIZER );
 
 
     private static final MultiTennantColumnFamily<ScopedRowKey<EdgeRowKey>, Long> EDGE_VERSIONS =
             new MultiTennantColumnFamily<>( "Graph_Edge_Versions",
-                    new OrganizationScopedRowKeySerializer<>( EDGE_ROW_KEY_SERIALIZER ), LONG_SERIALIZER );
+                    new ScopedRowKeySerializer<>( EDGE_ROW_KEY_SERIALIZER ), LONG_SERIALIZER );
 
 
     @Override

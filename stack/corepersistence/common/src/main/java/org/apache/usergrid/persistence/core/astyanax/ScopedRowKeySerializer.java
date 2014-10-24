@@ -37,7 +37,7 @@ import com.netflix.astyanax.serializers.AbstractSerializer;
  *
  * @author tnine
  */
-public class OrganizationScopedRowKeySerializer<K> extends AbstractSerializer<ScopedRowKey<K>> {
+public class ScopedRowKeySerializer<K> extends AbstractSerializer<ScopedRowKey<K>> {
 
 
     private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
@@ -51,7 +51,7 @@ public class OrganizationScopedRowKeySerializer<K> extends AbstractSerializer<Sc
 
 
 
-    public OrganizationScopedRowKeySerializer( final CompositeFieldSerializer<K> keySerializer ) {
+    public ScopedRowKeySerializer( final CompositeFieldSerializer<K> keySerializer ) {
         this.keySerializer = keySerializer;
     }
 

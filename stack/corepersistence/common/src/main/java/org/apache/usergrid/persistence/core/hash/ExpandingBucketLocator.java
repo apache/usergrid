@@ -39,26 +39,19 @@ package org.apache.usergrid.persistence.core.hash;/*
  */
 
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.google.common.hash.Funnel;
 
 
 /**
- * An algorithm that will generate all possible keys for different "Levels" of sharding.  For instance, imagine this scheme.
+ * An algorithm that will generate all possible keys for different "Levels" of sharding.  For instance, imagine this
+ * scheme.
  *
- * 1 Shard
- * 2 Shards
- * 4 Shards
- * 8 Shards
+ * 1 Shard 2 Shards 4 Shards 8 Shards
  *
  * (note that we do not need to expand by 2x each time, this is merely an example).
  *
- * When seeking on a string key, for 4 levels of the key, we get 4 different keys due to different shard sizes.
- * This is faster than seeking ALL shards, since this would result in 15 shards, vs 4 in the example.
- *
- * @param <T>
+ * When seeking on a string key, for 4 levels of the key, we get 4 different keys due to different shard sizes. This is
+ * faster than seeking ALL shards, since this would result in 15 shards, vs 4 in the example.
  */
 public class ExpandingBucketLocator<T> {
 
@@ -66,34 +59,37 @@ public class ExpandingBucketLocator<T> {
 
 
     /**
-     * Create a new instance with the specified history. For instance, from the javadoc above, the constructor
-     * would contains {8, 4, 3, 2, 1}.  Shards are returned in the size order they are given in the constructor
-     * @param funnel
-     * @param bucketSizes
+     * Create a new instance with the specified history. For instance, from the javadoc above, the constructor would
+     * contains {8, 4, 3, 2, 1}.  Shards are returned in the size order they are given in the constructor
      */
     public ExpandingBucketLocator( final Funnel<T> funnel, final int... bucketSizes ) {
 
         bucketLocatorList = new BucketLocator[bucketSizes.length];
 
-        for(int i = 0; i < bucketSizes.length; i ++){
+        for ( int i = 0; i < bucketSizes.length; i++ ) {
             bucketLocatorList[i] = new BucketLocator<>( funnel, bucketSizes[i] );
         }
-
     }
 
 
     /**
      * Hash the results, and return them in the same order as specified in the constructor
-     * @param hash
-     * @return
      */
-    public int[] getBuckets(T hash){
+    public int[] getAllBuckets( T hash ) {
         int[] results = new int[bucketLocatorList.length];
 
-        for(int i = 0; i < bucketLocatorList.length; i ++){
-          results[i] = bucketLocatorList[i].getBucket( hash );
+        for ( int i = 0; i < bucketLocatorList.length; i++ ) {
+            results[i] = bucketLocatorList[i].getBucket( hash );
         }
 
         return results;
+    }
+
+
+    /**
+     * Get the current bucket for the hash value.  Hashes from the first element in the list
+     */
+    public int getCurrentBucket( T hash ) {
+        return bucketLocatorList[0].getBucket( hash );
     }
 }

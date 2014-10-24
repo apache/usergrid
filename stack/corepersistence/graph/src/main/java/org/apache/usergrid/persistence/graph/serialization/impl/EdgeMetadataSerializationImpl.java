@@ -33,7 +33,7 @@ import org.apache.usergrid.persistence.core.astyanax.CompositeFieldSerializer;
 import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
-import org.apache.usergrid.persistence.core.astyanax.OrganizationScopedRowKeySerializer;
+import org.apache.usergrid.persistence.core.astyanax.ScopedRowKeySerializer;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.core.astyanax.StringColumnParser;
 import org.apache.usergrid.persistence.core.migration.Migration;
@@ -70,14 +70,14 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
     //row key serializers
     private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
-    private static final OrganizationScopedRowKeySerializer<Id> ROW_KEY_SER =
-            new OrganizationScopedRowKeySerializer<Id>( ID_SER );
+    private static final ScopedRowKeySerializer<Id> ROW_KEY_SER =
+            new ScopedRowKeySerializer<Id>( ID_SER );
 
     private static final StringSerializer STRING_SERIALIZER = StringSerializer.get();
 
     private static final EdgeTypeRowCompositeSerializer EDGE_SER = new EdgeTypeRowCompositeSerializer();
-    private static final OrganizationScopedRowKeySerializer<EdgeIdTypeKey> EDGE_TYPE_ROW_KEY =
-            new OrganizationScopedRowKeySerializer<EdgeIdTypeKey>( EDGE_SER );
+    private static final ScopedRowKeySerializer<EdgeIdTypeKey> EDGE_TYPE_ROW_KEY =
+            new ScopedRowKeySerializer<EdgeIdTypeKey>( EDGE_SER );
 
     private static final StringColumnParser PARSER = StringColumnParser.get();
 

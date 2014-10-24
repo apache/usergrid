@@ -44,14 +44,19 @@ public class ExpandingBucketLocatorTest extends TestCase {
         final String key = "mytestkey";
 
 
-        int[] results1 = expandingBucketLocator1.getBuckets(key  );
-        int[] results2 = expandingBucketLocator2.getBuckets(key  );
+        int[] results1 = expandingBucketLocator1.getAllBuckets(key  );
+        int[] results2 = expandingBucketLocator2.getAllBuckets(key  );
 
         assertTrue( "Same results returned", Arrays.equals(results1, results2));
 
         assertTrue("Within bounds", results1[0] <= 19);
         assertTrue("Within bounds", results1[1] <= 9);
         assertTrue("Within bounds", results1[2] <= 0);
+
+        //test the first hash
+        int newestBucket = expandingBucketLocator1.getCurrentBucket( key );
+
+        assertEquals("Same bucket returned", results1[0], newestBucket);
 
 
     }
