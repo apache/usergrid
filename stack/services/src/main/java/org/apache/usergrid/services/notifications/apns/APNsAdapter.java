@@ -21,6 +21,7 @@ import com.google.common.cache.*;
 import com.relayrides.pushy.apns.*;
 import com.relayrides.pushy.apns.util.*;
 
+import io.netty.channel.nio.NioEventLoopGroup;
 import org.apache.usergrid.persistence.entities.Notification;
 import org.apache.usergrid.persistence.entities.Notifier;
 import org.mortbay.util.ajax.JSON;
@@ -122,22 +123,8 @@ public class APNsAdapter implements ProviderAdapter {
     public Map<String, Date> getInactiveDevices(Notifier notifier,
             EntityManager em) throws Exception {
         Map<String,Date> map = new HashMap<String,Date>();
-        if(isMock(notifier)){
-            return map;
-        }
         PushManager<SimpleApnsPushNotification> pushManager = getPushManager(notifier);
-
-        List<ExpiredToken> tokens = null;
-        try {
-            tokens = pushManager.getExpiredTokens();
-        }catch (FeedbackConnectionException fce){
-            logger.debug("Failed to get tokens",fce);
-            return map;
-        }
-        for(ExpiredToken token : tokens){
-            String expiredToken = new String(token.getToken());
-            map.put(expiredToken, token.getExpiration());
-        }
+        pushManager.requestExpiredTokens();
         return map;
     }
 
@@ -179,13 +166,26 @@ public class APNsAdapter implements ProviderAdapter {
                 public PushManager<SimpleApnsPushNotification> load(Notifier notifier) {
                     try {
                         LinkedBlockingQueue<SimpleApnsPushNotification> queue = new LinkedBlockingQueue<SimpleApnsPushNotification>();
+                        NioEventLoopGroup group = new NioEventLoopGroup();
                         PushManagerConfiguration config = new PushManagerConfiguration();
                         config.setConcurrentConnectionCount(Runtime.getRuntime().availableProcessors() * 2);
-                        PushManager<SimpleApnsPushNotification> pushManager =  new PushManager<SimpleApnsPushNotification>(getApnsEnvironment(notifier), getSSLContext(notifier), null, null, queue, config);
+                        PushManager<SimpleApnsPushNotification> pushManager =  new PushManager<>(getApnsEnvironment(notifier), getSSLContext(notifier), group,null , queue, config,notifier.getName());
                         //only tested when a message is sent
                         pushManager.registerRejectedNotificationListener(new RejectedAPNsListener());
                         //this will get tested when start is called
                         pushManager.registerFailedConnectionListener(new FailedConnectionListener());
+
+                        pushManager.registerExpiredTokenListener(new ExpiredTokenListener<SimpleApnsPushNotification>() {
+                            @Override
+                            public void handleExpiredTokens(PushManager<? extends SimpleApnsPushNotification> pushManager, Collection<ExpiredToken> expiredTokens) {
+                                Map<String,Date> map = new HashMap<String,Date>();
+                                for(ExpiredToken token : expiredTokens){
+                                    String expiredToken = new String(token.getToken());
+                                    map.put(expiredToken, token.getExpiration());
+                                }
+                                //TODO figure out way to call back and clear out em references
+                            }
+                        });
                         try {
                             if (!pushManager.isStarted()) { //ensure manager is started
                                 pushManager.start();
