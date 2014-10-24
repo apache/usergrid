@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.core.astyanax;/*
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,6 +16,8 @@ package org.apache.usergrid.persistence.core.astyanax;/*
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.usergrid.persistence.core.hash;
+
 
 
 import com.google.common.hash.Funnel;
@@ -25,7 +27,8 @@ import com.google.common.hash.Hashing;
 
 
 /**
- * Simple utility to locate which bucket an element should be in
+ * Simple utility to locate which bucket an element should be located based on it's funnel
+ *
  */
 public class BucketLocator<T> {
 
@@ -38,9 +41,9 @@ public class BucketLocator<T> {
     private final Funnel<T> funnel;
 
 
-    public BucketLocator( final int totalBuckets, final Funnel<T> funnel ) {
-        this.totalBuckets = totalBuckets;
+    public BucketLocator(final Funnel<T> funnel, final int totalBuckets ) {
         this.funnel = funnel;
+        this.totalBuckets = totalBuckets;
     }
 
 
@@ -55,6 +58,13 @@ public class BucketLocator<T> {
      *
      * <p>See the <a href="http://en.wikipedia.org/wiki/Consistent_hashing">wikipedia article on consistent hashing</a>
      * for more information.
+     *
+     * <p>See <a href="http://arxiv.org/pdf/1406.2294v1.pdf">this paper</a> for more details on the algorithm</p>
+     *
+     *
+     * Note that after testing, increasing buckets does NOT yield the expected results.  You will need an algorithm
+     * that manually walks a tree.  See
+     *
      */
     public int getBucket( T value ) {
 
