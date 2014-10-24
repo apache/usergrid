@@ -63,16 +63,7 @@ public class ApplicationQueueManager  {
 
     HashMap<Object, Notifier> notifierHashMap; // only retrieve notifiers once
 
-    public final Map<String, ProviderAdapter> providerAdapters =   new HashMap<String, ProviderAdapter>(3);
-    {
-        providerAdapters.put("apple", APNS_ADAPTER);
-        providerAdapters.put("google", new GCMAdapter());
-        providerAdapters.put("noop", TEST_ADAPTER);
-    };
-    // these 2 can be static, but GCM can't. future: would be nice to get gcm
-    // static as well...
-    public static ProviderAdapter APNS_ADAPTER = new APNsAdapter();
-    public static ProviderAdapter TEST_ADAPTER = new TestAdapter();
+    public final Map<String, ProviderAdapter> providerAdapters;
 
 
     public ApplicationQueueManager(JobScheduler jobScheduler, EntityManager entityManager, QueueManager queueManager, MetricsFactory metricsFactory, Properties properties){
@@ -81,6 +72,12 @@ public class ApplicationQueueManager  {
         this.jobScheduler = jobScheduler;
         this.metricsFactory = metricsFactory;
         this.queueName = getQueueNames(properties);
+        providerAdapters =   new HashMap<String, ProviderAdapter>(3);
+        {
+            providerAdapters.put("apple", new APNsAdapter());
+            providerAdapters.put("google", new GCMAdapter());
+            providerAdapters.put("noop", new TestAdapter());
+        };
     }
 
     public boolean scheduleQueueJob(Notification notification) throws Exception{
@@ -254,6 +251,7 @@ public class ApplicationQueueManager  {
             int count = 0;
             while (notifierIterator.hasNext()) {
                 Notifier notifier = notifierIterator.next();
+                notifier.setEntityManager(em);
                 String name = notifier.getName() != null ? notifier.getName() : "";
                 UUID uuid = notifier.getUuid() != null ? notifier.getUuid() : UUID.randomUUID();
                 notifierHashMap.put(name.toLowerCase(), notifier);
@@ -454,70 +452,26 @@ public class ApplicationQueueManager  {
         }
     }
 
-    public void asyncCheckForInactiveDevices(Set<Notifier> notifiers)  throws Exception {
+    public void asyncCheckForInactiveDevices() throws Exception {
+        Collection<Notifier> notifiers = getNotifierMap().values();
         for (final Notifier notifier : notifiers) {
-            INACTIVE_DEVICE_CHECK_POOL.execute(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        checkForInactiveDevices(notifier);
-                    } catch (Exception e) {
-                        LOG.error("checkForInactiveDevices", e); // not
-                        // essential so
-                        // don't fail,
-                        // but log
-                    }
+            try {
+                ProviderAdapter providerAdapter = providerAdapters.get(notifier.getProvider());
+                if (providerAdapter != null) {
+                    LOG.debug("checking notifier {} for inactive devices", notifier);
+                    providerAdapter.removeInactiveDevices(notifier, em);
+
+                    LOG.debug("finished checking notifier {} for inactive devices",notifier);
                 }
-            });
-        }
-    }
-
-    /** gets the list of inactive devices from the Provider and updates them */
-    private void checkForInactiveDevices(Notifier notifier) throws Exception {
-        ProviderAdapter providerAdapter = providerAdapters.get(notifier
-                .getProvider());
-        if (providerAdapter != null) {
-            LOG.debug("checking notifier {} for inactive devices", notifier);
-            Map<String, Date> inactiveDeviceMap = providerAdapter
-                    .getInactiveDevices(notifier, em);
-
-            if (inactiveDeviceMap != null && inactiveDeviceMap.size() > 0) {
-                LOG.debug("processing {} inactive devices",
-                        inactiveDeviceMap.size());
-                Map<String, Object> clearPushtokenMap = new HashMap<String, Object>(
-                        2);
-                clearPushtokenMap.put(notifier.getName() + NOTIFIER_ID_POSTFIX,
-                        "");
-                clearPushtokenMap.put(notifier.getUuid() + NOTIFIER_ID_POSTFIX,
-                        "");
-
-                // todo: this could be done in a single query
-                for (Map.Entry<String, Date> entry : inactiveDeviceMap
-                        .entrySet()) {
-                    // name
-                    Query query = new Query();
-                    query.addEqualityFilter(notifier.getName()
-                            + NOTIFIER_ID_POSTFIX, entry.getKey());
-                    Results results = em.searchCollection(em.getApplication(),
-                            "devices", query);
-                    for (Entity e : results.getEntities()) {
-                        em.updateProperties(e, clearPushtokenMap);
-                    }
-                    // uuid
-                    query = new Query();
-                    query.addEqualityFilter(notifier.getUuid()
-                            + NOTIFIER_ID_POSTFIX, entry.getKey());
-                    results = em.searchCollection(em.getApplication(),
-                            "devices", query);
-                    for (Entity e : results.getEntities()) {
-                        em.updateProperties(e, clearPushtokenMap);
-                    }
-                }
+            } catch (Exception e) {
+                LOG.error("checkForInactiveDevices", e); // not
+                // essential so
+                // don't fail,
+                // but log
             }
-            LOG.debug("finished checking notifier {} for inactive devices",
-                    notifier);
         }
     }
+
 
     private boolean isOkToSend(Notification notification) {
         Map<String,Long> stats = notification.getStatistics();

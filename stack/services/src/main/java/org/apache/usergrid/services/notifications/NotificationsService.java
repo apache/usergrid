@@ -356,6 +356,7 @@ public class NotificationsService extends AbstractCollectionService {
     public void testConnection(Notifier notifier) throws Exception {
         ProviderAdapter providerAdapter = providerAdapters.get(notifier.getProvider());
         if (providerAdapter != null) {
+            notifier.setEntityManager(em);
             providerAdapter.testConnection(notifier);
         }
     }

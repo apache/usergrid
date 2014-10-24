@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 import rx.Observable;
 import javax.annotation.PostConstruct;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -151,7 +152,7 @@ public class QueueListener  {
                 LOG.info("retrieved batch of {} messages from queue {} ", messages.size(),queueName);
 
                 if (messages.size() > 0) {
-
+                    Map<UUID,ApplicationQueueManager> queueManagerMap = new ConcurrentHashMap<>();
                     HashMap<UUID, List<QueueMessage>> messageMap = new HashMap<>(messages.size());
                     //group messages into hash map by app id
                     for (QueueMessage message : messages) {
@@ -172,14 +173,18 @@ public class QueueListener  {
                         UUID applicationId = entry.getKey();
                         EntityManager entityManager = emf.getEntityManager(applicationId);
                         ServiceManager serviceManager = smf.getServiceManager(applicationId);
-                        final ApplicationQueueManager manager = new ApplicationQueueManager(
-                                new JobScheduler(serviceManager, entityManager),
-                                entityManager,
-                                queueManager,
-                                metricsService,
-                                properties
-                        );
 
+                        ApplicationQueueManager manager = queueManagerMap.get(applicationId);
+                        if(manager==null) {
+                            manager = new ApplicationQueueManager(
+                                    new JobScheduler(serviceManager, entityManager),
+                                    entityManager,
+                                    queueManager,
+                                    metricsService,
+                                    properties
+                            );
+                            queueManagerMap.put(applicationId,manager);
+                        }
                         LOG.info("send batch for app {} of {} messages", entry.getKey(), entry.getValue().size());
                         Observable current = manager.sendBatchToProviders(entry.getValue(),queueName);
                         if(merge == null)
@@ -192,6 +197,9 @@ public class QueueListener  {
                         merge.toBlocking().lastOrDefault(null);
                     }
                     queueManager.commitMessages(messages);
+                    for(ApplicationQueueManager applicationQueueManager : queueManagerMap.values()){
+                        applicationQueueManager.asyncCheckForInactiveDevices();
+                    }
                     meter.mark(messages.size());
                     LOG.info("sent batch {} messages duration {} ms", messages.size(),System.currentTimeMillis() - now);
 

@@ -19,6 +19,7 @@ package org.apache.usergrid.services.notifications.gcm;
 import com.google.android.gcm.server.*;
 import org.apache.usergrid.persistence.entities.Notification;
 import org.apache.usergrid.persistence.entities.Notifier;
+import org.apache.usergrid.services.notifications.InactiveDeviceManager;
 import org.mortbay.util.ajax.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,14 +88,16 @@ public class GCMAdapter implements ProviderAdapter {
     }
 
     @Override
-    public Map<String, Date> getInactiveDevices(Notifier notifier,
+    public void removeInactiveDevices(Notifier notifier,
             EntityManager em) throws Exception {
         Batch batch = getBatch(notifier, null);
         Map<String,Date> map = null;
         if(batch != null) {
             map = batch.getAndClearInactiveDevices();
+            InactiveDeviceManager deviceManager = new InactiveDeviceManager(notifier);
+            deviceManager.removeInactiveDevices(map);
         }
-        return map;
+
     }
 
     @Override

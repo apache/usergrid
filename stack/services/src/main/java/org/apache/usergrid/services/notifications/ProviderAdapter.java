@@ -46,7 +46,7 @@ public interface ProviderAdapter {
      */
     public void doneSendingNotifications() throws Exception;
 
-    public Map<String, Date> getInactiveDevices(Notifier notifier,
+    public void removeInactiveDevices(Notifier notifier,
                                                 EntityManager em) throws Exception;
 
     public Object translatePayload(Object payload) throws Exception;
