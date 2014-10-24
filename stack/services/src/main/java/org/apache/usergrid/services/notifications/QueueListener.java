@@ -144,6 +144,8 @@ public class QueueListener  {
         QueueScope queueScope = queueScopeFactory.getScope(smf.getManagementAppId(), queueName);
         QueueManager queueManager = TEST_QUEUE_MANAGER != null ? TEST_QUEUE_MANAGER : queueManagerFactory.getQueueManager(queueScope);
         // run until there are no more active jobs
+        long runCount = 0;
+        Map<UUID,ApplicationQueueManager> queueManagerMap = new ConcurrentHashMap<>(); //keep a cache of queuemangers then clear them at an interval
         while ( true ) {
             try {
 
@@ -152,7 +154,7 @@ public class QueueListener  {
                 LOG.info("retrieved batch of {} messages from queue {} ", messages.size(),queueName);
 
                 if (messages.size() > 0) {
-                    Map<UUID,ApplicationQueueManager> queueManagerMap = new ConcurrentHashMap<>();
+                    runCount++;
                     HashMap<UUID, List<QueueMessage>> messageMap = new HashMap<>(messages.size());
                     //group messages into hash map by app id
                     for (QueueMessage message : messages) {
@@ -197,15 +199,21 @@ public class QueueListener  {
                         merge.toBlocking().lastOrDefault(null);
                     }
                     queueManager.commitMessages(messages);
-                    for(ApplicationQueueManager applicationQueueManager : queueManagerMap.values()){
-                        applicationQueueManager.asyncCheckForInactiveDevices();
-                    }
+
                     meter.mark(messages.size());
                     LOG.info("sent batch {} messages duration {} ms", messages.size(),System.currentTimeMillis() - now);
 
                     if(sleepBetweenRuns > 0) {
                         LOG.info("sleep between rounds...sleep...{}", sleepBetweenRuns);
                         Thread.sleep(sleepBetweenRuns);
+                    }
+                    if(runCount % 100 == 0){
+                        for(ApplicationQueueManager applicationQueueManager : queueManagerMap.values()){
+                            applicationQueueManager.asyncCheckForInactiveDevices();
+                        }
+                        //clear everything
+                        queueManagerMap.clear();
+                        runCount=0;
                     }
                 }
                 else{

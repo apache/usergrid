@@ -89,10 +89,8 @@ public class TestAdapter implements ProviderAdapter {
     }
 
     @Override
-    public Map<String, Date> getInactiveDevices(Notifier notifier,
-            EntityManager em) throws Exception {
+    public void removeInactiveDevices(Notifier notifier, EntityManager em) throws Exception {
         log.debug("getInactiveDevices()");
-        return null;
     }
 
     @Override
