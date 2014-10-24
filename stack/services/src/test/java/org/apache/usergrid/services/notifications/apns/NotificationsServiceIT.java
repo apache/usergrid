@@ -686,15 +686,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         // mock action (based on verified actual behavior) //
         if (!USE_REAL_CONNECTIONS) {
             ns.providerAdapters.put("apple",
-                    new MockSuccessfulProviderAdapter() {
-                        @Override
-                        public Map<String, Date> getInactiveDevices(
-                                Notifier notifier, EntityManager em)
-                                throws Exception {
-                            return Collections.singletonMap(PUSH_TOKEN,
-                                    new Date());
-                        }
-                    });
+                    new MockSuccessfulProviderAdapter());
         }
 
         // create push notification //
@@ -716,9 +708,6 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         assertEquals(
                 notification.getPayloads().get(notifier.getUuid().toString()),
                 payload);
-//
-//        ns.addDevice(notification, device1);
-//        ns.addDevice(notification, device2);
 
         assertNotNull(device1.getProperty(notifier.getName()
                 + NOTIFIER_ID_POSTFIX));
@@ -731,11 +720,9 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         // check provider IDs //
 
         device1 = app.getEm().get(device1, Device.class);
-        assertNull(device1
-                .getProperty(notifier.getName() + NOTIFIER_ID_POSTFIX));
+        assertNull(device1 .getProperty(notifier.getName() + NOTIFIER_ID_POSTFIX));
         device2 = app.getEm().get(device2, Device.class);
-        assertNull(device2
-                .getProperty(notifier.getName() + NOTIFIER_ID_POSTFIX));
+        assertNull(device2 .getProperty(notifier.getName() + NOTIFIER_ID_POSTFIX));
     }
 
     @Test

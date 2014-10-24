@@ -57,9 +57,9 @@ public class MockSuccessfulProviderAdapter implements ProviderAdapter {
     }
 
     @Override
-    public Map<String, Date> getInactiveDevices(Notifier notifier,
+    public void removeInactiveDevices(Notifier notifier,
             EntityManager em) throws Exception {
-        return null;
+
     }
 
     @Override
