@@ -43,6 +43,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class QueueListener  {
     public  final int MESSAGE_TRANSACTION_TIMEOUT =  25 * 1000;
     private final QueueManagerFactory queueManagerFactory;
+    private final QueueScopeFactory queueScopeFactory;
 
     public   long DEFAULT_SLEEP = 5000;
 
@@ -78,6 +79,8 @@ public class QueueListener  {
         this.emf = emf;
         this.metricsService = metricsService;
         this.properties = props;
+        this.queueScopeFactory = CpSetup.getInjector().getInstance(QueueScopeFactory.class);
+
     }
 
     @PostConstruct
@@ -137,7 +140,7 @@ public class QueueListener  {
         com.codahale.metrics.Timer timer = metricsService.getTimer(QueueListener.class, "dequeue");
         svcMgr = smf.getServiceManager(smf.getManagementAppId());
         LOG.info("getting from queue {} ", queueName);
-        QueueScope queueScope = new QueueScopeImpl(new SimpleId(smf.getManagementAppId(),ApplicationQueueManager.QUEUE_PREFIX),queueName);
+        QueueScope queueScope = queueScopeFactory.getScope(smf.getManagementAppId(), queueName);
         QueueManager queueManager = TEST_QUEUE_MANAGER != null ? TEST_QUEUE_MANAGER : queueManagerFactory.getQueueManager(queueScope);
         // run until there are no more active jobs
         while ( true ) {

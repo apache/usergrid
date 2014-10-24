@@ -12,6 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+die () {
+    echo >&2 "$@"
+    exit 1
+}
+
+[ "$#" -eq 5 ] || die "5 arguments required, $# provided.  Arguments are URL ORG APP NUM_USERS RAMP_TIME"
 
 OLDDIR=`pwd`
 BIN_DIR=`dirname $0`
