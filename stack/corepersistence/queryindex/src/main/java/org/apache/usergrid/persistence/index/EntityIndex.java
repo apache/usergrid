@@ -30,14 +30,13 @@ import org.apache.usergrid.persistence.model.entity.Id;
 public interface EntityIndex {
 
     /**
-     * This should ONLY ever be called once on application create.  Otherwise we're introducing slowness into our system
-     *
+     * This should ONLY ever be called once on application create.  
+     * Otherwise we're introducing slowness into our system.
      */
     public void initializeIndex();
 
     /**
      * Create the index batch
-     * @return
      */
     public EntityIndexBatch createBatch();
 
@@ -49,8 +48,6 @@ public interface EntityIndex {
 
     /**
      * Get the candidate results of all versions of the entity for this id
-     * @param id
-     * @return
      */
     public CandidateResults getEntityVersions(final IndexScope indexScope, Id id);
 

@@ -68,11 +68,14 @@ import static org.apache.usergrid.persistence.index.impl.IndexingUtils.STRING_PR
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createCollectionScopeTypeName;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createIndexDocId;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createIndexName;
+import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.TermQueryBuilder;
 
 
 public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
-    private static final Logger log = LoggerFactory.getLogger( EsEntityIndexBatchImpl.class );
+    private static final Logger logger = LoggerFactory.getLogger( EsEntityIndexBatchImpl.class );
 
     private final ApplicationScope applicationScope;
 
@@ -107,13 +110,12 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
     @Override
     public EntityIndexBatch index( final IndexScope indexScope, final Entity entity ) {
 
-
         IndexValidationUtils.validateIndexScope( indexScope );
 
         final String indexType = createCollectionScopeTypeName( indexScope );
 
-        if ( log.isDebugEnabled() ) {
-            log.debug( "Indexing entity {}:{} in scope\n   app {}\n   "
+        if ( logger.isDebugEnabled() ) {
+            logger.debug( "Indexing entity {}:{} in scope\n   app {}\n   "
                 + "owner {}\n   name {}\n   type {}", new Object[] {
                     entity.getId().getType(), 
                     entity.getId().getUuid(), 
@@ -137,7 +139,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
         String indexId = createIndexDocId( entity );
 
-        log.debug( "Indexing entity id {} data {} ", indexId, entityAsMap );
+        logger.debug( "Indexing entity id {} data {} ", indexId, entityAsMap );
 
         bulkRequest.add(client.prepareIndex( indexName, indexType, indexId).setSource(entityAsMap));
 
@@ -154,8 +156,8 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
         final String indexType = createCollectionScopeTypeName( indexScope );
 
-        if ( log.isDebugEnabled() ) {
-            log.debug( "De-indexing entity {}:{} in scope\n   app {}\n   owner {}\n   "
+        if ( logger.isDebugEnabled() ) {
+            logger.debug( "De-indexing entity {}:{} in scope\n   app {}\n   owner {}\n   "
                 + "name {} type {}", new Object[] {
                     id.getType(), 
                     id.getUuid(), 
@@ -170,7 +172,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
         bulkRequest.add( client.prepareDelete( indexName, indexType, indexId ).setRefresh(refresh));
 
-        log.debug( "Deindexed Entity with index id " + indexId );
+        logger.debug( "Deindexed Entity with index id " + indexId );
 
         maybeFlush();
 
@@ -189,6 +191,24 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
     public EntityIndexBatch deindex( final IndexScope indexScope, final CandidateResult entity ) {
 
         return deindex( indexScope, entity.getId(), entity.getVersion() );
+    }
+
+    
+    @Override
+    public EntityIndexBatch deleteEntity(Id entityId) {
+
+        TermQueryBuilder tqb = QueryBuilders.termQuery(
+            STRING_PREFIX + ENTITYID_FIELDNAME, entityId.getUuid().toString().toLowerCase());
+
+        DeleteByQueryResponse response = client.prepareDeleteByQuery("test")
+            .setQuery( tqb ).execute().actionGet();
+
+        logger.debug("Deleted entity {}:{} from all index scopes with response status = {}", 
+            new Object[] { entityId.getType(), entityId.getUuid(), response.status().toString() });
+
+        maybeFlush();
+
+        return this;
     }
 
 
@@ -360,4 +380,5 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
     private void initBatch() {
         this.bulkRequest = client.prepareBulk();
     }
+
 }
