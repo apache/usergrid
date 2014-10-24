@@ -20,7 +20,6 @@ package org.apache.usergrid.persistence.collection.impl;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import com.google.inject.Inject;

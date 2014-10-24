@@ -19,6 +19,7 @@
 package org.apache.usergrid.persistence.collection.impl;
 
 
+import com.google.common.base.Optional;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -47,6 +48,9 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
+import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.same;
@@ -71,7 +75,7 @@ public class EntityVersionCleanupTaskTest {
     }
 
 
-    @Test(timeout=10000)
+    @Test //(timeout=10000)
     public void noListenerOneVersion() throws ExecutionException, InterruptedException, ConnectionException {
 
 
@@ -79,10 +83,10 @@ public class EntityVersionCleanupTaskTest {
 
         when( serializationFig.getBufferSize() ).thenReturn( 10 );
 
-        final MvccEntitySerializationStrategy mvccEntitySerializationStrategy =
+        final MvccEntitySerializationStrategy ess =
                 mock( MvccEntitySerializationStrategy.class );
 
-        final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy =
+        final MvccLogEntrySerializationStrategy less =
                 mock( MvccLogEntrySerializationStrategy.class );
 
         final Keyspace keyspace = mock( Keyspace.class );
@@ -91,36 +95,35 @@ public class EntityVersionCleanupTaskTest {
 
         final MutationBatch logBatch = mock( MutationBatch.class );
 
-        when( keyspace.prepareMutationBatch() ).thenReturn( entityBatch ).thenReturn( logBatch );
+        when( keyspace.prepareMutationBatch() )
+            .thenReturn( mock( MutationBatch.class ) ) // don't care what happens to this one
+            .thenReturn( entityBatch )
+            .thenReturn( logBatch );
 
-
-
-        //intentionally no events
+        // intentionally no events
         final List<EntityVersionDeleted> listeners = new ArrayList<EntityVersionDeleted>();
 
         final Id applicationId = new SimpleId( "application" );
-
 
         final CollectionScope appScope = new CollectionScopeImpl( applicationId, applicationId, "users" );
 
         final Id entityId = new SimpleId( "user" );
 
 
-        //mock up a single log entry for our first test
+        // mock up a single log entry for our first test
         final LogEntryMock logEntryMock =
-                LogEntryMock.createLogEntryMock( mvccLogEntrySerializationStrategy, appScope, entityId, 2 );
-
+                LogEntryMock.createLogEntryMock(less, appScope, entityId, 2 );
 
         final UUID version = logEntryMock.getEntries().iterator().next().getVersion();
 
-        final UniqueValueSerializationStrategy uniqueValueSerializationStrategy =
+        final UniqueValueSerializationStrategy uvss =
                 mock( UniqueValueSerializationStrategy.class );
 
         EntityVersionCleanupTask cleanupTask =
                 new EntityVersionCleanupTask( serializationFig,
-                        mvccLogEntrySerializationStrategy,
-                        mvccEntitySerializationStrategy,
-                        uniqueValueSerializationStrategy,
+                        less,
+                        ess,
+                        uvss,
                         keyspace,
                         appScope,
                         listeners,
@@ -131,22 +134,31 @@ public class EntityVersionCleanupTaskTest {
         final MutationBatch newBatch = mock( MutationBatch.class );
 
 
-        //set up returning a mutator
-        when( mvccEntitySerializationStrategy.delete( same( appScope ), same( entityId ), any( UUID.class ) ) )
+        // set up returning a mutator
+        when(ess.delete( same( appScope ), same( entityId ), any( UUID.class ) ) )
                 .thenReturn( newBatch );
 
-
-        when( mvccLogEntrySerializationStrategy.delete( same( appScope ), same( entityId ), any( UUID.class ) ) )
+        when(less.delete( same( appScope ), same( entityId ), any( UUID.class ) ) )
                 .thenReturn( newBatch );
 
+        final List<MvccEntity> mel = new ArrayList<MvccEntity>();
 
-        //start the task
+        mel.add( new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(), 
+                MvccEntity.Status.DELETED, Optional.fromNullable((Entity)null)) );
+
+        mel.add( new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(), 
+                MvccEntity.Status.DELETED, Optional.fromNullable((Entity)null)) );
+
+        when( ess.load( same( appScope ), same( entityId ), any(UUID.class), any(Integer.class) ) )
+                .thenReturn(mel.iterator() );
+
+        // start the task
         ListenableFuture<Void> future = taskExecutor.submit( cleanupTask );
 
-        //wait for the task
+        // wait for the task
         future.get();
 
-        //verify it was run
+        // verify it was run
         verify( entityBatch ).execute();
 
         verify( logBatch ).execute();
@@ -164,7 +176,7 @@ public class EntityVersionCleanupTaskTest {
 
         when( serializationFig.getBufferSize() ).thenReturn( 10 );
 
-        final MvccEntitySerializationStrategy mvccEntitySerializationStrategy =
+        final MvccEntitySerializationStrategy ess =
                 mock( MvccEntitySerializationStrategy.class );
 
         final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy =
@@ -176,7 +188,10 @@ public class EntityVersionCleanupTaskTest {
         final MutationBatch entityBatch = mock( MutationBatch.class );
         final MutationBatch logBatch = mock( MutationBatch.class );
 
-        when( keyspace.prepareMutationBatch() ).thenReturn( entityBatch ).thenReturn( logBatch );
+        when( keyspace.prepareMutationBatch() )
+            .thenReturn( mock( MutationBatch.class ) ) // don't care what happens to this one
+            .thenReturn( entityBatch )
+            .thenReturn( logBatch );
 
 
 
@@ -204,7 +219,7 @@ public class EntityVersionCleanupTaskTest {
         EntityVersionCleanupTask cleanupTask =
                 new EntityVersionCleanupTask( serializationFig,
                         mvccLogEntrySerializationStrategy,
-                        mvccEntitySerializationStrategy,
+                        ess,
                         uniqueValueSerializationStrategy,
                         keyspace,
                         appScope,
@@ -217,13 +232,24 @@ public class EntityVersionCleanupTaskTest {
 
 
         //set up returning a mutator
-        when( mvccEntitySerializationStrategy.delete( same( appScope ), same( entityId ), any( UUID.class ) ) )
+        when(ess.delete( same( appScope ), same( entityId ), any( UUID.class ) ) )
                 .thenReturn( batch );
 
 
         when( mvccLogEntrySerializationStrategy.delete( same( appScope ), same( entityId ), any( UUID.class ) ) )
                 .thenReturn( batch );
 
+
+        final List<MvccEntity> mel = new ArrayList<MvccEntity>();
+
+        mel.add( new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(), 
+                MvccEntity.Status.DELETED, Optional.fromNullable((Entity)null)) );
+
+        mel.add( new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(), 
+                MvccEntity.Status.DELETED, Optional.fromNullable((Entity)null)) );
+
+        when( ess.load( same( appScope ), same( entityId ), any(UUID.class), any(Integer.class) ) )
+                .thenReturn(mel.iterator() );
 
         //start the task
         ListenableFuture<Void> future = taskExecutor.submit( cleanupTask );
@@ -246,7 +272,7 @@ public class EntityVersionCleanupTaskTest {
 
         when( serializationFig.getBufferSize() ).thenReturn( 10 );
 
-        final MvccEntitySerializationStrategy mvccEntitySerializationStrategy =
+        final MvccEntitySerializationStrategy ess =
                 mock( MvccEntitySerializationStrategy.class );
 
         final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy =
@@ -258,7 +284,10 @@ public class EntityVersionCleanupTaskTest {
         final MutationBatch entityBatch = mock( MutationBatch.class );
         final MutationBatch logBatch = mock( MutationBatch.class );
 
-        when( keyspace.prepareMutationBatch() ).thenReturn( entityBatch ).thenReturn( logBatch );
+        when( keyspace.prepareMutationBatch() )
+            .thenReturn( mock( MutationBatch.class ) ) // don't care what happens to this one
+            .thenReturn( entityBatch )
+            .thenReturn( logBatch );
 
 
 
@@ -295,7 +324,7 @@ public class EntityVersionCleanupTaskTest {
         EntityVersionCleanupTask cleanupTask =
                 new EntityVersionCleanupTask( serializationFig,
                         mvccLogEntrySerializationStrategy,
-                        mvccEntitySerializationStrategy,
+                        ess,
                         uniqueValueSerializationStrategy,
                         keyspace,
                         appScope,
@@ -308,12 +337,24 @@ public class EntityVersionCleanupTaskTest {
 
 
         //set up returning a mutator
-        when( mvccEntitySerializationStrategy.delete( same( appScope ), same( entityId ), any( UUID.class ) ) )
+        when(ess.delete( same( appScope ), same( entityId ), any( UUID.class ) ) )
                 .thenReturn( batch );
 
 
         when( mvccLogEntrySerializationStrategy.delete( same( appScope ), same( entityId ), any( UUID.class ) ) )
                 .thenReturn( batch );
+
+
+        final List<MvccEntity> mel = new ArrayList<MvccEntity>();
+
+        mel.add( new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(), 
+                MvccEntity.Status.DELETED, Optional.fromNullable((Entity)null)) );
+
+        mel.add( new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(), 
+                MvccEntity.Status.DELETED, Optional.fromNullable((Entity)null)) );
+
+        when( ess.load( same( appScope ), same( entityId ), any(UUID.class), any(Integer.class) ) )
+                .thenReturn(mel.iterator() );
 
 
         //start the task
@@ -342,7 +383,7 @@ public class EntityVersionCleanupTaskTest {
 
         when( serializationFig.getBufferSize() ).thenReturn( 10 );
 
-        final MvccEntitySerializationStrategy mvccEntitySerializationStrategy =
+        final MvccEntitySerializationStrategy ess =
                 mock( MvccEntitySerializationStrategy.class );
 
         final UniqueValueSerializationStrategy uniqueValueSerializationStrategy =
@@ -358,7 +399,10 @@ public class EntityVersionCleanupTaskTest {
         final MutationBatch entityBatch = mock( MutationBatch.class );
         final MutationBatch logBatch = mock( MutationBatch.class );
 
-        when( keyspace.prepareMutationBatch() ).thenReturn( entityBatch ).thenReturn( logBatch );
+        when( keyspace.prepareMutationBatch() )
+            .thenReturn( mock( MutationBatch.class ) ) // don't care what happens to this one
+            .thenReturn( entityBatch )
+            .thenReturn( logBatch );
 
 
 
@@ -397,7 +441,7 @@ public class EntityVersionCleanupTaskTest {
         EntityVersionCleanupTask cleanupTask =
                 new EntityVersionCleanupTask( serializationFig,
                         mvccLogEntrySerializationStrategy,
-                        mvccEntitySerializationStrategy,
+                        ess,
                         uniqueValueSerializationStrategy,
                         keyspace,
                         appScope,
@@ -410,13 +454,23 @@ public class EntityVersionCleanupTaskTest {
 
 
         //set up returning a mutator
-        when( mvccEntitySerializationStrategy.delete( same( appScope ), same( entityId ), any( UUID.class ) ) )
+        when( ess.delete( same( appScope ), same( entityId ), any( UUID.class ) ) )
                 .thenReturn( batch );
 
 
         when( mvccLogEntrySerializationStrategy.delete( same( appScope ), same( entityId ), any( UUID.class ) ) )
                 .thenReturn( batch );
 
+        final List<MvccEntity> mel = new ArrayList<MvccEntity>();
+
+        mel.add( new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(), 
+                MvccEntity.Status.DELETED, Optional.fromNullable((Entity)null)) );
+
+        mel.add( new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(), 
+                MvccEntity.Status.DELETED, Optional.fromNullable((Entity)null)) );
+
+        when( ess.load( same( appScope ), same( entityId ), any(UUID.class), any(Integer.class) ) )
+                .thenReturn(mel.iterator() );
 
         //start the task
         ListenableFuture<Void> future = taskExecutor.submit( cleanupTask );
@@ -466,7 +520,10 @@ public class EntityVersionCleanupTaskTest {
         final MutationBatch entityBatch = mock( MutationBatch.class );
         final MutationBatch logBatch = mock( MutationBatch.class );
 
-        when( keyspace.prepareMutationBatch() ).thenReturn( entityBatch ).thenReturn( logBatch );
+        when( keyspace.prepareMutationBatch() )
+            .thenReturn( mock( MutationBatch.class ) ) // don't care what happens to this one
+            .thenReturn( entityBatch )
+            .thenReturn( logBatch );
 
 
 
@@ -601,8 +658,15 @@ public class EntityVersionCleanupTaskTest {
         final MutationBatch entityBatch = mock( MutationBatch.class );
         final MutationBatch logBatch = mock( MutationBatch.class );
 
-        when( keyspace1.prepareMutationBatch() ).thenReturn( entityBatch ).thenReturn( logBatch );
-        when( keyspace2.prepareMutationBatch() ).thenReturn( entityBatch ).thenReturn( logBatch );
+        when( keyspace1.prepareMutationBatch() )
+            .thenReturn( mock( MutationBatch.class ) ) // don't care what happens to this one
+            .thenReturn( entityBatch )
+            .thenReturn( logBatch );
+
+        when( keyspace2.prepareMutationBatch() )
+            .thenReturn( mock( MutationBatch.class ) ) // don't care what happens to this one
+            .thenReturn( entityBatch )
+            .thenReturn( logBatch );
 
 
         //create a latch for the event listener, and add it to the list of events
