@@ -195,7 +195,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                     @Override
                     public Void call(final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent) {
                         MvccEntity entity = mvccEntityCollectionIoEvent.getEvent();
-                        Task<Void> task = entityDeletedFactory.getTask(entity.getId(),entity.getVersion());
+                        Task<Void> task = entityDeletedFactory.getTask(collectionScope,entity.getId(),entity.getVersion());
                         taskExecutor.submit(task);
                         return null;
                     }

@@ -29,6 +29,6 @@ import java.util.UUID;
  * Creates EntityDeletedTask instances
  */
 public interface EntityDeletedFactory {
-    public EntityDeletedTask getTask( final Id entityId, final UUID version );
+    public EntityDeletedTask getTask(final CollectionScope collectionScope, final Id entityId, final UUID version );
 
 }

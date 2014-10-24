@@ -29,6 +29,7 @@ import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerSync;
+import org.apache.usergrid.persistence.collection.EntityDeletedFactory;
 import org.apache.usergrid.persistence.collection.EntityVersionCleanupFactory;
 import org.apache.usergrid.persistence.collection.event.EntityDeleted;
 import org.apache.usergrid.persistence.collection.event.EntityVersionCreated;
@@ -82,6 +83,9 @@ public class CollectionModule extends AbstractModule {
         install ( new FactoryModuleBuilder()
                 .build( EntityVersionCleanupFactory.class ));
 
+        install ( new FactoryModuleBuilder()
+                  .build( EntityDeletedFactory.class));
+
         //bind empty list.  including modules can add impelmentations
         Multibinder.newSetBinder( binder(), EntityVersionDeleted.class );
         Multibinder.newSetBinder( binder(), EntityVersionCreated.class );
@@ -104,7 +108,13 @@ public class CollectionModule extends AbstractModule {
 
 
     @Provides
-    public List<EntityVersionDeleted> emptySetInitialization(){
+         public List<EntityVersionDeleted> emptyEntityVersionDeletedInitialization(){
+        return Collections.EMPTY_LIST;
+
+    }
+
+    @Provides
+    public List<EntityDeleted> emptyEntityDeletedInitialization(){
         return Collections.EMPTY_LIST;
 
     }

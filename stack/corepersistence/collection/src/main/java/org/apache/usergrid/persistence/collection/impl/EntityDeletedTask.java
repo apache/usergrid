@@ -20,6 +20,7 @@
 
 package org.apache.usergrid.persistence.collection.impl;
 
+import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.netflix.astyanax.MutationBatch;
 import org.apache.usergrid.persistence.collection.CollectionScope;
@@ -47,17 +48,18 @@ public class EntityDeletedTask implements Task<Void> {
     private MvccLogEntrySerializationStrategy logEntrySerializationStrategy;
     private MvccEntitySerializationStrategy entitySerializationStrategy;
     private List<EntityDeleted> listeners;
-    private CollectionScope collectionScope;
-    private Id entityId;
-    private UUID version;
+    private final CollectionScope collectionScope;
+    private final Id entityId;
+    private final UUID version;
     private static final Logger LOG =  LoggerFactory.getLogger(EntityDeletedTask.class);
 
+    @Inject
     public EntityDeletedTask(EntityVersionCleanupFactory entityVersionCleanupFactory,
                              final MvccLogEntrySerializationStrategy logEntrySerializationStrategy,
                              final MvccEntitySerializationStrategy entitySerializationStrategy,
                              final List<EntityDeleted> listeners,
-                             CollectionScope collectionScope,
-                             @Assisted Id entityId, @Assisted UUID version){
+                             @Assisted final CollectionScope collectionScope,
+                             @Assisted final Id entityId, @Assisted final UUID version){
         this.entityVersionCleanupFactory = entityVersionCleanupFactory;
         this.logEntrySerializationStrategy = logEntrySerializationStrategy;
         this.entitySerializationStrategy = entitySerializationStrategy;
