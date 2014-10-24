@@ -85,26 +85,26 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
     /**
      * CFs where the row key contains the source node id
      */
-    private static final MultiTennantColumnFamily<ApplicationScope, Id, String> CF_SOURCE_EDGE_TYPES =
-            new MultiTennantColumnFamily<ApplicationScope, Id, String>( "Graph_Source_Edge_Types", ROW_KEY_SER,
+    private static final MultiTennantColumnFamily<ScopedRowKey<Id>, String> CF_SOURCE_EDGE_TYPES =
+            new MultiTennantColumnFamily<>( "Graph_Source_Edge_Types", ROW_KEY_SER,
                     STRING_SERIALIZER );
 
     //all target id types for source edge type
-    private static final MultiTennantColumnFamily<ApplicationScope, EdgeIdTypeKey, String> CF_SOURCE_EDGE_ID_TYPES =
-            new MultiTennantColumnFamily<ApplicationScope, EdgeIdTypeKey, String>( "Graph_Source_Edge_Id_Types",
+    private static final MultiTennantColumnFamily<ScopedRowKey<EdgeIdTypeKey>, String> CF_SOURCE_EDGE_ID_TYPES =
+            new MultiTennantColumnFamily<>( "Graph_Source_Edge_Id_Types",
                     EDGE_TYPE_ROW_KEY, STRING_SERIALIZER );
 
     /**
      * CFs where the row key is the target node id
      */
-    private static final MultiTennantColumnFamily<ApplicationScope, Id, String> CF_TARGET_EDGE_TYPES =
-            new MultiTennantColumnFamily<ApplicationScope, Id, String>( "Graph_Target_Edge_Types", ROW_KEY_SER,
+    private static final MultiTennantColumnFamily<ScopedRowKey<Id>, String> CF_TARGET_EDGE_TYPES =
+            new MultiTennantColumnFamily<>( "Graph_Target_Edge_Types", ROW_KEY_SER,
                     STRING_SERIALIZER );
 
 
     //all source id types for target edge type
-    private static final MultiTennantColumnFamily<ApplicationScope, EdgeIdTypeKey, String> CF_TARGET_EDGE_ID_TYPES =
-            new MultiTennantColumnFamily<ApplicationScope, EdgeIdTypeKey, String>( "Graph_Target_Edge_Id_Types",
+    private static final MultiTennantColumnFamily<ScopedRowKey<EdgeIdTypeKey>, String> CF_TARGET_EDGE_ID_TYPES =
+            new MultiTennantColumnFamily<>( "Graph_Target_Edge_Id_Types",
                     EDGE_TYPE_ROW_KEY, STRING_SERIALIZER );
 
 
@@ -133,7 +133,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
         ValidationUtils.validateApplicationScope( scope );
         GraphValidation.validateEdge( edge );
 
-
+        final Id scopeId = scope.getApplication();
         final Id source = edge.getSourceNode();
         final Id target = edge.getTargetNode();
         final String edgeType = edge.getType();
@@ -143,31 +143,32 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
                                             .withTimestamp( timestamp );
 
 
+
         //add source->target edge type to meta data
-        final ScopedRowKey<ApplicationScope, Id> sourceKey = new ScopedRowKey<ApplicationScope, Id>( scope, source );
+        final ScopedRowKey< Id> sourceKey = new ScopedRowKey<>( scopeId, source );
 
         batch.withRow( CF_SOURCE_EDGE_TYPES, sourceKey ).putColumn( edgeType, HOLDER );
 
 
         //write source->target edge type and id type to meta data
         EdgeIdTypeKey tk = new EdgeIdTypeKey( source, edgeType );
-        final ScopedRowKey<ApplicationScope, EdgeIdTypeKey> sourceTypeKey =
-                new ScopedRowKey<ApplicationScope, EdgeIdTypeKey>( scope, tk );
+        final ScopedRowKey<EdgeIdTypeKey> sourceTypeKey =
+                new ScopedRowKey<>( scopeId, tk );
 
 
         batch.withRow( CF_SOURCE_EDGE_ID_TYPES, sourceTypeKey ).putColumn( target.getType(), HOLDER );
 
 
         //write target<--source edge type meta data
-        final ScopedRowKey<ApplicationScope, Id> targetKey = new ScopedRowKey<ApplicationScope, Id>( scope, target );
+        final ScopedRowKey< Id> targetKey = new ScopedRowKey<>( scopeId, target );
 
 
         batch.withRow( CF_TARGET_EDGE_TYPES, targetKey ).putColumn( edgeType, HOLDER );
 
 
         //write target<--source edge type and id type to meta data
-        final ScopedRowKey<ApplicationScope, EdgeIdTypeKey> targetTypeKey =
-                new ScopedRowKey<ApplicationScope, EdgeIdTypeKey>( scope, new EdgeIdTypeKey( target, edgeType ) );
+        final ScopedRowKey<EdgeIdTypeKey> targetTypeKey =
+                new ScopedRowKey<>( scopeId, new EdgeIdTypeKey( target, edgeType ) );
 
 
         batch.withRow( CF_TARGET_EDGE_ID_TYPES, targetTypeKey ).putColumn( source.getType(), HOLDER );
@@ -242,11 +243,11 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
      */
     private MutationBatch removeEdgeType( final ApplicationScope scope, final Id rowKeyId, final String edgeType,
                                           final long version,
-                                          final MultiTennantColumnFamily<ApplicationScope, Id, String> cf ) {
+                                          final MultiTennantColumnFamily<ScopedRowKey<Id>, String> cf ) {
 
 
         //write target<--source edge type meta data
-        final ScopedRowKey<ApplicationScope, Id> rowKey = new ScopedRowKey<ApplicationScope, Id>( scope, rowKeyId );
+        final ScopedRowKey< Id> rowKey = new ScopedRowKey< Id>( scope.getApplication(), rowKeyId );
 
         final MutationBatch batch = keyspace.prepareMutationBatch().withTimestamp( version );
 
@@ -270,15 +271,15 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
      */
     private MutationBatch removeIdType( final ApplicationScope scope, final Id rowId, final String idType,
                                         final String edgeType, final long version,
-                                        final MultiTennantColumnFamily<ApplicationScope, EdgeIdTypeKey, String> cf ) {
+                                        final MultiTennantColumnFamily<ScopedRowKey<EdgeIdTypeKey>, String> cf ) {
 
 
         final MutationBatch batch = keyspace.prepareMutationBatch().withTimestamp( version );
 
 
         //write target<--source edge type and id type to meta data
-        final ScopedRowKey<ApplicationScope, EdgeIdTypeKey> rowKey =
-                new ScopedRowKey<ApplicationScope, EdgeIdTypeKey>( scope, new EdgeIdTypeKey( rowId, edgeType ) );
+        final ScopedRowKey< EdgeIdTypeKey> rowKey =
+                new ScopedRowKey<>( scope.getApplication(), new EdgeIdTypeKey( rowId, edgeType ) );
 
 
         batch.withRow( cf, rowKey ).deleteColumn( idType );
@@ -313,12 +314,12 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
      * @param cf The column family to execute on
      */
     private Iterator<String> getEdgeTypes( final ApplicationScope scope, final SearchEdgeType search,
-                                           final MultiTennantColumnFamily<ApplicationScope, Id, String> cf ) {
+                                           final MultiTennantColumnFamily<ScopedRowKey<Id>, String> cf ) {
         ValidationUtils.validateApplicationScope( scope );
         GraphValidation.validateSearchEdgeType( search );
 
 
-        final ScopedRowKey<ApplicationScope, Id> sourceKey = new ScopedRowKey<>( scope, search.getNode() );
+        final ScopedRowKey< Id> sourceKey = new ScopedRowKey<>( scope.getApplication(), search.getNode() );
 
 
         //resume from the last if specified.  Also set the range
@@ -326,7 +327,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
         final RangeBuilder rangeBuilder = createRange( search );
 
-        RowQuery<ScopedRowKey<ApplicationScope, Id>, String> query =
+        RowQuery<ScopedRowKey<Id>, String> query =
                 keyspace.prepareQuery( cf ).getKey( sourceKey ).autoPaginate( true )
                         .withColumnRange( rangeBuilder.build() );
 
@@ -348,19 +349,19 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
      * @param cf The column family to search
      */
     public Iterator<String> getIdTypes( final ApplicationScope scope, final SearchIdType search,
-                                        final MultiTennantColumnFamily<ApplicationScope, EdgeIdTypeKey, String> cf ) {
+                                        final MultiTennantColumnFamily<ScopedRowKey<EdgeIdTypeKey>, String> cf ) {
         ValidationUtils.validateApplicationScope( scope );
         GraphValidation.validateSearchEdgeIdType( search );
 
 
-        final ScopedRowKey<ApplicationScope, EdgeIdTypeKey> sourceTypeKey =
-                new ScopedRowKey<>( scope, new EdgeIdTypeKey( search.getNode(), search.getEdgeType() ) );
+        final ScopedRowKey<EdgeIdTypeKey> sourceTypeKey =
+                new ScopedRowKey<>( scope.getApplication(), new EdgeIdTypeKey( search.getNode(), search.getEdgeType() ) );
 
 
         final RangeBuilder rangeBuilder = createRange( search );
 
 
-        RowQuery<ScopedRowKey<ApplicationScope, EdgeIdTypeKey>, String> query =
+        RowQuery<ScopedRowKey<EdgeIdTypeKey>, String> query =
                 keyspace.prepareQuery( cf ).getKey( sourceTypeKey ).autoPaginate( true )
                         .withColumnRange( rangeBuilder.build() );
 

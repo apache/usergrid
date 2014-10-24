@@ -30,7 +30,7 @@ public class ShardsColumnIterator<R, C, T> implements Iterator<T> {
 
     private final EdgeSearcher<R, C, T> searcher;
 
-    private final MultiTennantColumnFamily<ApplicationScope, R, C> cf;
+    private final MultiTennantColumnFamily<ScopedRowKey<R>, C> cf;
 
     private Iterator<T> currentColumnIterator;
 
@@ -42,7 +42,7 @@ public class ShardsColumnIterator<R, C, T> implements Iterator<T> {
 
 
     public ShardsColumnIterator( final EdgeSearcher<R, C, T> searcher,
-                             final MultiTennantColumnFamily<ApplicationScope, R, C> cf, final Keyspace keyspace,
+                             final MultiTennantColumnFamily<ScopedRowKey<R>, C> cf, final Keyspace keyspace,
                              final ConsistencyLevel consistencyLevel, final int pageSize ) {
         this.searcher = searcher;
         this.cf = cf;
@@ -103,12 +103,12 @@ public class ShardsColumnIterator<R, C, T> implements Iterator<T> {
         /**
          * Get our list of slices
          */
-        final List<ScopedRowKey<ApplicationScope, R>> rowKeys = searcher.getRowKeys();
+        final List<ScopedRowKey<R>> rowKeys = searcher.getRowKeys();
 
 
         if(rowKeys.size() == 1){
 
-            final  RowQuery<ScopedRowKey<ApplicationScope, R>, C> query =
+            final  RowQuery<ScopedRowKey<R>, C> query =
                            keyspace.prepareQuery( cf ).setConsistencyLevel( consistencyLevel ).getKey( rowKeys.get( 0 ) )
                                    .autoPaginate( true ).withColumnRange( rangeBuilder.build() );
 

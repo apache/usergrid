@@ -18,22 +18,29 @@
  */
 
 package org.apache.usergrid.persistence.map.impl;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 
 import com.google.common.base.Preconditions;
 import org.apache.cassandra.db.marshal.BytesType;
 import org.apache.cassandra.db.marshal.UTF8Type;
 
+import org.apache.usergrid.persistence.core.astyanax.BucketLocator;
 import org.apache.usergrid.persistence.core.astyanax.CompositeFieldSerializer;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
+import org.apache.usergrid.persistence.core.astyanax.BucketScopedRowKey;
+import org.apache.usergrid.persistence.core.astyanax.OrganizationScopedBucketRowKeySerializer;
 import org.apache.usergrid.persistence.core.astyanax.OrganizationScopedRowKeySerializer;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.map.MapScope;
 
+import com.google.common.hash.Funnel;
+import com.google.common.hash.PrimitiveSink;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
@@ -51,8 +58,9 @@ import com.netflix.astyanax.serializers.StringSerializer;
 public class MapSerializationImpl implements MapSerialization {
 
     private static final MapKeySerializer KEY_SERIALIZER = new MapKeySerializer();
-        private static final OrganizationScopedRowKeySerializer<String> MAP_KEY_SERIALIZER =
-                new OrganizationScopedRowKeySerializer<>( KEY_SERIALIZER );
+
+        private static final OrganizationScopedBucketRowKeySerializer<String> MAP_KEY_SERIALIZER =
+                new OrganizationScopedBucketRowKeySerializer<>( KEY_SERIALIZER );
 
 
         private static final MapEntrySerializer ENTRY_SERIALIZER = new MapEntrySerializer();
@@ -68,18 +76,39 @@ public class MapSerializationImpl implements MapSerialization {
         /**
          * CFs where the row key contains the source node id
          */
-        private static final MultiTennantColumnFamily<ApplicationScope, MapEntryKey, Boolean> 
-            MAP_ENTRIES = new MultiTennantColumnFamily<>( 
+        private static final MultiTennantColumnFamily<ScopedRowKey<MapEntryKey>, Boolean>
+            MAP_ENTRIES = new MultiTennantColumnFamily<>(
                 "Map_Entries", MAP_ENTRY_SERIALIZER, BOOLEAN_SERIALIZER );
 
 
         /**
          * CFs where the row key contains the source node id
          */
-        private static final MultiTennantColumnFamily<ApplicationScope, String, String> MAP_KEYS =
+        private static final MultiTennantColumnFamily<BucketScopedRowKey<String>, String> MAP_KEYS =
                 new MultiTennantColumnFamily<>( "Map_Keys", MAP_KEY_SERIALIZER, STRING_SERIALIZER );
 
+    /**
+     * Number of buckets to hash across
+     */
+    private static final int NUM_BUCKETS = 20;
 
+    /**
+     * How to funnel keys for buckets
+     */
+    private static final Funnel<String> MAP_KEY_FUNNEL = new Funnel<String>() {
+
+        private Charset UTF8 = Charset.forName( "UTF8" );
+
+        @Override
+        public void funnel( final String key, final PrimitiveSink into ) {
+            into.putString( key, UTF8 );
+        }
+    };
+
+    /**
+     * Locator to get us all buckets
+     */
+    private static final BucketLocator<String> BUCKET_LOCATOR = new BucketLocator<>( NUM_BUCKETS, MAP_KEY_FUNNEL );
 
     private final Keyspace keyspace;
 
@@ -104,15 +133,17 @@ public class MapSerializationImpl implements MapSerialization {
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
         //add it to the entry
-        final ScopedRowKey<ApplicationScope, MapEntryKey> entryRowKey = MapEntryKey.fromKey(scope, key);
+        final ScopedRowKey<MapEntryKey> entryRowKey = MapEntryKey.fromKey(scope, key);
 
         //serialize to the entry
         batch.withRow(MAP_ENTRIES, entryRowKey).putColumn(true, value);
 
         //add it to the keys
 
-        final ScopedRowKey<ApplicationScope, String> keyRowKey =
-                ScopedRowKey.fromKey((ApplicationScope) scope, key);
+        final int bucket = BUCKET_LOCATOR.getBucket( key );
+
+        final BucketScopedRowKey< String> keyRowKey =
+                BucketScopedRowKey.fromKey( scope.getApplication(), key, bucket);
 
         //serialize to the entry
         batch.withRow(MAP_KEYS, keyRowKey).putColumn(key, true);
@@ -141,15 +172,17 @@ public class MapSerializationImpl implements MapSerialization {
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
         //add it to the entry
-        final ScopedRowKey<ApplicationScope, MapEntryKey> entryRowKey = MapEntryKey.fromKey(scope, key);
+        final ScopedRowKey<MapEntryKey> entryRowKey = MapEntryKey.fromKey(scope, key);
 
         //serialize to the entry
         batch.withRow(MAP_ENTRIES, entryRowKey).putColumn(true, putUuid);
 
         //add it to the keys
 
-        final ScopedRowKey<ApplicationScope, String> keyRowKey =
-                ScopedRowKey.fromKey((ApplicationScope) scope, key);
+        final int bucket = BUCKET_LOCATOR.getBucket( key );
+
+        final BucketScopedRowKey< String> keyRowKey =
+                BucketScopedRowKey.fromKey( scope.getApplication(), key, bucket);
 
         //serialize to the entry
         batch.withRow(MAP_KEYS, keyRowKey).putColumn(key, true);
@@ -178,15 +211,16 @@ public class MapSerializationImpl implements MapSerialization {
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
         //add it to the entry
-        final ScopedRowKey<ApplicationScope, MapEntryKey> entryRowKey = MapEntryKey.fromKey(scope, key);
+        final ScopedRowKey<MapEntryKey> entryRowKey = MapEntryKey.fromKey(scope, key);
 
         //serialize to the entry
         batch.withRow(MAP_ENTRIES, entryRowKey).putColumn(true, value);
 
         //add it to the keys
+        final int bucket = BUCKET_LOCATOR.getBucket( key );
 
-        final ScopedRowKey<ApplicationScope, String> keyRowKey =
-                ScopedRowKey.fromKey((ApplicationScope) scope, key);
+               final BucketScopedRowKey< String> keyRowKey =
+                       BucketScopedRowKey.fromKey( scope.getApplication(), key, bucket);
 
         //serialize to the entry
         batch.withRow(MAP_KEYS, keyRowKey).putColumn(key, true);
@@ -198,18 +232,20 @@ public class MapSerializationImpl implements MapSerialization {
     @Override
     public void delete( final MapScope scope, final String key ) {
         final MutationBatch batch = keyspace.prepareMutationBatch();
-        final ScopedRowKey<ApplicationScope, MapEntryKey> entryRowKey = MapEntryKey.fromKey(scope, key);
+        final ScopedRowKey<MapEntryKey> entryRowKey = MapEntryKey.fromKey(scope, key);
 
         //serialize to the entry
         batch.withRow(MAP_ENTRIES, entryRowKey).delete();
 
         //add it to the keys
 
-        final ScopedRowKey<ApplicationScope, String> keyRowKey = ScopedRowKey.fromKey((ApplicationScope) scope, key);
+        final int bucket = BUCKET_LOCATOR.getBucket( key );
 
-        //serialize to the entry
-        batch.withRow(MAP_KEYS, keyRowKey).delete();
-        executeBatch(batch);
+        final BucketScopedRowKey<String> rowKey = BucketScopedRowKey.fromKey( scope.getApplication(), key, bucket );
+
+        batch.withRow( MAP_KEYS, rowKey ).deleteColumn( key );
+
+        executeBatch( batch );
     }
 
 
@@ -237,7 +273,7 @@ public class MapSerializationImpl implements MapSerialization {
     private  Column<Boolean> getValue(MapScope scope, String key) {
 
         //add it to the entry
-        final ScopedRowKey<ApplicationScope, MapEntryKey> entryRowKey = MapEntryKey.fromKey(scope, key);
+        final ScopedRowKey<MapEntryKey> entryRowKey = MapEntryKey.fromKey(scope, key);
 
         try {
             final Column<Boolean> result = keyspace.prepareQuery( MAP_ENTRIES )
@@ -327,11 +363,10 @@ public class MapSerializationImpl implements MapSerialization {
         /**
          * Create a scoped row key from the key
          */
-        public static ScopedRowKey<ApplicationScope, MapEntryKey> fromKey( 
+        public static ScopedRowKey<MapEntryKey> fromKey(
                 final MapScope mapScope, final String key ) {
 
-            return ScopedRowKey.fromKey( 
-                    ( ApplicationScope ) mapScope, new MapEntryKey( mapScope.getName(), key ) );
+            return ScopedRowKey.fromKey( mapScope.getApplication(), new MapEntryKey( mapScope.getName(), key ) );
         }
     }
 }

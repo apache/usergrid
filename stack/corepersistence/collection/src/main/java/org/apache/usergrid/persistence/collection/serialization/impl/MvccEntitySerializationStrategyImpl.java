@@ -36,9 +36,9 @@ import org.apache.cassandra.db.marshal.UUIDType;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntitySet;
+import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
-import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.serialization.EntityRepair;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
@@ -96,9 +96,8 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
     private static final CollectionScopedRowKeySerializer<Id> ROW_KEY_SER =
             new CollectionScopedRowKeySerializer<Id>( ID_SER );
 
-    private static final MultiTennantColumnFamily<CollectionScope, Id, UUID> CF_ENTITY_DATA =
-            new MultiTennantColumnFamily<CollectionScope, Id, UUID>( "Entity_Version_Data", ROW_KEY_SER,
-                    UUIDSerializer.get() );
+    private static final MultiTennantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> CF_ENTITY_DATA =
+            new MultiTennantColumnFamily<>( "Entity_Version_Data", ROW_KEY_SER, UUIDSerializer.get() );
 
 
     protected final Keyspace keyspace;
@@ -141,7 +140,6 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
     }
 
 
-
     @Override
     public EntitySet load( final CollectionScope collectionScope, final Collection<Id> entityIds,
                            final UUID maxVersion ) {
@@ -154,37 +152,49 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
 
         //didn't put the max in the error message, I don't want to take the string construction hit every time
-        Preconditions.checkArgument( entityIds.size() <=  serializationFig.getMaxLoadSize(), "requested size cannot be over configured maximum");
+        Preconditions.checkArgument( entityIds.size() <= serializationFig.getMaxLoadSize(),
+                "requested size cannot be over configured maximum" );
 
 
+        final Id applicationId = collectionScope.getApplication();
+        final Id ownerId = collectionScope.getOwner();
+        final String collectionName = collectionScope.getName();
 
-        final List<ScopedRowKey<CollectionScope, Id>> rowKeys = new ArrayList<>( entityIds.size() );
+
+        final List<ScopedRowKey<CollectionPrefixedKey<Id>>> rowKeys = new ArrayList<>( entityIds.size() );
 
 
         for ( final Id entityId : entityIds ) {
-            rowKeys.add( ScopedRowKey.fromKey( collectionScope, entityId ) );
+            final CollectionPrefixedKey<Id> collectionPrefixedKey =
+                    new CollectionPrefixedKey<>( collectionName, ownerId, entityId );
+
+
+            final ScopedRowKey<CollectionPrefixedKey<Id>> rowKey =
+                    ScopedRowKey.fromKey( applicationId, collectionPrefixedKey );
+
+
+            rowKeys.add( rowKey );
         }
 
 
-        final Iterator<Row<ScopedRowKey<CollectionScope, Id>, UUID>> latestEntityColumns;
-
+        final Iterator<Row<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID>> latestEntityColumns;
 
 
         try {
             latestEntityColumns = keyspace.prepareQuery( CF_ENTITY_DATA ).getKeySlice( rowKeys )
                                           .withColumnRange( maxVersion, null, false, 1 ).execute().getResult()
                                           .iterator();
-        } catch ( ConnectionException e ) {
+        }
+        catch ( ConnectionException e ) {
             throw new CollectionRuntimeException( null, collectionScope, "An error occurred connecting to cassandra",
                     e );
         }
 
 
-
         final EntitySetImpl entitySetResults = new EntitySetImpl( entityIds.size() );
 
         while ( latestEntityColumns.hasNext() ) {
-            final Row<ScopedRowKey<CollectionScope, Id>, UUID> row = latestEntityColumns.next();
+            final Row<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> row = latestEntityColumns.next();
 
             final ColumnList<UUID> columns = row.getColumns();
 
@@ -192,7 +202,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
                 continue;
             }
 
-            final Id entityId = row.getKey().getKey();
+            final Id entityId = row.getKey().getKey().getSubKey();
 
             final Column<UUID> column = columns.getColumnByIndex( 0 );
 
@@ -202,7 +212,6 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
             final MvccEntity maybeRepaired = repair.maybeRepair( collectionScope, parsedEntity );
 
             entitySetResults.addEntity( maybeRepaired );
-
         }
 
         return entitySetResults;
@@ -219,8 +228,20 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         Preconditions.checkArgument( fetchSize > 0, "max Size must be greater than 0" );
 
 
-        RowQuery<ScopedRowKey<CollectionScope, Id>, UUID> query =
-                keyspace.prepareQuery( CF_ENTITY_DATA ).getKey( ScopedRowKey.fromKey( collectionScope, entityId ) )
+        final Id applicationId = collectionScope.getApplication();
+        final Id ownerId = collectionScope.getOwner();
+        final String collectionName = collectionScope.getName();
+
+        final CollectionPrefixedKey<Id> collectionPrefixedKey =
+                new CollectionPrefixedKey<>( collectionName, ownerId, entityId );
+
+
+        final ScopedRowKey<CollectionPrefixedKey<Id>> rowKey =
+                ScopedRowKey.fromKey( applicationId, collectionPrefixedKey );
+
+
+        RowQuery<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> query =
+                keyspace.prepareQuery( CF_ENTITY_DATA ).getKey( rowKey )
                         .withColumnRange( version, null, false, fetchSize );
 
         return new ColumnNameIterator( query, new MvccColumnParser( entityId ), false );
@@ -236,8 +257,21 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         Preconditions.checkNotNull( version, "version is required" );
         Preconditions.checkArgument( fetchSize > 0, "max Size must be greater than 0" );
 
-        RowQuery<ScopedRowKey<CollectionScope, Id>, UUID> query =
-                keyspace.prepareQuery( CF_ENTITY_DATA ).getKey( ScopedRowKey.fromKey( collectionScope, entityId ) )
+
+        final Id applicationId = collectionScope.getApplication();
+        final Id ownerId = collectionScope.getOwner();
+        final String collectionName = collectionScope.getName();
+
+        final CollectionPrefixedKey<Id> collectionPrefixedKey =
+                new CollectionPrefixedKey<>( collectionName, ownerId, entityId );
+
+
+        final ScopedRowKey<CollectionPrefixedKey<Id>> rowKey =
+                ScopedRowKey.fromKey( applicationId, collectionPrefixedKey );
+
+
+        RowQuery<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> query =
+                keyspace.prepareQuery( CF_ENTITY_DATA ).getKey( rowKey )
                         .withColumnRange( null, version, true, fetchSize );
 
         return new ColumnNameIterator( query, new MvccColumnParser( entityId ), false );
@@ -299,7 +333,19 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
     private MutationBatch doWrite( final CollectionScope collectionScope, final Id entityId, final RowOp op ) {
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
-        op.doOp( batch.withRow( CF_ENTITY_DATA, ScopedRowKey.fromKey( collectionScope, entityId ) ) );
+        final Id applicationId = collectionScope.getApplication();
+        final Id ownerId = collectionScope.getOwner();
+        final String collectionName = collectionScope.getName();
+
+        final CollectionPrefixedKey<Id> collectionPrefixedKey =
+                new CollectionPrefixedKey<>( collectionName, ownerId, entityId );
+
+
+        final ScopedRowKey<CollectionPrefixedKey<Id>> rowKey =
+                ScopedRowKey.fromKey( applicationId, collectionPrefixedKey );
+
+
+        op.doOp( batch.withRow( CF_ENTITY_DATA, rowKey ) );
 
         return batch;
     }

@@ -66,7 +66,7 @@ public class NodeShardCounterSerializationImpl implements NodeShardCounterSerial
     /**
      * Edge shards
      */
-    private static final MultiTennantColumnFamily<ApplicationScope, ShardKey, Boolean> EDGE_SHARD_COUNTS =
+    private static final MultiTennantColumnFamily<ScopedRowKey<ShardKey>, Boolean> EDGE_SHARD_COUNTS =
             new MultiTennantColumnFamily<>( "Edge_Shard_Counts",
                     new OrganizationScopedRowKeySerializer<>( SHARD_KEY_SERIALIZER ), BooleanSerializer.get() );
 
@@ -100,7 +100,7 @@ public class NodeShardCounterSerializationImpl implements NodeShardCounterSerial
             final long value = entry.getValue().get();
 
 
-            final ScopedRowKey rowKey = ScopedRowKey.fromKey( key.scope, key );
+            final ScopedRowKey rowKey = ScopedRowKey.fromKey( key.scope.getApplication(), key );
 
 
             batch.withRow( EDGE_SHARD_COUNTS, rowKey ).incrementCounterColumn(true , value );
@@ -114,7 +114,7 @@ public class NodeShardCounterSerializationImpl implements NodeShardCounterSerial
     @Override
     public long getCount( final ShardKey key ) {
 
-        final ScopedRowKey rowKey = ScopedRowKey.fromKey( key.scope, key );
+        final ScopedRowKey rowKey = ScopedRowKey.fromKey( key.scope.getApplication(), key );
 
 
         try {

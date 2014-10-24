@@ -22,9 +22,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 
-public class BucketScopedRowKey<S extends ApplicationScope, K> extends ScopedRowKey<S, K> {
+public class BucketScopedRowKey< K> extends ScopedRowKey< K> {
 
     private final int bucketNumber;
 
@@ -34,9 +35,18 @@ public class BucketScopedRowKey<S extends ApplicationScope, K> extends ScopedRow
      *
      * @param bucketNumber The bucket number for this row key
      */
-    public BucketScopedRowKey( final S scope, final K key, int bucketNumber ) {
+    public BucketScopedRowKey( final Id scope, final K key, int bucketNumber ) {
         super( scope, key );
         this.bucketNumber = bucketNumber;
+    }
+
+
+    /**
+     * Get the bucket number
+     * @return
+     */
+    public int getBucketNumber() {
+        return bucketNumber;
     }
 
 
@@ -81,7 +91,7 @@ public class BucketScopedRowKey<S extends ApplicationScope, K> extends ScopedRow
     /**
      * Utility function to generate a new key from the scope
      */
-    public static <S extends ApplicationScope, K> BucketScopedRowKey<S, K> fromKey( final S scope, final K key,
+    public static < K> BucketScopedRowKey< K> fromKey( final Id scope, final K key,
                                                                                     final int bucketNumber ) {
         return new BucketScopedRowKey<>( scope, key, bucketNumber );
     }
@@ -90,9 +100,9 @@ public class BucketScopedRowKey<S extends ApplicationScope, K> extends ScopedRow
     /**
      * Create a list of all buckets from [0,  totalBuckets}.  Note that this is an n-1 0 based system
      */
-    public static <S extends ApplicationScope, K> List<BucketScopedRowKey<S, K>> fromRange( final S scope, final K key, final int totalBuckets ) {
+    public static < K> List<BucketScopedRowKey< K>> fromRange( final Id scope, final K key, final int totalBuckets ) {
 
-        final List<BucketScopedRowKey<S, K>> results = new ArrayList<>( totalBuckets );
+        final List<BucketScopedRowKey< K>> results = new ArrayList<>( totalBuckets );
 
 
         for ( int i = 0; i < totalBuckets; i++ ) {

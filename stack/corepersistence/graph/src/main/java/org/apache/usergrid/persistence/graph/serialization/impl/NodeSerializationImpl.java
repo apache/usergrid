@@ -88,8 +88,8 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
      * BloomFilter on read.  This means our performance will be no worse than checking a distributed cache in RAM for
      * the existence of a marked node.
      */
-    private static final MultiTennantColumnFamily<ApplicationScope, Id, Boolean> GRAPH_DELETE =
-            new MultiTennantColumnFamily<ApplicationScope, Id, Boolean>( "Graph_Marked_Nodes",
+    private static final MultiTennantColumnFamily<ScopedRowKey<Id>, Boolean> GRAPH_DELETE =
+            new MultiTennantColumnFamily<>( "Graph_Marked_Nodes",
                     new OrganizationScopedRowKeySerializer<Id>( ROW_SERIALIZER ), BOOLEAN_SERIALIZER );
 
 
@@ -121,7 +121,7 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
 
         MutationBatch batch = keyspace.prepareMutationBatch().withConsistencyLevel( fig.getWriteCL() );
 
-        batch.withRow( GRAPH_DELETE, ScopedRowKey.fromKey( scope, node ) ).setTimestamp( timestamp )
+        batch.withRow( GRAPH_DELETE, ScopedRowKey.fromKey( scope.getApplication(), node ) ).setTimestamp( timestamp )
              .putColumn( COLUMN_NAME, timestamp );
 
         return batch;
@@ -136,7 +136,7 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
 
         MutationBatch batch = keyspace.prepareMutationBatch().withConsistencyLevel( fig.getWriteCL() );
 
-        batch.withRow( GRAPH_DELETE, ScopedRowKey.fromKey( scope, node ) ).setTimestamp( timestamp )
+        batch.withRow( GRAPH_DELETE, ScopedRowKey.fromKey( scope.getApplication(), node ) ).setTimestamp( timestamp )
              .deleteColumn( COLUMN_NAME );
 
         return batch;
@@ -148,13 +148,13 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
         ValidationUtils.validateApplicationScope( scope );
         ValidationUtils.verifyIdentity( node );
 
-        ColumnFamilyQuery<ScopedRowKey<ApplicationScope, Id>, Boolean> query =
+        ColumnFamilyQuery<ScopedRowKey<Id>, Boolean> query =
                 keyspace.prepareQuery( GRAPH_DELETE ).setConsistencyLevel( fig.getReadCL() );
 
 
         try {
             Column<Boolean> result = HystrixCassandra
-                    .user( query.getKey( ScopedRowKey.fromKey( scope, node ) ).getColumn( COLUMN_NAME ) )
+                    .user( query.getKey( ScopedRowKey.fromKey( scope.getApplication(), node ) ).getColumn( COLUMN_NAME ) )
                     .getResult();
 
             return Optional.of( result.getLongValue() );
@@ -177,27 +177,29 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
         Preconditions.checkNotNull( edges, "edges cannot be null" );
 
 
-        final ColumnFamilyQuery<ScopedRowKey<ApplicationScope, Id>, Boolean> query =
+        final ColumnFamilyQuery<ScopedRowKey< Id>, Boolean> query =
                 keyspace.prepareQuery( GRAPH_DELETE ).setConsistencyLevel( fig.getReadCL() );
 
 
-        final List<ScopedRowKey<ApplicationScope, Id>> keys =
-                new ArrayList<ScopedRowKey<ApplicationScope, Id>>( edges.size() );
+        final List<ScopedRowKey< Id>> keys =
+                new ArrayList<>( edges.size() );
 
         //worst case all are marked
         final Map<Id, Long> versions = new HashMap<>( edges.size() );
 
+        final Id scopeId = scope.getApplication();
+
         for ( final Edge edge : edges ) {
-            keys.add( ScopedRowKey.fromKey( scope, edge.getSourceNode() ) );
-            keys.add( ScopedRowKey.fromKey( scope, edge.getTargetNode() ) );
+            keys.add( ScopedRowKey.fromKey( scopeId, edge.getSourceNode() ) );
+            keys.add( ScopedRowKey.fromKey( scopeId, edge.getTargetNode() ) );
         }
 
 
-        final Rows<ScopedRowKey<ApplicationScope, Id>, Boolean> results = HystrixCassandra
+        final Rows<ScopedRowKey<Id>, Boolean> results = HystrixCassandra
                 .user( query.getRowSlice( keys ).withColumnSlice( Collections.singletonList( COLUMN_NAME ) ) )
                 .getResult();
 
-        for ( Row<ScopedRowKey<ApplicationScope, Id>, Boolean> row : results ) {
+        for ( Row<ScopedRowKey<Id>, Boolean> row : results ) {
             Column<Boolean> column = row.getColumns().getColumnByName( COLUMN_NAME );
 
             if ( column != null ) {

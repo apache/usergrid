@@ -30,6 +30,7 @@ import com.netflix.astyanax.model.CompositeBuilder;
 import com.netflix.astyanax.model.CompositeParser;
 import com.netflix.astyanax.model.Composites;
 import com.netflix.astyanax.serializers.AbstractSerializer;
+import com.netflix.astyanax.serializers.IntegerSerializer;
 
 
 /**
@@ -37,7 +38,7 @@ import com.netflix.astyanax.serializers.AbstractSerializer;
  *
  * @author tnine
  */
-public class OrganizationScopedRowKeySerializer<K> extends AbstractSerializer<ScopedRowKey<K>> {
+public class OrganizationScopedBucketRowKeySerializer<K> extends AbstractSerializer<BucketScopedRowKey<K>> {
 
 
     private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
@@ -51,18 +52,21 @@ public class OrganizationScopedRowKeySerializer<K> extends AbstractSerializer<Sc
 
 
 
-    public OrganizationScopedRowKeySerializer( final CompositeFieldSerializer<K> keySerializer ) {
+    public OrganizationScopedBucketRowKeySerializer( final CompositeFieldSerializer<K> keySerializer ) {
         this.keySerializer = keySerializer;
     }
 
 
     @Override
-    public ByteBuffer toByteBuffer( final ScopedRowKey< K> scopedRowKey ) {
+    public ByteBuffer toByteBuffer( final BucketScopedRowKey<K> scopedRowKey ) {
 
         final CompositeBuilder builder = Composites.newCompositeBuilder();
 
         //add the organization's id
         ID_SER.toComposite( builder, scopedRowKey.getScope() );
+
+        //add the bucket
+        builder.addInteger( scopedRowKey.getBucketNumber() );
 
         //add the key type
         keySerializer.toComposite( builder, scopedRowKey.getKey() );
@@ -72,15 +76,17 @@ public class OrganizationScopedRowKeySerializer<K> extends AbstractSerializer<Sc
 
 
     @Override
-    public ScopedRowKey<K> fromByteBuffer( final ByteBuffer byteBuffer ) {
+    public BucketScopedRowKey<K> fromByteBuffer( final ByteBuffer byteBuffer ) {
         final CompositeParser parser = Composites.newCompositeParser( byteBuffer );
 
         //read back the id
         final Id orgId = ID_SER.fromComposite( parser );
 
+        final int bucket = parser.readInteger();
+
         final K value = keySerializer.fromComposite( parser );
 
-        return new ScopedRowKey<K>(  orgId, value );
+        return new BucketScopedRowKey<>( orgId, value, bucket );
     }
 }
 
