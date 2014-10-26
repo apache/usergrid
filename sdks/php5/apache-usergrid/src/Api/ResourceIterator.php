@@ -57,11 +57,11 @@ class ResourceIterator extends BaseIterator
 
         $result = $this->command->execute();
 
-        $data = $result['entities'];
+        $data = $result;
 
         $lastItem = end($data);
 
-        $this->nextToken = $result['cursor'] ? $lastItem['uuid'] : false;
+        $this->nextToken = $result['cursor'] ? $lastItem['cursor'] : false;
 
         return $data;
     }
