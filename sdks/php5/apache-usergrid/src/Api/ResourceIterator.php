@@ -39,7 +39,7 @@ class ResourceIterator extends BaseIterator
     {
         parent::__construct($command, $data);
 
-        $this->pageSize = 100;
+        $this->pageSize = 20;
     }
 
     /**
@@ -61,7 +61,7 @@ class ResourceIterator extends BaseIterator
 
         $lastItem = end($data);
 
-        $this->nextToken = $result['has_more'] ? $lastItem['uuid'] : false;
+        $this->nextToken = $result['cursor'] ? $lastItem['cursor'] : false;
 
         return $data;
     }
