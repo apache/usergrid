@@ -61,7 +61,7 @@ class ResourceIterator extends BaseIterator
 
         $lastItem = end($data);
 
-        $this->nextToken = $result['cursor'] ? $lastItem['cursor'] : false;
+        $this->nextToken = $result['cursor'] ? $lastItem['uuid'] : false;
 
         return $data;
     }
