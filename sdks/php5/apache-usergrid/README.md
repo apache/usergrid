@@ -162,8 +162,8 @@ Gateway Objects using php Traits
 ## Javascript ##
 There is a javascript api to go with this for example I have a site that uses the javascript sdk to login to Apache Usergrid then it send the token server side 
 to be used in api calls on behalf of the logged in user. You can find this javascript sdk in my public git repo it requires one extra config setting and then you include
-the javascript file in you page but It only works with Laravel as it posts the token to a route bu it would not be hard to use else where its not part of this SDK so think
-of it as a helper as some times it good to have access to both world server side calls for and Ajax calls using the one login token.
+the javascript file in your page  It's set to works with Laravel as it posts the token to a route but it would not be hard to use else where just create uri it can post the token too. Its not part of this SDK so think
+of it as a helper as some times it good to have access to both world server side calls for long running or large result sets and Ajax calls to update UI using the one login token for both type of calls.
 
 
 ### Contribution guidelines ###
