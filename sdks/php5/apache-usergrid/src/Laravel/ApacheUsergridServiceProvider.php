@@ -15,7 +15,7 @@
  */
 namespace Apache\Usergrid\Laravel;
 
-
+use Apache\Usergrid\Api\Usergrid;
 use Apache\Usergrid\Guzzle\Plugin\Oauth2\GrantType\ClientCredentials;
 use Apache\Usergrid\Guzzle\Plugin\Oauth2\GrantType\PasswordCredentials;
 use Apache\Usergrid\Guzzle\Plugin\Oauth2\GrantType\RefreshToken;
