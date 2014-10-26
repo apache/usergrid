@@ -74,10 +74,9 @@ $res = Usergrid::application()->EntityGet(['collection' => 'shops']);
 
 
 ### Laravel ###
-In Laravel you then publish the config file like ```php artisan config:publish apache/usergrid ``` which will publish the config file to the app/config/packages/apache/usergrid/config.php 
-then add your client_id and secret to the config file and setup the service provider to app/config providers array ```Apache\Usergrid\Laravel\ApacheUsergridServiceProvider``` and add the alias to
-the aliases array ```'Usergrid' => 'Apache\Usergrid\Laravel\Facades\Usergrid``` to be able to access class via a Facade
-example for Laravel
+In Laravel once you have install the composer package you then publish the config file like ```php artisan config:publish apache/usergrid ``` which will publish the config file to the app/config/packages/apache/usergrid/config.php 
+then add your client_id and secret to the config file the set the service provider in the app/config.php providers array ```Apache\Usergrid\Laravel\ApacheUsergridServiceProvider``` and add the alias to
+the aliases array ```'Usergrid' => 'Apache\Usergrid\Laravel\Facades\Usergrid``` to be able to access class via a Facade. Example for Laravel
 
 ```
     $collection = Usergrid::application()->getEntity(['collection' => 'shops']);
@@ -95,7 +94,7 @@ example for Laravel
  AWS PHP SDK when calling enableFacades() on the AWS factory method.
  
 ### Error Handling ### 
-All HTTP and Server error returned by the Usergrid API have error classes attached to the services descriptors so to handle error's that you want to just catch the correct exception eg. resource not found.
+All HTTP and Server error returned by the Usergrid API have error classes attached to the services descriptors so to handle error's that you want too, Just catch the correct exception eg. resource not found.
 
 ```
 try {
@@ -107,8 +106,8 @@ try {
 ```
  
 ### Authentication ###
-  You can manage your own Oauth 2 flow by setting the enable_oauth2_plugin config setting to false then you need to call the Token api and then set the token on the usergrid instance
-  by default this will manage Oauth2 for you but if you want to do it your self set the config setting to false and then do some like this.
+  You can manage your own Oauth 2 flow by setting the enable_oauth2_plugin config setting to false then you need to call the Token api or get the token from elsewhere and then set the token on the usergrid instance.
+  By default this will manage Oauth2 flow for you and I recommend that you leave it set to true. But if you want to do it yourself set the config setting to false and then do something like this.
   
 ```
  $res  =  Usergrid::management()->authPasswordGet($array);
@@ -123,15 +122,28 @@ try {
  * Application Token -- Per Application token that is for the application
  * Application User Token -- User level access this token is for a logged in user.
  
- The Organization and Application token's when using client_credentials should only be used in a server side application as it has full access to each resource
- the Organization Token can access all applications and edit Organization details. The Application token has full access to all application 
+ The Organization and Application token's when using client_credentials should only be used in a server side application as it has full access to all resources.
+ The Organization Token can access all applications and edit Organization details. The Application token has full access to all application 
  resources. The Admin user token is the organization admin user so it too has access to all Applications and Organizations and the last level which is a User
- Token that is a per application users and will have access to all resources that roles attached to that user can access.
+ Token that is a per application user and will have access to all resources that roles attached to that user can access.
  
 So there are two settings in the config that controls which type of token you get.
 the ```'auth_type' => 'application' ``` controls the level you get Organization or Application and the ``` 'grant_type' => 'client_credentials'``` controls
-which type of credentials you use which can be either client_id & client_secret or username & password
+which type of credentials you use which can be either client_id & client_secret or username & password.
 
+### Result Iteration ###
+Apache Usergrid has a default paging size of 10 records so if you ask for a collection that has more then 10 result (entities) then it will return 
+a Cursor so you can pass it to the next request to get then next lot of 10 results so Ive made this easier. Using manifest version 1.0.1 and above you can now use a resource iterator  
+that will return all entities for you in one request. So again let the SDK do the hard work for you.
+
+``` 
+//The SDK will check each response to see if their is a cursor and if there is it will get the next set till all entities are returned.
+$allDevices = Usergrid::DevicesIterator();
+
+foreach($allDevices as $device) {
+// this will have all devices. 
+}
+```
 
 ## Manifest Files (Guzzle & Swagger  Service Descriptors) ## 
 All the files in the manifest folder are just temp file the final Service Descriptors are versioned so
@@ -139,10 +151,10 @@ the real files are in the manifest/1.0.0 folder so as usergrid is updated new ve
 Ill leave the other manifest file there for now but will cleanup when Apache Usergrid accepts this library.
 
 ## designs guidelines ##
-The design of this is to make it easy to add to existing project and be able to map Model objects in yor project 
+The design of this is to make it easy to add to existing project and be able to map Model objects in your project 
 to response models for example in my project I have a organization object that is saved in a mysql database and I can
 call a Usergrid Api call on that model object just like using the Usergrid api class eg:
-``` Usergrid::Mangement->putOrganization($data_array) ``` is the same as
+``` Usergrid::Management->putOrganization($data_array) ``` is the same as
 ``` Organization::put($data_array) ``` how to do this is beyond the scope of the SDK but its not hard to create 
 Gateway Objects using php Traits
 
