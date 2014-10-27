@@ -45,6 +45,7 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import java.util.Set;
 
 import rx.Observable;
 import rx.functions.Action1;
@@ -58,10 +59,9 @@ import rx.schedulers.Schedulers;
  */
 public class EntityVersionCleanupTask implements Task<Void> {
 
-    private static final Logger LOG = LoggerFactory.getLogger( EntityVersionCleanupTask.class );
+    private static final Logger logger = LoggerFactory.getLogger( EntityVersionCleanupTask.class );
 
-
-    private final List<EntityVersionDeleted> listeners;
+    private final Set<EntityVersionDeleted> listeners;
 
     private final MvccLogEntrySerializationStrategy logEntrySerializationStrategy;
     private final MvccEntitySerializationStrategy entitySerializationStrategy;
@@ -76,14 +76,16 @@ public class EntityVersionCleanupTask implements Task<Void> {
 
 
     @Inject
-    public EntityVersionCleanupTask( final SerializationFig serializationFig,
-                            final MvccLogEntrySerializationStrategy logEntrySerializationStrategy,
-                            final MvccEntitySerializationStrategy entitySerializationStrategy,
-                            final UniqueValueSerializationStrategy uniqueValueSerializationStrategy,
-                            final Keyspace keyspace,
-                            @Assisted final CollectionScope scope,
-                            final List<EntityVersionDeleted> listeners,
-                            @Assisted final Id entityId,@Assisted final UUID version ) {
+    public EntityVersionCleanupTask( 
+        final SerializationFig serializationFig,
+        final MvccLogEntrySerializationStrategy logEntrySerializationStrategy,
+        final MvccEntitySerializationStrategy   entitySerializationStrategy,
+        final UniqueValueSerializationStrategy  uniqueValueSerializationStrategy,
+        final Keyspace                          keyspace,
+        final Set<EntityVersionDeleted>         listeners, // MUST be a set or Guice will not inject
+        @Assisted final CollectionScope         scope,
+        @Assisted final Id                      entityId,
+        @Assisted final UUID                    version ) {
 
         this.serializationFig = serializationFig;
         this.logEntrySerializationStrategy = logEntrySerializationStrategy;
@@ -99,7 +101,7 @@ public class EntityVersionCleanupTask implements Task<Void> {
 
     @Override
     public void exceptionThrown( final Throwable throwable ) {
-        LOG.error( "Unable to run update task for collection {} with entity {} and version {}",
+        logger.error( "Unable to run update task for collection {} with entity {} and version {}",
                 new Object[] { scope, entityId, version }, throwable );
     }
 
@@ -193,7 +195,7 @@ public class EntityVersionCleanupTask implements Task<Void> {
 
         final int removedCount = deleteFieldsObservable.count().toBlocking().last();
 
-        LOG.debug("Removed unique values for {} entities of entity {}",removedCount,entityId);
+        logger.debug("Removed unique values for {} entities of entity {}",removedCount,entityId);
 
         return null;
     }
@@ -208,12 +210,11 @@ public class EntityVersionCleanupTask implements Task<Void> {
         }
 
         if ( listenerSize == 1 ) {
-            listeners.get( 0 ).versionDeleted( scope, entityId, versions );
-            //listeners.iterator().next().versionDeleted( scope,entityId,versions );
+            listeners.iterator().next().versionDeleted( scope, entityId, versions );
             return;
         }
 
-        LOG.debug( "Started firing {} listeners", listenerSize );
+        logger.debug( "Started firing {} listeners", listenerSize );
 
         //if we have more than 1, run them on the rx scheduler for a max of 8 operations at a time
         Observable.from( listeners )
@@ -232,7 +233,7 @@ public class EntityVersionCleanupTask implements Task<Void> {
                 }
             }, Schedulers.io() ).toBlocking().last();
 
-        LOG.debug( "Finished firing {} listeners", listenerSize );
+        logger.debug( "Finished firing {} listeners", listenerSize );
     }
 }
 

@@ -24,7 +24,12 @@ import org.apache.usergrid.persistence.model.entity.Id;
 
 import java.util.UUID;
 
+
 public interface EntityVersionCleanupFactory {
-    public EntityVersionCleanupTask getTask( final CollectionScope scope, final Id entityId, final UUID version );
+
+    public EntityVersionCleanupTask getTask( 
+        final CollectionScope scope, 
+        final Id entityId, 
+        final UUID version );
 
 }

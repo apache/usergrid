@@ -13,9 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.usergrid.corepersistence;
-
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
@@ -36,8 +34,9 @@ import org.slf4j.LoggerFactory;
 /**
  * Guice Module that encapsulates Core Persistence.
  */
-public class GuiceModule  extends AbstractModule {
-    private static final Logger LOG = LoggerFactory.getLogger( GuiceModule.class );
+public class GuiceModule extends AbstractModule {
+
+    private static final Logger logger = LoggerFactory.getLogger(GuiceModule.class);
 
     @Override
     protected void configure() {
@@ -49,13 +48,12 @@ public class GuiceModule  extends AbstractModule {
         install(new MapModule());
         install(new QueueModule());
 
-        bind(CpEntityDeleteListener.class).asEagerSingleton();
-        bind(CpEntityIndexDeleteListener.class).asEagerSingleton();
+        Multibinder<EntityDeleted> entityBinder
+                = Multibinder.newSetBinder(binder(), EntityDeleted.class);
+        entityBinder.addBinding().to(EntityDeletedImpl.class);
 
-
-        Multibinder<EntityDeleted> entityBinder =  Multibinder.newSetBinder(binder(), EntityDeleted.class);
-        entityBinder.addBinding().to( EntityDeletedImpl.class );
-        Multibinder<EntityVersionDeleted> versionBinder = Multibinder.newSetBinder(binder(), EntityVersionDeleted.class);
+        Multibinder<EntityVersionDeleted> versionBinder
+                = Multibinder.newSetBinder(binder(), EntityVersionDeleted.class);
         versionBinder.addBinding().to(EntityVersionDeletedImpl.class);
     }
 

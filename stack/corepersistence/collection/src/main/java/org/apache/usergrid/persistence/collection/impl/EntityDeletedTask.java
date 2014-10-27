@@ -35,7 +35,7 @@ import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
-import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 
@@ -43,23 +43,26 @@ import java.util.UUID;
  * Fires Cleanup Task
  */
 public class EntityDeletedTask implements Task<Void> {
+    private static final Logger LOG =  LoggerFactory.getLogger(EntityDeletedTask.class);
+
     private EntityVersionCleanupFactory entityVersionCleanupFactory;
     private MvccLogEntrySerializationStrategy logEntrySerializationStrategy;
     private MvccEntitySerializationStrategy entitySerializationStrategy;
-    private List<EntityDeleted> listeners;
+    private Set<EntityDeleted> listeners;
     private final CollectionScope collectionScope;
     private final Id entityId;
     private final UUID version;
-    private static final Logger LOG =  LoggerFactory.getLogger(EntityDeletedTask.class);
+
 
     @Inject
-    public EntityDeletedTask( EntityVersionCleanupFactory             entityVersionCleanupFactory,
-                              final MvccLogEntrySerializationStrategy logEntrySerializationStrategy,
-                              final MvccEntitySerializationStrategy   entitySerializationStrategy,
-                              final List<EntityDeleted>               listeners,
-                              @Assisted final CollectionScope collectionScope,
-                              @Assisted final Id entityId, 
-                              @Assisted final UUID version) {
+    public EntityDeletedTask( 
+        EntityVersionCleanupFactory             entityVersionCleanupFactory,
+        final MvccLogEntrySerializationStrategy logEntrySerializationStrategy,
+        final MvccEntitySerializationStrategy   entitySerializationStrategy,
+        final Set<EntityDeleted>                listeners, // MUST be a set or Guice will not inject
+        @Assisted final CollectionScope         collectionScope, 
+        @Assisted final Id                      entityId, 
+        @Assisted final UUID                    version) {
 
         this.entityVersionCleanupFactory = entityVersionCleanupFactory;
         this.logEntrySerializationStrategy = logEntrySerializationStrategy;
@@ -70,12 +73,14 @@ public class EntityDeletedTask implements Task<Void> {
         this.version = version;
     }
 
+
     @Override
     public void exceptionThrown(Throwable throwable) {
         LOG.error( "Unable to run update task for collection {} with entity {} and version {}",
                 new Object[] { collectionScope, entityId, version }, throwable );
     }
 
+    
     @Override
     public Void rejected() {
         try {
@@ -88,10 +93,11 @@ public class EntityDeletedTask implements Task<Void> {
         return null;
     }
 
+    
     @Override
     public Void call() throws Exception { 
 
-        entityVersionCleanupFactory.getTask( collectionScope, entityId, version, listeners ).call();
+        entityVersionCleanupFactory.getTask( collectionScope, entityId, version ).call();
 
         fireEvents();
         final MutationBatch entityDelete = entitySerializationStrategy.delete(collectionScope, entityId, version);
@@ -102,6 +108,7 @@ public class EntityDeletedTask implements Task<Void> {
         return null;
     }
 
+
     private void fireEvents() {
         final int listenerSize = listeners.size();
 
@@ -110,7 +117,7 @@ public class EntityDeletedTask implements Task<Void> {
         }
 
         if ( listenerSize == 1 ) {
-            listeners.get( 0 ).deleted( collectionScope, entityId,version );
+            listeners.iterator().next().deleted( collectionScope, entityId,version );
             return;
         }
 

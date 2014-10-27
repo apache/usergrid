@@ -21,8 +21,6 @@ package org.apache.usergrid.persistence.collection.impl;
 
 import org.apache.usergrid.persistence.collection.*;
 
-import java.net.ConnectException;
-import java.util.*;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -32,7 +30,6 @@ import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
 import org.apache.usergrid.persistence.core.task.Task;
-import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,6 +58,8 @@ import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+import java.util.ArrayList;
+import org.apache.usergrid.persistence.collection.event.EntityDeleted;
 
 import rx.Observable;
 import rx.Subscriber;
@@ -81,7 +80,6 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     private final CollectionScope collectionScope;
     private final UUIDService uuidService;
 
-
     //start stages
     private final WriteStart writeStart;
     private final WriteStart writeUpdate;
@@ -90,17 +88,18 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     private final WriteCommit writeCommit;
     private final RollbackAction rollback;
 
-
     //delete stages
     private final MarkStart markStart;
     private final MarkCommit markCommit;
 
     private final TaskExecutor taskExecutor;
-    private EntityVersionCleanupFactory entityVersionCleanupFactory;
+    private final EntityVersionCleanupFactory entityVersionCleanupFactory;
     private final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy;
     private final MvccEntitySerializationStrategy entitySerializationStrategy;
-    private EntityDeletedFactory entityDeletedFactory;
-    private UniqueValueSerializationStrategy uniqueValueSerializationStrategy;
+    private final EntityDeletedFactory entityDeletedFactory;
+    private final UniqueValueSerializationStrategy uniqueValueSerializationStrategy;
+
+    private List<EntityDeleted> entityDeletedListeners = new ArrayList<EntityDeleted>();
 
 
     @Inject
@@ -170,9 +169,13 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         observable.map(writeCommit).doOnNext(new Action1<Entity>() {
             @Override
             public void call(final Entity entity) {
-                //TODO fire a task here
-                taskExecutor.submit(entityVersionCleanupFactory.getTask(collectionScope, entityId,entity.getVersion()));
-                //post-processing to come later. leave it empty for now.
+
+                // TODO fire a task here
+
+                taskExecutor.submit(entityVersionCleanupFactory.getTask( 
+                    collectionScope, entityId, entity.getVersion() ));
+
+                // post-processing to come later. leave it empty for now.
             }
         }).doOnError(rollback);
 

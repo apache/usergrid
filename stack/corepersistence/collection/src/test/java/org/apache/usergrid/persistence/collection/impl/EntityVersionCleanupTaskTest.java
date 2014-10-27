@@ -21,7 +21,6 @@ package org.apache.usergrid.persistence.collection.impl;
 
 import com.google.common.base.Optional;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
@@ -48,6 +47,8 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import java.util.HashSet;
+import java.util.Set;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -59,6 +60,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import org.mockito.internal.util.collections.Sets;
 
 
 /**
@@ -102,7 +104,7 @@ public class EntityVersionCleanupTaskTest {
             .thenReturn( logBatch );
 
         // intentionally no events
-        final List<EntityVersionDeleted> listeners = new ArrayList<EntityVersionDeleted>();
+        final Set<EntityVersionDeleted> listeners = new HashSet<EntityVersionDeleted>();
 
         final Id applicationId = new SimpleId( "application" );
 
@@ -127,8 +129,8 @@ public class EntityVersionCleanupTaskTest {
                         ess,
                         uvss,
                         keyspace,
-                        appScope,
                         listeners,
+                        appScope,
                         entityId,
                         version
                 );
@@ -199,7 +201,7 @@ public class EntityVersionCleanupTaskTest {
 
 
         //intentionally no events
-        final List<EntityVersionDeleted> listeners = new ArrayList<EntityVersionDeleted>();
+        final Set<EntityVersionDeleted> listeners = new HashSet<EntityVersionDeleted>();
 
         final Id applicationId = new SimpleId( "application" );
 
@@ -226,8 +228,8 @@ public class EntityVersionCleanupTaskTest {
                         ess,
                         uniqueValueSerializationStrategy,
                         keyspace,
-                        appScope,
                         listeners,
+                        appScope,
                         entityId,
                         version
                 );
@@ -305,7 +307,7 @@ public class EntityVersionCleanupTaskTest {
 
         final EntityVersionDeletedTest eventListener = new EntityVersionDeletedTest( latch );
 
-        final List<EntityVersionDeleted> listeners = new ArrayList<EntityVersionDeleted>();
+        final Set<EntityVersionDeleted> listeners = new HashSet<EntityVersionDeleted>();
 
         listeners.add( eventListener );
 
@@ -335,8 +337,8 @@ public class EntityVersionCleanupTaskTest {
                         ess,
                         uniqueValueSerializationStrategy,
                         keyspace,
-                        appScope,
                         listeners,
+                        appScope,
                         entityId,
                         version
                 );
@@ -423,7 +425,7 @@ public class EntityVersionCleanupTaskTest {
         final EntityVersionDeletedTest listener2 = new EntityVersionDeletedTest( latch );
         final EntityVersionDeletedTest listener3 = new EntityVersionDeletedTest( latch );
 
-        final List<EntityVersionDeleted> listeners = new ArrayList<EntityVersionDeleted>();
+        final Set<EntityVersionDeleted> listeners = new HashSet<EntityVersionDeleted>();
 
         listeners.add( listener1 );
         listeners.add( listener2 );
@@ -448,8 +450,8 @@ public class EntityVersionCleanupTaskTest {
                         ess,
                         uniqueValueSerializationStrategy,
                         keyspace,
-                        appScope,
                         listeners,
+                        appScope,
                         entityId,
                         version
                 );
@@ -550,7 +552,7 @@ public class EntityVersionCleanupTaskTest {
         final SlowListener listener4 = new SlowListener( latch, waitSemaphore );
         final SlowListener listener5 = new SlowListener( latch, waitSemaphore );
 
-        final List<EntityVersionDeleted> listeners = new ArrayList<>();
+        final Set<EntityVersionDeleted> listeners = new HashSet<EntityVersionDeleted>();
 
         listeners.add( listener1 );
         listeners.add( listener2 );
@@ -584,8 +586,8 @@ public class EntityVersionCleanupTaskTest {
                         mvccEntitySerializationStrategy,
                         uniqueValueSerializationStrategy,
                         keyspace,
-                        appScope,
                         listeners,
+                        appScope,
                         entityId,
                         version
                 );
@@ -721,8 +723,8 @@ public class EntityVersionCleanupTaskTest {
             mvccEntitySerializationStrategy, 
             uniqueValueSerializationStrategy, 
             keyspace1,
+            Sets.newSet( (EntityVersionDeleted)runListener ),
             appScope,  
-            Arrays.<EntityVersionDeleted>asList( slowListener ),
             entityId, 
             version );
 
@@ -736,8 +738,8 @@ public class EntityVersionCleanupTaskTest {
             mvccEntitySerializationStrategy,
             uniqueValueSerializationStrategy, 
             keyspace2, 
+            Sets.newSet( (EntityVersionDeleted)runListener ),
             appScope,
-            Arrays.<EntityVersionDeleted>asList( runListener ),
             entityId, 
             version );
 
@@ -813,6 +815,7 @@ public class EntityVersionCleanupTaskTest {
                 final List<MvccEntity> entityVersion ) {
             invocationLatch.countDown();
         }
+
     }
 
 
