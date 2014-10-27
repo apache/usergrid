@@ -15,6 +15,7 @@
  */
 namespace Apache\Usergrid\Laravel;
 
+
 use Apache\Usergrid\Api\Usergrid;
 use Apache\Usergrid\Guzzle\Plugin\Oauth2\GrantType\ClientCredentials;
 use Apache\Usergrid\Guzzle\Plugin\Oauth2\GrantType\PasswordCredentials;
@@ -52,13 +53,6 @@ class ApacheUsergridServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $enable_oauth2_plugin = $this->app['config']->get('apache/usergrid::usergrid.enable_oauth2_plugin');
-
-        //check if user managed oauth auth flow
-        if($enable_oauth2_plugin){
-            // Create the Oauth2 Guzzle Plugin.
-            $this->createGuzzleOauth2Plugin();
-        }
         // register Usergrid
         $this->registerUsergrid();
 
@@ -67,6 +61,27 @@ class ApacheUsergridServiceProvider extends ServiceProvider
     protected function registerUsergrid() {
 
         $this->app['usergrid'] = $this->app->share(function ($app) {
+
+            /** Note: I had to move this to here from the register function as the below config values would not get set and would be null
+             * unless I has this with the package namespace missing but doing that would mean that it would not find the  enable_oauth2_plugin
+             * value .. This has been driving me crazy as I tried to read the config values from a rout and they would not show up
+             * then I did . Also this would not find the config values if the boot function did not have the package method called with
+             * all 3 args
+            $enable_oauth2_plugin = $this->app['config']->get('usergrid.enable_oauth2_plugin');
+
+            //check if user managed oauth auth flow
+            if($enable_oauth2_plugin){
+            // Create the Oauth2 Guzzle Plugin.
+            $this->createGuzzleOauth2Plugin();
+            }
+             */
+            $enable_oauth2_plugin = $app['config']->get('apache/usergrid::usergrid.enable_oauth2_plugin');
+
+            //check if user managed oauth auth flow
+            if($enable_oauth2_plugin){
+                // Create the Oauth2 Guzzle Plugin.
+                $this->createGuzzleOauth2Plugin();
+            }
 
             $baseUrl = $app['config']->get('apache/usergrid::usergrid.url');
 
