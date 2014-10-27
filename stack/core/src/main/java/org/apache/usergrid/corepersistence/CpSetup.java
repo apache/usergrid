@@ -22,7 +22,6 @@ import com.google.inject.Injector;
 import com.netflix.config.ConfigurationManager;
 import java.util.Properties;
 import java.util.UUID;
-import java.util.logging.Level;
 import me.prettyprint.cassandra.service.CassandraHost;
 import me.prettyprint.hector.api.ddl.ComparatorType;
 import static me.prettyprint.hector.api.factory.HFactory.createColumnFamilyDefinition;
@@ -59,7 +58,10 @@ public class CpSetup implements Setup {
 
     private static final Logger logger = LoggerFactory.getLogger( CpSetup.class );
 
-    private final org.apache.usergrid.persistence.EntityManagerFactory emf;
+    private static org.apache.usergrid.persistence.EntityManagerFactory emf;
+
+    private static Injector injector = null;
+
     private final CassandraService cass;
 
     private GuiceModule gm;
@@ -67,16 +69,20 @@ public class CpSetup implements Setup {
 
     /**
      * Instantiates a new setup object.
-     *
-     * @param emf the emf
      */
     public CpSetup( EntityManagerFactory emf, CassandraService cass ) {
-        this.emf = emf;
+        CpSetup.emf = emf;
         this.cass = cass;
     }
 
 
-    private static Injector injector = null;
+    /**
+     * EntityManagerFactory is created by Spring, but Guice-created classes need access to it. 
+     */
+    public static EntityManagerFactory getEntityManagerFactory() {
+        return emf; 
+    }
+
 
     public static Injector getInjector() {
         if ( injector == null ) {

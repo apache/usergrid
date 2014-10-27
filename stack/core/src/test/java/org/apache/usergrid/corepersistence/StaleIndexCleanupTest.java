@@ -95,11 +95,11 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
 
     /**
-     * Test that the CpRelationManager cleans up and stale indexes that it finds when it is 
-     * building search results.
+     * Test that the CpRelationManager cleans up stale indexes on read. Ensures that the query 
+     * results builder removes any stale indexes that it finds when building search results.
      */
     @Test
-    public void testStaleIndexCleanup() throws Exception {
+    public void testCleanupOnRead() throws Exception {
 
         logger.info("Started testStaleIndexCleanup()");
 
@@ -202,6 +202,82 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
     }
 
 
+    /**
+     * Test that the EntityDeleteImpl cleans up stale indexes on delete. Ensures that when an 
+     * entity is deleted its old indexes are cleared from ElasticSearch.
+     */
+    @Test
+    public void testCleanupOnDelete() throws Exception {
+
+        logger.info("Started testStaleIndexCleanup()");
+
+        // TODO: turn off index cleanup on read
+
+        final EntityManager em = app.getEntityManager();
+
+        final int numEntities = 10;
+        final int numUpdates = 3;
+
+        // create lots of entities
+        final List<Entity> things = new ArrayList<Entity>(numEntities);
+        for ( int i=0; i<numEntities; i++) {
+            final String thingName = "thing" + i;
+            things.add( em.create("thing", new HashMap<String, Object>() {{
+                put("name", thingName);
+            }}));
+            Thread.sleep( writeDelayMs );
+        }
+        em.refreshIndex();
+
+        CandidateResults crs = queryCollectionCp( "things", "select *");
+        Assert.assertEquals( "Expect no stale candidates yet", numEntities, crs.size() );
+
+        // update each one a bunch of times
+        int count = 0;
+
+        List<Entity> maxVersions = new ArrayList<>(numEntities);
+
+        for ( Entity thing : things ) {
+            Entity toUpdate = null;
+
+            for ( int j=0; j<numUpdates; j++) {
+                toUpdate = em.get( thing.getUuid() );
+                toUpdate.setProperty( "property"  + j, RandomStringUtils.randomAlphanumeric(10));
+
+                em.update(toUpdate);
+
+                Thread.sleep( writeDelayMs );
+                count++;
+                if ( count % 100 == 0 ) {
+                    logger.info("Updated {} of {} times", count, numEntities * numUpdates);
+                }
+            }
+
+            maxVersions.add( toUpdate );
+        }
+        em.refreshIndex();
+
+        // query Core Persistence directly for total number of result candidates
+        crs = queryCollectionCp("things", "select *");
+        Assert.assertEquals( "Expect stale candidates", numEntities * (numUpdates + 1), crs.size());
+
+        // delete all entities
+        for ( Entity thing : things ) {
+            em.delete( thing );
+        }
+        em.refreshIndex();
+
+        // wait for indexes to be cleared for the deleted entities
+        count = 0;
+        do {
+            Thread.sleep(100);
+            crs = queryCollectionCp("things", "select *");
+        } while ( crs.size() > 0 || count++ > 14 );
+
+        Assert.assertEquals( "Expect no candidates", 0, crs.size() );
+    }
+
+    
     /** 
      * Go around EntityManager and get directly from Core Persistence.
      */

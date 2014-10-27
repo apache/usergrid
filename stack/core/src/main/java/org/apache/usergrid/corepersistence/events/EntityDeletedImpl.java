@@ -26,18 +26,22 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import java.util.UUID;
 import org.apache.usergrid.corepersistence.CpEntityManagerFactory;
 import org.apache.usergrid.corepersistence.CpSetup;
-import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.apache.usergrid.corepersistence.HybridEntityManagerFactory;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
 /**
- * purge most current entity
+ * Delete all Query Index indexes associated with an Entity that has just been deleted. 
  */
 public class EntityDeletedImpl implements EntityDeleted {
     private static final Logger logger = LoggerFactory.getLogger( EntityDeletedImpl.class );
 
+
+    public EntityDeletedImpl() {
+        logger.debug("Created");        
+    }
 
     @Override
     public void deleted(CollectionScope scope, Id entityId, UUID version) {
@@ -47,10 +51,10 @@ public class EntityDeletedImpl implements EntityDeleted {
             new Object[] { entityId.getType(), entityId.getUuid(), version,
                 scope.getName(), scope.getOwner(), scope.getApplication()});
 
-        CpEntityManagerFactory emf = (CpEntityManagerFactory)
-            CpSetup.getInjector().getInstance( EntityManagerFactory.class );
+        HybridEntityManagerFactory hemf = (HybridEntityManagerFactory)CpSetup.getEntityManagerFactory();
+        CpEntityManagerFactory cpemf = (CpEntityManagerFactory)hemf.getImplementation();
 
-        final EntityIndex ei = emf.getManagerCache().getEntityIndex(scope);
+        final EntityIndex ei = cpemf.getManagerCache().getEntityIndex(scope);
 
         EntityIndexBatch batch = ei.createBatch();
 

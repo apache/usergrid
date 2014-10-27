@@ -15,7 +15,6 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-
 package org.apache.usergrid.corepersistence.events;
 
 import org.apache.usergrid.corepersistence.CpEntityManagerFactory;
@@ -37,17 +36,18 @@ import rx.schedulers.Schedulers;
 import java.util.List;
 
 import com.google.inject.Inject;
+import org.apache.usergrid.corepersistence.HybridEntityManagerFactory;
 
 
 /**
  * Purge old entity versions
  */
-public class EntityVersionDeletedImpl implements EntityVersionDeleted{
+public class EntityVersionDeletedImpl implements EntityVersionDeleted {
 
     private final SerializationFig serializationFig;
 
     @Inject
-    public EntityVersionDeletedImpl(SerializationFig fig){
+    public EntityVersionDeletedImpl(SerializationFig fig) {
         this.serializationFig = fig;
     }
 
@@ -55,30 +55,29 @@ public class EntityVersionDeletedImpl implements EntityVersionDeleted{
     public void versionDeleted(
             final CollectionScope scope, final Id entityId, final List<MvccEntity> entityVersions) {
 
-        CpEntityManagerFactory emf = (CpEntityManagerFactory)
-                CpSetup.getInjector().getInstance( EntityManagerFactory.class );
+        HybridEntityManagerFactory hemf = (HybridEntityManagerFactory)CpSetup.getEntityManagerFactory();
+        CpEntityManagerFactory cpemf = (CpEntityManagerFactory)hemf.getImplementation();
 
-        final EntityIndex ei = emf.getManagerCache().getEntityIndex(scope);
-
-        final EntityIndexBatch entityIndexBatch = ei.createBatch();
-
+        final EntityIndex ei = cpemf.getManagerCache().getEntityIndex(scope);
+        
+        final EntityIndexBatch eibatch = ei.createBatch();
 
         final IndexScope indexScope = new IndexScopeImpl(
-                new SimpleId(scope.getOwner().getUuid(),scope.getOwner().getType()),
+                new SimpleId(scope.getOwner().getUuid(), scope.getOwner().getType()),
                 scope.getName()
         );
         rx.Observable.from(entityVersions)
-                .subscribeOn(Schedulers.io())
-                .buffer(serializationFig.getBufferSize())
-                .map(new Func1<List<MvccEntity>,List<MvccEntity>>() {
-                    @Override
-                    public List<MvccEntity> call(List<MvccEntity> entityList) {
-                        for(MvccEntity entity : entityList){
-                             entityIndexBatch.deindex(indexScope,entityId,entity.getVersion());
-                        }
-                        entityIndexBatch.execute();
-                        return entityList;
+            .subscribeOn(Schedulers.io())
+            .buffer(serializationFig.getBufferSize())
+            .map(new Func1<List<MvccEntity>, List<MvccEntity>>() {
+                @Override
+                public List<MvccEntity> call(List<MvccEntity> entityList) {
+                    for (MvccEntity entity : entityList) {
+                        eibatch.deindex(indexScope, entityId, entity.getVersion());
                     }
-                }).toBlocking().last();
+                    eibatch.execute();
+                    return entityList;
+                }
+            }).toBlocking().last();
     }
 }
