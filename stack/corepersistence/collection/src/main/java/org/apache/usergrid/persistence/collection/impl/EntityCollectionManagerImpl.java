@@ -58,8 +58,6 @@ import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
-import java.util.ArrayList;
-import org.apache.usergrid.persistence.collection.event.EntityDeleted;
 
 import rx.Observable;
 import rx.Subscriber;
@@ -99,28 +97,29 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     private final EntityDeletedFactory entityDeletedFactory;
     private final UniqueValueSerializationStrategy uniqueValueSerializationStrategy;
 
-    private List<EntityDeleted> entityDeletedListeners = new ArrayList<EntityDeleted>();
-
 
     @Inject
-    public EntityCollectionManagerImpl( final UUIDService uuidService, @Write final WriteStart writeStart,
-                                        @WriteUpdate final WriteStart writeUpdate,
-                                        final WriteUniqueVerify writeVerifyUnique,
-                                        final WriteOptimisticVerify writeOptimisticVerify,
-                                        final WriteCommit writeCommit, final RollbackAction rollback,
-                                        final MarkStart markStart, final MarkCommit markCommit,
-                                        final EntityVersionCleanupFactory entityVersionCleanupFactory,
-                                       final MvccEntitySerializationStrategy entitySerializationStrategy,
-                                       final UniqueValueSerializationStrategy uniqueValueSerializationStrategy,
-                                       final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy,
-                                       final EntityDeletedFactory entityDeletedFactory,
-                                       @CollectionTaskExecutor final TaskExecutor taskExecutor,
-                                       @Assisted final CollectionScope collectionScope
+    public EntityCollectionManagerImpl( 
+        final UUIDService                          uuidService, 
+        @Write final WriteStart                    writeStart,
+        @WriteUpdate final WriteStart              writeUpdate,
+        final WriteUniqueVerify                    writeVerifyUnique,
+        final WriteOptimisticVerify                writeOptimisticVerify,
+        final WriteCommit                          writeCommit, 
+        final RollbackAction                       rollback,
+        final MarkStart                            markStart, 
+        final MarkCommit                           markCommit,
+        final EntityVersionCleanupFactory          entityVersionCleanupFactory,
+        final MvccEntitySerializationStrategy      entitySerializationStrategy,
+        final UniqueValueSerializationStrategy     uniqueValueSerializationStrategy,
+        final MvccLogEntrySerializationStrategy    mvccLogEntrySerializationStrategy,
+        final EntityDeletedFactory                 entityDeletedFactory,
+        @CollectionTaskExecutor final TaskExecutor taskExecutor,
+        @Assisted final CollectionScope            collectionScope
     ) {
         this.uniqueValueSerializationStrategy = uniqueValueSerializationStrategy;
         this.entitySerializationStrategy = entitySerializationStrategy;
         this.entityDeletedFactory = entityDeletedFactory;
-
 
         Preconditions.checkNotNull(uuidService, "uuidService must be defined");
 
@@ -132,7 +131,6 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         this.writeOptimisticVerify = writeOptimisticVerify;
         this.writeCommit = writeCommit;
         this.rollback = rollback;
-
 
         this.markStart = markStart;
         this.markCommit = markCommit;
@@ -157,7 +155,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
 
         // create our observable and start the write
-        final CollectionIoEvent<Entity> writeData = new CollectionIoEvent<Entity>(collectionScope, entity);
+        final CollectionIoEvent<Entity> writeData = 
+                new CollectionIoEvent<Entity>(collectionScope, entity);
 
         Observable<CollectionIoEvent<MvccEntity>> observable = stageRunner(writeData, writeStart);
 
@@ -198,7 +197,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                     @Override
                     public Void call(final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent) {
                         MvccEntity entity = mvccEntityCollectionIoEvent.getEvent();
-                        Task<Void> task = entityDeletedFactory.getTask(collectionScope,entity.getId(),entity.getVersion());
+                        Task<Void> task = entityDeletedFactory.getTask(
+                                collectionScope,entity.getId(),entity.getVersion());
                         taskExecutor.submit(task);
                         return null;
                     }
@@ -240,8 +240,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
             @Override
             public void call(final Subscriber<? super EntitySet> subscriber) {
                 try {
-                    final EntitySet results =
-                            entitySerializationStrategy.load(collectionScope, entityIds, UUIDGenerator.newTimeUUID());
+                    final EntitySet results = entitySerializationStrategy
+                            .load(collectionScope, entityIds, UUIDGenerator.newTimeUUID());
 
                     subscriber.onNext(results);
                     subscriber.onCompleted();
@@ -312,7 +312,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     public Observable<CollectionIoEvent<MvccEntity>> stageRunner(CollectionIoEvent<Entity> writeData,
                                                                  WriteStart writeState) {
 
-        return Observable.from(writeData).map(writeState).doOnNext(new Action1<CollectionIoEvent<MvccEntity>>() {
+        return Observable.from(writeData).map(writeState).
+            doOnNext(new Action1<CollectionIoEvent<MvccEntity>>() {
 
             @Override
             public void call(final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent) {
@@ -321,16 +322,13 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                         Observable.from(mvccEntityCollectionIoEvent).subscribeOn(Schedulers.io())
                                 .doOnNext(writeVerifyUnique);
 
-
                 // optimistic verification
                 Observable<CollectionIoEvent<MvccEntity>> optimistic =
                         Observable.from(mvccEntityCollectionIoEvent).subscribeOn(Schedulers.io())
                                 .doOnNext(writeOptimisticVerify);
 
-
                 //wait for both to finish
                 Observable.merge(unique, optimistic).toBlocking().last();
-
             }
         });
     }
