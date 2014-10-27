@@ -144,7 +144,12 @@ foreach($allDevices as $device) {
 // this will have all devices. 
 }
 ```
-
+### HTTP headers and UserAgents ###
+ When working with http clients & server system you may want to sett additional HTTP Headers. Ive have made this easy as well on the Usergrid class you 
+ can set any http headers or access token or user agent when calling the set method it will append new headers or replace headers already set so if you 
+ have some customer analytics set up on your version of usergrid server then just pass the headers you like in a fluent way eg:
+ ``` Usergrid::setHeaders(['BAAS-PLATFORM-ANALYTICS' => 'user001'])->users()->findById(['uuid' => '12343']); ```
+ 
 ## Manifest Files (Guzzle & Swagger  Service Descriptors) ## 
 All the files in the manifest folder are just temp file the final Service Descriptors are versioned so
 the real files are in the manifest/1.0.0 folder so as usergrid is updated new versions can be added like 1.1.0 etc.
