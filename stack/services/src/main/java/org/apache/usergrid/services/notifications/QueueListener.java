@@ -209,7 +209,7 @@ public class QueueListener  {
                         LOG.info("sleep between rounds...sleep...{}", sleepBetweenRuns);
                         Thread.sleep(sleepBetweenRuns);
                     }
-                    if(runCount++ % consecutiveCallsToRemoveDevices == 0){
+                    if(++runCount % consecutiveCallsToRemoveDevices == 0){
                         for(ApplicationQueueManager applicationQueueManager : queueManagerMap.values()){
                             try {
                                 applicationQueueManager.asyncCheckForInactiveDevices();
