@@ -123,7 +123,7 @@ class Usergrid
     function __construct($orgName = null, $appName = null, $manifestPath, $version, $baseUrl, Oauth2Plugin $oauth2_plugin = null)
     {
         //Set Version so its added to header
-        $this->setVersion($version ?: $this-version); 
+        $this->setVersion($version ?: $this->version); 
 
         $this->baseUrl = $baseUrl;
 
