@@ -64,15 +64,13 @@ import static org.mockito.Mockito.when;
  */
 @RunWith(ITRunner.class)
 @UseModules({ TestGraphModule.class })
-public class EdgeMetadataSerializationTest {
+public abstract class EdgeMetadataSerializationTest {
 
     @Inject
     @Rule
     public MigrationManagerRule migrationManagerRule;
 
 
-    @Inject
-    protected EdgeMetadataSerialization serialization;
 
     @Inject
     protected Keyspace keyspace;
@@ -80,6 +78,7 @@ public class EdgeMetadataSerializationTest {
 
     protected ApplicationScope scope;
 
+    protected EdgeMetadataSerialization serialization;
 
     @Before
     public void setup() {
@@ -91,6 +90,8 @@ public class EdgeMetadataSerializationTest {
         when( orgId.getUuid() ).thenReturn( UUIDGenerator.newTimeUUID() );
 
         when( scope.getApplication() ).thenReturn( orgId );
+
+        serialization = getSerializationImpl();
     }
 
 
@@ -575,4 +576,6 @@ public class EdgeMetadataSerializationTest {
 
         assertTrue( deleted );
     }
+
+    protected abstract EdgeMetadataSerialization getSerializationImpl();
 }

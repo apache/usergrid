@@ -29,7 +29,7 @@ import org.apache.usergrid.persistence.QueryUtilsTest;
 import org.apache.usergrid.persistence.SchemaTest;
 import org.apache.usergrid.persistence.UtilsTest;
 import org.apache.usergrid.persistence.cassandra.QueryProcessorTest;
-import org.apache.usergrid.persistence.cassandra.SimpleIndexBucketLocatorImplTest;
+import org.apache.usergrid.persistence.cassandra.SimpleIndexShardLocatorImplTest;
 import org.apache.usergrid.persistence.query.ir.result.IntersectionIteratorTest;
 import org.apache.usergrid.persistence.query.ir.result.SubtractionIteratorTest;
 import org.apache.usergrid.persistence.query.ir.result.UnionIteratorTest;
@@ -38,7 +38,7 @@ import org.apache.usergrid.persistence.query.ir.result.UnionIteratorTest;
 @RunWith(ConcurrentSuite.class)
 @Suite.SuiteClasses({
         ZookeeperLockManagerTest.class, QueuePathsTest.class, QueryProcessorTest.class,
-        SimpleIndexBucketLocatorImplTest.class, EntityTest.class, QueryTest.class, QueryUtilsTest.class,
+        SimpleIndexShardLocatorImplTest.class, EntityTest.class, QueryTest.class, QueryUtilsTest.class,
         SchemaTest.class, UtilsTest.class, IntersectionIteratorTest.class, SubtractionIteratorTest.class,
         UnionIteratorTest.class 
 })

@@ -22,8 +22,6 @@ package org.apache.usergrid.persistence.core.astyanax;
 
 import java.nio.ByteBuffer;
 
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.netflix.astyanax.model.CompositeBuilder;
@@ -49,15 +47,13 @@ public class ScopedRowKeySerializer<K> extends AbstractSerializer<ScopedRowKey<K
     private final CompositeFieldSerializer<K> keySerializer;
 
 
-
-
     public ScopedRowKeySerializer( final CompositeFieldSerializer<K> keySerializer ) {
         this.keySerializer = keySerializer;
     }
 
 
     @Override
-    public ByteBuffer toByteBuffer( final ScopedRowKey< K> scopedRowKey ) {
+    public ByteBuffer toByteBuffer( final ScopedRowKey<K> scopedRowKey ) {
 
         final CompositeBuilder builder = Composites.newCompositeBuilder();
 
@@ -80,7 +76,7 @@ public class ScopedRowKeySerializer<K> extends AbstractSerializer<ScopedRowKey<K
 
         final K value = keySerializer.fromComposite( parser );
 
-        return new ScopedRowKey<K>(  orgId, value );
+        return new ScopedRowKey<K>( orgId, value );
     }
 }
 

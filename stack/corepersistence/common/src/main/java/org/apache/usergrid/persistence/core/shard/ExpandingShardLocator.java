@@ -19,7 +19,7 @@
  *
  */
 
-package org.apache.usergrid.persistence.core.hash;/*
+package org.apache.usergrid.persistence.core.shard;/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -53,21 +53,21 @@ import com.google.common.hash.Funnel;
  * When seeking on a string key, for 4 levels of the key, we get 4 different keys due to different shard sizes. This is
  * faster than seeking ALL shards, since this would result in 15 shards, vs 4 in the example.
  */
-public class ExpandingBucketLocator<T> {
+public class ExpandingShardLocator<T> {
 
-    private final BucketLocator<T>[] bucketLocatorList;
+    private final ShardLocator<T>[] shardLocatorList;
 
 
     /**
      * Create a new instance with the specified history. For instance, from the javadoc above, the constructor would
      * contains {8, 4, 3, 2, 1}.  Shards are returned in the size order they are given in the constructor
      */
-    public ExpandingBucketLocator( final Funnel<T> funnel, final int... bucketSizes ) {
+    public ExpandingShardLocator( final Funnel<T> funnel, final int... bucketSizes ) {
 
-        bucketLocatorList = new BucketLocator[bucketSizes.length];
+        shardLocatorList = new ShardLocator[bucketSizes.length];
 
         for ( int i = 0; i < bucketSizes.length; i++ ) {
-            bucketLocatorList[i] = new BucketLocator<>( funnel, bucketSizes[i] );
+            shardLocatorList[i] = new ShardLocator<>( funnel, bucketSizes[i] );
         }
     }
 
@@ -76,10 +76,10 @@ public class ExpandingBucketLocator<T> {
      * Hash the results, and return them in the same order as specified in the constructor
      */
     public int[] getAllBuckets( T hash ) {
-        int[] results = new int[bucketLocatorList.length];
+        int[] results = new int[shardLocatorList.length];
 
-        for ( int i = 0; i < bucketLocatorList.length; i++ ) {
-            results[i] = bucketLocatorList[i].getBucket( hash );
+        for ( int i = 0; i < shardLocatorList.length; i++ ) {
+            results[i] = shardLocatorList[i].getBucket( hash );
         }
 
         return results;
@@ -90,6 +90,6 @@ public class ExpandingBucketLocator<T> {
      * Get the current bucket for the hash value.  Hashes from the first element in the list
      */
     public int getCurrentBucket( T hash ) {
-        return bucketLocatorList[0].getBucket( hash );
+        return shardLocatorList[0].getBucket( hash );
     }
 }

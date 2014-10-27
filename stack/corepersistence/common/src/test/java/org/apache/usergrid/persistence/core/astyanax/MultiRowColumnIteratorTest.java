@@ -85,6 +85,12 @@ public class MultiRowColumnIteratorTest {
             public ConsistencyLevel getWriteCL() {
                 return ConsistencyLevel.CL_QUORUM;
             }
+
+
+            @Override
+            public int[] getShardSettings() {
+                return new int[]{20};
+            }
         };
 
 

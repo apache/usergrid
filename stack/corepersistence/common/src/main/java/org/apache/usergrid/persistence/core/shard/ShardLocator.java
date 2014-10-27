@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.core.hash;
+package org.apache.usergrid.persistence.core.shard;
 
 
 
@@ -30,7 +30,7 @@ import com.google.common.hash.Hashing;
  * Simple utility to locate which bucket an element should be located based on it's funnel
  *
  */
-public class BucketLocator<T> {
+public class ShardLocator<T> {
 
     /**
      * Use the murmur 3 hash
@@ -41,7 +41,7 @@ public class BucketLocator<T> {
     private final Funnel<T> funnel;
 
 
-    public BucketLocator(final Funnel<T> funnel, final int totalBuckets ) {
+    public ShardLocator( final Funnel<T> funnel, final int totalBuckets ) {
         this.funnel = funnel;
         this.totalBuckets = totalBuckets;
     }

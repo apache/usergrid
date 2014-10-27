@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.core.hash;
+package org.apache.usergrid.persistence.core.shard;
 
 
 import java.nio.charset.Charset;
@@ -26,15 +26,13 @@ import org.junit.Test;
 import com.google.common.hash.Funnel;
 import com.google.common.hash.PrimitiveSink;
 
-import junit.framework.TestCase;
-
 import static org.junit.Assert.assertEquals;
 
 
 /**
  * Simple test that validates hashing is actually consistent as buckets grow
  */
-public class BucketLocatorTest {
+public class ShardLocatorTest {
 
     public static final Funnel<String> STRING_FUNNEL = new Funnel<String>() {
 
@@ -53,13 +51,13 @@ public class BucketLocatorTest {
 
         final String hashValue = "keystring";
 
-        BucketLocator<String> bucketLocator1 = new BucketLocator<>(STRING_FUNNEL,  100 );
+        ShardLocator<String> shardLocator1 = new ShardLocator<>(STRING_FUNNEL,  100 );
 
-        int index1 = bucketLocator1.getBucket( hashValue );
+        int index1 = shardLocator1.getBucket( hashValue );
 
-        BucketLocator<String> bucketLocator2 = new BucketLocator<>( STRING_FUNNEL, 100 );
+        ShardLocator<String> shardLocator2 = new ShardLocator<>( STRING_FUNNEL, 100 );
 
-        int index2 = bucketLocator2.getBucket( hashValue );
+        int index2 = shardLocator2.getBucket( hashValue );
 
         assertEquals( "Same index expected", index1, index2 );
     }

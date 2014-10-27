@@ -41,4 +41,5 @@ public interface CompositeFieldSerializer<K> {
      * Create an instance from the composite
      */
     public K fromComposite( CompositeParser composite );
+
 }

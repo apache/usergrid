@@ -41,7 +41,7 @@ import org.apache.usergrid.persistence.graph.impl.stage.NodeDeleteListenerImpl;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
-import org.apache.usergrid.persistence.graph.serialization.impl.EdgeMetadataSerializationImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.EdgeMetadataSerializationV1Impl;
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.NodeSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeColumnFamilies;
@@ -81,7 +81,7 @@ public class GraphModule extends AbstractModule {
         install( new GuicyFigModule( GraphFig.class ) );
 
 
-        bind( EdgeMetadataSerialization.class ).to( EdgeMetadataSerializationImpl.class );
+        bind( EdgeMetadataSerialization.class ).to( EdgeMetadataSerializationV1Impl.class );
         bind( NodeSerialization.class ).to( NodeSerializationImpl.class );
 
         bind( TimeService.class ).to( TimeServiceImpl.class );

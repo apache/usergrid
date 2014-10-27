@@ -18,7 +18,6 @@
  */
 
 package org.apache.usergrid.persistence.map.impl;
-import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -35,7 +34,8 @@ import org.apache.usergrid.persistence.core.astyanax.BucketScopedRowKey;
 import org.apache.usergrid.persistence.core.astyanax.BucketScopedRowKeySerializer;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKeySerializer;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
-import org.apache.usergrid.persistence.core.hash.ExpandingBucketLocator;
+import org.apache.usergrid.persistence.core.shard.ExpandingShardLocator;
+import org.apache.usergrid.persistence.core.shard.StringHashUtils;
 import org.apache.usergrid.persistence.map.MapScope;
 
 import com.google.common.hash.Funnel;
@@ -96,18 +96,19 @@ public class MapSerializationImpl implements MapSerialization {
      */
     private static final Funnel<String> MAP_KEY_FUNNEL = new Funnel<String>() {
 
-        private Charset UTF8 = Charset.forName( "UTF8" );
+
 
         @Override
         public void funnel( final String key, final PrimitiveSink into ) {
-            into.putString( key, UTF8 );
+            into.putString( key, StringHashUtils.UTF8 );
         }
     };
 
     /**
      * Locator to get us all buckets
      */
-    private static final ExpandingBucketLocator<String> BUCKET_LOCATOR = new ExpandingBucketLocator<>(MAP_KEY_FUNNEL, NUM_BUCKETS);
+    private static final ExpandingShardLocator<String>
+            BUCKET_LOCATOR = new ExpandingShardLocator<>(MAP_KEY_FUNNEL, NUM_BUCKETS);
 
     private final Keyspace keyspace;
 

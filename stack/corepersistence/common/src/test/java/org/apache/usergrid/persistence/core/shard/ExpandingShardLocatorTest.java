@@ -19,7 +19,7 @@
  *
  */
 
-package org.apache.usergrid.persistence.core.hash;
+package org.apache.usergrid.persistence.core.shard;
 
 
 import java.util.Arrays;
@@ -32,20 +32,22 @@ import junit.framework.TestCase;
 /**
  * Tests that we get consistent results when hashing
  */
-public class ExpandingBucketLocatorTest extends TestCase {
+public class ExpandingShardLocatorTest extends TestCase {
 
 
     @Test
     public void testConsistency(){
 
-        final ExpandingBucketLocator<String> expandingBucketLocator1 = new ExpandingBucketLocator<>( BucketLocatorTest.STRING_FUNNEL, 20, 10, 1 );
-        final ExpandingBucketLocator<String> expandingBucketLocator2 = new ExpandingBucketLocator<>( BucketLocatorTest.STRING_FUNNEL, 20, 10, 1 );
+        final ExpandingShardLocator<String>
+                expandingShardLocator1 = new ExpandingShardLocator<>( ShardLocatorTest.STRING_FUNNEL, 20, 10, 1 );
+        final ExpandingShardLocator<String>
+                expandingShardLocator2 = new ExpandingShardLocator<>( ShardLocatorTest.STRING_FUNNEL, 20, 10, 1 );
 
         final String key = "mytestkey";
 
 
-        int[] results1 = expandingBucketLocator1.getAllBuckets(key  );
-        int[] results2 = expandingBucketLocator2.getAllBuckets(key  );
+        int[] results1 = expandingShardLocator1.getAllBuckets(key  );
+        int[] results2 = expandingShardLocator2.getAllBuckets(key  );
 
         assertTrue( "Same results returned", Arrays.equals(results1, results2));
 
@@ -54,7 +56,7 @@ public class ExpandingBucketLocatorTest extends TestCase {
         assertTrue("Within bounds", results1[2] <= 0);
 
         //test the first hash
-        int newestBucket = expandingBucketLocator1.getCurrentBucket( key );
+        int newestBucket = expandingShardLocator1.getCurrentBucket( key );
 
         assertEquals("Same bucket returned", results1[0], newestBucket);
 

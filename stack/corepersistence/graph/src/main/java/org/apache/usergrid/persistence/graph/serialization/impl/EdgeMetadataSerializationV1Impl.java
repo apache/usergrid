@@ -63,7 +63,7 @@ import com.netflix.astyanax.util.RangeBuilder;
  * Class to perform all edge metadata I/O
  */
 @Singleton
-public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization, Migration {
+public class EdgeMetadataSerializationV1Impl implements EdgeMetadataSerialization, Migration {
 
     private static final byte[] HOLDER = new byte[] { 0 };
 
@@ -114,8 +114,8 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
 
     @Inject
-    public EdgeMetadataSerializationImpl( final Keyspace keyspace, final CassandraConfig cassandraConfig,
-                                          final GraphFig graphFig ) {
+    public EdgeMetadataSerializationV1Impl( final Keyspace keyspace, final CassandraConfig cassandraConfig,
+                                            final GraphFig graphFig ) {
 
         Preconditions.checkNotNull( "cassandraConfig is required", cassandraConfig );
         Preconditions.checkNotNull( "consistencyFig is required", graphFig );
@@ -412,6 +412,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
             return new EdgeIdTypeKey( id, edgeType );
         }
+
     }
 
 

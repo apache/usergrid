@@ -38,6 +38,7 @@ public class CassandraConfigImpl implements CassandraConfig {
 
     private ConsistencyLevel readCl;
     private ConsistencyLevel writeCl;
+    private int[] shardSettings;
 
 
     @Inject
@@ -46,6 +47,9 @@ public class CassandraConfigImpl implements CassandraConfig {
         this.readCl = ConsistencyLevel.valueOf( cassandraFig.getReadCL() );
 
         this.writeCl = ConsistencyLevel.valueOf( cassandraFig.getWriteCL() );
+
+        this.shardSettings = parseShardSettings( cassandraFig.getShardValues() );
+
 
 
         //add the listeners to update the values
@@ -60,6 +64,9 @@ public class CassandraConfigImpl implements CassandraConfig {
 
                 else if ( CassandraFig.WRITE_CL.equals( propName ) ) {
                     writeCl = ConsistencyLevel.valueOf( evt.getNewValue().toString() );
+                }
+                else if (CassandraFig.SHARD_VALUES.equals(propName)){
+                    shardSettings = parseShardSettings( cassandraFig.getShardValues() );
                 }
             }
         } );
@@ -78,4 +85,20 @@ public class CassandraConfigImpl implements CassandraConfig {
     }
 
 
+    @Override
+    public int[] getShardSettings() {
+      return shardSettings;
+    }
+
+    private int[] parseShardSettings(final String value){
+        final String[] shardHistory = value.split( "," );
+
+        int[] settings = new int [shardHistory.length];
+
+        for(int i = 0; i < shardHistory.length; i ++){
+            settings[i] = Integer.parseInt( shardHistory[i] );
+        }
+
+      return settings;
+    }
 }

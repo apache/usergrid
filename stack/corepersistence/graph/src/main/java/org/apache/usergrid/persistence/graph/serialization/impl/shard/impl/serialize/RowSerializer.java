@@ -38,7 +38,6 @@ public class RowSerializer implements CompositeFieldSerializer<RowKey> {
 
     private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
 
-
     @Override
     public void toComposite( final CompositeBuilder builder, final RowKey key ) {
 
@@ -60,4 +59,5 @@ public class RowSerializer implements CompositeFieldSerializer<RowKey> {
 
         return new RowKey( id, edgeType, shard );
     }
+
 }

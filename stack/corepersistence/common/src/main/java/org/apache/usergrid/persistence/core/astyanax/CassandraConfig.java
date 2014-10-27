@@ -24,5 +24,11 @@ public interface CassandraConfig {
      */
     public ConsistencyLevel getWriteCL();
 
+    /**
+     * Return the number of shards that has been set in the property file
+     * @return
+     */
+    public int[] getShardSettings();
+
 
 }
