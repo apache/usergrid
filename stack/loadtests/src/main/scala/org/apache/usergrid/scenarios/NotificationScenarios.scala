@@ -60,7 +60,7 @@ object NotificationScenarios {
 
   val sendNotificationToUser= exec(http("Send Notification to All Devices")
     .post("/users/${userId}/notifications")
-    .body(StringBody("{\"debug\":\"true\",\"payloads\":{\"" + notifier + "\":\"testmessage\"}}"))
+    .body(StringBody("{\"payloads\":{\"" + notifier + "\":\"testmessage\"}}"))
     .check(status.is(200))
   )
 
