@@ -30,24 +30,21 @@ import io.gatling.core.Predef._
       .check(status.is(200))
   )
 
-  val postUser = exec(
-    http("POST geolocated Users")
-      .post("/users")
-      .body(new StringBody("""{"location":{"latitude":"${latitude}","longitude":"${longitude}"},"username":"${username}",
-      "displayName":"${displayName}","age":"${age}","seen":"${seen}","weight":"${weight}",
-      "height":"${height}","aboutMe":"${aboutMe}","profileId":"${profileId}","headline":"${headline}","
-      "showAge":"${showAge}","relationshipStatus":"${relationshipStatus}","ethnicity":"${ethnicity}","password":"password"}"""))
-      .check(status.is(200))
-  )
+   val getUserByUsername = exec(
+     http("GET user")
+       .get("/users/${username}")
+       .check(status.is(200), jsonPath("$..entities[0].uuid").saveAs("userId"))
+   )
 
-  val postUser400ok = exec(
+  val postUser = exec(
     http("POST geolocated Users")
       .post("/users")
       .body(new StringBody("""{"location":{"latitude":"${latitude}","longitude":"${longitude}"},"username":"${username}",
       "displayName":"${displayName}","age":"${age}","seen":"${seen}","weight":"${weight}",
       "height":"${height}","aboutMe":"${aboutMe}","profileId":"${profileId}","headline":"${headline}",
       "showAge":"${showAge}","relationshipStatus":"${relationshipStatus}","ethnicity":"${ethnicity}","password":"password"}"""))
-      .check(status.in(200 to 400))
-  )
-
+      .check(status.is(200), status.saveAs("userStatus"), jsonPath("$..entities[0].uuid").saveAs("userId")))
+    .doIf ("${userStatus}", "400") {
+      exec(getUserByUsername)
+    }
 }

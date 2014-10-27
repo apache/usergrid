@@ -131,7 +131,7 @@
 				<artifactId>gatling-maven-plugin</artifactId>
         <configuration>
           <simulationsFolder>src/main/scala</simulationsFolder>
-          <simulationClass>org.apache.usergrid.simulations.PushNotificationTargetDeviceSimulation</simulationClass>
+          <simulationClass>org.apache.usergrid.simulations.PushNotificationTargetUserSimulation</simulationClass>
         </configuration>
 
 			</plugin>

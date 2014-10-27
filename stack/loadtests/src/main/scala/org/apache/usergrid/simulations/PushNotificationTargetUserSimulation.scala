@@ -38,7 +38,7 @@ class PushNotificationTargetUserSimulation extends Simulation {
   val createNotifier = NotifierScenarios.createNotifier
   val createDevice = DeviceScenarios.postDeviceWithNotifier
   val sendNotification = NotificationScenarios.sendNotificationToUser
-  val createUser = UserScenarios.postUser400ok
+  val createUser = UserScenarios.postUser
   val createOrg = OrganizationScenarios.createOrgAndAdmin
   val connectUserToDevice = ConnectionScenarios.postUserToDeviceConnection
 
