@@ -1504,7 +1504,7 @@ public class CpRelationManager implements RelationManager {
         if ( query.getSortPredicates().isEmpty() ) {
 
             Query.SortPredicate asc = 
-                new Query.SortPredicate( PROPERTY_CREATED, Query.SortDirection.DESCENDING);
+                new Query.SortPredicate( PROPERTY_CREATED, Query.SortDirection.ASCENDING);
 
             query.addSort( asc );
         }
