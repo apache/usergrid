@@ -22,11 +22,13 @@
 package org.apache.usergrid.persistence.core.astyanax;
 
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.TreeSet;
@@ -78,7 +80,8 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
     private T startColumn;
 
 
-    private int lastReturnCount;
+    private boolean moreToReturn;
+
 
     private Iterator<T> currentColumnIterator;
 
@@ -112,7 +115,7 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
         this.rowKeys = rowKeys;
         this.keyspace = keyspace;
         this.consistencyLevel = consistencyLevel;
-        this.lastReturnCount = -1;
+        this.moreToReturn = true;
 
         //        seenResults = new HashMap<>( pageSize * 10 );
     }
@@ -121,7 +124,7 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
     @Override
     public boolean hasNext() {
 
-        if ( currentColumnIterator == null || ( !currentColumnIterator.hasNext() && lastReturnCount == pageSize || lastReturnCount == -1 ) ) {
+        if ( currentColumnIterator == null || ( !currentColumnIterator.hasNext() && moreToReturn ) ) {
             advance();
         }
 
@@ -139,10 +142,6 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
         final T next = currentColumnIterator.next();
 
 
-        //set our start pointer
-        startColumn = next;
-        lastReturnCount ++;
-
         return next;
     }
 
@@ -154,8 +153,6 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
 
 
     public void advance() {
-
-        this.lastReturnCount = 0;
 
         /**
          * If the edge is present, we need to being seeking from this
@@ -201,7 +198,7 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
         //do a merge if only one row has data.
 
 
-        final Iterator<T> mergedResults;
+        final List<T> mergedResults;
 
         if ( containsSingleRowOnly( result ) ) {
             mergedResults = singleRowResult( result );
@@ -219,21 +216,31 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
 
         //discard our first element (maybe)
 
-        PushbackIterator<T> iterator = new PushbackIterator<>( mergedResults );
 
-        //we have a first column to discard, our iterator has a value, but they are not equal, meaning we can't discard it
-        //as we have from the check so we need to push it back into the iterator
-        if(skipFirstColumn && iterator.hasNext()) {
 
-            final T firstResult = iterator.next();
+        final int size = mergedResults.size();
 
-            if(comparator.compare( startColumn, firstResult ) != 0){
-                iterator.pushback( firstResult );
+        moreToReturn = size == selectSize;
+
+        //we have a first column to to check
+        if( size > 0) {
+
+            final T firstResult = mergedResults.get( 0 );
+
+            //The search has either told us to skip the first element, or it matches our last, therefore we disregard it
+            if(columnSearch.skipFirst( firstResult ) || (skipFirstColumn && comparator.compare( startColumn, firstResult ) == 0)){
+                mergedResults.remove( 0 );
             }
 
         }
 
-        currentColumnIterator = iterator;
+
+        if(moreToReturn && mergedResults.size() > 0){
+            startColumn = mergedResults.get( mergedResults.size()  - 1 );
+        }
+
+
+        currentColumnIterator = mergedResults.iterator();
 
         LOG.trace( "Finished parsing {} rows for results", rowKeys.size() );
     }
@@ -266,21 +273,30 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
      * @param result
      * @return
      */
-    private Iterator<T> singleRowResult( final Rows<R, C> result ) {
+    private List<T> singleRowResult( final Rows<R, C> result ) {
 
 
         for ( R key : result.getKeys() ) {
             final ColumnList<C> columnList = result.getRow( key ).getColumns();
 
-            if ( columnList.size() > 0 ) {
+            final int size = columnList.size();
 
-                return new SingleRowIterator(columnList);
+            if ( size > 0 ) {
+
+                final List<T> results = new ArrayList<>(size);
+
+                for(Column<C> column: columnList){
+                    results.add(columnParser.parseColumn( column ));
+                }
+
+                return results;
+
 
             }
         }
 
         //we didn't have any results, just return nothing
-        return Collections.<T>emptyList().iterator();
+        return Collections.<T>emptyList();
     }
 
 
@@ -289,9 +305,12 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
      * @param result
      * @return
      */
-    private Iterator<T> mergeResults( final Rows<R, C> result, final int maxSize ) {
+    private List<T> mergeResults( final Rows<R, C> result, final int maxSize ) {
 
-        final TreeSet<T> mergedResults = new TreeSet<>( comparator );
+
+        final List<T> mergedResults = new ArrayList<>(maxSize);
+
+
 
 
         for ( final R key : result.getKeys() ) {
@@ -301,6 +320,9 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
             for (final Column<C> column :columns  ) {
 
                 final T returnedValue = columnParser.parseColumn( column );
+
+                //Use an O(log n) search, same as a tree, but with fast access to indexes for later operations
+                int searchIndex = Collections.binarySearch( mergedResults, returnedValue, comparator );
 
                 /**
                  * DO NOT remove this section of code. If you're seeing inconsistent results during shard transition,
@@ -320,18 +342,32 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
                 //
                 //                previous = returnedValue;
 
-                mergedResults.add( returnedValue );
+                //we've already seen it, no-op
+                if(searchIndex > -1){
+                    continue;
+                }
+
+                final int insertIndex = (searchIndex+1)*-1;
+
+                //it's at the end of the list, don't bother inserting just to remove it
+                if(insertIndex >= maxSize){
+                    continue;
+                }
+
+                mergedResults.add( insertIndex, returnedValue );
+
 
                 //prune the mergedResults
                 while ( mergedResults.size() > maxSize ) {
-                    mergedResults.pollLast();
+                    //just remove from our tail until the size falls to the correct value
+                    mergedResults.remove(mergedResults.size()-1);
                 }
             }
 
             LOG.trace( "Candidate result set size is {}", mergedResults.size() );
 
         }
-        return mergedResults.iterator();
+        return mergedResults;
     }
 
 
