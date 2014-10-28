@@ -55,6 +55,7 @@ import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerializa
 import org.apache.usergrid.persistence.graph.serialization.util.GraphValidation;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.hash.Funnel;
 import com.google.common.hash.PrimitiveSink;
@@ -451,8 +452,8 @@ public class EdgeMetadataSerializationV2Impl implements EdgeMetadataSerializatio
         final int[] bucketIds = edgeTypeExpandingShardLocator.getAllBuckets( edgeIdTypeKey );
 
         //no generics is intentional here
-        final List<BucketScopedRowKey<Id>> buckets =
-                BucketScopedRowKey.fromRange( applicationId, searchNode, bucketIds );
+        final List<BucketScopedRowKey<EdgeIdTypeKey>> buckets =
+                BucketScopedRowKey.fromRange( applicationId, edgeIdTypeKey, bucketIds );
 
 
         final ColumnSearch<String> columnSearch = createSearch( search );
@@ -517,6 +518,19 @@ public class EdgeMetadataSerializationV2Impl implements EdgeMetadataSerializatio
             @Override
             public void buildRange( final RangeBuilder rangeBuilder ) {
                 buildRange( rangeBuilder, null );
+            }
+
+
+            @Override
+            public boolean skipFirst( final String first ) {
+
+                final Optional<String> last = search.getLast();
+
+                if(!last.isPresent()){
+                    return false;
+                }
+
+                return last.get().equals( first );
             }
         };
     }

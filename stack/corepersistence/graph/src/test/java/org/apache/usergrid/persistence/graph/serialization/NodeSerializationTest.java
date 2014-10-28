@@ -113,7 +113,7 @@ public class NodeSerializationTest {
 
         final Id nodeId = createId( "test" );
 
-        Optional<Long>returned = serialization.getMaxVersion( scope, nodeId );
+        Optional<Long> returned = serialization.getMaxVersion( scope, nodeId );
 
         /**
          * Verifies we didnt' get anything back when nothing has been marked
@@ -130,11 +130,11 @@ public class NodeSerializationTest {
 
         final Id nodeId = createId( "test" );
         final long version1 = System.currentTimeMillis();
-        final long version2 = version1+1;
+        final long version2 = version1 + 1;
 
         serialization.mark( scope, nodeId, version2 ).execute();
 
-        Optional<Long>returned = serialization.getMaxVersion( scope, nodeId );
+        Optional<Long> returned = serialization.getMaxVersion( scope, nodeId );
 
         assertEquals( version2, returned.get().longValue() );
 

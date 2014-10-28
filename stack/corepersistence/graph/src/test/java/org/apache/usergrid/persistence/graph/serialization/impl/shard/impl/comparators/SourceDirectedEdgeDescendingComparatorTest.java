@@ -114,8 +114,8 @@ public class SourceDirectedEdgeDescendingComparatorTest {
 
         final UUID sourceId = UUIDGenerator.newTimeUUID();
 
-        final Id sourceId1 = createId( sourceId,  "source1" );
-        final Id sourceId2 = createId( sourceId,  "source2" );
+        final Id sourceId1 = createId( sourceId, "source1" );
+        final Id sourceId2 = createId( sourceId, "source2" );
         final Id targetId = createId( "target" );
         final String type = "type";
         final long timestamp = 10000;

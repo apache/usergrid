@@ -28,6 +28,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.usergrid.persistence.core.guice.ProxyImpl;
 import org.apache.usergrid.persistence.core.hystrix.HystrixCassandra;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -74,7 +75,7 @@ public class NodeDeleteListenerImpl implements NodeDeleteListener {
      */
     @Inject
     public NodeDeleteListenerImpl( final NodeSerialization nodeSerialization,
-                                   final EdgeMetadataSerialization edgeMetadataSerialization,
+                                   @ProxyImpl final EdgeMetadataSerialization edgeMetadataSerialization,
                                    final EdgeMetaRepair edgeMetaRepair, final GraphFig graphFig,
                                    final EdgeSerialization storageSerialization,
                                    final Keyspace keyspace ) {

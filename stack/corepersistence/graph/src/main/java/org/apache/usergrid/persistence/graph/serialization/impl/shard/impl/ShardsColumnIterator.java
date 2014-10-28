@@ -105,20 +105,7 @@ public class ShardsColumnIterator<R, C, T> implements Iterator<T> {
          */
         final List<ScopedRowKey<R>> rowKeys = searcher.getRowKeys();
 
-
-        if(rowKeys.size() == 1){
-
-            final  RowQuery<ScopedRowKey<R>, C> query =
-                           keyspace.prepareQuery( cf ).setConsistencyLevel( consistencyLevel ).getKey( rowKeys.get( 0 ) )
-                                   .autoPaginate( true ).withColumnRange( rangeBuilder.build() );
-
-            currentColumnIterator = new ColumnNameIterator<>( query, searcher, searcher.hasPage() );
-        }
-
-        else{
-
-            currentColumnIterator = new MultiRowColumnIterator<>( keyspace, cf,  consistencyLevel, searcher, searcher, searcher.getComparator(), rowKeys, pageSize);
-        }
+        currentColumnIterator = new MultiRowColumnIterator<>( keyspace, cf,  consistencyLevel, searcher, searcher, searcher.getComparator(), rowKeys, pageSize);
 
 
 

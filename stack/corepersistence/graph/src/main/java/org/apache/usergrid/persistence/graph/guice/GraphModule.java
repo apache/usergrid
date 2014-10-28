@@ -21,8 +21,12 @@ package org.apache.usergrid.persistence.graph.guice;
 
 import org.safehaus.guicyfig.GuicyFigModule;
 
+import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
 import org.apache.usergrid.persistence.core.consistency.TimeService;
 import org.apache.usergrid.persistence.core.consistency.TimeServiceImpl;
+import org.apache.usergrid.persistence.core.guice.CurrentImpl;
+import org.apache.usergrid.persistence.core.guice.PreviousImpl;
+import org.apache.usergrid.persistence.core.guice.ProxyImpl;
 import org.apache.usergrid.persistence.core.migration.Migration;
 import org.apache.usergrid.persistence.core.task.NamedTaskExecutorImpl;
 import org.apache.usergrid.persistence.core.task.TaskExecutor;
@@ -41,7 +45,9 @@ import org.apache.usergrid.persistence.graph.impl.stage.NodeDeleteListenerImpl;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
+import org.apache.usergrid.persistence.graph.serialization.impl.EdgeMetadataSerializationProxyImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeMetadataSerializationV1Impl;
+import org.apache.usergrid.persistence.graph.serialization.impl.EdgeMetadataSerializationV2Impl;
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.NodeSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeColumnFamilies;
@@ -70,6 +76,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.multibindings.Multibinder;
+import com.netflix.astyanax.Keyspace;
 
 
 public class GraphModule extends AbstractModule {
@@ -81,7 +88,6 @@ public class GraphModule extends AbstractModule {
         install( new GuicyFigModule( GraphFig.class ) );
 
 
-        bind( EdgeMetadataSerialization.class ).to( EdgeMetadataSerializationV1Impl.class );
         bind( NodeSerialization.class ).to( NodeSerializationImpl.class );
 
         bind( TimeService.class ).to( TimeServiceImpl.class );
@@ -126,7 +132,7 @@ public class GraphModule extends AbstractModule {
 
         bind( EdgeColumnFamilies.class ).to( SizebasedEdgeColumnFamilies.class );
 
-        bind( ShardGroupCompaction.class).to( ShardGroupCompactionImpl.class);
+        bind( ShardGroupCompaction.class ).to( ShardGroupCompactionImpl.class );
 
 
         /**
@@ -141,13 +147,16 @@ public class GraphModule extends AbstractModule {
         //do multibindings for migrations
         Multibinder<Migration> migrationBinding = Multibinder.newSetBinder( binder(), Migration.class );
         migrationBinding.addBinding().to( Key.get( NodeSerialization.class ) );
-        migrationBinding.addBinding().to( Key.get( EdgeMetadataSerialization.class ) );
 
         //bind each singleton to the multi set.  Otherwise we won't migrate properly
         migrationBinding.addBinding().to( Key.get( EdgeColumnFamilies.class ) );
 
         migrationBinding.addBinding().to( Key.get( EdgeShardSerialization.class ) );
         migrationBinding.addBinding().to( Key.get( NodeShardCounterSerialization.class ) );
+
+        //Get the old version and the new one
+        migrationBinding.addBinding().to( Key.get( EdgeMetadataSerialization.class, PreviousImpl.class) );
+        migrationBinding.addBinding().to( Key.get( EdgeMetadataSerialization.class, CurrentImpl.class  ) );
     }
 
 
@@ -155,11 +164,42 @@ public class GraphModule extends AbstractModule {
     @Singleton
     @Provides
     @GraphTaskExecutor
-    public TaskExecutor graphTaskExecutor(final GraphFig graphFig){
-        return new NamedTaskExecutorImpl( "graphTaskExecutor",  graphFig.getShardAuditWorkerCount(), graphFig.getShardAuditWorkerQueueSize()  );
+    public TaskExecutor graphTaskExecutor( final GraphFig graphFig ) {
+        return new NamedTaskExecutorImpl( "graphTaskExecutor", graphFig.getShardAuditWorkerCount(),
+                graphFig.getShardAuditWorkerQueueSize() );
     }
 
 
+    @Inject
+    @Singleton
+    @Provides
+    @PreviousImpl
+    public EdgeMetadataSerialization getPreviousEdgeMetaSerialization( final Keyspace keyspace,
+                                                                       final CassandraConfig cassandraConfig,
+                                                                       final GraphFig graphFig ) {
+        return new EdgeMetadataSerializationV1Impl( keyspace, cassandraConfig, graphFig );
+    }
+
+
+    @Inject
+    @Singleton
+    @Provides
+    @CurrentImpl
+    public EdgeMetadataSerialization getCurrentEdgeMetaSerialization( final Keyspace keyspace,
+                                                                      final CassandraConfig cassandraConfig,
+                                                                      final GraphFig graphFig ) {
+        return new EdgeMetadataSerializationV2Impl( keyspace, cassandraConfig, graphFig );
+    }
+
+
+    @Inject
+    @Singleton
+    @Provides
+    @ProxyImpl
+    public EdgeMetadataSerialization getCurrentEdgeMetaSerialization( @PreviousImpl final EdgeMetadataSerialization previous,
+                                                   @CurrentImpl final EdgeMetadataSerialization current ) {
+       return new EdgeMetadataSerializationProxyImpl( previous, current );
+    }
 }
 
 

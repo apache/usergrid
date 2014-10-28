@@ -29,12 +29,13 @@ import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import com.google.inject.Inject;
 
 
-@RunWith( ITRunner.class )
-@UseModules( { TestGraphModule.class } )
+@RunWith(ITRunner.class)
+@UseModules({ TestGraphModule.class })
 public class PermanentSerializationTest extends EdgeSerializationTest {
 
     @Inject
     protected EdgeSerialization edgeSerialization;
+
 
     @Override
     protected EdgeSerialization getSerialization() {

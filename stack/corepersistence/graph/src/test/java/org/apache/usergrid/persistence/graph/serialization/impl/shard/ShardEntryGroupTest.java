@@ -85,7 +85,8 @@ public class ShardEntryGroupTest {
         assertNull( "Can't compact, no min compacted shard present", shardEntryGroup.getCompactionTarget() );
 
 
-        //TODO, should this blow up in general?  We don't have a compacted shard at the lower bounds, which shouldn't be allowed
+        //TODO, should this blow up in general?  We don't have a compacted shard at the lower bounds,
+        // which shouldn't be allowed
 
     }
 
@@ -229,7 +230,8 @@ public class ShardEntryGroupTest {
         assertFalse( "Merge cannot be run within min time",
                 shardEntryGroup.shouldCompact( secondShard.getCreatedTime() + delta + 1 ) );
 
-        assertTrue( "Merge should be run with after min time", shardEntryGroup.shouldCompact( firstShard.getCreatedTime() + delta + 1 ) );
+        assertTrue( "Merge should be run with after min time",
+                shardEntryGroup.shouldCompact( firstShard.getCreatedTime() + delta + 1 ) );
     }
 
 
@@ -264,12 +266,11 @@ public class ShardEntryGroupTest {
 
         Collection<Shard> readShards = shardEntryGroup.getReadShards();
 
-        assertEquals("Shard size correct", 2, readShards.size());
+        assertEquals( "Shard size correct", 2, readShards.size() );
 
-        assertTrue("First shard present",  readShards.contains( secondShard ) );
+        assertTrue( "First shard present", readShards.contains( secondShard ) );
 
-        assertTrue("Second shard present",  readShards.contains( compactedShard1 ) );
-
+        assertTrue( "Second shard present", readShards.contains( compactedShard1 ) );
     }
 
 
@@ -303,55 +304,50 @@ public class ShardEntryGroupTest {
         assertTrue( "Shard added", result );
 
 
-
         Collection<Shard> writeShards = shardEntryGroup.getWriteShards( firstShard.getCreatedTime() + delta );
 
-        assertEquals("Shard size correct", 1, writeShards.size());
+        assertEquals( "Shard size correct", 1, writeShards.size() );
 
-        assertTrue("Root shard present",  writeShards.contains( compactedShard ) );
+        assertTrue( "Root shard present", writeShards.contains( compactedShard ) );
 
 
+        writeShards = shardEntryGroup.getWriteShards( secondShard.getCreatedTime() + delta );
 
-        writeShards = shardEntryGroup.getWriteShards(secondShard.getCreatedTime()+delta);
+        assertEquals( "Shard size correct", 1, writeShards.size() );
 
-        assertEquals("Shard size correct", 1, writeShards.size());
-
-        assertTrue("Third shard present",  writeShards.contains( compactedShard ) );
+        assertTrue( "Third shard present", writeShards.contains( compactedShard ) );
 
 
         /**
          * Not the max created timestamp, shouldn't return less than all shards
          */
-        writeShards = shardEntryGroup.getWriteShards(secondShard.getCreatedTime() +1 + delta);
+        writeShards = shardEntryGroup.getWriteShards( secondShard.getCreatedTime() + 1 + delta );
 
-        assertEquals("Shard size correct", 1, writeShards.size());
-
-
-        assertTrue("Second shard present",  writeShards.contains( compactedShard ) );
+        assertEquals( "Shard size correct", 1, writeShards.size() );
 
 
+        assertTrue( "Second shard present", writeShards.contains( compactedShard ) );
 
 
-        assertEquals("Compaction target correct", secondShard, shardEntryGroup.getCompactionTarget());
+        assertEquals( "Compaction target correct", secondShard, shardEntryGroup.getCompactionTarget() );
 
-        writeShards = shardEntryGroup.getWriteShards(firstShard.getCreatedTime() +1 + delta);
+        writeShards = shardEntryGroup.getWriteShards( firstShard.getCreatedTime() + 1 + delta );
 
-        assertEquals("Shard size correct", 1, writeShards.size());
+        assertEquals( "Shard size correct", 1, writeShards.size() );
 
 
-        assertTrue("Second shard present",  writeShards.contains( secondShard ) );
-
+        assertTrue( "Second shard present", writeShards.contains( secondShard ) );
     }
 
 
-    @Test(expected=IllegalArgumentException.class)
+    @Test( expected = IllegalArgumentException.class )
     public void failsInsertionOrder() {
 
         final long delta = 10000;
 
-        Shard secondShard = new Shard(20000, 10000, false);
+        Shard secondShard = new Shard( 20000, 10000, false );
 
-        Shard firstShard = new Shard(10000 , 10000, false );
+        Shard firstShard = new Shard( 10000, 10000, false );
 
         Shard rootShard = new Shard( 0, 0, false );
 
@@ -368,10 +364,7 @@ public class ShardEntryGroupTest {
         //this should blow up, we can't add a shard in the middle, it must always be greater than the current max
 
         shardEntryGroup.addShard( firstShard );
-
-
     }
-
 
 
     @Test
@@ -383,7 +376,7 @@ public class ShardEntryGroupTest {
 
         Shard midShard = new Shard( 20000, 1000, true );
 
-        Shard lowShard = new Shard( 10000, 1000, false);
+        Shard lowShard = new Shard( 10000, 1000, false );
 
         ShardEntryGroup shardEntryGroup = new ShardEntryGroup( delta );
 
@@ -399,10 +392,6 @@ public class ShardEntryGroupTest {
 
         assertFalse( "Shard added", result );
     }
-
-
-
-
 }
 
 

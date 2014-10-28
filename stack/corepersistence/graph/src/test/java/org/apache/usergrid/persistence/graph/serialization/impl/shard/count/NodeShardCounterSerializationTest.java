@@ -98,11 +98,11 @@ public class NodeShardCounterSerializationTest {
 
         final Id id = createId( "test" );
 
-        ShardKey key1 = new ShardKey( scope, new Shard(0, 0, false), DirectedEdgeMeta.fromSourceNode( id, "type1"  ) );
+        ShardKey key1 = new ShardKey( scope, new Shard( 0, 0, false ), DirectedEdgeMeta.fromSourceNode( id, "type1" ) );
 
-        ShardKey key2 = new ShardKey( scope, new Shard(0, 0, false), DirectedEdgeMeta.fromSourceNode( id, "type2"  ) );
+        ShardKey key2 = new ShardKey( scope, new Shard( 0, 0, false ), DirectedEdgeMeta.fromSourceNode( id, "type2" ) );
 
-        ShardKey key3 = new ShardKey( scope, new Shard(1, 0, false), DirectedEdgeMeta.fromSourceNode( id, "type1"  ) );
+        ShardKey key3 = new ShardKey( scope, new Shard( 1, 0, false ), DirectedEdgeMeta.fromSourceNode( id, "type1" ) );
 
 
         Counter counter = new Counter();

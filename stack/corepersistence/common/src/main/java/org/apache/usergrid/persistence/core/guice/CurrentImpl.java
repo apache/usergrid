@@ -21,6 +21,7 @@
 
 package org.apache.usergrid.persistence.core.guice;
 
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -32,11 +33,10 @@ import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 
-
 /**
  * Represents 2 versions of an impl.  Generally used for online migration.  This represents the version that is the
- * previous version of the implementation.  I.E the "old" version.
+ * current version of the implementation.  I.E the "new" version.
  */
 @BindingAnnotation
 @Target({ FIELD, PARAMETER, METHOD }) @Retention(RUNTIME)
-public @interface PreviousVersion {}
+public @interface CurrentImpl {}

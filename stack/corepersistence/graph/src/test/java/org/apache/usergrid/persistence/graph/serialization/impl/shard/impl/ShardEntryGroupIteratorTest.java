@@ -90,7 +90,7 @@ public class ShardEntryGroupIteratorTest {
         verify( shardGroupCompaction ).evaluateShardGroup( same( scope ), same( directedEdgeMeta ), eq( group ) );
 
 
-        Collection<Shard> readShards = group.getReadShards( );
+        Collection<Shard> readShards = group.getReadShards();
 
         assertEquals( "Min shard present", 1, readShards.size() );
 
@@ -173,7 +173,7 @@ public class ShardEntryGroupIteratorTest {
         //verify we ran our compaction check
         verify( shardGroupCompaction ).evaluateShardGroup( same( scope ), same( directedEdgeMeta ), eq( group ) );
 
-        Collection<Shard> readShards = group.getReadShards( );
+        Collection<Shard> readShards = group.getReadShards();
 
         assertEquals( "Both shards present", 2, readShards.size() );
 
@@ -213,7 +213,7 @@ public class ShardEntryGroupIteratorTest {
         verify( shardGroupCompaction ).evaluateShardGroup( same( scope ), same( directedEdgeMeta ), eq( group ) );
 
 
-        readShards = group.getReadShards( );
+        readShards = group.getReadShards();
 
 
         assertEquals( "Both shards present", 2, readShards.size() );
@@ -230,7 +230,7 @@ public class ShardEntryGroupIteratorTest {
         assertTrue( "shardGroup2Shard1 shard present", writeShards.contains( shardGroup2Shard1 ) );
 
 
-        writeShards = group.getWriteShards( shardGroup2Shard2.getCreatedTime() + delta +1 );
+        writeShards = group.getWriteShards( shardGroup2Shard2.getCreatedTime() + delta + 1 );
 
         assertEquals( "Both shards present", 1, writeShards.size() );
 
@@ -249,7 +249,6 @@ public class ShardEntryGroupIteratorTest {
 
         //verify we ran our compaction check
         verify( shardGroupCompaction ).evaluateShardGroup( same( scope ), same( directedEdgeMeta ), eq( group ) );
-
 
 
         readShards = group.getReadShards();

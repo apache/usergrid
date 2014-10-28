@@ -28,7 +28,6 @@ import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-import org.apache.usergrid.persistence.core.consistency.TimeService;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.NodeShardCacheImpl;
@@ -94,10 +93,10 @@ public class NodeShardCacheTest {
 
 
         final ShardEntryGroup group = new ShardEntryGroup( newTime );
-        group.addShard( new Shard(0, 0, true) );
+        group.addShard( new Shard( 0, 0, true ) );
 
 
-        DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromSourceNodeTargetType( id, edgeType, otherIdType ) ;
+        DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromSourceNodeTargetType( id, edgeType, otherIdType );
 
         /**
          * Simulate returning no shards at all.
@@ -112,28 +111,25 @@ public class NodeShardCacheTest {
                             throws Throwable {
                         return Collections.singletonList( group ).iterator();
                     }
-                });
+                } );
 
 
         ShardEntryGroup returnedGroup = cache.getWriteShardGroup( scope, newTime, directedEdgeMeta );
 
         //ensure it's the same group
-        assertSame(group, returnedGroup);
+        assertSame( group, returnedGroup );
 
 
-        Iterator<ShardEntryGroup>
-                shards = cache.getReadShardGroup( scope, newTime, directedEdgeMeta );
+        Iterator<ShardEntryGroup> shards = cache.getReadShardGroup( scope, newTime, directedEdgeMeta );
 
-        assertTrue(shards.hasNext());
+        assertTrue( shards.hasNext() );
 
 
         returnedGroup = shards.next();
 
-        assertSame("Single shard group expected", group, returnedGroup);
+        assertSame( "Single shard group expected", group, returnedGroup );
 
-        assertFalse(shards.hasNext());
-
-
+        assertFalse( shards.hasNext() );
 
 
         //we return the min UUID possible, all edges should start by writing to this edge
@@ -143,9 +139,8 @@ public class NodeShardCacheTest {
          *
          * TODO, us the GUAVA Tick to make this happen
          */
-//        verify(and allocation ).auditMaxShard( scope, id, edgeType, otherIdType );
+        //        verify(and allocation ).auditMaxShard( scope, id, edgeType, otherIdType );
     }
-
 
 
     @Test
@@ -170,9 +165,9 @@ public class NodeShardCacheTest {
         NodeShardCache cache = new NodeShardCacheImpl( allocation, graphFig );
 
 
-        final Shard minShard = new Shard(0, 0, true);
-        final Shard midShard = new Shard(10000, 1000, true);
-        final Shard maxShard = new Shard(20000, 2000, true);
+        final Shard minShard = new Shard( 0, 0, true );
+        final Shard midShard = new Shard( 10000, 1000, true );
+        final Shard maxShard = new Shard( 20000, 2000, true );
 
 
         /**
@@ -189,132 +184,119 @@ public class NodeShardCacheTest {
         maxShardGroup.addShard( maxShard );
 
 
-
-
-        DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromTargetNodeSourceType( id, edgeType, otherIdType ) ;
+        DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromTargetNodeSourceType( id, edgeType, otherIdType );
 
 
         /**
          * Simulate returning no shards at all.
          */
-        when( allocation
-                .getShards( same( scope ), any( Optional.class ), same( directedEdgeMeta ) ) )
+        when( allocation.getShards( same( scope ), any( Optional.class ), same( directedEdgeMeta ) ) )
 
                 //use "thenAnswer" so we always return the value, even if  it's invoked more than 1 time.
-                .thenAnswer( new Answer<Iterator<ShardEntryGroup>>(){
+                .thenAnswer( new Answer<Iterator<ShardEntryGroup>>() {
 
                     @Override
                     public Iterator<ShardEntryGroup> answer( final InvocationOnMock invocationOnMock )
                             throws Throwable {
                         return Arrays.asList( maxShardGroup, midShardGroup, minShardGroup ).iterator();
                     }
-                });
+                } );
 
 
         //check getting equal to our min, mid and max
 
-        ShardEntryGroup writeShard  = cache.getWriteShardGroup( scope, minShard.getShardIndex(), directedEdgeMeta );
+        ShardEntryGroup writeShard = cache.getWriteShardGroup( scope, minShard.getShardIndex(), directedEdgeMeta );
 
-        assertSame(minShardGroup, writeShard);
-
-
-        Iterator<ShardEntryGroup>
-                groups = cache.getReadShardGroup( scope, minShard.getShardIndex(), directedEdgeMeta );
-
-        assertTrue(groups.hasNext());
-
-        assertSame("min shard expected", minShardGroup, groups.next());
-
-        assertFalse(groups.hasNext());
+        assertSame( minShardGroup, writeShard );
 
 
+        Iterator<ShardEntryGroup> groups = cache.getReadShardGroup( scope, minShard.getShardIndex(), directedEdgeMeta );
+
+        assertTrue( groups.hasNext() );
+
+        assertSame( "min shard expected", minShardGroup, groups.next() );
+
+        assertFalse( groups.hasNext() );
 
 
         //mid
         writeShard = cache.getWriteShardGroup( scope, midShard.getShardIndex(), directedEdgeMeta );
 
-        assertSame(midShardGroup, writeShard);
+        assertSame( midShardGroup, writeShard );
 
 
-        groups =  cache.getReadShardGroup( scope, midShard.getShardIndex(), directedEdgeMeta );
+        groups = cache.getReadShardGroup( scope, midShard.getShardIndex(), directedEdgeMeta );
 
-        assertTrue(groups.hasNext());
+        assertTrue( groups.hasNext() );
 
-        assertSame("mid shard expected", midShardGroup, groups.next());
+        assertSame( "mid shard expected", midShardGroup, groups.next() );
 
-        assertTrue(groups.hasNext());
+        assertTrue( groups.hasNext() );
 
-        assertSame("min shard expected", minShardGroup, groups.next());
+        assertSame( "min shard expected", minShardGroup, groups.next() );
 
-        assertFalse(groups.hasNext());
-
+        assertFalse( groups.hasNext() );
 
 
         //max
 
         writeShard = cache.getWriteShardGroup( scope, maxShard.getShardIndex(), directedEdgeMeta );
 
-        assertSame(maxShardGroup, writeShard);
+        assertSame( maxShardGroup, writeShard );
 
 
-        groups =  cache.getReadShardGroup( scope, maxShard.getShardIndex(), directedEdgeMeta );
+        groups = cache.getReadShardGroup( scope, maxShard.getShardIndex(), directedEdgeMeta );
 
-        assertTrue(groups.hasNext());
+        assertTrue( groups.hasNext() );
 
-        assertSame("max shard expected", maxShardGroup, groups.next());
+        assertSame( "max shard expected", maxShardGroup, groups.next() );
 
-        assertTrue(groups.hasNext());
+        assertTrue( groups.hasNext() );
 
-        assertSame("mid shard expected", midShardGroup, groups.next());
+        assertSame( "mid shard expected", midShardGroup, groups.next() );
 
 
-        assertTrue(groups.hasNext());
+        assertTrue( groups.hasNext() );
 
-        assertSame("min shard expected", minShardGroup, groups.next());
+        assertSame( "min shard expected", minShardGroup, groups.next() );
 
-        assertFalse(groups.hasNext());
-
+        assertFalse( groups.hasNext() );
 
 
         //now test at mid +1 to ensure we get mid + min
         writeShard = cache.getWriteShardGroup( scope, midShard.getShardIndex() + 1, directedEdgeMeta );
 
-        assertSame(midShardGroup, writeShard);
+        assertSame( midShardGroup, writeShard );
 
 
-        groups =  cache.getReadShardGroup( scope, midShard.getShardIndex() + 1, directedEdgeMeta );
+        groups = cache.getReadShardGroup( scope, midShard.getShardIndex() + 1, directedEdgeMeta );
 
-        assertTrue(groups.hasNext());
+        assertTrue( groups.hasNext() );
 
-        assertSame("mid shard expected", midShardGroup, groups.next());
+        assertSame( "mid shard expected", midShardGroup, groups.next() );
 
-        assertTrue(groups.hasNext());
+        assertTrue( groups.hasNext() );
 
-        assertSame("min shard expected", minShardGroup, groups.next());
+        assertSame( "min shard expected", minShardGroup, groups.next() );
 
-        assertFalse(groups.hasNext());
-
+        assertFalse( groups.hasNext() );
 
 
         //now test at mid -1 to ensure we get min
         writeShard = cache.getWriteShardGroup( scope, midShard.getShardIndex() - 1, directedEdgeMeta );
 
-        assertSame(minShardGroup, writeShard);
+        assertSame( minShardGroup, writeShard );
 
 
-        groups =  cache.getReadShardGroup( scope, midShard.getShardIndex() - 1, directedEdgeMeta );
+        groups = cache.getReadShardGroup( scope, midShard.getShardIndex() - 1, directedEdgeMeta );
 
 
-        assertTrue(groups.hasNext());
+        assertTrue( groups.hasNext() );
 
-        assertSame("min shard expected", minShardGroup, groups.next());
+        assertSame( "min shard expected", minShardGroup, groups.next() );
 
-        assertFalse(groups.hasNext());
-
+        assertFalse( groups.hasNext() );
     }
-
-
-
 
 
     private GraphFig getFigMock() {
