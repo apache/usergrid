@@ -34,7 +34,7 @@ import java.security.KeyStore;
 import java.util.concurrent.LinkedBlockingDeque;
 
 /**
- * Classy class class.
+ * Store notifier within PushManager so it can be retrieved later.  Need this for the async token listener
  */
 public class EntityPushManager extends PushManager<SimpleApnsPushNotification> {
     private final Notifier notifier;

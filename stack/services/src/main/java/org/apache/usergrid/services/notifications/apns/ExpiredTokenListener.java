@@ -39,7 +39,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Classy class class.
+ * Listen for token expirations and remove
  */
 public class ExpiredTokenListener implements com.relayrides.pushy.apns.ExpiredTokenListener<SimpleApnsPushNotification> {
 
