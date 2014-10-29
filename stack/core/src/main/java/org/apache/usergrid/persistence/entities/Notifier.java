@@ -18,7 +18,6 @@ package org.apache.usergrid.persistence.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.TypedEntity;
 import org.apache.usergrid.persistence.annotations.EntityProperty;
 
@@ -34,8 +33,6 @@ import java.util.UUID;
 public class Notifier extends TypedEntity {
 
     public static final String ENTITY_TYPE = "notifier";
-
-    protected EntityManager entityManager;
 
     @EntityProperty(aliasProperty = true, unique = true, basic = true)
     protected String name;
