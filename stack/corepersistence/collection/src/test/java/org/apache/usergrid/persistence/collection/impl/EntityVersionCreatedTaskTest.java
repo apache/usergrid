@@ -134,8 +134,8 @@ public class EntityVersionCreatedTaskTest {
 
     }
 
-    @Test//(timeout=10000)
-    public void oneListener()//why does it matter if it has a version or not without a listener
+    @Test(timeout=10000)
+    public void oneListener()
             throws ExecutionException, InterruptedException, ConnectionException {
 
 
