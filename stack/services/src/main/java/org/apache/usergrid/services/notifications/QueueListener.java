@@ -25,12 +25,11 @@ import org.apache.usergrid.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 
-import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.queue.*;
 import org.apache.usergrid.persistence.queue.QueueManager;
-import org.apache.usergrid.persistence.queue.impl.QueueScopeImpl;
 import org.apache.usergrid.services.ServiceManager;
 import org.apache.usergrid.services.ServiceManagerFactory;
+import org.apache.usergrid.services.notifications.impl.ApplicationQueueManagerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
@@ -96,7 +95,7 @@ public class QueueListener  {
                 sleepWhenNoneFound = new Long(properties.getProperty("usergrid.notifications.listener.sleep.after", ""+DEFAULT_SLEEP)).longValue();
                 batchSize = new Integer(properties.getProperty("usergrid.notifications.listener.batchSize", (""+batchSize)));
                 consecutiveCallsToRemoveDevices = new Integer(properties.getProperty("usergrid.notifications.inactive.interval", ""+200));
-                queueName = ApplicationQueueManager.getQueueNames(properties);
+                queueName = ApplicationQueueManagerImpl.getQueueNames(properties);
 
                 int maxThreads = new Integer(properties.getProperty("usergrid.notifications.listener.maxThreads", ""+MAX_THREADS));
 
@@ -251,7 +250,7 @@ public class QueueListener  {
                                  EntityManager entityManager = emf.getEntityManager(applicationId);
                                  ServiceManager serviceManager = smf.getServiceManager(applicationId);
 
-                                 ApplicationQueueManager manager = new ApplicationQueueManager(
+                                 ApplicationQueueManagerImpl manager = new ApplicationQueueManagerImpl(
                                          new JobScheduler(serviceManager, entityManager),
                                          entityManager,
                                          queueManager,

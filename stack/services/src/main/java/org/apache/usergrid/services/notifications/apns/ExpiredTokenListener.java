@@ -23,15 +23,7 @@ package org.apache.usergrid.services.notifications.apns;
 import com.relayrides.pushy.apns.ExpiredToken;
 import com.relayrides.pushy.apns.PushManager;
 import com.relayrides.pushy.apns.util.SimpleApnsPushNotification;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.entities.Notifier;
-import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.services.notifications.ApplicationQueueManager;
 import org.apache.usergrid.services.notifications.InactiveDeviceManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Date;

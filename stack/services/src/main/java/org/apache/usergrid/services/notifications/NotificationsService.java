@@ -29,13 +29,12 @@ import org.apache.usergrid.persistence.entities.Notifier;
 import org.apache.usergrid.persistence.entities.Receipt;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.queue.QueueManager;
 import org.apache.usergrid.persistence.queue.QueueManagerFactory;
 import org.apache.usergrid.persistence.queue.QueueScope;
 import org.apache.usergrid.persistence.queue.QueueScopeFactory;
-import org.apache.usergrid.persistence.queue.impl.QueueScopeImpl;
 import org.apache.usergrid.services.*;
+import org.apache.usergrid.services.notifications.impl.ApplicationQueueManagerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,9 +43,6 @@ import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundExcept
 import org.apache.usergrid.services.exceptions.ForbiddenServiceOperationException;
 import static org.apache.usergrid.utils.InflectionUtils.pluralize;
 
-import org.apache.usergrid.services.notifications.apns.APNsAdapter;
-import org.apache.usergrid.services.notifications.gcm.GCMAdapter;
-import org.springframework.beans.factory.annotation.Autowired;
 import rx.Observable;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
@@ -62,8 +58,6 @@ public class NotificationsService extends AbstractCollectionService {
     private static final Logger LOG = LoggerFactory.getLogger(NotificationsService.class);
     //need a mocking framework, this is to substitute for no mocking
     public static QueueManager TEST_QUEUE_MANAGER = null;
-
-    public static final String NOTIFIER_ID_POSTFIX = ".notifier.id";
 
     static final String MESSAGE_PROPERTY_DEVICE_UUID = "deviceUUID";
 
@@ -94,12 +88,12 @@ public class NotificationsService extends AbstractCollectionService {
         postMeter = metricsService.getMeter(NotificationsService.class, "requests");
         postTimer = metricsService.getTimer(this.getClass(), "execution_rest");
         JobScheduler jobScheduler = new JobScheduler(sm,em);
-        String name = ApplicationQueueManager.getQueueNames(props);
+        String name = ApplicationQueueManagerImpl.getQueueNames(props);
         QueueScopeFactory queueScopeFactory = CpSetup.getInjector().getInstance(QueueScopeFactory.class);
         QueueScope queueScope = queueScopeFactory.getScope(smf.getManagementAppId(), name);
         queueManagerFactory = CpSetup.getInjector().getInstance(QueueManagerFactory.class);
         QueueManager queueManager = TEST_QUEUE_MANAGER !=null ? TEST_QUEUE_MANAGER : queueManagerFactory.getQueueManager(queueScope);
-        notificationQueueManager = new ApplicationQueueManager(jobScheduler,em,queueManager,metricsService,props);
+        notificationQueueManager = new ApplicationQueueManagerImpl(jobScheduler,em,queueManager,metricsService,props);
         gracePeriod = jobScheduler.SCHEDULER_GRACE_PERIOD;
     }
 
@@ -262,7 +256,7 @@ public class NotificationsService extends AbstractCollectionService {
                         throw new IllegalArgumentException("notifier \""
                                 + notifierId + "\" not found");
                     }
-                    ProviderAdapter providerAdapter = ProviderAdapterFactory.getProviderAdapter(notifier,em);
+                    ProviderAdapter providerAdapter = ProviderAdapterFactory.getProviderAdapter(notifier, em);
                     Object payload = entry.getValue();
                     try {
                         return providerAdapter.translatePayload(payload); // validate

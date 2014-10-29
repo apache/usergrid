@@ -25,6 +25,7 @@ import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.entities.Notifier;
 import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.services.notifications.impl.ApplicationQueueManagerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +46,7 @@ public class InactiveDeviceManager {
         this.entityManager = entityManager;
     }
     public void removeInactiveDevices( Map<String,Date> inactiveDeviceMap  ){
-        final String notfierPostFix = ApplicationQueueManager.NOTIFIER_ID_POSTFIX;
+        final String notfierPostFix = ApplicationQueueManagerImpl.NOTIFIER_ID_POSTFIX;
         if (inactiveDeviceMap != null && inactiveDeviceMap.size() > 0) {
             LOG.debug("processing {} inactive devices",  inactiveDeviceMap.size());
             Map<String, Object> clearPushtokenMap = new HashMap<String, Object>( 2);

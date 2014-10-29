@@ -18,22 +18,19 @@ package org.apache.usergrid.services.notifications.gcm;
 
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.entities.*;
-import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.services.ServiceParameter;
 import org.apache.usergrid.services.TestQueueManager;
 import org.apache.usergrid.services.notifications.*;
 import org.junit.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.*;
 
 import org.apache.usergrid.services.ServiceAction;
 
 import static org.junit.Assert.*;
-import static org.apache.usergrid.services.notifications.NotificationsService.NOTIFIER_ID_POSTFIX;
+import static org.apache.usergrid.services.notifications.ApplicationQueueManager.NOTIFIER_ID_POSTFIX;
 
 public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
@@ -59,7 +56,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
     @BeforeClass
     public static void setup(){
-        ApplicationQueueManager.DEFAULT_QUEUE_NAME = "test";
+
     }
     @Override
     @Before

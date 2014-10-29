@@ -16,10 +16,8 @@
  */
 package org.apache.usergrid.services.notifications.apns;
 
-import com.relayrides.pushy.apns.*;
 import com.relayrides.pushy.apns.util.*;
 import org.apache.commons.io.IOUtils;
-import org.apache.usergrid.services.ServiceParameter;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.entities.*;
 import org.apache.usergrid.persistence.index.query.Query;
@@ -30,7 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
-import java.net.SocketException;
 import java.util.*;
 
 import org.apache.usergrid.services.ServiceAction;
@@ -40,7 +37,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
-import static org.apache.usergrid.services.notifications.NotificationsService.NOTIFIER_ID_POSTFIX;
+import static org.apache.usergrid.services.notifications.impl.ApplicationQueueManagerImpl.NOTIFIER_ID_POSTFIX;
 
 // todo: test reschedule on delivery time change
 // todo: test restart of queuing
@@ -68,7 +65,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
     @BeforeClass
     public static void setup(){
-        ApplicationQueueManager.DEFAULT_QUEUE_NAME = "test";
+
     }
 
     @Override
