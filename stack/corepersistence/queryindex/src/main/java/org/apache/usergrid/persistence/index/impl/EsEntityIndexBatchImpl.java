@@ -332,7 +332,8 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
             }
             else if ( f instanceof UUIDField ) {
 
-                entityMap.put( STRING_PREFIX + field.getName().toLowerCase(), field.getValue().toString().toLowerCase() );
+                entityMap.put( STRING_PREFIX + field.getName().toLowerCase(), 
+                        field.getValue().toString().toLowerCase() );
             }
             else {
                 entityMap.put( field.getName().toLowerCase(), field.getValue() );

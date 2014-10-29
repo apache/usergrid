@@ -31,9 +31,7 @@ import com.google.inject.Inject;
 /**
  * Factory for creating results
  */
-
 public class ResultsLoaderFactoryImpl implements ResultsLoaderFactory {
-
 
     private final CpManagerCache managerCache;
 
@@ -48,7 +46,6 @@ public class ResultsLoaderFactoryImpl implements ResultsLoaderFactory {
     public ResultsLoader getLoader( final ApplicationScope applicationScope, 
             final EntityRef ownerId, final Query.Level resultsLevel ) {
 
-
         ResultsVerifier verifier;
 
         if ( resultsLevel == Query.Level.REFS ) {
@@ -60,7 +57,6 @@ public class ResultsLoaderFactoryImpl implements ResultsLoaderFactory {
         else {
             verifier = new EntityVerifier(Query.MAX_LIMIT);
         }
-
 
         return new FilteringLoader( managerCache, verifier, ownerId, applicationScope );
     }

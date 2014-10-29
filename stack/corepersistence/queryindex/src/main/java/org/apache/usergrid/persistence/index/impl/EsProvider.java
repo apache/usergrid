@@ -109,7 +109,7 @@ public class EsProvider {
                     .build();
 
                 log.info("-----------------------------------------------------------------------");
-                log.info("Starting ElasticSearch embedded server with settings: \n" + settings.getAsMap() );
+                log.info("Starting ElasticSearch embedded server settings: \n"+settings.getAsMap());
                 log.info("-----------------------------------------------------------------------");
 
                 Node node = NodeBuilder.nodeBuilder().settings(settings)
@@ -169,8 +169,10 @@ public class EsProvider {
 
                 log.debug("Creating ElasticSearch client with settings: " +  settings.getAsMap());
 
-                //use this client when connecting via socket only, such as ssh tunnel or other firewall issues
-//                newClient  = new TransportClient(settings).addTransportAddress( new InetSocketTransportAddress("localhost", 9300) );
+                // use this client when connecting via socket only, 
+                // such as ssh tunnel or other firewall issues
+                // newClient  = new TransportClient(settings).addTransportAddress( 
+                //                  new InetSocketTransportAddress("localhost", 9300) );
 
                 //use this client for quick connectivity
                 Node node = NodeBuilder.nodeBuilder().settings(settings)

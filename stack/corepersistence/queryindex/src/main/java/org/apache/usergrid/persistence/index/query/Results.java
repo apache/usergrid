@@ -53,7 +53,9 @@ public class Results implements Iterable<Entity> {
     final EntityCollectionManagerFactory ecmf;
 
 
-    public Results( Query query, List<CandidateResult> candidates, EntityCollectionManagerFactory ecmf ) {
+    public Results( Query query, List<CandidateResult> candidates, 
+            EntityCollectionManagerFactory ecmf ) {
+
         this.query = query;
         this.candidates = candidates;
         this.ecmf = ecmf;

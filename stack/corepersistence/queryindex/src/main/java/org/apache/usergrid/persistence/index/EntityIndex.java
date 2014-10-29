@@ -31,7 +31,7 @@ public interface EntityIndex {
 
     /**
      * This should ONLY ever be called once on application create.  
-     * Otherwise we're introducing slowness into our system.
+     * Otherwise we're introducing slowness into our system
      */
     public void initializeIndex();
 

@@ -96,40 +96,32 @@ public class FilteringLoader implements ResultsLoader {
         }
 
 
-        /**
-         * For each entity, holds the index it appears in our candidates for keeping ordering correct
-         */
+        // For each entity, holds the index it appears in our candidates for keeping ordering correct
         final Map<Id, Integer> orderIndex = new HashMap<>( crs.size() );
 
-        /**
-         * Maps the entity ids to our candidates
-         */
+        // Maps the entity ids to our candidates
         final Map<Id, CandidateResult> maxCandidateMapping = new HashMap<>( crs.size() );
 
-        /**
-         * Groups all candidate results by types.  When search connections there will be multiple types,
-         * so we want to batch
-         * fetch them more efficiently
-         */
-        final HashMultimap<String, CandidateResult> groupedByScopes = HashMultimap.create( crs.size(), crs.size() );
+        // Groups all candidate results by types.  When search connections there will be multiple 
+        // types, so we want to batch fetch them more efficiently
+        
+        final HashMultimap<String, CandidateResult> groupedByScopes = 
+                HashMultimap.create( crs.size(), crs.size() );
 
         final Iterator<CandidateResult> iter = crs.iterator();
 
 
-        /**
-         * TODO, in this case we're "optimizing" due to the limitations of collection scope.  Perhaps  we should
-         * change the API to just be an application, then an "owner" scope?
-         */
+        // TODO, in this case we're "optimizing" due to the limitations of collection scope.  
+        // Perhaps  we should change the API to just be an application, then an "owner" scope?
 
-        /**
-         * Go through the candidates and group them by scope for more efficient retrieval.  Also remove duplicates before we even make a network call
-         */
+        // Go through the candidates and group them by scope for more efficient retrieval.  
+        // Also remove duplicates before we even make a network call
         for ( int i = 0; iter.hasNext(); i++ ) {
 
             final CandidateResult currentCandidate = iter.next();
 
-            final String collectionType =
-                    CpNamingUtils.getCollectionScopeNameFromEntityType( currentCandidate.getId().getType() );
+            final String collectionType = CpNamingUtils.getCollectionScopeNameFromEntityType( 
+                    currentCandidate.getId().getType() );
 
             final Id entityId = currentCandidate.getId();
 
@@ -154,9 +146,12 @@ public class FilteringLoader implements ResultsLoader {
             if ( UUIDComparator.staticCompare( currentVersion, previousMaxVersion ) > 0 ) {
 
                 //de-index it
-                logger.debug( "Stale version of Entity uuid:{} type:{}, stale v:{}, latest v:{}", new Object[] {
-                                entityId.getUuid(), entityId.getType(), previousMaxVersion, currentVersion
-                        } );
+                logger.debug( "Stale version of Entity uuid:{} type:{}, stale v:{}, latest v:{}", 
+                    new Object[] { 
+                        entityId.getUuid(), 
+                        entityId.getType(), 
+                        previousMaxVersion, 
+                        currentVersion } );
 
                 //deindex this document, and remove the previous maxVersion
                 //we have to deindex this from our ownerId, since this is what gave us the reference
@@ -197,12 +192,13 @@ public class FilteringLoader implements ResultsLoader {
 
             //now using the scope, load the collection
 
-            // Get the collection scope and batch load all the versions.  We put all entities in app/app for easy retrieval
-            // unless persistence changes, we never want to read from any scope other than the app, app, scope name scope
+            // Get the collection scope and batch load all the versions.  We put all entities in 
+            // app/app for easy retrieval/ unless persistence changes, we never want to read from 
+            // any scope other than the app, app, scope name scope
             final CollectionScope collScope = new CollectionScopeImpl( 
-                    applicationScope.getApplication(), applicationScope.getApplication(), scopeName );
+                applicationScope.getApplication(), applicationScope.getApplication(), scopeName);
 
-            final EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collScope );
+            final EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collScope);
 
 
             //load the results into the loader for this scope for validation
@@ -228,7 +224,8 @@ public class FilteringLoader implements ResultsLoader {
         }
 
 
-         //NOTE DO NOT execute the batch here.  It changes the results and we need consistent paging until we aggregate all results
+         // NOTE DO NOT execute the batch here.  
+        // It changes the results and we need consistent paging until we aggregate all results
         return resultsVerifier.getResults( sortedResults.values() );
     }
 
@@ -239,10 +236,12 @@ public class FilteringLoader implements ResultsLoader {
     }
 
 
-    protected void deIndex( final EntityIndexBatch batch, final Id ownerId, final CandidateResult candidateResult ) {
+    protected void deIndex( final EntityIndexBatch batch, final Id ownerId, 
+            final CandidateResult candidateResult ) {
 
-        IndexScope indexScope = new IndexScopeImpl( ownerId,
-                CpNamingUtils.getCollectionScopeNameFromEntityType( candidateResult.getId().getType() ) );
+        IndexScope indexScope = new IndexScopeImpl( 
+            ownerId,
+            CpNamingUtils.getCollectionScopeNameFromEntityType( candidateResult.getId().getType()));
 
         batch.deindex( indexScope, candidateResult );
     }

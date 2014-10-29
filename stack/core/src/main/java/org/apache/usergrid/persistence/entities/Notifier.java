@@ -63,8 +63,6 @@ public class Notifier extends TypedEntity {
         uuid = id;
     }
 
-
-
     @Override
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public String getName() {

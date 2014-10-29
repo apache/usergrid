@@ -29,13 +29,12 @@ import org.apache.usergrid.persistence.entities.Notifier;
 import org.apache.usergrid.persistence.entities.Receipt;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.queue.QueueManager;
 import org.apache.usergrid.persistence.queue.QueueManagerFactory;
 import org.apache.usergrid.persistence.queue.QueueScope;
 import org.apache.usergrid.persistence.queue.QueueScopeFactory;
-import org.apache.usergrid.persistence.queue.impl.QueueScopeImpl;
 import org.apache.usergrid.services.*;
+import org.apache.usergrid.services.notifications.impl.ApplicationQueueManagerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,9 +43,6 @@ import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundExcept
 import org.apache.usergrid.services.exceptions.ForbiddenServiceOperationException;
 import static org.apache.usergrid.utils.InflectionUtils.pluralize;
 
-import org.apache.usergrid.services.notifications.apns.APNsAdapter;
-import org.apache.usergrid.services.notifications.gcm.GCMAdapter;
-import org.springframework.beans.factory.annotation.Autowired;
 import rx.Observable;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
@@ -63,8 +59,6 @@ public class NotificationsService extends AbstractCollectionService {
     //need a mocking framework, this is to substitute for no mocking
     public static QueueManager TEST_QUEUE_MANAGER = null;
 
-    public static final String NOTIFIER_ID_POSTFIX = ".notifier.id";
-
     static final String MESSAGE_PROPERTY_DEVICE_UUID = "deviceUUID";
 
     static {
@@ -72,18 +66,6 @@ public class NotificationsService extends AbstractCollectionService {
                 MESSAGE_PROPERTY_DEVICE_UUID, UUID.class);
     }
 
-    // these 2 can be static, but GCM can't. future: would be nice to get gcm
-    // static as well...
-    public static ProviderAdapter APNS_ADAPTER = new APNsAdapter();
-    public static ProviderAdapter TEST_ADAPTER = new TestAdapter();
-
-    public final Map<String, ProviderAdapter> providerAdapters =
-            new HashMap<String, ProviderAdapter>(3);
-    {
-        providerAdapters.put("apple", APNS_ADAPTER);
-        providerAdapters.put("google", new GCMAdapter());
-        providerAdapters.put("noop", TEST_ADAPTER);
-    }
 
     private ApplicationQueueManager notificationQueueManager;
     private long gracePeriod;
@@ -106,12 +88,12 @@ public class NotificationsService extends AbstractCollectionService {
         postMeter = metricsService.getMeter(NotificationsService.class, "requests");
         postTimer = metricsService.getTimer(this.getClass(), "execution_rest");
         JobScheduler jobScheduler = new JobScheduler(sm,em);
-        String name = ApplicationQueueManager.getQueueNames(props);
+        String name = ApplicationQueueManagerImpl.getQueueNames(props);
         QueueScopeFactory queueScopeFactory = CpSetup.getInjector().getInstance(QueueScopeFactory.class);
         QueueScope queueScope = queueScopeFactory.getScope(smf.getManagementAppId(), name);
         queueManagerFactory = CpSetup.getInjector().getInstance(QueueManagerFactory.class);
         QueueManager queueManager = TEST_QUEUE_MANAGER !=null ? TEST_QUEUE_MANAGER : queueManagerFactory.getQueueManager(queueScope);
-        notificationQueueManager = new ApplicationQueueManager(jobScheduler,em,queueManager,metricsService,props);
+        notificationQueueManager = new ApplicationQueueManagerImpl(jobScheduler,em,queueManager,metricsService,props);
         gracePeriod = jobScheduler.SCHEDULER_GRACE_PERIOD;
     }
 
@@ -250,10 +232,6 @@ public class NotificationsService extends AbstractCollectionService {
         return (notification.getStarted() == null);
     }
 
-    public Set<String> getProviders() {
-        return providerAdapters.keySet();
-    }
-
     // validate payloads
     private void validate(EntityRef ref, ServicePayload servicePayload)
             throws Exception {
@@ -278,8 +256,7 @@ public class NotificationsService extends AbstractCollectionService {
                         throw new IllegalArgumentException("notifier \""
                                 + notifierId + "\" not found");
                     }
-                    ProviderAdapter providerAdapter = providerAdapters.get(notifier
-                            .getProvider());
+                    ProviderAdapter providerAdapter = ProviderAdapterFactory.getProviderAdapter(notifier, em);
                     Object payload = entry.getValue();
                     try {
                         return providerAdapter.translatePayload(payload); // validate
@@ -354,9 +331,9 @@ public class NotificationsService extends AbstractCollectionService {
      * failure
      */
     public void testConnection(Notifier notifier) throws Exception {
-        ProviderAdapter providerAdapter = providerAdapters.get(notifier.getProvider());
+        ProviderAdapter providerAdapter = ProviderAdapterFactory.getProviderAdapter(notifier,em);
         if (providerAdapter != null) {
-            providerAdapter.testConnection(notifier);
+            providerAdapter.testConnection();
         }
     }
 
