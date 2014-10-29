@@ -34,10 +34,9 @@ import org.apache.usergrid.services.ServicePayload;
  */
 public interface ProviderAdapter {
 
-    public void testConnection(Notifier notifier) throws ConnectionException;
+    public void testConnection() throws ConnectionException;
 
-    public void sendNotification(String providerId, Notifier notifier,
-                                 Object payload, Notification notification, TaskTracker tracker)
+    public void sendNotification(String providerId,  Object payload, Notification notification, TaskTracker tracker)
             throws Exception;
 
     /**
@@ -46,10 +45,13 @@ public interface ProviderAdapter {
      */
     public void doneSendingNotifications() throws Exception;
 
-    public void removeInactiveDevices(Notifier notifier,
-                                                EntityManager em) throws Exception;
+    public void removeInactiveDevices() throws Exception;
 
     public Object translatePayload(Object payload) throws Exception;
 
     public void validateCreateNotifier(ServicePayload payload) throws Exception;
+
+    public void stop();
+
+    public Notifier getNotifier();
 }

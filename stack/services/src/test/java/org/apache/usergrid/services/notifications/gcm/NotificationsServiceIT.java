@@ -240,51 +240,6 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         }
     }
 
-    @Ignore("todo: how can I mock this?")
-    @Test
-    public void providerIdUpdate() throws Exception {
-
-        // mock action (based on verified actual behavior) //
-        final String newProviderId = "newProviderId";
-        ns.providerAdapters.put("google", new MockSuccessfulProviderAdapter() {
-            @Override
-            public void sendNotification(String providerId, Notifier notifier,
-                                         Object payload, Notification notification,
-                                         TaskTracker tracker) throws Exception {
-                tracker.completed(newProviderId);
-            }
-        });
-
-        // create push notification //
-
-        app.clear();
-        String payload = "Hello, World!";
-        Map<String, String> payloads = new HashMap<String, String>(1);
-        payloads.put(notifier.getUuid().toString(), payload);
-        app.put("payloads", payloads);
-        app.put("queued", System.currentTimeMillis());
-        app.put("debug",true);
-
-        Entity e = app.testRequest(ServiceAction.POST, 1,"devices",device1.getUuid(), "notifications")
-                .getEntity();
-        app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
-
-        Notification notification = app.getEm().get(e.getUuid(),
-                Notification.class);
-        assertEquals(
-                notification.getPayloads().get(notifier.getUuid().toString()),
-                payload);
-
-        ns.addDevice(notification, device1);
-
-        // perform push //
-        notification = scheduleNotificationAndWait(notification);
-        checkReceipts(notification, 1);
-
-        Device device = (Device) app.getEm().get(device1).toTypedEntity();
-        assertEquals(newProviderId,
-                device.getProperty(notifier.getName() + NOTIFIER_ID_POSTFIX));
-    }
 
     @Test
     public void badPayloads() throws Exception {
@@ -353,20 +308,6 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
     @Test
     public void badToken() throws Exception {
 
-        // mock action (based on verified actual behavior) //
-        if (!USE_REAL_CONNECTIONS) {
-            ns.providerAdapters.put("google",
-                    new MockSuccessfulProviderAdapter() {
-                        @Override
-                        public void sendNotification(String providerId,
-                                                     Notifier notifier, Object payload,
-                                                     Notification notification, TaskTracker tracker)
-                                throws Exception {
-                            tracker.failed("InvalidRegistration",
-                                    "InvalidRegistration");
-                        }
-                    });
-        }
 
         // create push notification //
 
@@ -409,21 +350,6 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
     @Ignore("todo: how can I mock this?")
     @Test
     public void badAPIKey() throws Exception {
-
-        if (!USE_REAL_CONNECTIONS) {
-            // mock action (based on verified actual behavior) //
-            ns.providerAdapters.put("google",
-                    new MockSuccessfulProviderAdapter() {
-                        @Override
-                        public void sendNotification(String providerId,
-                                                     Notifier notifier, Object payload,
-                                                     Notification notification, TaskTracker tracker)
-                                throws Exception {
-                            Exception e = new IOException();
-                            throw new ConnectionException(e.getMessage(), e);
-                        }
-                    });
-        }
 
         // create push notification //
 

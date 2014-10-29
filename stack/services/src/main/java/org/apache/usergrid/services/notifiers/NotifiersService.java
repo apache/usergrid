@@ -18,6 +18,10 @@ package org.apache.usergrid.services.notifiers;
 
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.entities.Notifier;
+import org.apache.usergrid.services.notifications.ProviderAdapterFactory;
+import org.apache.usergrid.services.notifications.TestAdapter;
+import org.apache.usergrid.services.notifications.apns.APNsAdapter;
+import org.apache.usergrid.services.notifications.gcm.GCMAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.services.*;
@@ -25,6 +29,8 @@ import org.apache.usergrid.services.notifications.NotificationsService;
 import org.apache.usergrid.services.notifications.ProviderAdapter;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 public class NotifiersService extends AbstractCollectionService {
@@ -45,22 +51,21 @@ public class NotifiersService extends AbstractCollectionService {
 
         NotificationsService ns = (NotificationsService) sm
                 .getService("notifications");
-        Set<String> providers = ns.getProviders();
 
         String provider = payload.getStringProperty("provider");
-        if (!providers.contains(provider)) {
-            throw new IllegalArgumentException("provider must be one of: "
-                    + Arrays.toString(providers.toArray()));
-        }
 
-        ProviderAdapter providerAdapter = ns.providerAdapters.get(provider);
-        providerAdapter.validateCreateNotifier(payload);
 
         ServiceResults results = super.postCollection(context);
-
-        Notifier notifier =(Notifier) results.getEntity();
+        Notifier notifier = (Notifier) results.getEntity();
         if (notifier != null) {
             try {
+                ProviderAdapter providerAdapter = ProviderAdapterFactory.getProviderAdapter(notifier, em);
+
+                if (providerAdapter==null) {
+                    throw new IllegalArgumentException("provider must be one of: "
+                            + Arrays.toString(ProviderAdapterFactory.getValidProviders()));
+                }
+                providerAdapter.validateCreateNotifier(payload);
                 ns.testConnection(notifier);
             } catch (Exception e) {
                 logger.info("notifier testConnection() failed", e);

@@ -38,14 +38,16 @@ import java.util.concurrent.LinkedBlockingDeque;
  */
 public class EntityPushManager extends PushManager<SimpleApnsPushNotification> {
     private final Notifier notifier;
+    private final EntityManager entityManager;
 
-    public EntityPushManager( Notifier notifier, PushManagerConfiguration configuration) {
+    public EntityPushManager( Notifier notifier, EntityManager entityManager, PushManagerConfiguration configuration) {
         super(getApnsEnvironment(notifier), getSSLContext(notifier), null, null, new LinkedBlockingDeque<SimpleApnsPushNotification>(), configuration, notifier.getName());
         this.notifier = notifier;
+        this.entityManager = entityManager;
     }
 
     public EntityManager getEntityManager() {
-        return notifier.getEntityManager();
+        return entityManager;
     }
 
     public Notifier getNotifier() {

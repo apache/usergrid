@@ -327,8 +327,6 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
     @Test
     public void badPayloads() throws Exception {
 
-        MockSuccessfulProviderAdapter.uninstall(ns);
-
         // bad payloads format
 
         app.clear();
@@ -399,24 +397,6 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
     public void badToken() throws Exception {
 
         // mock action (based on verified actual behavior) //
-
-        if (!USE_REAL_CONNECTIONS) {
-            ns.providerAdapters.put("apple",
-                    new MockSuccessfulProviderAdapter() {
-                        @Override
-                        public void sendNotification(String providerId,
-                                                     Notifier notifier, Object payload,
-                                                     Notification notification, TaskTracker tracker)
-                                throws Exception {
-                            APNsNotification apnsNotification = APNsNotification
-                                    .create(providerId, payload.toString(),
-                                            notification, tracker);
-                            apnsNotification.messageSent();
-                            apnsNotification
-                                    .messageSendFailed( RejectedNotificationReason.INVALID_TOKEN);
-                        }
-                    });
-        }
 
         // create push notification //
 
@@ -628,16 +608,16 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         // mock error (based on verified actual behavior) //
         if (!USE_REAL_CONNECTIONS) {
-            ns.providerAdapters.put("apple",
-                    new MockSuccessfulProviderAdapter() {
-                        @Override
-                        public void testConnection(Notifier notifier)
-                                throws ConnectionException {
-                            Exception e = new SocketException(
-                                    "Connection closed by remote host");
-                            throw new ConnectionException(e.getMessage(), e);
-                        }
-                    });
+//            ns.providerAdapters.put("apple",
+//                    new MockSuccessfulProviderAdapter() {
+//                        @Override
+//                        public void testConnection(Notifier notifier)
+//                                throws ConnectionException {
+//                            Exception e = new SocketException(
+//                                    "Connection closed by remote host");
+//                            throw new ConnectionException(e.getMessage(), e);
+//                        }
+//                    });
         }
 
         // create push notification //
@@ -685,8 +665,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         // mock action (based on verified actual behavior) //
         if (!USE_REAL_CONNECTIONS) {
-            ns.providerAdapters.put("apple",
-                    new MockSuccessfulProviderAdapter());
+
         }
 
         // create push notification //

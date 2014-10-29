@@ -72,18 +72,6 @@ public class NotificationsService extends AbstractCollectionService {
                 MESSAGE_PROPERTY_DEVICE_UUID, UUID.class);
     }
 
-    // these 2 can be static, but GCM can't. future: would be nice to get gcm
-    // static as well...
-    public static ProviderAdapter APNS_ADAPTER = new APNsAdapter();
-    public static ProviderAdapter TEST_ADAPTER = new TestAdapter();
-
-    public final Map<String, ProviderAdapter> providerAdapters =
-            new HashMap<String, ProviderAdapter>(3);
-    {
-        providerAdapters.put("apple", APNS_ADAPTER);
-        providerAdapters.put("google", new GCMAdapter());
-        providerAdapters.put("noop", TEST_ADAPTER);
-    }
 
     private ApplicationQueueManager notificationQueueManager;
     private long gracePeriod;
@@ -250,10 +238,6 @@ public class NotificationsService extends AbstractCollectionService {
         return (notification.getStarted() == null);
     }
 
-    public Set<String> getProviders() {
-        return providerAdapters.keySet();
-    }
-
     // validate payloads
     private void validate(EntityRef ref, ServicePayload servicePayload)
             throws Exception {
@@ -278,8 +262,7 @@ public class NotificationsService extends AbstractCollectionService {
                         throw new IllegalArgumentException("notifier \""
                                 + notifierId + "\" not found");
                     }
-                    ProviderAdapter providerAdapter = providerAdapters.get(notifier
-                            .getProvider());
+                    ProviderAdapter providerAdapter = ProviderAdapterFactory.getProviderAdapter(notifier,em);
                     Object payload = entry.getValue();
                     try {
                         return providerAdapter.translatePayload(payload); // validate
@@ -354,10 +337,9 @@ public class NotificationsService extends AbstractCollectionService {
      * failure
      */
     public void testConnection(Notifier notifier) throws Exception {
-        ProviderAdapter providerAdapter = providerAdapters.get(notifier.getProvider());
+        ProviderAdapter providerAdapter = ProviderAdapterFactory.getProviderAdapter(notifier,em);
         if (providerAdapter != null) {
-            notifier.setEntityManager(em);
-            providerAdapter.testConnection(notifier);
+            providerAdapter.testConnection();
         }
     }
 

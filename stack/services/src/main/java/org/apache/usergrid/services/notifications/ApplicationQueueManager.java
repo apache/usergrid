@@ -39,6 +39,7 @@ import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
+import java.security.Provider;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -61,9 +62,7 @@ public class ApplicationQueueManager  {
     private final MetricsFactory metricsFactory;
     private final String queueName;
 
-    HashMap<Object, Notifier> notifierHashMap; // only retrieve notifiers once
-
-    public final Map<String, ProviderAdapter> providerAdapters;
+    HashMap<Object, ProviderAdapter> notifierHashMap; // only retrieve notifiers once
 
 
     public ApplicationQueueManager(JobScheduler jobScheduler, EntityManager entityManager, QueueManager queueManager, MetricsFactory metricsFactory, Properties properties){
@@ -72,12 +71,7 @@ public class ApplicationQueueManager  {
         this.jobScheduler = jobScheduler;
         this.metricsFactory = metricsFactory;
         this.queueName = getQueueNames(properties);
-        providerAdapters =   new HashMap<String, ProviderAdapter>(3);
-        {
-            providerAdapters.put("apple", new APNsAdapter());
-            providerAdapters.put("google", new GCMAdapter());
-            providerAdapters.put("noop", new TestAdapter());
-        };
+
     }
 
     public boolean scheduleQueueJob(Notification notification) throws Exception{
@@ -106,7 +100,7 @@ public class ApplicationQueueManager  {
         final AtomicInteger deviceCount = new AtomicInteger(); //count devices so you can make a judgement on batching
         final ConcurrentLinkedQueue<String> errorMessages = new ConcurrentLinkedQueue<String>(); //build up list of issues
 
-        final HashMap<Object,Notifier> notifierMap =  getNotifierMap();
+        final HashMap<Object,ProviderAdapter> notifierMap =  getNotifierMap();
 
         //get devices in querystring, and make sure you have access
         if (pathQuery != null) {
@@ -147,9 +141,9 @@ public class ApplicationQueueManager  {
 
                             //find the device notifier info, match it to the payload
                             for (Map.Entry<String, Object> entry : payloads.entrySet()) {
-                                Notifier notifier = notifierMap.get(entry.getKey().toLowerCase());
+                                ProviderAdapter adapter = notifierMap.get(entry.getKey().toLowerCase());
                                 now = System.currentTimeMillis();
-                                String providerId = getProviderId(deviceRef, notifier);
+                                String providerId = getProviderId(deviceRef, adapter.getNotifier());
                                 if (providerId != null) {
                                     notifierId = providerId;
                                     notifierKey = entry.getKey().toLowerCase();
@@ -236,10 +230,10 @@ public class ApplicationQueueManager  {
      * only need to get notifiers once. will reset on next batch
      * @return
      */
-    public HashMap<Object,Notifier> getNotifierMap(){
+    public HashMap<Object,ProviderAdapter> getNotifierMap(){
         if(notifierHashMap == null) {
             long now = System.currentTimeMillis();
-            notifierHashMap = new HashMap<Object, Notifier>();
+            notifierHashMap = new HashMap<Object, ProviderAdapter>();
             Query query = new Query();
             query.setCollection("notifiers");
             query.setLimit(100);
@@ -251,12 +245,12 @@ public class ApplicationQueueManager  {
             int count = 0;
             while (notifierIterator.hasNext()) {
                 Notifier notifier = notifierIterator.next();
-                notifier.setEntityManager(em);
                 String name = notifier.getName() != null ? notifier.getName() : "";
                 UUID uuid = notifier.getUuid() != null ? notifier.getUuid() : UUID.randomUUID();
-                notifierHashMap.put(name.toLowerCase(), notifier);
-                notifierHashMap.put(uuid, notifier);
-                notifierHashMap.put(uuid.toString(), notifier);
+                ProviderAdapter providerAdapter = ProviderAdapterFactory.getProviderAdapter(notifier,em);
+                notifierHashMap.put(name.toLowerCase(), providerAdapter);
+                notifierHashMap.put(uuid, providerAdapter);
+                notifierHashMap.put(uuid.toString(), providerAdapter);
                 if(count++ >= 100){
                     LOG.error("ApplicationQueueManager: too many notifiers...breaking out ", notifierHashMap.size());
                     break;
@@ -276,7 +270,7 @@ public class ApplicationQueueManager  {
         LOG.info("sending batch of {} notifications.", messages.size());
         final Meter sendMeter = metricsFactory.getMeter(NotificationsService.class, "send");
 
-        final Map<Object, Notifier> notifierMap = getNotifierMap();
+        final Map<Object, ProviderAdapter> notifierMap = getNotifierMap();
         final ApplicationQueueManager proxy = this;
         final ConcurrentHashMap<UUID,TaskManager> taskMap = new ConcurrentHashMap<UUID, TaskManager>(messages.size());
         final ConcurrentHashMap<UUID,Notification> notificationMap = new ConcurrentHashMap<UUID, Notification>(messages.size());
@@ -310,10 +304,10 @@ public class ApplicationQueueManager  {
 
                     try {
                         String notifierName = message.getNotifierKey().toLowerCase();
-                        Notifier notifier = notifierMap.get(notifierName.toLowerCase());
+                        ProviderAdapter providerAdapter = notifierMap.get(notifierName.toLowerCase());
                         Object payload = translatedPayloads.get(notifierName);
                         Receipt receipt = new Receipt(notification.getUuid(), message.getNotifierId(), payload, deviceUUID);
-                        TaskTracker tracker = new TaskTracker(notifier, taskManager, receipt, deviceUUID);
+                        TaskTracker tracker = new TaskTracker(providerAdapter.getNotifier(), taskManager, receipt, deviceUUID);
                         if(!isOkToSend(notification)){
                              tracker.failed(0, "Notification is duplicate/expired/cancelled.");
                         }else {
@@ -323,8 +317,7 @@ public class ApplicationQueueManager  {
                             } else {
                                 long now = System.currentTimeMillis();
                                 try {
-                                    ProviderAdapter providerAdapter = providerAdapters.get(notifier.getProvider());
-                                    providerAdapter.sendNotification(message.getNotifierId(), notifier, payload, notification, tracker);
+                                    providerAdapter.sendNotification(message.getNotifierId(), payload, notification, tracker);
                                 } catch (Exception e) {
                                     tracker.failed(0, e.getMessage());
                                 } finally {
@@ -362,7 +355,7 @@ public class ApplicationQueueManager  {
                     @Override
                     public HashMap<UUID, ApplicationQueueMessage> call(List<ApplicationQueueMessage> queueMessages) {
                         //for gcm this will actually send notification
-                        for (ProviderAdapter providerAdapter : providerAdapters.values()) {
+                        for (ProviderAdapter providerAdapter : notifierMap.values()) {
                             try {
                                 providerAdapter.doneSendingNotifications();
                             } catch (Exception e) {
@@ -395,24 +388,26 @@ public class ApplicationQueueManager  {
         return o;
     }
 
+    public void stop(){
+        for(ProviderAdapter adapter : getNotifierMap().values()){
+            adapter.stop();
+        }
+    }
+
 
     /**
      * Call the adapter with the notifier
      */
-    private Map<String, Object> translatePayloads(Map<String, Object> payloads, Map<Object, Notifier> notifierMap) throws Exception {
-        Map<String, Object> translatedPayloads = new HashMap<String, Object>(
-                payloads.size());
+    private Map<String, Object> translatePayloads(Map<String, Object> payloads, Map<Object, ProviderAdapter> notifierMap) throws Exception {
+        Map<String, Object> translatedPayloads = new HashMap<String, Object>(  payloads.size());
         for (Map.Entry<String, Object> entry : payloads.entrySet()) {
             String payloadKey = entry.getKey().toLowerCase();
             Object payloadValue = entry.getValue();
-            Notifier notifier = notifierMap.get(payloadKey);
-            if (notifier != null) {
-                ProviderAdapter providerAdapter = providerAdapters.get(notifier.getProvider());
-                if (providerAdapter != null) {
-                    Object translatedPayload = payloadValue != null ? providerAdapter.translatePayload(payloadValue) : null;
-                    if (translatedPayload != null) {
-                        translatedPayloads.put(payloadKey, translatedPayload);
-                    }
+            ProviderAdapter providerAdapter = notifierMap.get(payloadKey);
+            if (providerAdapter != null) {
+                Object translatedPayload = payloadValue != null ? providerAdapter.translatePayload(payloadValue) : null;
+                if (translatedPayload != null) {
+                    translatedPayloads.put(payloadKey, translatedPayload);
                 }
             }
         }
@@ -453,15 +448,14 @@ public class ApplicationQueueManager  {
     }
 
     public void asyncCheckForInactiveDevices() throws Exception {
-        Collection<Notifier> notifiers = getNotifierMap().values();
-        for (final Notifier notifier : notifiers) {
+        Collection<ProviderAdapter> providerAdapters = getNotifierMap().values();
+        for (final ProviderAdapter providerAdapter : providerAdapters) {
             try {
-                ProviderAdapter providerAdapter = providerAdapters.get(notifier.getProvider());
                 if (providerAdapter != null) {
-                    LOG.debug("checking notifier {} for inactive devices", notifier);
-                    providerAdapter.removeInactiveDevices(notifier, em);
+                    LOG.debug("checking notifier {} for inactive devices", providerAdapter.getNotifier());
+                    providerAdapter.removeInactiveDevices();
 
-                    LOG.debug("finished checking notifier {} for inactive devices",notifier);
+                    LOG.debug("finished checking notifier {} for inactive devices",providerAdapter.getNotifier());
                 }
             } catch (Exception e) {
                 LOG.error("checkForInactiveDevices", e); // not

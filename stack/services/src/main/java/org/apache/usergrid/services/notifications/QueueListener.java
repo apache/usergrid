@@ -18,6 +18,7 @@ package org.apache.usergrid.services.notifications;
 
 import com.codahale.metrics.*;
 import com.codahale.metrics.Timer;
+import com.google.common.cache.*;
 import org.apache.usergrid.corepersistence.CpSetup;
 import org.apache.usergrid.metrics.MetricsFactory;
 
@@ -35,10 +36,7 @@ import org.slf4j.LoggerFactory;
 import rx.Observable;
 import javax.annotation.PostConstruct;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class QueueListener  {
@@ -148,7 +146,9 @@ public class QueueListener  {
         QueueManager queueManager = TEST_QUEUE_MANAGER != null ? TEST_QUEUE_MANAGER : queueManagerFactory.getQueueManager(queueScope);
         // run until there are no more active jobs
         long runCount = 0;
-        Map<UUID,ApplicationQueueManager> queueManagerMap = new ConcurrentHashMap<>(); //keep a cache of queuemangers then clear them at an interval
+        //cache to retrieve push manager, cached per notifier, so many notifications will get same push manager
+        LoadingCache<UUID, ApplicationQueueManager> queueManagerMap = getQueueManagerCache(queueManager);
+
         while ( true ) {
             try {
 
@@ -175,20 +175,7 @@ public class QueueListener  {
                     //send each set of app ids together
                     for (Map.Entry<UUID, List<QueueMessage>> entry : messageMap.entrySet()) {
                         UUID applicationId = entry.getKey();
-                        EntityManager entityManager = emf.getEntityManager(applicationId);
-                        ServiceManager serviceManager = smf.getServiceManager(applicationId);
-
                         ApplicationQueueManager manager = queueManagerMap.get(applicationId);
-                        if(manager==null) {
-                            manager = new ApplicationQueueManager(
-                                    new JobScheduler(serviceManager, entityManager),
-                                    entityManager,
-                                    queueManager,
-                                    metricsService,
-                                    properties
-                            );
-                            queueManagerMap.put(applicationId,manager);
-                        }
                         LOG.info("send batch for app {} of {} messages", entry.getKey(), entry.getValue().size());
                         Observable current = manager.sendBatchToProviders(entry.getValue(),queueName);
                         if(merge == null)
@@ -210,7 +197,7 @@ public class QueueListener  {
                         Thread.sleep(sleepBetweenRuns);
                     }
                     if(++runCount % consecutiveCallsToRemoveDevices == 0){
-                        for(ApplicationQueueManager applicationQueueManager : queueManagerMap.values()){
+                        for(ApplicationQueueManager applicationQueueManager : queueManagerMap.asMap().values()){
                             try {
                                 applicationQueueManager.asyncCheckForInactiveDevices();
                             }catch (Exception inactiveDeviceException){
@@ -218,7 +205,6 @@ public class QueueListener  {
                             }
                         }
                         //clear everything
-                        queueManagerMap.clear();
                         runCount=0;
                     }
                 }
@@ -244,6 +230,43 @@ public class QueueListener  {
         }
     }
 
+    private LoadingCache<UUID, ApplicationQueueManager> getQueueManagerCache(final QueueManager queueManager) {
+        return CacheBuilder
+                    .newBuilder()
+                    .expireAfterAccess(10, TimeUnit.MINUTES)
+                    .removalListener(new RemovalListener<UUID, ApplicationQueueManager>() {
+                        @Override
+                        public void onRemoval(
+                                RemovalNotification<UUID, ApplicationQueueManager> queueManagerNotifiication) {
+                            try {
+                                queueManagerNotifiication.getValue().stop();
+                            } catch (Exception ie) {
+                                LOG.error("Failed to shutdown from cache", ie);
+                            }
+                        }
+                    }).build(new CacheLoader<UUID, ApplicationQueueManager>() {
+                         @Override
+                         public ApplicationQueueManager load(final UUID applicationId) {
+                             try {
+                                 EntityManager entityManager = emf.getEntityManager(applicationId);
+                                 ServiceManager serviceManager = smf.getServiceManager(applicationId);
+
+                                 ApplicationQueueManager manager = new ApplicationQueueManager(
+                                         new JobScheduler(serviceManager, entityManager),
+                                         entityManager,
+                                         queueManager,
+                                         metricsService,
+                                         properties
+                                 );
+                                 return manager;
+                             } catch (Exception e) {
+                                 LOG.error("Could not instantiate queue manager", e);
+                                 return null;
+                             }
+                         }
+                     });
+    }
+
     public void stop(){
         LOG.info("stop processes");
 
@@ -262,5 +285,7 @@ public class QueueListener  {
         this.batchSize = batchSize;
     }
     public int getBatchSize(){return batchSize;}
+
+
 
 }

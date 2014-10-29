@@ -38,13 +38,14 @@ import java.util.Map;
 public class InactiveDeviceManager {
     private static final Logger LOG = LoggerFactory.getLogger(InactiveDeviceManager.class);
     private final Notifier notifier;
+    private EntityManager entityManager;
 
-    public InactiveDeviceManager(Notifier notifier){
+    public InactiveDeviceManager(Notifier notifier,EntityManager entityManager){
         this.notifier = notifier;
+        this.entityManager = entityManager;
     }
     public void removeInactiveDevices( Map<String,Date> inactiveDeviceMap  ){
         final String notfierPostFix = ApplicationQueueManager.NOTIFIER_ID_POSTFIX;
-        final EntityManager em = notifier.getEntityManager();
         if (inactiveDeviceMap != null && inactiveDeviceMap.size() > 0) {
             LOG.debug("processing {} inactive devices",  inactiveDeviceMap.size());
             Map<String, Object> clearPushtokenMap = new HashMap<String, Object>( 2);
@@ -57,16 +58,16 @@ public class InactiveDeviceManager {
                     // name
                     Query query = new Query();
                     query.addEqualityFilter(notifier.getName() + notfierPostFix, entry.getKey());
-                    Results results = em.searchCollection(em.getApplication(), "devices", query);
+                    Results results = entityManager.searchCollection(entityManager.getApplication(), "devices", query);
                     for (Entity e : results.getEntities()) {
-                        em.updateProperties(e, clearPushtokenMap);
+                        entityManager.updateProperties(e, clearPushtokenMap);
                     }
                     // uuid
                     query = new Query();
                     query.addEqualityFilter(notifier.getUuid() + notfierPostFix, entry.getKey());
-                    results = em.searchCollection(em.getApplication(),  "devices", query);
+                    results = entityManager.searchCollection(entityManager.getApplication(),  "devices", query);
                     for (Entity e : results.getEntities()) {
-                        em.updateProperties(e, clearPushtokenMap);
+                        entityManager.updateProperties(e, clearPushtokenMap);
                     }
                 }catch (Exception e){
                     LOG.error("failed to remove token",e);

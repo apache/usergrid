@@ -53,7 +53,7 @@ public class ExpiredTokenListener implements com.relayrides.pushy.apns.ExpiredTo
         }
         if(pushManager instanceof EntityPushManager){
             EntityPushManager entityPushManager = (EntityPushManager) pushManager;
-            InactiveDeviceManager inactiveDeviceManager = new InactiveDeviceManager(entityPushManager.getNotifier());
+            InactiveDeviceManager inactiveDeviceManager = new InactiveDeviceManager(entityPushManager.getNotifier(),entityPushManager.getEntityManager());
             inactiveDeviceManager.removeInactiveDevices(inactiveDeviceMap);
         }
     }

@@ -40,11 +40,17 @@ public class GCMAdapter implements ProviderAdapter {
     private static final Logger LOG = LoggerFactory.getLogger(GCMAdapter.class);
     private static final int SEND_RETRIES = 3;
     private static int BATCH_SIZE = 1000;
+    private final Notifier notifier;
+    private EntityManager entityManager;
 
     private Map<Notifier, Batch> notifierBatches = new HashMap<Notifier, Batch>();
 
+    public GCMAdapter(EntityManager entityManager,Notifier notifier){
+        this.notifier = notifier;
+        this.entityManager = entityManager;
+    }
     @Override
-    public void testConnection(Notifier notifier) throws ConnectionException {
+    public void testConnection() throws ConnectionException {
         Sender sender = new Sender(notifier.getApiKey());
         Message message = new Message.Builder().build();
         try {
@@ -56,7 +62,7 @@ public class GCMAdapter implements ProviderAdapter {
     }
 
     @Override
-    public void sendNotification(String providerId, Notifier notifier,
+    public void sendNotification(String providerId,
             Object payload, Notification notification, TaskTracker tracker)
             throws Exception {
         Map<String,Object> map = (Map<String, Object>) payload;
@@ -66,12 +72,11 @@ public class GCMAdapter implements ProviderAdapter {
             expireSeconds = expireSeconds <= 2419200 ? expireSeconds : 2419200; //send the max gcm value documented here http://developer.android.com/google/gcm/adv.html#ttl
             map.put(expiresKey, expireSeconds);
         }
-        Batch batch = getBatch(notifier, map);
+        Batch batch = getBatch( map);
         batch.add(providerId, tracker);
     }
 
-    synchronized private Batch getBatch(Notifier notifier,
-            Map<String, Object> payload) {
+    synchronized private Batch getBatch( Map<String, Object> payload) {
         Batch batch = notifierBatches.get(notifier);
         if (batch == null && payload != null) {
             batch = new Batch(notifier, payload);
@@ -88,13 +93,12 @@ public class GCMAdapter implements ProviderAdapter {
     }
 
     @Override
-    public void removeInactiveDevices(Notifier notifier,
-            EntityManager em) throws Exception {
-        Batch batch = getBatch(notifier, null);
+    public void removeInactiveDevices( ) throws Exception {
+        Batch batch = getBatch( null);
         Map<String,Date> map = null;
         if(batch != null) {
             map = batch.getAndClearInactiveDevices();
-            InactiveDeviceManager deviceManager = new InactiveDeviceManager(notifier);
+            InactiveDeviceManager deviceManager = new InactiveDeviceManager(notifier,entityManager);
             deviceManager.removeInactiveDevices(map);
         }
 
@@ -124,6 +128,16 @@ public class GCMAdapter implements ProviderAdapter {
         if (payload.getProperty("apiKey") == null) {
             throw new RequiredPropertyNotFoundException("notifier", "apiKey");
         }
+    }
+
+    @Override
+    public void stop() {
+
+    }
+
+    @Override
+    public Notifier getNotifier() {
+        return notifier;
     }
 
     private class Batch {

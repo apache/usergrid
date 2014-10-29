@@ -32,23 +32,13 @@ public class MockSuccessfulProviderAdapter implements ProviderAdapter {
 
     private static ProviderAdapter realProviderAdapter;
 
-    public static void install(NotificationsService ns) {
-        if (realProviderAdapter != null)
-            realProviderAdapter = ns.providerAdapters.get("google");
-        ns.providerAdapters.put("google", new MockSuccessfulProviderAdapter());
-    }
 
-    public static void uninstall(NotificationsService ns) {
-        if (realProviderAdapter != null) {
-            ns.providerAdapters.put("google", realProviderAdapter);
-        }
-    }
 
     public MockSuccessfulProviderAdapter() {
     }
 
     @Override
-    public void testConnection(Notifier notifier) throws ConnectionException {
+    public void testConnection() throws ConnectionException {
     }
 
     @Override
@@ -56,14 +46,20 @@ public class MockSuccessfulProviderAdapter implements ProviderAdapter {
         return payload.toString();
     }
 
+
+
     @Override
-    public void removeInactiveDevices(Notifier notifier,
-            EntityManager em) throws Exception {
+    public void validateCreateNotifier(ServicePayload payload) throws Exception {
+    }
+
+    @Override
+    public void stop() {
 
     }
 
     @Override
-    public void validateCreateNotifier(ServicePayload payload) throws Exception {
+    public Notifier getNotifier() {
+        return null;
     }
 
     @Override
@@ -71,7 +67,12 @@ public class MockSuccessfulProviderAdapter implements ProviderAdapter {
     }
 
     @Override
-    public void sendNotification(String providerId, Notifier notifier,
+    public void removeInactiveDevices() throws Exception {
+
+    }
+
+    @Override
+    public void sendNotification(String providerId,
             Object payload, Notification notification, final TaskTracker tracker)
             throws Exception {
         new Thread() {
