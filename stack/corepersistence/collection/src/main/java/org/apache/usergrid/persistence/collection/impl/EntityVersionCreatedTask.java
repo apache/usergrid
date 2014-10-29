@@ -122,9 +122,7 @@ public class EntityVersionCreatedTask implements Task<Void> {
         }
 
         if ( listenerSize == 1 ) {
-            EntityVersionCreated entityVersionCreated = listeners.iterator().next();
-
-            entityVersionCreated.versionCreated( collectionScope,entity );
+            listeners.iterator().next().versionCreated( collectionScope,entity );
             return;
         }
 
