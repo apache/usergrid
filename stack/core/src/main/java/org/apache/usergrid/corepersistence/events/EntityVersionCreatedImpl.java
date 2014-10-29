@@ -39,9 +39,6 @@ public class EntityVersionCreatedImpl implements EntityVersionCreated{
         HybridEntityManagerFactory hemf = (HybridEntityManagerFactory)CpSetup.getEntityManagerFactory();
         CpEntityManagerFactory cpemf = (CpEntityManagerFactory)hemf.getImplementation();
 
-//        CpEntityManagerFactory emf = (CpEntityManagerFactory)
-//                CpSetup.getInjector().getInstance( EntityManagerFactory.class );
-
         final EntityIndex ei = cpemf.getManagerCache().getEntityIndex(scope);
 
         EntityIndexBatch batch = ei.createBatch();

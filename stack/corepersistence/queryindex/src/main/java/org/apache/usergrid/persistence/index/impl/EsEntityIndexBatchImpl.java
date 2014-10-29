@@ -222,10 +222,6 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
                          ( STRING_PREFIX + ENTITYID_FIELDNAME,entity.getId().getUuid().toString().toLowerCase() ),
                          FilterBuilders.rangeFilter("version").lt( entity.getId().getUuid().timestamp() ));
 
-
-
-        //QueryBuilders.rangeQuery(  )
-
         DeleteByQueryResponse response = client.prepareDeleteByQuery("test")
                                                .setQuery( fqb ).execute().actionGet();
 

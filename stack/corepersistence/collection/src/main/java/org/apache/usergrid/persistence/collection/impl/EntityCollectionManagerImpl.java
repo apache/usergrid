@@ -159,7 +159,6 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
         ValidationUtils.verifyIdentity(entityId);
 
-
         // create our observable and start the write
         final CollectionIoEvent<Entity> writeData = 
                 new CollectionIoEvent<Entity>(collectionScope, entity);
@@ -174,20 +173,10 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         observable.map(writeCommit).doOnNext(new Action1<Entity>() {
             @Override
             public void call(final Entity entity) {
-//<<<<<<< Updated upstream
-//
-//                // TODO fire a task here
-//
-//                taskExecutor.submit(entityVersionCleanupFactory.getTask(
-//                    collectionScope, entityId, entity.getVersion() ));
-//
-//                // post-processing to come later. leave it empty for now.
-//=======
                 //TODO fire the created task first then the entityVersioncleanup
                 taskExecutor.submit(entityVersionCreatedFactory.getTask(collectionScope,entity));
                 taskExecutor.submit(entityVersionCleanupFactory.getTask(collectionScope, entityId,entity.getVersion()));
                 //post-processing to come later. leave it empty for now.
-//>>>>>>> Stashed changes
             }
         }).doOnError(rollback);
 

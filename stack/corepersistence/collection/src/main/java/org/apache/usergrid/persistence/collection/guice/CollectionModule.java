@@ -93,19 +93,6 @@ public class CollectionModule extends AbstractModule {
 
     }
 
-
-    @Provides
-    public List<EntityVersionDeleted> emptyEntityVersionDeletedInitialization(){
-        return Collections.EMPTY_LIST;
-
-    }
-
-    @Provides
-    public List<EntityDeleted> emptyEntityDeletedInitialization(){
-        return Collections.EMPTY_LIST;
-
-    }
-
     @Provides
     @Singleton
     @Inject
