@@ -64,6 +64,7 @@ public class APNsAdapter implements ProviderAdapter {
 
     private EntityManager entityManager;
     private EntityPushManager pushManager;
+    private LinkedBlockingQueue<SimpleApnsPushNotification> queue;
 
     public APNsAdapter(EntityManager entityManager, Notifier notifier){
         this.entityManager = entityManager;
@@ -76,13 +77,12 @@ public class APNsAdapter implements ProviderAdapter {
         try {
             CountDownLatch latch = new CountDownLatch(1);
             notification.setLatch(latch);
-            EntityPushManager pushManager = getPushManager(notifier);
-                addToQueue(pushManager, notification);
-                latch.await(10000,TimeUnit.MILLISECONDS);
-                if(notification.hasFailed()){
-                    // this is expected with a bad certificate (w/message: comes from failedconnectionlistener
-                    throw new ConnectionException("Bad certificate. Double-check your environment.",notification.getCause() != null ? notification.getCause() : new Exception("Bad certificate."));
-                }
+            addToQueue(notification);
+            latch.await(10000, TimeUnit.MILLISECONDS);
+            if (notification.hasFailed()) {
+                // this is expected with a bad certificate (w/message: comes from failedconnectionlistener
+                throw new ConnectionException("Bad certificate. Double-check your environment.", notification.getCause() != null ? notification.getCause() : new Exception("Bad certificate."));
+            }
                 notification.finished();
         } catch (Exception e) {
             notification.finished();
@@ -97,8 +97,8 @@ public class APNsAdapter implements ProviderAdapter {
         }
     }
 
-    private BlockingQueue<SimpleApnsPushNotification> addToQueue(PushManager<SimpleApnsPushNotification> pushManager, SimpleApnsPushNotification notification) throws InterruptedException {
-        BlockingQueue<SimpleApnsPushNotification> queue = pushManager.getQueue();
+    private BlockingQueue<SimpleApnsPushNotification> addToQueue(SimpleApnsPushNotification notification) throws Exception {
+        BlockingQueue<SimpleApnsPushNotification> queue = getPushManager(notifier).getQueue();
         queue.offer(notification,2500,TimeUnit.MILLISECONDS);
         return queue;
     }
@@ -107,9 +107,8 @@ public class APNsAdapter implements ProviderAdapter {
     public void sendNotification(String providerId, Object payload, Notification notification, TaskTracker tracker)
             throws Exception {
         APNsNotification apnsNotification = APNsNotification.create(providerId, payload.toString(), notification, tracker);
-        PushManager<SimpleApnsPushNotification> pushManager = getPushManager(notifier);
         try {
-            addToQueue(pushManager, apnsNotification);
+            addToQueue( apnsNotification);
             apnsNotification.messageSent();
         }catch (InterruptedException ie){
             apnsNotification.messageSendFailed(ie);
@@ -129,10 +128,12 @@ public class APNsAdapter implements ProviderAdapter {
     }
 
     private EntityPushManager getPushManager(Notifier notifier) throws ExecutionException {
-        if(pushManager != null &&  !pushManager.isStarted() && pushManager.isShutDown()){
+        if (pushManager == null || !pushManager.isStarted() || pushManager.isShutDown()) {
             PushManagerConfiguration config = new PushManagerConfiguration();
             config.setConcurrentConnectionCount(Runtime.getRuntime().availableProcessors() * 2);
-            EntityPushManager pushManager =  new EntityPushManager(notifier,entityManager, config);
+            queue = new LinkedBlockingQueue<SimpleApnsPushNotification>();
+
+            pushManager = new EntityPushManager(notifier, entityManager, queue, config);
             //only tested when a message is sent
             pushManager.registerRejectedNotificationListener(new RejectedAPNsListener());
             //this will get tested when start is called
@@ -144,10 +145,9 @@ public class APNsAdapter implements ProviderAdapter {
                 if (!pushManager.isStarted()) { //ensure manager is started
                     pushManager.start();
                 }
-            }catch(IllegalStateException ise){
-                logger.debug("failed to start",ise);//could have failed because its started
+            } catch (IllegalStateException ise) {
+                logger.debug("failed to start", ise);//could have failed because its started
             }
-            return pushManager;
         }
         return pushManager;
     }
@@ -189,8 +189,9 @@ public class APNsAdapter implements ProviderAdapter {
     @Override
     public void stop() {
         try {
-            if (!pushManager.isShutDown()) {
-                List<SimpleApnsPushNotification> notifications = pushManager.shutdown(3000);
+            EntityPushManager entityPushManager = getPushManager(notifier);
+            if (!entityPushManager.isShutDown()) {
+                List<SimpleApnsPushNotification> notifications = entityPushManager.shutdown(3000);
                 for (SimpleApnsPushNotification notification1 : notifications) {
                     try {
                         ((APNsNotification) notification1).messageSendFailed(new Exception("Cache Expired: Shutting down sender"));
