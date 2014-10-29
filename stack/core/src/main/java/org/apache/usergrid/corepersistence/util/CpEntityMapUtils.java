@@ -68,7 +68,8 @@ public class CpEntityMapUtils {
         return fromMap( null, map, entityType, topLevel );
     }
 
-    public static Entity fromMap( Entity entity, Map<String, Object> map, String entityType, boolean topLevel ) {
+    public static Entity fromMap( 
+            Entity entity, Map<String, Object> map, String entityType, boolean topLevel ) {
 
         if ( entity == null ) {
             entity = new Entity();
@@ -263,7 +264,7 @@ public class CpEntityMapUtils {
                 // field names lat and lon trigger ElasticSearch geo location 
                 locMap.put("lat", locField.getValue().getLatitude());
                 locMap.put("lon", locField.getValue().getLongitude());
-                 entityMap.put( field.getName(), field.getValue());
+                entityMap.put( field.getName(), field.getValue());
 
             } else if (f instanceof ByteArrayField) {
                     ByteArrayField bf = ( ByteArrayField ) f;

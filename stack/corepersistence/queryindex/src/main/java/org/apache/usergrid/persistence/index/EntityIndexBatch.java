@@ -27,9 +27,6 @@ import org.apache.usergrid.persistence.model.entity.Id;
 
 public interface EntityIndexBatch {
 
-
-
-
     /**
      * Create index for Entity
      * @param indexScope The scope for the index
@@ -58,9 +55,6 @@ public interface EntityIndexBatch {
      * @param version Version to be removed from index.
      */
     public EntityIndexBatch deindex(final IndexScope scope, final Id id, final UUID version);
-
-
-    //TODO: Create a delete method that delete's  by Id.  This will delete all documents from ES with the same entity Id
 
     /**
      * Execute the batch

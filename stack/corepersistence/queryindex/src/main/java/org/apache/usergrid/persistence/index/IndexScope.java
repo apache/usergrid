@@ -18,8 +18,6 @@
  */
 package org.apache.usergrid.persistence.index;
 
-
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 
@@ -31,11 +29,10 @@ public interface IndexScope {
      */
     public String getName();
 
-
     /**
-     * @return A uuid that is unique to this context.  It can be any uuid (time uuid preferred). Can be an application id
-     * if this is indexed in a collection, or the collection owner.  In a graph structure, this will be the source
-     * node in the graph
+     * @return A uuid that is unique to this context.  It can be any uuid (time uuid preferred). 
+     * Can be an application id if this is indexed in a collection, or the collection owner.  
+     * In a graph structure, this will be the source node in the graph
      */
     public Id getOwner();
 }

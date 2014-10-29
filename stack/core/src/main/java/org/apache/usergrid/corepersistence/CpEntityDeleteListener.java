@@ -68,28 +68,35 @@ public class CpEntityDeleteListener {
         return Observable.create( new ObservableIterator<MvccEntity>( "deleteEntities" ) {
             @Override
             protected Iterator<MvccEntity> getIterator() {
-                Iterator<MvccEntity> iterator = entityMetadataSerialization.loadHistory( entityEvent.getCollectionScope(), entity.getId(), entity.getVersion(), serializationFig.getHistorySize() );
+                Iterator<MvccEntity> iterator = entityMetadataSerialization.loadHistory( 
+                        entityEvent.getCollectionScope(), 
+                        entity.getId(), 
+                        entity.getVersion(), 
+                        serializationFig.getHistorySize() );
                 return iterator;
             }
         } ).subscribeOn(Schedulers.io())
-                .buffer(serializationFig.getBufferSize())
-                .flatMap(new Func1<List<MvccEntity>, Observable<EntityVersion>>() {
-                    @Override
-                    public Observable<EntityVersion> call(List<MvccEntity> mvccEntities) {
-                        MutationBatch mutationBatch = keyspace.prepareMutationBatch();
-                        List<EntityVersion> versions = new ArrayList<>();
-                        //actually delete the edge from both the commit log and
-                        for (MvccEntity mvccEntity : mvccEntities) {
-                            versions.add(mvccEntity);
-                            mutationBatch.mergeShallow(entityMetadataSerialization.delete(entityEvent.getCollectionScope(), mvccEntity.getId(), mvccEntity.getVersion()));
-                        }
-                        try {
-                            mutationBatch.execute();
-                        } catch (ConnectionException e) {
-                            throw new RuntimeException("Unable to execute mutation", e);
-                        }
-                        return Observable.from(versions);
+            .buffer(serializationFig.getBufferSize())
+            .flatMap(new Func1<List<MvccEntity>, Observable<EntityVersion>>() {
+                @Override
+                public Observable<EntityVersion> call(List<MvccEntity> mvccEntities) {
+                    MutationBatch mutationBatch = keyspace.prepareMutationBatch();
+                    List<EntityVersion> versions = new ArrayList<>();
+                    //actually delete the edge from both the commit log and
+                    for (MvccEntity mvccEntity : mvccEntities) {
+                        versions.add(mvccEntity);
+                        mutationBatch.mergeShallow(entityMetadataSerialization.delete(
+                                entityEvent.getCollectionScope(), 
+                                mvccEntity.getId(), 
+                                mvccEntity.getVersion()));
                     }
-                });
+                    try {
+                        mutationBatch.execute();
+                    } catch (ConnectionException e) {
+                        throw new RuntimeException("Unable to execute mutation", e);
+                    }
+                    return Observable.from(versions);
+                }
+            });
     }
 }

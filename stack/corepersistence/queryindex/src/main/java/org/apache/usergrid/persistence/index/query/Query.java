@@ -115,12 +115,13 @@ public class Query {
     public Query( Query q ) {
         if ( q != null ) {
             type = q.type;
-            sortPredicates = q.sortPredicates != null ? new ArrayList<SortPredicate>( q.sortPredicates ) : null;
+            sortPredicates = q.sortPredicates != null 
+                    ? new ArrayList<SortPredicate>( q.sortPredicates ) : null;
             startResult = q.startResult;
             cursor = q.cursor;
             limit = q.limit;
-            selectAssignments =
-                    q.selectAssignments != null ? new LinkedHashMap<String, String>( q.selectAssignments ) : null;
+            selectAssignments = q.selectAssignments != null 
+                    ? new LinkedHashMap<String, String>( q.selectAssignments ) : null;
             mergeSelectResults = q.mergeSelectResults;
             //level = q.level;
             connection = q.connection;
@@ -132,9 +133,10 @@ public class Query {
             resolution = q.resolution;
             pad = q.pad;
             rootOperand = q.rootOperand;
-            identifiers = q.identifiers != null ? new ArrayList<Identifier>( q.identifiers ) : null;
-            counterFilters =
-                    q.counterFilters != null ? new ArrayList<CounterFilterPredicate>( q.counterFilters ) : null;
+            identifiers = q.identifiers != null 
+                    ? new ArrayList<Identifier>( q.identifiers ) : null;
+            counterFilters = q.counterFilters != null 
+                    ? new ArrayList<CounterFilterPredicate>( q.counterFilters ) : null;
             collection = q.collection;
         }
     }
@@ -253,7 +255,8 @@ public class Query {
     }
 
 
-    public static Query fromQueryParams( Map<String, List<String>> params ) throws QueryParseException {
+    public static Query fromQueryParams( Map<String, List<String>> params ) 
+            throws QueryParseException {
         Query q = null;
         CounterResolution resolution = null;
         List<Identifier> identifiers = null;
@@ -621,8 +624,8 @@ public class Query {
 
         for ( SortPredicate s : sortPredicates ) {
             if ( s.getPropertyName().equals( sort.getPropertyName() ) ) {
-                throw new QueryParseException(
-                        String.format( "Attempted to set sort order for %s more than once", s.getPropertyName() ) );
+                throw new QueryParseException( String.format( 
+                    "Attempted to set sort order for %s more than once", s.getPropertyName() ) );
             }
         }
         sortPredicates.add( sort );
@@ -1094,7 +1097,9 @@ public class Query {
         private final Query.SortDirection direction;
 
 
-        public SortPredicate(@JsonProperty("propertyName")  String propertyName, @JsonProperty("direction")  Query.SortDirection direction ) {
+        public SortPredicate(@JsonProperty("propertyName")  String propertyName, 
+                @JsonProperty("direction")  Query.SortDirection direction ) {
+
             if ( propertyName == null ) {
                 throw new NullPointerException( "Property name was null" );
             }
@@ -1232,7 +1237,7 @@ public class Query {
                 }
             }
 
-            if ( ( user == null ) && ( group == null ) && ( category == null ) && ( name == null ) ) {
+            if ( ( user == null ) && ( group == null ) && ( category == null ) && ( name == null)) {
                 return null;
             }
 
