@@ -43,7 +43,7 @@ public class GCMAdapter implements ProviderAdapter {
     private final Notifier notifier;
     private EntityManager entityManager;
 
-    private Map<Notifier, Batch> notifierBatches = new HashMap<Notifier, Batch>();
+    private Map<Notifier, Batch> notifierBatches = new HashMap<>();
 
     public GCMAdapter(EntityManager entityManager,Notifier notifier){
         this.notifier = notifier;

@@ -29,7 +29,7 @@ import org.apache.usergrid.persistence.queue.QueueScopeFactory;
 import java.util.UUID;
 
 /**
- * Classy class class.
+ * Returns scope for queues.
  */
 public class QueueScopeFactoryImpl implements QueueScopeFactory {
 

@@ -390,7 +390,11 @@ public class ApplicationQueueManager  {
 
     public void stop(){
         for(ProviderAdapter adapter : getNotifierMap().values()){
-            adapter.stop();
+            try {
+                adapter.stop();
+            }catch (Exception e){
+                LOG.error("failed to stop adapter",e);
+            }
         }
     }
 

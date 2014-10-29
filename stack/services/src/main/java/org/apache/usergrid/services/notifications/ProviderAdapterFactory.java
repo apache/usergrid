@@ -28,7 +28,7 @@ import org.apache.usergrid.services.notifications.gcm.GCMAdapter;
 import java.util.HashMap;
 
 /**
- * Classy class class.
+ * Get valid provideradapters
  */
 public class ProviderAdapterFactory {
     private static final String[] providers =  new String[]{"apple", "google", "noop"};

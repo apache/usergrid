@@ -33,7 +33,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Classy class class.
+ * remove inactive devices.
  */
 public class InactiveDeviceManager {
     private static final Logger LOG = LoggerFactory.getLogger(InactiveDeviceManager.class);
