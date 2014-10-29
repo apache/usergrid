@@ -34,8 +34,20 @@ import org.apache.usergrid.services.ServicePayload;
  */
 public interface ProviderAdapter {
 
+    /**
+     * test the connection
+     * @throws ConnectionException
+     */
     public void testConnection() throws ConnectionException;
 
+    /**
+     * send a notification
+     * @param providerId
+     * @param payload
+     * @param notification
+     * @param tracker
+     * @throws Exception
+     */
     public void sendNotification(String providerId,  Object payload, Notification notification, TaskTracker tracker)
             throws Exception;
 
@@ -45,12 +57,30 @@ public interface ProviderAdapter {
      */
     public void doneSendingNotifications() throws Exception;
 
+    /**
+     * remove inactive devices
+     * @throws Exception
+     */
     public void removeInactiveDevices() throws Exception;
 
+    /**
+     * translate payload for each notifier
+     * @param payload
+     * @return
+     * @throws Exception
+     */
     public Object translatePayload(Object payload) throws Exception;
 
+    /**
+     * Validate payload from services
+     * @param payload
+     * @throws Exception
+     */
     public void validateCreateNotifier(ServicePayload payload) throws Exception;
 
+    /**
+     * stop the adapter when you are done, so it can quit processing notifications
+     */
     public void stop();
 
     public Notifier getNotifier();

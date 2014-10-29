@@ -187,22 +187,23 @@ public class APNsAdapter implements ProviderAdapter {
     }
 
     @Override
-    public void stop(){
-            try {
-                if (!pushManager.isShutDown()) {
-                    List<SimpleApnsPushNotification> notifications = pushManager.shutdown(3000);
-                    for (SimpleApnsPushNotification notification1 : notifications) {
-                        try {
-                            ((APNsNotification) notification1).messageSendFailed(new Exception("Cache Expired: Shutting down sender"));
-                        }catch (Exception e){
-                            logger.error("Failed to mark notification",e);
-                        }
+    public void stop() {
+        try {
+            if (!pushManager.isShutDown()) {
+                List<SimpleApnsPushNotification> notifications = pushManager.shutdown(3000);
+                for (SimpleApnsPushNotification notification1 : notifications) {
+                    try {
+                        ((APNsNotification) notification1).messageSendFailed(new Exception("Cache Expired: Shutting down sender"));
+                    } catch (Exception e) {
+                        logger.error("Failed to mark notification", e);
                     }
                 }
-            } catch (Exception ie) {
-                logger.error("Failed to shutdown from cache", ie);
             }
+        } catch (Exception ie) {
+            logger.error("Failed to shutdown from cache", ie);
+        }
     }
+
     @Override
     public Notifier getNotifier(){return notifier;}
 
