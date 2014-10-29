@@ -16,22 +16,14 @@
  */
 package org.apache.usergrid.services.notifiers;
 
-import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.entities.Notifier;
 import org.apache.usergrid.services.notifications.ProviderAdapterFactory;
-import org.apache.usergrid.services.notifications.TestAdapter;
-import org.apache.usergrid.services.notifications.apns.APNsAdapter;
-import org.apache.usergrid.services.notifications.gcm.GCMAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.services.*;
 import org.apache.usergrid.services.notifications.NotificationsService;
 import org.apache.usergrid.services.notifications.ProviderAdapter;
-
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 
 public class NotifiersService extends AbstractCollectionService {
 
@@ -46,15 +38,7 @@ public class NotifiersService extends AbstractCollectionService {
     @Override
     public ServiceResults postCollection(ServiceContext context)
             throws Exception {
-
         ServicePayload payload = context.getPayload();
-
-        NotificationsService ns = (NotificationsService) sm
-                .getService("notifications");
-
-        String provider = payload.getStringProperty("provider");
-
-
         ServiceResults results = super.postCollection(context);
         Notifier notifier = (Notifier) results.getEntity();
         if (notifier != null) {
@@ -66,6 +50,7 @@ public class NotifiersService extends AbstractCollectionService {
                             + Arrays.toString(ProviderAdapterFactory.getValidProviders()));
                 }
                 providerAdapter.validateCreateNotifier(payload);
+                NotificationsService ns = (NotificationsService) sm.getService("notifications");
                 ns.testConnection(notifier);
             } catch (Exception e) {
                 logger.info("notifier testConnection() failed", e);
