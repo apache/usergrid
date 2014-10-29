@@ -32,8 +32,7 @@ public interface ResultsLoaderFactory {
 
     /**
      * Get the load for results
-     * @return
      */
-    public ResultsLoader getLoader(final ApplicationScope applicationScope, final EntityRef ownerId,
-                                        final Query.Level resultsLevel );
+    public ResultsLoader getLoader( final ApplicationScope applicationScope, 
+            final EntityRef ownerId, final Query.Level resultsLevel );
 }

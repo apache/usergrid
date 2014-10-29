@@ -22,7 +22,6 @@ import com.google.inject.Injector;
 import com.netflix.config.ConfigurationManager;
 import java.util.Properties;
 import java.util.UUID;
-import java.util.logging.Level;
 import me.prettyprint.cassandra.service.CassandraHost;
 import me.prettyprint.hector.api.ddl.ComparatorType;
 import static me.prettyprint.hector.api.factory.HFactory.createColumnFamilyDefinition;
