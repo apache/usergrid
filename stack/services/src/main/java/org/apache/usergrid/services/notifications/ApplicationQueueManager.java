@@ -28,7 +28,7 @@ import rx.Observable;
 import java.util.List;
 
 /**
- * Classy class class.
+ * Manages Queues for Applications
  */
 public interface ApplicationQueueManager {
 
@@ -38,11 +38,30 @@ public interface ApplicationQueueManager {
 
     public static final  String DEFAULT_QUEUE_NAME = "push_v1";
 
+    /**
+     * send notification to queue
+     * @param notification
+     * @param jobExecution
+     * @throws Exception
+     */
     void queueNotification(Notification notification, JobExecution jobExecution) throws Exception;
 
+    /**
+     * send notifications to providers
+     * @param messages
+     * @param queuePath
+     * @return
+     */
     Observable sendBatchToProviders(List<QueueMessage> messages, String queuePath);
 
+    /**
+     * stop processing and send message to providers to stop
+     */
     void stop();
 
+    /**
+     * check for inactive devices, apple and google require this
+     * @throws Exception
+     */
     void asyncCheckForInactiveDevices() throws Exception;
 }
