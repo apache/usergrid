@@ -16,6 +16,7 @@
  */
 package org.apache.usergrid.services.notifications.gcm;
 
+import com.clearspring.analytics.hash.MurmurHash;
 import com.google.android.gcm.server.*;
 import org.apache.usergrid.persistence.entities.Notification;
 import org.apache.usergrid.persistence.entities.Notifier;
@@ -34,6 +35,8 @@ import org.apache.usergrid.services.notifications.TaskTracker;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class GCMAdapter implements ProviderAdapter {
 
@@ -43,11 +46,12 @@ public class GCMAdapter implements ProviderAdapter {
     private final Notifier notifier;
     private EntityManager entityManager;
 
-    private Map<Notifier, Batch> notifierBatches = new HashMap<>();
+    private ConcurrentHashMap<Long,Batch> batches;
 
     public GCMAdapter(EntityManager entityManager,Notifier notifier){
         this.notifier = notifier;
         this.entityManager = entityManager;
+        batches = new ConcurrentHashMap<>();
     }
     @Override
     public void testConnection() throws ConnectionException {
@@ -62,8 +66,7 @@ public class GCMAdapter implements ProviderAdapter {
     }
 
     @Override
-    public void sendNotification(String providerId,
-            Object payload, Notification notification, TaskTracker tracker)
+    public void sendNotification(String providerId, Object payload, Notification notification, TaskTracker tracker)
             throws Exception {
         Map<String,Object> map = (Map<String, Object>) payload;
         final String expiresKey = "time_to_live";
@@ -77,17 +80,18 @@ public class GCMAdapter implements ProviderAdapter {
     }
 
     synchronized private Batch getBatch( Map<String, Object> payload) {
-        Batch batch = notifierBatches.get(notifier);
+        long hash = MurmurHash.hash64(payload);
+        Batch batch = batches.get(hash);
         if (batch == null && payload != null) {
-            batch = new Batch(notifier, payload);
-            notifierBatches.put(notifier, batch);
+            batch = new Batch(notifier,payload);
+            batches.put(hash,batch);
         }
         return batch;
     }
 
     @Override
     synchronized public void doneSendingNotifications() throws Exception {
-        for (Batch batch : notifierBatches.values()) {
+        for (Batch batch : batches.values()) {
             batch.send();
         }
     }
@@ -95,9 +99,8 @@ public class GCMAdapter implements ProviderAdapter {
     @Override
     public void removeInactiveDevices( ) throws Exception {
         Batch batch = getBatch( null);
-        Map<String,Date> map = null;
         if(batch != null) {
-            map = batch.getAndClearInactiveDevices();
+            Map<String,Date> map = batch.getAndClearInactiveDevices();
             InactiveDeviceManager deviceManager = new InactiveDeviceManager(notifier,entityManager);
             deviceManager.removeInactiveDevices(map);
         }
@@ -147,7 +150,7 @@ public class GCMAdapter implements ProviderAdapter {
         private List<TaskTracker> trackers;
         private Map<String, Date> inactiveDevices = new HashMap<String, Date>();
 
-        Batch(Notifier notifier, Map<String, Object> payload) {
+        Batch(Notifier notifier, Map<String,Object> payload) {
             this.notifier = notifier;
             this.payload = payload;
             this.ids = new ArrayList<String>();
@@ -163,7 +166,6 @@ public class GCMAdapter implements ProviderAdapter {
         synchronized void add(String id, TaskTracker tracker) throws Exception {
             ids.add(id);
             trackers.add(tracker);
-
             if (ids.size() == BATCH_SIZE) {
                 send();
             }
