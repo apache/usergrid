@@ -27,12 +27,18 @@ import java.io.StringWriter;
 import java.util.NavigableMap;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.migration.schema.MigrationException;
 
+import com.google.common.base.Preconditions;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -46,13 +52,32 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
 
     private final MigrationInfoSerialization migrationInfoSerialization;
 
+    /**
+     * Cache to cache versions temporarily
+     */
+    private final LoadingCache<String, Integer> versionCache = CacheBuilder.newBuilder()
+            //cache the local value for 1 minute
+            .expireAfterWrite( 1, TimeUnit.MINUTES ).build( new CacheLoader<String, Integer>() {
+                @Override
+                public Integer load( final String key ) throws Exception {
+                    return migrationInfoSerialization.getVersion();
+                }
+            } );
+
 
     @Inject
     public DataMigrationManagerImpl( final MigrationInfoSerialization migrationInfoSerialization,
                                      final Set<DataMigration> migrations ) {
+        Preconditions.checkNotNull( migrationInfoSerialization, "migrationInfoSerialization must not be null" );
+        Preconditions.checkNotNull( migrations, "migrations must not be null" );
+
         this.migrationInfoSerialization = migrationInfoSerialization;
 
+
+
         for ( DataMigration migration : migrations ) {
+
+            Preconditions.checkNotNull( migration, "A migration instance in the set of migrations was null.  This is not allowed" );
 
             final int version = migration.getVersion();
 
@@ -103,7 +128,7 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
 
             LOG.info( "Running migration version {}", migrationVersion );
 
-            observer.update( migrationVersion,  "Starting migration" );
+            observer.update( migrationVersion, "Starting migration" );
 
 
             //perform this migration, if it fails, short circuit
@@ -119,7 +144,7 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
             }
 
             //we had an unhandled exception or the migration failed, short circuit
-            if(observer.failed){
+            if ( observer.failed ) {
                 return;
             }
 
@@ -128,19 +153,26 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
 
             //update the observer for progress so other nodes can see it
             observer.update( migrationVersion, "Completed successfully" );
-
-
         }
 
         migrationInfoSerialization.setStatusCode( StatusCode.COMPLETE.status );
-
-
     }
 
 
     @Override
     public boolean isRunning() {
         return migrationInfoSerialization.getStatusCode() == StatusCode.RUNNING.status;
+    }
+
+
+    @Override
+    public int getCurrentVersion() {
+        try {
+            return versionCache.get( "currentVersion" );
+        }
+        catch ( ExecutionException e ) {
+            throw new DataMigrationException( "Unable to get current version", e );
+        }
     }
 
 
@@ -153,10 +185,10 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
     /**
      * Different status enums
      */
-    public enum StatusCode{
-        COMPLETE(1),
-        RUNNING(2),
-        ERROR(3);
+    public enum StatusCode {
+        COMPLETE( 1 ),
+        RUNNING( 2 ),
+        ERROR( 3 );
 
         public final int status;
 
@@ -170,14 +202,13 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
         private boolean failed = false;
 
 
-
         @Override
         public void failed( final int migrationVersion, final String reason ) {
 
-            final String storedMessage = String.format( "Failed to migrate, reason is appended.  Error '%s'", reason);
+            final String storedMessage = String.format( "Failed to migrate, reason is appended.  Error '%s'", reason );
 
 
-            update(migrationVersion,  storedMessage );
+            update( migrationVersion, storedMessage );
 
             LOG.error( storedMessage );
 
@@ -193,9 +224,10 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
             throwable.printStackTrace( new PrintWriter( stackTrace ) );
 
 
-            final String storedMessage = String.format( "Failed to migrate, reason is appended.  Error '%s' %s", reason, stackTrace.toString() );
+            final String storedMessage = String.format( "Failed to migrate, reason is appended.  Error '%s' %s", reason,
+                    stackTrace.toString() );
 
-            update(migrationVersion,  storedMessage );
+            update( migrationVersion, storedMessage );
 
 
             LOG.error( "Unable to migrate version {} due to reason {}.", migrationVersion, reason, throwable );
@@ -208,7 +240,7 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
 
         @Override
         public void update( final int migrationVersion, final String message ) {
-            final String error = String.format( "Migration version %d.  %s", migrationVersion, message);
+            final String error = String.format( "Migration version %d.  %s", migrationVersion, message );
 
             migrationInfoSerialization.setStatusMessage( error );
         }
@@ -216,7 +248,6 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
 
         /**
          * Return true if we failed
-         * @return
          */
         public boolean isFailed() {
             return failed;

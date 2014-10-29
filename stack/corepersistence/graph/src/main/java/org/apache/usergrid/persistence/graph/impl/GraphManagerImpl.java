@@ -92,9 +92,11 @@ public class GraphManagerImpl implements GraphManager {
     @Inject
     public GraphManagerImpl( @ProxyImpl final EdgeMetadataSerialization edgeMetadataSerialization,
                              final EdgeSerialization storageEdgeSerialization,
-                             final NodeSerialization nodeSerialization, final GraphFig graphFig,
-                             @Assisted final ApplicationScope scope, final EdgeDeleteListener edgeDeleteListener,
-                             final NodeDeleteListener nodeDeleteListener ) {
+                             final NodeSerialization nodeSerialization,
+                             final GraphFig graphFig,
+                             final EdgeDeleteListener edgeDeleteListener,
+                             final NodeDeleteListener nodeDeleteListener,
+                             @Assisted final ApplicationScope scope) {
 
 
         ValidationUtils.validateApplicationScope( scope );
@@ -103,6 +105,7 @@ public class GraphManagerImpl implements GraphManager {
         Preconditions.checkNotNull( nodeSerialization, "nodeSerialization must not be null" );
         Preconditions.checkNotNull( graphFig, "consistencyFig must not be null" );
         Preconditions.checkNotNull( scope, "scope must not be null" );
+        Preconditions.checkNotNull( nodeDeleteListener, "nodeDeleteListener must not be null" );
 
         this.scope = scope;
         this.edgeMetadataSerialization = edgeMetadataSerialization;

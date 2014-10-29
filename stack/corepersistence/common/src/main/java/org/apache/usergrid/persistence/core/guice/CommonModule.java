@@ -59,6 +59,13 @@ public class CommonModule extends AbstractModule {
         // bind our migration manager
         bind( MigrationManager.class ).to( MigrationManagerImpl.class );
 
+
+
+        //do multibindings for migrations
+        Multibinder<Migration> migrationBinding = Multibinder.newSetBinder( binder(), Migration.class );
+        migrationBinding.addBinding().to( Key.get( MigrationInfoSerialization.class ) );
+
+
         bind( TimeService.class ).to( TimeServiceImpl.class );
 
         bind( CassandraConfig.class ).to( CassandraConfigImpl.class );
@@ -71,8 +78,11 @@ public class CommonModule extends AbstractModule {
 
         bind( DataMigrationManager.class ).to( DataMigrationManagerImpl.class );
 
+
+
         //do multibindings for migrations
-        Multibinder<Migration> migrationBinding = Multibinder.newSetBinder( binder(), Migration.class );
-        migrationBinding.addBinding().to( Key.get( MigrationInfoSerialization.class ) );
+        Multibinder<DataMigrationManager> dataMigrationManagerMultibinder = Multibinder.newSetBinder( binder(), DataMigrationManager.class );
+//        migrationBinding.addBinding().to( Key.get( MigrationInfoSerialization.class ) );
+
     }
 }

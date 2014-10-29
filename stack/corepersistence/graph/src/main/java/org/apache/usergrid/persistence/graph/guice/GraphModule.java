@@ -27,6 +27,7 @@ import org.apache.usergrid.persistence.core.consistency.TimeServiceImpl;
 import org.apache.usergrid.persistence.core.guice.CurrentImpl;
 import org.apache.usergrid.persistence.core.guice.PreviousImpl;
 import org.apache.usergrid.persistence.core.guice.ProxyImpl;
+import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
 import org.apache.usergrid.persistence.core.migration.schema.Migration;
 import org.apache.usergrid.persistence.core.task.NamedTaskExecutorImpl;
 import org.apache.usergrid.persistence.core.task.TaskExecutor;
@@ -157,6 +158,15 @@ public class GraphModule extends AbstractModule {
         //Get the old version and the new one
         migrationBinding.addBinding().to( Key.get( EdgeMetadataSerialization.class, PreviousImpl.class) );
         migrationBinding.addBinding().to( Key.get( EdgeMetadataSerialization.class, CurrentImpl.class  ) );
+
+
+        /**
+         * Migrations of our edge meta serialization
+         */
+
+        bind(EdgeMetadataSerialization.class).annotatedWith( PreviousImpl.class ).to( EdgeMetadataSerializationV1Impl.class  );
+        bind(EdgeMetadataSerialization.class).annotatedWith( CurrentImpl.class ).to( EdgeMetadataSerializationV2Impl.class  );
+        bind(EdgeMetadataSerialization.class).annotatedWith( ProxyImpl.class ).to( EdgeMetadataSerializationProxyImpl.class  );
     }
 
 
@@ -170,36 +180,6 @@ public class GraphModule extends AbstractModule {
     }
 
 
-    @Inject
-    @Singleton
-    @Provides
-    @PreviousImpl
-    public EdgeMetadataSerialization getPreviousEdgeMetaSerialization( final Keyspace keyspace,
-                                                                       final CassandraConfig cassandraConfig,
-                                                                       final GraphFig graphFig ) {
-        return new EdgeMetadataSerializationV1Impl( keyspace, cassandraConfig, graphFig );
-    }
-
-
-    @Inject
-    @Singleton
-    @Provides
-    @CurrentImpl
-    public EdgeMetadataSerialization getCurrentEdgeMetaSerialization( final Keyspace keyspace,
-                                                                      final CassandraConfig cassandraConfig,
-                                                                      final GraphFig graphFig ) {
-        return new EdgeMetadataSerializationV2Impl( keyspace, cassandraConfig, graphFig );
-    }
-
-
-    @Inject
-    @Singleton
-    @Provides
-    @ProxyImpl
-    public EdgeMetadataSerialization getCurrentEdgeMetaSerialization( @PreviousImpl final EdgeMetadataSerialization previous,
-                                                   @CurrentImpl final EdgeMetadataSerialization current ) {
-       return new EdgeMetadataSerializationProxyImpl( previous, current );
-    }
 }
 
 

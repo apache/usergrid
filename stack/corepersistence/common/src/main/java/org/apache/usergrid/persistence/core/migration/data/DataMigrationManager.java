@@ -41,6 +41,12 @@ public interface DataMigrationManager {
      */
     public boolean isRunning();
 
+    /**
+     * Get the current version of the schema
+     * @return
+     */
+    public int getCurrentVersion();
+
 
     /**
      * Return that last status of the migration
