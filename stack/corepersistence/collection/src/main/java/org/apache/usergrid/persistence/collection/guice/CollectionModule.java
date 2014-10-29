@@ -27,6 +27,7 @@ import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerSync;
 import org.apache.usergrid.persistence.collection.EntityDeletedFactory;
 import org.apache.usergrid.persistence.collection.EntityVersionCleanupFactory;
+import org.apache.usergrid.persistence.collection.EntityVersionCreatedFactory;
 import org.apache.usergrid.persistence.collection.event.EntityDeleted;
 import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerImpl;
@@ -72,9 +73,11 @@ public class CollectionModule extends AbstractModule {
 
         install ( new FactoryModuleBuilder().build( EntityVersionCleanupFactory.class ));
         install ( new FactoryModuleBuilder().build( EntityDeletedFactory.class));
+        install ( new FactoryModuleBuilder().build( EntityVersionCreatedFactory.class ));
 
         // users of this module can add their own implemementations
         // for more information: https://github.com/google/guice/wiki/Multibindings
+
         Multibinder.newSetBinder( binder(), EntityVersionDeleted.class );
         Multibinder.newSetBinder( binder(), EntityVersionCreated.class );
         Multibinder.newSetBinder( binder(), EntityDeleted.class );

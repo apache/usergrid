@@ -30,6 +30,9 @@ import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.index.query.FilterBuilders;
+import org.elasticsearch.index.query.FilteredQueryBuilder;
+import org.elasticsearch.index.query.QueryStringQueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -205,6 +208,29 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
         logger.debug("Deleted entity {}:{} from all index scopes with response status = {}", 
             new Object[] { entityId.getType(), entityId.getUuid(), response.status().toString() });
+
+        maybeFlush();
+
+        return this;
+    }
+
+    @Override
+    public EntityIndexBatch deindexPreviousVersions(Entity entity){
+
+         FilteredQueryBuilder fqb = QueryBuilders.filteredQuery
+                 (QueryBuilders.termQuery
+                         ( STRING_PREFIX + ENTITYID_FIELDNAME,entity.getId().getUuid().toString().toLowerCase() ),
+                         FilterBuilders.rangeFilter("version").lt( entity.getId().getUuid().timestamp() ));
+
+
+
+        //QueryBuilders.rangeQuery(  )
+
+        DeleteByQueryResponse response = client.prepareDeleteByQuery("test")
+                                               .setQuery( fqb ).execute().actionGet();
+
+        logger.debug("Deleted entity {}:{} from all index scopes with response status = {}",
+                new Object[] { entity.getId().getType(), entity.getId().getUuid(), response.status().toString() });
 
         maybeFlush();
 
