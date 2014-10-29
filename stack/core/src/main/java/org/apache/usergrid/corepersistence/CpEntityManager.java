@@ -17,6 +17,10 @@ package org.apache.usergrid.corepersistence;
 
 
 import com.google.common.base.Preconditions;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.CacheLoader.InvalidCacheLoadException;
+import com.google.common.cache.LoadingCache;
 import com.netflix.hystrix.exception.HystrixRuntimeException;
 import com.yammer.metrics.annotation.Metered;
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
@@ -37,6 +41,8 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.ColumnSlice;
 import me.prettyprint.hector.api.beans.CounterRow;
@@ -181,6 +187,9 @@ public class CpEntityManager implements EntityManager {
 
     private String TYPES_BY_UUID_MAP = "zzz_typesbyuuid_zzz";
 
+    /** Short-term cache to keep us from reloading same Entity during single request. */
+    private LoadingCache<EntityScope, org.apache.usergrid.persistence.model.entity.Entity> entityCache;
+
 
     public CpEntityManager() {}
 
@@ -202,6 +211,56 @@ public class CpEntityManager implements EntityManager {
 
         // set to false for now
         this.skipAggregateCounters = false;
+
+        int entityCacheSize = Integer.parseInt( 
+            cass.getProperties().getProperty("usergrid.entity_cache_size", "100"));
+
+        int entityCacheTimeout = Integer.parseInt( 
+            cass.getProperties().getProperty("usergrid.entity_cache_timeout_ms", "500"));
+
+        this.entityCache = CacheBuilder.newBuilder()
+            .maximumSize( entityCacheSize )
+            .expireAfterWrite( entityCacheTimeout, TimeUnit.MILLISECONDS )
+            .build( new CacheLoader<EntityScope, org.apache.usergrid.persistence.model.entity.Entity>() {
+                public org.apache.usergrid.persistence.model.entity.Entity load( EntityScope entityScope ) { 
+                    return managerCache.getEntityCollectionManager( 
+                        entityScope.scope ).load( entityScope.entityId ).toBlocking().lastOrDefault(null);
+                }
+            }
+        );
+    }
+
+
+    /** Needed to support short-term Entity cache. */ 
+    public static class EntityScope {
+        CollectionScope scope;
+        Id entityId;
+        public EntityScope( CollectionScope scope, Id entityId ) {
+            this.scope = scope;
+            this.entityId = entityId;
+        }
+    }
+
+
+    /**
+     * Load entity from short-term cache. 
+     * Package scope so that CpRelationManager can use it too.
+     * 
+     * @param es Carries Entity Id and CollectionScope from which to load Entity.
+     * @return Entity or null if not found
+     */
+    org.apache.usergrid.persistence.model.entity.Entity load( EntityScope es ) {
+        try {
+            return entityCache.get( es );
+            
+        } catch ( InvalidCacheLoadException icle ) { 
+            // fine, entity not found
+            return null;
+
+        } catch ( ExecutionException exex ) { 
+            // uh-oh, more serious problem
+            throw new RuntimeException( "Error loading entity", exex );
+        }
     }
 
 
@@ -316,7 +375,7 @@ public class CpEntityManager implements EntityManager {
 //        }
 
        org.apache.usergrid.persistence.model.entity.Entity cpEntity = 
-                ecm.load( id ).toBlockingObservable().last();
+               load( new EntityScope( collectionScope, id ) );
 
         if ( cpEntity == null ) {
             if ( logger.isDebugEnabled() ) {
@@ -403,7 +462,7 @@ public class CpEntityManager implements EntityManager {
 //        }
 
         org.apache.usergrid.persistence.model.entity.Entity cpEntity = 
-                ecm.load( id ).toBlocking().last();
+            load( new EntityScope( collectionScope, id ) );
 
         if ( cpEntity == null ) {
             if ( logger.isDebugEnabled() ) {
@@ -493,6 +552,8 @@ public class CpEntityManager implements EntityManager {
 
         try {
             cpEntity = ecm.update( cpEntity ).toBlockingObservable().last();
+
+            // need to reload entity so bypass entity cache
             cpEntity = ecm.load( entityId ).toBlockingObservable().last();
 
             logger.debug("Wrote {}:{} version {}", new Object[] { 
@@ -541,7 +602,7 @@ public class CpEntityManager implements EntityManager {
 //        }
 
         org.apache.usergrid.persistence.model.entity.Entity entity = 
-                ecm.load( entityId ).toBlocking().last();
+            load( new EntityScope( collectionScope, entityId ) );
 
         if ( entity != null ) {
 
@@ -988,7 +1049,7 @@ public class CpEntityManager implements EntityManager {
 //        }
 
         org.apache.usergrid.persistence.model.entity.Entity cpEntity =
-                ecm.load( entityId ).toBlocking().last();
+            load( new EntityScope( collectionScope, entityId ) );
 
         cpEntity.removeField( propertyName );
 
