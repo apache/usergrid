@@ -23,8 +23,7 @@ package org.apache.usergrid.persistence.graph.serialization.impl.shard;
 
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
-import org.apache.usergrid.persistence.core.migration.Migration;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.migration.schema.Migration;
 
 
 /**

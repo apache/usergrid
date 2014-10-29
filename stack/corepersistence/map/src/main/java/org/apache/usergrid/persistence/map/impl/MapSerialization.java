@@ -20,7 +20,7 @@
 package org.apache.usergrid.persistence.map.impl;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.core.migration.Migration;
+import org.apache.usergrid.persistence.core.migration.schema.Migration;
 import org.apache.usergrid.persistence.map.MapScope;
 
 

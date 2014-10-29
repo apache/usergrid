@@ -36,7 +36,7 @@ import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDef
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKeySerializer;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.core.astyanax.StringColumnParser;
-import org.apache.usergrid.persistence.core.migration.Migration;
+import org.apache.usergrid.persistence.core.migration.schema.Migration;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;

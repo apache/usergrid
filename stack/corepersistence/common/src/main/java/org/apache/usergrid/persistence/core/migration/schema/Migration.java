@@ -16,19 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.core.migration;
+package org.apache.usergrid.persistence.core.migration.schema;
+
+
+import java.util.Collection;
+
+import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
 
 
 /**
- * A manager that will perform any migrations necessary.  Setup code should invoke the implementation of this interface
- *
  * @author tnine
  */
-public interface MigrationManager {
+public interface Migration {
 
     /**
-     * Perform any migration necessary in the application.  Will only create keyspaces and column families if they do
-     * not exist
+     * Get the column families required for this implementation.  If one does not exist it will be created.
      */
-    public void migrate() throws MigrationException;
+    public Collection<MultiTennantColumnFamilyDefinition> getColumnFamilies();
 }

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.usergrid.persistence.collection.guice;
+package org.apache.usergrid.persistence.core.guice;
 
 
 import java.io.IOException;

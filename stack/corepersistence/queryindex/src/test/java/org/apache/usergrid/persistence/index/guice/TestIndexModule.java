@@ -20,7 +20,7 @@ package org.apache.usergrid.persistence.index.guice;
 
 
 import org.apache.usergrid.persistence.collection.guice.CollectionModule;
-import org.apache.usergrid.persistence.collection.guice.TestModule;
+import org.apache.usergrid.persistence.core.guice.TestModule;
 import org.apache.usergrid.persistence.core.guice.CommonModule;
 
 

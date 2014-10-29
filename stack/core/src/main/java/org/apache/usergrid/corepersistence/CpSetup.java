@@ -22,7 +22,7 @@ import com.google.inject.Injector;
 import com.netflix.config.ConfigurationManager;
 import java.util.Properties;
 import java.util.UUID;
-import java.util.logging.Level;
+
 import me.prettyprint.cassandra.service.CassandraHost;
 import me.prettyprint.hector.api.ddl.ComparatorType;
 import static me.prettyprint.hector.api.factory.HFactory.createColumnFamilyDefinition;
@@ -44,8 +44,8 @@ import static org.apache.usergrid.persistence.cassandra.CassandraService.TOKENS_
 import static org.apache.usergrid.persistence.cassandra.CassandraService.USE_VIRTUAL_KEYSPACES;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.keyspaceForApplication;
 import org.apache.usergrid.persistence.cassandra.Setup;
-import org.apache.usergrid.persistence.core.migration.MigrationException;
-import org.apache.usergrid.persistence.core.migration.MigrationManager;
+import org.apache.usergrid.persistence.core.migration.schema.MigrationException;
+import org.apache.usergrid.persistence.core.migration.schema.MigrationManager;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.exceptions.ApplicationAlreadyExistsException;
 import org.slf4j.Logger;

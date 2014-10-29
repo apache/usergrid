@@ -18,7 +18,7 @@
 package org.apache.usergrid.persistence.map.guice;
 
 
-import org.apache.usergrid.persistence.core.migration.Migration;
+import org.apache.usergrid.persistence.core.migration.schema.Migration;
 import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapManagerFactory;
 import org.apache.usergrid.persistence.map.impl.MapManagerImpl;
