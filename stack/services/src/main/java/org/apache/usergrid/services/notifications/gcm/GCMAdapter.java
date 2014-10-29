@@ -79,20 +79,24 @@ public class GCMAdapter implements ProviderAdapter {
         batch.add(providerId, tracker);
     }
 
-    synchronized private Batch getBatch( Map<String, Object> payload) {
-        long hash = MurmurHash.hash64(payload);
-        Batch batch = batches.get(hash);
-        if (batch == null && payload != null) {
-            batch = new Batch(notifier,payload);
-            batches.put(hash,batch);
+    private Batch getBatch( Map<String, Object> payload) {
+        synchronized (this) {
+            long hash = MurmurHash.hash64(payload);
+            Batch batch = batches.get(hash);
+            if (batch == null && payload != null) {
+                batch = new Batch(notifier, payload);
+                batches.put(hash, batch);
+            }
+            return batch;
         }
-        return batch;
     }
 
     @Override
-    synchronized public void doneSendingNotifications() throws Exception {
-        for (Batch batch : batches.values()) {
-            batch.send();
+    public void doneSendingNotifications() throws Exception {
+        synchronized (this) {
+            for (Batch batch : batches.values()) {
+                batch.send();
+            }
         }
     }
 
@@ -163,11 +167,18 @@ public class GCMAdapter implements ProviderAdapter {
             return map;
         }
 
-        synchronized void add(String id, TaskTracker tracker) throws Exception {
-            ids.add(id);
-            trackers.add(tracker);
-            if (ids.size() == BATCH_SIZE) {
-                send();
+        void add(String id, TaskTracker tracker) throws Exception {
+            synchronized (this) {
+                if(!ids.contains(id)) { //dedupe to a device
+                    ids.add(id);
+                    trackers.add(tracker);
+                    if (ids.size() == BATCH_SIZE) {
+                        send();
+                    }
+                }else{
+                    tracker.completed();
+                }
+
             }
         }
 
@@ -177,33 +188,35 @@ public class GCMAdapter implements ProviderAdapter {
         // anything that JSONValue can handle is fine.
         // (What is necessary here is that the Map needs to have a nested
         // structure.)
-        synchronized void send() throws Exception {
-            if (ids.size() == 0)
-                return;
-            Sender sender = new Sender(notifier.getApiKey());
-            Message.Builder builder = new Message.Builder();
-            builder.setData(payload);
-            Message message = builder.build();
+        void send() throws Exception {
+            synchronized (this) {
+                if (ids.size() == 0)
+                    return;
+                Sender sender = new Sender(notifier.getApiKey());
+                Message.Builder builder = new Message.Builder();
+                builder.setData(payload);
+                Message message = builder.build();
 
-            MulticastResult multicastResult = sender.send(message, ids, SEND_RETRIES);
-            LOG.debug("sendNotification result: {}", multicastResult);
+                MulticastResult multicastResult = sender.send(message, ids, SEND_RETRIES);
+                LOG.debug("sendNotification result: {}", multicastResult);
 
-            for (int i = 0; i < multicastResult.getResults().size(); i++) {
-                Result result = multicastResult.getResults().get(i);
+                for (int i = 0; i < multicastResult.getResults().size(); i++) {
+                    Result result = multicastResult.getResults().get(i);
 
-                if (result.getMessageId() != null) {
-                    String canonicalRegId = result.getCanonicalRegistrationId();
-                    trackers.get(i).completed(canonicalRegId);
-                } else {
-                    String error = result.getErrorCodeName();
-                    trackers.get(i).failed(error, error);
-                    if (Constants.ERROR_NOT_REGISTERED.equals(error) || Constants.ERROR_INVALID_REGISTRATION.equals(error)) {
-                        inactiveDevices.put(ids.get(i), new Date());
+                    if (result.getMessageId() != null) {
+                        String canonicalRegId = result.getCanonicalRegistrationId();
+                        trackers.get(i).completed(canonicalRegId);
+                    } else {
+                        String error = result.getErrorCodeName();
+                        trackers.get(i).failed(error, error);
+                        if (Constants.ERROR_NOT_REGISTERED.equals(error) || Constants.ERROR_INVALID_REGISTRATION.equals(error)) {
+                            inactiveDevices.put(ids.get(i), new Date());
+                        }
                     }
                 }
+                this.ids.clear();
+                this.trackers.clear();
             }
-            this.ids.clear();
-            this.trackers.clear();
         }
     }
 }
