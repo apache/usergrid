@@ -91,7 +91,10 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     private final MarkCommit markCommit;
 
     private final TaskExecutor taskExecutor;
-    private final EntityVersionCleanupFactory entityVersionCleanupFactory;
+
+    private EntityVersionCleanupFactory entityVersionCleanupFactory;
+    private EntityVersionCreatedFactory entityVersionCreatedFactory;
+
     private final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy;
     private final MvccEntitySerializationStrategy entitySerializationStrategy;
     private final EntityDeletedFactory entityDeletedFactory;
@@ -110,16 +113,19 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         final MarkStart                            markStart, 
         final MarkCommit                           markCommit,
         final EntityVersionCleanupFactory          entityVersionCleanupFactory,
+        final EntityVersionCreatedFactory          entityVersionCreatedFactory,
         final MvccEntitySerializationStrategy      entitySerializationStrategy,
         final UniqueValueSerializationStrategy     uniqueValueSerializationStrategy,
         final MvccLogEntrySerializationStrategy    mvccLogEntrySerializationStrategy,
         final EntityDeletedFactory                 entityDeletedFactory,
         @CollectionTaskExecutor final TaskExecutor taskExecutor,
         @Assisted final CollectionScope            collectionScope
+
     ) {
         this.uniqueValueSerializationStrategy = uniqueValueSerializationStrategy;
         this.entitySerializationStrategy = entitySerializationStrategy;
         this.entityDeletedFactory = entityDeletedFactory;
+        this.entityVersionCreatedFactory = entityVersionCreatedFactory;
 
         Preconditions.checkNotNull(uuidService, "uuidService must be defined");
 
@@ -153,7 +159,6 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
         ValidationUtils.verifyIdentity(entityId);
 
-
         // create our observable and start the write
         final CollectionIoEvent<Entity> writeData = 
                 new CollectionIoEvent<Entity>(collectionScope, entity);
@@ -168,13 +173,10 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         observable.map(writeCommit).doOnNext(new Action1<Entity>() {
             @Override
             public void call(final Entity entity) {
-
-                // TODO fire a task here
-
-                taskExecutor.submit(entityVersionCleanupFactory.getTask( 
-                    collectionScope, entityId, entity.getVersion() ));
-
-                // post-processing to come later. leave it empty for now.
+                //TODO fire the created task first then the entityVersioncleanup
+                taskExecutor.submit(entityVersionCreatedFactory.getTask(collectionScope,entity));
+                taskExecutor.submit(entityVersionCleanupFactory.getTask(collectionScope, entityId,entity.getVersion()));
+                //post-processing to come later. leave it empty for now.
             }
         }).doOnError(rollback);
 
