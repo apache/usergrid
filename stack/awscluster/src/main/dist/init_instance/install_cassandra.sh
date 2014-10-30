@@ -22,9 +22,10 @@
 # Install and stop Cassandra
 pushd /etc/apt/sources.list.d
 
+curl -L http://debian.datastax.com/debian/repo_key | apt-key add -
+
 sudo cat >> cassandra.sources.list << EOF
-deb http://www.apache.org/dist/cassandra/debian 12x main
-#deb http://debian.datastax.com/community stable main
+deb http://debian.datastax.com/community stable main
 EOF
 
 apt-get update
@@ -50,7 +51,7 @@ groovy configure_cassandra.groovy > /etc/cassandra/cassandra.yaml
 # Install opscenter
 echo "deb http://debian.datastax.com/community stable main" | sudo tee -a /etc/apt/sources.list.d/datastax.community.list
 
-curl -L http://debian.datastax.com/debian/repo_key | apt-key add -
+
 
 apt-get update
 apt-get  --force-yes -y install opscenter
