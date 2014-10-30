@@ -39,10 +39,10 @@ package org.apache.usergrid.persistence.graph.serialization;/*
  */
 
 
-import org.jukito.UseModules;
+import org.apache.usergrid.persistence.core.test.UseModules;
 import org.junit.runner.RunWith;
 
-import org.apache.usergrid.persistence.core.cassandra.ITRunner;
+import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.guice.PreviousImpl;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeMetadataSerializationV1Impl;

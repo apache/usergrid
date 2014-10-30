@@ -22,10 +22,14 @@
 package org.apache.usergrid.persistence.graph.serialization;
 
 
-import org.jukito.UseModules;
+import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerialization;
+import org.apache.usergrid.persistence.core.test.UseModules;
+
+import org.junit.After;
+import org.junit.Before;
 import org.junit.runner.RunWith;
 
-import org.apache.usergrid.persistence.core.cassandra.ITRunner;
+import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.guice.ProxyImpl;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeMetadataSerializationProxyImpl;
@@ -47,6 +51,28 @@ public class EdgeMetaDataSerializationProxyV2Test extends EdgeMetadataSerializat
     @ProxyImpl
     protected EdgeMetadataSerialization serialization;
 
+    @Inject
+    protected MigrationInfoSerialization migrationInfoSerialization;
+
+    private int existingVersion;
+
+
+    /**
+     * We need to run our migration to ensure that we are on the current version, and everything still functions
+     * correctly
+     */
+    @Before
+    public void setMigrationVersion(){
+        existingVersion = migrationInfoSerialization.getVersion();
+
+        //set our version equal to the new version so it only delegates to the new version
+        migrationInfoSerialization.setVersion( EdgeMetadataSerializationProxyImpl.MIGRATION_VERSION );
+    }
+
+    @After
+    public void reSetMigrationVersion(){
+        migrationInfoSerialization.setVersion( existingVersion );
+    }
 
     @Override
     protected EdgeMetadataSerialization getSerializationImpl() {

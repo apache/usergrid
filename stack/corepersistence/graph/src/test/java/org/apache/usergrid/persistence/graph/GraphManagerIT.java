@@ -22,7 +22,6 @@ package org.apache.usergrid.persistence.graph;
 import java.util.Iterator;
 import java.util.concurrent.TimeoutException;
 
-import org.jukito.All;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -1625,18 +1624,18 @@ public abstract class GraphManagerIT {
 
 
     @Test( expected = NullPointerException.class )
-    public void invalidEdgeTypesWrite( @All Edge edge ) {
+    public void invalidEdgeTypesWrite(  ) {
         final GraphManager em = emf.createEdgeManager( scope );
 
-        em.writeEdge( edge );
+        em.writeEdge( null );
     }
 
 
     @Test( expected = NullPointerException.class )
-    public void invalidEdgeTypesDelete( @All Edge edge ) {
+    public void invalidEdgeTypesDelete( ) {
         final GraphManager em = emf.createEdgeManager( scope );
 
-        em.deleteEdge( edge );
+        em.deleteEdge( null );
     }
 }
 

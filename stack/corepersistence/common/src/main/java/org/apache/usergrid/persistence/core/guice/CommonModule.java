@@ -27,6 +27,7 @@ import org.apache.usergrid.persistence.core.astyanax.CassandraConfigImpl;
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.core.consistency.TimeService;
 import org.apache.usergrid.persistence.core.consistency.TimeServiceImpl;
+import org.apache.usergrid.persistence.core.migration.data.DataMigration;
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationManagerImpl;
 import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerialization;
@@ -81,8 +82,12 @@ public class CommonModule extends AbstractModule {
 
 
         //do multibindings for migrations
-        Multibinder<DataMigrationManager> dataMigrationManagerMultibinder = Multibinder.newSetBinder( binder(), DataMigrationManager.class );
+        Multibinder<DataMigration> dataMigrationMultibinder = Multibinder.newSetBinder( binder(), DataMigration.class );
+//        dataMigrationMultibinder.addBinding();
+//        dataMigrationManagerMultibinder.addBinding().to( DataMigrationManagerImpl.class );
 //        migrationBinding.addBinding().to( Key.get( MigrationInfoSerialization.class ) );
 
     }
+
+
 }

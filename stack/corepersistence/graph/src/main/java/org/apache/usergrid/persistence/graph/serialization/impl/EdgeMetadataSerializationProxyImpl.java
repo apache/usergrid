@@ -46,7 +46,7 @@ import com.netflix.astyanax.MutationBatch;
 @Singleton
 public class EdgeMetadataSerializationProxyImpl implements EdgeMetadataSerialization {
 
-    private static final int MIGRATION_VERSION = 1;
+    public static final int MIGRATION_VERSION = 1;
 
     private final DataMigrationManager dataMigrationManager;
     private final Keyspace keyspace;
@@ -193,13 +193,13 @@ public class EdgeMetadataSerializationProxyImpl implements EdgeMetadataSerializa
         if ( isOldVersion() ) {
             final MutationBatch aggregateBatch = keyspace.prepareMutationBatch();
 
-            aggregateBatch.mergeShallow( previous.removeIdTypeFromSource( scope, edge ) );
-            aggregateBatch.mergeShallow( current.removeIdTypeFromSource( scope, edge ) );
+            aggregateBatch.mergeShallow( previous.removeIdTypeToTarget( scope, edge ) );
+            aggregateBatch.mergeShallow( current.removeIdTypeToTarget( scope, edge ) );
 
             return aggregateBatch;
         }
 
-        return current.removeIdTypeFromSource( scope, edge );
+        return current.removeIdTypeToTarget( scope, edge );
     }
 
 

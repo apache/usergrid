@@ -73,11 +73,11 @@ public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, Colum
 
     @Override
     public boolean skipFirst( final T first ) {
-        if(last == null){
+        if(!last.isPresent()){
             return false;
         }
 
-        return last.equals( first );
+        return last.get().equals( first );
     }
 
 

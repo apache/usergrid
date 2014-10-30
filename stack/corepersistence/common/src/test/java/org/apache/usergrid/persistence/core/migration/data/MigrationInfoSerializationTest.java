@@ -22,15 +22,16 @@
 package org.apache.usergrid.persistence.core.migration.data;
 
 
-import org.jukito.UseModules;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import org.apache.usergrid.persistence.core.cassandra.ITRunner;
+import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.guice.TestCommonModule;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.test.UseModules;
 
 import com.google.inject.Inject;
 import com.netflix.astyanax.Keyspace;

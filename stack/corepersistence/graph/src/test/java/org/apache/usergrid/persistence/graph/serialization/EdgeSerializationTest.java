@@ -371,7 +371,9 @@ public abstract class EdgeSerializationTest {
 
         results = serialization.getEdgesToTargetBySourceType( scope,
                 createSearchByEdgeAndId( targetId1, "edge", now, sourceId.getType(), edge2 ) );
-        assertFalse( results.hasNext() );
+        assertTrue( results.hasNext() );
+        assertEquals(edge1, results.next());
+        assertFalse(results.hasNext());
 
 
         results = serialization.getEdgesToTargetBySourceType( scope,

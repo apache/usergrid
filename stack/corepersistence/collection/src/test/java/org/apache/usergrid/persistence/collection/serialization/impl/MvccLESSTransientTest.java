@@ -20,10 +20,11 @@
 package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
+import java.lang.annotation.Annotation;
 import java.util.Collections;
 import java.util.UUID;
 
-import org.jukito.UseModules;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,15 +33,16 @@ import org.safehaus.guicyfig.Env;
 import org.safehaus.guicyfig.Option;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
-import org.apache.usergrid.persistence.collection.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
-import org.apache.usergrid.persistence.core.cassandra.ITRunner;
+import org.apache.usergrid.persistence.core.test.ITRunner;
+import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -57,9 +59,9 @@ import static org.junit.Assert.assertNull;
 @RunWith( ITRunner.class )
 @UseModules( TestCollectionModule.class )
 public class MvccLESSTransientTest {
-    
+
     @Inject
-    @Bypass( environments = { Env.ALL, Env.UNIT }, options = @Option( method = "getTimeout", override = "1" ) )
+
     public SerializationFig serializationFig;
 
 
@@ -70,6 +72,66 @@ public class MvccLESSTransientTest {
     @Inject
     @Rule
     public MigrationManagerRule migrationManagerRule;
+
+    private int originalTimeout;
+
+
+    @Before
+    public void setTimeout() {
+        originalTimeout = serializationFig.getTimeout();
+        //set the bypass options
+        serializationFig.setBypass( new TestByPass() );
+    }
+
+
+    /**
+     * Test bypass that sets all environments to use the timeout of 1 second
+     */
+    public class TestByPass implements Bypass {
+
+
+        @Override
+        public Option[] options() {
+            return new Option[] { new TestOption() };
+        }
+
+
+        @Override
+        public Env[] environments() {
+            return new Env[] { Env.ALL, Env.UNIT };
+        }
+
+
+        @Override
+        public Class<? extends Annotation> annotationType() {
+            return Bypass.class;
+        }
+    }
+
+
+    /**
+     * TestOption
+     */
+    public class TestOption implements Option {
+
+
+        @Override
+        public Class<? extends Annotation> annotationType() {
+            return Bypass.class;
+        }
+
+
+        @Override
+        public String method() {
+            return "getTimeout";
+        }
+
+
+        @Override
+        public String override() {
+            return "1";
+        }
+    }
 
 
     @Test
@@ -85,8 +147,7 @@ public class MvccLESSTransientTest {
         final UUID version = UUIDGenerator.newTimeUUID();
 
         for ( Stage stage : Stage.values() ) {
-            MvccLogEntry saved = new MvccLogEntryImpl( 
-                    id, version, stage, MvccLogEntry.State.COMPLETE );
+            MvccLogEntry saved = new MvccLogEntryImpl( id, version, stage, MvccLogEntry.State.COMPLETE );
             logEntryStrategy.write( context, saved ).execute();
 
             //Read it back after the timeout
@@ -94,7 +155,8 @@ public class MvccLESSTransientTest {
             //noinspection PointlessArithmeticExpression
             Thread.sleep( 1000 );
 
-            MvccLogEntry returned = logEntryStrategy.load( context, Collections.singleton(id), version ).getMaxVersion( id );
+            MvccLogEntry returned =
+                    logEntryStrategy.load( context, Collections.singleton( id ), version ).getMaxVersion( id );
 
 
             if ( stage.isTransient() ) {

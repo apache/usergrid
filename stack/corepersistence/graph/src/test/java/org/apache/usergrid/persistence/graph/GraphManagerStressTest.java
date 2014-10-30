@@ -23,7 +23,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
-import org.jukito.UseModules;
+import org.apache.usergrid.persistence.core.test.UseModules;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.commons.lang3.time.StopWatch;
 
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
-import org.apache.usergrid.persistence.core.cassandra.ITRunner;
+import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
