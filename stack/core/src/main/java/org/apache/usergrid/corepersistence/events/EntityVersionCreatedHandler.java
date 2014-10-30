@@ -1,6 +1,6 @@
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
- *  contributor license agreements.  The ASF licenses this file to You
+ * contributor license agreements.  The ASF licenses this file to You
  * under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,41 +15,39 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-
 package org.apache.usergrid.corepersistence.events;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.event.EntityDeleted;
-import org.apache.usergrid.persistence.index.EntityIndexBatch;
-import org.apache.usergrid.persistence.model.entity.Id;
-
-import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.usergrid.corepersistence.CpEntityManagerFactory;
 import org.apache.usergrid.corepersistence.CpSetup;
 import org.apache.usergrid.corepersistence.HybridEntityManagerFactory;
+import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.event.EntityVersionCreated;
 import org.apache.usergrid.persistence.index.EntityIndex;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.usergrid.persistence.index.EntityIndexBatch;
+import org.apache.usergrid.persistence.model.entity.Entity;
 
 
 /**
- * Delete all Query Index indexes associated with an Entity that has just been deleted. 
+ * Clean up stale entity indexes when new version of Entity created. Called when an Entity is 
+ * updated by the Collections module and we react by calling the Query Index module and removing 
+ * any indexes that exist for previous versions of the the Entity. 
  */
-public class EntityDeletedImpl implements EntityDeleted {
-    private static final Logger logger = LoggerFactory.getLogger( EntityDeletedImpl.class );
+public class EntityVersionCreatedHandler implements EntityVersionCreated { 
 
+    private static final Logger logger = LoggerFactory.getLogger(EntityVersionCreatedHandler.class );
 
-    public EntityDeletedImpl() {
-        logger.debug("Created");        
+    public EntityVersionCreatedHandler() {
+        logger.debug("EntityVersionCreated");
     }
 
     @Override
-    public void deleted(CollectionScope scope, Id entityId, UUID version) {
-
+    public void versionCreated( final CollectionScope scope, final Entity entity ) {
         logger.debug("Entering deleted for entity {}:{} v {} "
-                + "scope\n   name: {}\n   owner: {}\n   app: {}",
-            new Object[] { entityId.getType(), entityId.getUuid(), version,
-                scope.getName(), scope.getOwner(), scope.getApplication()});
+                        + "scope\n   name: {}\n   owner: {}\n   app: {}",
+                new Object[] { entity.getId().getType(), entity.getId().getUuid(), entity.getVersion(),
+                        scope.getName(), scope.getOwner(), scope.getApplication()});
 
         HybridEntityManagerFactory hemf = (HybridEntityManagerFactory)CpSetup.getEntityManagerFactory();
         CpEntityManagerFactory cpemf = (CpEntityManagerFactory)hemf.getImplementation();
@@ -58,7 +56,7 @@ public class EntityDeletedImpl implements EntityDeleted {
 
         EntityIndexBatch batch = ei.createBatch();
 
-        batch.deleteEntity( entityId );
+        batch.deindexPreviousVersions( entity );
         batch.execute();
     }
 }

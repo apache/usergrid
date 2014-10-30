@@ -1,6 +1,6 @@
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
- *  contributor license agreements.  The ASF licenses this file to You
+ * contributor license agreements.  The ASF licenses this file to You
  * under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,7 +19,6 @@ package org.apache.usergrid.corepersistence.events;
 
 import org.apache.usergrid.corepersistence.CpEntityManagerFactory;
 import org.apache.usergrid.corepersistence.CpSetup;
-import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
@@ -40,14 +39,16 @@ import org.apache.usergrid.corepersistence.HybridEntityManagerFactory;
 
 
 /**
- * Purge old entity versions
+ * Remove Entity index when specific version of Entity is deleted.
+ * TODO: do we need this? Don't our version-created and entity-deleted handlers take care of this? 
+ * If we do need it then it should be wired in via GuiceModule in the corepersistence package.
  */
-public class EntityVersionDeletedImpl implements EntityVersionDeleted {
+public class EntityVersionDeletedHandler implements EntityVersionDeleted {
 
     private final SerializationFig serializationFig;
 
     @Inject
-    public EntityVersionDeletedImpl(SerializationFig fig) {
+    public EntityVersionDeletedHandler(SerializationFig fig) {
         this.serializationFig = fig;
     }
 
