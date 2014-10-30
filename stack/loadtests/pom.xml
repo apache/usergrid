@@ -148,6 +148,7 @@
         <configuration>
           <simulationsFolder>src/main/scala</simulationsFolder>
           <simulationClass>org.apache.usergrid.simulations.PushNotificationTargetUserSimulation</simulationClass>
+          <propagateSystemProperties>true</propagateSystemProperties>
         </configuration>
 
 			</plugin>
