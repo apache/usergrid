@@ -8,11 +8,11 @@ import org.safehaus.guicyfig.Key;
 @FigSingleton
 public interface QueueFig extends GuicyFig {
 
-    @Key( "queue.region" )
+    @Key( "usergrid.queue.region" )
     @Default("us-east-1")
     public String getRegion();
 
-    @Key( "queue.prefix" )
+    @Key( "usergrid.queue.prefix" )
     @Default("usergrid")
     public String getPrefix();
 
