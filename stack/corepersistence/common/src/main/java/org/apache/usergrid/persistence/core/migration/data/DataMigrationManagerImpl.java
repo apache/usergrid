@@ -151,6 +151,8 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
             //set the version
             migrationInfoSerialization.setVersion( migrationVersion );
 
+            versionCache.invalidateAll();
+
             //update the observer for progress so other nodes can see it
             observer.update( migrationVersion, "Completed successfully" );
         }

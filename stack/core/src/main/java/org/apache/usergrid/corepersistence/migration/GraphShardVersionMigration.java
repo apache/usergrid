@@ -22,7 +22,22 @@
 package org.apache.usergrid.corepersistence.migration;
 
 
+import org.apache.usergrid.persistence.core.migration.data.DataMigration;
+
+
 /**
  * Migration for migrating graph edges to the new Shards
  */
-public class GraphShardVersionMigration {}
+public class GraphShardVersionMigration implements DataMigration{
+
+    @Override
+    public void migrate( final ProgressObserver observer ) throws Throwable {
+
+    }
+
+
+    @Override
+    public int getVersion() {
+        return Versions.VERSION_1;
+    }
+}

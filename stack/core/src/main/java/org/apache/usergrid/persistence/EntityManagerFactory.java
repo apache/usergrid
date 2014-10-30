@@ -123,6 +123,24 @@ public interface EntityManagerFactory {
 
     public void rebuildApplicationIndexes( UUID appId, ProgressObserver po ) throws Exception;
 
+    /**
+     * Perform any data migrations necessary in the system
+     * @throws Exception
+     */
+    public void migrateData() throws Exception;
+
+    /**
+     * Return the migration status message
+     * @return
+     */
+    public String getMigrateDataStatus();
+
+    /**
+     * Return the current migration version of the system
+     * @return
+     */
+    public int getMigrateDataVersion();
+
     public void setApplicationContext(ApplicationContext ac);
 
     /** For testing purposes */

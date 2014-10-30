@@ -38,12 +38,14 @@ import org.springframework.stereotype.Component;
 
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.apache.usergrid.persistence.EntityManagerFactory.ProgressObserver;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
 
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.sun.jersey.api.json.JSONWithPadding;
-import org.apache.usergrid.persistence.EntityManagerFactory.ProgressObserver;
 
 
 @Path( "/system" )
@@ -67,7 +69,7 @@ public class SystemResource extends AbstractContextResource {
     @GET
     @Path( "database/setup" )
     public JSONWithPadding getSetup( @Context UriInfo ui,
-                             @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+                                     @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
 
         ApiResponse response = createApiResponse();
@@ -91,7 +93,7 @@ public class SystemResource extends AbstractContextResource {
     @GET
     @Path( "superuser/setup" )
     public JSONWithPadding getSetupSuperuser( @Context UriInfo ui,
-                             @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+                                              @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
 
         ApiResponse response = createApiResponse();
@@ -114,9 +116,67 @@ public class SystemResource extends AbstractContextResource {
 
     @RequireSystemAccess
     @PUT
+    @Path( "migrate/run" )
+    public JSONWithPadding migrateData( @Context UriInfo ui,
+                                        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+            throws Exception {
+
+        ApiResponse response = createApiResponse();
+        response.setAction( "Migrate Data" );
+
+
+        final Thread migrate = new Thread() {
+
+            @Override
+            public void run() {
+                logger.info( "Rebuilding all indexes" );
+
+                try {
+                    emf.migrateData();
+                }
+                catch ( Exception e ) {
+                    logger.error( "Unable to rebuild indexes", e );
+                }
+            }
+        };
+
+        migrate.setName( "Index migrate data formats" );
+        migrate.setDaemon( true );
+        migrate.start();
+
+
+        response.setSuccess();
+
+        return new JSONWithPadding( response, callback );
+    }
+
+
+    @RequireSystemAccess
+    @GET
+    @Path( "migrate/status" )
+    public JSONWithPadding migrateStatus( @Context UriInfo ui,
+                                          @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+            throws Exception {
+
+        ApiResponse response = createApiResponse();
+        response.setAction( "Migrate Schema indexes" );
+
+        ObjectNode node = JsonNodeFactory.instance.objectNode();
+        node.put( "currentVersion", emf.getMigrateDataVersion() );
+        node.put( "lastMessage", emf.getMigrateDataStatus() );
+        response.setProperty( "status", node );
+
+        response.setSuccess();
+
+        return new JSONWithPadding( response, callback );
+    }
+
+
+    @RequireSystemAccess
+    @PUT
     @Path( "index/rebuild" )
     public JSONWithPadding rebuildIndexes( @Context UriInfo ui,
-                             @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+                                           @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
 
         ApiResponse response = createApiResponse();
@@ -168,19 +228,15 @@ public class SystemResource extends AbstractContextResource {
     @RequireSystemAccess
     @PUT
     @Path( "index/rebuild/" + RootResource.APPLICATION_ID_PATH )
-    public JSONWithPadding rebuildIndexes( 
-                @Context UriInfo ui, 
-                @PathParam( "applicationId" ) String applicationIdStr,
-                @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback,
-                @QueryParam( "delay" ) @DefaultValue( "10" ) final long delay)
+    public JSONWithPadding rebuildIndexes( @Context UriInfo ui, @PathParam( "applicationId" ) String applicationIdStr,
+                                           @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback,
+                                           @QueryParam( "delay" ) @DefaultValue( "10" ) final long delay )
 
             throws Exception {
 
         final UUID appId = UUIDUtils.tryExtractUUID( applicationIdStr );
         ApiResponse response = createApiResponse();
         response.setAction( "rebuild indexes" );
-
-
 
 
         final EntityManager em = emf.getEntityManager( appId );
@@ -213,12 +269,11 @@ public class SystemResource extends AbstractContextResource {
     @RequireSystemAccess
     @PUT
     @Path( "index/rebuild/" + RootResource.APPLICATION_ID_PATH + "/{collectionName}" )
-    public JSONWithPadding rebuildIndexes( 
-                @Context UriInfo ui,
-                @PathParam( "applicationId" ) final String applicationIdStr,
-                @PathParam( "collectionName" ) final String collectionName,
-                @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback,
-                @QueryParam( "delay" ) @DefaultValue( "10" ) final long delay )
+    public JSONWithPadding rebuildIndexes( @Context UriInfo ui,
+                                           @PathParam( "applicationId" ) final String applicationIdStr,
+                                           @PathParam( "collectionName" ) final String collectionName,
+                                           @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback,
+                                           @QueryParam( "delay" ) @DefaultValue( "10" ) final long delay )
             throws Exception {
 
         final UUID appId = UUIDUtils.tryExtractUUID( applicationIdStr );
@@ -233,8 +288,7 @@ public class SystemResource extends AbstractContextResource {
             }
         };
 
-        rebuild.setName( String.format( 
-                "Index rebuild for app %s and collection %s", appId, collectionName ) );
+        rebuild.setName( String.format( "Index rebuild for app %s and collection %s", appId, collectionName ) );
         rebuild.setDaemon( true );
         rebuild.start();
 
@@ -249,7 +303,7 @@ public class SystemResource extends AbstractContextResource {
 
             @Override
             public void onProgress( final EntityRef entity ) {
-                logger.info( "Indexing entity {}:{}", entity.getType(), entity.getUuid());
+                logger.info( "Indexing entity {}:{}", entity.getType(), entity.getUuid() );
             }
 
 
