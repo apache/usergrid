@@ -21,6 +21,7 @@ import com.google.common.cache.*;
 import com.relayrides.pushy.apns.*;
 import com.relayrides.pushy.apns.util.*;
 
+import io.netty.channel.nio.NioEventLoopGroup;
 import org.apache.usergrid.persistence.entities.Notification;
 import org.apache.usergrid.persistence.entities.Notifier;
 import org.mortbay.util.ajax.JSON;
@@ -46,8 +47,7 @@ import javax.net.ssl.SSLContext;
  */
 public class APNsAdapter implements ProviderAdapter {
 
-    private static final Logger logger = LoggerFactory
-            .getLogger(APNsAdapter.class);
+    private static final Logger logger = LoggerFactory.getLogger(APNsAdapter.class);
 
     public static int MAX_CONNECTION_POOL_SIZE = 15;
     private static final Set<String> validEnvironments = new HashSet<String>();
@@ -60,29 +60,34 @@ public class APNsAdapter implements ProviderAdapter {
         validEnvironments.add("mock");
     }
 
-    public APNsAdapter(){}
+    private final Notifier notifier;
+
+    private EntityManager entityManager;
+    private EntityPushManager pushManager;
+    private LinkedBlockingQueue<SimpleApnsPushNotification> queue;
+
+    public APNsAdapter(EntityManager entityManager, Notifier notifier){
+        this.entityManager = entityManager;
+        this.notifier = notifier;
+    }
 
     @Override
-    public void testConnection(Notifier notifier) throws ConnectionException {
-        if(isMock(notifier)){
-            delayRandom(notifier); return;
-        }
+    public void testConnection() throws ConnectionException {
         TestAPNsNotification notification =  TestAPNsNotification.create(TEST_TOKEN, TEST_PAYLOAD);
         try {
             CountDownLatch latch = new CountDownLatch(1);
             notification.setLatch(latch);
-                PushManager<SimpleApnsPushNotification> pushManager = getPushManager(notifier);
-                addToQueue(pushManager, notification);
-                latch.await(10000,TimeUnit.MILLISECONDS);
-                if(notification.hasFailed()){
-                    // this is expected with a bad certificate (w/message: comes from failedconnectionlistener
-                    throw new ConnectionException("Bad certificate. Double-check your environment.",notification.getCause() != null ? notification.getCause() : new Exception("Bad certificate."));
-                }
+            addToQueue(notification);
+            latch.await(10000, TimeUnit.MILLISECONDS);
+            if (notification.hasFailed()) {
+                // this is expected with a bad certificate (w/message: comes from failedconnectionlistener
+                throw new ConnectionException("Bad certificate. Double-check your environment.", notification.getCause() != null ? notification.getCause() : new Exception("Bad certificate."));
+            }
                 notification.finished();
-            } catch (Exception e) {
-                notification.finished();
+        } catch (Exception e) {
+            notification.finished();
 
-                if (e instanceof ConnectionException) {
+            if (e instanceof ConnectionException) {
                 throw (ConnectionException) e;
             }
             if (e instanceof InterruptedException) {
@@ -92,20 +97,18 @@ public class APNsAdapter implements ProviderAdapter {
         }
     }
 
-    private BlockingQueue<SimpleApnsPushNotification> addToQueue(PushManager<SimpleApnsPushNotification> pushManager, SimpleApnsPushNotification notification) throws InterruptedException {
-        BlockingQueue<SimpleApnsPushNotification> queue = pushManager.getQueue();
+    private BlockingQueue<SimpleApnsPushNotification> addToQueue(SimpleApnsPushNotification notification) throws Exception {
+        BlockingQueue<SimpleApnsPushNotification> queue = getPushManager(notifier).getQueue();
         queue.offer(notification,2500,TimeUnit.MILLISECONDS);
         return queue;
     }
 
     @Override
-    public void sendNotification(String providerId, Notifier notifier,
-            Object payload, Notification notification, TaskTracker tracker)
+    public void sendNotification(String providerId, Object payload, Notification notification, TaskTracker tracker)
             throws Exception {
         APNsNotification apnsNotification = APNsNotification.create(providerId, payload.toString(), notification, tracker);
-        PushManager<SimpleApnsPushNotification> pushManager = getPushManager(notifier);
         try {
-            addToQueue(pushManager, apnsNotification);
+            addToQueue( apnsNotification);
             apnsNotification.messageSent();
         }catch (InterruptedException ie){
             apnsNotification.messageSendFailed(ie);
@@ -119,88 +122,35 @@ public class APNsAdapter implements ProviderAdapter {
     }
 
     @Override
-    public Map<String, Date> getInactiveDevices(Notifier notifier,
-            EntityManager em) throws Exception {
-        Map<String,Date> map = new HashMap<String,Date>();
-        if(isMock(notifier)){
-            return map;
-        }
+    public void removeInactiveDevices() throws Exception {
         PushManager<SimpleApnsPushNotification> pushManager = getPushManager(notifier);
-
-        List<ExpiredToken> tokens = null;
-        try {
-            tokens = pushManager.getExpiredTokens();
-        }catch (FeedbackConnectionException fce){
-            logger.debug("Failed to get tokens",fce);
-            return map;
-        }
-        for(ExpiredToken token : tokens){
-            String expiredToken = new String(token.getToken());
-            map.put(expiredToken, token.getExpiration());
-        }
-        return map;
+        pushManager.requestExpiredTokens();
     }
 
-    private PushManager<SimpleApnsPushNotification> getPushManager(Notifier notifier) throws ExecutionException {
-        PushManager<SimpleApnsPushNotification> pushManager = apnsServiceMap.get(notifier);
-        if(pushManager != null &&  !pushManager.isStarted() && pushManager.isShutDown()){
-            apnsServiceMap.invalidate(notifier);
-            pushManager = apnsServiceMap.get(notifier);
+    private EntityPushManager getPushManager(Notifier notifier) throws ExecutionException {
+        if (pushManager == null || !pushManager.isStarted() || pushManager.isShutDown()) {
+            PushManagerConfiguration config = new PushManagerConfiguration();
+            config.setConcurrentConnectionCount(Runtime.getRuntime().availableProcessors() * 2);
+            queue = new LinkedBlockingQueue<SimpleApnsPushNotification>();
+
+            pushManager = new EntityPushManager(notifier, entityManager, queue, config);
+            //only tested when a message is sent
+            pushManager.registerRejectedNotificationListener(new RejectedAPNsListener());
+            //this will get tested when start is called
+            pushManager.registerFailedConnectionListener(new FailedConnectionListener());
+            //unregistered expired devices
+            pushManager.registerExpiredTokenListener(new ExpiredTokenListener());
+
+            try {
+                if (!pushManager.isStarted()) { //ensure manager is started
+                    pushManager.start();
+                }
+            } catch (IllegalStateException ise) {
+                logger.debug("failed to start", ise);//could have failed because its started
+            }
         }
         return pushManager;
     }
-
-    //cache to retrieve push manager, cached per notifier, so many notifications will get same push manager
-    private static LoadingCache<Notifier, PushManager<SimpleApnsPushNotification>> apnsServiceMap = CacheBuilder
-            .newBuilder()
-            .expireAfterAccess(10, TimeUnit.MINUTES)
-            .removalListener(new RemovalListener<Notifier, PushManager<SimpleApnsPushNotification>>() {
-                @Override
-                public void onRemoval(
-                        RemovalNotification<Notifier, PushManager<SimpleApnsPushNotification>> notification) {
-                    try {
-                        PushManager<SimpleApnsPushNotification> manager = notification.getValue();
-                        if (!manager.isShutDown()) {
-                            List<SimpleApnsPushNotification> notifications = manager.shutdown(3000);
-                            for (SimpleApnsPushNotification notification1 : notifications) {
-                                try {
-                                    ((APNsNotification) notification1).messageSendFailed(new Exception("Cache Expired: Shutting down sender"));
-                                }catch (Exception e){
-                                    logger.error("Failed to mark notification",e);
-                                }
-                            }
-                        }
-                    } catch (Exception ie) {
-                        logger.error("Failed to shutdown from cache", ie);
-                    }
-                }
-            }).build(new CacheLoader<Notifier, PushManager<SimpleApnsPushNotification>>() {
-                @Override
-                public PushManager<SimpleApnsPushNotification> load(Notifier notifier) {
-                    try {
-                        LinkedBlockingQueue<SimpleApnsPushNotification> queue = new LinkedBlockingQueue<SimpleApnsPushNotification>();
-                        PushManagerConfiguration config = new PushManagerConfiguration();
-                        config.setConcurrentConnectionCount(Runtime.getRuntime().availableProcessors() * 2);
-                        PushManager<SimpleApnsPushNotification> pushManager =  new PushManager<SimpleApnsPushNotification>(getApnsEnvironment(notifier), getSSLContext(notifier), null, null, queue, config);
-                        //only tested when a message is sent
-                        pushManager.registerRejectedNotificationListener(new RejectedAPNsListener());
-                        //this will get tested when start is called
-                        pushManager.registerFailedConnectionListener(new FailedConnectionListener());
-                        try {
-                            if (!pushManager.isStarted()) { //ensure manager is started
-                                pushManager.start();
-                            }
-                        }catch(IllegalStateException ise){
-                            logger.debug("failed to start",ise);//could have failed because its started
-                        }
-                        return pushManager;
-                    } catch (Exception e) {
-                        logger.error("Could not instantiate pushmanager", e);
-                        return null;
-                    }
-                }
-            });
-
 
 
     @Override
@@ -235,42 +185,30 @@ public class APNsAdapter implements ProviderAdapter {
                     "p12Certificate");
         }
     }
-    public boolean isMock(Notifier notifier){
-        return notifier.getEnvironment() !=null ? notifier.getEnvironment().equals("mock") : false ;
-    }
-    public boolean delayRandom(Notifier notifier) {
-        boolean wasDelayed = false;
-        if (isMock(notifier)) {
-            try {
-                Thread.sleep(
-                        new Random().nextInt(300)
-                );
-                wasDelayed = true;
-            } catch (InterruptedException ie) {
-                //delay was stopped
-            }
-        }
-        return wasDelayed;
-    }
 
-    private static ApnsEnvironment getApnsEnvironment(Notifier notifier){
-        return  notifier.isProduction()
-                ? ApnsEnvironment.getProductionEnvironment()
-                : ApnsEnvironment.getSandboxEnvironment();
-    }
-
-
-    private static SSLContext getSSLContext(Notifier notifier) {
+    @Override
+    public void stop() {
         try {
-            KeyStore keyStore = KeyStore.getInstance("PKCS12");
-            String password = notifier.getCertificatePassword();
-            char[] passChars =(password != null ? password : "").toCharArray();
-            InputStream stream = notifier.getP12CertificateStream();
-            keyStore.load(stream,passChars);
-            SSLContext context =  SSLContextUtil.createDefaultSSLContext(keyStore, passChars);
-            return context;
-        }catch (Exception e){
-            throw new RuntimeException("Error getting certificate",e);
+            EntityPushManager entityPushManager = getPushManager(notifier);
+            if (!entityPushManager.isShutDown()) {
+                List<SimpleApnsPushNotification> notifications = entityPushManager.shutdown(3000);
+                for (SimpleApnsPushNotification notification1 : notifications) {
+                    try {
+                        ((APNsNotification) notification1).messageSendFailed(new Exception("Cache Expired: Shutting down sender"));
+                    } catch (Exception e) {
+                        logger.error("Failed to mark notification", e);
+                    }
+                }
+            }
+        } catch (Exception ie) {
+            logger.error("Failed to shutdown from cache", ie);
         }
     }
+
+    @Override
+    public Notifier getNotifier(){return notifier;}
+
+
+
 }
+

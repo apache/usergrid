@@ -36,7 +36,7 @@ import com.fasterxml.uuid.UUIDComparator;
 
 
 /**
- * A loader that verifies versions are correct in cassandra and match elasticsearch
+ * A loader that verifies versions are correct in Cassandra and match ElasticSearch
  */
 public abstract class VersionVerifier implements ResultsVerifier {
 
@@ -69,7 +69,11 @@ public abstract class VersionVerifier implements ResultsVerifier {
 
         if ( UUIDComparator.staticCompare( savedVersion, candidateResult.getVersion() ) > 0 ) {
             logger.debug( "Stale version of Entity uuid:{} type:{}, stale v:{}, latest v:{}",
-                new Object[] { entityId.getUuid(), entityId.getType(), candidateResult.getVersion(), savedVersion
+                new Object[] { 
+                    entityId.getUuid(), 
+                    entityId.getType(), 
+                    candidateResult.getVersion(), 
+                    savedVersion
             } );
 
             return false;

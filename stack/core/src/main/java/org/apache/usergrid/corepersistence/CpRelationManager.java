@@ -234,9 +234,9 @@ public class CpRelationManager implements RelationManager {
                 } );
         }
 
-        //TODO PERFORMANCE why are we loading this again here?
-        this.cpHeadEntity = ecm.load( new SimpleId( 
-            headEntity.getUuid(), headEntity.getType() )).toBlocking().lastOrDefault(null);
+        Id entityId = new SimpleId( headEntity.getUuid(), headEntity.getType() );
+        this.cpHeadEntity = ((CpEntityManager)em).load( 
+            new CpEntityManager.EntityScope( headEntityScope, entityId));
 
         // commented out because it is possible that CP entity has not been created yet
         Assert.notNull( cpHeadEntity, "cpHeadEntity cannot be null" );
@@ -626,12 +626,12 @@ public class CpRelationManager implements RelationManager {
                 applicationScope.getApplication(),
                 applicationScope.getApplication(),
                 CpNamingUtils.getCollectionScopeNameFromEntityType( itemRef.getType() ) );
-
         EntityCollectionManager memberMgr = managerCache.getEntityCollectionManager( memberScope );
 
         //TODO, this double load should disappear once events are in
-        org.apache.usergrid.persistence.model.entity.Entity memberEntity = memberMgr.load( 
-                new SimpleId( itemRef.getUuid(), itemRef.getType() ) ).toBlocking().last();
+        Id entityId = new SimpleId( itemRef.getUuid(), itemRef.getType() ); 
+        org.apache.usergrid.persistence.model.entity.Entity memberEntity = 
+            ((CpEntityManager)em).load( new CpEntityManager.EntityScope( memberScope, entityId));
 
         if ( memberEntity == null ) {
             throw new RuntimeException(
@@ -796,8 +796,9 @@ public class CpRelationManager implements RelationManager {
                });
         }
 
-        org.apache.usergrid.persistence.model.entity.Entity memberEntity = memberMgr.load( 
-            new SimpleId( itemRef.getUuid(), itemRef.getType() ) ).toBlockingObservable().last();
+        Id entityId = new SimpleId( itemRef.getUuid(), itemRef.getType() ); 
+        org.apache.usergrid.persistence.model.entity.Entity memberEntity = 
+            ((CpEntityManager)em).load( new CpEntityManager.EntityScope( memberScope, entityId));
 
         final EntityIndex ei = managerCache.getEntityIndex( applicationScope );
         final EntityIndexBatch batch = ei.createBatch();
@@ -1015,9 +1016,9 @@ public class CpRelationManager implements RelationManager {
             });
         }
 
-        org.apache.usergrid.persistence.model.entity.Entity targetEntity = targetEcm.load( 
-            new SimpleId( connectedEntityRef.getUuid(), connectedEntityRef.getType() ) )
-                .toBlockingObservable().last();
+        Id entityId = new SimpleId( connectedEntityRef.getUuid(), connectedEntityRef.getType()); 
+        org.apache.usergrid.persistence.model.entity.Entity targetEntity = 
+            ((CpEntityManager)em).load( new CpEntityManager.EntityScope( targetScope, entityId));
 
         String edgeType = CpNamingUtils.getEdgeTypeFromConnectionType( connectionType );
 
@@ -1240,12 +1241,12 @@ public class CpRelationManager implements RelationManager {
                     connectingEntityRef.getUuid(),
                     connectedEntityRef.getType(),
                     connectedEntityRef.getUuid()
-                    } );
+                });
         }
 
-        org.apache.usergrid.persistence.model.entity.Entity targetEntity = targetEcm.load( 
-            new SimpleId( connectedEntityRef.getUuid(), connectedEntityRef.getType() ) ) 
-                .toBlockingObservable().last();
+        Id entityId = new SimpleId( connectedEntityRef.getUuid(), connectedEntityRef.getType() );
+        org.apache.usergrid.persistence.model.entity.Entity targetEntity = 
+            ((CpEntityManager)em).load( new CpEntityManager.EntityScope( targetScope, entityId));
 
         // Delete graph edge connection from head entity to member entity
         Edge edge = new SimpleEdge( 

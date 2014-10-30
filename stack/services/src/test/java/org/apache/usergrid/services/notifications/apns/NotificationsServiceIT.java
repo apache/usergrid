@@ -16,10 +16,8 @@
  */
 package org.apache.usergrid.services.notifications.apns;
 
-import com.relayrides.pushy.apns.*;
 import com.relayrides.pushy.apns.util.*;
 import org.apache.commons.io.IOUtils;
-import org.apache.usergrid.services.ServiceParameter;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.entities.*;
 import org.apache.usergrid.persistence.index.query.Query;
@@ -30,7 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
-import java.net.SocketException;
 import java.util.*;
 
 import org.apache.usergrid.services.ServiceAction;
@@ -40,7 +37,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
-import static org.apache.usergrid.services.notifications.NotificationsService.NOTIFIER_ID_POSTFIX;
+import static org.apache.usergrid.services.notifications.impl.ApplicationQueueManagerImpl.NOTIFIER_ID_POSTFIX;
 
 // todo: test reschedule on delivery time change
 // todo: test restart of queuing
@@ -68,7 +65,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
     @BeforeClass
     public static void setup(){
-        ApplicationQueueManager.DEFAULT_QUEUE_NAME = "test";
+
     }
 
     @Override
@@ -327,8 +324,6 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
     @Test
     public void badPayloads() throws Exception {
 
-        MockSuccessfulProviderAdapter.uninstall(ns);
-
         // bad payloads format
 
         app.clear();
@@ -399,24 +394,6 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
     public void badToken() throws Exception {
 
         // mock action (based on verified actual behavior) //
-
-        if (!USE_REAL_CONNECTIONS) {
-            ns.providerAdapters.put("apple",
-                    new MockSuccessfulProviderAdapter() {
-                        @Override
-                        public void sendNotification(String providerId,
-                                                     Notifier notifier, Object payload,
-                                                     Notification notification, TaskTracker tracker)
-                                throws Exception {
-                            APNsNotification apnsNotification = APNsNotification
-                                    .create(providerId, payload.toString(),
-                                            notification, tracker);
-                            apnsNotification.messageSent();
-                            apnsNotification
-                                    .messageSendFailed( RejectedNotificationReason.INVALID_TOKEN);
-                        }
-                    });
-        }
 
         // create push notification //
 
@@ -628,16 +605,16 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         // mock error (based on verified actual behavior) //
         if (!USE_REAL_CONNECTIONS) {
-            ns.providerAdapters.put("apple",
-                    new MockSuccessfulProviderAdapter() {
-                        @Override
-                        public void testConnection(Notifier notifier)
-                                throws ConnectionException {
-                            Exception e = new SocketException(
-                                    "Connection closed by remote host");
-                            throw new ConnectionException(e.getMessage(), e);
-                        }
-                    });
+//            ns.providerAdapters.put("apple",
+//                    new MockSuccessfulProviderAdapter() {
+//                        @Override
+//                        public void testConnection(Notifier notifier)
+//                                throws ConnectionException {
+//                            Exception e = new SocketException(
+//                                    "Connection closed by remote host");
+//                            throw new ConnectionException(e.getMessage(), e);
+//                        }
+//                    });
         }
 
         // create push notification //
@@ -685,16 +662,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         // mock action (based on verified actual behavior) //
         if (!USE_REAL_CONNECTIONS) {
-            ns.providerAdapters.put("apple",
-                    new MockSuccessfulProviderAdapter() {
-                        @Override
-                        public Map<String, Date> getInactiveDevices(
-                                Notifier notifier, EntityManager em)
-                                throws Exception {
-                            return Collections.singletonMap(PUSH_TOKEN,
-                                    new Date());
-                        }
-                    });
+
         }
 
         // create push notification //
@@ -716,9 +684,6 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         assertEquals(
                 notification.getPayloads().get(notifier.getUuid().toString()),
                 payload);
-//
-//        ns.addDevice(notification, device1);
-//        ns.addDevice(notification, device2);
 
         assertNotNull(device1.getProperty(notifier.getName()
                 + NOTIFIER_ID_POSTFIX));
@@ -731,11 +696,9 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         // check provider IDs //
 
         device1 = app.getEm().get(device1, Device.class);
-        assertNull(device1
-                .getProperty(notifier.getName() + NOTIFIER_ID_POSTFIX));
+        assertNull(device1 .getProperty(notifier.getName() + NOTIFIER_ID_POSTFIX));
         device2 = app.getEm().get(device2, Device.class);
-        assertNull(device2
-                .getProperty(notifier.getName() + NOTIFIER_ID_POSTFIX));
+        assertNull(device2 .getProperty(notifier.getName() + NOTIFIER_ID_POSTFIX));
     }
 
     @Test

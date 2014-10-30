@@ -25,16 +25,13 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Properties;
-import java.util.logging.Level;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.persistence.core.util.AvailablePortFinder;
 import org.apache.usergrid.persistence.index.IndexFig;
 import org.elasticsearch.client.Client;
-import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 import org.slf4j.Logger;
@@ -112,7 +109,7 @@ public class EsProvider {
                     .build();
 
                 log.info("-----------------------------------------------------------------------");
-                log.info("Starting ElasticSearch embedded server with settings: \n" + settings.getAsMap() );
+                log.info("Starting ElasticSearch embedded server settings: \n"+settings.getAsMap());
                 log.info("-----------------------------------------------------------------------");
 
                 Node node = NodeBuilder.nodeBuilder().settings(settings)
@@ -172,8 +169,10 @@ public class EsProvider {
 
                 log.debug("Creating ElasticSearch client with settings: " +  settings.getAsMap());
 
-                //use this client when connecting via socket only, such as ssh tunnel or other firewall issues
-//                newClient  = new TransportClient(settings).addTransportAddress( new InetSocketTransportAddress("localhost", 9300) );
+                // use this client when connecting via socket only, 
+                // such as ssh tunnel or other firewall issues
+                // newClient  = new TransportClient(settings).addTransportAddress( 
+                //                  new InetSocketTransportAddress("localhost", 9300) );
 
                 //use this client for quick connectivity
                 Node node = NodeBuilder.nodeBuilder().settings(settings)

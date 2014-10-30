@@ -23,19 +23,15 @@ import org.apache.usergrid.persistence.entities.Device;
 import org.apache.usergrid.persistence.entities.Notification;
 import org.apache.usergrid.persistence.entities.Notifier;
 import org.apache.usergrid.persistence.entities.Receipt;
-import org.apache.usergrid.persistence.queue.QueueManager;
-import org.apache.usergrid.persistence.queue.QueueMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class TaskManager {
 
     private static final Logger LOG = LoggerFactory.getLogger(TaskManager.class);
-    private final ApplicationQueueManager proxy;
 
     private Notification notification;
     private AtomicLong successes = new AtomicLong();
@@ -43,10 +39,9 @@ public class TaskManager {
     private EntityManager em;
     private boolean hasFinished;
 
-    public TaskManager(EntityManager em,ApplicationQueueManager proxy, Notification notification) {
+    public TaskManager(EntityManager em, Notification notification) {
         this.em = em;
         this.notification = notification;
-        this.proxy = proxy;
         hasFinished = false;
     }
 
@@ -132,14 +127,14 @@ public class TaskManager {
     protected void replaceProviderId(EntityRef device, Notifier notifier,
                                      String newProviderId) throws Exception {
         Object value = em.getProperty(device, notifier.getName()
-                + NotificationsService.NOTIFIER_ID_POSTFIX);
+                + ApplicationQueueManager.NOTIFIER_ID_POSTFIX);
         if (value != null) {
-            em.setProperty(device, notifier.getName() + NotificationsService.NOTIFIER_ID_POSTFIX, newProviderId);
+            em.setProperty(device, notifier.getName() + ApplicationQueueManager.NOTIFIER_ID_POSTFIX, newProviderId);
         } else {
             value = em.getProperty(device, notifier.getUuid()
-                    + NotificationsService.NOTIFIER_ID_POSTFIX);
+                    + ApplicationQueueManager.NOTIFIER_ID_POSTFIX);
             if (value != null) {
-                em.setProperty(device, notifier.getUuid() + NotificationsService.NOTIFIER_ID_POSTFIX, newProviderId);
+                em.setProperty(device, notifier.getUuid() + ApplicationQueueManager.NOTIFIER_ID_POSTFIX, newProviderId);
             }
         }
     }
@@ -183,7 +178,7 @@ public class TaskManager {
             LOG.info("notification finished batch: {} of {} devices in " + latency + "ms", notification.getUuid(), totals);
 
             em.update(notification);
-//        Set<Notifier> notifiers = new HashSet<>(proxy.getNotifierMap().values()); // remove dups
+//        Set<Notifier> notifiers = new HashSet<>(proxy.getAdapterMap().values()); // remove dups
 //        proxy.asyncCheckForInactiveDevices(notifiers);
         }
     }

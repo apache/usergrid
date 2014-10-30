@@ -18,26 +18,24 @@ package org.apache.usergrid.services.notifications;
 
 import com.codahale.metrics.*;
 import com.codahale.metrics.Timer;
+import com.google.common.cache.*;
 import org.apache.usergrid.corepersistence.CpSetup;
 import org.apache.usergrid.metrics.MetricsFactory;
 
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 
-import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.queue.*;
 import org.apache.usergrid.persistence.queue.QueueManager;
-import org.apache.usergrid.persistence.queue.impl.QueueScopeImpl;
 import org.apache.usergrid.services.ServiceManager;
 import org.apache.usergrid.services.ServiceManagerFactory;
+import org.apache.usergrid.services.notifications.impl.ApplicationQueueManagerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
 import javax.annotation.PostConstruct;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class QueueListener  {
@@ -63,7 +61,7 @@ public class QueueListener  {
 
     private long sleepWhenNoneFound = 0;
 
-    private long sleepBetweenRuns = 5000;
+    private long sleepBetweenRuns = 0;
 
     private ExecutorService pool;
     private List<Future> futures;
@@ -72,6 +70,7 @@ public class QueueListener  {
     private Integer batchSize = 10;
     private String queueName;
     public QueueManager TEST_QUEUE_MANAGER;
+    private int consecutiveCallsToRemoveDevices;
 
     public QueueListener(ServiceManagerFactory smf, EntityManagerFactory emf, MetricsFactory metricsService, Properties props){
         this.queueManagerFactory = CpSetup.getInjector().getInstance(QueueManagerFactory.class);
@@ -92,12 +91,14 @@ public class QueueListener  {
             int threadCount = 0;
 
             try {
-                sleepBetweenRuns = new Long(properties.getProperty("usergrid.notifications.listener.sleep.between", "0")).longValue();
+                sleepBetweenRuns = new Long(properties.getProperty("usergrid.notifications.listener.sleep.between", ""+sleepBetweenRuns)).longValue();
                 sleepWhenNoneFound = new Long(properties.getProperty("usergrid.notifications.listener.sleep.after", ""+DEFAULT_SLEEP)).longValue();
                 batchSize = new Integer(properties.getProperty("usergrid.notifications.listener.batchSize", (""+batchSize)));
-                queueName = ApplicationQueueManager.getQueueNames(properties);
+                consecutiveCallsToRemoveDevices = new Integer(properties.getProperty("usergrid.notifications.inactive.interval", ""+200));
+                queueName = ApplicationQueueManagerImpl.getQueueNames(properties);
 
                 int maxThreads = new Integer(properties.getProperty("usergrid.notifications.listener.maxThreads", ""+MAX_THREADS));
+
                 futures = new ArrayList<Future>(maxThreads);
 
                 //create our thread pool based on our threadcount.
@@ -143,6 +144,10 @@ public class QueueListener  {
         QueueScope queueScope = queueScopeFactory.getScope(smf.getManagementAppId(), queueName);
         QueueManager queueManager = TEST_QUEUE_MANAGER != null ? TEST_QUEUE_MANAGER : queueManagerFactory.getQueueManager(queueScope);
         // run until there are no more active jobs
+        long runCount = 0;
+        //cache to retrieve push manager, cached per notifier, so many notifications will get same push manager
+        LoadingCache<UUID, ApplicationQueueManager> queueManagerMap = getQueueManagerCache(queueManager);
+
         while ( true ) {
             try {
 
@@ -151,7 +156,6 @@ public class QueueListener  {
                 LOG.info("retrieved batch of {} messages from queue {} ", messages.size(),queueName);
 
                 if (messages.size() > 0) {
-
                     HashMap<UUID, List<QueueMessage>> messageMap = new HashMap<>(messages.size());
                     //group messages into hash map by app id
                     for (QueueMessage message : messages) {
@@ -170,16 +174,7 @@ public class QueueListener  {
                     //send each set of app ids together
                     for (Map.Entry<UUID, List<QueueMessage>> entry : messageMap.entrySet()) {
                         UUID applicationId = entry.getKey();
-                        EntityManager entityManager = emf.getEntityManager(applicationId);
-                        ServiceManager serviceManager = smf.getServiceManager(applicationId);
-                        final ApplicationQueueManager manager = new ApplicationQueueManager(
-                                new JobScheduler(serviceManager, entityManager),
-                                entityManager,
-                                queueManager,
-                                metricsService,
-                                properties
-                        );
-
+                        ApplicationQueueManager manager = queueManagerMap.get(applicationId);
                         LOG.info("send batch for app {} of {} messages", entry.getKey(), entry.getValue().size());
                         Observable current = manager.sendBatchToProviders(entry.getValue(),queueName);
                         if(merge == null)
@@ -192,12 +187,24 @@ public class QueueListener  {
                         merge.toBlocking().lastOrDefault(null);
                     }
                     queueManager.commitMessages(messages);
+
                     meter.mark(messages.size());
                     LOG.info("sent batch {} messages duration {} ms", messages.size(),System.currentTimeMillis() - now);
 
                     if(sleepBetweenRuns > 0) {
                         LOG.info("sleep between rounds...sleep...{}", sleepBetweenRuns);
                         Thread.sleep(sleepBetweenRuns);
+                    }
+                    if(++runCount % consecutiveCallsToRemoveDevices == 0){
+                        for(ApplicationQueueManager applicationQueueManager : queueManagerMap.asMap().values()){
+                            try {
+                                applicationQueueManager.asyncCheckForInactiveDevices();
+                            }catch (Exception inactiveDeviceException){
+                                LOG.error("Inactive Device Get failed",inactiveDeviceException);
+                            }
+                        }
+                        //clear everything
+                        runCount=0;
                     }
                 }
                 else{
@@ -222,6 +229,43 @@ public class QueueListener  {
         }
     }
 
+    private LoadingCache<UUID, ApplicationQueueManager> getQueueManagerCache(final QueueManager queueManager) {
+        return CacheBuilder
+                    .newBuilder()
+                    .expireAfterAccess(10, TimeUnit.MINUTES)
+                    .removalListener(new RemovalListener<UUID, ApplicationQueueManager>() {
+                        @Override
+                        public void onRemoval(
+                                RemovalNotification<UUID, ApplicationQueueManager> queueManagerNotifiication) {
+                            try {
+                                queueManagerNotifiication.getValue().stop();
+                            } catch (Exception ie) {
+                                LOG.error("Failed to shutdown from cache", ie);
+                            }
+                        }
+                    }).build(new CacheLoader<UUID, ApplicationQueueManager>() {
+                         @Override
+                         public ApplicationQueueManager load(final UUID applicationId) {
+                             try {
+                                 EntityManager entityManager = emf.getEntityManager(applicationId);
+                                 ServiceManager serviceManager = smf.getServiceManager(applicationId);
+
+                                 ApplicationQueueManagerImpl manager = new ApplicationQueueManagerImpl(
+                                         new JobScheduler(serviceManager, entityManager),
+                                         entityManager,
+                                         queueManager,
+                                         metricsService,
+                                         properties
+                                 );
+                                 return manager;
+                             } catch (Exception e) {
+                                 LOG.error("Could not instantiate queue manager", e);
+                                 return null;
+                             }
+                         }
+                     });
+    }
+
     public void stop(){
         LOG.info("stop processes");
 
@@ -240,5 +284,7 @@ public class QueueListener  {
         this.batchSize = batchSize;
     }
     public int getBatchSize(){return batchSize;}
+
+
 
 }
