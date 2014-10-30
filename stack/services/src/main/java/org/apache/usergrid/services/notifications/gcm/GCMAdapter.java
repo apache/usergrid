@@ -139,7 +139,15 @@ public class GCMAdapter implements ProviderAdapter {
 
     @Override
     public void stop() {
-
+        try {
+            synchronized (this) {
+                for (Batch batch : batches.values()) {
+                    batch.send();
+                }
+            }
+        }catch (Exception e){
+            LOG.error("error while trying to send on stop",e);
+        }
     }
 
     @Override

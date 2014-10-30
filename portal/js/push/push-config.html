@@ -6,16 +6,16 @@
   The ASF licenses this file to You under the Apache License, Version 2.0
   (the "License"); you may not use this file except in compliance with
   the License.  You may obtain a copy of the License at
-  
+
   http://www.apache.org/licenses/LICENSE-2.0
-  
+
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS,
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-    <page-title icon="&#9874;" title="Configuration"></page-title>
+    <page-title icon="&#9874;" title="Configure Notifiers"></page-title>
 
 
   <bsmodal id="deleteNotifier"
@@ -30,6 +30,47 @@
 
   <a style="float: right" target="_blank" href="http://apigee.com/docs/usergrid/content/push-notifications" class="notifications-links">Learn more in our docs</a>
   <tabs>
+    <pane heading="Notifiers">
+
+        <bsmodal id="deleteNotifiers"
+                 title="Are you sure you want to delete the notifiers(s)?"
+                 close="hideModal"
+                 closelabel="Cancel"
+                 extrabutton="deleteNotifiersDialog"
+                 extrabuttonlabel="Delete"
+                 ng-cloak>
+            <fieldset>
+                <div class="control-group">
+                </div>
+            </fieldset>
+        </bsmodal>
+
+      <span  class="button-strip">
+        <button class="btn btn-primary" ng-disabled="!valueSelected(notifiersCollection._list)" ng-click="deleteNotifiersDialog()">Delete Notifier(s)</button>
+      </span>
+      <table class="table table-striped collection-list">
+        <tbody>
+        <tr class="zebraRows notifications-row">
+          <td style="width: 30px;"><input type="checkbox"  ng-click="selectAllEntities(notifiersCollection._list,this,'queryBoxesSelected',true)"></td>
+          <td class="notifications-details bold-header">Provider</td>
+          <td class="notifications-details bold-header">Notifier</td>
+        </tr>
+
+        <tr class="zebraRows notifications-row" ng-repeat="notifier in notifiersCollection._list">
+          <td>
+            <input
+              type="checkbox"
+              ng-value="notifier.uuid"
+
+              ng-model="notifier.checked"
+              >
+          </td>
+          <td class="details">{{notifier.get('provider')}}</td>
+          <td class="details">{{notifier.get('name')}}</td>
+        </tr>
+      </table>
+    </pane>
+
     <pane heading="Apple">
       <div style="margin-top: 10px;"> <!-- ng-controller="PushConfigCtrl"-->
         <div class="user-header-title">Apple Push Notification Service</div>
@@ -116,46 +157,6 @@
           </form>
       </div>
 
-    </pane>
-    <pane heading="Notifiers">
-
-        <bsmodal id="deleteNotifiers"
-                 title="Are you sure you want to delete the notifiers(s)?"
-                 close="hideModal"
-                 closelabel="Cancel"
-                 extrabutton="deleteNotifiersDialog"
-                 extrabuttonlabel="Delete"
-                 ng-cloak>
-            <fieldset>
-                <div class="control-group">
-                </div>
-            </fieldset>
-        </bsmodal>
-
-      <span  class="button-strip">
-        <button class="btn btn-primary" ng-disabled="!valueSelected(notifiersCollection._list)" ng-click="deleteNotifiersDialog()">Delete Notifier(s)</button>
-      </span>
-      <table class="table table-striped collection-list">
-        <tbody>
-        <tr class="zebraRows notifications-row">
-          <td style="width: 30px;"><input type="checkbox"  ng-click="selectAllEntities(notifiersCollection._list,this,'queryBoxesSelected',true)"></td>
-          <td class="notifications-details bold-header">Provider</td>
-          <td class="notifications-details bold-header">Notifier</td>
-        </tr>
-
-        <tr class="zebraRows notifications-row" ng-repeat="notifier in notifiersCollection._list">
-          <td>
-            <input
-              type="checkbox"
-              ng-value="notifier.uuid"
-
-              ng-model="notifier.checked"
-              >
-          </td>
-          <td class="details">{{notifier.get('provider')}}</td>
-          <td class="details">{{notifier.get('name')}}</td>
-        </tr>
-      </table>
     </pane>
 
 
