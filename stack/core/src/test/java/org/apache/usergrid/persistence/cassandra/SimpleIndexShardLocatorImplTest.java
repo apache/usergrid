@@ -38,7 +38,7 @@ import static org.junit.Assert.assertEquals;
 
 /** @author tnine */
 @Concurrent()
-public class SimpleIndexBucketLocatorImplTest {
+public class SimpleIndexShardLocatorImplTest {
     @Test
     public void oneBucket() {
 
@@ -123,7 +123,7 @@ public class SimpleIndexBucketLocatorImplTest {
         Map<String, Float> counts = new HashMap<String, Float>();
 
         final Timer hashes =
-                Metrics.newTimer( SimpleIndexBucketLocatorImplTest.class, "responses", TimeUnit.MILLISECONDS,
+                Metrics.newTimer( SimpleIndexShardLocatorImplTest.class, "responses", TimeUnit.MILLISECONDS,
                         TimeUnit.SECONDS );
 
         // ConsoleReporter.enable(1, TimeUnit.SECONDS);

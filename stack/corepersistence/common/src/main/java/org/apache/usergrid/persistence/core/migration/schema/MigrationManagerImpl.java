@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.core.migration;
+package org.apache.usergrid.persistence.core.migration.schema;
 
 
 import java.util.Collection;

@@ -16,22 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.core.migration;
+package org.apache.usergrid.persistence.core.migration.schema;
 
 
 /**
- * Thrown when a migration cannot be performed
+ * A manager that will perform any migrations necessary.  Setup code should invoke the implementation of this interface
  *
  * @author tnine
  */
-public class MigrationException extends Exception {
+public interface MigrationManager {
 
-    public MigrationException( final String message ) {
-        super( message );
-    }
-
-
-    public MigrationException( final String message, final Throwable cause ) {
-        super( message, cause );
-    }
+    /**
+     * Perform any migration necessary in the application.  Will only create keyspaces and column families if they do
+     * not exist
+     */
+    public void migrate() throws MigrationException;
 }

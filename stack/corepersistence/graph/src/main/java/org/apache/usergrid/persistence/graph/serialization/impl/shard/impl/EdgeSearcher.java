@@ -54,14 +54,14 @@ public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, Colum
 
 
 
-    public List<ScopedRowKey<ApplicationScope, R>> getRowKeys() {
+    public List<ScopedRowKey<R>> getRowKeys() {
 
-        List<ScopedRowKey<ApplicationScope, R>> rowKeys = new ArrayList<>(shards.size());
+        List<ScopedRowKey<R>> rowKeys = new ArrayList<>(shards.size());
 
         for(Shard shard : shards){
 
-            final ScopedRowKey<ApplicationScope, R> rowKey = ScopedRowKey
-                    .fromKey( scope, generateRowKey(shard.getShardIndex() ) );
+            final ScopedRowKey< R> rowKey = ScopedRowKey
+                    .fromKey( scope.getApplication(), generateRowKey(shard.getShardIndex() ) );
 
             rowKeys.add( rowKey );
         }
@@ -71,11 +71,13 @@ public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, Colum
     }
 
 
+    @Override
+    public boolean skipFirst( final T first ) {
+        if(!last.isPresent()){
+            return false;
+        }
 
-
-
-    public boolean hasPage() {
-        return last.isPresent();
+        return last.get().equals( first );
     }
 
 

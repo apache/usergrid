@@ -22,8 +22,6 @@ package org.apache.usergrid.persistence.core.astyanax;
 
 import java.nio.ByteBuffer;
 
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.netflix.astyanax.model.CompositeBuilder;
@@ -37,7 +35,7 @@ import com.netflix.astyanax.serializers.AbstractSerializer;
  *
  * @author tnine
  */
-public class OrganizationScopedRowKeySerializer<K> extends AbstractSerializer<ScopedRowKey<ApplicationScope, K>> {
+public class ScopedRowKeySerializer<K> extends AbstractSerializer<ScopedRowKey<K>> {
 
 
     private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
@@ -49,18 +47,18 @@ public class OrganizationScopedRowKeySerializer<K> extends AbstractSerializer<Sc
     private final CompositeFieldSerializer<K> keySerializer;
 
 
-    public OrganizationScopedRowKeySerializer( final CompositeFieldSerializer<K> keySerializer ) {
+    public ScopedRowKeySerializer( final CompositeFieldSerializer<K> keySerializer ) {
         this.keySerializer = keySerializer;
     }
 
 
     @Override
-    public ByteBuffer toByteBuffer( final ScopedRowKey<ApplicationScope, K> scopedRowKey ) {
+    public ByteBuffer toByteBuffer( final ScopedRowKey<K> scopedRowKey ) {
 
         final CompositeBuilder builder = Composites.newCompositeBuilder();
 
         //add the organization's id
-        ID_SER.toComposite( builder, scopedRowKey.getScope().getApplication() );
+        ID_SER.toComposite( builder, scopedRowKey.getScope() );
 
         //add the key type
         keySerializer.toComposite( builder, scopedRowKey.getKey() );
@@ -70,7 +68,7 @@ public class OrganizationScopedRowKeySerializer<K> extends AbstractSerializer<Sc
 
 
     @Override
-    public ScopedRowKey<ApplicationScope, K> fromByteBuffer( final ByteBuffer byteBuffer ) {
+    public ScopedRowKey<K> fromByteBuffer( final ByteBuffer byteBuffer ) {
         final CompositeParser parser = Composites.newCompositeParser( byteBuffer );
 
         //read back the id
@@ -78,7 +76,7 @@ public class OrganizationScopedRowKeySerializer<K> extends AbstractSerializer<Sc
 
         final K value = keySerializer.fromComposite( parser );
 
-        return new ScopedRowKey<ApplicationScope, K>( new ApplicationScopeImpl( orgId), value );
+        return new ScopedRowKey<K>( orgId, value );
     }
 }
 

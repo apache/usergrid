@@ -35,6 +35,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.safehaus.guicyfig.Bypass;
 import org.safehaus.guicyfig.OptionState;
@@ -65,7 +66,6 @@ import com.netflix.astyanax.retry.RetryPolicy;
 
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createId;
 import static org.junit.Assert.assertEquals;
-import org.junit.Ignore;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -121,13 +121,13 @@ public class NodeShardApproximationTest {
 
 
         final Id id = createId( "test" );
-        final Shard shard = new Shard(0, 0, true);
+        final Shard shard = new Shard( 0, 0, true );
         final String type = "type";
         final String type2 = "subType";
 
         final DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromTargetNodeSourceType( id, type, type2 );
 
-        long count = approximation.getCount( scope, shard, directedEdgeMeta);
+        long count = approximation.getCount( scope, shard, directedEdgeMeta );
 
         waitForFlush( approximation );
 
@@ -153,7 +153,7 @@ public class NodeShardApproximationTest {
         final String type = "type";
         final String type2 = "subType";
 
-        final Shard shard = new Shard(10000, 0, true);
+        final Shard shard = new Shard( 10000, 0, true );
 
         final DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromTargetNodeSourceType( id, type, type2 );
 
@@ -194,12 +194,12 @@ public class NodeShardApproximationTest {
 
         //test we get nothing with the other type
 
-        final long emptyCount = approximation.getCount( scope, shard,  DirectedEdgeMeta.fromSourceNodeTargetType( id, type, type2 ));
+        final long emptyCount =
+                approximation.getCount( scope, shard, DirectedEdgeMeta.fromSourceNodeTargetType( id, type, type2 ) );
 
 
         assertEquals( 0, emptyCount );
     }
-
 
 
     @Ignore("outdated and no longer relevant test")
@@ -224,7 +224,6 @@ public class NodeShardApproximationTest {
 
 
         final DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromTargetNodeSourceType( id, type, type2 );
-
 
 
         ExecutorService executor = Executors.newFixedThreadPool( workers );
@@ -258,7 +257,7 @@ public class NodeShardApproximationTest {
 
             waitForFlush( approximation );
 
-            final long returnedCount = approximation.getCount( scope, shardId, directedEdgeMeta);
+            final long returnedCount = approximation.getCount( scope, shardId, directedEdgeMeta );
 
             assertEquals( increments, returnedCount );
         }
@@ -271,12 +270,11 @@ public class NodeShardApproximationTest {
 
         while ( approximation.flushPending() ) {
 
-            LOG.info("Waiting on beginFlush to complete");
+            LOG.info( "Waiting on beginFlush to complete" );
 
             Thread.sleep( 100 );
         }
     }
-
 
 
     /**

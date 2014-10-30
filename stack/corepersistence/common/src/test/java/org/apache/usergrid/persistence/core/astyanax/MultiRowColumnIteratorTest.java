@@ -85,6 +85,12 @@ public class MultiRowColumnIteratorTest {
             public ConsistencyLevel getWriteCL() {
                 return ConsistencyLevel.CL_QUORUM;
             }
+
+
+            @Override
+            public int[] getShardSettings() {
+                return new int[]{20};
+            }
         };
 
 
@@ -144,6 +150,12 @@ public class MultiRowColumnIteratorTest {
             public void buildRange( final RangeBuilder rangeBuilder ) {
 
             }
+
+
+            @Override
+            public boolean skipFirst( final Long first ) {
+                return false;
+            }
         };
 
 
@@ -183,6 +195,12 @@ public class MultiRowColumnIteratorTest {
             @Override
             public void buildRange( final RangeBuilder rangeBuilder ) {
                 rangeBuilder.setReversed( true );
+            }
+
+
+            @Override
+            public boolean skipFirst( final Long first ) {
+                return false;
             }
         };
 
@@ -252,6 +270,12 @@ public class MultiRowColumnIteratorTest {
             public void buildRange( final RangeBuilder rangeBuilder ) {
 
             }
+
+
+            @Override
+            public boolean skipFirst( final Long first ) {
+                return false;
+            }
         };
 
 
@@ -295,6 +319,12 @@ public class MultiRowColumnIteratorTest {
             @Override
             public void buildRange( final RangeBuilder rangeBuilder ) {
                 rangeBuilder.setReversed( true );
+            }
+
+
+            @Override
+            public boolean skipFirst( final Long first ) {
+                return false;
             }
         };
 
@@ -387,6 +417,12 @@ public class MultiRowColumnIteratorTest {
             public void buildRange( final RangeBuilder rangeBuilder ) {
 
             }
+
+
+            @Override
+            public boolean skipFirst( final Long first ) {
+                return false;
+            }
         };
 
 
@@ -426,6 +462,12 @@ public class MultiRowColumnIteratorTest {
             @Override
             public void buildRange( final RangeBuilder rangeBuilder ) {
                 rangeBuilder.setReversed( true );
+            }
+
+
+            @Override
+            public boolean skipFirst( final Long first ) {
+                return false;
             }
         };
 

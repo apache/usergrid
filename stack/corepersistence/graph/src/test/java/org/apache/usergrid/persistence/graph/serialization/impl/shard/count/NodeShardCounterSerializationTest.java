@@ -19,7 +19,7 @@
 package org.apache.usergrid.persistence.graph.serialization.impl.shard.count;
 
 
-import org.jukito.UseModules;
+import org.apache.usergrid.persistence.core.test.UseModules;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
-import org.apache.usergrid.persistence.core.cassandra.ITRunner;
+import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
@@ -98,11 +98,11 @@ public class NodeShardCounterSerializationTest {
 
         final Id id = createId( "test" );
 
-        ShardKey key1 = new ShardKey( scope, new Shard(0, 0, false), DirectedEdgeMeta.fromSourceNode( id, "type1"  ) );
+        ShardKey key1 = new ShardKey( scope, new Shard( 0, 0, false ), DirectedEdgeMeta.fromSourceNode( id, "type1" ) );
 
-        ShardKey key2 = new ShardKey( scope, new Shard(0, 0, false), DirectedEdgeMeta.fromSourceNode( id, "type2"  ) );
+        ShardKey key2 = new ShardKey( scope, new Shard( 0, 0, false ), DirectedEdgeMeta.fromSourceNode( id, "type2" ) );
 
-        ShardKey key3 = new ShardKey( scope, new Shard(1, 0, false), DirectedEdgeMeta.fromSourceNode( id, "type1"  ) );
+        ShardKey key3 = new ShardKey( scope, new Shard( 1, 0, false ), DirectedEdgeMeta.fromSourceNode( id, "type1" ) );
 
 
         Counter counter = new Counter();

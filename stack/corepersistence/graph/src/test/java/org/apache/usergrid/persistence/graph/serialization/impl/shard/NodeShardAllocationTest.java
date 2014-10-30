@@ -251,7 +251,7 @@ public class NodeShardAllocationTest {
         /**
          * Allocate 2.5x what this shard should have.  We should ultimately have a split at 2x
          */
-        final long shardCount = ( long ) (graphFig.getShardSize() * 2.5);
+        final long shardCount = ( long ) ( graphFig.getShardSize() * 2.5 );
 
 
         //return a shard size equal to our max
@@ -259,7 +259,7 @@ public class NodeShardAllocationTest {
 
 
         //this is how many we should be iterating and should set the value of the last shard we keep
-        final int numToIterate = ( int ) (graphFig.getShardSize() *2);
+        final int numToIterate = ( int ) ( graphFig.getShardSize() * 2 );
 
 
         /**
@@ -282,7 +282,7 @@ public class NodeShardAllocationTest {
         edges.add( keep );
         i++;
 
-        for ( ; i < shardCount; i++ ) {
+        for (; i < shardCount; i++ ) {
 
             edges.add( skipped );
         }
@@ -365,14 +365,14 @@ public class NodeShardAllocationTest {
         final long shardCount = graphFig.getShardSize();
 
 
-        final SimpleMarkedEdge skippedEdge =   new SimpleMarkedEdge( nodeId, type, createId( "subType" ), 10000l, false );
+        final SimpleMarkedEdge skippedEdge = new SimpleMarkedEdge( nodeId, type, createId( "subType" ), 10000l, false );
         final SimpleMarkedEdge returnedEdge =
                 new SimpleMarkedEdge( nodeId, type, createId( "subType" ), 10005l, false );
 
         List<MarkedEdge> iteratedEdges = new ArrayList<>( ( int ) shardCount );
 
-        for(long i = 0; i < shardCount-1; i ++){
-            iteratedEdges.add( skippedEdge);
+        for ( long i = 0; i < shardCount - 1; i++ ) {
+            iteratedEdges.add( skippedEdge );
         }
 
         iteratedEdges.add( returnedEdge );
@@ -386,7 +386,6 @@ public class NodeShardAllocationTest {
         //mock up our mutation
         when( edgeShardSerialization.writeShardMeta( same( scope ), shardValue.capture(), same( targetEdgeMeta ) ) )
                 .thenReturn( mock( MutationBatch.class ) );
-
 
 
         final Iterator<MarkedEdge> edgeIterator = iteratedEdges.iterator();
@@ -635,7 +634,7 @@ public class NodeShardAllocationTest {
 
         final TimeService timeService = mock( TimeService.class );
 
-        final long returnTime = System.currentTimeMillis()+graphFig.getShardCacheTimeout()*2 ;
+        final long returnTime = System.currentTimeMillis() + graphFig.getShardCacheTimeout() * 2;
 
         when( timeService.getCurrentTime() ).thenReturn( returnTime );
 

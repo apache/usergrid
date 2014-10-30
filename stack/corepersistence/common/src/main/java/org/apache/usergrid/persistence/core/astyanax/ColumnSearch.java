@@ -33,14 +33,19 @@ public interface ColumnSearch<T> {
 
     /**
      * Set the start value supplied and the user supplied end value (if present)
-     * @param rangeBuilder
+     *
      * @param value The value to set in the start
      */
-    public  void   buildRange(final RangeBuilder rangeBuilder, final T value);
+    public void buildRange( final RangeBuilder rangeBuilder, final T value );
 
     /**
      * Set the range builder with the user supplied start and finish
-     * @param rangeBuilder
      */
-    public void buildRange(final RangeBuilder rangeBuilder);
+    public void buildRange( final RangeBuilder rangeBuilder );
+
+    /**
+     * Return true if we should skip the first result
+     * @return
+     */
+    public boolean skipFirst(final T first);
 }

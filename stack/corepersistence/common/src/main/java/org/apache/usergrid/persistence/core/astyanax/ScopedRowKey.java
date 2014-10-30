@@ -20,6 +20,7 @@ package org.apache.usergrid.persistence.core.astyanax;
 
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Preconditions;
 
@@ -30,14 +31,14 @@ import com.google.common.base.Preconditions;
  *
  * @author tnine
  */
-public class ScopedRowKey<S extends ApplicationScope, K> {
+public class ScopedRowKey< K> {
 
-    private final S scope;
+    private final Id scope;
 
     private final K key;
 
 
-    public ScopedRowKey( final S scope, final K key ) {
+    public ScopedRowKey( final Id scope, final K key ) {
         Preconditions.checkNotNull( scope, "CollectionScope is required" );
         Preconditions.checkNotNull( key, "Key is required" );
 
@@ -49,7 +50,7 @@ public class ScopedRowKey<S extends ApplicationScope, K> {
     /**
      * Get the stored scope
      */
-    public S getScope() {
+    public Id getScope() {
         return scope;
     }
 
@@ -104,7 +105,7 @@ public class ScopedRowKey<S extends ApplicationScope, K> {
     /**
      * Utility function to generate a new key from the scope
      */
-    public static <S extends ApplicationScope, K> ScopedRowKey<S, K> fromKey( final S scope, K key ) {
-        return new ScopedRowKey<S, K>( scope, key );
+    public static <K> ScopedRowKey< K> fromKey( final Id scope, K key ) {
+        return new ScopedRowKey<>( scope, key );
     }
 }

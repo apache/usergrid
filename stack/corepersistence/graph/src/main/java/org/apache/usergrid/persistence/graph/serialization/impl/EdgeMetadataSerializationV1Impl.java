@@ -33,10 +33,10 @@ import org.apache.usergrid.persistence.core.astyanax.CompositeFieldSerializer;
 import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
-import org.apache.usergrid.persistence.core.astyanax.OrganizationScopedRowKeySerializer;
+import org.apache.usergrid.persistence.core.astyanax.ScopedRowKeySerializer;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.core.astyanax.StringColumnParser;
-import org.apache.usergrid.persistence.core.migration.Migration;
+import org.apache.usergrid.persistence.core.migration.schema.Migration;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
@@ -63,21 +63,21 @@ import com.netflix.astyanax.util.RangeBuilder;
  * Class to perform all edge metadata I/O
  */
 @Singleton
-public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization, Migration {
+public class EdgeMetadataSerializationV1Impl implements EdgeMetadataSerialization, Migration {
 
     private static final byte[] HOLDER = new byte[] { 0 };
 
 
     //row key serializers
     private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
-    private static final OrganizationScopedRowKeySerializer<Id> ROW_KEY_SER =
-            new OrganizationScopedRowKeySerializer<Id>( ID_SER );
+    private static final ScopedRowKeySerializer<Id> ROW_KEY_SER =
+            new ScopedRowKeySerializer<Id>( ID_SER );
 
     private static final StringSerializer STRING_SERIALIZER = StringSerializer.get();
 
     private static final EdgeTypeRowCompositeSerializer EDGE_SER = new EdgeTypeRowCompositeSerializer();
-    private static final OrganizationScopedRowKeySerializer<EdgeIdTypeKey> EDGE_TYPE_ROW_KEY =
-            new OrganizationScopedRowKeySerializer<EdgeIdTypeKey>( EDGE_SER );
+    private static final ScopedRowKeySerializer<EdgeIdTypeKey> EDGE_TYPE_ROW_KEY =
+            new ScopedRowKeySerializer<EdgeIdTypeKey>( EDGE_SER );
 
     private static final StringColumnParser PARSER = StringColumnParser.get();
 
@@ -85,26 +85,26 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
     /**
      * CFs where the row key contains the source node id
      */
-    private static final MultiTennantColumnFamily<ApplicationScope, Id, String> CF_SOURCE_EDGE_TYPES =
-            new MultiTennantColumnFamily<ApplicationScope, Id, String>( "Graph_Source_Edge_Types", ROW_KEY_SER,
+    private static final MultiTennantColumnFamily<ScopedRowKey<Id>, String> CF_SOURCE_EDGE_TYPES =
+            new MultiTennantColumnFamily<>( "Graph_Source_Edge_Types", ROW_KEY_SER,
                     STRING_SERIALIZER );
 
     //all target id types for source edge type
-    private static final MultiTennantColumnFamily<ApplicationScope, EdgeIdTypeKey, String> CF_SOURCE_EDGE_ID_TYPES =
-            new MultiTennantColumnFamily<ApplicationScope, EdgeIdTypeKey, String>( "Graph_Source_Edge_Id_Types",
+    private static final MultiTennantColumnFamily<ScopedRowKey<EdgeIdTypeKey>, String> CF_SOURCE_EDGE_ID_TYPES =
+            new MultiTennantColumnFamily<>( "Graph_Source_Edge_Id_Types",
                     EDGE_TYPE_ROW_KEY, STRING_SERIALIZER );
 
     /**
      * CFs where the row key is the target node id
      */
-    private static final MultiTennantColumnFamily<ApplicationScope, Id, String> CF_TARGET_EDGE_TYPES =
-            new MultiTennantColumnFamily<ApplicationScope, Id, String>( "Graph_Target_Edge_Types", ROW_KEY_SER,
+    private static final MultiTennantColumnFamily<ScopedRowKey<Id>, String> CF_TARGET_EDGE_TYPES =
+            new MultiTennantColumnFamily<>( "Graph_Target_Edge_Types", ROW_KEY_SER,
                     STRING_SERIALIZER );
 
 
     //all source id types for target edge type
-    private static final MultiTennantColumnFamily<ApplicationScope, EdgeIdTypeKey, String> CF_TARGET_EDGE_ID_TYPES =
-            new MultiTennantColumnFamily<ApplicationScope, EdgeIdTypeKey, String>( "Graph_Target_Edge_Id_Types",
+    private static final MultiTennantColumnFamily<ScopedRowKey<EdgeIdTypeKey>, String> CF_TARGET_EDGE_ID_TYPES =
+            new MultiTennantColumnFamily<>( "Graph_Target_Edge_Id_Types",
                     EDGE_TYPE_ROW_KEY, STRING_SERIALIZER );
 
 
@@ -114,8 +114,8 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
 
     @Inject
-    public EdgeMetadataSerializationImpl( final Keyspace keyspace, final CassandraConfig cassandraConfig,
-                                          final GraphFig graphFig ) {
+    public EdgeMetadataSerializationV1Impl( final Keyspace keyspace, final CassandraConfig cassandraConfig,
+                                            final GraphFig graphFig ) {
 
         Preconditions.checkNotNull( "cassandraConfig is required", cassandraConfig );
         Preconditions.checkNotNull( "consistencyFig is required", graphFig );
@@ -133,7 +133,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
         ValidationUtils.validateApplicationScope( scope );
         GraphValidation.validateEdge( edge );
 
-
+        final Id scopeId = scope.getApplication();
         final Id source = edge.getSourceNode();
         final Id target = edge.getTargetNode();
         final String edgeType = edge.getType();
@@ -143,31 +143,32 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
                                             .withTimestamp( timestamp );
 
 
+
         //add source->target edge type to meta data
-        final ScopedRowKey<ApplicationScope, Id> sourceKey = new ScopedRowKey<ApplicationScope, Id>( scope, source );
+        final ScopedRowKey< Id> sourceKey = new ScopedRowKey<>( scopeId, source );
 
         batch.withRow( CF_SOURCE_EDGE_TYPES, sourceKey ).putColumn( edgeType, HOLDER );
 
 
         //write source->target edge type and id type to meta data
         EdgeIdTypeKey tk = new EdgeIdTypeKey( source, edgeType );
-        final ScopedRowKey<ApplicationScope, EdgeIdTypeKey> sourceTypeKey =
-                new ScopedRowKey<ApplicationScope, EdgeIdTypeKey>( scope, tk );
+        final ScopedRowKey<EdgeIdTypeKey> sourceTypeKey =
+                new ScopedRowKey<>( scopeId, tk );
 
 
         batch.withRow( CF_SOURCE_EDGE_ID_TYPES, sourceTypeKey ).putColumn( target.getType(), HOLDER );
 
 
         //write target<--source edge type meta data
-        final ScopedRowKey<ApplicationScope, Id> targetKey = new ScopedRowKey<ApplicationScope, Id>( scope, target );
+        final ScopedRowKey< Id> targetKey = new ScopedRowKey<>( scopeId, target );
 
 
         batch.withRow( CF_TARGET_EDGE_TYPES, targetKey ).putColumn( edgeType, HOLDER );
 
 
         //write target<--source edge type and id type to meta data
-        final ScopedRowKey<ApplicationScope, EdgeIdTypeKey> targetTypeKey =
-                new ScopedRowKey<ApplicationScope, EdgeIdTypeKey>( scope, new EdgeIdTypeKey( target, edgeType ) );
+        final ScopedRowKey<EdgeIdTypeKey> targetTypeKey =
+                new ScopedRowKey<>( scopeId, new EdgeIdTypeKey( target, edgeType ) );
 
 
         batch.withRow( CF_TARGET_EDGE_ID_TYPES, targetTypeKey ).putColumn( source.getType(), HOLDER );
@@ -242,11 +243,11 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
      */
     private MutationBatch removeEdgeType( final ApplicationScope scope, final Id rowKeyId, final String edgeType,
                                           final long version,
-                                          final MultiTennantColumnFamily<ApplicationScope, Id, String> cf ) {
+                                          final MultiTennantColumnFamily<ScopedRowKey<Id>, String> cf ) {
 
 
         //write target<--source edge type meta data
-        final ScopedRowKey<ApplicationScope, Id> rowKey = new ScopedRowKey<ApplicationScope, Id>( scope, rowKeyId );
+        final ScopedRowKey< Id> rowKey = new ScopedRowKey< Id>( scope.getApplication(), rowKeyId );
 
         final MutationBatch batch = keyspace.prepareMutationBatch().withTimestamp( version );
 
@@ -270,15 +271,15 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
      */
     private MutationBatch removeIdType( final ApplicationScope scope, final Id rowId, final String idType,
                                         final String edgeType, final long version,
-                                        final MultiTennantColumnFamily<ApplicationScope, EdgeIdTypeKey, String> cf ) {
+                                        final MultiTennantColumnFamily<ScopedRowKey<EdgeIdTypeKey>, String> cf ) {
 
 
         final MutationBatch batch = keyspace.prepareMutationBatch().withTimestamp( version );
 
 
         //write target<--source edge type and id type to meta data
-        final ScopedRowKey<ApplicationScope, EdgeIdTypeKey> rowKey =
-                new ScopedRowKey<ApplicationScope, EdgeIdTypeKey>( scope, new EdgeIdTypeKey( rowId, edgeType ) );
+        final ScopedRowKey< EdgeIdTypeKey> rowKey =
+                new ScopedRowKey<>( scope.getApplication(), new EdgeIdTypeKey( rowId, edgeType ) );
 
 
         batch.withRow( cf, rowKey ).deleteColumn( idType );
@@ -313,12 +314,12 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
      * @param cf The column family to execute on
      */
     private Iterator<String> getEdgeTypes( final ApplicationScope scope, final SearchEdgeType search,
-                                           final MultiTennantColumnFamily<ApplicationScope, Id, String> cf ) {
+                                           final MultiTennantColumnFamily<ScopedRowKey<Id>, String> cf ) {
         ValidationUtils.validateApplicationScope( scope );
         GraphValidation.validateSearchEdgeType( search );
 
 
-        final ScopedRowKey<ApplicationScope, Id> sourceKey = new ScopedRowKey<>( scope, search.getNode() );
+        final ScopedRowKey< Id> sourceKey = new ScopedRowKey<>( scope.getApplication(), search.getNode() );
 
 
         //resume from the last if specified.  Also set the range
@@ -326,7 +327,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
         final RangeBuilder rangeBuilder = createRange( search );
 
-        RowQuery<ScopedRowKey<ApplicationScope, Id>, String> query =
+        RowQuery<ScopedRowKey<Id>, String> query =
                 keyspace.prepareQuery( cf ).getKey( sourceKey ).autoPaginate( true )
                         .withColumnRange( rangeBuilder.build() );
 
@@ -348,19 +349,19 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
      * @param cf The column family to search
      */
     public Iterator<String> getIdTypes( final ApplicationScope scope, final SearchIdType search,
-                                        final MultiTennantColumnFamily<ApplicationScope, EdgeIdTypeKey, String> cf ) {
+                                        final MultiTennantColumnFamily<ScopedRowKey<EdgeIdTypeKey>, String> cf ) {
         ValidationUtils.validateApplicationScope( scope );
         GraphValidation.validateSearchEdgeIdType( search );
 
 
-        final ScopedRowKey<ApplicationScope, EdgeIdTypeKey> sourceTypeKey =
-                new ScopedRowKey<>( scope, new EdgeIdTypeKey( search.getNode(), search.getEdgeType() ) );
+        final ScopedRowKey<EdgeIdTypeKey> sourceTypeKey =
+                new ScopedRowKey<>( scope.getApplication(), new EdgeIdTypeKey( search.getNode(), search.getEdgeType() ) );
 
 
         final RangeBuilder rangeBuilder = createRange( search );
 
 
-        RowQuery<ScopedRowKey<ApplicationScope, EdgeIdTypeKey>, String> query =
+        RowQuery<ScopedRowKey<EdgeIdTypeKey>, String> query =
                 keyspace.prepareQuery( cf ).getKey( sourceTypeKey ).autoPaginate( true )
                         .withColumnRange( rangeBuilder.build() );
 
@@ -411,6 +412,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
             return new EdgeIdTypeKey( id, edgeType );
         }
+
     }
 
 

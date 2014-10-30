@@ -16,21 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.core.migration;
-
-
-import java.util.Collection;
-
-import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
+package org.apache.usergrid.persistence.core.migration.schema;
 
 
 /**
+ * Thrown when a migration cannot be performed
+ *
  * @author tnine
  */
-public interface Migration {
+public class MigrationException extends Exception {
 
-    /**
-     * Get the column families required for this implementation.  If one does not exist it will be created.
-     */
-    public Collection<MultiTennantColumnFamilyDefinition> getColumnFamilies();
+    public MigrationException( final String message ) {
+        super( message );
+    }
+
+
+    public MigrationException( final String message, final Throwable cause ) {
+        super( message, cause );
+    }
 }
