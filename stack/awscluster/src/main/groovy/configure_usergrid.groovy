@@ -169,6 +169,8 @@ usergrid.user.resetpw.url=${baseUrl}/%s/%s/users/%s/resetpw
 
 
 usergrid.metrics.graphite.host=${graphite}
+
+queue.prefix=${clusterName}
 """
 
 println usergridConfig 
