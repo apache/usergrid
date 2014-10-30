@@ -21,7 +21,6 @@ package org.apache.usergrid.corepersistence.results;
 
 
 import java.util.Collection;
-
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.index.query.CandidateResult;
@@ -38,10 +37,9 @@ public interface ResultsVerifier {
     public void loadResults(Collection<Id> ids, EntityCollectionManager ecm);
 
     /**
-     * Return true if the candidate result is a valid result that should be retained. * If it 
-     * should not it should also be removed from the list of possible return values in this loader
+     * Return true if the candidate result is a valid result that should be retained. If it should 
+     * not it should also be removed from the list of possible return values in this loader
      * @param candidateResult
-     * @return
      */
     public boolean isValid(CandidateResult candidateResult);
 

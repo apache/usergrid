@@ -24,9 +24,11 @@ import static java.lang.String.CASE_INSENSITIVE_ORDER;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -91,23 +93,23 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     public static final Class<DynamicEntity> APPLICATION_ENTITY_CLASS = DynamicEntity.class;
 
-    // The System Application where we store app and org metadata
+    /** The System Application where we store app and org metadata */
     public static final UUID SYSTEM_APP_ID =
             UUID.fromString("b6768a08-b5d5-11e3-a495-10ddb1de66c3");
 
-    /**
-     * App where we store management info
-     */
+    /** App where we store management info */
     public static final  UUID MANAGEMENT_APPLICATION_ID =
             UUID.fromString("b6768a08-b5d5-11e3-a495-11ddb1de66c8");
 
-    /**
-     * TODO Dave what is this?
-     */
+    /** TODO Do we need this in two-dot-o? */
     public static final  UUID DEFAULT_APPLICATION_ID =
             UUID.fromString("b6768a08-b5d5-11e3-a495-11ddb1de66c9");
 
-    private AtomicBoolean init_indexes = new AtomicBoolean(  );
+    /** Have we already initialized the index for the management app? */
+    private AtomicBoolean indexInitialized = new AtomicBoolean(  );
+
+    /** Keep track of applications that already have indexes to avoid redundant re-creation. */
+    private static final Set<UUID> applicationIndexesCreated = new HashSet<UUID>();
 
 
     // cache of already instantiated entity managers
@@ -205,13 +207,16 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
 
     private EntityManager _getEntityManager( UUID applicationId ) {
+
         EntityManager em = new CpEntityManager();
         em.init( this, applicationId );
-        //TODO PERFORMANCE  Can we remove this?  Seems like we should fix our lifecycle instead...
-        //if this is the first time we've loaded this entity manager in the JVM, create it's indexes, it may be new
-        //not sure how to handle other than this if the system dies after the application em has been created
-        //but before the create call can create the index
-        em.createIndex();
+
+        // only need to do this once 
+        if ( !applicationIndexesCreated.contains( applicationId ) ) {
+            em.createIndex();
+            applicationIndexesCreated.add( applicationId );
+        }
+
         return em;
     }
 
@@ -294,10 +299,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         }
         properties.put( PROPERTY_NAME, appName );
         EntityManager appEm = getEntityManager( applicationId );
-
-        //create our ES index since we're initializing this application
-//  TODO PERFORMANCE  pushed this down into the cache load can we do this here?
-//        appEm.createIndex();
 
         appEm.create( applicationId, TYPE_APPLICATION, properties );
         appEm.resetRoles();
@@ -640,7 +641,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     private void maybeCreateIndexes() {
         // system app
-        if ( init_indexes.getAndSet( true ) ) {
+        if ( indexInitialized.getAndSet( true ) ) {
             return;
         }
 
@@ -653,16 +654,16 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private List<EntityIndex> getManagementIndexes() {
 
         return Arrays.asList(
-                getManagerCache().getEntityIndex(
-                        new ApplicationScopeImpl( new SimpleId( SYSTEM_APP_ID, "application" ) ) ),
+            getManagerCache().getEntityIndex(
+                new ApplicationScopeImpl( new SimpleId( SYSTEM_APP_ID, "application" ))),
 
-                // default app
-               getManagerCache().getEntityIndex(
-                       new ApplicationScopeImpl( new SimpleId( getManagementAppId(), "application" ) ) ),
+            // management app
+            getManagerCache().getEntityIndex(
+                new ApplicationScopeImpl( new SimpleId( getManagementAppId(), "application" ))),
 
-                // management app
-               getManagerCache().getEntityIndex(
-                       new ApplicationScopeImpl( new SimpleId( getDefaultAppId(), "application" ) ) ) );
+            // default app TODO: do we need this in two-dot-o
+            getManagerCache().getEntityIndex(
+                new ApplicationScopeImpl( new SimpleId( getDefaultAppId(), "application" ))));
     }
 
 

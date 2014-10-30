@@ -564,7 +564,7 @@
       <groupId>com.relayrides</groupId>
       <artifactId>pushy</artifactId>
       <!-- The sha in the version is the git commit used in this build.  Check out the pushy source, then this commit to build the library locally -->
-      <version>0.4-apigee-63dec68314c97c6e3ef40c88590e1b196d3ec55b</version>
+      <version>0.4</version>
     </dependency>
 
     <dependency>

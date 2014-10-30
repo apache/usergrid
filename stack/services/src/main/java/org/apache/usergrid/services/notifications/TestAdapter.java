@@ -38,25 +38,26 @@ public class TestAdapter implements ProviderAdapter {
 
     private static final Logger log = LoggerFactory.getLogger(TestAdapter.class);
     private static final int DELAY = 1; // if delay > 0, uses threadpool
+    private final Notifier notifier;
 
     private ExecutorService pool = null;
 
-    public TestAdapter() {
+    public TestAdapter(Notifier notifier) {
         if (DELAY > 0) {
             pool = Executors
                     .newFixedThreadPool(APNsAdapter.MAX_CONNECTION_POOL_SIZE);
         }
+        this.notifier = notifier;
     }
 
     @Override
-    public void testConnection(Notifier notifier) throws ConnectionException {
+    public void testConnection() throws ConnectionException {
     }
 
     @Override
     public void sendNotification(
             String providerId, 
-            Notifier notifier,
-            final Object payload, 
+            final Object payload,
             Notification notification,
             TaskTracker tracker)
             throws Exception {
@@ -89,10 +90,8 @@ public class TestAdapter implements ProviderAdapter {
     }
 
     @Override
-    public Map<String, Date> getInactiveDevices(Notifier notifier,
-            EntityManager em) throws Exception {
+    public void removeInactiveDevices() throws Exception {
         log.debug("getInactiveDevices()");
-        return null;
     }
 
     @Override
@@ -102,5 +101,15 @@ public class TestAdapter implements ProviderAdapter {
 
     @Override
     public void validateCreateNotifier(ServicePayload payload) throws Exception {
+    }
+
+    @Override
+    public void stop() {
+
+    }
+
+    @Override
+    public Notifier getNotifier() {
+        return notifier;
     }
 }

@@ -20,6 +20,7 @@
 package org.apache.usergrid.persistence.queue;
 
 import org.apache.usergrid.persistence.queue.guice.TestQueueModule;
+import org.apache.usergrid.persistence.queue.impl.QueueScopeFactoryImpl;
 import org.apache.usergrid.persistence.queue.impl.QueueScopeImpl;
 import org.apache.usergrid.persistence.core.test.UseModules;
 import org.junit.Before;
@@ -31,12 +32,13 @@ import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 
 import com.google.inject.Inject;
+import org.safehaus.guicyfig.Bypass;
+import org.safehaus.guicyfig.OptionState;
+import org.safehaus.guicyfig.Overrides;
 
+import java.beans.PropertyChangeListener;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
@@ -44,9 +46,13 @@ import static org.junit.Assert.*;
 @UseModules( { TestQueueModule.class } )
 public class QueueManagerTest {
 
-
+    @Inject
+    protected QueueFig queueFig;
     @Inject
     protected QueueManagerFactory qmf;
+
+    @Inject
+    protected QueueScopeFactory queueScopeFactory;
 
     protected QueueScope scope;
     private QueueManager qm;
@@ -56,6 +62,16 @@ public class QueueManagerTest {
     public void mockApp() {
         this.scope = new QueueScopeImpl( new SimpleId( "application" ), "testQueue" );
         qm = qmf.getQueueManager(scope);
+        queueScopeFactory = new QueueScopeFactoryImpl(queueFig);
+    }
+
+    @Test
+    public void scopeFactory(){
+        UUID uuid = UUID.randomUUID();
+        String key = "test";
+        QueueScope scope =queueScopeFactory.getScope(uuid,key);
+        assertEquals(key,scope.getName());
+        assertEquals(scope.getApplication().getUuid(),uuid);
     }
 
     @Ignore("need aws creds")
@@ -94,5 +110,6 @@ public class QueueManagerTest {
         assertTrue(messageList.size() <= 0);
 
     }
+
 
 }

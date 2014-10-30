@@ -23,34 +23,15 @@ import org.apache.usergrid.services.notifications.NotificationsService;
 import org.apache.usergrid.services.notifications.ProviderAdapter;
 import org.apache.usergrid.services.notifications.TaskTracker;
 
-import java.util.Date;
-import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.services.ServicePayload;
 
 public class MockSuccessfulProviderAdapter implements ProviderAdapter {
 
     private static ProviderAdapter realProviderAdapter;
 
-    public static void install(NotificationsService ns) {
-        install(ns, false);
-    }
-
-    public static void install(NotificationsService ns, boolean doAsync) {
-        if (realProviderAdapter != null)
-            realProviderAdapter = ns.providerAdapters.get("apple");
-        ns.providerAdapters.put("apple", new MockSuccessfulProviderAdapter(
-                doAsync));
-    }
-
-    public static void uninstall(NotificationsService ns) {
-        if (realProviderAdapter != null) {
-            ns.providerAdapters.put("apple", realProviderAdapter);
-        }
-    }
 
     private ExecutorService pool;
 
@@ -65,7 +46,7 @@ public class MockSuccessfulProviderAdapter implements ProviderAdapter {
     }
 
     @Override
-    public void testConnection(Notifier notifier) throws ConnectionException {
+    public void testConnection() throws ConnectionException {
     }
 
     @Override
@@ -74,9 +55,7 @@ public class MockSuccessfulProviderAdapter implements ProviderAdapter {
     }
 
     @Override
-    public Map<String, Date> getInactiveDevices(Notifier notifier,
-            EntityManager em) throws Exception {
-        return null;
+    public void removeInactiveDevices() {
     }
 
     @Override
@@ -84,12 +63,21 @@ public class MockSuccessfulProviderAdapter implements ProviderAdapter {
     }
 
     @Override
+    public void stop() {
+
+    }
+
+    @Override
+    public Notifier getNotifier() {
+        return null;
+    }
+
+    @Override
     public void doneSendingNotifications() throws Exception {
     }
 
     @Override
-    public void sendNotification(final String providerId,
-            final Notifier notifier, final Object payload,
+    public void sendNotification(final String providerId, final Object payload,
             final Notification notification, final TaskTracker tracker)
             throws Exception {
 

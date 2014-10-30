@@ -67,18 +67,18 @@ public class EntityResults implements Iterable<Entity>, Iterator<Entity> {
 
 
     /**
-     * Advance to our next candidate so that it is avaiablel
+     * Advance to our next candidate so that it is available
      */
     private void doAdvance(){
         while(itr.hasNext() && next == null){
             CandidateResult candidate = itr.next();
 
-            //our candidate is > our max, we can't use it
+            // our candidate is > our max, we can't use it
             if( UUIDUtils.compare( candidate.getVersion(), maxVersion ) > 0){
                 continue;
             }
 
-            //our candidate was too new, ignore it
+            // our candidate was too new, ignore it
             next = ecm.load( candidate.getId() ).toBlocking().single();
         }
     }

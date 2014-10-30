@@ -205,9 +205,11 @@ public class SQSQueueManagerImpl implements QueueManager {
         }
         DeleteMessageBatchRequest request = new DeleteMessageBatchRequest(url,entries);
         DeleteMessageBatchResult result = sqs.deleteMessageBatch(request);
-        boolean successful = result.getFailed().size() > 0;
+        boolean successful = result.getFailed().size() <= 0;
         if(!successful){
-            LOG.error("Commit failed {} messages", result.getFailed().size());
+            for( BatchResultErrorEntry failed : result.getFailed()) {
+                LOG.error("Commit failed reason: {} messages id: {}", failed.getMessage(),failed.getId());
+            }
         }
     }
 
