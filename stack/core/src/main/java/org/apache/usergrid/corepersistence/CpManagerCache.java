@@ -44,8 +44,7 @@ public class CpManagerCache {
 
     private LoadingCache<CollectionScope, EntityCollectionManager> ecmCache = 
         CacheBuilder.newBuilder()
-            .maximumSize(100)
-            .expireAfterWrite( 1, TimeUnit.HOURS)
+            .maximumSize(1000)
             .build( new CacheLoader<CollectionScope, EntityCollectionManager>() {
                 public EntityCollectionManager load( CollectionScope scope ) { 
                     return ecmf.createCollectionManager( scope );
@@ -55,8 +54,7 @@ public class CpManagerCache {
 
     private LoadingCache<ApplicationScope, EntityIndex> eiCache = 
         CacheBuilder.newBuilder()
-            .maximumSize(100)
-            .expireAfterWrite( 1, TimeUnit.HOURS )
+            .maximumSize(1000)
             .build( new CacheLoader<ApplicationScope, EntityIndex>() {
                 public EntityIndex load( ApplicationScope scope ) { 
                     return eif.createEntityIndex( scope );
@@ -66,8 +64,7 @@ public class CpManagerCache {
 
     private LoadingCache<ApplicationScope, GraphManager> gmCache = 
         CacheBuilder.newBuilder()
-            .maximumSize(100)
-            .expireAfterWrite( 1, TimeUnit.HOURS )
+            .maximumSize(1000)
             .build( new CacheLoader<ApplicationScope, GraphManager>() {
                 public GraphManager load( ApplicationScope scope ) { 
                     return gmf.createEdgeManager( scope );
@@ -77,8 +74,7 @@ public class CpManagerCache {
 
     private LoadingCache<MapScope, MapManager> mmCache = 
         CacheBuilder.newBuilder()
-            .maximumSize(100)
-            .expireAfterWrite( 1, TimeUnit.HOURS )
+            .maximumSize(1000)
             .build( new CacheLoader<MapScope, MapManager>() {
                 public MapManager load( MapScope scope ) { 
                     return mmf.createMapManager( scope );

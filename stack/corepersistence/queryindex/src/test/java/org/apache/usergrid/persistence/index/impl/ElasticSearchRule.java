@@ -43,7 +43,7 @@ public class ElasticSearchRule extends EnvironResource {
         if ( client == null ) {
             Injector injector = Guice.createInjector( new GuicyFigModule( IndexFig.class ) );
             IndexFig indexFig = injector.getInstance( IndexFig.class );            
-            client = EsProvider.getClient( indexFig );
+            client = new EsProvider(indexFig  ).getClient( );
         }
         return client;
     }

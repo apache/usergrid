@@ -43,6 +43,12 @@ public interface IndexFig extends GuicyFig {
 
     public static final String ELASTICSEARCH_FORCE_REFRESH = "elasticsearch.force_refresh";
 
+
+    /**
+     * the number of times we can fail before we refresh the client
+     */
+    public static final String ELASTICSEARCH_FAIL_REFRESH = "elasticsearch.fail_refresh";
+
     public static final String QUERY_LIMIT_DEFAULT = "index.query.limit.default";
     
     @Default( "127.0.0.1" )
@@ -82,4 +88,8 @@ public interface IndexFig extends GuicyFig {
     @Default("default")
     @Key( ELASTICSEARCH_NODENAME )
     public String getNodeName();
+
+    @Default( "20" )
+    @Key( ELASTICSEARCH_FAIL_REFRESH )
+    int getFailRefreshCount();
 }
