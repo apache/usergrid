@@ -40,6 +40,10 @@ def clusterName  = System.getenv().get("CASSANDRA_CLUSTER_NAME")
 def superUserEmail     = System.getenv().get("SUPER_USER_EMAIL")
 def testAdminUserEmail = System.getenv().get("TEST_ADMIN_USER_EMAIL")
 
+def numEsNodes = System.getenv().get("ES_NUM_SERVERS")
+def esShards = numEsNodes/2;
+def esReplicas = 2;
+
 def cassThreads = System.getenv().get("TOMCAT_THREADS")
 def hystrixThreads = Integer.parseInt(cassThreads) / 100
 
@@ -95,6 +99,8 @@ elasticsearch.cluster_name=${clusterName}
 elasticsearch.index_prefix=usergrid
 elasticsearch.hosts=${esnodes}
 elasticsearch.port=9300
+elasticsearch.number_shards=${esShards}
+elasticsearch.number_replicas=${esReplicas}
 
 ######################################################
 # Custom mail transport 
@@ -172,6 +178,7 @@ usergrid.metrics.graphite.host=${graphite}
 
 usergrid.queue.prefix=${clusterName}
 usergrid.queue.region=${ec2Region}
+
 """
 
 println usergridConfig 
