@@ -24,6 +24,10 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthStatus;
+import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
 import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateResponse;
@@ -31,7 +35,8 @@ import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequestBuilder;
 import org.elasticsearch.client.AdminClient;
-import org.elasticsearch.client.Client;
+import org.elasticsearch.common.settings.ImmutableSettings;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.index.query.FilterBuilder;
@@ -77,7 +82,7 @@ import static org.apache.usergrid.persistence.index.impl.IndexingUtils.STRING_PR
  */
 public class EsEntityIndexImpl implements EntityIndex {
 
-    private static final Logger log = LoggerFactory.getLogger( EsEntityIndexImpl.class );
+    private static final Logger logger = LoggerFactory.getLogger( EsEntityIndexImpl.class );
 
     private static final AtomicBoolean mappingsCreated = new AtomicBoolean( false );
 
@@ -133,16 +138,25 @@ public class EsEntityIndexImpl implements EntityIndex {
                 createMappings();
             }
 
-            AdminClient admin = esProvider.getClient().admin();
-            CreateIndexResponse cir = admin.indices().prepareCreate( indexName ).execute().actionGet();
-            log.info( "Created new Index Name [{}] ACK=[{}]", indexName, cir.isAcknowledged() );
+            final AdminClient admin = esProvider.getClient().admin();
+
+            final int numberOfShards = config.getNumberOfShards();
+            final int numberOfReplicas = config.getNumberOfReplicas();
+
+            Settings settings = ImmutableSettings.settingsBuilder()
+            .put("index.number_of_shards", numberOfShards )
+            .put("index.number_of_replicas", numberOfReplicas).build();
+
+
+            final  CreateIndexResponse cir = admin.indices().prepareCreate( indexName ).setSettings( settings ).execute().actionGet();
+
+            logger.info( "Created new Index Name [{}] ACK=[{}]", indexName, cir.isAcknowledged() );
 
             // create the document, this ensures the index is ready
 
             // Immediately create a document and remove it to ensure the entire cluster is ready 
-            // to receive documents. Occasionally we see errors.  See this post:
-            // http://elasticsearch-users.115913.n3.nabble
-            // .com/IndexMissingException-on-create-index-followed-by-refresh-td1832793.html
+            // to receive documents. Occasionally we see errors.  
+            // See this post: http://s.apache.org/index-missing-exception
 
             testNewIndex();
         }
@@ -156,16 +170,13 @@ public class EsEntityIndexImpl implements EntityIndex {
 
 
     /**
-     * Tests writing a document to a new index to ensure it's working correctly.  Comes from email
-     *
-     * http://elasticsearch-users.115913.n3.nabble
-     * .com/IndexMissingException-on-create-index-followed-by-refresh-td1832793.html
+     * Tests writing a document to a new index to ensure it's working correctly. 
+     * See this post: http://s.apache.org/index-missing-exception
      */
-
     private void testNewIndex() {
 
 
-        log.info( "Refreshing Created new Index Name [{}]", indexName );
+        logger.info( "Refreshing Created new Index Name [{}]", indexName );
 
         final RetryOperation retryOperation = new RetryOperation() {
             @Override
@@ -174,14 +185,18 @@ public class EsEntityIndexImpl implements EntityIndex {
 
                 esProvider.getClient().prepareIndex( indexName, VERIFY_TYPE, tempId ).setSource( DEFAULT_PAYLOAD ).get();
 
-                log.info( "Successfully created new document with docId {} in index {} and type {}", tempId, indexName,
+                logger.info( "Successfully created new document with docId {} in index {} and type {}", tempId, indexName,
                         VERIFY_TYPE );
+                logger.info( "Successfully created new document with docId {} in index {} and type {}", 
+                        tempId, indexName, VERIFY_TYPE );
 
                 // delete all types, this way if we miss one it will get cleaned up
                 esProvider.getClient().prepareDeleteByQuery( indexName ).setTypes( VERIFY_TYPE ).setQuery( MATCH_ALL_QUERY_BUILDER )
                       .get();
 
-                log.info( "Successfully deleted all documents in index {} and type {}", indexName, VERIFY_TYPE );
+                logger.info( "Successfully deleted all documents in index {} and type {}", indexName, VERIFY_TYPE );
+                logger.info( "Successfully deleted all documents in index {} and type {}", 
+                        indexName, VERIFY_TYPE );
 
                 return true;
             }
@@ -220,8 +235,8 @@ public class EsEntityIndexImpl implements EntityIndex {
 
         QueryBuilder qb = query.createQueryBuilder();
 
-        if ( log.isDebugEnabled() ) {
-            log.debug( "Searching index {}\n   type {}\n   query {} limit {}", new Object[] {
+        if ( logger.isDebugEnabled() ) {
+            logger.debug( "Searching index {}\n   type {}\n   query {} limit {}", new Object[] {
                     this.indexName, indexType, qb.toString().replace( "\n", " " ), query.getLimit()
             } );
         }
@@ -235,7 +250,7 @@ public class EsEntityIndexImpl implements EntityIndex {
 
             FilterBuilder fb = query.createFilterBuilder();
             if ( fb != null ) {
-                log.debug( "   Filter: {} ", fb.toString() );
+                logger.debug( "   Filter: {} ", fb.toString() );
                 srb = srb.setPostFilter( fb );
             }
 
@@ -257,29 +272,29 @@ public class EsEntityIndexImpl implements EntityIndex {
                 // to ignore any fields that are not present.
 
                 final String stringFieldName = STRING_PREFIX + sp.getPropertyName();
-                final FieldSortBuilder stringSort =
-                        SortBuilders.fieldSort( stringFieldName ).order( order ).ignoreUnmapped( true );
+                final FieldSortBuilder stringSort = SortBuilders.fieldSort( stringFieldName )
+                        .order( order ).ignoreUnmapped( true );
                 srb.addSort( stringSort );
-                log.debug( "   Sort: {} order by {}", stringFieldName, order.toString() );
+                logger.debug( "   Sort: {} order by {}", stringFieldName, order.toString() );
 
                 final String numberFieldName = NUMBER_PREFIX + sp.getPropertyName();
-                final FieldSortBuilder numberSort =
-                        SortBuilders.fieldSort( numberFieldName ).order( order ).ignoreUnmapped( true );
+                final FieldSortBuilder numberSort = SortBuilders.fieldSort( numberFieldName )
+                        .order( order ).ignoreUnmapped( true );
                 srb.addSort( numberSort );
-                log.debug( "   Sort: {} order by {}", numberFieldName, order.toString() );
+                logger.debug( "   Sort: {} order by {}", numberFieldName, order.toString() );
 
                 final String booleanFieldName = BOOLEAN_PREFIX + sp.getPropertyName();
-                final FieldSortBuilder booleanSort =
-                        SortBuilders.fieldSort( booleanFieldName ).order( order ).ignoreUnmapped( true );
+                final FieldSortBuilder booleanSort = SortBuilders.fieldSort( booleanFieldName )
+                        .order( order ).ignoreUnmapped( true );
                 srb.addSort( booleanSort );
-                log.debug( "   Sort: {} order by {}", booleanFieldName, order.toString() );
+                logger.debug( "   Sort: {} order by {}", booleanFieldName, order.toString() );
             }
 
             try {
                 searchResponse = srb.execute().actionGet();
             }
             catch ( Throwable t ) {
-                log.error( "Unable to communicate with elasticsearch" );
+                logger.error( "Unable to communicate with elasticsearch" );
                 failureMonitor.fail( "Unable to execute batch", t );
                 throw t;
             }
@@ -295,7 +310,7 @@ public class EsEntityIndexImpl implements EntityIndex {
             if ( scrollId.endsWith( "\"" ) ) {
                 scrollId = scrollId.substring( 0, scrollId.length() - 1 );
             }
-            log.debug( "Executing query with cursor: {} ", scrollId );
+            logger.debug( "Executing query with cursor: {} ", scrollId );
 
             SearchScrollRequestBuilder ssrb = esProvider.getClient().prepareSearchScroll( scrollId ).setScroll( cursorTimeout + "m" );
 
@@ -303,7 +318,7 @@ public class EsEntityIndexImpl implements EntityIndex {
                 searchResponse = ssrb.execute().actionGet();
             }
             catch ( Throwable t ) {
-                log.error( "Unable to communicate with elasticsearch" );
+                logger.error( "Unable to communicate with elasticsearch" );
                 failureMonitor.fail( "Unable to execute batch", t );
                 throw t;
             }
@@ -313,7 +328,7 @@ public class EsEntityIndexImpl implements EntityIndex {
         }
 
         SearchHits hits = searchResponse.getHits();
-        log.debug( "   Hit count: {} Total hits: {}", hits.getHits().length, hits.getTotalHits() );
+        logger.debug( "   Hit count: {} Total hits: {}", hits.getHits().length, hits.getTotalHits() );
 
         List<CandidateResult> candidates = new ArrayList<CandidateResult>();
 
@@ -333,7 +348,7 @@ public class EsEntityIndexImpl implements EntityIndex {
 
         if ( candidates.size() >= query.getLimit() ) {
             candidateResults.setCursor( searchResponse.getScrollId() );
-            log.debug( "   Cursor = " + searchResponse.getScrollId() );
+            logger.debug( "   Cursor = " + searchResponse.getScrollId() );
         }
 
         return candidateResults;
@@ -343,18 +358,18 @@ public class EsEntityIndexImpl implements EntityIndex {
     public void refresh() {
 
 
-        log.info( "Refreshing Created new Index Name [{}]", indexName );
+        logger.info( "Refreshing Created new Index Name [{}]", indexName );
 
         final RetryOperation retryOperation = new RetryOperation() {
             @Override
             public boolean doOp() {
                 try {
                     esProvider.getClient().admin().indices().prepareRefresh( indexName ).execute().actionGet();
-                    log.debug( "Refreshed index: " + indexName );
+                    logger.debug( "Refreshed index: " + indexName );
                     return true;
                 }
                 catch ( IndexMissingException e ) {
-                    log.error( "Unable to refresh index after create. Waiting before sleeping.", e );
+                    logger.error( "Unable to refresh index after create. Waiting before sleeping.", e);
                     throw e;
                 }
             }
@@ -362,7 +377,7 @@ public class EsEntityIndexImpl implements EntityIndex {
 
         doInRetry( retryOperation );
 
-        log.debug( "Refreshed index: " + indexName );
+        logger.debug( "Refreshed index: " + indexName );
     }
 
 
@@ -382,16 +397,17 @@ public class EsEntityIndexImpl implements EntityIndex {
         AdminClient adminClient = esProvider.getClient().admin();
         DeleteIndexResponse response = adminClient.indices().prepareDelete( indexName ).get();
         if ( response.isAcknowledged() ) {
-            log.info( "Deleted index: " + indexName );
+            logger.info( "Deleted index: " + indexName );
         }
         else {
-            log.info( "Failed to delete index " + indexName );
+            logger.info( "Failed to delete index " + indexName );
         }
     }
 
 
     /**
      * Do the retry operation
+     * @param operation
      */
     private void doInRetry( final RetryOperation operation ) {
         for ( int i = 0; i < MAX_WAITS; i++ ) {
@@ -402,7 +418,7 @@ public class EsEntityIndexImpl implements EntityIndex {
                 }
             }
             catch ( Exception e ) {
-                log.error( "Unable to execute operation, retrying", e );
+                logger.error( "Unable to execute operation, retrying", e );
             }
 
 
@@ -413,6 +429,27 @@ public class EsEntityIndexImpl implements EntityIndex {
                 //swallow it
             }
         }
+    }
+
+
+    @Override
+    public boolean isHealthy() {
+
+        try {
+            ClusterHealthResponse health =
+                    esProvider.getClient().admin().cluster().health( new ClusterHealthRequest() ).get();
+
+            //we only check red, that indicates something is wrong with one of the index on the cluster
+            //TODO, not sure we even want to do this.  If 1 index is broken, that app may be broken, but others will function correctly.  The status always is the worst index in the cluster
+            if ( health.getStatus().equals( ClusterHealthStatus.RED ) ) {
+                return false;
+            }
+        } 
+        catch (Exception ex) {
+            logger.error("Error connecting to ElasticSearch", ex);
+        } 
+
+        return true ;
     }
 
 

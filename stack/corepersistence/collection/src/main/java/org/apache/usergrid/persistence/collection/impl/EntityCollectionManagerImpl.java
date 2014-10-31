@@ -19,8 +19,6 @@
 package org.apache.usergrid.persistence.collection.impl;
 
 
-import java.net.ConnectException;
-import java.util.*;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -29,7 +27,6 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
-import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +35,6 @@ import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntitySet;
 import org.apache.usergrid.persistence.collection.VersionSet;
-import org.apache.usergrid.persistence.collection.guice.CollectionTaskExecutor;
 import org.apache.usergrid.persistence.collection.guice.Write;
 import org.apache.usergrid.persistence.collection.guice.WriteUpdate;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
@@ -53,8 +49,6 @@ import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteCommit;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteOptimisticVerify;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteStart;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteUniqueVerify;
-import org.apache.usergrid.persistence.collection.service.UUIDService;
-import org.apache.usergrid.persistence.core.task.TaskExecutor;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -63,6 +57,12 @@ import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+import com.netflix.astyanax.Keyspace;
+import com.netflix.astyanax.connectionpool.OperationResult;
+import com.netflix.astyanax.model.ColumnFamily;
+import com.netflix.astyanax.model.CqlResult;
+import com.netflix.astyanax.serializers.StringSerializer;
+import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 
 import rx.Observable;
 import rx.Subscriber;
@@ -78,10 +78,9 @@ import rx.schedulers.Schedulers;
  */
 public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
-    private static final Logger log = LoggerFactory.getLogger(EntityCollectionManagerImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(EntityCollectionManagerImpl.class);
 
     private final CollectionScope collectionScope;
-    private final UUIDService uuidService;
 
 
     //start stages
@@ -97,31 +96,31 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     private final MarkStart markStart;
     private final MarkCommit markCommit;
 
-    private final TaskExecutor taskExecutor;
-
     private final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy;
     private final MvccEntitySerializationStrategy entitySerializationStrategy;
-    private UniqueValueSerializationStrategy uniqueValueSerializationStrategy;
+    private final UniqueValueSerializationStrategy uniqueValueSerializationStrategy;
+
+    private final Keyspace keyspace;
+    private SerializationFig config;
 
 
     @Inject
-    public EntityCollectionManagerImpl(final UUIDService uuidService, @Write final WriteStart writeStart,
-                                       @WriteUpdate final WriteStart writeUpdate,
-                                       final WriteUniqueVerify writeVerifyUnique,
-                                       final WriteOptimisticVerify writeOptimisticVerify,
-                                       final WriteCommit writeCommit, final RollbackAction rollback,
-                                       final MarkStart markStart, final MarkCommit markCommit,
-                                       final MvccEntitySerializationStrategy entitySerializationStrategy,
-                                       final UniqueValueSerializationStrategy uniqueValueSerializationStrategy,
-                                       final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy,
-                                       @CollectionTaskExecutor final TaskExecutor taskExecutor,
-                                       @Assisted final CollectionScope collectionScope
+    public EntityCollectionManagerImpl(
+        @Write final WriteStart writeStart,
+        @WriteUpdate final WriteStart writeUpdate,
+        final WriteUniqueVerify writeVerifyUnique,
+        final WriteOptimisticVerify writeOptimisticVerify,
+        final WriteCommit writeCommit, final RollbackAction rollback,
+        final MarkStart markStart, final MarkCommit markCommit,
+        final MvccEntitySerializationStrategy entitySerializationStrategy,
+        final UniqueValueSerializationStrategy uniqueValueSerializationStrategy,
+        final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy,
+        final Keyspace keyspace,
+        final SerializationFig config,
+        @Assisted final CollectionScope collectionScope
     ) {
         this.uniqueValueSerializationStrategy = uniqueValueSerializationStrategy;
         this.entitySerializationStrategy = entitySerializationStrategy;
-
-
-        Preconditions.checkNotNull(uuidService, "uuidService must be defined");
 
         MvccValidationUtils.validateCollectionScope(collectionScope);
 
@@ -136,9 +135,10 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         this.markStart = markStart;
         this.markCommit = markCommit;
 
-        this.uuidService = uuidService;
+        this.keyspace = keyspace;
+        this.config = config;
+
         this.collectionScope = collectionScope;
-        this.taskExecutor = taskExecutor;
         this.mvccLogEntrySerializationStrategy = mvccLogEntrySerializationStrategy;
     }
 
@@ -187,12 +187,12 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull(entityId.getType(), "Entity type is required in this stage");
 
         return Observable.from(new CollectionIoEvent<Id>(collectionScope, entityId)).map(markStart)
-                .doOnNext(markCommit).map(new Func1<CollectionIoEvent<MvccEntity>, Void>() {
-                    @Override
-                    public Void call(final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent) {
-                        return null;
-                    }
-                });
+            .doOnNext(markCommit).map(new Func1<CollectionIoEvent<MvccEntity>, Void>() {
+                @Override
+                public Void call(final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent) {
+                    return null;
+                }
+            });
     }
 
 
@@ -229,8 +229,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
             @Override
             public void call(final Subscriber<? super EntitySet> subscriber) {
                 try {
-                    final EntitySet results =
-                            entitySerializationStrategy.load(collectionScope, entityIds, UUIDGenerator.newTimeUUID());
+                    final EntitySet results = entitySerializationStrategy.load(
+                            collectionScope, entityIds, UUIDGenerator.newTimeUUID());
 
                     subscriber.onNext(results);
                     subscriber.onCompleted();
@@ -253,7 +253,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                     Id id = value == null ? null : value.getEntityId();
                     return id;
                 } catch (ConnectionException e) {
-                    log.error("Failed to getIdField", e);
+                    logger.error("Failed to getIdField", e);
                     throw new RuntimeException(e);
                 }
             }
@@ -263,7 +263,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     @Override
     public Observable<Entity> update(final Entity entity) {
 
-        log.debug("Starting update process");
+        logger.debug("Starting update process");
 
         //do our input validation
         Preconditions.checkNotNull(entity, "Entity is required in the new stage of the mvcc write");
@@ -283,7 +283,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         return observable.map(writeCommit).doOnNext(new Action1<Entity>() {
             @Override
             public void call(final Entity entity) {
-                log.debug("sending entity to the queue");
+                logger.debug("sending entity to the queue");
 
                 //we an update, signal the fix
 
@@ -301,7 +301,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     public Observable<CollectionIoEvent<MvccEntity>> stageRunner(CollectionIoEvent<Entity> writeData,
                                                                  WriteStart writeState) {
 
-        return Observable.from(writeData).map(writeState).doOnNext(new Action1<CollectionIoEvent<MvccEntity>>() {
+        return Observable.from(writeData).map(writeState).doOnNext(
+                new Action1<CollectionIoEvent<MvccEntity>>() {
 
             @Override
             public void call(final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent) {
@@ -325,7 +326,6 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
 
     @Override
-
     public Observable<VersionSet> getLatestVersion(final Collection<Id> entityIds) {
 
         return Observable.create(new Observable.OnSubscribe<VersionSet>() {
@@ -345,4 +345,31 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
             }
         });
     }
+
+
+    @Override
+    public boolean isHealthy() {
+
+        try {
+            ColumnFamily<String, String> CF_SYSTEM_LOCAL = new ColumnFamily<String, String>(
+                "system.local", 
+                StringSerializer.get(), 
+                StringSerializer.get(), 
+                StringSerializer.get());
+
+            OperationResult<CqlResult<String, String>> result = keyspace.prepareQuery(CF_SYSTEM_LOCAL)
+                .withCql("SELECT now() FROM system.local;")
+                .execute();
+
+            if ( result.getResult().getRows().size() == 1 ) {
+                return true;
+            }
+
+        } catch ( ConnectionException ex ) {
+            logger.error("Error connecting to Cassandra", ex);
+        }
+
+        return false;
+    }
+
 }

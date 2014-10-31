@@ -50,6 +50,7 @@ import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.CounterUtils;
 import org.apache.usergrid.persistence.cassandra.Setup;
 import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
@@ -740,5 +741,24 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     @Override
     public void rebuildCollectionIndex(UUID appId, String collection, ProgressObserver po ) {
         throw new UnsupportedOperationException( "Not supported yet." );
+    }
+
+    @Override
+    public boolean verifyCollectionsModuleHealthy() {
+
+        CollectionScope collScope = new CollectionScopeImpl(
+            getApplicationScope(SYSTEM_APP_ID).getApplication(),
+            getApplicationScope(SYSTEM_APP_ID).getApplication(),
+            CpNamingUtils.getCollectionScopeNameFromCollectionName( "appinfos" ));
+
+        EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collScope );
+        return ecm.isHealthy();
+    }
+
+    @Override
+    public boolean verifyQueryIndexModuleHealthy() {
+
+        EntityIndex ei = managerCache.getEntityIndex( getApplicationScope( SYSTEM_APP_ID ));
+        return ei.isHealthy();
     }
 }

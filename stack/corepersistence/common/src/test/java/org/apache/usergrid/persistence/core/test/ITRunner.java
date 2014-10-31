@@ -43,6 +43,7 @@ public class ITRunner extends BlockJUnit4ClassRunner {// extends JukitoRunner {
     //this is fugly, but we have no other way to start cassandra before the jukito runner
     static{
       CassandraRule rule = new CassandraRule();
+
         try {
             rule.before();
         }
@@ -51,6 +52,8 @@ public class ITRunner extends BlockJUnit4ClassRunner {// extends JukitoRunner {
             throwable.printStackTrace();
             System.exit( -1 );
         }
+
+
     }
 
     private Injector injector;

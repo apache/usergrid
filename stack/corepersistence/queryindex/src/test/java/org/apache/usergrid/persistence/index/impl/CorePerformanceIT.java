@@ -64,7 +64,7 @@ public class CorePerformanceIT extends BaseIT {
     private static final Logger log = LoggerFactory.getLogger(CorePerformanceIT.class);
 
     @ClassRule
-    public static ElasticSearchRule es = new ElasticSearchRule();
+    public static ElasticSearchResource es = new ElasticSearchResource();
 
     @ClassRule
     public static CassandraRule cass = new CassandraRule();
