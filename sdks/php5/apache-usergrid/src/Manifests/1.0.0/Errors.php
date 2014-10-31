@@ -33,7 +33,7 @@ return [
 	],
 
 	[
-		'class' => ' Apache\Usergrid\Api\Exception\NotFoundException',
+		'class' => 'Apache\Usergrid\Api\Exception\NotFoundException',
 		'code'  => 404,
 	],
 
