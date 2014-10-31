@@ -104,8 +104,11 @@ public class EsProvider {
 
                     .put("gateway.type", "none")
                     .put("index.store.type", "memory")
-                    .put("index.number_of_shards", 1)
-                    .put("index.number_of_replicas", 1)
+
+                    // should be set on index creation and not here
+//                    .put("index.number_of_shards", 1)
+//                    .put("index.number_of_replicas", 1)
+
                     .build();
 
                 log.info("-----------------------------------------------------------------------");
@@ -161,11 +164,14 @@ public class EsProvider {
 
                     .put( "client.transport.ping_timeout", 2000 ) // milliseconds
                     .put( "client.transport.nodes_sampler_interval", 100 )
-                    .put("index.number_of_shards", fig.getNumberOfShards() )
-                    .put("index.number_of_replicas", fig.numberOfReplicas() )
+
                     .put( "network.tcp.blocking", true )
                     .put( "node.client", true )
                     .put( "node.name", nodeName )
+
+                    // should be set on index creation and not here
+//                    .put("index.number_of_shards", fig.getNumberOfShards() )
+//                    .put("index.number_of_replicas", fig.numberOfReplicas() )
 
                     .build();
 

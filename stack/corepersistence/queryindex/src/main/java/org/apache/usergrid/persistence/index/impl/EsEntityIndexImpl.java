@@ -64,7 +64,7 @@ import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
-import java.util.concurrent.ExecutionException;
+import java.util.HashMap;
 
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.BOOLEAN_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.DOC_ID_SEPARATOR_SPLITTER;
@@ -131,7 +131,16 @@ public class EsEntityIndexImpl implements EntityIndex {
             }
 
             AdminClient admin = client.admin();
-            CreateIndexResponse cir = admin.indices().prepareCreate( indexName ).execute().actionGet();
+
+            CreateIndexResponse cir = admin.indices()
+                .prepareCreate( indexName )
+                .setSettings( new HashMap<String, Object>() {{
+                    put("index.number_of_shards", config.getNumberOfShards() );
+                    put("index.number_of_replicas", config.numberOfReplicas() );
+                }} )
+                .execute()
+                .actionGet();
+
             logger.info( "Created new Index Name [{}] ACK=[{}]", indexName, cir.isAcknowledged() );
 
             // create the document, this ensures the index is ready
