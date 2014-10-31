@@ -18,17 +18,17 @@
 return [
 
 	[
-		'class' => ' Apache\Usergrid\Api\Exception\BadRequestException',
+		'class' => 'Apache\Usergrid\Api\Exception\BadRequestException',
 		'code'  => 400,
 	],
 
 	[
-		'class' => ' Apache\Usergrid\Api\Exception\UnauthorizedException',
+		'class' => 'Apache\Usergrid\Api\Exception\UnauthorizedException',
 		'code'  => 401,
 	],
 
 	[
-		'class' => ' Apache\Usergrid\Api\Exception\RequestFailedException',
+		'class' => 'Apache\Usergrid\Api\Exception\RequestFailedException',
 		'code'  => 402,
 	],
 
@@ -38,22 +38,22 @@ return [
 	],
 
 	[
-		'class' => ' Apache\Usergrid\Api\Exception\ServerErrorException',
+		'class' => 'Apache\Usergrid\Api\Exception\ServerErrorException',
 		'code'  => 500,
 	],
 
 	[
-		'class' => ' Apache\Usergrid\Api\Exception\ServerErrorException',
+		'class' => 'Apache\Usergrid\Api\Exception\ServerErrorException',
 		'code'  => 502,
 	],
 
 	[
-		'class' => ' Apache\Usergrid\Api\Exception\ServerErrorException',
+		'class' => 'Apache\Usergrid\Api\Exception\ServerErrorException',
 		'code'  => 503,
 	],
 
 	[
-		'class' => ' Apache\Usergrid\Api\Exception\ServerErrorException',
+		'class' => 'Apache\Usergrid\Api\Exception\ServerErrorException',
 		'code'  => 504,
 	],
 
