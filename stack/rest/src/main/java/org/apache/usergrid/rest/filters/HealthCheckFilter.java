@@ -56,8 +56,6 @@ public class HealthCheckFilter implements Filter {
         if ( !emf.verifyQueryIndexModuleHealthy() ) {
             throw new RuntimeException("Error connecting to query index");
         }
-
-        throw new RuntimeException("Foo!");
     }
 
     @Override
