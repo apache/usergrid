@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+[ "$#" -eq 6 ] || die "6 arguments required, $# provided.  Arguments are URL ORG APP NOTIFIERNAME NUM_USERS RAMP_TIME"
+
 URL="$1"
 ORG="$2"
 APP="$3"

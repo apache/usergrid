@@ -24,15 +24,12 @@ import org.apache.usergrid.persistence.collection.event.EntityDeleted;
 
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
-
 import org.apache.usergrid.persistence.model.field.Field;
 import rx.Observable;
 
 
 /**
- *
  * The operations for performing changes on an entity
- *
  */
 public interface EntityCollectionManager {
 
@@ -76,4 +73,10 @@ public interface EntityCollectionManager {
      * the entity in this object applied to it.
      */
     public Observable<Entity> update ( Entity entity );
+
+    /** 
+     * Return true if connection query index system (Cassandra) is healthy.
+     */
+    public boolean isHealthy();
+
 }

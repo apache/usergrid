@@ -41,9 +41,9 @@ import org.springframework.context.ApplicationContext;
 import org.apache.commons.lang.text.StrSubstitutor;
 
 import static org.apache.commons.lang.StringUtils.isEmpty;
-import static org.springframework.web.context.support.WebApplicationContextUtils.getRequiredWebApplicationContext;
 import static org.apache.usergrid.rest.utils.CORSUtils.allowAllOrigins;
 import static org.apache.usergrid.utils.StringUtils.readClasspathFileAsString;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
 
 public class SwaggerServlet extends HttpServlet implements Filter {
@@ -85,7 +85,8 @@ public class SwaggerServlet extends HttpServlet implements Filter {
         if ( sc == null ) {
             return null;
         }
-        ApplicationContext appContext = getRequiredWebApplicationContext( sc );
+        ApplicationContext appContext = 
+                WebApplicationContextUtils.getRequiredWebApplicationContext( sc );
         return appContext.getBean( beanName );
     }
 

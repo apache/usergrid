@@ -34,7 +34,6 @@ import org.apache.usergrid.persistence.model.field.Field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.collection.guice.CollectionTaskExecutor;
 import org.apache.usergrid.persistence.collection.guice.Write;
 import org.apache.usergrid.persistence.collection.guice.WriteUpdate;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
@@ -48,8 +47,6 @@ import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteCommit;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteOptimisticVerify;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteStart;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteUniqueVerify;
-import org.apache.usergrid.persistence.collection.service.UUIDService;
-import org.apache.usergrid.persistence.core.task.TaskExecutor;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -58,6 +55,14 @@ import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+import com.netflix.astyanax.Keyspace;
+import com.netflix.astyanax.connectionpool.OperationResult;
+import com.netflix.astyanax.model.ColumnFamily;
+import com.netflix.astyanax.model.CqlResult;
+import com.netflix.astyanax.serializers.StringSerializer;
+import org.apache.usergrid.persistence.collection.guice.CollectionTaskExecutor;
+import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
+import org.apache.usergrid.persistence.core.task.TaskExecutor;
 
 import rx.Observable;
 import rx.Subscriber;
@@ -73,10 +78,9 @@ import rx.schedulers.Schedulers;
  */
 public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
-    private static final Logger log = LoggerFactory.getLogger(EntityCollectionManagerImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(EntityCollectionManagerImpl.class);
 
     private final CollectionScope collectionScope;
-    private final UUIDService uuidService;
 
     //start stages
     private final WriteStart writeStart;
@@ -90,44 +94,40 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     private final MarkStart markStart;
     private final MarkCommit markCommit;
 
-    private final TaskExecutor taskExecutor;
-
-    private EntityVersionCleanupFactory entityVersionCleanupFactory;
-    private EntityVersionCreatedFactory entityVersionCreatedFactory;
-
     private final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy;
     private final MvccEntitySerializationStrategy entitySerializationStrategy;
-    private final EntityDeletedFactory entityDeletedFactory;
     private final UniqueValueSerializationStrategy uniqueValueSerializationStrategy;
+
+    private final EntityVersionCleanupFactory entityVersionCleanupFactory;
+    private final EntityVersionCreatedFactory entityVersionCreatedFactory;
+    private final EntityDeletedFactory entityDeletedFactory;
+    private final TaskExecutor taskExecutor;
+
+    private final Keyspace keyspace;
+    private SerializationFig config;
 
 
     @Inject
-    public EntityCollectionManagerImpl( 
-        final UUIDService                          uuidService, 
-        @Write final WriteStart                    writeStart,
-        @WriteUpdate final WriteStart              writeUpdate,
-        final WriteUniqueVerify                    writeVerifyUnique,
-        final WriteOptimisticVerify                writeOptimisticVerify,
-        final WriteCommit                          writeCommit, 
-        final RollbackAction                       rollback,
-        final MarkStart                            markStart, 
-        final MarkCommit                           markCommit,
-        final EntityVersionCleanupFactory          entityVersionCleanupFactory,
-        final EntityVersionCreatedFactory          entityVersionCreatedFactory,
-        final MvccEntitySerializationStrategy      entitySerializationStrategy,
-        final UniqueValueSerializationStrategy     uniqueValueSerializationStrategy,
-        final MvccLogEntrySerializationStrategy    mvccLogEntrySerializationStrategy,
-        final EntityDeletedFactory                 entityDeletedFactory,
+    public EntityCollectionManagerImpl(
+        @Write final WriteStart writeStart,
+        @WriteUpdate final WriteStart writeUpdate,
+        final WriteUniqueVerify writeVerifyUnique,
+        final WriteOptimisticVerify writeOptimisticVerify,
+        final WriteCommit writeCommit, final RollbackAction rollback,
+        final MarkStart markStart, final MarkCommit markCommit,
+        final MvccEntitySerializationStrategy entitySerializationStrategy,
+        final UniqueValueSerializationStrategy uniqueValueSerializationStrategy,
+        final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy,
+        final Keyspace keyspace,
+        final SerializationFig config,
+        final EntityVersionCleanupFactory entityVersionCleanupFactory,
+        final EntityVersionCreatedFactory entityVersionCreatedFactory,
+        final EntityDeletedFactory        entityDeletedFactory,
         @CollectionTaskExecutor final TaskExecutor taskExecutor,
-        @Assisted final CollectionScope            collectionScope
-
+        @Assisted final CollectionScope collectionScope
     ) {
         this.uniqueValueSerializationStrategy = uniqueValueSerializationStrategy;
         this.entitySerializationStrategy = entitySerializationStrategy;
-        this.entityDeletedFactory = entityDeletedFactory;
-        this.entityVersionCreatedFactory = entityVersionCreatedFactory;
-
-        Preconditions.checkNotNull(uuidService, "uuidService must be defined");
 
         MvccValidationUtils.validateCollectionScope(collectionScope);
 
@@ -141,10 +141,15 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         this.markStart = markStart;
         this.markCommit = markCommit;
 
-        this.uuidService = uuidService;
-        this.collectionScope = collectionScope;
-        this.taskExecutor = taskExecutor;
+        this.keyspace = keyspace;
+        this.config = config;
+
         this.entityVersionCleanupFactory = entityVersionCleanupFactory;
+        this.entityVersionCreatedFactory = entityVersionCreatedFactory;
+        this.entityDeletedFactory = entityDeletedFactory;
+        this.taskExecutor = taskExecutor;
+
+        this.collectionScope = collectionScope;
         this.mvccLogEntrySerializationStrategy = mvccLogEntrySerializationStrategy;
     }
 
@@ -266,7 +271,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                     Id id = value == null ? null : value.getEntityId();
                     return id;
                 } catch (ConnectionException e) {
-                    log.error("Failed to getIdField", e);
+                    logger.error("Failed to getIdField", e);
                     throw new RuntimeException(e);
                 }
             }
@@ -276,7 +281,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     @Override
     public Observable<Entity> update(final Entity entity) {
 
-        log.debug("Starting update process");
+        logger.debug("Starting update process");
 
         //do our input validation
         Preconditions.checkNotNull(entity, "Entity is required in the new stage of the mvcc write");
@@ -296,7 +301,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         return observable.map(writeCommit).doOnNext(new Action1<Entity>() {
             @Override
             public void call(final Entity entity) {
-                log.debug("sending entity to the queue");
+                logger.debug("sending entity to the queue");
 
                 //we an update, signal the fix
 
@@ -356,4 +361,31 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
             }
         });
     }
+
+
+    @Override
+    public boolean isHealthy() {
+
+        try {
+            ColumnFamily<String, String> CF_SYSTEM_LOCAL = new ColumnFamily<String, String>(
+                "system.local", 
+                StringSerializer.get(), 
+                StringSerializer.get(), 
+                StringSerializer.get());
+
+            OperationResult<CqlResult<String, String>> result = keyspace.prepareQuery(CF_SYSTEM_LOCAL)
+                .withCql("SELECT now() FROM system.local;")
+                .execute();
+
+            if ( result.getResult().getRows().size() == 1 ) {
+                return true;
+            }
+
+        } catch ( ConnectionException ex ) {
+            logger.error("Error connecting to Cassandra", ex);
+        }
+
+        return false;
+    }
+
 }
