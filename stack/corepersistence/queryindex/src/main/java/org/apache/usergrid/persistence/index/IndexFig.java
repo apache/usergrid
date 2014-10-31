@@ -39,6 +39,10 @@ public interface IndexFig extends GuicyFig {
 
     public static final String ELASTICSEARCH_STARTUP = "elasticsearch.startup";
 
+    public static final String ELASTICSEARCH_NUMBER_OF_SHARDS = "elasticsearch.number_shards";
+
+    public static final String ELASTICSEARCH_NUMBER_OF_REPLICAS = "elasticsearch.number_replicas";
+
     public static final String QUERY_CURSOR_TIMEOUT_MINUTES = "elasticsearch.cursor_timeout.minutes";
 
     public static final String ELASTICSEARCH_FORCE_REFRESH = "elasticsearch.force_refresh";
@@ -88,6 +92,14 @@ public interface IndexFig extends GuicyFig {
     @Default("default")
     @Key( ELASTICSEARCH_NODENAME )
     public String getNodeName();
+
+    @Default("1") 
+    @Key( ELASTICSEARCH_NUMBER_OF_SHARDS )
+    public int getNumberOfShards();
+
+    @Default("1")
+    @Key( ELASTICSEARCH_NUMBER_OF_REPLICAS )
+    public int numberOfReplicas();
 
     @Default( "20" )
     @Key( ELASTICSEARCH_FAIL_REFRESH )

@@ -148,6 +148,10 @@ public interface EntityManagerFactory {
 
     public void rebuildCollectionIndex(UUID appId, String collection, ProgressObserver object);
 
+    public boolean verifyCollectionsModuleHealthy();
+
+    public boolean verifyQueryIndexModuleHealthy();
+
     public interface ProgressObserver {
         public void onProgress( EntityRef entity);
 

@@ -694,4 +694,16 @@ public class EntityCollectionManagerIT {
         assertEquals( MvccLogEntry.State.COMPLETE, version2Log.getState() );
         assertEquals( Stage.COMMITTED, version2Log.getStage() );
     }
+
+
+    @Test
+    public void healthTest() {
+
+        CollectionScope context = new CollectionScopeImpl( 
+            new SimpleId( "organization" ), new SimpleId( "test" ), "test" );
+
+        final EntityCollectionManager manager = factory.createCollectionManager( context );
+
+        assertTrue( manager.isHealthy() );
+    }
 }
