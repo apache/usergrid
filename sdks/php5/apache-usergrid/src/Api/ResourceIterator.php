@@ -57,9 +57,7 @@ class ResourceIterator extends BaseIterator
 
         $result = $this->command->execute();
 
-        $data = $result;
-
-        $lastItem = end($data);
+        $data = $result['entities'];
 
         $this->nextToken = $result['cursor'] ? $result['cursor'] : false;
 
