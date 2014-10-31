@@ -35,13 +35,6 @@ chown elasticsearch /mnt/data/elasticsearch
 mkdir -p /mnt/log/elasticsearch
 chown elasticsearch /mnt/log/elasticsearch
 
-mkdir -p /mnt/var/log/elasticsearch
-chown elasticsearch /mnt/var/log/elasticsearch
-
-#Set up the symlink for the logs
-rm -rf /var/log/elasticsearch
-ln -s /mnt/var/log/elasticsearch /var/log/elasticsearch
-
 # Configure ElasticSearch
 cd /usr/share/usergrid/scripts
 
@@ -99,7 +92,6 @@ ES_HEAP_SIZE=${ES_HEAP_SIZE}
 MAX_OPEN_FILES=65535
 MAX_LOCKED_MEMORY=unlimited
 JAVA_HOME=/usr/lib/jvm/jdk1.7.0
-LOG_DIR=/var/log/elasticsearch
 EOF
 
 
