@@ -24,6 +24,10 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthStatus;
+import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
 import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateResponse;
@@ -31,6 +35,8 @@ import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequestBuilder;
 import org.elasticsearch.client.AdminClient;
+import org.elasticsearch.common.settings.ImmutableSettings;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.index.query.FilterBuilder;
@@ -132,8 +138,18 @@ public class EsEntityIndexImpl implements EntityIndex {
                 createMappings();
             }
 
-            AdminClient admin = esProvider.getClient().admin();
-            CreateIndexResponse cir = admin.indices().prepareCreate( indexName ).execute().actionGet();
+            final AdminClient admin = esProvider.getClient().admin();
+
+            final int numberOfShards = config.getNumberOfShards();
+            final int numberOfReplicas = config.getNumberOfReplicas();
+
+            Settings settings = ImmutableSettings.settingsBuilder()
+            .put("index.number_of_shards", numberOfShards )
+            .put("index.number_of_replicas", numberOfReplicas).build();
+
+
+            final  CreateIndexResponse cir = admin.indices().prepareCreate( indexName ).setSettings( settings ).execute().actionGet();
+
             logger.info( "Created new Index Name [{}] ACK=[{}]", indexName, cir.isAcknowledged() );
 
             // create the document, this ensures the index is ready
@@ -169,7 +185,7 @@ public class EsEntityIndexImpl implements EntityIndex {
 
                 esProvider.getClient().prepareIndex( indexName, VERIFY_TYPE, tempId ).setSource( DEFAULT_PAYLOAD ).get();
 
-                log.info( "Successfully created new document with docId {} in index {} and type {}", tempId, indexName,
+                logger.info( "Successfully created new document with docId {} in index {} and type {}", tempId, indexName,
                         VERIFY_TYPE );
                 logger.info( "Successfully created new document with docId {} in index {} and type {}", 
                         tempId, indexName, VERIFY_TYPE );
@@ -178,7 +194,7 @@ public class EsEntityIndexImpl implements EntityIndex {
                 esProvider.getClient().prepareDeleteByQuery( indexName ).setTypes( VERIFY_TYPE ).setQuery( MATCH_ALL_QUERY_BUILDER )
                       .get();
 
-                log.info( "Successfully deleted all documents in index {} and type {}", indexName, VERIFY_TYPE );
+                logger.info( "Successfully deleted all documents in index {} and type {}", indexName, VERIFY_TYPE );
                 logger.info( "Successfully deleted all documents in index {} and type {}", 
                         indexName, VERIFY_TYPE );
 
@@ -349,7 +365,7 @@ public class EsEntityIndexImpl implements EntityIndex {
             public boolean doOp() {
                 try {
                     esProvider.getClient().admin().indices().prepareRefresh( indexName ).execute().actionGet();
-                    log.debug( "Refreshed index: " + indexName );
+                    logger.debug( "Refreshed index: " + indexName );
                     return true;
                 }
                 catch ( IndexMissingException e ) {
@@ -421,17 +437,19 @@ public class EsEntityIndexImpl implements EntityIndex {
 
         try {
             ClusterHealthResponse health =
-                    client.admin().cluster().health( new ClusterHealthRequest() ).get();
-            
-            if ( health.getStatus().equals( ClusterHealthStatus.GREEN ) ) {
-                return true;
+                    esProvider.getClient().admin().cluster().health( new ClusterHealthRequest() ).get();
+
+            //we only check red, that indicates something is wrong with one of the index on the cluster
+            //TODO, not sure we even want to do this.  If 1 index is broken, that app may be broken, but others will function correctly.  The status always is the worst index in the cluster
+            if ( health.getStatus().equals( ClusterHealthStatus.RED ) ) {
+                return false;
             }
         } 
         catch (Exception ex) {
             logger.error("Error connecting to ElasticSearch", ex);
         } 
 
-        return false ;
+        return true ;
     }
 
 

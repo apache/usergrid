@@ -93,13 +93,13 @@ public interface IndexFig extends GuicyFig {
     @Key( ELASTICSEARCH_NODENAME )
     public String getNodeName();
 
-    @Default("1") 
+    @Default("6")
     @Key( ELASTICSEARCH_NUMBER_OF_SHARDS )
     public int getNumberOfShards();
 
     @Default("1")
     @Key( ELASTICSEARCH_NUMBER_OF_REPLICAS )
-    public int numberOfReplicas();
+    public int getNumberOfReplicas();
 
     @Default( "20" )
     @Key( ELASTICSEARCH_FAIL_REFRESH )

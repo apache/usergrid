@@ -57,7 +57,6 @@ public class HealthCheckFilter implements Filter {
             throw new RuntimeException("Error connecting to query index");
         }
 
-        throw new RuntimeException("Foo!");
     }
 
     @Override

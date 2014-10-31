@@ -49,6 +49,8 @@ public class ElasticSearchResource extends EnvironResource {
 
     private static Node node;
 
+    private static int port;
+
 
 
     public ElasticSearchResource() {
@@ -62,6 +64,13 @@ public class ElasticSearchResource extends EnvironResource {
     }
 
 
+
+
+    public static int getPort() {
+        return port;
+    }
+
+
     public synchronized ElasticSearchResource startEs(){
         if ( node != null ) {
             return this;
@@ -69,7 +78,7 @@ public class ElasticSearchResource extends EnvironResource {
 
 
         //override the system properties in the Archiaus env
-        int port = AvailablePortFinder.getNextAvailable( 9300 );
+        port = AvailablePortFinder.getNextAvailable( 9300 );
 
         final String host = "127.0.0.1";
         System.setProperty( IndexFig.ELASTICSEARCH_HOSTS, host );
@@ -126,6 +135,8 @@ public class ElasticSearchResource extends EnvironResource {
     public static void shutdown() {
         node.stop();
     }
+
+
 
 
     /**

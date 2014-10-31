@@ -16,12 +16,12 @@
  */
 package org.apache.usergrid.rest;
 
-import org.apache.usergrid.ElasticSearchResource;
 import org.junit.ClassRule;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.cassandra.Concurrent;
+import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.rest.applications.events.ApplicationRequestCounterIT;
 import org.apache.usergrid.rest.applications.collection.devices.DevicesResourceIT;
 import org.apache.usergrid.rest.applications.assets.AssetResourceIT;
@@ -57,7 +57,7 @@ import org.apache.usergrid.rest.management.organizations.AdminEmailEncodingIT;
 public class RestITSuite {
 
     @ClassRule
-    public static ElasticSearchResource elasticSearchResource = ElasticSearchResource.instance;
+    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource().startEs();
 
     @ClassRule
     public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();

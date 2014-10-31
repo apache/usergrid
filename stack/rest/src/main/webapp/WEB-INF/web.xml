@@ -39,7 +39,7 @@
 
     <filter-mapping>
         <filter-name>healthCheckFilter</filter-name>
-        <url-pattern>/*</url-pattern>
+        <url-pattern>/status</url-pattern>
     </filter-mapping>
 
     <filter>
