@@ -23,6 +23,7 @@ import org.junit.runners.Suite;
 import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.cassandra.ConcurrentSuite;
+import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.persistence.query.AllInCollectionIT;
 import org.apache.usergrid.persistence.query.AllInConnectionIT;
 import org.apache.usergrid.persistence.query.AllInConnectionNoTypeIT;
@@ -78,5 +79,5 @@ public class ConcurrentCoreIteratorITSuite {
     public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts( "coreManager" );
     
     @ClassRule
-    public static ElasticSearchResource elasticSearchResource = ElasticSearchResource.instance;
+    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource().startEs();
 }

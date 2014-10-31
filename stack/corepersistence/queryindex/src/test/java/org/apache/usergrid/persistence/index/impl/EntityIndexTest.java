@@ -38,7 +38,6 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
-import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.index.EntityIndex;
@@ -64,7 +63,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 
-@RunWith(ITRunner.class)
+@RunWith(EsRunner.class)
 @UseModules({ TestIndexModule.class })
 public class EntityIndexTest extends BaseIT {
 
@@ -74,7 +73,7 @@ public class EntityIndexTest extends BaseIT {
     public static CassandraRule cass = new CassandraRule();
 
     @Rule
-    public ElasticSearchRule elasticSearchRule = new ElasticSearchRule();
+    public ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
 
     @Inject
     @Rule

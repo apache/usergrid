@@ -19,11 +19,8 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
-import java.io.File;
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Properties;
 
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.ImmutableSettings;
@@ -33,7 +30,6 @@ import org.elasticsearch.node.NodeBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.RandomStringUtils;
 
 import org.apache.usergrid.persistence.index.IndexFig;
@@ -98,7 +94,6 @@ public class EsProvider {
 
         String allHosts = "";
 
-        if ( "remote".equals( fig.getStartUp() ) ) {
 
             // we will connect to ES on all configured hosts
             String SEP = "";
@@ -106,12 +101,6 @@ public class EsProvider {
                 allHosts = allHosts + SEP + host + ":" + fig.getPort();
                 SEP = ",";
             }
-        }
-        else {
-
-            // we will connect to forked ES on localhost
-            allHosts = "localhost:" + System.getProperty( LOCAL_ES_PORT_PROPNAME );
-        }
 
         String nodeName = fig.getNodeName();
         if ( "default".equals( nodeName ) ) {
@@ -153,33 +142,5 @@ public class EsProvider {
     }
 
 
-    /**
-     * Uses a project.properties file that Maven does substitution on to to replace the value of a property with the
-     * path to the Maven build directory (a.k.a. target). It then uses this path to generate a random String which it
-     * uses to append a path component to so a unique directory is selected. If already present it's deleted, then the
-     * directory is created.
-     *
-     * @return a unique temporary directory
-     *
-     * @throws IOException if we cannot access the properties file
-     */
-    public static File getTempDirectory() throws IOException {
-        File tmpdir;
-        Properties props = new Properties();
-        props.load( ClassLoader.getSystemResourceAsStream( "project.properties" ) );
-        File basedir = new File( ( String ) props.get( "target.directory" ) );
-        String comp = RandomStringUtils.randomAlphanumeric( 7 );
-        tmpdir = new File( basedir, comp );
 
-        if ( tmpdir.exists() ) {
-            log.info( "Deleting directory: {}", tmpdir );
-            FileUtils.forceDelete( tmpdir );
-        }
-        else {
-            log.info( "Creating temporary directory: {}", tmpdir );
-            FileUtils.forceMkdir( tmpdir );
-        }
-
-        return tmpdir;
-    }
 }

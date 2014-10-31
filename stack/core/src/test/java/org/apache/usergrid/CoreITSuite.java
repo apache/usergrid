@@ -34,6 +34,7 @@ import org.apache.usergrid.persistence.IndexIT;
 import org.apache.usergrid.persistence.PathQueryIT;
 import org.apache.usergrid.persistence.PermissionsIT;
 import org.apache.usergrid.persistence.cassandra.EntityManagerFactoryImplIT;
+import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.system.UsergridSystemMonitorIT;
 
 
@@ -50,6 +51,8 @@ public class CoreITSuite {
     public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts( "coreManager" );
 
     @ClassRule
-    public static ElasticSearchResource elasticSearchResource = ElasticSearchResource.instance;
+    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource().startEs();
+
+
 
 }
