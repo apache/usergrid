@@ -57,12 +57,7 @@ object NotifierScenarios {
     .exec(http("Create Notifier")
     .post(Settings.baseAppUrl+"/notifiers")
     .body(StringBody("{\"name\":\"" + notifier + "\",\"provider\":\"" + provider + "\"}"))
-    //remnants of trying to upload an apple certificate
-//    .param("name", "${notifierName}")
-//    .param("provider", "apple")
-//    .param("environment", "mock")
-//    .fileBody("p12Certificate", Map).fileBody(pkcs12Cert)
-    .check(status.is(200)))
+    .check(status.in(200 to 400)))
 
 
 }

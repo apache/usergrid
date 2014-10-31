@@ -57,7 +57,6 @@ class PushNotificationTargetUserSimulation extends Simulation {
     .exec(createNotifier)
 
   val scnToRun = scenario("Create Push Notification")
-    .exec(getManagementToken)
     .feed(userFeeder)
     .exec(createUser)
     .exec(getUserToken)
@@ -70,7 +69,7 @@ class PushNotificationTargetUserSimulation extends Simulation {
 
   setUp(
     scnCreateOrg.inject(atOnceUsers(1)).protocols(http.baseURL(Settings.baseUrl)),
-    scnToRun.inject(nothingFor(30), constantUsersPerSec(numUsersPerSecond) during (duration))
+    scnToRun.inject(nothingFor(15), constantUsersPerSec(numUsersPerSecond) during (duration))
       .throttle(reachRps(throttle) in (rampTime.seconds)).protocols(httpConf))
 
 }

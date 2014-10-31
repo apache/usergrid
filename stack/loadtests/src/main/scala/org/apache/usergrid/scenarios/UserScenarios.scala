@@ -40,7 +40,6 @@ import io.gatling.core.Predef._
   val postUser = exec(
     http("POST geolocated Users")
       .post("/users")
-      .headers(Headers.jsonAuthorized)
       .body(new StringBody("""{"location":{"latitude":"${latitude}","longitude":"${longitude}"},"username":"${username}",
       "displayName":"${displayName}","age":"${age}","seen":"${seen}","weight":"${weight}",
       "height":"${height}","aboutMe":"${aboutMe}","profileId":"${profileId}","headline":"${headline}",
