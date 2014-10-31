@@ -56,6 +56,7 @@ object NotifierScenarios {
 
     .exec(http("Create Notifier")
     .post(Settings.baseAppUrl+"/notifiers")
+    .headers(Headers.jsonAuthorized)
     .body(StringBody("{\"name\":\"" + notifier + "\",\"provider\":\"" + provider + "\"}"))
     .check(status.in(200 to 400)))
 

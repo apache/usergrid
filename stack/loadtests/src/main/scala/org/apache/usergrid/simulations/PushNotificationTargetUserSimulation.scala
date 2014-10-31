@@ -41,8 +41,9 @@ class PushNotificationTargetUserSimulation extends Simulation {
   val createUser = UserScenarios.postUser
   val createOrg = OrganizationScenarios.createOrgAndAdmin
   val connectUserToDevice = ConnectionScenarios.postUserToDeviceConnection
+  val createApp = ApplicationScenarios.createApplication
 
-  val getManagementToken = OrganizationScenarios.getManagementToken;
+  val getManagementToken = OrganizationScenarios.getManagementToken
 
   val getUserToken = UserScenarios.getUserToken
 
@@ -54,6 +55,7 @@ class PushNotificationTargetUserSimulation extends Simulation {
     .feed(orgFeeder)
     .exec(createOrg)
     .exec(getManagementToken)
+    .exec(createApp)
     .exec(createNotifier)
 
   val scnToRun = scenario("Create Push Notification")

@@ -36,10 +36,10 @@ import io.gatling.http.Predef._
 object ApplicationScenarios {
 
   val createApplication = exec(http("Create Application")
-    .post("/management/organizations/${org}/applications")
+    .post(Settings.baseUrl +  "/management/organizations/"+Settings.org+"/applications")
     .headers(Headers.jsonAuthorized)
     .body(StringBody("{\"name\":\"" + Settings.app + "\"}"))
-    .check(status.is(200))
+    .check(status.in(200 to 204))
 
     )
 
