@@ -40,7 +40,7 @@ def clusterName  = System.getenv().get("CASSANDRA_CLUSTER_NAME")
 def superUserEmail     = System.getenv().get("SUPER_USER_EMAIL")
 def testAdminUserEmail = System.getenv().get("TEST_ADMIN_USER_EMAIL")
 
-def numEsNodes = System.getenv().get("ES_NUM_SERVERS")
+def numEsNodes = Integer.parseInt(System.getenv().get("ES_NUM_SERVERS"))
 def esShards = numEsNodes/2;
 def esReplicas = 2;
 
