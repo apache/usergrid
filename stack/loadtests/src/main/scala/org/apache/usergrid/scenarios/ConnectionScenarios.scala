@@ -18,19 +18,23 @@
 
 import io.gatling.core.Predef._
 import io.gatling.http.Predef._
+ import org.apache.usergrid.settings.Headers
 
-object ConnectionScenarios {
+ object ConnectionScenarios {
 
   val postConnection = exec(
     http("POST connection")
     .post("/users/${user1}/likes/users/${user2}")
-    .check(status.is(200))
+      .headers(Headers.jsonAuthorized)
+
+      .check(status.is(200))
   )
 
   val postUserToDeviceConnection = exec(
     http("Connect user with device")
     .post("/users/${username}/devices/${deviceId}")
-    .check(status.is(200))
+      .headers(Headers.jsonAuthorized)
+      .check(status.is(200))
   )
 
 }

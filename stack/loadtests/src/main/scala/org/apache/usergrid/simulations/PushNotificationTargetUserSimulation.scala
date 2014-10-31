@@ -42,6 +42,10 @@ class PushNotificationTargetUserSimulation extends Simulation {
   val createOrg = OrganizationScenarios.createOrgAndAdmin
   val connectUserToDevice = ConnectionScenarios.postUserToDeviceConnection
 
+  val getManagementToken = OrganizationScenarios.getManagementToken;
+
+  val getUserToken = UserScenarios.getUserToken
+
   val deviceNameFeeder = FeederGenerator.generateEntityNameFeeder("device", numEntities)
   val userFeeder = FeederGenerator.generateUserWithGeolocationFeeder(numUsersPerSecond * duration, Settings.userLocationRadius, Settings.centerLatitude, Settings.centerLongitude)
   val orgFeeder = FeederGenerator.generateRandomEntityNameFeeder("org", 1)
@@ -49,24 +53,24 @@ class PushNotificationTargetUserSimulation extends Simulation {
   val scnCreateOrg = scenario("Create org")
     .feed(orgFeeder)
     .exec(createOrg)
-
-  val scnCreateNotifier = scenario("Create notifier")
+    .exec(getManagementToken)
     .exec(createNotifier)
 
   val scnToRun = scenario("Create Push Notification")
+    .exec(getManagementToken)
     .feed(userFeeder)
     .exec(createUser)
+    .exec(getUserToken)
     .repeat(2){
       feed(deviceNameFeeder)
-      .exec(createDevice)
-      .exec(connectUserToDevice)
-    }
+        .exec(createDevice)
+        .exec(connectUserToDevice)
+      }
     .exec(sendNotification)
 
-
-
-  setUp(scnCreateOrg.inject(atOnceUsers(1)).protocols(http.baseURL(Settings.baseUrl)),
-    scnCreateNotifier.inject(nothingFor(5), atOnceUsers(1)).protocols(httpConf),
-    scnToRun.inject(nothingFor(7), constantUsersPerSec(numUsersPerSecond) during (duration)).throttle(reachRps(throttle) in (rampTime.seconds)).protocols(httpConf))
+  setUp(
+    scnCreateOrg.inject(atOnceUsers(1)).protocols(http.baseURL(Settings.baseUrl)),
+    scnToRun.inject(nothingFor(30), constantUsersPerSec(numUsersPerSecond) during (duration))
+      .throttle(reachRps(throttle) in (rampTime.seconds)).protocols(httpConf))
 
 }

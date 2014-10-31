@@ -35,9 +35,18 @@ object OrganizationScenarios {
 
   //register the org with the randomly generated org
   val createOrgAndAdmin = exec(http("Create Organization")
-  .post("/management/organizations")
-  .headers(Headers.jsonAnonymous)
-  .body(StringBody("{\"organization\":\"" + Settings.org + "\",\"username\":\"${entityName}\",\"name\":\"${entityName}\",\"email\":\"${entityName}@apigee.com\",\"password\":\"test\"}"))
-  .check(status.is(200)))
+    .post(Settings.baseUrl+"/management/organizations")
+    .headers(Headers.jsonAnonymous)
+    .body(StringBody("{\"organization\":\"" + Settings.org + "\",\"username\":\"" + Settings.org + "\",\"name\":\"${entityName}\",\"email\":\"${entityName}@apigee.com\",\"password\":\"test\"}"))
+    .check(status.in(200 to 400))
+  )
+
+  val getManagementToken = exec(http("POST Org Token")
+    .post(Settings.baseUrl+"/management/token")
+    .headers(Headers.jsonAnonymous)
+    //pass in the the username and password, store the "access_token" json response element as the var "authToken" in the session
+    .body(StringBody("{\"username\":\"" + Settings.org + "\",\"password\":\"test\",\"grant_type\":\"password\"}"))
+    .check(jsonPath("$.access_token").find(0).saveAs("authToken"))
+  )
 
 }

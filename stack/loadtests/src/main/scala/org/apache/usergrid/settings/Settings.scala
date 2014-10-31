@@ -26,7 +26,8 @@ object Settings {
   val org = System.getProperty("org")
   val app = System.getProperty("app")
   val baseUrl = System.getProperty("baseurl")
-  val httpConf = http.baseURL(baseUrl + "/" + org + "/" + app)
+  val baseAppUrl = baseUrl + "/" + org + "/" + app
+  val httpConf = http.baseURL(baseAppUrl)
 
   // Simulation settings
   val numUsers:Int = Integer.getInteger("numUsers", 10).toInt

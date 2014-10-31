@@ -25,7 +25,7 @@ import scala.concurrent.duration._
 
 import scala.io.Source
 
-import org.apache.usergrid.settings.Settings
+import org.apache.usergrid.settings.{Headers, Settings}
 
 /**
  *
@@ -55,12 +55,14 @@ object NotificationScenarios {
   val sendNotification = exec(http("Send Single Notification")
       .post("/devices/${entityName}/notifications")
       .body(StringBody("{\"payloads\":{\"" + notifier + "\":\"testmessage\"}}"))
+      .headers(Headers.jsonAuthorized)
       .check(status.is(200))
     )
 
   val sendNotificationToUser= exec(http("Send Notification to All Devices")
     .post("/users/${userId}/notifications")
     .body(StringBody("{\"payloads\":{\"" + notifier + "\":\"testmessage\"}}"))
+    .headers(Headers.jsonAuthorized)
     .check(status.is(200))
   )
 
