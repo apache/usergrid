@@ -21,7 +21,7 @@ return [
         'notes' => 'Create Notification for group.  See Usergrid documentation for JSON format of body.',
         'summary' => 'Create new app notification',
         'responseClass' => '',
-        'responseType' => 'object',
+        'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
             'access_token' => [
@@ -57,7 +57,7 @@ return [
         'notes' => 'Create Notification for single Device.  See Usergrid documentation for JSON format of body.',
         'summary' => 'Create new app notification',
         'responseClass' => '',
-        'responseType' => 'object',
+        'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
             'access_token' => [
@@ -93,7 +93,7 @@ return [
         'notes' => 'Create Notification all Devices.  See Usergrid documentation for JSON format of body.',
         'summary' => 'Create new app notification',
         'responseClass' => '',
-        'responseType' => 'object',
+        'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
             'access_token' => [
@@ -122,7 +122,7 @@ return [
         'notes' => 'Create Notification single User.  See Usergrid documentation for JSON format of body.',
         'summary' => 'Create new app notification',
         'responseClass' => '',
-        'responseType' => 'object',
+        'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
             'access_token' => [

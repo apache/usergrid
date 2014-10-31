@@ -22,7 +22,7 @@ return [
         'notes' => 'Query an app collection.',
         'summary' => 'Query an app collection',
         'responseClass' => 'Apache\Usergrid\Api\Models\Collection',
-        'responseType' => 'class',
+        'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -79,7 +79,6 @@ return [
                 'location' => 'query',
                 'type' => 'integer',
                 'required' => false,
-                'default' => 10000
             ],
             'filter' => [
                 'description' => 'a condition to filter on',
@@ -99,7 +98,7 @@ return [
         'notes' => 'Query Roles.',
         'summary' => 'Query the roles collection',
         'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
-        'responseType' => 'class',
+        'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -174,7 +173,7 @@ return [
         'notes' => 'Find Role by uuid.',
         'summary' => 'Find role by uuid',
         'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
-        'responseType' => 'class',
+        'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -256,7 +255,7 @@ return [
         'notes' => 'Create new Role.  See Usergrid documentation for JSON format of body.',
         'summary' => 'Create new Role entity',
         'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
-        'responseType' => 'class',
+        'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -296,7 +295,7 @@ return [
         'notes' => 'Delete a Role entity.',
         'summary' => 'Delete a Role entity by name or uuid',
         'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
-        'responseType' => 'class',
+        'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -338,7 +337,7 @@ return [
         'notes' => 'Update a Role entity.',
         'summary' => 'Update a Roles entity by name or uuid and using JSON data',
         'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
-        'responseType' => 'class',
+        'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -358,7 +357,7 @@ return [
                 'location' => 'uri',
                 'type' => 'string',
                 'required' => true,
-                'default' => 'roles'
+                'default' => 'r'
             ],
             'access_token' => [
                 'description' => 'The OAuth2 access token',

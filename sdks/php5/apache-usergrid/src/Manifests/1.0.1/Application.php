@@ -22,7 +22,7 @@ return [
         'notes' => 'Get the app access token.  See the OAuth2 specification for details.',
         'summary' => 'Get app access token',
         'responseClass' => '',
-        'responseType' => 'object',
+        'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
             'grant_type' => [
@@ -76,7 +76,7 @@ return [
         'notes' => 'Get the app access token.  See the OAuth2 specification for details.',
         'summary' => 'Get app access token',
         'responseClass' => '',
-        'responseType' => 'object',
+        'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
             'grant_type' => [
@@ -130,7 +130,7 @@ return [
         'notes' => 'Authorize the app client.  See the OAuth2 specification.',
         'summary' => 'Authorize app client',
         'responseClass' => '',
-        'responseType' => 'object',
+        'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -184,7 +184,7 @@ return [
         'notes' => 'Authorize the app client.  See the OAuth2 specification.',
         'summary' => 'Authorize app client',
         'responseClass' => '',
-        'responseType' => 'object',
+        'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -238,7 +238,7 @@ return [
         'notes' => 'Get the app client credentials.',
         'summary' => 'Get app client credentials',
         'responseClass' => '',
-        'responseType' => 'object',
+        'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -267,7 +267,7 @@ return [
         'notes' => 'Generate new app client credentials',
         'summary' => 'Generate app client credentials',
         'responseClass' => '',
-        'responseType' => 'object',
+        'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -296,7 +296,7 @@ return [
         'notes' => 'Create new app user',
         'summary' => 'Create new app user.  See Usergrid documentation for JSON format of body.',
         'responseClass' => '',
-        'responseType' => 'object',
+        'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -343,7 +343,7 @@ return [
         'notes' => 'Create new app user',
         'summary' => 'Create new app user using form post parameters.',
         'responseClass' => '',
-        'responseType' => 'object',
+        'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -390,7 +390,7 @@ return [
         'notes' => 'Initiate a user password reset.  Returns browser-viewable HTML page.',
         'summary' => 'Initiate a user password reset',
         'responseClass' => '',
-        'responseType' => 'object',
+        'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -413,7 +413,7 @@ return [
         'notes' => 'Complete a user password reset.  Handles form POST response.',
         'summary' => 'Complete a user password reset',
         'responseClass' => '',
-        'responseType' => 'object',
+        'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -454,7 +454,7 @@ return [
         'notes' => 'Returns the app user details.',
         'summary' => 'Returns the app user details',
         'responseClass' => '',
-        'responseType' => 'object',
+        'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -489,7 +489,7 @@ return [
         'notes' => 'Updates the app user details.',
         'summary' => 'Updates the app user details',
         'responseClass' => '',
-        'responseType' => 'object',
+        'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -527,7 +527,7 @@ return [
         'notes' => 'Activates the app user from link provided in email notification.',
         'summary' => 'Activates the app user',
         'responseClass' => '',
-        'responseType' => 'object',
+        'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -568,7 +568,7 @@ return [
         'notes' => 'Request app user reactivation.',
         'summary' => 'Reactivates the app user',
         'responseClass' => '',
-        'responseType' => 'object',
+        'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -597,7 +597,7 @@ return [
         'notes' => 'Get app user activity feed.',
         'summary' => 'Get app user activity feed',
         'responseClass' => '',
-        'responseType' => 'object',
+        'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -632,7 +632,7 @@ return [
         'notes' => 'Set app user password.  See Usergrid documentation for JSON format of body.',
         'summary' => 'Set app user password',
         'responseClass' => '',
-        'responseType' => 'object',
+        'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -671,7 +671,7 @@ return [
         'notes' => 'Initiate a user password reset.  Returns browser-viewable HTML page.',
         'summary' => 'Initiate a user password reset',
         'responseClass' => '',
-        'responseType' => 'object',
+        'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -700,7 +700,7 @@ return [
         'notes' => 'Complete a user password reset.  Handles form POST response.',
         'summary' => 'Complete a user password reset',
         'responseClass' => '',
-        'responseType' => 'object',
+        'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -740,8 +740,8 @@ return [
         'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/{collection}',
         'notes' => 'Query an app collection.',
         'summary' => 'Query an app collection',
-        'responseClass' => '',
-        'responseType' => 'object',
+        'responseClass' => 'Apache\Usergrid\Api\Models\Collection',
+        'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -812,7 +812,7 @@ return [
         'notes' => 'Create new app entity.  See Usergrid documentation for JSON format of body.',
         'summary' => 'Create new app entity',
         'responseClass' => '',
-        'responseType' => 'object',
+        'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -851,7 +851,7 @@ return [
         'notes' => 'Update an app entity in a collection.',
         'summary' => 'Update an app entity',
         'responseClass' => '',
-        'responseType' => 'object',
+        'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -896,7 +896,7 @@ return [
         'notes' => 'Delete an app entity.',
         'summary' => 'Delete an app entity',
         'responseClass' => '',
-        'responseType' => 'object',
+        'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -937,7 +937,7 @@ return [
         'notes' => 'Create Event.  See Usergrid documentation for JSON format of body.',
         'summary' => 'Create new app event',
         'responseClass' => '',
-        'responseType' => 'object',
+        'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
