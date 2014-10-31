@@ -203,7 +203,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         TermQueryBuilder tqb = QueryBuilders.termQuery(
             STRING_PREFIX + ENTITYID_FIELDNAME, entityId.getUuid().toString().toLowerCase());
 
-        DeleteByQueryResponse response = client.prepareDeleteByQuery("test")
+        DeleteByQueryResponse response = client.prepareDeleteByQuery( indexName )
             .setQuery( tqb ).execute().actionGet();
 
         logger.debug("Deleted entity {}:{} from all index scopes with response status = {}", 
@@ -222,7 +222,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
                          ( STRING_PREFIX + ENTITYID_FIELDNAME,entity.getId().getUuid().toString().toLowerCase() ),
                          FilterBuilders.rangeFilter("version").lt( entity.getId().getUuid().timestamp() ));
 
-        DeleteByQueryResponse response = client.prepareDeleteByQuery("test")
+        DeleteByQueryResponse response = client.prepareDeleteByQuery( indexName )
                                                .setQuery( fqb ).execute().actionGet();
 
         logger.debug("Deleted entity {}:{} from all index scopes with response status = {}",
