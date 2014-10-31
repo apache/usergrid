@@ -1,5 +1,4 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
-<configuration>
 <!--
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
@@ -18,6 +17,8 @@
  * limitations under the License.
  */
 -->
+<configuration>
+
 	<appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
 		<encoder>
 			<pattern>%d{HH:mm:ss.SSS} [%-5level] %logger{15} - %msg%n%rEx</pattern>
