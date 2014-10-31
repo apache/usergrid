@@ -22,7 +22,7 @@ return [
         'notes' => 'Get the org or admin user access token.  See the OAuth2 specification for details.',
         'summary' => 'Get organization access token',
         'responseClass' => '',
-        'responseType' => 'object',
+        'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
             'grant_type' => [
@@ -64,7 +64,7 @@ return [
         'notes' => 'Get the Application user access token.  See the OAuth2 specification for details.',
         'summary' => 'Get Application access token',
         'responseClass' => '',
-        'responseType' => 'object',
+        'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
             'org_name_or_uuid' => [
@@ -118,7 +118,7 @@ return [
         'notes' => 'Create Admin User .  See Usergrid documentation for JSON format of body.',
         'summary' => 'Create Admin User',
         'responseClass' => '',
-        'responseType' => 'object',
+        'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
             'org_name_or_uuid' => [
@@ -168,7 +168,7 @@ return [
         'notes' => 'Update Admin User .  See Usergrid documentation for JSON format of body.',
         'summary' => 'Create Admin User',
         'responseClass' => '',
-        'responseType' => 'object',
+        'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
             'org_name_or_uuid' => [
@@ -200,7 +200,7 @@ return [
         'notes' => 'Get Admin User .  See Usergrid documentation for JSON format of body.',
         'summary' => 'Get Admin User',
         'responseClass' => '',
-        'responseType' => 'object',
+        'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
             'org_name_or_uuid' => [
@@ -229,7 +229,7 @@ return [
         'notes' => 'Set Admin User Password.  See Usergrid documentation for JSON format of body.',
         'summary' => 'Get Admin User',
         'responseClass' => '',
-        'responseType' => 'object',
+        'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
             'org_name_or_uuid' => [
@@ -272,7 +272,7 @@ return [
         'notes' => 'Create new Organization.  See Usergrid documentation for JSON format of body.',
         'summary' => 'Create New Organization',
         'responseClass' => '',
-        'responseType' => 'object',
+        'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
             'access_token' => [
