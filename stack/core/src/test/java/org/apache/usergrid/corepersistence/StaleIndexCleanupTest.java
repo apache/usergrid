@@ -208,7 +208,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
      * Test that the EntityDeleteImpl cleans up stale indexes on delete. Ensures that when an 
      * entity is deleted its old indexes are cleared from ElasticSearch.
      */
-    @Test
+    @Test(timeout=10000)
     public void testCleanupOnDelete() throws Exception {
 
         logger.info("Started testStaleIndexCleanup()");
@@ -274,7 +274,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         do {
             Thread.sleep(100);
             crs = queryCollectionCp("things", "select *");
-        } while ( crs.size() > 0 || count++ < 14 );
+        } while ( crs.size() > 0 && count++ < 14 );
 
         Assert.assertEquals( "Expect no candidates", 0, crs.size() );
     }
@@ -284,7 +284,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
      * Test that the EntityDeleteImpl cleans up stale indexes on update. Ensures that when an 
      * entity is updated its old indexes are cleared from ElasticSearch.
      */
-    @Test
+    @Test(timeout=10000)
     public void testCleanupOnUpdate() throws Exception {
 
         logger.info("Started testCleanupOnUpdate()");
@@ -340,12 +340,12 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         Assert.assertEquals( "Expect stale candidates", numEntities * (numUpdates + 1), crs.size());
 
         // wait for indexes to be cleared for the deleted entities
-        count = 0;
         do {
             Thread.sleep(100);
             crs = queryCollectionCp("things", "select *");
-        } while ( crs.size() > 0 || count++ < 14 );
+        } while ( crs.size() > 0 );
 
+        // will never get here if test times out
         Assert.assertEquals( "Expect no candidates", 0, crs.size() );
     }
 
