@@ -19,7 +19,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.apache.usergrid</groupId>
-	<artifactId>gatling</artifactId>
+	<artifactId>loadtests</artifactId>
 	<version>1.0-SNAPSHOT</version>
 
 	<repositories>
@@ -52,8 +52,8 @@
 		<scala.version>2.10.4</scala.version>
 		<encoding>UTF-8</encoding>
 
-		<gatling.version>2.0.0</gatling.version>
-		<gatling-highcharts.version>2.0.0</gatling-highcharts.version>
+		<gatling.version>2.0.1</gatling.version>
+		<gatling-highcharts.version>2.0.1</gatling-highcharts.version>
 
 		<scala-maven-plugin.version>3.1.6</scala-maven-plugin.version>
 	</properties>
