@@ -32,9 +32,6 @@ dpkg-reconfigure -f noninteractive tzdata
 . /etc/profile.d/aws-credentials.sh
 . /etc/profile.d/usergrid-env.sh
 
-cd /usr/share/usergrid/init_instance
-./create_raid0.sh
-
 # Install the easy stuff
 PKGS="ntp unzip groovy curl"
 apt-get update
@@ -59,8 +56,7 @@ groovy tag_instance.groovy -BUILD-IN-PROGRESS
 cd /usr/share/usergrid/init_instance
 ./install_oraclejdk.sh 
 
-# Install and stop Cassandra 
-pushd /etc/apt/sources.list.d
+# Install and stop Cassandra
 
 curl -L http://debian.datastax.com/debian/repo_key | apt-key add -
 
@@ -80,11 +76,11 @@ cd /usr/share/usergrid/scripts
 groovy registry_register.groovy opscenter
 
 #TODO make this configurable for the box sizes
-#Set or min/max heap to 8GB
-sed -i.bak s/calculate_heap_sizes\(\)/MAX_HEAP_SIZE=\"8G\"\\nHEAP_NEWSIZE=\"1200M\"\\n\\ncalculate_heap_sizes\(\)/g /etc/cassandra/cassandra-env.sh
+#Leave default heaps in place
+#sed -i.bak s/calculate_heap_sizes\(\)/MAX_HEAP_SIZE=\"2G\"\\nHEAP_NEWSIZE=\"1200M\"\\n\\ncalculate_heap_sizes\(\)/g /etc/cassandra/cassandra-env.sh
 
 cd /usr/share/usergrid/scripts
-groovy configure_opscenter.groovy > /etc/cassandra/cassandra.yaml
+groovy configure_opscenter_cassandra.groovy > /etc/cassandra/cassandra.yaml
 /etc/init.d/cassandra start
 
 
@@ -94,6 +90,14 @@ echo "deb http://debian.datastax.com/community stable main" | sudo tee -a /etc/a
 
 apt-get update
 apt-get  --force-yes -y install opscenter
+
+sudo service opscenterd stop
+
+#Configure the usergrid cluster to store data locally, not on the target cluster and auto boostrap it
+cd /usr/share/usergrid/scripts
+groovy wait_for_instances.groovy cassandra 1
+mkdir -p /etc/opscenter/clusters
+groovy configure_opscenter_usergrid.groovy > /etc/opscenter/clusters/$CASSANDRA_CLUSTER_NAME.conf
 
 sudo service opscenterd start
 
