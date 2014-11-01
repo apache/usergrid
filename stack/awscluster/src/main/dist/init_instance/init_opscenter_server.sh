@@ -75,10 +75,6 @@ chown cassandra /mnt/data/cassandra
 cd /usr/share/usergrid/scripts
 groovy registry_register.groovy opscenter
 
-#TODO make this configurable for the box sizes
-#Leave default heaps in place
-#sed -i.bak s/calculate_heap_sizes\(\)/MAX_HEAP_SIZE=\"2G\"\\nHEAP_NEWSIZE=\"1200M\"\\n\\ncalculate_heap_sizes\(\)/g /etc/cassandra/cassandra-env.sh
-
 cd /usr/share/usergrid/scripts
 groovy configure_opscenter_cassandra.groovy > /etc/cassandra/cassandra.yaml
 /etc/init.d/cassandra start
