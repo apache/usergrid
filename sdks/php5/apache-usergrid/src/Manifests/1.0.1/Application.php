@@ -965,36 +965,147 @@ return [
         ]
     ],
 
-    //Application Groups
-    'CreateGroups' => [],
-    'AddUserToGroups' => [],
-    'GetGroups' => [],
-    'PutGroups' => [],
-    'DeleteUserFromGroups' => [],
-    'GetGroupsFeeds' => [],
-    'AddGroupUser' => [],
 
-
-    //Application Roles
-    'CreateRole' => [],
-    'GetRole' => [],
-    'DeleteRole' => [],
-    'GetRolePermission' => [],
-    'AddRolePermission' => [],
-    'DeleteRolePermission' => [],
-    'AddRoleUser' => [],
-    'GetRoleUsers' => [],
-    'DeleteRoleUser' => [],
-
-    //Application Users
-    'CreateUser' => [],
-    'GetUser' => [],
-    'UpdateUser' => [],
-    'DeleteUser' => [],
-    'AddUserConnection' => [],
-    'DeleteUserConnection' => [],
-    'GetUserConnections' => [],
-    'GetUserFeed' => []
 
     //Application Collection Relationships
+    'GetRelationship' => [
+        'httpMethod' => 'GET',
+        'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/{collection}/{entity_id}/{relationship}',
+        'notes' => 'Query an Entity Relationship ',
+        'summary' => 'Query an Entity Relationship',
+        'responseClass' => 'Apache\Usergrid\Api\Models\Collection',
+        'responseType' => 'class',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'app_name_or_uuid' => [
+                'description' => 'app name or uuid',
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+            ],
+            'collection' => [
+                'description' => 'collection name (entity type)',
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+            ],
+            'entity_id' => [
+                'description' => 'Entity  ID (uuid)',
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+            ],
+            'relationship' => [
+                'description' => 'Relationship',
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+            ],
+            'access_token' => [
+                'description' => 'The OAuth2 access token',
+                'location' => 'query',
+                'type' => 'string',
+                'required' => false,
+            ],
+            'ql' => [
+                'description' => 'a query in the query language',
+                'location' => 'query',
+                'type' => 'string',
+                'required' => false,
+            ],
+            'reversed' => [
+                'description' => 'return results in reverse order',
+                'location' => 'query',
+                'type' => 'boolean',
+                'required' => false,
+            ],
+            'start' => [
+                'description' => 'the first entity UUID to return',
+                'location' => 'query',
+                'type' => 'string',
+                'required' => false,
+            ],
+            'cursor' => [
+                'description' => 'an encoded representation of the query position for paging',
+                'location' => 'query',
+                'type' => 'string',
+                'required' => false,
+            ],
+            'limit' => [
+                'description' => 'an encoded representation of the query position for paging',
+                'location' => 'query',
+                'type' => 'integer',
+                'required' => false,
+            ],
+            'filter' => [
+                'description' => 'a condition to filter on',
+                'location' => 'query',
+                'type' => 'integer',
+                'required' => false,
+            ],
+            'org_name_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Organization name or uuid'
+            ]
+        ]
+    ],
+    'CreateRelationship' => [
+        'httpMethod' => 'POST',
+        'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/{collection}/{first_entity_id}/{relationship}/{second_entity_id}',
+        'notes' => 'Create new app entity.  See Usergrid documentation for JSON format of body.',
+        'summary' => 'Create new app entity',
+        'responseClass' => '',
+        'responseType' => 'model',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'app_name_or_uuid' => [
+                'description' => 'app name or uuid',
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+            ],
+            'collection' => [
+                'description' => 'collection name (entity type)',
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+            ],
+            'first_entity_id' => [
+                'description' => 'first entity id (uuid)',
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+            ],
+            'relationship' => [
+                'description' => 'relationship',
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+            ],
+            'second_entity_id' => [
+                'description' => '2nd entity id (uuid)',
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+            ],
+            'access_token' => [
+                'description' => 'The OAuth2 access token',
+                'location' => 'query',
+                'type' => 'string',
+                'required' => false,
+            ],
+            'org_name_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Organization name or uuid'
+            ]
+        ],
+        'additionalParameters' => [
+            "description" => "Entity data",
+            'location' => 'json'
+        ]
+    ],
 ];

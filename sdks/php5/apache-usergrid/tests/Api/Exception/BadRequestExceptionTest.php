@@ -14,14 +14,14 @@
  * permissions and limitations under the License.
  */
 
-namespace Apache\Usergrid\Tests\Api;
+namespace Apache\Usergrid\Tests\Api\Exception;
 
-
-use Apache\Usergrid\Native\UsergridBootstrapper;
 use PHPUnit_Framework_TestCase;
+use Guzzle\Http\Message\Response;
+use Apache\Usergrid\Api\Exception\BadRequestException;
 
 /**
- * Class UsergridTest
+ * Class BadRequestExceptionTest
  *
  * @package    Apache/Usergrid
  * @version    1.0.0
@@ -30,23 +30,29 @@ use PHPUnit_Framework_TestCase;
  * @copyright  (c) 2008-2014, Baas Platform Pty. Ltd
  * @link       http://baas-platform.com
  */
-class ManagementTest extends PHPUnit_Framework_TestCase
-{
-    protected $usergrid;
-    protected $config;
+class BadRequestExceptionTest extends PHPUnit_Framework_TestCase {
 
-    public function setUp()
-    {
-        /** @noinspection PhpIncludeInspection */
-        $this->config = include  $_SERVER['CONFIG'];
-        $bootstrap = new UsergridBootstrapper($this->config);
-        $this->usergrid = $bootstrap->createUsergrid();
-    }
-    /**
-     * @test
-     * @group internet
-     */
-    public function it_can_make_management_call(){
+	/** @test */
+	public function it_can_create_the_exception()
+	{
+		$command = $this->getMock('Guzzle\Service\Command\CommandInterface');
+		$command
+			->expects($this->once())
+			->method('getRequest')
+			->will($this->returnValue(
+				$this->getMock('Guzzle\Http\Message\Request', [], [], '', false)
+			));
 
-    }
-} 
+		$response = new Response(400);
+		$response->setBody('');
+
+        /** @noinspection PhpParamsInspection */
+        $exception = BadRequestException::fromCommand($command, $response);
+
+		$this->assertInstanceOf(
+			'Apache\Usergrid\Api\Exception\BadRequestException',
+			$exception
+		);
+	}
+
+}
