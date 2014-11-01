@@ -42,7 +42,7 @@ return [
                 'location' => 'uri',
                 'type' => 'string',
                 'required' => true,
-                'default' => 'groups'
+                'default' => $custom
             ],
             'access_token' => [
                 'description' => 'The OAuth2 access token',
@@ -79,7 +79,6 @@ return [
                 'location' => 'query',
                 'type' => 'integer',
                 'required' => false,
-
             ],
             'filter' => [
                 'description' => 'a condition to filter on',
@@ -96,9 +95,9 @@ return [
     'find' => [
         'httpMethod' => 'GET',
         'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/{collection}',
-        'notes' => 'Query Groups.',
-        'summary' => 'Query the groups collection',
-        'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
+        'notes' => 'Query Users.',
+        'summary' => 'Query the users collection',
+        'responseClass' => 'Apache\Usergrid\Api\Models\User',
         'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
@@ -119,7 +118,7 @@ return [
                 'location' => 'uri',
                 'type' => 'string',
                 'required' => true,
-                'default' => 'groups'
+                'default' => $custom
             ],
             'access_token' => [
                 'description' => 'The OAuth2 access token',
@@ -171,9 +170,9 @@ return [
     ],
     'findById' => ['httpMethod' => 'GET',
         'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/{collection}/{uuid}',
-        'notes' => 'Find group by uuid.',
-        'summary' => 'Find group by uuid',
-        'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
+        'notes' => 'Find User by uuid.',
+        'summary' => 'Find user by uuid',
+        'responseClass' => 'Apache\Usergrid\Api\Models\User',
         'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
@@ -194,10 +193,10 @@ return [
                 'location' => 'uri',
                 'type' => 'string',
                 'required' => true,
-                'default' => 'groups'
+                'default' => $custom
             ],
             'uuid' => [
-                'description' => 'Group UUID (entity uuid)',
+                'description' => 'User UUID (entity uuid)',
                 'location' => 'uri',
                 'type' => 'string',
                 'required' => true
@@ -253,9 +252,9 @@ return [
     'create' => [
         'httpMethod' => 'POST',
         'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/{collection}',
-        'notes' => 'Create new Group.  See Usergrid documentation for JSON format of body.',
-        'summary' => 'Create new Group entity',
-        'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
+        'notes' => 'Create new User.  See Usergrid documentation for JSON format of body.',
+        'summary' => 'Create new User entity',
+        'responseClass' => 'Apache\Usergrid\Api\Models\User',
         'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
@@ -270,7 +269,7 @@ return [
                 'location' => 'uri',
                 'type' => 'string',
                 'required' => true,
-                'default' => 'groups'
+                'default' => $custom
             ],
             'access_token' => [
                 'description' => 'The OAuth2 access token',
@@ -293,9 +292,9 @@ return [
     'destroy' => [
         'httpMethod' => 'DELETE',
         'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/{collection}/{entity_name_or_uuid}',
-        'notes' => 'Delete a Group entity.',
-        'summary' => 'Delete a Group entity by name or uuid',
-        'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
+        'notes' => 'Delete a User entity.',
+        'summary' => 'Delete a User entity by name or uuid',
+        'responseClass' => 'Apache\Usergrid\Api\Models\User',
         'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
@@ -316,7 +315,7 @@ return [
                 'location' => 'uri',
                 'type' => 'string',
                 'required' => true,
-                'default' => 'groups'
+                'default' => $custom
             ],
             'access_token' => [
                 'description' => 'The OAuth2 access token',
@@ -335,9 +334,9 @@ return [
     'update' => [
         'httpMethod' => 'PUT',
         'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/{collection}/{entity_name_or_uuid}',
-        'notes' => 'Update a Group entity.',
-        'summary' => 'Update a Group entity by name or uuid and using JSON data',
-        'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
+        'notes' => 'Update a User entity.',
+        'summary' => 'Update a User entity by name or uuid and using JSON data',
+        'responseClass' => 'Apache\Usergrid\Api\Models\User',
         'responseType' => 'model',
         'errorResponses' => $errors,
         'parameters' => [
@@ -348,7 +347,7 @@ return [
                 'required' => true,
             ],
             'entity_name_or_uuid' => [
-                'description' => 'group name or uuid',
+                'description' => 'entity name or uuid',
                 'location' => 'uri',
                 'type' => 'string',
                 'required' => true,
@@ -358,111 +357,7 @@ return [
                 'location' => 'uri',
                 'type' => 'string',
                 'required' => true,
-                'default' => 'groups'
-            ],
-            'access_token' => [
-                'description' => 'The OAuth2 access token',
-                'location' => 'query',
-                'type' => 'string',
-                'required' => false,
-            ],
-            'org_name_or_uuid' => [
-                'location' => 'uri',
-                'type' => 'string',
-                'required' => true,
-                'description' => 'Organization name or uuid'
-            ]
-        ],
-        'additionalParameters' => [
-            "description" => "Entity data",
-            'location' => 'json'
-        ]
-    ],
-    'addUser' => [
-        'httpMethod' => 'POST',
-        'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/{collection}/{entity_name_or_uuid}/users/{user_name_or_uuid}',
-        'notes' => 'Update a Group entity.',
-        'summary' => 'Update a Group entity by name or uuid and using JSON data',
-        'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
-        'responseType' => 'model',
-        'errorResponses' => $errors,
-        'parameters' => [
-            'app_name_or_uuid' => [
-                'description' => 'app name or uuid',
-                'location' => 'uri',
-                'type' => 'string',
-                'required' => true,
-            ],
-            'entity_name_or_uuid' => [
-                'description' => 'group name or uuid',
-                'location' => 'uri',
-                'type' => 'string',
-                'required' => true,
-            ],
-            'user_name_or_uuid' => [
-                'description' => 'user name or uuid',
-                'location' => 'uri',
-                'type' => 'string',
-                'required' => true,
-            ],
-            'collection' => [
-                'description' => 'collection name (entity type)',
-                'location' => 'uri',
-                'type' => 'string',
-                'required' => true,
-                'default' => 'groups'
-            ],
-            'access_token' => [
-                'description' => 'The OAuth2 access token',
-                'location' => 'query',
-                'type' => 'string',
-                'required' => false,
-            ],
-            'org_name_or_uuid' => [
-                'location' => 'uri',
-                'type' => 'string',
-                'required' => true,
-                'description' => 'Organization name or uuid'
-            ]
-        ],
-        'additionalParameters' => [
-            "description" => "Entity data",
-            'location' => 'json'
-        ]
-    ],
-    'removeUser' => [
-        'httpMethod' => 'DELETE',
-        'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/{collection}/{entity_name_or_uuid}/users/{user_name_or_uuid}',
-        'notes' => 'Update a Group entity.',
-        'summary' => 'Update a Group entity by name or uuid and using JSON data',
-        'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
-        'responseType' => 'model',
-        'errorResponses' => $errors,
-        'parameters' => [
-            'app_name_or_uuid' => [
-                'description' => 'app name or uuid',
-                'location' => 'uri',
-                'type' => 'string',
-                'required' => true,
-            ],
-            'entity_name_or_uuid' => [
-                'description' => 'group name or uuid',
-                'location' => 'uri',
-                'type' => 'string',
-                'required' => true,
-            ],
-            'user_name_or_uuid' => [
-                'description' => 'user name or uuid',
-                'location' => 'uri',
-                'type' => 'string',
-                'required' => true,
-            ],
-            'collection' => [
-                'description' => 'collection name (entity type)',
-                'location' => 'uri',
-                'type' => 'string',
-                'required' => true,
-                'default' => 'groups'
+                'default' => $custom
             ],
             'access_token' => [
                 'description' => 'The OAuth2 access token',

@@ -40,47 +40,24 @@ class ApplicationTest extends PHPUnit_Framework_TestCase
      */
     protected $usergrid;
 
-    protected $config = [
-        'usergrid' => [
-            'url' => 'https://api.usergrid.com',
-            'version' => '1.0.0',
-            'orgName' => null,
-            'appName' => null,
-            'manifestPath' => './src/Manifests/1.0.1',
-            'clientId' => null,
-            'clientSecret' => null,
-            'username' => null,
-            'password' => null,
-            /**
-             * The Auth Type setting is the Oauth 2 end point you want to get the OAuth 2
-             * Token from.  You have two options here one is 'application' the other is 'organization'
-             *
-             *  organization will get the the token from http://example.com/management using  client_credentials or password grant type
-             *  application will get the token from http://example.com/managment/org_name/app_name using client_credentials or password grant type
-             */
-            'auth_type' => 'organization',
-            /** The Grant Type to use
-             *
-             * This has to be set to one of the 2 grant types that Apache Usergrid
-             * supports which at the moment is client_credentials or password but at
-             * 2 level organization or application
-             */
-            'grant_type' => 'client_credentials'
-        ]
-    ];
+    protected $config;
 
     /**
      *
      */
     public function setUp()
     {
-        $boostrap = new UsergridBootstrapper($this->config);
-        $this->usergrid = $boostrap->createUsergrid();
+        /** @noinspection PhpIncludeInspection */
+        $this->config = include  $_SERVER['CONFIG'];
+        $bootstrap = new UsergridBootstrapper($this->config);
+        $this->usergrid = $bootstrap->createUsergrid();
     }
 
-    /** @test */
-    public function it_can_get_oauth2_token()
-    {
+    /**
+     * @test
+     * @group internet
+     */
+    public function it_can_get_entity(){
 
     }
 } 
