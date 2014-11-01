@@ -187,7 +187,7 @@ public class EsEntityIndexImpl implements EntityIndex {
 
                 logger.info( "Successfully created new document with docId {} in index {} and type {}", tempId, indexName,
                         VERIFY_TYPE );
-                logger.info( "Successfully created new document with docId {} in index {} and type {}", 
+                logger.info( "Successfully created new document with docId {} in index {} and type {}",
                         tempId, indexName, VERIFY_TYPE );
 
                 // delete all types, this way if we miss one it will get cleaned up
@@ -195,7 +195,7 @@ public class EsEntityIndexImpl implements EntityIndex {
                       .get();
 
                 logger.info( "Successfully deleted all documents in index {} and type {}", indexName, VERIFY_TYPE );
-                logger.info( "Successfully deleted all documents in index {} and type {}", 
+                logger.info( "Successfully deleted all documents in index {} and type {}",
                         indexName, VERIFY_TYPE );
 
                 return true;
