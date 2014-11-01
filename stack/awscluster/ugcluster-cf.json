@@ -149,6 +149,29 @@
             "Default": "1",
             "MinValue": "1"
         },
+        "OpsCenterInstanceType": {
+                   "Description": "Instance type for Opscenter server",
+                   "Type": "String",
+                   "Default": "m3.large",
+                   "AllowedValues": [
+                       "t1.micro",
+                       "m1.small",
+                       "m1.medium",
+                       "m1.large",
+                       "m3.large",
+                       "m1.xlarge",
+                       "m3.xlarge",
+                       "m3.2xlarge",
+                       "c3.4xlarge"
+                   ],
+                   "ConstraintDescription": "must be valid instance type."
+               },
+               "OpsCenterNumServers": {
+                   "Description": "Minimum number of opscenter servers. There should only be one",
+                   "Type": "Number",
+                   "Default": "1",
+                   "MinValue": "1"
+               },
         "InstallYourkit": {
             "Description": "Install the yourkit remote profiling agent into tomcat.  Valid values are 'true' or 'false'",
             "Type": "String",
@@ -401,6 +424,196 @@
                 }
             }
         },
+            "OpsCenterUser": {
+                        "Type": "AWS::IAM::User",
+                        "Properties": {
+                            "Path": "/",
+                            "Policies": [
+                                {
+                                    "PolicyName": "root",
+                                    "PolicyDocument": {
+                                        "Statement": [
+                                            {
+                                                "Effect": "Allow",
+                                                "Action": "*",
+                                                "Resource": "*"
+
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "OpsCenterKey": {
+                        "Type": "AWS::IAM::AccessKey",
+                        "Properties": {
+                            "UserName": {
+                                "Ref": "OpsCenterUser"
+                            }
+                        }
+                    },
+                   "OpsCenterAutoScalingLaunchConfiguration":{
+                     "Type":"AWS::AutoScaling::LaunchConfiguration",
+                     "Properties":{
+                        "UserData":{
+                           "Fn::Base64":{
+                              "Fn::Join":[
+                                 "",
+                                 [
+                                    "#!/bin/bash -ex\n",
+                                    "# OPSCENTER NODE STARTUP \n",
+                                    "exec >/var/log/usergrid-bootstrap.log 2>&1\n",
+                                    "\n",
+                                    "mkdir -p /usr/share/usergrid\n",
+                                    "\n",
+                                    "# create script that sets our environment variables\n",
+                                    "cat >/etc/profile.d/usergrid-env.sh <<EOF\n",
+                                    "alias sudo='sudo -E'\n", "\n",
+                                    "export TYPE=opscenter\n",
+                                    "export STACK_NAME=", { "Ref":"AWS::StackName" }, "\n", "\n",
+                                    "export PUBLIC_HOSTNAME=`(curl -s http://169.254.169.254/latest/meta-data/public-hostname)`\n",
+                                    "export INTERNAL_HOSTNAME=`(curl http://169.254.169.254/latest/meta-data/local-ipv4)`\n",
+                                    "\n",
+                                    "export EC2_INSTANCE_ID=`ec2metadata --instance-id`\n",
+                                    "export EC2_REGION=", { "Ref":"AWS::Region" },
+                                    "\n",
+                                    "export EC2_URL=https://ec2.amazonaws.com/\n",
+                                    "\n",
+                                    "export OPSCENTER_SECURITY_GROUP_NAME=", { "Ref":"OpsCenterSecurityGroup" }, "\n",
+                                    "\n",
+                                    "\n",
+                                    "export CASSANDRA_CLUSTER_NAME=", { "Ref":"CassClusterName" }, "\n",
+                                    "export CASSANDRA_NUM_SERVERS=", { "Ref":"CassNumServers" }, "\n",
+                                    "export GRAPHITE_NUM_SERVERS=", { "Ref":"GraphiteNumServers" }, "\n",
+                                    "export CASSANDRA_KEYSPACE_NAME=usergrid", "\n",
+                                    "export CASSANDRA_REPLICATION_FACTOR=", { "Ref":"CassReplicationFactor" }, "\n",
+                                    "\n",
+                                    "export RELEASE_BUCKET=", { "Ref":"ReleaseBucket" }, "\n",
+                                    "\n",
+                                    "EOF\n",
+                                    "\n",
+                                    "# put AWS creds in environment\n",
+                                    "cat >/etc/profile.d/aws-credentials.sh <<EOF\n",
+                                    "export AWS_ACCESS_KEY=", { "Ref":"CassKey" }, "\n",
+                                    "export AWS_SECRET_KEY=", { "Fn::GetAtt":[ "CassKey", "SecretAccessKey" ] }, "\n",
+                                    "EOF\n",
+                                    "\n",
+                                    "# put AWS creds Priam's config file\n",
+                                    "cat >/etc/awscredential.properties <<EOF\n",
+                                    "AWSACCESSID=", { "Ref":"CassKey" }, "\n",
+                                    "AWSKEY=", { "Fn::GetAtt":[ "CassKey", "SecretAccessKey" ] },
+                                    "\n",
+                                    "EOF\n",
+                                    "\n",
+                                    "# setup s3cmd (will be installed by init script) \n",
+                                    "cat >/etc/s3cfg <<EOF\n",
+                                    "access_key=", { "Ref":"CassKey" }, "\n",
+                                    "secret_key=", { "Fn::GetAtt":[ "CassKey", "SecretAccessKey" ] },
+                                    "\n",
+                                    "EOF\n",
+                                    "chmod 644 /etc/s3cfg\n",
+                                    "ln -s /etc/s3cfg ~ubuntu/.s3cfg\n",
+                                    "ln -s /etc/s3cfg ~root/.s3cfg\n",
+                                    "\n",
+                                    "# download usergrid and init script bundle from S3\n",
+                                    "wget -O- -q http://s3tools.org/repo/deb-all/stable/s3tools.key | apt-key add -\n",
+                                    "wget -O/etc/apt/sources.list.d/s3tools.list http://s3tools.org/repo/deb-all/stable/s3tools.list\n",
+                                    "apt-get update\n",
+                                    "apt-get -y install s3cmd\n",
+                                    "cd /usr/share/usergrid\n",
+                                    "s3cmd --config=/etc/s3cfg get s3://", { "Ref":"ReleaseBucket" }, "/awscluster-1.0-SNAPSHOT-any.tar.gz\n",
+                                    "tar xvf awscluster-1.0-SNAPSHOT-any.tar.gz\n",
+                                    "rm -fr awscluster-1.0-SNAPSHOT-any.tar.gz\n",
+                                    "chmod 755 ./init_instance/*.sh\n",
+                                    "cd ./init_instance\n",
+                                    "# init as an opscenter node \n",
+                                    "sh ./init_opscenter_server.sh\n"
+                               ]
+                              ]
+
+                           }
+                        },
+                        "KeyName":{
+                           "Ref":"KeyPair"
+                        },
+                        "ImageId":{
+                           "Fn::FindInMap":[
+                              "AWSRegionArch2AMI",
+                              {
+                                 "Ref":"AWS::Region"
+                              },
+                              {
+                                 "Fn::FindInMap":[
+                                    "AWSInstanceType2Arch",
+                                    {
+                                       "Ref":"OpsCenterInstanceType"
+                                    },
+                                    "Arch"
+                                 ]
+                              }
+                           ]
+                        },
+                        "InstanceType":{
+                           "Ref":"OpsCenterInstanceType"
+                        },
+                        "IamInstanceProfile":{
+                           "Ref":"RootInstanceProfile"
+                        },
+                        "SecurityGroups":[
+                                        {
+                                           "Ref":"OpsCenterSecurityGroup"
+                                        }
+                                     ]
+
+                     }
+                  },
+                    "OpsCenterAutoScalingGroup": {
+                        "Type": "AWS::AutoScaling::AutoScalingGroup",
+                        "Version": "2014-07-24",
+                        "Properties": {
+                            "AvailabilityZones": [
+                                {
+                                    "Fn::FindInMap": [
+                                        "TwoAZs",
+                                        {
+                                            "Ref": "AWS::Region"
+                                        },
+                                        "AZ1"
+                                    ]
+                                },
+                                {
+                                    "Fn::FindInMap": [
+                                        "TwoAZs",
+                                        {
+                                            "Ref": "AWS::Region"
+                                        },
+                                        "AZ2"
+                                    ]
+                                }
+                            ],
+                            "LaunchConfigurationName": {
+                                "Ref": "OpsCenterAutoScalingLaunchConfiguration"
+                            },
+                            "MinSize": {
+                                "Ref": "OpsCenterNumServers"
+                            },
+                            "MaxSize": {
+                                "Ref": "OpsCenterNumServers"
+                            },
+                            "NotificationConfiguration": {
+                                "TopicARN": {
+                                    "Ref": "NotificationTopic"
+                                },
+                                "NotificationTypes": [
+                                    "autoscaling:EC2_INSTANCE_LAUNCH",
+                                    "autoscaling:EC2_INSTANCE_LAUNCH_ERROR",
+                                    "autoscaling:EC2_INSTANCE_TERMINATE",
+                                    "autoscaling:EC2_INSTANCE_TERMINATE_ERROR"
+                                ]
+                            }
+                        }
+                    },
         "RestUser": {
             "Type": "AWS::IAM::User",
             "Properties": {
@@ -1372,18 +1585,21 @@
                 }
             }
         },
-        "AllowAllToCassOnPort8888": {
-            "Type": "AWS::EC2::SecurityGroupIngress",
-            "Properties": {
-                "GroupName": {
-                    "Ref": "CassSecurityGroup"
-                },
-                "IpProtocol": "tcp",
-                "FromPort": "8888",
-                "ToPort": "8888",
-                "CidrIp": "0.0.0.0/0"
-            }
-        },
+        "AllowOpsCenterToCassOnAllPorts": {
+                "Type": "AWS::EC2::SecurityGroupIngress",
+                "Properties": {
+                    "GroupName": {
+                        "Ref": "CassSecurityGroup"
+                    },
+                    "IpProtocol": "tcp",
+                    "FromPort": "1",
+                    "ToPort": "65535",
+                    "SourceSecurityGroupName": {
+                        "Ref": "OpsCenterSecurityGroup"
+                    }
+                }
+            },
+
         "RestSecurityGroup": {
             "Type": "AWS::EC2::SecurityGroup",
             "Properties": {
@@ -1465,6 +1681,41 @@
                     "Ref": "RestSecurityGroup"
                 }
             }
+        },
+        "OpsCenterSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Opscenter Machines",
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "22",
+                        "ToPort": "22",
+                        "CidrIp": "0.0.0.0/0"
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "8888",
+                        "ToPort": "8888",
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ]
+            }
+        },
+        "AllowCassToOpscenterAllPorts": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupName": {
+                    "Ref": "OpsCenterSecurityGroup"
+                },
+                "IpProtocol": "tcp",
+                "FromPort": "0",
+                "ToPort": "65535",
+                "SourceSecurityGroupName": {
+                    "Ref": "CassSecurityGroup"
+                }
+            }
         }
+
     }
 }

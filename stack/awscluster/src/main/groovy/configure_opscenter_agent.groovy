@@ -36,7 +36,7 @@ String domain    = stackName
 NodeRegistry registry = new NodeRegistry();
 
 // build seed list by listing all Cassandra nodes found in SimpleDB domain with our stackName
-def selectResult = registry.searchNode('cassandra')
+def selectResult = registry.searchNode('opscenter')
 
 def opsCenterNode = selectResult[0]
 
@@ -44,7 +44,7 @@ def opsCenterNode = selectResult[0]
 def clientconfig = """
 
 
-stomp_interface: : ${opsCenterNode}
+stomp_interface: ${opsCenterNode}
 """
 
 println clientconfig

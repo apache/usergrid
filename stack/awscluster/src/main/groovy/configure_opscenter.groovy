@@ -1,19 +1,22 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- *  contributor license agreements.  The ASF licenses this file to You
- * under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License.
- * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *  * Licensed to the Apache Software Foundation (ASF) under one
+ *  * or more contributor license agreements.  See the NOTICE file
+ *  * distributed with this work for additional information
+ *  * regarding copyright ownership.  The ASF licenses this file
+ *  * to you under the Apache License, Version 2.0 (the
+ *  * "License"); you may not use this file except in compliance
+ *  * with the License.  You may obtain a copy of the License at
+ *  *
+ *  *    http://www.apache.org/licenses/LICENSE-2.0
+ *  *
+ *  * Unless required by applicable law or agreed to in writing,
+ *  * software distributed under the License is distributed on an
+ *  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  * KIND, either express or implied.  See the License for the
+ *  * specific language governing permissions and limitations
+ *  * under the License.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.  For additional information regarding
- * copyright in this work, please see the NOTICE file in the top level
- * directory of this distribution.
  */
 
 
@@ -28,31 +31,19 @@ import com.amazonaws.services.simpledb.model.*
 
 
 String hostName  = (String)System.getenv().get("PUBLIC_HOSTNAME")
-String clusterName  = (String)System.getenv().get("CASSANDRA_CLUSTER_NAME")
-
-
 // build seed list by listing all Cassandra nodes found in SimpleDB domain with our stackName
 
-NodeRegistry registry = new NodeRegistry();
-
-def selectResult = registry.searchNode('cassandra')
-def seeds = ""
-def sep = ""
-for (host in selectResult) {
-    seeds = "${seeds}${sep}${host}"
-    sep = ","
-}
 
 
 def cassandraConfig = """
 
 
-cluster_name: '${clusterName}'
+cluster_name: 'opscenter'
 listen_address: ${hostName}
 seed_provider:
     - class_name: org.apache.cassandra.locator.SimpleSeedProvider
       parameters:
-          - seeds: "${seeds}"
+          - seeds: "${hostName}"
 auto_bootstrap: false 
 num_tokens: 256
 hinted_handoff_enabled: true
