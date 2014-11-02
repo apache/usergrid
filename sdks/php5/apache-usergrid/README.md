@@ -92,7 +92,10 @@ the aliases array ```'Usergrid' => 'Apache\Usergrid\Laravel\Facades\Usergrid``` 
  and they are cached by the Usergrid web service client. Calls on the Usergrid client are like magic method in the sense that ```php Usergrid::Management()-> method``` call is not
  backed by a Management class or method its the Manifest that it being selected . Also by using Facades all method are like static method and fit in with newer PHP frameworks just like using the
  AWS PHP SDK when calling enableFacades() on the AWS factory method.
- 
+  
+ All responses are subclasses of Illuminate\Support\Collection class so all collection methods are available to call on your response model eg: first(), get(), map(), fetch(), hasKey(), hasValue(), etc.
+ this is not to mistake this with a Usergrid collection which is like your DB table they too are collection object but if you get a response of a single entiry then its a Collection with a count of 1.
+  
 ### Error Handling ### 
 All HTTP and Server error returned by the Usergrid API have error classes attached to the services descriptors so to handle error's that you want too, Just catch the correct exception eg. resource not found.
 
@@ -144,6 +147,7 @@ foreach($allDevices as $device) {
 // this will have all devices. 
 }
 ```
+
 ### HTTP headers and UserAgents ###
  When working with http clients & server system you may want to sett additional HTTP Headers. Ive have made this easy as well on the Usergrid class you 
  can set any http headers or access token or user agent when calling the set method it will append new headers or replace headers already set so if you 

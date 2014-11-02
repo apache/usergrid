@@ -39,7 +39,7 @@ trait GuzzleCommandTrait
     public static function fromCommand(OperationCommand $command)
     {
         // Initialize the collection
-        $collection = new self($command->getResponse()->json());
+        $collection = new self($command->getResponse()->json()['entities']);
 
         // Set the Usergrid API client on the collection
         $collection->setApiClient($command->getClient()->getApiClient());
