@@ -40,7 +40,7 @@ public class DevicesService extends org.apache.usergrid.services.devices.Devices
     @Override
     public ServiceResults putItemById( ServiceContext context, UUID id ) throws Exception {
         logger.debug("Registering device {}", id);
-        unregisterDeviceToUsers(id,context.getOwner());
+//        unregisterDeviceToUsers(id,context.getOwner());
         ServiceResults results = super.putItemById( context, id );
         return results;
     }
@@ -49,7 +49,7 @@ public class DevicesService extends org.apache.usergrid.services.devices.Devices
     @Override
     public ServiceResults postItemById( ServiceContext context, UUID id ) throws Exception {
         logger.info( "Attempting to connect an entity to device {}", id );
-        unregisterDeviceToUsers(id,context.getOwner());
+//        unregisterDeviceToUsers(id,context.getOwner());
         ServiceResults results = super.postItemById( context, id );
         return results;
     }
