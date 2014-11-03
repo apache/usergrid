@@ -37,7 +37,7 @@ object OrganizationScenarios {
   val createOrgAndAdmin = exec(http("Create Organization")
     .post(Settings.baseUrl+"/management/organizations")
     .headers(Headers.jsonAnonymous)
-    .body(StringBody("{\"organization\":\"" + Settings.org + "\",\"username\":\"" + Settings.org + "\",\"name\":\"${entityName}\",\"email\":\"${entityName}@apigee.com\",\"password\":\"test\"}"))
+    .body(StringBody("{\"organization\":\"" + Settings.org + "\",\"username\":\"" + Settings.admin + "\",\"name\":\"${entityName}\",\"email\":\"${entityName}@apigee.com\",\"password\":\""+Settings.password+"\"}"))
     .check(status.in(200 to 400))
   )
 
@@ -45,7 +45,7 @@ object OrganizationScenarios {
     .post(Settings.baseUrl+"/management/token")
     .headers(Headers.jsonAnonymous)
     //pass in the the username and password, store the "access_token" json response element as the var "authToken" in the session
-    .body(StringBody("{\"username\":\"" + Settings.org + "\",\"password\":\"test\",\"grant_type\":\"password\"}"))
+    .body(StringBody("{\"username\":\"" + Settings.admin + "\",\"password\":\"test\",\"grant_type\":\"password\"}"))
     .check(jsonPath("$.access_token").find(0).saveAs("authToken"))
   )
 

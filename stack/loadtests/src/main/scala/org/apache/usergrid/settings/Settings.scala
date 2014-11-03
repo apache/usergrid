@@ -25,6 +25,8 @@ object Settings {
   // Target settings
   val org = System.getProperty("org")
   val app = System.getProperty("app")
+  val admin = System.getProperty("adminUser")
+  val password = System.getProperty("adminPassword")
   val baseUrl = System.getProperty("baseurl")
   val baseAppUrl = baseUrl + "/" + org + "/" + app
   val httpConf = http.baseURL(baseAppUrl)
