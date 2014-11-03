@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- package org.apache.usergrid.settings
+package org.apache.usergrid.settings
 
 import io.gatling.core.Predef._
 import io.gatling.http.Predef._
