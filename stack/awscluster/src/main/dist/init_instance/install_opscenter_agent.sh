@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # 
 #  Licensed to the Apache Software Foundation (ASF) under one or more
 #   contributor license agreements.  The ASF licenses this file to You
@@ -20,8 +19,6 @@
 
 
 # Install and stop Cassandra
-pushd /etc/apt/sources.list.d
-
 echo "deb http://debian.datastax.com/community stable main" | sudo tee -a /etc/apt/sources.list.d/datastax.community.list
 
 curl -L https://debian.datastax.com/debian/repo_key | sudo apt-key add -
@@ -42,4 +39,4 @@ groovy configure_opscenter_agent.groovy > /var/lib/datastax-agent/conf/address.y
 sudo service datastax-agent stop
 sudo service datastax-agent start
 
-popd
+

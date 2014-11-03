@@ -89,7 +89,177 @@ popd
 
 /etc/init.d/cassandra start
 
+#We have to wait for cass to actually start before we can run our CQL.   Sleep 5 seconds between retries
+while ! echo exit | nc localhost 9160; do sleep 5; done
+
+CASS_REGION=${EC2_REGION%-1}
 #create our keyspace
+cat >> /tmp/opscenter.cql << EOF
+CREATE KEYSPACE "OpsCenter" WITH REPLICATION = {'class' : 'NetworkTopologyStrategy', '${CASS_REGION}' : 1};
+
+USE "OpsCenter";
+
+CREATE TABLE bestpractice_results (
+  key text,
+  column1 varint,
+  value blob,
+  PRIMARY KEY (key, column1)
+) WITH COMPACT STORAGE AND
+  CLUSTERING ORDER BY (column1 DESC) AND
+  bloom_filter_fp_chance=0.010000 AND
+  caching='KEYS_ONLY' AND
+  comment='{"info": "OpsCenter management data.", "version": [5, 0, 1]}' AND
+  dclocal_read_repair_chance=0.000000 AND
+  gc_grace_seconds=0 AND
+  read_repair_chance=0.250000 AND
+  replicate_on_write='true' AND
+  populate_io_cache_on_flush='false' AND
+  compaction={'class': 'SizeTieredCompactionStrategy'} AND
+  compression={'sstable_compression': 'SnappyCompressor'};
+
+CREATE TABLE events (
+  key text PRIMARY KEY,
+  action bigint,
+  level bigint,
+  success boolean,
+  time bigint
+) WITH COMPACT STORAGE AND
+  bloom_filter_fp_chance=0.010000 AND
+  caching='KEYS_ONLY' AND
+  comment='{"info": "OpsCenter management data.", "version": [5, 0, 1]}' AND
+  dclocal_read_repair_chance=0.000000 AND
+  gc_grace_seconds=864000 AND
+  read_repair_chance=0.250000 AND
+  replicate_on_write='true' AND
+  populate_io_cache_on_flush='false' AND
+  compaction={'class': 'SizeTieredCompactionStrategy'} AND
+  compression={'sstable_compression': 'SnappyCompressor'};
+
+CREATE TABLE events_timeline (
+  key text,
+  column1 bigint,
+  value blob,
+  PRIMARY KEY (key, column1)
+) WITH COMPACT STORAGE AND
+  bloom_filter_fp_chance=0.010000 AND
+  caching='KEYS_ONLY' AND
+  comment='{"info": "OpsCenter management data.", "version": [5, 0, 1]}' AND
+  dclocal_read_repair_chance=0.000000 AND
+  gc_grace_seconds=864000 AND
+  read_repair_chance=0.250000 AND
+  replicate_on_write='true' AND
+  populate_io_cache_on_flush='false' AND
+  compaction={'class': 'SizeTieredCompactionStrategy'} AND
+  compression={'sstable_compression': 'SnappyCompressor'};
+
+CREATE TABLE pdps (
+  key text,
+  column1 text,
+  value blob,
+  PRIMARY KEY (key, column1)
+) WITH COMPACT STORAGE AND
+  bloom_filter_fp_chance=0.010000 AND
+  caching='KEYS_ONLY' AND
+  comment='{"info": "OpsCenter management data.", "version": [5, 0, 1]}' AND
+  dclocal_read_repair_chance=0.000000 AND
+  gc_grace_seconds=0 AND
+  read_repair_chance=0.250000 AND
+  replicate_on_write='true' AND
+  populate_io_cache_on_flush='false' AND
+  compaction={'class': 'SizeTieredCompactionStrategy'} AND
+  compression={'sstable_compression': 'SnappyCompressor'};
+
+CREATE TABLE rollups300 (
+  key text,
+  column1 varint,
+  value blob,
+  PRIMARY KEY (key, column1)
+) WITH COMPACT STORAGE AND
+  bloom_filter_fp_chance=0.010000 AND
+  caching='KEYS_ONLY' AND
+  comment='{"info": "OpsCenter management data.", "version": [5, 0, 1]}' AND
+  dclocal_read_repair_chance=0.000000 AND
+  gc_grace_seconds=0 AND
+  read_repair_chance=0.250000 AND
+  replicate_on_write='true' AND
+  populate_io_cache_on_flush='false' AND
+  compaction={'class': 'SizeTieredCompactionStrategy'} AND
+  compression={'sstable_compression': 'SnappyCompressor'};
+
+CREATE TABLE rollups60 (
+  key text,
+  column1 varint,
+  value blob,
+  PRIMARY KEY (key, column1)
+) WITH COMPACT STORAGE AND
+  bloom_filter_fp_chance=0.010000 AND
+  caching='KEYS_ONLY' AND
+  comment='{"info": "OpsCenter management data.", "version": [5, 0, 1]}' AND
+  dclocal_read_repair_chance=0.000000 AND
+  gc_grace_seconds=0 AND
+  read_repair_chance=0.250000 AND
+  replicate_on_write='true' AND
+  populate_io_cache_on_flush='false' AND
+  compaction={'class': 'SizeTieredCompactionStrategy'} AND
+  compression={'sstable_compression': 'SnappyCompressor'};
+
+CREATE TABLE rollups7200 (
+  key text,
+  column1 varint,
+  value blob,
+  PRIMARY KEY (key, column1)
+) WITH COMPACT STORAGE AND
+  bloom_filter_fp_chance=0.010000 AND
+  caching='KEYS_ONLY' AND
+  comment='{"info": "OpsCenter management data.", "version": [5, 0, 1]}' AND
+  dclocal_read_repair_chance=0.000000 AND
+  gc_grace_seconds=0 AND
+  read_repair_chance=0.250000 AND
+  replicate_on_write='true' AND
+  populate_io_cache_on_flush='false' AND
+  compaction={'class': 'SizeTieredCompactionStrategy'} AND
+  compression={'sstable_compression': 'SnappyCompressor'};
+
+CREATE TABLE rollups86400 (
+  key text,
+  column1 varint,
+  value blob,
+  PRIMARY KEY (key, column1)
+) WITH COMPACT STORAGE AND
+  bloom_filter_fp_chance=0.010000 AND
+  caching='KEYS_ONLY' AND
+  comment='{"info": "OpsCenter management data.", "version": [5, 0, 1]}' AND
+  dclocal_read_repair_chance=0.000000 AND
+  gc_grace_seconds=0 AND
+  read_repair_chance=0.250000 AND
+  replicate_on_write='true' AND
+  populate_io_cache_on_flush='false' AND
+  compaction={'class': 'SizeTieredCompactionStrategy'} AND
+  compression={'sstable_compression': 'SnappyCompressor'};
+
+CREATE TABLE settings (
+  key blob,
+  column1 blob,
+  value blob,
+  PRIMARY KEY (key, column1)
+) WITH COMPACT STORAGE AND
+  bloom_filter_fp_chance=0.010000 AND
+  caching='KEYS_ONLY' AND
+  comment='{"info": "OpsCenter management data.", "version": [5, 0, 1]}' AND
+  dclocal_read_repair_chance=0.000000 AND
+  gc_grace_seconds=864000 AND
+  read_repair_chance=1.000000 AND
+  replicate_on_write='true' AND
+  populate_io_cache_on_flush='false' AND
+  compaction={'class': 'SizeTieredCompactionStrategy'} AND
+  compression={'sstable_compression': 'SnappyCompressor'};
+
+EOF
+
+
+echo "Creating opscenter keyspace"
+/usr/bin/cqlsh -f  /tmp/opscenter.cql
+
 
 
 
@@ -103,15 +273,15 @@ apt-get  --force-yes -y install opscenter
 sudo service opscenterd stop
 
 #Configure the usergrid cluster to store data locally, not on the target cluster and auto boostrap it
-pushd /usr/share/usergrid/scripts
+cd /usr/share/usergrid/scripts
 groovy wait_for_instances.groovy cassandra 1
 mkdir -p /etc/opscenter/clusters
 groovy configure_opscenter_usergrid.groovy > /etc/opscenter/clusters/$CASSANDRA_CLUSTER_NAME.conf
-popd
+
 
 sudo service opscenterd start
 
 # tag last so we can see in the console that the script ran to completion
-pushd /usr/share/usergrid/scripts
+cd /usr/share/usergrid/scripts
 groovy tag_instance.groovy
-popd
+

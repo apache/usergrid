@@ -36,12 +36,13 @@ mkdir -p /mnt/log/elasticsearch
 chown elasticsearch /mnt/log/elasticsearch
 
 # Configure ElasticSearch
-cd /usr/share/usergrid/scripts
+
 
 echo "vm.swappiness = 0" >> /etc/sysctl.conf
 sysctl -p
 
 # No need to do this, elasticsearch nodes are also cassandra nodes
+cd /usr/share/usergrid/scripts
 groovy registry_register.groovy elasticsearch
 groovy wait_for_instances.groovy elasticsearch ${ES_NUM_SERVERS}
 
@@ -90,10 +91,13 @@ esac
 cat >> /etc/default/elasticsearch << EOF
 ES_HEAP_SIZE=${ES_HEAP_SIZE}
 MAX_OPEN_FILES=65535
-MAX_LOCKED_MEMORY=unlimited
+MAX_MAP_COUNT=262144
+#MAX_LOCKED_MEMORY=unlimited
 JAVA_HOME=/usr/lib/jvm/jdk1.7.0
 EOF
 
+#Set it because Matt says so
+ulimit -l unlimited
 
 cat >> /etc/security/limits.conf << EOF
 elasticsearch - nofile 65535
@@ -101,6 +105,7 @@ elasticsearch - memlock unlimited
 EOF
 
 
+cd /usr/share/usergrid/scripts
 groovy ./configure_elasticsearch.groovy > /etc/elasticsearch/elasticsearch.yml
 
 update-rc.d elasticsearch defaults 95 10
@@ -114,6 +119,14 @@ pushd /usr/share/elasticsearch/bin
 #Install bigdesk
 
 ./plugin --install lukas-vlcek/bigdesk
+
+./plugin --install mobz/elasticsearch-head
+
+./plugin -install royrusso/elasticsearch-HQ
+
+./plugin -install karmi/elasticsearch-paramedic
+
+./plugin -install xyu/elasticsearch-whatson/0.1.3
 
 popd
 
