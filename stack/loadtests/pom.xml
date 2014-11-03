@@ -53,6 +53,7 @@
 		<encoding>UTF-8</encoding>
 
 		<gatling.version>2.0.1</gatling.version>
+    <gatling.plugin.version>2.0.0</gatling.plugin.version>
 		<gatling-highcharts.version>2.0.1</gatling-highcharts.version>
 
 		<scala-maven-plugin.version>3.1.6</scala-maven-plugin.version>
@@ -115,7 +116,7 @@
 				<plugin>
 					<groupId>io.gatling</groupId>
 					<artifactId>gatling-maven-plugin</artifactId>
-					<version>${gatling.version}</version>
+					<version>${gatling.plugin.version}</version>
 				</plugin>
 			</plugins>
 		</pluginManagement>
