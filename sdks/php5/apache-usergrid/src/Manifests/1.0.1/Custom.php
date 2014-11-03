@@ -22,7 +22,7 @@ return [
         'notes' => 'Query an app collection.',
         'summary' => 'Query an app collection',
         'responseClass' => 'Apache\Usergrid\Api\Models\Collection',
-        'responseType' => 'model',
+        'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -98,7 +98,7 @@ return [
         'notes' => 'Query Users.',
         'summary' => 'Query the users collection',
         'responseClass' => 'Apache\Usergrid\Api\Models\User',
-        'responseType' => 'model',
+        'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -173,7 +173,7 @@ return [
         'notes' => 'Find User by uuid.',
         'summary' => 'Find user by uuid',
         'responseClass' => 'Apache\Usergrid\Api\Models\User',
-        'responseType' => 'model',
+        'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -255,7 +255,7 @@ return [
         'notes' => 'Create new User.  See Usergrid documentation for JSON format of body.',
         'summary' => 'Create new User entity',
         'responseClass' => 'Apache\Usergrid\Api\Models\User',
-        'responseType' => 'model',
+        'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -295,7 +295,7 @@ return [
         'notes' => 'Delete a User entity.',
         'summary' => 'Delete a User entity by name or uuid',
         'responseClass' => 'Apache\Usergrid\Api\Models\User',
-        'responseType' => 'model',
+        'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -337,7 +337,7 @@ return [
         'notes' => 'Update a User entity.',
         'summary' => 'Update a User entity by name or uuid and using JSON data',
         'responseClass' => 'Apache\Usergrid\Api\Models\User',
-        'responseType' => 'model',
+        'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [

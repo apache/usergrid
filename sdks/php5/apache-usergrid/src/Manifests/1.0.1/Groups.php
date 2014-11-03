@@ -22,7 +22,7 @@ return [
         'notes' => 'Query an app collection.',
         'summary' => 'Query an app collection',
         'responseClass' => 'Apache\Usergrid\Api\Models\Collection',
-        'responseType' => 'model',
+        'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -99,7 +99,7 @@ return [
         'notes' => 'Query Groups.',
         'summary' => 'Query the groups collection',
         'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
-        'responseType' => 'model',
+        'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -174,7 +174,7 @@ return [
         'notes' => 'Find group by uuid.',
         'summary' => 'Find group by uuid',
         'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
-        'responseType' => 'model',
+        'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -256,7 +256,7 @@ return [
         'notes' => 'Create new Group.  See Usergrid documentation for JSON format of body.',
         'summary' => 'Create new Group entity',
         'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
-        'responseType' => 'model',
+        'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -296,7 +296,7 @@ return [
         'notes' => 'Delete a Group entity.',
         'summary' => 'Delete a Group entity by name or uuid',
         'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
-        'responseType' => 'model',
+        'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -338,7 +338,7 @@ return [
         'notes' => 'Update a Group entity.',
         'summary' => 'Update a Group entity by name or uuid and using JSON data',
         'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
-        'responseType' => 'model',
+        'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -384,7 +384,7 @@ return [
         'notes' => 'Update a Group entity.',
         'summary' => 'Update a Group entity by name or uuid and using JSON data',
         'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
-        'responseType' => 'model',
+        'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -436,7 +436,7 @@ return [
         'notes' => 'Update a Group entity.',
         'summary' => 'Update a Group entity by name or uuid and using JSON data',
         'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
-        'responseType' => 'model',
+        'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
