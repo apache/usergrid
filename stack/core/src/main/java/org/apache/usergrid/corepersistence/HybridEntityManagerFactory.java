@@ -182,4 +182,14 @@ public class HybridEntityManagerFactory implements EntityManagerFactory, Applica
     public void rebuildCollectionIndex(UUID appId, String collection, ProgressObserver po) {
         factory.rebuildCollectionIndex(appId, collection, po);
     }
+
+    @Override
+    public boolean verifyCollectionsModuleHealthy() {
+        return factory.verifyCollectionsModuleHealthy();
+    }
+
+    @Override
+    public boolean verifyQueryIndexModuleHealthy() {
+        return factory.verifyQueryIndexModuleHealthy();
+    }
 }

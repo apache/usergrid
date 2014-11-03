@@ -31,8 +31,15 @@ sudo apt-get install datastax-agent
 
 
 cd /usr/share/usergrid/scripts
+
+#Wait for the opscenter node to come up
+groovy wait_for_instances.groovy opscenter 1
+
+#Wait for opscenter to come up
+
 groovy configure_opscenter_agent.groovy > /var/lib/datastax-agent/conf/address.yaml
 
+sudo service datastax-agent stop
 sudo service datastax-agent start
 
 popd

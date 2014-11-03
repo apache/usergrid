@@ -28,6 +28,7 @@ import org.apache.usergrid.management.RoleIT;
 import org.apache.usergrid.management.cassandra.ApplicationCreatorIT;
 import org.apache.usergrid.management.cassandra.ExportServiceIT;
 import org.apache.usergrid.management.cassandra.ManagementServiceIT;
+import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.security.providers.FacebookProviderIT;
 import org.apache.usergrid.security.providers.PingIdentityProviderIT;
 import org.apache.usergrid.services.ActivitiesServiceIT;
@@ -59,5 +60,5 @@ public class ServiceITSuite {
     public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
     
     @ClassRule
-    public static ElasticSearchResource elasticSearchResource = ElasticSearchResource.instance;
+    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource().startEs();
 }

@@ -28,6 +28,7 @@ import org.apache.usergrid.mq.QueueManagerFactory;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.IndexBucketLocator;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
+import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.utils.JsonUtils;
 
 
@@ -79,7 +80,7 @@ public class CoreITSetupImpl implements CoreITSetup {
      */
     protected void before( Description description ) throws Throwable {
         LOG.info( "Setting up for {}", description.getDisplayName() );
-        elasticSearchResource.before();
+        elasticSearchResource.startEs();
         initialize();
     }
 
@@ -98,7 +99,6 @@ public class CoreITSetupImpl implements CoreITSetup {
     /** Override to tear down your specific external resource. */
     protected void after( Description description ) {
         LOG.info( "Tearing down for {}", description.getDisplayName() );
-        elasticSearchResource.after();
     }
 
 

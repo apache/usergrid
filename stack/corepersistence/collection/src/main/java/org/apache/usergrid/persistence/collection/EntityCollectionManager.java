@@ -21,18 +21,14 @@ package org.apache.usergrid.persistence.collection;
 
 import java.util.Collection;
 
-import java.util.UUID;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
-
 import org.apache.usergrid.persistence.model.field.Field;
 import rx.Observable;
 
 
 /**
- *
  * The operations for performing changes on an entity
- *
  */
 public interface EntityCollectionManager {
 
@@ -83,4 +79,10 @@ public interface EntityCollectionManager {
      * @return
      */
     public Observable<Entity> update ( Entity entity );
+
+    /** 
+     * Return true if connection query index system (Cassandra) is healthy.
+     */
+    public boolean isHealthy();
+
 }

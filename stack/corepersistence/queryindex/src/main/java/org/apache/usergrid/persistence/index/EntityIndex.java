@@ -36,27 +36,27 @@ public interface EntityIndex {
     public void initializeIndex();
 
     /**
-     * Create the index batch
-     * @return
+     * Create the index batch.
      */
     public EntityIndexBatch createBatch();
 
     /**
      * Execute query in Usergrid syntax.
      */
-
     public CandidateResults search(final IndexScope indexScope,  Query query );
 
     /**
-     * Get the candidate results of all versions of the entity for this id
-     * @param id
-     * @return
+     * Get the candidate results of all versions of the entity for this id.
      */
     public CandidateResults getEntityVersions(final IndexScope indexScope, Id id);
 
     /**
-     * Refresh the index
+     * Refresh the index.
      */
     public void refresh();
 
+    /** 
+     * Return true if connection query index system (ElasticSearch) is healthy.
+     */
+    public boolean isHealthy();
 }

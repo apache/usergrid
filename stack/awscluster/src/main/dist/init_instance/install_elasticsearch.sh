@@ -84,12 +84,22 @@ case `(curl http://169.254.169.254/latest/meta-data/instance-type)` in
     export ES_HEAP_SIZE=24g
 esac
 
+
+
+
 cat >> /etc/default/elasticsearch << EOF
 ES_HEAP_SIZE=${ES_HEAP_SIZE}
 MAX_OPEN_FILES=65535
 MAX_LOCKED_MEMORY=unlimited
 JAVA_HOME=/usr/lib/jvm/jdk1.7.0
 EOF
+
+
+cat >> /etc/security/limits.conf << EOF
+elasticsearch - nofile 65535
+elasticsearch - memlock unlimited
+EOF
+
 
 groovy ./configure_elasticsearch.groovy > /etc/elasticsearch/elasticsearch.yml
 
