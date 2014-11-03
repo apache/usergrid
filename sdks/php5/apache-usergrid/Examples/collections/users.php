@@ -63,3 +63,29 @@ $bootstrapper = new UsergridBootstrapper($config);
 Usergrid::instance($bootstrapper);
 
 
+// call user by page size 20
+$users_paged = Usergrid::users()->all();
+var_dump(get_class($users_paged->entities));
+
+//// get user 50 page size
+$users_paged_50= Usergrid::users()->all(['limit' => 50]);
+var_dump($users_paged_50->entities);
+
+// get all users
+$all_users  = Usergrid::usersIterator();
+foreach($all_users as $user) {
+//    var_dump($user['uuid']); // as array
+}
+
+// find user by query
+$find_user_by_query = Usergrid::users()->find(['ql' => "select * where email='jason@apps4u.com.au'"]);
+var_dump($find_user_by_query->entities->fetch('uuid'));
+
+$find_user_by_uuid = Usergrid::users()->findById(['uuid' => $find_user_by_query->entities->fetch('uuid')[0]]);
+var_dump($find_user_by_uuid->entities);
+
+
+// add user to group
+//$user_to_group = Usergrid::groups()->addUser(['entity_name_or_uuid' => 'group_name_or_uuid', 'user_name_or_uuid' => 'user name or uuid']);
+
+//$user_remove_group = Usergrid::groups()->removeUser(['entity_name_or_uuid' => 'group_name_or_uuid', 'user_name_or_uuid' => 'user name or uuid']);

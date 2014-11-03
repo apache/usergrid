@@ -63,9 +63,9 @@ $bootstrapper = new UsergridBootstrapper($config);
 Usergrid::instance($bootstrapper);
 
 
-//foreach($books_data as $book){
-//    Usergrid::application()->EntityJsonPost($book);
-//}
+foreach($books_data as $book){
+    Usergrid::application()->EntityJsonPost($book);
+}
 
 
 $books = Usergrid::application()->EntityGet(['collection' => 'books', 'limit' => 25]);
@@ -105,7 +105,8 @@ $books->jsonSerialize();
 // Get an iterator for the items in collection
 $iterator = $books->getIterator();
 
-
+//Get a CachingIterator instance
+$caching_iterator = $books->getCachingIterator();
 
 /// Here are some more Methods that you can call on your responses .. To get the most out of this SDK please look at the Illuminate\Support\Collection class
 /// which is the supper class of Apache/Usergrid/Api/Models/BaseCollection class

@@ -22,7 +22,7 @@ return [
         'notes' => 'Get All devices.',
         'summary' => 'Get all Device collection limit 10000',
         'responseClass' => 'Apache\Usergrid\Api\Models\Collection',
-        'responseType' => 'model',
+        'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -99,7 +99,7 @@ return [
         'notes' => 'Query Devices.',
         'summary' => 'Query the devices collection',
         'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
-        'responseType' => 'model',
+        'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -174,7 +174,7 @@ return [
         'notes' => 'Find Device by uuid.',
         'summary' => 'Find device by uuid',
         'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
-        'responseType' => 'model',
+        'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -256,7 +256,7 @@ return [
         'notes' => 'Create new Device.  See Usergrid documentation for JSON format of body.',
         'summary' => 'Create new Device entity',
         'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
-        'responseType' => 'model',
+        'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -296,7 +296,7 @@ return [
         'notes' => 'Delete a Device entity.',
         'summary' => 'Delete a Device entity by name or uuid',
         'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
-        'responseType' => 'model',
+        'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [
@@ -338,7 +338,7 @@ return [
         'notes' => 'Update a Device entity.',
         'summary' => 'Update a Device entity by name or uuid and using JSON data',
         'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
-        'responseType' => 'model',
+        'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
             'app_name_or_uuid' => [

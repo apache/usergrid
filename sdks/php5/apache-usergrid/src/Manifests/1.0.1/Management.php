@@ -15,14 +15,13 @@
  */
 
 return [
-    // Management Tokens
-    'OrgTokenGet' => [
+
+    'AuthPasswordGet' => [
         'httpMethod' => 'GET',
         'uri' => '/management/token',
-        'notes' => 'Get the org or admin user access token.  See the OAuth2 specification for details.',
-        'summary' => 'Get organization access token',
+        'summary' => 'Get management access token',
         'responseClass' => '',
-        'responseType' => 'model',
+        'responseType' => 'object',
         'errorResponses' => $errors,
         'parameters' => [
             'grant_type' => [
@@ -58,15 +57,499 @@ return [
             ]
         ]
     ],
-    'AppTokenGet' => [
+    'AuthorizeGet' => [
         'httpMethod' => 'GET',
-        'uri' => '/management/{org_name_or_uuid}/{app_name_or_uuid}/token',
-        'notes' => 'Get the Application user access token.  See the OAuth2 specification for details.',
-        'summary' => 'Get Application access token',
+        'uri' => '/management/authorize',
+        'summary' => 'Authorize the client.  See the OAuth2 specification.',
         'responseClass' => '',
-        'responseType' => 'model',
+        'responseType' => 'object',
         'errorResponses' => $errors,
         'parameters' => [
+            'response_type' => [
+                'description' => 'Response type.',
+                'location' => 'query',
+                'type' => 'string',
+                'defaultValue' => 'token',
+                'required' => true,
+                'allowableValues' => ['code', 'token']
+            ],
+            'client_id' => [
+                'description' => 'Client ID.',
+                'location' => 'query',
+                'type' => 'string',
+                'required' => true,
+            ],
+            'redirect_uri' => [
+                'description' => 'Redirect URI.',
+                'location' => 'query',
+                'type' => 'string',
+                'required' => false,
+            ],
+            'scope' => [
+                'description' => 'Access Token Scope.',
+                'location' => 'query',
+                'type' => 'string',
+                'required' => false,
+            ],
+            'state' => [
+                'description' => 'Client State.',
+                'location' => 'query',
+                'type' => 'string',
+                'required' => false,
+            ]
+        ]
+
+    ],
+    'OrgJsonPost' => [
+        'httpMethod' => 'POST',
+        'uri' => '/management/orgs',
+        'summary' => 'Create new organization.  See Usergrid documentation for JSON format of body.',
+        'responseClass' => 'Apache\Usergrid\Api\Models\Organization',
+        'responseType' => 'class',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'organization' => [
+                'location' => 'json',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Organization Name'
+            ],
+            'username' => [
+                'location' => 'json',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Admin Username'
+            ],
+            'name' => [
+                'location' => 'json',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Admin Name'
+            ],
+            'email' => [
+                'location' => 'json',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Admin Email'
+            ],
+            'password' => [
+                'location' => 'json',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Admin Password'
+            ]
+        ],
+        'additionalParameters' => [
+            'location' => 'json'
+        ]
+    ],
+    'OrgGet' => [
+        'httpMethod' => 'GET',
+        'uri' => '/management/orgs/{org_name_or_uuid}',
+        'summary' => 'Find organization by name or UUID',
+        'responseClass' => 'Apache\Usergrid\Api\Models\Organization',
+        'responseType' => 'class',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'access_token' => [
+                'location' => 'query',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'The OAuth2 access token'
+            ],
+            'org_name_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Organization name or uuid'
+            ]
+        ]
+    ],
+    'OrgActivateGet' => [
+        'httpMethod' => 'GET',
+        'uri' => '/management/orgs/{org_name_or_uuid}/activate',
+        'summary' => 'Activates the organization',
+        'responseClass' => 'Apache\Usergrid\Api\Models\Organization',
+        'responseType' => 'class',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'org_name_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Organization name or uuid'
+            ],
+            'token' => [
+                'location' => 'query',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'The OAuth2 access token'
+            ],
+            'confirm' => [
+                'location' => 'query',
+                'type' => 'boolean',
+                'required' => false,
+                'description' => 'Send confirmation email'
+            ]
+
+        ]
+    ],
+    'OrgReactivateGet' => [
+        'httpMethod' => 'GET',
+        'uri' => '/management/orgs/{org_name_or_uuid}/reactivate',
+        'summary' => 'Reactivates the organization',
+        'responseClass' => 'Apache\Usergrid\Api\Models\Organization',
+        'responseType' => 'class',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'org_name_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Organization name or uuid'
+            ],
+        ]
+    ],
+    'OrgFeedGet' => [
+        'httpMethod' => 'GET',
+        'uri' => '/management/orgs/{org_name_or_uuid}/feed',
+        'summary' => 'Get organization activity feed',
+        'responseClass' => '',
+        'responseType' => 'object',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'access_token' => [
+                'location' => 'query',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'The OAuth2 access token'
+            ],
+            'org_name_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Organization name or uuid'
+            ]
+        ]
+    ],
+    'OrgCredentialsGet' => [
+        'httpMethod' => 'GET',
+        'uri' => '/management/orgs/{org_name_or_uuid}/credentials',
+        'summary' => 'Get organization client credentials',
+        'responseClass' => '',
+        'responseType' => 'object',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'access_token' => [
+                'location' => 'query',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'The OAuth2 access token'
+            ],
+            'org_name_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Organization name or uuid'
+            ]
+        ]
+    ],
+    'OrgCredentialsPost' => [
+        'httpMethod' => 'POST',
+        'uri' => '/management/orgs/{org_name_or_uuid}/credentials',
+        'summary' => 'Generate organization client credentials',
+        'responseClass' => '',
+        'responseType' => 'object',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'access_token' => [
+                'location' => 'query',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'The OAuth2 access token'
+            ],
+            'org_name_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Organization name or uuid'
+            ]
+        ]
+    ],
+    'OrgUsersGet' => [
+        'httpMethod' => 'GET',
+        'uri' => '/management/orgs/{org_name_or_uuid}/users',
+        'summary' => 'Get admin users for organization',
+        'responseClass' => 'Apache\Usergrid\Api\Models\User',
+        'responseType' => 'class',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'access_token' => [
+                'location' => 'query',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'The OAuth2 access token'
+            ],
+            'org_name_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Organization name or uuid'
+            ]
+        ]
+    ],
+    'OrgUsersJsonPost' => [
+        'httpMethod' => 'POST',
+        'uri' => '/management/orgs/{org_name_or_uuid}/users',
+        'summary' => 'Create new admin user for organization using JSON payload.',
+        'responseClass' => 'Apache\Usergrid\Api\Models\User',
+        'responseType' => 'class',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'access_token' => [
+                'location' => 'query',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'The OAuth2 access token'
+            ],
+            'org_name_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Organization name or uuid'
+            ],
+            'username' => [
+                'location' => 'json',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Admin Username'
+            ],
+            'name' => [
+                'location' => 'json',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Admin Name'
+            ],
+            'email' => [
+                'location' => 'json',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Admin Email'
+            ],
+            'password' => [
+                'location' => 'json',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Admin Password'
+            ]
+        ],
+        'additionalParameters' => [
+            'location' => 'json'
+        ]
+    ],
+    'OrgUsersFormPost' => [
+        'httpMethod' => 'POST',
+        'uri' => '/management/orgs/{org_name_or_uuid}/users',
+        'summary' => 'Create new admin user for organization using form parameters.',
+        'responseClass' => 'Apache\Usergrid\Api\Models\User',
+        'responseType' => 'class',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'access_token' => [
+                'location' => 'query',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'The OAuth2 access token'
+            ],
+            'org_name_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Organization name or uuid'
+            ],
+            'username' => [
+                'location' => 'postField',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Admin Username'
+            ],
+            'name' => [
+                'location' => 'postField',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Admin Name'
+            ],
+            'email' => [
+                'location' => 'postField',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Admin Email'
+            ],
+            'password' => [
+                'location' => 'postField',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Admin Password'
+            ]
+        ],
+        'additionalParameters' => [
+            'location' => 'postField'
+        ]
+    ],
+    'OrgUserPut' => [
+        'httpMethod' => 'PUT',
+        'uri' => '/management/orgs/{org_name_or_uuid}/users/{user_username_email_or_uuid}',
+        'summary' => 'Adds existing admin users for organization.',
+        'responseClass' => 'Apache\Usergrid\Api\Models\User',
+        'responseType' => 'class',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'access_token' => [
+                'location' => 'query',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'The OAuth2 access token'
+            ],
+            'org_name_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Organization name or uuid'
+            ],
+            'user_username_email_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Admin user username, email, or uuid'
+            ]
+        ]
+    ],
+    'OrgUserDelete' => [
+        'httpMethod' => 'DELETE',
+        'uri' => '/management/orgs/{org_name_or_uuid}/users/{user_username_email_or_uuid}',
+        'summary' => 'Remove an admin user from organization.',
+        'responseClass' => 'Apache\Usergrid\Api\Models\User',
+        'responseType' => 'class',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'access_token' => [
+                'location' => 'query',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'The OAuth2 access token'
+            ],
+            'org_name_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Organization name or uuid'
+            ],
+            'user_username_email_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Admin user username, email, or uuid'
+            ]
+        ]
+    ],
+    'OrgAppsGet' => [
+        'httpMethod' => 'GET',
+        'uri' => '/management/orgs/{org_name_or_uuid}/apps',
+        'summary' => 'Get apps for organization',
+        'responseClass' => 'Apache\Usergrid\Api\Models\Application',
+        'responseType' => 'class',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'access_token' => [
+                'location' => 'query',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'The OAuth2 access token'
+            ],
+            'org_name_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Organization name or uuid'
+            ]
+        ]
+    ],
+    'OrgAppsJsonPost' => [
+        'httpMethod' => 'POST',
+        'uri' => '/management/orgs/{org_name_or_uuid}/apps',
+        'summary' => 'Create new application for organization using JSON payload.',
+        'responseClass' => 'Apache\Usergrid\Api\Models\Application',
+        'responseType' => 'class',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'access_token' => [
+                'location' => 'query',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'The OAuth2 access token'
+            ],
+            'org_name_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Organization name or uuid'
+            ],
+            'name' => [
+                'location' => 'json',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Application Name'
+            ]
+        ],
+        'additionalParameters' => [
+            'location' => 'json'
+        ]
+    ],
+    'OrgAppsFormPost' => [
+        'httpMethod' => 'POST',
+        'uri' => '/management/orgs/{org_name_or_uuid}/apps',
+        'summary' => 'Create new application for organization using form parameters.',
+        'responseClass' => 'Apache\Usergrid\Api\Models\Application',
+        'responseType' => 'class',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'access_token' => [
+                'location' => 'query',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'The OAuth2 access token'
+            ],
+            'org_name_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Organization name or uuid'
+            ],
+            'name' => [
+                'location' => 'postField',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Application Name'
+            ]
+        ],
+        'additionalParameters' => [
+            'location' => 'postField'
+        ]
+    ],
+    'OrgAppDelete' => [
+        'httpMethod' => 'DELETE',
+        'uri' => '/management/orgs/{org_name_or_uuid}/apps/{app_name_or_uuid}',
+        'summary' => 'Delete an application in an organization.',
+        'responseClass' => 'Apache\Usergrid\Api\Models\Application',
+        'responseType' => 'class',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'access_token' => [
+                'location' => 'query',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'The OAuth2 access token'
+            ],
             'org_name_or_uuid' => [
                 'location' => 'uri',
                 'type' => 'string',
@@ -78,242 +561,516 @@ return [
                 'type' => 'string',
                 'required' => true,
                 'description' => 'Application name or uuid'
-            ],
-            'grant_type' => [
-                'description' => 'Grant type.',
-                'location' => 'query',
-                'type' => 'string',
-                'defaultValue' => 'password',
-                'required' => true,
-            ],
-            'username' => [
-                'description' => 'Username (for grant_type=password).',
-                'location' => 'query',
-                'type' => 'string',
-                'required' => false,
-            ],
-            'password' => [
-                'description' => 'Password (for grant_type=password).',
-                'location' => 'query',
-                'type' => 'string',
-                'required' => false,
-            ],
-            'client_id' => [
-                'description' => 'Client ID (for grant_type=client_credentials).',
-                'location' => 'query',
-                'type' => 'string',
-                'required' => false,
-            ],
-            'client_secret' => [
-                'description' => 'Client Secret (for grant_type=client_credentials).',
-                'location' => 'query',
-                'type' => 'string',
-                'required' => false,
             ]
         ]
     ],
-    'AdminUserPost' => [
-        'httpMethod' => 'POST',
-        'uri' => '/management/{org_name_or_uuid}/users',
-        'notes' => 'Create Admin User .  See Usergrid documentation for JSON format of body.',
-        'summary' => 'Create Admin User',
+    'OrgAppCredentialsGet' => [
+        'httpMethod' => 'GET',
+        'uri' => '/management/orgs/{org_name_or_uuid}/apps/{app_name_or_uuid}/credentials',
+        'summary' => 'Get application keys.',
         'responseClass' => '',
-        'responseType' => 'model',
+        'responseType' => 'object',
         'errorResponses' => $errors,
         'parameters' => [
+            'access_token' => [
+                'location' => 'query',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'The OAuth2 access token'
+            ],
             'org_name_or_uuid' => [
                 'location' => 'uri',
                 'type' => 'string',
                 'required' => true,
                 'description' => 'Organization name or uuid'
             ],
+            'app_name_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Application name or uuid'
+            ]
+        ]
+    ],
+    'OrgAppCredentialsPost' => [
+        'httpMethod' => 'POST',
+        'uri' => '/management/orgs/{org_name_or_uuid}/apps/{app_name_or_uuid}/credentials',
+        'summary' => 'Generate application keys.',
+        'responseClass' => '',
+        'responseType' => 'object',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'access_token' => [
+                'location' => 'query',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'The OAuth2 access token'
+            ],
+            'org_name_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Organization name or uuid'
+            ],
+            'app_name_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Application name or uuid'
+            ]
+        ]
+    ],
+    'OrgUserJsonPost' => [
+        'httpMethod' => 'POST',
+        'uri' => '/management/users',
+        'summary' => 'Create new admin user.  See Usergrid documentation for JSON format of body.',
+        'responseClass' => 'Apache\Usergrid\Api\Models\User',
+        'responseType' => 'class',
+        'errorResponses' => $errors,
+        'parameters' => [
             'username' => [
                 'location' => 'json',
                 'type' => 'string',
                 'required' => true,
-                'description' => 'Admin User username'
-            ],
-            'email' => [
-                'location' => 'json',
-                'type' => 'string',
-                'required' => true,
-                'description' => 'Admin User email address'
+                'description' => 'Admin Username'
             ],
             'name' => [
                 'location' => 'json',
                 'type' => 'string',
                 'required' => true,
-                'description' => 'Admin User Full name'
+                'description' => 'Admin Name'
+            ],
+            'email' => [
+                'location' => 'json',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Admin Email'
             ],
             'password' => [
                 'location' => 'json',
                 'type' => 'string',
                 'required' => true,
-                'description' => 'Admin User Password Word'
-            ],
-            'access_token' => [
-                'description' => 'The OAuth2 access token',
-                'location' => 'query',
-                'type' => 'string',
-                'required' => false,
-            ],
+                'description' => 'Admin Password'
+            ]
         ],
         'additionalParameters' => [
             'location' => 'json'
         ]
     ],
-    'AdminUserPut' => [
-        'httpMethod' => 'PUT',
-        'uri' => '/management/{org_name_or_uuid}/users/{user_name_or_email}',
-        'notes' => 'Update Admin User .  See Usergrid documentation for JSON format of body.',
-        'summary' => 'Create Admin User',
-        'responseClass' => '',
-        'responseType' => 'model',
+    'OrgUserFormPost' => [
+        'httpMethod' => 'POST',
+        'uri' => '/management/users',
+        'summary' => 'Create new admin using form post parameters.',
+        'responseClass' => 'Apache\Usergrid\Api\Models\User',
+        'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
-            'org_name_or_uuid' => [
-                'location' => 'uri',
+            'username' => [
+                'location' => 'postField',
                 'type' => 'string',
                 'required' => true,
-                'description' => 'Organization name or uuid'
+                'description' => 'Admin Username'
             ],
-            'user_name_or_email' => [
-                'location' => 'uri',
+            'name' => [
+                'location' => 'postField',
                 'type' => 'string',
                 'required' => true,
-                'description' => 'username or email of admin user'
+                'description' => 'Admin Name'
             ],
-            'access_token' => [
-                'description' => 'The OAuth2 access token',
-                'location' => 'query',
+            'email' => [
+                'location' => 'postField',
                 'type' => 'string',
-                'required' => false,
+                'required' => true,
+                'description' => 'Admin Email'
+            ],
+            'password' => [
+                'location' => 'postField',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Admin Password'
             ]
         ],
         'additionalParameters' => [
-            'location' => 'json'
+            'location' => 'postField'
+        ]
+
+    ],
+    'OrgUserResetPasswordGet' => [
+        'httpMethod' => 'GET',
+        'uri' => '/management/users/resetpw',
+        'summary' => 'Initiate a user password reset.  Returns browser-viewable HTML page.',
+        'responseClass' => '',
+        'responseType' => 'object',
+        'errorResponses' => $errors,
+    ],
+    'OrgUserResetPasswordFormPost' => [
+        'httpMethod' => 'POST',
+        'uri' => '/management/users/resetpw',
+        'summary' => 'Complete a user password reset.  Handles form POST response.',
+        'responseClass' => '',
+        'responseType' => 'object',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'email' => [
+                'location' => 'postField',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Admin Email'
+            ],
+            'recaptcha_challenge_field' => [
+                'location' => 'postField',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Recaptcha Challenge Field'
+            ],
+            'recaptcha_response_field' => [
+                'location' => 'postField',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Recaptcha Response Field'
+            ],
         ]
     ],
     'AdminUserGet' => [
         'httpMethod' => 'GET',
-        'uri' => '/management/{org_name_or_uuid}/users/{user_name_or_email}',
-        'notes' => 'Get Admin User .  See Usergrid documentation for JSON format of body.',
-        'summary' => 'Get Admin User',
-        'responseClass' => '',
-        'responseType' => 'model',
+        'uri' => '/management/users/{user_username_email_or_uuid}',
+        'summary' => 'Returns the admin user details',
+        'responseClass' => 'Apache\Usergrid\Api\Models\User',
+        'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
-            'org_name_or_uuid' => [
-                'location' => 'uri',
-                'type' => 'string',
-                'required' => true,
-                'description' => 'Organization name or uuid'
-            ],
-            'user_name_or_email' => [
-                'location' => 'uri',
-                'type' => 'string',
-                'required' => true,
-                'description' => 'username or email of admin user'
-            ],
             'access_token' => [
-                'description' => 'The OAuth2 access token',
                 'location' => 'query',
                 'type' => 'string',
-                'required' => false,
-            ]
-        ]
-    ],
-    'AdminUserPassword' => [
-        'httpMethod' => 'PUT',
-        'uri' => '/management/{org_name_or_uuid}/users/{user_name_or_email}/password',
-        'notes' => 'Set Admin User Password.  See Usergrid documentation for JSON format of body.',
-        'summary' => 'Get Admin User',
-        'responseClass' => '',
-        'responseType' => 'model',
-        'errorResponses' => $errors,
-        'parameters' => [
-            'org_name_or_uuid' => [
+                'required' => true,
+                'description' => 'The OAuth2 access token'
+            ],
+            'user_username_email_or_uuid' => [
                 'location' => 'uri',
                 'type' => 'string',
                 'required' => true,
-                'description' => 'Organization name or uuid'
+                'description' => 'Admin username, email or uuid'
             ],
-            'user_name_or_email' => [
-                'location' => 'uri',
-                'type' => 'string',
-                'required' => true,
-                'description' => 'username or email of admin user'
-            ],
-            'access_token' => [
-                'description' => 'The OAuth2 access token',
-                'location' => 'query',
-                'type' => 'string',
-                'required' => false,
-            ],
-            'password' => [
-                'description' => 'The old password',
-                'location' => 'json',
-                'type' => 'string',
-                'required' => true,
-            ],
-            'newpassword' => [
-                'description' => 'The new password',
-                'location' => 'json',
-                'type' => 'string',
-                'required' => true,
-            ]
         ]
-    ],
 
-    //Management Organizations
-    'CreateOrg' => [
-        'httpMethod' => 'POST',
-        'uri' => '/management/organizations',
-        'notes' => 'Create new Organization.  See Usergrid documentation for JSON format of body.',
-        'summary' => 'Create New Organization',
-        'responseClass' => '',
-        'responseType' => 'model',
+    ],
+    'AdminUserJsonPut' => [
+        'httpMethod' => 'PUT',
+        'uri' => '/management/users/{user_username_email_or_uuid}',
+        'summary' => 'Updates the admin user details.',
+        'responseClass' => 'Apache\Usergrid\Api\Models\User',
+        'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
             'access_token' => [
-                'description' => 'The OAuth2 access token',
                 'location' => 'query',
                 'type' => 'string',
+                'required' => true,
+                'description' => 'The OAuth2 access token'
+            ],
+            'user_username_email_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Admin username, email or uuid'
+            ],
+        ],
+        'additionalParameters' => [
+            'location' => 'json'
+        ]
+
+    ],
+    'AdminUserActivateGet' => [
+        'httpMethod' => 'GET',
+        'uri' => '/management/users/{user_username_email_or_uuid}/activate',
+        'summary' => 'Activates the admin user from link provided in email notification.',
+        'responseClass' => 'Apache\Usergrid\Api\Models\User',
+        'responseType' => 'class',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'access_token' => [
+                'location' => 'query',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'The OAuth2 access token'
+            ],
+            'user_username_email_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Admin username, email or uuid'
+            ],
+            'confirm' => [
+                'location' => 'uri',
+                'type' => 'boolean',
                 'required' => false,
+                'description' => 'Send confirmation email'
+            ],
+        ]
+    ],
+    'AdminUserReactivateGet' => [
+        'httpMethod' => 'GET',
+        'uri' => '/management/users/{user_username_email_or_uuid}/reactivate',
+        'summary' => 'Request admin user reactivation.',
+        'responseClass' => '',
+        'responseType' => 'object',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'user_username_email_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Admin username, email or uuid'
+            ]
+        ]
+    ],
+    'AdminUserFeedGet' => [
+        'httpMethod' => 'GET',
+        'uri' => '/management/users/{user_username_email_or_uuid}/feed',
+        'summary' => 'Get admin user activity feed.',
+        'responseClass' => '',
+        'responseType' => 'object',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'user_username_email_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Admin username, email or uuid'
+            ],
+            'access_token' => [
+                'location' => 'query',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'The OAuth2 access token'
+            ],
+        ]
+    ],
+    'AdminUserPasswordJsonPut' => [
+        'httpMethod' => 'PUT',
+        'uri' => '/management/users/{user_username_email_or_uuid}/password',
+        'summary' => 'Set admin user password.  See Usergrid documentation for JSON format of body.',
+        'responseClass' => '',
+        'responseType' => 'object',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'user_username_email_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Admin username, email or uuid'
+            ],
+            'access_token' => [
+                'location' => 'query',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'The OAuth2 access token'
+            ],
+            'old_password' => [
+                'location' => 'json',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Old and new password'
+            ],
+            'new_password' => [
+                'location' => 'json',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Old and new password'
+            ],
+        ]
+    ],
+    'AdminUserResetPasswordGet' => [
+        'httpMethod' => 'GET',
+        'uri' => '/management/users/{user_username_email_or_uuid}/resetpw',
+        'summary' => 'Initiate a user password reset.  Returns browser-viewable HTML page.',
+        'responseClass' => '',
+        'responseType' => 'object',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'user_username_email_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Admin username, email or uuid'
+            ]
+        ]
+    ],
+    'AdminUserResetPasswordFormPost' => [
+        'httpMethod' => 'GET',
+        'uri' => '/management/users/{user_username_email_or_uuid}/resetpw',
+        'summary' => 'Complete a user password reset.  Handles form POST response.',
+        'responseClass' => '',
+        'responseType' => 'object',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'user_username_email_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Admin username, email or uuid'
+            ],
+            'recaptcha_challenge_field' => [
+                'location' => 'postField',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Recaptcha Challenge Field'
+            ],
+            'recaptcha_response_field' => [
+                'location' => 'postField',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Recaptcha Response Field'
+            ]
+        ]
+    ],
+    'AdminUserOrgsGet' => [
+        'httpMethod' => 'GET',
+        'uri' => '/management/users/{user_username_email_or_uuid}/orgs',
+        'summary' => 'Get organizations for admin user.',
+        'responseClass' => 'Apache\Usergrid\Api\Models\Organization',
+        'responseType' => 'class',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'access_token' => [
+                'location' => 'query',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'The OAuth2 access token'
+            ],
+            'user_username_email_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Admin username, email or uuid'
+            ],
+
+        ]
+    ],
+    'AdminUserOrgsJsonPost' => [
+        'httpMethod' => 'POST',
+        'uri' => '/management/users/{user_username_email_or_uuid}/orgs',
+        'summary' => 'Create new organization for admin user using JSON payload.',
+        'responseClass' => 'Apache\Usergrid\Api\Models\Organization',
+        'responseType' => 'class',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'access_token' => [
+                'location' => 'query',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'The OAuth2 access token'
+            ],
+            'user_username_email_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Admin username, email or uuid'
             ],
             'organization' => [
-                'description' => 'Organization Name',
                 'location' => 'json',
                 'type' => 'string',
                 'required' => true,
+                'description' => 'Admin username, email or uuid'
             ],
-            'username' => [
-                'description' => 'Admin User  Name',
-                'location' => 'json',
-                'type' => 'string',
-                'required' => true,
-            ],
-            'name' => [
-                'description' => 'Admin Users Full Name',
-                'location' => 'json',
-                'type' => 'string',
-                'required' => true,
-            ],
-            'email' => [
-                'description' => 'Admin Users email',
-                'location' => 'json',
-                'type' => 'string',
-                'required' => true,
-            ],
-            'password' => [
-                'description' => 'Admin Users password',
-                'location' => 'json',
-                'type' => 'string',
-                'required' => true,
-            ]
+
         ],
         'additionalParameters' => [
             'location' => 'json'
         ]
     ],
+    'AdminUserOrgsFormPost' => [
+        'httpMethod' => 'POST',
+        'uri' => '/management/users/{user_username_email_or_uuid}/orgs',
+        'summary' => 'Create new organization for admin user using form parameters.',
+        'responseClass' => 'Apache\Usergrid\Api\Models\Organization',
+        'responseType' => 'class',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'access_token' => [
+                'location' => 'query',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'The OAuth2 access token'
+            ],
+            'user_username_email_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Admin username, email or uuid'
+            ],
+            'organization' => [
+                'location' => 'postField',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Admin username, email or uuid'
+            ],
+
+        ],
+        'additionalParameters' => [
+            'location' => 'postField'
+        ]
+    ],
+    'AdminUserOrgPut' => [
+        'httpMethod' => 'PUT',
+        'uri' => '/management/users/{user_username_email_or_uuid}/orgs/{org_name_or_uuid}',
+        'summary' => 'Add admin users to organization.',
+        'responseClass' => '',
+        'responseType' => 'object',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'access_token' => [
+                'location' => 'query',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'The OAuth2 access token'
+            ],
+            'user_username_email_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Admin username, email or uuid'
+            ],
+            'org_name_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Organization name or uuid'
+            ],
+
+        ],
+        'additionalParameters' => [
+            'location' => 'json'
+        ]
+    ],
+    'AdminUserOrgDelete' => [
+        'httpMethod' => 'DELETE',
+        'uri' => '/management/users/{user_username_email_or_uuid}/orgs/{org_name_or_uuid}',
+        'summary' => 'Remove an admin user from organization.',
+        'responseClass' => '',
+        'responseType' => 'object',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'access_token' => [
+                'location' => 'query',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'The OAuth2 access token'
+            ],
+            'user_username_email_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Admin username, email or uuid'
+            ],
+            'org_name_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Organization name or uuid'
+            ],
+
+        ]
+    ]
+
 ];

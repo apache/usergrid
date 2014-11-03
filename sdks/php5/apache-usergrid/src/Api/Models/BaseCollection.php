@@ -38,7 +38,7 @@ class BaseCollection extends Collection
      *
      * @var array
      */
-    protected $collections = [];
+    protected $collections = ['entities'];
 
     /**
      * The Usergrid API client instance.
