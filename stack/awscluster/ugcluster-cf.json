@@ -152,16 +152,11 @@
         "OpsCenterInstanceType": {
                    "Description": "Instance type for Opscenter server",
                    "Type": "String",
-                   "Default": "m3.large",
+                   "Default": "c3.xlarge",
                    "AllowedValues": [
-                       "t1.micro",
-                       "m1.small",
-                       "m1.medium",
-                       "m1.large",
-                       "m3.large",
-                       "m1.xlarge",
-                       "m3.xlarge",
-                       "m3.2xlarge",
+                       "c3.large",
+                       "c3.xlarge",
+                       "c3.2xlarge",
                        "c3.4xlarge"
                    ],
                    "ConstraintDescription": "must be valid instance type."
@@ -564,7 +559,18 @@
                                         {
                                            "Ref":"OpsCenterSecurityGroup"
                                         }
-                                     ]
+                                     ],
+
+                         "BlockDeviceMappings": [
+                             {
+                                 "DeviceName": "/dev/sdb",
+                                 "VirtualName": "ephemeral0"
+                             },
+                             {
+                                 "DeviceName": "/dev/sdc",
+                                 "VirtualName": "ephemeral1"
+                              }
+                            ]
 
                      }
                   },

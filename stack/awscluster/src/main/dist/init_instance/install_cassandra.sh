@@ -20,11 +20,9 @@
 
 
 # Install and stop Cassandra
-pushd /etc/apt/sources.list.d
-
 curl -L http://debian.datastax.com/debian/repo_key | apt-key add -
 
-sudo cat >> cassandra.sources.list << EOF
+sudo cat >> /etc/apt/sources.list.d/cassandra.sources.list << EOF
 deb http://debian.datastax.com/community stable main
 EOF
 
@@ -44,10 +42,10 @@ groovy wait_for_instances.groovy cassandra ${CASSANDRA_NUM_SERVERS}
 #Set or min/max heap to 8GB
 sed -i.bak s/calculate_heap_sizes\(\)/MAX_HEAP_SIZE=\"8G\"\\nHEAP_NEWSIZE=\"1200M\"\\n\\ncalculate_heap_sizes\(\)/g /etc/cassandra/cassandra-env.sh
 
-cd /usr/share/usergrid/scripts
+pushd /usr/share/usergrid/scripts
 groovy configure_cassandra.groovy > /etc/cassandra/cassandra.yaml
+popd
+
 /etc/init.d/cassandra start
 
-
-popd
 

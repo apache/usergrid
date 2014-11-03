@@ -53,14 +53,20 @@ ln -s /home/ubuntu/.groovy /root/.groovy
 cd /usr/share/usergrid/scripts
 groovy tag_instance.groovy -BUILD-IN-PROGRESS
 
-cd /usr/share/usergrid/init_instance
-./install_oraclejdk.sh 
+
+#Create the raid0 array for cassandra storage
+pushd /usr/share/usergrid/init_instance
+./create_raid0.sh
+#Install the oracle jdd
+./install_oraclejdk.sh
+popd
+
+#Install cassandra
 
 # Install and stop Cassandra
-
 curl -L http://debian.datastax.com/debian/repo_key | apt-key add -
 
-sudo cat >> cassandra.sources.list << EOF
+sudo cat >> /etc/apt/sources.list.d/cassandra.sources.list << EOF
 deb http://debian.datastax.com/community stable main
 EOF
 
@@ -71,13 +77,20 @@ apt-get -y --force-yes install libcap2 cassandra=1.2.19
 mkdir -p /mnt/data/cassandra
 chown cassandra /mnt/data/cassandra
 
-# Wait for other instances to start up
-cd /usr/share/usergrid/scripts
-groovy registry_register.groovy opscenter
 
-cd /usr/share/usergrid/scripts
+# Register ourselves
+pushd /usr/share/usergrid/scripts
+groovy registry_register.groovy opscenter
+popd
+
+pushd /usr/share/usergrid/scripts
 groovy configure_opscenter_cassandra.groovy > /etc/cassandra/cassandra.yaml
+popd
+
 /etc/init.d/cassandra start
+
+#create our keyspace
+
 
 
 #Install the opscenter service
@@ -90,13 +103,15 @@ apt-get  --force-yes -y install opscenter
 sudo service opscenterd stop
 
 #Configure the usergrid cluster to store data locally, not on the target cluster and auto boostrap it
-cd /usr/share/usergrid/scripts
+pushd /usr/share/usergrid/scripts
 groovy wait_for_instances.groovy cassandra 1
 mkdir -p /etc/opscenter/clusters
 groovy configure_opscenter_usergrid.groovy > /etc/opscenter/clusters/$CASSANDRA_CLUSTER_NAME.conf
+popd
 
 sudo service opscenterd start
 
 # tag last so we can see in the console that the script ran to completion
-cd /usr/share/usergrid/scripts
+pushd /usr/share/usergrid/scripts
 groovy tag_instance.groovy
+popd
