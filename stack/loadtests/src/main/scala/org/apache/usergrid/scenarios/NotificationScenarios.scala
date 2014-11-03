@@ -21,7 +21,8 @@ import java.nio.file.{Paths, Files}
 
 import io.gatling.core.Predef._
 import io.gatling.http.Predef._
-import scala.concurrent.duration._
+ import org.apache.usergrid.datagenerators.FeederGenerator
+ import scala.concurrent.duration._
 
 import scala.io.Source
 
@@ -65,6 +66,26 @@ object NotificationScenarios {
     .headers(Headers.jsonAuthorized)
     .check(status.is(200))
   )
+
+  val numEntities:Int = Settings.numUsers * 3 * Settings.duration
+
+  val userFeeder = FeederGenerator.generateUserWithGeolocationFeeder(Settings.numUsers *  Settings.duration, Settings.userLocationRadius, Settings.centerLatitude, Settings.centerLongitude)
+
+  val createScenario = scenario("Create Push Notification")
+    .feed(userFeeder)
+    .exec( UserScenarios.postUser)
+    .exec(TokenScenarios.getUserToken)
+    .repeat(2){
+    feed(FeederGenerator.generateEntityNameFeeder("device", numEntities))
+      .exec( DeviceScenarios.postDeviceWithNotifier)
+      .exec(ConnectionScenarios.postUserToDeviceConnection)
+  }
+    .exec(session => {
+    // print the Session for debugging, don't do that on real Simulations
+    println(session)
+    session
+  })
+    .exec( NotificationScenarios.sendNotificationToUser)
 
   /**
    * TODO: Add posting to users, which would expect a user in the session

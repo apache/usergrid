@@ -17,38 +17,21 @@
 package org.apache.usergrid.simulations
 
 import io.gatling.core.Predef._
-import org.apache.usergrid.datagenerators.FeederGenerator
+import io.gatling.http.Predef._
 import org.apache.usergrid.scenarios._
 import org.apache.usergrid.settings.Settings
 import scala.concurrent.duration._
 
 class PushNotificationTargetUserSimulation extends Simulation {
-
-  val duration:Int = Settings.duration
-  val numUsersPerSecond:Int = Settings.numUsers
-  val numEntities:Int = numUsersPerSecond * 3 * duration
-  val httpConf = Settings.httpConf.acceptHeader("application/json")
-  val userFeeder = FeederGenerator.generateUserWithGeolocationFeeder(numUsersPerSecond * duration, Settings.userLocationRadius, Settings.centerLatitude, Settings.centerLongitude)
-
-  val scnToRun = scenario("Create Push Notification")
-    .feed(userFeeder)
-    .exec( UserScenarios.postUser)
-    .exec(TokenScenarios.getUserToken)
-    .repeat(2){
-      feed(FeederGenerator.generateEntityNameFeeder("device", numEntities))
-        .exec( DeviceScenarios.postDeviceWithNotifier)
-        .exec(ConnectionScenarios.postUserToDeviceConnection)
-      }
-    .exec(session => {
-      // print the Session for debugging, don't do that on real Simulations
-      println(session)
-      session
-    })
-    .exec( NotificationScenarios.sendNotificationToUser)
-    .inject(nothingFor(15),constantUsersPerSec(numUsersPerSecond) during (duration))
+  val scnToRun = NotificationScenarios.createScenario
+    .inject(nothingFor(15),constantUsersPerSec(Settings.numUsers) during (Settings.duration)) // wait for 15 seconds so create org can finish, need to figure out coordination
     .throttle(reachRps(Settings.throttle) in ( Settings.rampTime.seconds))
-    .protocols(httpConf)
+    .protocols( Settings.httpConf.acceptHeader("application/json"))
 
-  setUp(OrganizationScenarios.createOrgScenario,scnToRun)
+  val createOrg = OrganizationScenarios.createOrgScenario
+    .inject(atOnceUsers(1))
+    .protocols(http.baseURL(Settings.baseUrl))
+
+  setUp(createOrg,scnToRun)
 
 }

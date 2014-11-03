@@ -56,7 +56,6 @@ object OrganizationScenarios {
 
   val createOrgScenario = scenario("Create org")
     .exec(OrganizationScenarios.createOrgBatch)
-    .inject(atOnceUsers(1))
-    .protocols(http.baseURL(Settings.baseUrl))
+
 
 }
