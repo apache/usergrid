@@ -288,15 +288,12 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
         final Id entityId = entity.getId();
 
-
         ValidationUtils.verifyIdentity(entityId);
 
         // create our observable and start the write
         CollectionIoEvent<Entity> writeData = new CollectionIoEvent<Entity>(collectionScope, entity);
 
-
         Observable<CollectionIoEvent<MvccEntity>> observable = stageRunner(writeData, writeUpdate);
-
 
         return observable.map(writeCommit).doOnNext(new Action1<Entity>() {
             @Override
@@ -304,13 +301,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                 logger.debug("sending entity to the queue");
 
                 //we an update, signal the fix
-
                 taskExecutor.submit(entityVersionCreatedFactory.getTask(collectionScope,entity));
-                //taskExecutor.submit(entityVersionCleanupFactory.getTask(collectionScope, entityId,entity.getVersion()));
-                //TODO T.N Change this to fire a task
-                //                Observable.from( new CollectionIoEvent<Id>(collectionScope,
-                // entityId ) ).map( load ).subscribeOn( Schedulers.io() ).subscribe();
-
 
             }
         }).doOnError(rollback);

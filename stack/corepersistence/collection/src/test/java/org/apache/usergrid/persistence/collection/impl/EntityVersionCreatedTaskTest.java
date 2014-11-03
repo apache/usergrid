@@ -58,12 +58,7 @@ public class EntityVersionCreatedTaskTest {
 
         final int sizeToReturn = 0;
 
-        final CountDownLatch latch = new CountDownLatch( sizeToReturn );
-
-        final EntityVersionCreatedTest eventListener = new EntityVersionCreatedTest(latch);
-
         final Set<EntityVersionCreated> listeners = mock( Set.class );
-        final Iterator<EntityVersionCreated> helper = mock(Iterator.class);
 
         when ( listeners.size()).thenReturn( 0 );
 

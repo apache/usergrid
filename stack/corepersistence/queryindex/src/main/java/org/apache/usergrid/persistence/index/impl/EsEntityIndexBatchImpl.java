@@ -222,25 +222,22 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         return this;
     }
 
+
     @Override
-    public EntityIndexBatch deindexPreviousVersions(Entity entity){
+    public EntityIndexBatch deindexPreviousVersions( Entity entity ) {
 
-            //String helper = System.getProperty( "allow.stale.entities","false" );
-        //"false" gets returned if there is no allow.stale.entities process
-            FilteredQueryBuilder fqb = QueryBuilders.filteredQuery( QueryBuilders
-                            .termQuery( STRING_PREFIX + ENTITYID_FIELDNAME,
-                                    entity.getId().getUuid().toString().toLowerCase() ),
-                    FilterBuilders.rangeFilter( ENTITYVERSION_FIELDNAME ).lt( entity.getVersion().timestamp() ) );
+        FilteredQueryBuilder fqb = QueryBuilders.filteredQuery( QueryBuilders
+                        .termQuery( STRING_PREFIX + ENTITYID_FIELDNAME,
+                                entity.getId().getUuid().toString().toLowerCase() ),
+                FilterBuilders.rangeFilter( ENTITYVERSION_FIELDNAME ).lt( entity.getVersion().timestamp() ) );
 
-            DeleteByQueryResponse response =
-                    client.prepareDeleteByQuery( indexName ).setQuery( fqb ).execute().actionGet();
+        DeleteByQueryResponse response = client.prepareDeleteByQuery( indexName ).setQuery( fqb ).execute().actionGet();
 
-            //error message needs to be retooled so that it describes the entity more througly
-            logger.debug( "Deleted entity {}:{} from all index scopes with response status = {}",
-                    new Object[] { entity.getId().getType(), entity.getId().getUuid(), response.status().toString() } );
+        //error message needs to be retooled so that it describes the entity more throughly
+        logger.debug( "Deleted entity {}:{} from all index scopes with response status = {}",
+                new Object[] { entity.getId().getType(), entity.getId().getUuid(), response.status().toString() } );
 
-            maybeFlush();
-       // }
+        maybeFlush();
 
         return this;
     }

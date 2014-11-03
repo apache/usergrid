@@ -45,10 +45,6 @@ import com.google.inject.name.Named;
  */
 public class EntityVersionCreatedHandler implements EntityVersionCreated {
 
-    @Inject
-    @Named( "defaultConfig" )
-    private Boolean defaultConfig;
-
     private static final Logger logger = LoggerFactory.getLogger(EntityVersionCreatedHandler.class );
 
     public EntityVersionCreatedHandler() {
@@ -68,16 +64,6 @@ public class EntityVersionCreatedHandler implements EntityVersionCreated {
         final EntityIndex ei = cpemf.getManagerCache().getEntityIndex(scope);
 
         EntityIndexBatch batch = ei.createBatch();
-
-        //loads test properties, if not found then remove stale entities
-//        String[] locations = { "usergrid-properties-context.xml" };
-//        ConfigurableApplicationContext appContext =
-//                new ClassPathXmlApplicationContext( locations );
-//
-//        Properties properties = (Properties)appContext.getBean("properties");
-//        String staleString = properties.getProperty("allow.stale.entities","false");
-
-        //if(!staleString.contains( "true" ))
 
         if(System.getProperty( "allow.stale.entities","false" ).equals( "false" )) {
             batch.deindexPreviousVersions( entity );

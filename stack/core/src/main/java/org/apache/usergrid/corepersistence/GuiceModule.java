@@ -64,8 +64,6 @@ public class GuiceModule extends AbstractModule {
                 = Multibinder.newSetBinder( binder(),EntityVersionCreated.class );
         versionCreatedMultibinder.addBinding().to(EntityVersionCreatedHandler.class);
 
-        bind( Boolean.class ).annotatedWith( Names.named( "defaultConfig" ) ).toInstance( false );
-
     }
 
 }
