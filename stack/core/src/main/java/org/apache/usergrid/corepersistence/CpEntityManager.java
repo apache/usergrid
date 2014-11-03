@@ -2640,7 +2640,7 @@ public class CpEntityManager implements EntityManager {
             logger.debug("About to Write {}:{} version {}", new Object[] { 
                 cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion() });
 
-             cpEntity = ecm .write( cpEntity ).toBlocking().last();
+             cpEntity = ecm.write( cpEntity ).toBlocking().last();
 
             logger.debug("Wrote {}:{} version {}", new Object[] { 
                 cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion() });

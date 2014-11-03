@@ -305,6 +305,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
                 //we an update, signal the fix
 
+                taskExecutor.submit(entityVersionCreatedFactory.getTask(collectionScope,entity));
+                //taskExecutor.submit(entityVersionCleanupFactory.getTask(collectionScope, entityId,entity.getVersion()));
                 //TODO T.N Change this to fire a task
                 //                Observable.from( new CollectionIoEvent<Id>(collectionScope,
                 // entityId ) ).map( load ).subscribeOn( Schedulers.io() ).subscribe();

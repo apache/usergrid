@@ -51,6 +51,45 @@ public class EntityVersionCreatedTaskTest {
 
 
     @Test(timeout=10000)
+    public void noListener()
+            throws ExecutionException, InterruptedException, ConnectionException {
+
+        // create a latch for the event listener, and add it to the list of events
+
+        final int sizeToReturn = 0;
+
+        final CountDownLatch latch = new CountDownLatch( sizeToReturn );
+
+        final EntityVersionCreatedTest eventListener = new EntityVersionCreatedTest(latch);
+
+        final Set<EntityVersionCreated> listeners = mock( Set.class );
+        final Iterator<EntityVersionCreated> helper = mock(Iterator.class);
+
+        when ( listeners.size()).thenReturn( 0 );
+
+        final Id applicationId = new SimpleId( "application" );
+
+        final CollectionScope appScope = new CollectionScopeImpl(
+                applicationId, applicationId, "users" );
+
+        final Id entityId = new SimpleId( "user" );
+        final Entity entity = new Entity( entityId );
+
+        // start the task
+
+        EntityVersionCreatedTask entityVersionCreatedTask =
+                new EntityVersionCreatedTask( appScope, listeners, entity);
+
+        ListenableFuture<Void> future = taskExecutor.submit( entityVersionCreatedTask );
+
+        // wait for the task
+        future.get();
+
+        //mocked listener makes sure that the task is called
+        verify( listeners ).size();
+
+    }
+    @Test(timeout=10000)
     public void oneListener()
             throws ExecutionException, InterruptedException, ConnectionException {
 
@@ -106,30 +145,4 @@ public class EntityVersionCreatedTaskTest {
             invocationLatch.countDown();
         }
     }
-
-
-//    private static class SlowListener extends EntityVersionCreatedTest {
-//        final Semaphore blockLatch;
-//
-//        private SlowListener( final CountDownLatch invocationLatch, final Semaphore blockLatch ) {
-//            super( invocationLatch );
-//            this.blockLatch = blockLatch;
-//        }
-//
-//
-//        @Override
-//        public void versionDeleted( final CollectionScope scope, final Id entityId,
-//                                    final List<MvccEntity> entityVersion ) {
-//
-//            //wait for unblock to happen before counting down invocation latches
-//            try {
-//                blockLatch.acquire();
-//            }
-//            catch ( InterruptedException e ) {
-//                throw new RuntimeException( e );
-//            }
-//            super.versionDeleted( scope, entityId, entityVersion );
-//        }
-//    }
-
 }

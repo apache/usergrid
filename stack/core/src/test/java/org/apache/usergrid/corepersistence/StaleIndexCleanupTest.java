@@ -18,13 +18,20 @@
 package org.apache.usergrid.corepersistence;
 
 import com.fasterxml.uuid.UUIDComparator;
+import com.google.inject.Guice;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Properties;
 import java.util.UUID;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.usergrid.AbstractCoreIT;
+import org.apache.usergrid.CoreITSuite;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.count.SimpleBatcher;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityRef;
@@ -43,14 +50,21 @@ import org.apache.usergrid.persistence.index.impl.IndexScopeImpl;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
+
 import org.junit.Assert;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+
+import org.junit.Before;
+import org.junit.After;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 
+//need to create system properties in test that can get applied
 /**
  * Test on read style clean-up of stale ElasticSearch indexes.
  */
@@ -61,6 +75,18 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
     private static final long writeDelayMs = 50;
     private static final long readDelayMs = 50;
 
+    @Before
+    public void before() {
+        //set the batcher to block the submit so we wait for results when testing
+        System.setProperty( "allow.stale.entities","true" );
+
+    }
+
+    @After
+    public void after() {
+        System.clearProperty( "allow.stale.entities" );
+
+    }
 
     /**
      * Test that updating an entity causes the entity's version number to change.
@@ -287,7 +313,9 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
     @Test
     public void testCleanupOnUpdate() throws Exception {
 
-        logger.info("Started testCleanupOnUpdate()");
+        System.setProperty( "allow.stale.entities","false" );
+
+        logger.info( "Started testCleanupOnUpdate()" );
 
         // TODO: turn off index cleanup on read
 
@@ -337,16 +365,9 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
         // query Core Persistence directly for total number of result candidates
         crs = queryCollectionCp("things", "select *");
-        Assert.assertEquals( "Expect stale candidates", numEntities * (numUpdates + 1), crs.size());
+        Assert.assertEquals( "Expect candidates without earlier stale entities", numEntities, crs.size() );
 
-        // wait for indexes to be cleared for the deleted entities
-        count = 0;
-        do {
-            Thread.sleep(100);
-            crs = queryCollectionCp("things", "select *");
-        } while ( crs.size() > 0 || count++ < 14 );
-
-        Assert.assertEquals( "Expect no candidates", 0, crs.size() );
+        System.clearProperty( "allow.stale.entities" );
     }
 
     
