@@ -18,6 +18,7 @@
 
 import io.gatling.core.Predef._
 import io.gatling.http.Predef._
+ import org.apache.usergrid.datagenerators.FeederGenerator
  import org.apache.usergrid.settings.{Settings, Headers}
  import scala.concurrent.duration._
 
@@ -34,19 +35,27 @@ import io.gatling.http.Predef._
 object OrganizationScenarios {
 
   //register the org with the randomly generated org
-  val createOrgAndAdmin = exec(http("Create Organization")
-    .post(Settings.baseUrl+"/management/organizations")
-    .headers(Headers.jsonAnonymous)
-    .body(StringBody("{\"organization\":\"" + Settings.org + "\",\"username\":\"" + Settings.org + "\",\"name\":\"${entityName}\",\"email\":\"${entityName}@apigee.com\",\"password\":\"test\"}"))
-    .check(status.in(200 to 400))
-  )
+  val createOrgAndAdmin =
+    exec(http("Create Organization")
+      .post(Settings.baseUrl + "/management/organizations")
+      .headers(Headers.jsonAnonymous)
+      .body(StringBody("{\"organization\":\"" + Settings.org + "\",\"username\":\"" + Settings.admin + "\",\"name\":\"${entityName}\",\"email\":\"${entityName}@apigee.com\",\"password\":\"" + Settings.password + "\"}"))
+      .check(status.in(200 to 400))
+    )
+  val createOrgBatch =
+    feed(FeederGenerator.generateRandomEntityNameFeeder("org", 1))
+      .exec(OrganizationScenarios.createOrgAndAdmin)
+      .exec(TokenScenarios.getManagementToken)
+      .exec(session => {
+      // print the Session for debugging, don't do that on real Simulations
+      println(session)
+      session
+    })
+      .exec(ApplicationScenarios.createApplication)
+      .exec(NotifierScenarios.createNotifier)
 
-  val getManagementToken = exec(http("POST Org Token")
-    .post(Settings.baseUrl+"/management/token")
-    .headers(Headers.jsonAnonymous)
-    //pass in the the username and password, store the "access_token" json response element as the var "authToken" in the session
-    .body(StringBody("{\"username\":\"" + Settings.org + "\",\"password\":\"test\",\"grant_type\":\"password\"}"))
-    .check(jsonPath("$.access_token").find(0).saveAs("authToken"))
-  )
+  val createOrgScenario = scenario("Create org")
+    .exec(OrganizationScenarios.createOrgBatch)
+
 
 }
