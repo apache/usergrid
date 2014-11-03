@@ -34,13 +34,12 @@ import io.gatling.http.Predef._
 object OrganizationScenarios {
 
   //register the org with the randomly generated org
-  val createOrgAndAdmin = exec(http("Create Organization")
-    .post(Settings.baseUrl+"/management/organizations")
-    .headers(Headers.jsonAnonymous)
-    .body(StringBody("{\"organization\":\"" + Settings.org + "\",\"username\":\"" + Settings.admin + "\",\"name\":\"${entityName}\",\"email\":\"${entityName}@apigee.com\",\"password\":\""+Settings.password+"\"}"))
-    .check(status.in(200 to 400))
-  )
-
-
+  val createOrgAndAdmin =
+    exec(http("Create Organization")
+      .post(Settings.baseUrl + "/management/organizations")
+      .headers(Headers.jsonAnonymous)
+      .body(StringBody("{\"organization\":\"" + Settings.org + "\",\"username\":\"" + Settings.admin + "\",\"name\":\"${entityName}\",\"email\":\"${entityName}@apigee.com\",\"password\":\"" + Settings.password + "\"}"))
+      .check(status.in(200 to 400))
+    )
 
 }
