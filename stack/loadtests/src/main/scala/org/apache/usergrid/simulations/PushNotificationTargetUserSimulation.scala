@@ -14,11 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- package org.apache.usergrid.simulations
+package org.apache.usergrid.simulations
 
 import io.gatling.core.Predef._
-import io.gatling.http.Predef._
-import org.apache.usergrid.settings.Utils
 import org.apache.usergrid.datagenerators.FeederGenerator
 import org.apache.usergrid.scenarios._
 import org.apache.usergrid.settings.Settings
@@ -29,60 +27,28 @@ class PushNotificationTargetUserSimulation extends Simulation {
   val duration:Int = Settings.duration
   val numUsersPerSecond:Int = Settings.numUsers
   val numEntities:Int = numUsersPerSecond * 3 * duration
-  val rampTime:Int = Settings.rampTime
-  val throttle:Int = Settings.throttle
-
   val httpConf = Settings.httpConf.acceptHeader("application/json")
-  val notifier = Settings.pushNotifier
-
-  val createNotifier = NotifierScenarios.createNotifier
-  val createDevice = DeviceScenarios.postDeviceWithNotifier
-  val sendNotification = NotificationScenarios.sendNotificationToUser
-  val createUser = UserScenarios.postUser
-  val createOrg = OrganizationScenarios.createOrgAndAdmin
-  val connectUserToDevice = ConnectionScenarios.postUserToDeviceConnection
-  val createApp = ApplicationScenarios.createApplication
-
-  val getManagementToken = TokenScenarios.getManagementToken
-
-  val getUserToken = TokenScenarios.getUserToken
-
-  val deviceNameFeeder = FeederGenerator.generateEntityNameFeeder("device", numEntities)
   val userFeeder = FeederGenerator.generateUserWithGeolocationFeeder(numUsersPerSecond * duration, Settings.userLocationRadius, Settings.centerLatitude, Settings.centerLongitude)
-  val orgFeeder = FeederGenerator.generateRandomEntityNameFeeder("org", 1)
-
-  val scnCreateOrg = scenario("Create org")
-    .feed(orgFeeder)
-    .exec(createOrg)
-    .exec(getManagementToken)
-    .exec(session => {
-      // print the Session for debugging, don't do that on real Simulations
-      println(session)
-      session
-    })
-    .exec(createApp)
-    .exec(createNotifier).inject(atOnceUsers(1))
-    .protocols(http.baseURL(Settings.baseUrl))
 
   val scnToRun = scenario("Create Push Notification")
     .feed(userFeeder)
-    .exec(createUser)
-    .exec(getUserToken)
+    .exec( UserScenarios.postUser)
+    .exec(TokenScenarios.getUserToken)
     .repeat(2){
-      feed(deviceNameFeeder)
-        .exec(createDevice)
-        .exec(connectUserToDevice)
+      feed(FeederGenerator.generateEntityNameFeeder("device", numEntities))
+        .exec( DeviceScenarios.postDeviceWithNotifier)
+        .exec(ConnectionScenarios.postUserToDeviceConnection)
       }
     .exec(session => {
       // print the Session for debugging, don't do that on real Simulations
       println(session)
       session
     })
-    .exec(sendNotification)
+    .exec( NotificationScenarios.sendNotificationToUser)
     .inject(nothingFor(15),constantUsersPerSec(numUsersPerSecond) during (duration))
-    .throttle(reachRps(throttle) in (rampTime.seconds))
+    .throttle(reachRps(Settings.throttle) in ( Settings.rampTime.seconds))
     .protocols(httpConf)
 
-  setUp(scnCreateOrg,scnToRun)
+  setUp(OrganizationScenarios.createOrgScenario,scnToRun)
 
 }

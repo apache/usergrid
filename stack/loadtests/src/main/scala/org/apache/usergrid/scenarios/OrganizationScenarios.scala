@@ -18,6 +18,7 @@
 
 import io.gatling.core.Predef._
 import io.gatling.http.Predef._
+ import org.apache.usergrid.datagenerators.FeederGenerator
  import org.apache.usergrid.settings.{Settings, Headers}
  import scala.concurrent.duration._
 
@@ -41,5 +42,21 @@ object OrganizationScenarios {
       .body(StringBody("{\"organization\":\"" + Settings.org + "\",\"username\":\"" + Settings.admin + "\",\"name\":\"${entityName}\",\"email\":\"${entityName}@apigee.com\",\"password\":\"" + Settings.password + "\"}"))
       .check(status.in(200 to 400))
     )
+  val createOrgBatch =
+    feed(FeederGenerator.generateRandomEntityNameFeeder("org", 1))
+      .exec(OrganizationScenarios.createOrgAndAdmin)
+      .exec(TokenScenarios.getManagementToken)
+      .exec(session => {
+      // print the Session for debugging, don't do that on real Simulations
+      println(session)
+      session
+    })
+      .exec(ApplicationScenarios.createApplication)
+      .exec(NotifierScenarios.createNotifier)
+
+  val createOrgScenario = scenario("Create org")
+    .exec(OrganizationScenarios.createOrgBatch)
+    .inject(atOnceUsers(1))
+    .protocols(http.baseURL(Settings.baseUrl))
 
 }
