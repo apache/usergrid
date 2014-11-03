@@ -43,9 +43,9 @@ class PushNotificationTargetUserSimulation extends Simulation {
   val connectUserToDevice = ConnectionScenarios.postUserToDeviceConnection
   val createApp = ApplicationScenarios.createApplication
 
-  val getManagementToken = OrganizationScenarios.getManagementToken
+  val getManagementToken = TokenScenarios.getManagementToken
 
-  val getUserToken = UserScenarios.getUserToken
+  val getUserToken = TokenScenarios.getUserToken
 
   val deviceNameFeeder = FeederGenerator.generateEntityNameFeeder("device", numEntities)
   val userFeeder = FeederGenerator.generateUserWithGeolocationFeeder(numUsersPerSecond * duration, Settings.userLocationRadius, Settings.centerLatitude, Settings.centerLongitude)

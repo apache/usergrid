@@ -49,11 +49,5 @@ import io.gatling.core.Predef._
       exec(getUserByUsername)
     }
 
-   val getUserToken =
-     exec(
-       http("POST user token")
-         .post("/token")
-         .body(StringBody("{\"grant_type\":\"password\",\"username\":\"${username}\",\"password\":\"password\"}"))
-         .check(status.is(200),jsonPath("$..access_token").exists,jsonPath("$..access_token").saveAs("authToken"))
-     )
+
 }

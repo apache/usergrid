@@ -41,12 +41,6 @@ object OrganizationScenarios {
     .check(status.in(200 to 400))
   )
 
-  val getManagementToken = exec(http("POST Org Token")
-    .post(Settings.baseUrl+"/management/token")
-    .headers(Headers.jsonAnonymous)
-    //pass in the the username and password, store the "access_token" json response element as the var "authToken" in the session
-    .body(StringBody("{\"username\":\"" + Settings.admin + "\",\"password\":\"test\",\"grant_type\":\"password\"}"))
-    .check(jsonPath("$.access_token").find(0).saveAs("authToken"))
-  )
+
 
 }
