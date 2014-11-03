@@ -33,16 +33,6 @@
     </listener>
 
     <filter>
-        <filter-name>healthCheckFilter</filter-name>
-        <filter-class>org.apache.usergrid.rest.filters.HealthCheckFilter</filter-class>
-    </filter>
-
-    <filter-mapping>
-        <filter-name>healthCheckFilter</filter-name>
-        <url-pattern>/*</url-pattern>
-    </filter-mapping>
-
-    <filter>
         <filter-name>swaggerFilter</filter-name>
         <filter-class>org.apache.usergrid.rest.SwaggerServlet</filter-class>
     </filter>

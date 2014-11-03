@@ -19,6 +19,7 @@
 
 package org.apache.usergrid.persistence.index;
 
+import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -55,8 +56,14 @@ public interface EntityIndex {
      */
     public void refresh();
 
-    /** 
-     * Return true if connection query index system (ElasticSearch) is healthy.
+    /**
+     * Check health of cluster.
      */
-    public boolean isHealthy();
+    public Health getClusterHealth();
+    
+    /**
+     * Check health of this specific index.
+     */
+    public Health getIndexHealth();
+
 }

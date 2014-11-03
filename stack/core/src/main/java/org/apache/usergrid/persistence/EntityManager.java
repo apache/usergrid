@@ -28,6 +28,7 @@ import me.prettyprint.hector.api.mutation.Mutator;
 
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.GeoIndexManager;
+import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.Role;
 import org.apache.usergrid.persistence.index.query.CounterResolution;
@@ -695,4 +696,9 @@ public interface EntityManager {
     public void flushManagerCaches();
 
     public void reindex( final EntityManagerFactory.ProgressObserver po ) throws Exception;
+
+    /**
+     * Get health status of application's index.
+     */
+    public Health getIndexHealth();
 }

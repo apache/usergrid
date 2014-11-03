@@ -19,7 +19,6 @@ package org.apache.usergrid.rest;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
@@ -70,6 +69,9 @@ import com.yammer.metrics.core.Sampling;
 import com.yammer.metrics.core.Summarizable;
 import com.yammer.metrics.core.Timer;
 import com.yammer.metrics.stats.Snapshot;
+import java.io.IOException;
+import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.core.util.Health;
 
 
 /** @author ed@anuff.com */
@@ -160,14 +162,40 @@ public class RootResource extends AbstractContextResource implements MetricProce
 
     @GET
     @Path("status")
-    public JSONWithPadding getStatus( @QueryParam("callback") @DefaultValue("callback") String callback ) {
+    public JSONWithPadding getStatus( 
+            @QueryParam("ignore_errors") @DefaultValue("true") Boolean ignoreErrors,
+            @QueryParam("callback") @DefaultValue("callback") String callback ) {
+
         ApiResponse response = createApiResponse();
+
+        if ( !ignoreErrors ) {
+
+            if ( !emf.getEntityStoreHealth().equals( Health.GREEN )) {
+                throw new RuntimeException("Error connecting to datastore");
+            }
+
+            EntityManager em = emf.getEntityManager( emf.getManagementAppId() );
+            if ( em.getIndexHealth().equals( Health.RED) ) {
+                throw new RuntimeException("Management app index is status RED");
+            }
+
+        }
 
         ObjectNode node = JsonNodeFactory.instance.objectNode();
         node.put( "started", started );
         node.put( "uptime", System.currentTimeMillis() - started );
         node.put( "version", usergridSystemMonitor.getBuildNumber() );
-        node.put( "cassandraAvailable", usergridSystemMonitor.getIsCassandraAlive() );
+
+        // Hector status, for backwards compatibility
+        node.put( "cassandraAvailable", usergridSystemMonitor.getIsCassandraAlive() ); 
+
+        // Core Persistence Collections module status
+        node.put( "cassandraStatus", emf.getEntityStoreHealth().toString() ); 
+
+        // Core Persistence Query Index module status for Management App Index
+        EntityManager em = emf.getEntityManager( emf.getManagementAppId() );
+        node.put( "managementAppIndexStatus", em.getIndexHealth().toString() );
+
         dumpMetrics( node );
         response.setProperty( "status", node );
         return new JSONWithPadding( response, callback );

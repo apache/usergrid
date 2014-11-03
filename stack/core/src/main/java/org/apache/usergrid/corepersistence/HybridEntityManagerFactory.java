@@ -23,6 +23,7 @@ import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.CounterUtils;
 import org.apache.usergrid.persistence.cassandra.EntityManagerFactoryImpl;
+import org.apache.usergrid.persistence.core.util.Health;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -165,12 +166,7 @@ public class HybridEntityManagerFactory implements EntityManagerFactory, Applica
     }
 
     @Override
-    public boolean verifyCollectionsModuleHealthy() {
-        return factory.verifyCollectionsModuleHealthy();
-    }
-
-    @Override
-    public boolean verifyQueryIndexModuleHealthy() {
-        return factory.verifyQueryIndexModuleHealthy();
+    public Health getEntityStoreHealth() {
+        return factory.getEntityStoreHealth();
     }
 }
