@@ -475,6 +475,14 @@
       <scope>test</scope>
     </dependency>
 
+
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>${mockito.version}</version>
+      <scope>test</scope>
+    </dependency>
+
     <dependency>
       <groupId>org.jvnet.mock-javamail</groupId>
       <artifactId>mock-javamail</artifactId>
@@ -538,13 +546,6 @@
       <artifactId>queue</artifactId>
       <version>2.0.0-SNAPSHOT</version>
       <type>jar</type>
-    </dependency>
-
-    <dependency>
-        <groupId>org.jukito</groupId>
-        <artifactId>jukito</artifactId>
-        <version>1.4-UG</version>
-        <scope>test</scope>
     </dependency>
 
     <dependency>

@@ -116,6 +116,7 @@
     <antlr.version>3.4</antlr.version>
     <tika.version>1.4</tika.version>
     <elasticsearch.version>1.3.2</elasticsearch.version>
+    <mockito.version>1.10.8</mockito.version>
 
     <usergrid.it.forkCount>3</usergrid.it.forkCount>
     <usergrid.it.reuseForks>false</usergrid.it.reuseForks>
@@ -1977,13 +1978,13 @@
     </plugins>
   </reporting>
 
-    <repositories>
-        <repository>
-            <id>local-dependencies</id>
-            <name>local-depedendencies</name>
-            <url>file://${project.basedir}/../m2/repository</url>
-        </repository>
-    </repositories>
+    <!--<repositories>-->
+        <!--<repository>-->
+            <!--<id>local-dependencies</id>-->
+            <!--<name>local-depedendencies</name>-->
+            <!--<url>file://${project.basedir}/../m2/repository</url>-->
+        <!--</repository>-->
+    <!--</repositories>-->
 
     <scm>
     	<url>https://git-wip-us.apache.org/repos/asf/incubator-usergrid.git</url>

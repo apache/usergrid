@@ -66,7 +66,7 @@ threadpool.index.type: fixed
 threadpool.index.size: 160
 threadpool.index.queue_size: 0
 threadpool.bulk.type: fixed
-threadpool.bulk.size: 5000
+threadpool.bulk.size: 1000
 threadpool.bulk.queue_size: 0
 threadpool.search.size: 10000
 threadpool.search.type: fixed
