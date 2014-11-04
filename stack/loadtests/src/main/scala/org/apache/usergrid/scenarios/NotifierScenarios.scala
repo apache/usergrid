@@ -60,5 +60,11 @@ object NotifierScenarios {
     .body(StringBody("{\"name\":\"" + notifier + "\",\"provider\":\"" + provider + "\"}"))
     .check(status.in(200 to 400)))
 
+  val checkNotifier = exec(http("Get Notifier")
+    .get(Settings.baseAppUrl+"/notifiers/"+notifier)
+    .headers(Headers.jsonAuthorized)
+    .check(status.is(200),status.saveAs("notifierStatus"))
+  )
+
 
 }

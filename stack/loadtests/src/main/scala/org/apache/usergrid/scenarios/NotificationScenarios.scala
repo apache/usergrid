@@ -72,6 +72,11 @@ object NotificationScenarios {
   val userFeeder = FeederGenerator.generateUserWithGeolocationFeeder(Settings.numUsers *  Settings.duration, Settings.userLocationRadius, Settings.centerLatitude, Settings.centerLongitude)
 
   val createScenario = scenario("Create Push Notification")
+    .asLongAs(session=>session.get("applicationStatus")!="200" && session.get("notifierStatus")!="200"){
+      exec(TokenScenarios.getManagementToken)
+        .exec(ApplicationScenarios.checkApplication)
+        .exec(NotifierScenarios.checkNotifier)
+    }
     .feed(userFeeder)
     .exec( UserScenarios.postUser)
     .exec(TokenScenarios.getUserToken)

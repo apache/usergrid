@@ -46,13 +46,13 @@ object OrganizationScenarios {
     feed(FeederGenerator.generateRandomEntityNameFeeder("org", 1))
       .exec(createOrgAndAdmin)
       .exec(TokenScenarios.getManagementToken)
-      .exec(session => {
-        // print the Session for debugging, don't do that on real Simulations
-        println(session)
-        session
-      })
       .exec(ApplicationScenarios.createApplication)
       .exec(NotifierScenarios.createNotifier)
+      .exec(session => {
+      // print the Session for debugging, don't do that on real Simulations
+      println(session)
+      session
+    })
 
   val createOrgScenario = scenario("Create org").exec(createOrgBatch)
 
