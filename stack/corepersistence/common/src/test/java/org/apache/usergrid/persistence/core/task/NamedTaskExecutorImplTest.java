@@ -185,6 +185,38 @@ public class NamedTaskExecutorImplTest {
     }
 
 
+    @Test
+    public void rejectingTaskExecutor() throws InterruptedException {
+
+        final int threadPoolSize = 0;
+        final int queueSize = 0;
+
+        final TaskExecutor executor = new NamedTaskExecutorImpl( "jobSuccess", threadPoolSize, queueSize );
+
+        final CountDownLatch exceptionLatch = new CountDownLatch( 0 );
+        final CountDownLatch rejectedLatch = new CountDownLatch( 1 );
+        final CountDownLatch runLatch = new CountDownLatch( 0 );
+
+
+        //now submit the second task
+
+
+
+        final TestTask<Void> testTask = new TestTask<Void>( exceptionLatch, rejectedLatch, runLatch ) {};
+
+        executor.submit( testTask );
+
+
+        //should be immediately rejected
+        rejectedLatch.await( 1000, TimeUnit.MILLISECONDS );
+
+        //if we get here we've been rejected, just double check we didn't run
+
+        assertEquals( 0l, exceptionLatch.getCount() );
+        assertEquals( 0l, runLatch.getCount() );
+    }
+
+
     private static abstract class TestTask<V> implements Task<V> {
 
         private final List<Throwable> exceptions;

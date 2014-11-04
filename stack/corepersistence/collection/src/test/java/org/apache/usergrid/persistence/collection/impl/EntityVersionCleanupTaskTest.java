@@ -639,119 +639,88 @@ public class EntityVersionCleanupTaskTest {
         latch.await();
     }
 
-
     /**
      * Tests that our task will run in the caller if there's no threads, ensures that the task runs
      */
-    @Ignore("Test is a work in progress")
     @Test(timeout=10000)
-    public void runsWhenRejected() 
+    public void singleListenerSingleVersionRejected()
             throws ExecutionException, InterruptedException, ConnectionException {
 
 
-        /**
-         * only 1 thread on purpose, we want to saturate the task
-         */
-        final TaskExecutor taskExecutor = new NamedTaskExecutorImpl( "test", 1, 0 );
+        final TaskExecutor taskExecutor = new NamedTaskExecutorImpl( "test", 0, 0 );
 
         final SerializationFig serializationFig = mock( SerializationFig.class );
 
         when( serializationFig.getBufferSize() ).thenReturn( 10 );
 
-        final MvccEntitySerializationStrategy mvccEntitySerializationStrategy =
+        final MvccEntitySerializationStrategy ess =
                 mock( MvccEntitySerializationStrategy.class );
 
         final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy =
                 mock( MvccLogEntrySerializationStrategy.class );
 
-        final Keyspace keyspace1 = mock( Keyspace.class );
-        final Keyspace keyspace2 = mock( Keyspace.class );
+        final Keyspace keyspace = mock( Keyspace.class );
 
 
         final MutationBatch entityBatch = mock( MutationBatch.class );
         final MutationBatch logBatch = mock( MutationBatch.class );
 
-        when( keyspace1.prepareMutationBatch() )
-            .thenReturn( mock( MutationBatch.class ) ) // don't care what happens to this one
-            .thenReturn( entityBatch )
-            .thenReturn( logBatch );
+        when( keyspace.prepareMutationBatch() )
+                .thenReturn( mock( MutationBatch.class ) ) // don't care what happens to this one
+                .thenReturn( entityBatch )
+                .thenReturn( logBatch );
 
-        when( keyspace2.prepareMutationBatch() )
-            .thenReturn( mock( MutationBatch.class ) ) // don't care what happens to this one
-            .thenReturn( entityBatch )
-            .thenReturn( logBatch );
 
 
         //create a latch for the event listener, and add it to the list of events
-        final int sizeToReturn = 10;
+        final int sizeToReturn = 1;
 
+        final CountDownLatch latch = new CountDownLatch( sizeToReturn );
 
-        final int listenerCount = 2;
+        final EntityVersionDeletedTest eventListener = new EntityVersionDeletedTest( latch );
 
-        final CountDownLatch latch = new CountDownLatch( 
-                sizeToReturn/serializationFig.getBufferSize() * listenerCount );
-        final Semaphore waitSemaphore = new Semaphore( 0 );
+        final Set<EntityVersionDeleted> listeners = new HashSet<EntityVersionDeleted>();
 
-
-        final SlowListener slowListener = new SlowListener( latch, waitSemaphore );
-        final EntityVersionDeletedTest runListener = new EntityVersionDeletedTest( latch );
-
+        listeners.add( eventListener );
 
         final Id applicationId = new SimpleId( "application" );
 
 
-        final CollectionScope appScope = new CollectionScopeImpl( 
+        final CollectionScope appScope = new CollectionScopeImpl(
                 applicationId, applicationId, "users" );
 
         final Id entityId = new SimpleId( "user" );
 
 
         //mock up a single log entry for our first test
-        final LogEntryMock logEntryMock = LogEntryMock.createLogEntryMock( 
+        final LogEntryMock logEntryMock = LogEntryMock.createLogEntryMock(
                 mvccLogEntrySerializationStrategy, appScope, entityId, sizeToReturn + 1 );
 
 
         final UUID version = logEntryMock.getEntries().iterator().next().getVersion();
 
+
         final UniqueValueSerializationStrategy uniqueValueSerializationStrategy =
                 mock( UniqueValueSerializationStrategy.class );
 
-
-        EntityVersionCleanupTask firstTask = new EntityVersionCleanupTask( 
-            serializationFig, 
-            mvccLogEntrySerializationStrategy,
-            mvccEntitySerializationStrategy, 
-            uniqueValueSerializationStrategy, 
-            keyspace1,
-            Sets.newSet( (EntityVersionDeleted)runListener ),
-            appScope,  
-            entityId, 
-            version );
-
-
-        //change the listeners to one that is just invoked quickly
-
-
-        EntityVersionCleanupTask secondTask = new EntityVersionCleanupTask( 
-            serializationFig,
-            mvccLogEntrySerializationStrategy,
-            mvccEntitySerializationStrategy,
-            uniqueValueSerializationStrategy, 
-            keyspace2, 
-            Sets.newSet( (EntityVersionDeleted)runListener ),
-            appScope,
-            entityId, 
-            version );
-
+        EntityVersionCleanupTask cleanupTask =
+                new EntityVersionCleanupTask( serializationFig,
+                        mvccLogEntrySerializationStrategy,
+                        ess,
+                        uniqueValueSerializationStrategy,
+                        keyspace,
+                        listeners,
+                        appScope,
+                        entityId,
+                        version
+                );
 
         final MutationBatch batch = mock( MutationBatch.class );
 
 
         //set up returning a mutator
-        when( mvccEntitySerializationStrategy
-                .delete( same( appScope ), same( entityId ), any( UUID.class ) ) )
+        when(ess.delete( same( appScope ), same( entityId ), any( UUID.class ) ) )
                 .thenReturn( batch );
-
 
 
         when( mvccLogEntrySerializationStrategy
@@ -759,47 +728,33 @@ public class EntityVersionCleanupTaskTest {
                 .thenReturn( batch );
 
 
+        final List<MvccEntity> mel = new ArrayList<MvccEntity>();
+
+        mel.add( new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(),
+                MvccEntity.Status.DELETED, Optional.fromNullable((Entity)null)) );
+
+        mel.add( new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(),
+                MvccEntity.Status.DELETED, Optional.fromNullable((Entity)null)) );
+
+        when( ess.load( same( appScope ), same( entityId ), any(UUID.class), any(Integer.class) ) )
+                .thenReturn(mel.iterator() );
+
+
         //start the task
-        ListenableFuture<Void> future1 = taskExecutor.submit( firstTask );
-
-        //now start another task while the slow running task is running
-        ListenableFuture<Void> future2 = taskExecutor.submit( secondTask );
-
-        //get the second task, we shouldn't have been able to queue it, 
-        // therefore it should just run in process
-        future2.get();
-
-        /**
-         * While we're not done, release latches every 200 ms
-         */
-        while ( !future1.isDone() ) {
-            Thread.sleep( 200 );
-            waitSemaphore.release( listenerCount );
-        }
+        ListenableFuture<Void> future = taskExecutor.submit( cleanupTask );
 
         //wait for the task
-        future1.get();
+        future.get();
 
         //we deleted the version
-        //verify we deleted everything
+        //verify it was run
+        verify( entityBatch ).execute();
 
-
-        //we deleted the version
-        //verify we deleted everything
-        verify( logBatch, times( sizeToReturn* 2 ) ).mergeShallow( any( MutationBatch.class ) );
-
-        verify( entityBatch, times( sizeToReturn * 2) ).mergeShallow( any( MutationBatch.class ) );
-
-
-        verify( logBatch, times(2) ).execute();
-
-        verify( entityBatch, times(2) ).execute();
-
+        verify( logBatch ).execute();
 
         //the latch was executed
         latch.await();
     }
-
 
     private static class EntityVersionDeletedTest implements EntityVersionDeleted {
         final CountDownLatch invocationLatch;
