@@ -30,7 +30,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <aws.s3.release-bucket>ug-cloudformation</aws.s3.release-bucket>
+        <aws.s3.release-bucket>usergrid-jenkins-builds</aws.s3.release-bucket>
         <stack.war>../rest/target/ROOT.war</stack.war>
         <portal.dir>../../portal/dist/usergrid-portal</portal.dir>
     </properties>
@@ -69,26 +69,52 @@
                         <goals>
                             <goal>java</goal>
                         </goals>
+                        <id>upload-scripts</id>
+                        <configuration>
+                            <includeProjectDependencies>true</includeProjectDependencies>
+                            <includePluginDependencies>true</includePluginDependencies>
+                            <classpathScope>runtime</classpathScope>
+                            <executableDependency>
+                                <groupId>net.java.dev.jets3t</groupId>
+                                <artifactId>jets3t</artifactId>
+                            </executableDependency>
+                            <mainClass>org.jets3t.apps.synchronize.Synchronize</mainClass>
+                            <arguments>
+                                <argument>--nodelete</argument>
+                                <argument>--properties</argument>
+                                <argument>${project.basedir}/aws.properties</argument>
+                                <argument>UP</argument>
+                                <argument>${aws.s3.release-bucket}</argument>
+                                <argument>${project.build.directory}/${project.build.finalName}-any.tar.gz</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <id>upload-war</id>
+                        <configuration>
+                            <includeProjectDependencies>true</includeProjectDependencies>
+                            <includePluginDependencies>true</includePluginDependencies>
+                            <classpathScope>runtime</classpathScope>
+                            <executableDependency>
+                                <groupId>net.java.dev.jets3t</groupId>
+                                <artifactId>jets3t</artifactId>
+                            </executableDependency>
+                            <mainClass>org.jets3t.apps.synchronize.Synchronize</mainClass>
+                            <arguments>
+                                <argument>--nodelete</argument>
+                                <argument>--properties</argument>
+                                <argument>${project.basedir}/aws.properties</argument>
+                                <argument>UP</argument>
+                                <argument>${aws.s3.release-bucket}</argument>
+                                <argument>${stack.war}</argument>
+                            </arguments>
+                        </configuration>
                     </execution>
                 </executions>
-                <configuration>
-                    <includeProjectDependencies>true</includeProjectDependencies>
-                    <includePluginDependencies>true</includePluginDependencies>
-                    <classpathScope>runtime</classpathScope>
-                    <executableDependency>
-                        <groupId>net.java.dev.jets3t</groupId>
-                        <artifactId>jets3t</artifactId>
-                    </executableDependency>
-                    <mainClass>org.jets3t.apps.synchronize.Synchronize</mainClass>
-                    <arguments>
-                        <argument>--nodelete</argument>
-                        <argument>--properties</argument>
-                        <argument>${project.basedir}/aws.properties</argument>
-                        <argument>UP</argument>
-                        <argument>${aws.s3.release-bucket}</argument>
-                        <argument>${project.build.directory}/${project.build.finalName}-any.tar.gz</argument>
-                    </arguments>
-                </configuration>
                 <dependencies>
                     <dependency>
                         <groupId>net.java.dev.jets3t</groupId>
@@ -143,7 +169,7 @@
             <artifactId>jets3t</artifactId>
             <version>0.8.0</version>
         </dependency>
-        
+
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk</artifactId>
