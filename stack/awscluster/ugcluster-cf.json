@@ -15,7 +15,7 @@
         "ReleaseBucket": {
             "Description": "S3 Bucket where Usergrid assembly is to be found.",
             "Type": "String",
-            "Default": "ug-cloudformation"
+            "Default": "usergrid-jenkins-builds"
         },
         "RestMinServers": {
             "Description": "Minimum number of REST servers.",
@@ -49,7 +49,7 @@
         "KeyPair": {
             "Description": "EC2 key pair to be use for SSH access",
             "Type": "String",
-            "Default": "ug-cloudformation"
+            "Default": "jenkins-east"
         },
         "CassClusterName": {
             "Description": "Name to be used for Cassandra cluster.",
@@ -309,9 +309,11 @@
                       "apt-get update\n",
                       "apt-get -y install s3cmd\n",
                       "cd /usr/share/usergrid\n",
-                      "s3cmd --config=/etc/s3cfg get s3://", { "Ref":"ReleaseBucket" }, "/awscluster-1.0-SNAPSHOT-any.tar.gz\n",
-                      "tar xvf awscluster-1.0-SNAPSHOT-any.tar.gz\n",
-                      "rm -fr awscluster-1.0-SNAPSHOT-any.tar.gz\n",
+                      "s3cmd --config=/etc/s3cfg get s3://", {"Ref": "ReleaseBucket"}, "/aws-init-scripts.tgz\n",
+                      "s3cmd --config=/etc/s3cfg get s3://", {"Ref": "ReleaseBucket"}, "/stack/rest/target/ROOT.war\n",
+                      "tar xvf aws-init-scripts.tgz\n",
+                      "rm -fr aws-init-scripts.tgz\n",
+                      "mv ROOT.war webapps/ROOT.war\n",
                       "chmod 755 ./init_instance/*.sh\n",
                       "cd ./init_instance\n",
                       "# Init as a REST intance \n",
@@ -554,9 +556,11 @@
                         "apt-get update\n",
                         "apt-get -y install s3cmd\n",
                         "cd /usr/share/usergrid\n",
-                        "s3cmd --config=/etc/s3cfg get s3://", { "Ref":"ReleaseBucket" }, "/awscluster-1.0-SNAPSHOT-any.tar.gz\n",
-                        "tar xvf awscluster-1.0-SNAPSHOT-any.tar.gz\n",
-                        "rm -fr awscluster-1.0-SNAPSHOT-any.tar.gz\n",
+                        "s3cmd --config=/etc/s3cfg get s3://", {"Ref": "ReleaseBucket"}, "/aws-init-scripts.tgz\n",
+                        "s3cmd --config=/etc/s3cfg get s3://", {"Ref": "ReleaseBucket"}, "/stack/rest/target/ROOT.war\n",
+                        "tar xvf aws-init-scripts.tgz\n",
+                        "rm -fr aws-init-scripts.tgz\n",
+                        "mv ROOT.war webapps/ROOT.war\n",
                         "chmod 755 ./init_instance/*.sh\n",
                         "cd ./init_instance\n",
                         "# init as a Cassandra node \n",
@@ -675,7 +679,7 @@
                         "export TYPE=es\n",
                         "export STACK_NAME=", { "Ref":"AWS::StackName" }, "\n", "\n",
                         "export PUBLIC_HOSTNAME=`(curl -s http://169.254.169.254/latest/meta-data/public-hostname)`\n",
-                        "export INTERNAL_HOSTNAME=`(curl http://169.254.169.254/latest/meta-data/local-ipv4)`\n", 
+                        "export INTERNAL_HOSTNAME=`(curl http://169.254.169.254/latest/meta-data/local-ipv4)`\n",
                         "\n",
                         "export EC2_INSTANCE_ID=`ec2metadata --instance-id`\n",
                         "export EC2_REGION=", { "Ref":"AWS::Region" },
@@ -715,9 +719,11 @@
                         "apt-get update\n",
                         "apt-get -y install s3cmd\n",
                         "cd /usr/share/usergrid\n",
-                        "s3cmd --config=/etc/s3cfg get s3://", { "Ref":"ReleaseBucket" }, "/awscluster-1.0-SNAPSHOT-any.tar.gz\n",
-                        "tar xvf awscluster-1.0-SNAPSHOT-any.tar.gz\n",
-                        "rm -fr awscluster-1.0-SNAPSHOT-any.tar.gz\n",
+                        "s3cmd --config=/etc/s3cfg get s3://", {"Ref": "ReleaseBucket"}, "/aws-init-scripts.tgz\n",
+                        "s3cmd --config=/etc/s3cfg get s3://", {"Ref": "ReleaseBucket"}, "/stack/rest/target/ROOT.war\n",
+                        "tar xvf aws-init-scripts.tgz\n",
+                        "rm -fr aws-init-scripts.tgz\n",
+                        "mv ROOT.war webapps/ROOT.war\n",
                         "chmod 755 ./init_instance/*.sh\n",
                         "cd ./init_instance\n",
                         "# init as an ES node \n",
@@ -884,9 +890,11 @@
                         "apt-get update\n",
                         "apt-get -y install s3cmd\n",
                         "cd /usr/share/usergrid\n",
-                        "s3cmd --config=/etc/s3cfg get s3://", { "Ref":"ReleaseBucket" }, "/awscluster-1.0-SNAPSHOT-any.tar.gz\n",
-                        "tar xvf awscluster-1.0-SNAPSHOT-any.tar.gz\n",
-                        "rm -fr awscluster-1.0-SNAPSHOT-any.tar.gz\n",
+                        "s3cmd --config=/etc/s3cfg get s3://", {"Ref": "ReleaseBucket"}, "/aws-init-scripts.tgz\n",
+                        "s3cmd --config=/etc/s3cfg get s3://", {"Ref": "ReleaseBucket"}, "/stack/rest/target/ROOT.war\n",
+                        "tar xvf aws-init-scripts.tgz\n",
+                        "rm -fr aws-init-scripts.tgz\n",
+                        "mv ROOT.war webapps/ROOT.war\n",
                         "chmod 755 ./init_instance/*.sh\n",
                         "cd ./init_instance\n",
                         "# Init as a REST intance \n",
@@ -1270,7 +1278,7 @@
                     }
                 ]
             }
-        },        
+        },
         "AllowCassToCassOnAllPorts": {
             "Type": "AWS::EC2::SecurityGroupIngress",
             "Properties": {
