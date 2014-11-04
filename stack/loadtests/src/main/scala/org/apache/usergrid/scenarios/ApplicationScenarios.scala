@@ -45,7 +45,7 @@ object ApplicationScenarios {
 
    val checkApplication = exec(http("Get Application")
      .get(Settings.baseAppUrl)
-     .headers(Headers.jsonAnonymous)
+     .headers(Headers.jsonAuthorized)
      .check(status.saveAs("applicationStatus"))
    )
 

@@ -24,7 +24,7 @@ import scala.concurrent.duration._
 
 class PushNotificationTargetUserSimulation extends Simulation {
   val scnToRun = NotificationScenarios.createScenario
-    .inject(nothingFor(15),constantUsersPerSec(Settings.numUsers) during (Settings.duration)) // wait for 15 seconds so create org can finish, need to figure out coordination
+    .inject(constantUsersPerSec(Settings.numUsers) during (Settings.duration)) // wait for 15 seconds so create org can finish, need to figure out coordination
     .throttle(reachRps(Settings.throttle) in ( Settings.rampTime.seconds))
     .protocols( Settings.httpConf.acceptHeader("application/json"))
 
