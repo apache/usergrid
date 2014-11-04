@@ -19,8 +19,6 @@
 package org.apache.usergrid.corepersistence;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.name.Names;
 
 
 public class TestGuiceModule extends AbstractModule {
