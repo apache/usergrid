@@ -76,6 +76,7 @@ object NotificationScenarios {
       exec(TokenScenarios.getManagementToken)
         .exec(ApplicationScenarios.checkApplication)
         .exec(NotifierScenarios.checkNotifier)
+        .exec(session=>{session.remove("authToken")})
     }
     .feed(userFeeder)
     .exec( UserScenarios.postUser)
