@@ -180,6 +180,52 @@ public class EntityVersionCreatedTaskTest {
         verify( listeners ).iterator();
     }
 
+    @Test(timeout=10000)
+    public void oneListenerRejected()
+            throws ExecutionException, InterruptedException, ConnectionException {
+
+        // create a latch for the event listener, and add it to the list of events
+
+        final TaskExecutor taskExecutor = new NamedTaskExecutorImpl( "test", 0, 0 );
+
+        final int sizeToReturn = 1;
+
+        final CountDownLatch latch = new CountDownLatch( sizeToReturn );
+
+        final EntityVersionCreatedTest eventListener = new EntityVersionCreatedTest(latch);
+
+        final Set<EntityVersionCreated> listeners = mock( Set.class );
+        final Iterator<EntityVersionCreated> helper = mock(Iterator.class);
+
+        when ( listeners.size()).thenReturn( 1 );
+        when ( listeners.iterator()).thenReturn( helper );
+        when ( helper.next() ).thenReturn( eventListener );
+
+        final Id applicationId = new SimpleId( "application" );
+
+        final CollectionScope appScope = new CollectionScopeImpl(
+                applicationId, applicationId, "users" );
+
+        final Id entityId = new SimpleId( "user" );
+        final Entity entity = new Entity( entityId );
+
+        // start the task
+
+        EntityVersionCreatedTask entityVersionCreatedTask =
+                new EntityVersionCreatedTask( appScope, listeners, entity);
+
+        ListenableFuture<Void> future = taskExecutor.submit( entityVersionCreatedTask );
+
+        // wait for the task
+        future.get();
+
+        //mocked listener makes sure that the task is called
+        verify( listeners ).size();
+        verify( listeners ).iterator();
+        verify( helper ).next();
+
+    }
+
     private static class EntityVersionCreatedTest implements EntityVersionCreated {
         final CountDownLatch invocationLatch;
 
