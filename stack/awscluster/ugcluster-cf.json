@@ -15,7 +15,7 @@
         "ReleaseBucket": {
             "Description": "S3 Bucket where Usergrid assembly is to be found.",
             "Type": "String",
-            "Default": "usergrid-jenkins-builds"
+            "Default": "ug-cloudformation"
         },
         "RestMinServers": {
             "Description": "Minimum number of REST servers.",
@@ -49,7 +49,7 @@
         "KeyPair": {
             "Description": "EC2 key pair to be use for SSH access",
             "Type": "String",
-            "Default": "jenkins-east"
+            "Default": "ug-cloudformation"
         },
         "CassClusterName": {
             "Description": "Name to be used for Cassandra cluster.",
@@ -144,7 +144,7 @@
         "OpsCenterInstanceType": {
                    "Description": "Instance type for Opscenter server",
                    "Type": "String",
-                   "Default": "c3.xlarge",
+                   "Default": "c3.large",
                    "AllowedValues": [
                        "c3.large",
                        "c3.xlarge",
@@ -319,11 +319,9 @@
                       "apt-get update\n",
                       "apt-get -y install s3cmd\n",
                       "cd /usr/share/usergrid\n",
-                      "s3cmd --config=/etc/s3cfg get s3://", {"Ref": "ReleaseBucket"}, "/awscluster-1.0-SNAPSHOT-any.tar.gz\n",
-                      "s3cmd --config=/etc/s3cfg get s3://", {"Ref": "ReleaseBucket"}, "/ROOT.war\n",
+                      "s3cmd --config=/etc/s3cfg get s3://", { "Ref":"ReleaseBucket" }, "/awscluster-1.0-SNAPSHOT-any.tar.gz\n",
                       "tar xvf awscluster-1.0-SNAPSHOT-any.tar.gz\n",
                       "rm -fr awscluster-1.0-SNAPSHOT-any.tar.gz\n",
-                      "mv ROOT.war webapps/ROOT.war\n",
                       "chmod 755 ./init_instance/*.sh\n",
                       "cd ./init_instance\n",
                       "# Init as a REST intance \n",
@@ -767,11 +765,9 @@
                         "apt-get update\n",
                         "apt-get -y install s3cmd\n",
                         "cd /usr/share/usergrid\n",
-                        "s3cmd --config=/etc/s3cfg get s3://", {"Ref": "ReleaseBucket"}, "/awscluster-1.0-SNAPSHOT-any.tar.gz\n",
-                        "s3cmd --config=/etc/s3cfg get s3://", {"Ref": "ReleaseBucket"}, "/ROOT.war\n",
+                        "s3cmd --config=/etc/s3cfg get s3://", { "Ref":"ReleaseBucket" }, "/awscluster-1.0-SNAPSHOT-any.tar.gz\n",
                         "tar xvf awscluster-1.0-SNAPSHOT-any.tar.gz\n",
                         "rm -fr awscluster-1.0-SNAPSHOT-any.tar.gz\n",
-                        "mv ROOT.war webapps/ROOT.war\n",
                         "chmod 755 ./init_instance/*.sh\n",
                         "cd ./init_instance\n",
                         "# init as a Cassandra node \n",
@@ -930,11 +926,9 @@
                         "apt-get update\n",
                         "apt-get -y install s3cmd\n",
                         "cd /usr/share/usergrid\n",
-                        "s3cmd --config=/etc/s3cfg get s3://", {"Ref": "ReleaseBucket"}, "/awscluster-1.0-SNAPSHOT-any.tar.gz\n",
-                        "s3cmd --config=/etc/s3cfg get s3://", {"Ref": "ReleaseBucket"}, "/ROOT.war\n",
+                        "s3cmd --config=/etc/s3cfg get s3://", { "Ref":"ReleaseBucket" }, "/awscluster-1.0-SNAPSHOT-any.tar.gz\n",
                         "tar xvf awscluster-1.0-SNAPSHOT-any.tar.gz\n",
                         "rm -fr awscluster-1.0-SNAPSHOT-any.tar.gz\n",
-                        "mv ROOT.war webapps/ROOT.war\n",
                         "chmod 755 ./init_instance/*.sh\n",
                         "cd ./init_instance\n",
                         "# init as an ES node \n",
