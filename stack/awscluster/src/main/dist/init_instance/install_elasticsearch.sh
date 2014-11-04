@@ -48,41 +48,21 @@ groovy wait_for_instances.groovy elasticsearch ${ES_NUM_SERVERS}
 
 # leave room for Cassandra: use about one half of RAM for heap
 case `(curl http://169.254.169.254/latest/meta-data/instance-type)` in
-'m1.small' )
-    # total of 1.7g
-    export ES_HEAP_SIZE=850m
-;;
-'m1.medium' )
-    # total of 3.75g
-    export ES_HEAP_SIZE=1700m
-;;
-'m1.large' )
-    # total of 7.5g
-    export ES_HEAP_SIZE=3500m
-;;
-'m1.xlarge' )
-    # total of 15g
-    export ES_HEAP_SIZE=7500m
-;;
-'m3.large' )
-    # total of 7.5g
-    export ES_HEAP_SIZE=3500m
-;;
-'m3.xlarge' )
+'c3.large' )
     # total of 15g 
-    export ES_HEAP_SIZE=7500m
+    export ES_HEAP_SIZE=1920m
 ;;
 'c3.xlarge' )
     # total of 7.5g
-    export ES_HEAP_SIZE=3500m
+    export ES_HEAP_SIZE=3840m
 ;;
 'c3.2xlarge' )
     # total of 15g
-    export ES_HEAP_SIZE=7500m
+    export ES_HEAP_SIZE=7680m
 ;;
 'c3.4xlarge' )
     # total of 30g
-    export ES_HEAP_SIZE=24g
+    export ES_HEAP_SIZE=15g
 esac
 
 

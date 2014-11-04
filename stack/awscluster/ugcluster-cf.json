@@ -65,14 +65,10 @@
         "CassInstanceType": {
             "Description": "Instance type for Cass servers",
             "Type": "String",
-            "Default": "c3.2xlarge",
+            "Default": "c3.4xlarge",
             "AllowedValues": [
-                "m1.small",
-                "m1.medium",
-                "m1.large",
-                "m1.xlarge",
-                "m3.xlarge",
-                "m3.2xlarge",
+                "c3.large",
+                "c3.xlarge",
                 "c3.2xlarge",
                 "c3.4xlarge"
             ],
@@ -98,14 +94,10 @@
         "ESInstanceType": {
             "Description": "Instance type for ES servers",
             "Type": "String",
-            "Default": "c3.2xlarge",
+            "Default": "c3.4xlarge",
             "AllowedValues": [
-                "m1.small",
-                "m1.medium",
-                "m1.large",
-                "m1.xlarge",
-                "m3.xlarge",
-                "m3.2xlarge",
+                "c3.large",
+                "c3.xlarge",
                 "c3.2xlarge",
                 "c3.4xlarge"
             ],
