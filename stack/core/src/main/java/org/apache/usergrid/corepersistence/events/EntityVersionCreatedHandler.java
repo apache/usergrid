@@ -17,13 +17,8 @@
  */
 package org.apache.usergrid.corepersistence.events;
 
-import java.util.Properties;
-
-import org.elasticsearch.common.inject.Guice;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import org.apache.usergrid.corepersistence.CpEntityManagerFactory;
 import org.apache.usergrid.corepersistence.CpSetup;
@@ -34,8 +29,6 @@ import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.apache.usergrid.persistence.model.entity.Entity;
 
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 
 /**
@@ -65,7 +58,7 @@ public class EntityVersionCreatedHandler implements EntityVersionCreated {
 
         EntityIndexBatch batch = ei.createBatch();
 
-        if(System.getProperty( "allow.stale.entities","false" ).equals( "false" )) {
+        if ( System.getProperty( "allow.stale.entities", "false" ).equals( "false" )) {
             batch.deindexPreviousVersions( entity );
             batch.execute();
         }
