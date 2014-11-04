@@ -162,6 +162,7 @@ import static org.apache.usergrid.persistence.cassandra.Serializers.be;
 import static org.apache.usergrid.persistence.cassandra.Serializers.le;
 import static org.apache.usergrid.persistence.cassandra.Serializers.se;
 import static org.apache.usergrid.persistence.cassandra.Serializers.ue;
+import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.hector.CountingMutator;
 import static org.apache.usergrid.persistence.index.query.Query.Level.REFS;
 import static org.apache.usergrid.utils.ClassUtils.cast;
@@ -2929,4 +2930,9 @@ public class EntityManagerImpl implements EntityManager {
         throw new UnsupportedOperationException("Not supported."); 
     }
 
+
+    @Override
+    public Health getIndexHealth() {
+        return Health.GREEN; // no good way to assess index status using old-school entity manager
+    }
 }

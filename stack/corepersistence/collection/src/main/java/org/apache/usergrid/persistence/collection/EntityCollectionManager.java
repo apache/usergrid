@@ -20,6 +20,7 @@ package org.apache.usergrid.persistence.collection;
 
 
 import java.util.Collection;
+import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.collection.event.EntityDeleted;
 
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -75,8 +76,8 @@ public interface EntityCollectionManager {
     public Observable<Entity> update ( Entity entity );
 
     /** 
-     * Return true if connection query index system (Cassandra) is healthy.
+     * Returns health of entity data store.
      */
-    public boolean isHealthy();
+    public Health getHealth();
 
 }

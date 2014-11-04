@@ -50,7 +50,6 @@ import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.google.inject.Inject;
-import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -124,19 +123,6 @@ public class EntityConnectionIndexImplTest extends BaseIT {
         assertEquals( 1, likes.size() );
         assertEquals(muffin.getId(), likes.get(0).getId());
 
-    }
-
-    
-
-    @Test
-    public void healthTest() {
-
-        Id appId = new SimpleId( "application" );
-        ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
-
-        EntityIndex ei = ecif.createEntityIndex( applicationScope ); 
-
-        assertTrue( ei.isHealthy() );
     }
 
 }

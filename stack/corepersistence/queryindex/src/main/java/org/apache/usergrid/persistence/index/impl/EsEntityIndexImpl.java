@@ -64,7 +64,8 @@ import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
-import java.util.concurrent.ExecutionException;
+import java.util.HashMap;
+import org.apache.usergrid.persistence.core.util.Health;
 
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.BOOLEAN_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.DOC_ID_SEPARATOR_SPLITTER;
@@ -131,7 +132,16 @@ public class EsEntityIndexImpl implements EntityIndex {
             }
 
             AdminClient admin = client.admin();
-            CreateIndexResponse cir = admin.indices().prepareCreate( indexName ).execute().actionGet();
+
+            CreateIndexResponse cir = admin.indices()
+                .prepareCreate( indexName )
+                .setSettings( new HashMap<String, Object>() {{
+                    put("index.number_of_shards", config.getNumberOfShards() );
+                    put("index.number_of_replicas", config.numberOfReplicas() );
+                }} )
+                .execute()
+                .actionGet();
+
             logger.info( "Created new Index Name [{}] ACK=[{}]", indexName, cir.isAcknowledged() );
 
             // create the document, this ensures the index is ready
@@ -392,32 +402,53 @@ public class EsEntityIndexImpl implements EntityIndex {
     }
 
 
+    /**
+     * Check health of cluster.
+     */
     @Override
-    public boolean isHealthy() {
+    public Health getClusterHealth() {
 
         try {
-            ClusterHealthResponse health =
-                    client.admin().cluster().health( new ClusterHealthRequest() ).get();
-            
-            if ( health.getStatus().equals( ClusterHealthStatus.GREEN ) ) {
-                return true;
-            }
+            ClusterHealthResponse chr = client.admin().cluster()
+                .health( new ClusterHealthRequest() ).get();
+            return Health.valueOf( chr.getStatus().name() );
         } 
         catch (Exception ex) {
             logger.error("Error connecting to ElasticSearch", ex);
         } 
 
-        return false ;
+        // this is bad, red alert!
+        return Health.RED;
     }
 
 
     /**
-     * Interface for operations
+     * Check health of this specific index.
+     */
+    @Override
+    public Health getIndexHealth() {
+        
+        try {
+            ClusterHealthResponse chr = client.admin().cluster()
+                .health( new ClusterHealthRequest( new String[] { indexName } ) ).get();
+            return Health.valueOf( chr.getStatus().name() );
+        } 
+        catch (Exception ex) {
+            logger.error("Error connecting to ElasticSearch", ex);
+        } 
+
+        // this is bad, red alert!
+        return Health.RED;
+    }
+
+
+    /**
+     * Interface for operations.
      */
     private static interface RetryOperation {
 
         /**
-         * Return true if done, false if there should be a retry
+         * Return true if done, false if there should be a retry.
          */
         public boolean doOp();
     }

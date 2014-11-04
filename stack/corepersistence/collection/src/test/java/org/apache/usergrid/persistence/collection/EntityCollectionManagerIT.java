@@ -45,6 +45,7 @@ import org.apache.usergrid.persistence.model.field.StringField;
 
 import com.fasterxml.uuid.UUIDComparator;
 import com.google.inject.Inject;
+import org.apache.usergrid.persistence.core.util.Health;
 
 import rx.Observable;
 
@@ -704,6 +705,6 @@ public class EntityCollectionManagerIT {
 
         final EntityCollectionManager manager = factory.createCollectionManager( context );
 
-        assertTrue( manager.isHealthy() );
+        assertEquals( Health.GREEN, manager.getHealth() );
     }
 }

@@ -62,6 +62,7 @@ import com.netflix.astyanax.model.CqlResult;
 import com.netflix.astyanax.serializers.StringSerializer;
 import org.apache.usergrid.persistence.collection.guice.CollectionTaskExecutor;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
+import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.core.task.TaskExecutor;
 
 import rx.Observable;
@@ -364,7 +365,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
 
     @Override
-    public boolean isHealthy() {
+    public Health getHealth() {
 
         try {
             ColumnFamily<String, String> CF_SYSTEM_LOCAL = new ColumnFamily<String, String>(
@@ -378,14 +379,14 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                 .execute();
 
             if ( result.getResult().getRows().size() == 1 ) {
-                return true;
+                return Health.GREEN;
             }
 
         } catch ( ConnectionException ex ) {
             logger.error("Error connecting to Cassandra", ex);
         }
 
-        return false;
+        return Health.RED;
     }
 
 }
