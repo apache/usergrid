@@ -742,7 +742,7 @@ public class EntityVersionCleanupTaskTest {
 
 
         try {
-            cleanupTask.call();
+            cleanupTask.rejected();
         }catch(Exception e){
             Assert.fail(e.getMessage());
         }
