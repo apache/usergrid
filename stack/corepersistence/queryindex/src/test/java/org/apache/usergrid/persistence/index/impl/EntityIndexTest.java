@@ -35,9 +35,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.commons.lang3.time.StopWatch;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
-import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.core.cassandra.ITRunner;
@@ -61,10 +59,11 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
-import java.util.ArrayList;
+import org.apache.usergrid.persistence.core.util.Health;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 
 
 @RunWith(ITRunner.class)
@@ -84,7 +83,7 @@ public class EntityIndexTest extends BaseIT {
     public MigrationManagerRule migrationManagerRule;
 
     @Inject
-    public EntityIndexFactory cif;
+    public EntityIndexFactory eif;
 
 
 
@@ -100,7 +99,7 @@ public class EntityIndexTest extends BaseIT {
         IndexScope indexScope = new IndexScopeImpl( appId, "things" );
 
 
-        EntityIndex entityIndex = cif.createEntityIndex( applicationScope );
+        EntityIndex entityIndex = eif.createEntityIndex( applicationScope );
         entityIndex.initializeIndex();
 
         InputStream is = this.getClass().getResourceAsStream( "/sample-large.json" );
@@ -155,7 +154,7 @@ public class EntityIndexTest extends BaseIT {
 
         IndexScope indexScope = new IndexScopeImpl( appId, "fastcars" );
 
-        EntityIndex entityIndex = cif.createEntityIndex( applicationScope );
+        EntityIndex entityIndex = eif.createEntityIndex( applicationScope );
         entityIndex.initializeIndex();
 
         Map entityMap = new HashMap() {{
@@ -284,7 +283,7 @@ public class EntityIndexTest extends BaseIT {
 
 
 
-        EntityIndex entityIndex = cif.createEntityIndex( applicationScope );
+        EntityIndex entityIndex = eif.createEntityIndex( applicationScope );
         entityIndex.initializeIndex();
 
         final String middleName = "middleName" + UUIDUtils.newTimeUUID();
@@ -334,7 +333,7 @@ public class EntityIndexTest extends BaseIT {
 
         IndexScope appScope = new IndexScopeImpl( ownerId, "user" );
 
-        EntityIndex ei = cif.createEntityIndex( applicationScope );
+        EntityIndex ei = eif.createEntityIndex( applicationScope );
         ei.initializeIndex();
 
         final String middleName = "middleName" + UUIDUtils.newTimeUUID();
@@ -378,7 +377,7 @@ public class EntityIndexTest extends BaseIT {
 
         IndexScope appScope = new IndexScopeImpl( ownerId, "user" );
 
-        EntityIndex ei = cif.createEntityIndex( applicationScope );
+        EntityIndex ei = eif.createEntityIndex( applicationScope );
         ei.createBatch();
 
         // Bill has favorites as string, age as string and retirement goal as number
@@ -438,6 +437,25 @@ public class EntityIndexTest extends BaseIT {
         query.addEqualityFilter( "age", "thirtysomething" );
         r = ei.search(  appScope, query );
         assertEquals( bill.getId(), r.get( 0 ).getId() );
+    }
+
+    
+    @Test
+    public void healthTest() {
+
+        Id appId = new SimpleId( "application" );
+        ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
+
+        EntityIndex ei = eif.createEntityIndex( applicationScope ); 
+
+        assertNotEquals( "cluster should be ok", Health.RED, ei.getClusterHealth() );
+        assertEquals( "index not be ready yet", Health.RED, ei.getIndexHealth() );
+
+        ei.initializeIndex();
+        ei.refresh();
+
+        assertNotEquals( "cluster should be fine", Health.RED, ei.getIndexHealth() );
+        assertNotEquals( "cluster should be ready now", Health.RED, ei.getClusterHealth() );
     }
 }
 

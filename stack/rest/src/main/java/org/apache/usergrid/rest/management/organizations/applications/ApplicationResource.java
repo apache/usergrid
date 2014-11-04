@@ -62,14 +62,22 @@ import com.sun.jersey.api.json.JSONWithPadding;
 import static javax.servlet.http.HttpServletResponse.SC_ACCEPTED;
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
+import static javax.servlet.http.HttpServletResponse.SC_OK;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.core.util.Health;
 
 
 @Component("org.apache.usergrid.rest.management.organizations.applications.ApplicationResource")
 @Scope("prototype")
 @Produces({
-        MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
-        "application/ecmascript", "text/jscript"
+    MediaType.APPLICATION_JSON, 
+    "application/javascript", 
+    "application/x-javascript", 
+    "text/ecmascript",
+    "application/ecmascript", 
+    "text/jscript"
 })
 public class ApplicationResource extends AbstractContextResource {
 
@@ -104,10 +112,9 @@ public class ApplicationResource extends AbstractContextResource {
 
     @RequireOrganizationAccess
     @DELETE
-    public JSONWithPadding deleteApplicationFromOrganizationByApplicationId( @Context UriInfo ui,
-                                                                             @QueryParam("callback")
-                                                                             @DefaultValue("callback") String callback )
-            throws Exception {
+    public JSONWithPadding deleteApplicationFromOrganizationByApplicationId( 
+            @Context UriInfo ui, @QueryParam("callback") @DefaultValue("callback") String callback )
+        throws Exception {
 
         ApiResponse response = createApiResponse();
         response.setAction( "delete application from organization" );
@@ -120,9 +127,9 @@ public class ApplicationResource extends AbstractContextResource {
 
     @RequireOrganizationAccess
     @GET
-    public JSONWithPadding getApplication( @Context UriInfo ui,
-                                           @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception {
+    public JSONWithPadding getApplication( 
+            @Context UriInfo ui, @QueryParam("callback") @DefaultValue("callback") String callback )
+        throws Exception {
 
         ApiResponse response = createApiResponse();
         ServiceManager sm = smf.getServiceManager( applicationId );
@@ -137,9 +144,9 @@ public class ApplicationResource extends AbstractContextResource {
     @RequireOrganizationAccess
     @GET
     @Path("credentials")
-    public JSONWithPadding getCredentials( @Context UriInfo ui,
-                                           @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception {
+    public JSONWithPadding getCredentials( 
+            @Context UriInfo ui, @QueryParam("callback") @DefaultValue("callback") String callback )
+        throws Exception {
 
         ApiResponse response = createApiResponse();
         response.setAction( "get application client credentials" );
@@ -156,9 +163,9 @@ public class ApplicationResource extends AbstractContextResource {
     @RequireOrganizationAccess
     @POST
     @Path("credentials")
-    public JSONWithPadding generateCredentials( @Context UriInfo ui,
-                                                @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception {
+    public JSONWithPadding generateCredentials( @Context UriInfo ui, 
+            @QueryParam("callback") @DefaultValue("callback") String callback )
+        throws Exception {
 
         ApiResponse response = createApiResponse();
         response.setAction( "generate application client credentials" );
@@ -176,10 +183,13 @@ public class ApplicationResource extends AbstractContextResource {
     @Path("sia-provider")
     @Consumes(APPLICATION_JSON)
     @RequireOrganizationAccess
-    public JSONWithPadding configureProvider( @Context UriInfo ui, @QueryParam("provider_key") String siaProvider,
-                                              Map<String, Object> json,
-                                              @QueryParam("callback") @DefaultValue("") String callback )
-            throws Exception {
+    public JSONWithPadding configureProvider( 
+            @Context UriInfo ui, 
+            @QueryParam("provider_key") String siaProvider,
+            Map<String, Object> json, 
+            @QueryParam("callback") 
+            @DefaultValue("") String callback )
+        throws Exception {
 
         ApiResponse response = createApiResponse();
         response.setAction( "post signin provider configuration" );
@@ -188,20 +198,20 @@ public class ApplicationResource extends AbstractContextResource {
 
         SignInAsProvider signInAsProvider = null;
         if ( StringUtils.equalsIgnoreCase( siaProvider, "facebook" ) ) {
-            signInAsProvider =
-                    signInProviderFactory.facebook( smf.getServiceManager( applicationId ).getApplication() );
+            signInAsProvider = signInProviderFactory.facebook( 
+                    smf.getServiceManager( applicationId ).getApplication() );
         }
         else if ( StringUtils.equalsIgnoreCase( siaProvider, "pingident" ) ) {
-            signInAsProvider =
-                    signInProviderFactory.pingident( smf.getServiceManager( applicationId ).getApplication() );
+            signInAsProvider = signInProviderFactory.pingident( 
+                    smf.getServiceManager( applicationId ).getApplication() );
         }
         else if ( StringUtils.equalsIgnoreCase( siaProvider, "foursquare" ) ) {
-            signInAsProvider =
-                    signInProviderFactory.foursquare( smf.getServiceManager( applicationId ).getApplication() );
+            signInAsProvider = signInProviderFactory.foursquare( 
+                    smf.getServiceManager( applicationId ).getApplication() );
         }
 
-        Preconditions
-                .checkArgument( signInAsProvider != null, "No signin provider found by that name: " + siaProvider );
+        Preconditions.checkArgument( signInAsProvider != null, 
+                "No signin provider found by that name: " + siaProvider );
 
         signInAsProvider.saveToConfiguration( json );
 
@@ -261,14 +271,17 @@ public class ApplicationResource extends AbstractContextResource {
             uuidRet.put( "Export Entity", jobUUID.toString() );
         }
         catch ( NullPointerException e ) {
-            return Response.status( SC_BAD_REQUEST ).type( JSONPUtils.jsonMediaType( callback ) )
-                           .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) ).build();
+            return Response.status( SC_BAD_REQUEST )
+                .type( JSONPUtils.jsonMediaType( callback ) )
+                .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) ).build();
         }
         catch ( Exception e ) {
-            //TODO:throw descriptive error message and or include on in the response
-            //TODO:fix below, it doesn't work if there is an exception. Make it look like the OauthResponse.
-            return Response.status( SC_INTERNAL_SERVER_ERROR ).type( JSONPUtils.jsonMediaType( callback ) )
-                                       .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) ).build();
+            // TODO: throw descriptive error message and or include on in the response
+            // TODO: fix below, it doesn't work if there is an exception. 
+            // Make it look like the OauthResponse.
+            return Response.status( SC_INTERNAL_SERVER_ERROR )
+                .type( JSONPUtils.jsonMediaType( callback ) )
+                .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) ).build();
         }
 
         return Response.status( SC_ACCEPTED ).entity( uuidRet ).build();
@@ -278,8 +291,9 @@ public class ApplicationResource extends AbstractContextResource {
     @Path("collection/{collection_name}/export")
     @Consumes(APPLICATION_JSON)
     @RequireOrganizationAccess
-    public Response exportPostJson( @Context UriInfo ui,@PathParam( "collection_name" ) String collection_name ,Map<String, Object> json,
-                                    @QueryParam("callback") @DefaultValue("") String callback )
+    public Response exportPostJson( @Context UriInfo ui,
+            @PathParam( "collection_name" ) String collection_name ,Map<String, Object> json,
+            @QueryParam("callback") @DefaultValue("") String callback )
             throws OAuthSystemException {
 
 
@@ -327,19 +341,53 @@ public class ApplicationResource extends AbstractContextResource {
             uuidRet.put( "Export Entity", jobUUID.toString() );
         }
         catch ( NullPointerException e ) {
-            return Response.status( SC_BAD_REQUEST ).type( JSONPUtils.jsonMediaType( callback ) )
-                           .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) ).build();
+            return Response.status( SC_BAD_REQUEST )
+                .type( JSONPUtils.jsonMediaType( callback ) )
+                .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) )
+                .build();
         }
         catch ( Exception e ) {
-            //TODO:throw descriptive error message and or include on in the response
-            //TODO:fix below, it doesn't work if there is an exception. Make it look like the OauthResponse.
-            OAuthResponse errorMsg =
-                    OAuthResponse.errorResponse( SC_INTERNAL_SERVER_ERROR ).setErrorDescription( e.getMessage() )
-                                 .buildJSONMessage();
-            return Response.status( errorMsg.getResponseStatus() ).type( JSONPUtils.jsonMediaType( callback ) )
-                           .entity( ServiceResource.wrapWithCallback( errorMsg.getBody(), callback ) ).build();
+
+            // TODO: throw descriptive error message and or include on in the response
+            // TODO: fix below, it doesn't work if there is an exception.  
+            // Make it look like the OauthResponse.
+
+            OAuthResponse errorMsg = OAuthResponse.errorResponse( SC_INTERNAL_SERVER_ERROR )
+                .setErrorDescription( e.getMessage() )
+                .buildJSONMessage();
+
+            return Response.status( errorMsg.getResponseStatus() )
+                .type( JSONPUtils.jsonMediaType( callback ) )
+                .entity( ServiceResource.wrapWithCallback( errorMsg.getBody(), callback ) )
+                .build();
         }
 
         return Response.status( SC_ACCEPTED ).entity( uuidRet ).build();
+    }
+
+    @GET
+    @Path("/status")
+    public Response getStatus() {
+
+        Map<String, Object> statusMap = new HashMap<String, Object>();
+
+        EntityManager em = emf.getEntityManager( applicationId );
+        if ( !em.getIndexHealth().equals( Health.RED ) ) {
+            statusMap.put("message", "Index Health Status RED for application " + applicationId );
+            return Response.status( SC_INTERNAL_SERVER_ERROR ).entity( statusMap ).build();
+        }
+
+        try {
+            if ( em.getApplication() == null ) {
+                statusMap.put("message", "Appliction " + applicationId + " not found");
+                return Response.status( SC_NOT_FOUND ).entity( statusMap ).build();
+            }
+
+        } catch (Exception ex) {
+            statusMap.put("message", "Error looking up appliction " + applicationId );
+            return Response.status( SC_INTERNAL_SERVER_ERROR ).entity( statusMap ).build();
+        }
+            
+        return Response.status( SC_OK ).entity( null ).build();
     }
 }

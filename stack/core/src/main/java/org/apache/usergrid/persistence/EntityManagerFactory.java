@@ -19,17 +19,16 @@ package org.apache.usergrid.persistence;
 
 import java.util.Map;
 import java.util.UUID;
+import org.apache.usergrid.persistence.core.util.Health;
 import org.springframework.context.ApplicationContext;
 
 
-// TODO: Auto-generated Javadoc
-
-
 /**
- * The interface class that specifies the operations that can be performed on the Usergrid Datastore. This interface is
- * designed to be implemented by different backends. Although these operations are meant to take advantage of the
- * capabilities of Cassandra, they should be implementable using other relational databases such as MySql or NoSQL
- * databases such as GAE or MongoDB.
+ * The interface that specifies the operations that can be performed on the Usergrid Datastore. 
+ * This interface is designed to be implemented by different backends. Although these 
+ * operations are meant to take advantage of the capabilities of Cassandra, they should be 
+ * implementable using other relational databases such as MySql or NoSQL databases such as GAE or 
+ * MongoDB.
  */
 public interface EntityManagerFactory {
 
@@ -63,7 +62,8 @@ public interface EntityManagerFactory {
     public abstract UUID createApplication( String organizationName, String name ) throws Exception;
 
     /**
-     * Creates a Application entity. All entities except for applications must be attached to a Application.
+     * Creates a Application entity. All entities except for applications must be attached to a 
+     * Application.
      *
      * @param name the name of the application to create.
      * @param properties property values to create in the new entity or null.
@@ -72,8 +72,8 @@ public interface EntityManagerFactory {
      *
      * @throws Exception the exception
      */
-    public abstract UUID createApplication( String organizationName, String name, Map<String, Object> properties )
-            throws Exception;
+    public abstract UUID createApplication( 
+            String organizationName, String name, Map<String, Object> properties ) throws Exception;
 
     public abstract UUID importApplication( String organization, UUID applicationId, String name,
                                             Map<String, Object> properties ) throws Exception;
@@ -130,11 +130,10 @@ public interface EntityManagerFactory {
 
     public void rebuildCollectionIndex(UUID appId, String collection, ProgressObserver object);
 
-    public boolean verifyCollectionsModuleHealthy();
-
-    public boolean verifyQueryIndexModuleHealthy();
+    public Health getEntityStoreHealth();
 
     public interface ProgressObserver {
+
         public void onProgress( EntityRef entity);
 
         /**
