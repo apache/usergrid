@@ -48,9 +48,9 @@ def usergridConfig = """
 seed_hosts = ${seeds}
 
 #TODO, this doesn't seem to work, I think opscenter is broken.  Try this again at a later time and remove opscenter exclusion below
-#[storage_cassandra]
-#seed_hosts = ${hostName}
-#api_port = 9160
+[storage_cassandra]
+seed_hosts = ${hostName}
+api_port = 9160
 
 
 """
