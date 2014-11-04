@@ -43,7 +43,7 @@ object TokenScenarios {
     .post(Settings.baseUrl+"/management/token")
     .headers(Headers.jsonAnonymous)
     //pass in the the username and password, store the "access_token" json response element as the var "authToken" in the session
-    .body(StringBody("{\"username\":\"" + Settings.admin + "\",\"password\":\"test\",\"grant_type\":\"password\"}"))
+    .body(StringBody("{\"username\":\"" + Settings.admin + "\",\"password\":\""+Settings.password+"\",\"grant_type\":\"password\"}"))
     .check(jsonPath("$.access_token").find(0).saveAs("authToken"))
   )
 
