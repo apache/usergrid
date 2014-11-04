@@ -23,12 +23,16 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 
+import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.action.get.GetRequest;
+import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.FilterBuilders;
 import org.elasticsearch.index.query.FilteredQueryBuilder;
@@ -65,6 +69,7 @@ import com.google.common.base.Joiner;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ANALYZED_STRING_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.BOOLEAN_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ENTITYID_FIELDNAME;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ENTITYVERSION_FIELDNAME;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.GEO_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.NUMBER_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.STRING_PREFIX;
@@ -135,6 +140,9 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         // need prefix here becuase we index UUIDs as strings
         entityAsMap.put( STRING_PREFIX + ENTITYID_FIELDNAME, 
                 entity.getId().getUuid().toString().toLowerCase() );
+        //index entity as a long ENTITYVERSION_FIELDNAME
+        //puts it in the index
+        entityAsMap.put( ENTITYVERSION_FIELDNAME, entity.getVersion().timestamp());
 
         // let caller add these fields if needed
         // entityAsMap.put("created", entity.getId().getUuid().timestamp();
@@ -214,19 +222,20 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         return this;
     }
 
+
     @Override
-    public EntityIndexBatch deindexPreviousVersions(Entity entity){
+    public EntityIndexBatch deindexPreviousVersions( Entity entity ) {
 
-         FilteredQueryBuilder fqb = QueryBuilders.filteredQuery
-                 (QueryBuilders.termQuery
-                         ( STRING_PREFIX + ENTITYID_FIELDNAME,entity.getId().getUuid().toString().toLowerCase() ),
-                         FilterBuilders.rangeFilter("version").lt( entity.getId().getUuid().timestamp() ));
+        FilteredQueryBuilder fqb = QueryBuilders.filteredQuery( QueryBuilders
+                        .termQuery( STRING_PREFIX + ENTITYID_FIELDNAME,
+                                entity.getId().getUuid().toString().toLowerCase() ),
+                FilterBuilders.rangeFilter( ENTITYVERSION_FIELDNAME ).lt( entity.getVersion().timestamp() ) );
 
-        DeleteByQueryResponse response = client.prepareDeleteByQuery( indexName )
-                                               .setQuery( fqb ).execute().actionGet();
+        DeleteByQueryResponse response = client.prepareDeleteByQuery( indexName ).setQuery( fqb ).execute().actionGet();
 
-        logger.debug("Deleted entity {}:{} from all index scopes with response status = {}",
-                new Object[] { entity.getId().getType(), entity.getId().getUuid(), response.status().toString() });
+        //error message needs to be retooled so that it describes the entity more throughly
+        logger.debug( "Deleted entity {}:{} from all index scopes with response status = {}",
+                new Object[] { entity.getId().getType(), entity.getId().getUuid(), response.status().toString() } );
 
         maybeFlush();
 

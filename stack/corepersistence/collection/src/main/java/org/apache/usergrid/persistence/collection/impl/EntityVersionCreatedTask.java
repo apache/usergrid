@@ -36,9 +36,9 @@ import rx.schedulers.Schedulers;
  * Fires events so that all EntityVersionCreated handlers area called.
  */
 public class EntityVersionCreatedTask implements Task<Void> {
-    private static final Logger logger = LoggerFactory.getLogger( EntityVersionCleanupTask.class );
+    private static final Logger logger = LoggerFactory.getLogger( EntityVersionCreatedTask.class );
 
-    private final Set<EntityVersionCreated> listeners;
+    private Set<EntityVersionCreated> listeners;
     private final CollectionScope collectionScope;
     private final Entity entity;
 

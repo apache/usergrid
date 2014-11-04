@@ -39,6 +39,8 @@ public class IndexingUtils {
 
     public static final String ENTITYID_FIELDNAME = "zzz_entityid_zzz";
 
+    public static final String ENTITYVERSION_FIELDNAME = "zzz_entityversion_zzz";
+
     public static final String DOC_ID_SEPARATOR = "|";
     public static final String DOC_ID_SEPARATOR_SPLITTER = "\\|";
 
