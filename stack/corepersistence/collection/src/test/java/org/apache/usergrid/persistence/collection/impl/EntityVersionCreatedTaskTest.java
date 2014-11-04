@@ -50,6 +50,7 @@ import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.Test;
 
 import static org.mockito.Matchers.any;
@@ -98,10 +99,15 @@ public class EntityVersionCreatedTaskTest {
         EntityVersionCreatedTask entityVersionCreatedTask =
                 new EntityVersionCreatedTask( appScope, listeners, entity);
 
-        ListenableFuture<Void> future = taskExecutor.submit( entityVersionCreatedTask );
+        try {
+            entityVersionCreatedTask.call();
+        }catch(Exception e){
+            Assert.fail(e.getMessage());
+        }
+
 
         // wait for the task
-        future.get();
+       // future.get();
 
         //mocked listener makes sure that the task is called
         verify( listeners ).size();
@@ -139,11 +145,12 @@ public class EntityVersionCreatedTaskTest {
         EntityVersionCreatedTask entityVersionCreatedTask =
             new EntityVersionCreatedTask( appScope, listeners, entity);
 
-        ListenableFuture<Void> future = taskExecutor.submit( entityVersionCreatedTask );
+        try {
+            entityVersionCreatedTask.call();
+        }catch(Exception e){
 
-        // wait for the task
-        future.get();
-
+            Assert.fail(e.getMessage());
+        }
         //mocked listener makes sure that the task is called
         verify( listeners ).size();
         verify( listeners ).iterator();
@@ -184,15 +191,15 @@ public class EntityVersionCreatedTaskTest {
 
         when ( helper.next() ).thenReturn( listener1,listener2,listener3);
 
-        ListenableFuture<Void> future = taskExecutor.submit( entityVersionCreatedTask );
-
-        //wait for the task
-        //intentionally fails due to difficulty mocking observable
         try {
-            future.get();
+            entityVersionCreatedTask.call();
         }catch(Exception e){
             ;
         }
+        //ListenableFuture<Void> future = taskExecutor.submit( entityVersionCreatedTask );
+
+        //wait for the task
+        //intentionally fails due to difficulty mocking observable
 
         //mocked listener makes sure that the task is called
         verify( listeners ).size();
@@ -234,10 +241,7 @@ public class EntityVersionCreatedTaskTest {
         EntityVersionCreatedTask entityVersionCreatedTask =
                 new EntityVersionCreatedTask( appScope, listeners, entity);
 
-        ListenableFuture<Void> future = taskExecutor.submit( entityVersionCreatedTask );
-
-        // wait for the task
-        future.get();
+        entityVersionCreatedTask.rejected();
 
         //mocked listener makes sure that the task is called
         verify( listeners ).size();

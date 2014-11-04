@@ -31,6 +31,7 @@ import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.junit.AfterClass;
 import org.junit.Test;
+import org.junit.Assert;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
@@ -156,11 +157,11 @@ public class EntityVersionCleanupTaskTest {
         when( ess.load( same( appScope ), same( entityId ), any(UUID.class), any(Integer.class) ) )
                 .thenReturn(mel.iterator() );
 
-        // start the task
-        ListenableFuture<Void> future = taskExecutor.submit( cleanupTask );
-
-        // wait for the task
-        future.get();
+        try {
+            cleanupTask.call();
+        }catch(Exception e){
+            Assert.fail( e.getMessage() );
+        }
 
         // verify it was run
         verify( entityBatch ).execute();
@@ -257,10 +258,11 @@ public class EntityVersionCleanupTaskTest {
                 .thenReturn(mel.iterator() );
 
         //start the task
-        ListenableFuture<Void> future = taskExecutor.submit( cleanupTask );
-
-        //wait for the task
-        future.get();
+        try {
+            cleanupTask.call();
+        }catch(Exception e){
+            Assert.fail( e.getMessage() );
+        }
 
 
         // These last two verify statements do not make sense. We cannot assert that the entity
@@ -368,11 +370,11 @@ public class EntityVersionCleanupTaskTest {
                 .thenReturn(mel.iterator() );
 
 
-        //start the task
-        ListenableFuture<Void> future = taskExecutor.submit( cleanupTask );
-
-        //wait for the task
-        future.get();
+        try {
+            cleanupTask.call();
+        }catch(Exception e){
+            Assert.fail( e.getMessage() );
+        }
 
         //we deleted the version
         //verify it was run
@@ -480,12 +482,11 @@ public class EntityVersionCleanupTaskTest {
         when( ess.load( same( appScope ), same( entityId ), any(UUID.class), any(Integer.class) ) )
                 .thenReturn(mel.iterator() );
 
-        //start the task
-        ListenableFuture<Void> future = taskExecutor.submit( cleanupTask );
-
-        //wait for the task
-        future.get();
-
+        try {
+            cleanupTask.call();
+        }catch(Exception e){
+            Assert.fail( e.getMessage() );
+        }
         //we deleted the version
         //verify we deleted everything
         verify( entityBatch, times( 1 ) ).mergeShallow( any( MutationBatch.class ) );
@@ -740,11 +741,11 @@ public class EntityVersionCleanupTaskTest {
                 .thenReturn(mel.iterator() );
 
 
-        //start the task
-        ListenableFuture<Void> future = taskExecutor.submit( cleanupTask );
-
-        //wait for the task
-        future.get();
+        try {
+            cleanupTask.call();
+        }catch(Exception e){
+            Assert.fail(e.getMessage());
+        }
 
         //we deleted the version
         //verify it was run
