@@ -66,6 +66,7 @@ import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.core.util.Health;
 
 
 @Component("org.apache.usergrid.rest.management.organizations.applications.ApplicationResource")
@@ -371,6 +372,11 @@ public class ApplicationResource extends AbstractContextResource {
         Map<String, Object> statusMap = new HashMap<String, Object>();
 
         EntityManager em = emf.getEntityManager( applicationId );
+        if ( !em.getIndexHealth().equals( Health.RED ) ) {
+            statusMap.put("message", "Index Health Status RED for application " + applicationId );
+            return Response.status( SC_INTERNAL_SERVER_ERROR ).entity( statusMap ).build();
+        }
+
         try {
             if ( em.getApplication() == null ) {
                 statusMap.put("message", "Appliction " + applicationId + " not found");

@@ -160,15 +160,24 @@ public class RootResource extends AbstractContextResource implements MetricProce
     }
 
 
+    /**
+     * Return status of this Usergrid instance in JSON format.
+     * 
+     * By Default this end-point will ignore errors but if you call it with ignore_status=false
+     * then it will return HTTP 500 if either the Entity store or the Index for the management
+     * application are in a bad state.
+     * 
+     * @param ignoreError Ignore any errors and return status no matter what.
+     */
     @GET
     @Path("status")
     public JSONWithPadding getStatus( 
-            @QueryParam("ignore_errors") @DefaultValue("true") Boolean ignoreErrors,
+            @QueryParam("ignore_error") @DefaultValue("true") Boolean ignoreError,
             @QueryParam("callback") @DefaultValue("callback") String callback ) {
 
         ApiResponse response = createApiResponse();
 
-        if ( !ignoreErrors ) {
+        if ( !ignoreError ) {
 
             if ( !emf.getEntityStoreHealth().equals( Health.GREEN )) {
                 throw new RuntimeException("Error connecting to datastore");
@@ -178,7 +187,6 @@ public class RootResource extends AbstractContextResource implements MetricProce
             if ( em.getIndexHealth().equals( Health.RED) ) {
                 throw new RuntimeException("Management app index is status RED");
             }
-
         }
 
         ObjectNode node = JsonNodeFactory.instance.objectNode();
