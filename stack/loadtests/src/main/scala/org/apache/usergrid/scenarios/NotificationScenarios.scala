@@ -85,7 +85,7 @@ object NotificationScenarios {
     println(session)
     session
   })
-    .exec( NotificationScenarios.sendNotificationToUser)
+    .exec( sendNotificationToUser)
 
   /**
    * TODO: Add posting to users, which would expect a user in the session
