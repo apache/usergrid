@@ -56,6 +56,7 @@ import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
+import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.exceptions.ApplicationAlreadyExistsException;
 import org.apache.usergrid.persistence.graph.Edge;
@@ -744,21 +745,16 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     }
 
     @Override
-    public boolean verifyCollectionsModuleHealthy() {
+    public Health getEntityStoreHealth() {
 
-        CollectionScope collScope = new CollectionScopeImpl(
-            getApplicationScope(SYSTEM_APP_ID).getApplication(),
-            getApplicationScope(SYSTEM_APP_ID).getApplication(),
-            CpNamingUtils.getCollectionScopeNameFromCollectionName( "appinfos" ));
-
-        EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collScope );
-        return ecm.isHealthy();
-    }
-
-    @Override
-    public boolean verifyQueryIndexModuleHealthy() {
-
-        EntityIndex ei = managerCache.getEntityIndex( getApplicationScope( SYSTEM_APP_ID ));
-        return ei.isHealthy();
-    }
+        // could use any collection scope here, does not matter
+        EntityCollectionManager ecm = getManagerCache().getEntityCollectionManager( 
+            new CollectionScopeImpl( 
+                new SimpleId( SYSTEM_APP_ID, "application"), 
+                new SimpleId( SYSTEM_APP_ID, "application"), 
+                "dummy"
+        ));
+                 
+        return ecm.getHealth();
+    } 
 }

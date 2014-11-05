@@ -183,19 +183,17 @@ public class EsEntityIndexImpl implements EntityIndex {
             public boolean doOp() {
                 final String tempId = UUIDGenerator.newTimeUUID().toString();
 
-                esProvider.getClient().prepareIndex( indexName, VERIFY_TYPE, tempId ).setSource( DEFAULT_PAYLOAD ).get();
+                client.prepareIndex( indexName, VERIFY_TYPE, tempId )
+                        .setSource( DEFAULT_PAYLOAD ).get();
 
-                logger.info( "Successfully created new document with docId {} in index {} and type {}", tempId, indexName,
-                        VERIFY_TYPE );
-                logger.info( "Successfully created new document with docId {} in index {} and type {}",
+                logger.info( "Successfully created new document with docId {} in index {} and type {}", 
                         tempId, indexName, VERIFY_TYPE );
 
                 // delete all types, this way if we miss one it will get cleaned up
-                esProvider.getClient().prepareDeleteByQuery( indexName ).setTypes( VERIFY_TYPE ).setQuery( MATCH_ALL_QUERY_BUILDER )
-                      .get();
+                client.prepareDeleteByQuery( indexName ).setTypes( VERIFY_TYPE )
+                        .setQuery( MATCH_ALL_QUERY_BUILDER ).get();
 
-                logger.info( "Successfully deleted all documents in index {} and type {}", indexName, VERIFY_TYPE );
-                logger.info( "Successfully deleted all documents in index {} and type {}",
+                logger.info( "Successfully deleted all documents in index {} and type {}", 
                         indexName, VERIFY_TYPE );
 
                 return true;
@@ -432,37 +430,54 @@ public class EsEntityIndexImpl implements EntityIndex {
     }
 
 
+    /**
+     * Check health of cluster.
+     */
     @Override
-    public boolean isHealthy() {
+    public Health getClusterHealth() {
 
         try {
-            ClusterHealthResponse health =
-                    esProvider.getClient().admin().cluster().health( new ClusterHealthRequest() ).get();
-
-            //we only check red, that indicates something is wrong with one of the index on the cluster
-            //TODO, not sure we even want to do this.  If 1 index is broken, that app may be broken, but others will function correctly.  The status always is the worst index in the cluster
-            if ( health.getStatus().equals( ClusterHealthStatus.RED ) ) {
-                return false;
-            }
+            ClusterHealthResponse chr = client.admin().cluster()
+                .health( new ClusterHealthRequest() ).get();
+            return Health.valueOf( chr.getStatus().name() );
         } 
         catch (Exception ex) {
             logger.error("Error connecting to ElasticSearch", ex);
         } 
 
-        return true ;
+        // this is bad, red alert!
+        return Health.RED;
     }
 
 
     /**
-     * Interface for operations
+     * Check health of this specific index.
+     */
+    @Override
+    public Health getIndexHealth() {
+        
+        try {
+            ClusterHealthResponse chr = client.admin().cluster()
+                .health( new ClusterHealthRequest( new String[] { indexName } ) ).get();
+            return Health.valueOf( chr.getStatus().name() );
+        } 
+        catch (Exception ex) {
+            logger.error("Error connecting to ElasticSearch", ex);
+        } 
+
+        // this is bad, red alert!
+        return Health.RED;
+    }
+
+
+    /**
+     * Interface for operations.
      */
     private static interface RetryOperation {
 
         /**
-         * Return true if done, false if there should be a retry
+         * Return true if done, false if there should be a retry.
          */
         public boolean doOp();
     }
-
-
 }

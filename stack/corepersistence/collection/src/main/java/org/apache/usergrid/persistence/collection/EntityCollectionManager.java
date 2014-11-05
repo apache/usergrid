@@ -20,6 +20,7 @@ package org.apache.usergrid.persistence.collection;
 
 
 import java.util.Collection;
+import org.apache.usergrid.persistence.core.util.Health;
 
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -70,7 +71,6 @@ public interface EntityCollectionManager {
      */
     public Observable<EntitySet> load(Collection<Id> entityIds);
 
-
     /**
      * Takes the change and reloads an entity with all changes applied in this entity applied.
      * The resulting entity from calling load will be the previous version of this entity + the entity
@@ -81,8 +81,8 @@ public interface EntityCollectionManager {
     public Observable<Entity> update ( Entity entity );
 
     /** 
-     * Return true if connection query index system (Cassandra) is healthy.
+     * Returns health of entity data store.
      */
-    public boolean isHealthy();
+    public Health getHealth();
 
 }
