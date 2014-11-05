@@ -16,22 +16,28 @@
  */
 package org.apache.usergrid.simulations
 
+import com.ning.http.client.AsyncHttpClient
 import io.gatling.core.Predef._
 import io.gatling.http.Predef._
 import org.apache.usergrid.scenarios._
 import org.apache.usergrid.settings.Settings
 import scala.concurrent.duration._
+import org.apache.usergrid.helpers.Setup
 
 class PushNotificationTargetUserSimulation extends Simulation {
-  val scnToRun = NotificationScenarios.createScenario
-    .inject(constantUsersPerSec(Settings.numUsers) during (Settings.duration)) // wait for 15 seconds so create org can finish, need to figure out coordination
-    .throttle(reachRps(Settings.throttle) in ( Settings.rampTime.seconds))
-    .protocols( Settings.httpConf.acceptHeader("application/json"))
 
-  val createOrg = OrganizationScenarios.createOrgScenario
-    .inject(atOnceUsers(1))
-    .protocols(http.baseURL(Settings.baseUrl))
 
-  setUp(createOrg,scnToRun)
+  before{
+    Setup.setupOrg()
+    Setup.setupApplication()
+    Setup.setupNotifier()
+    Setup.setupUsers()
+  }
+  setUp(
+    NotificationScenarios.createScenario
+      .inject(constantUsersPerSec(Settings.numUsers) during (Settings.duration)) // wait for 15 seconds so create org can finish, need to figure out coordination
+      .throttle(reachRps(Settings.throttle) in ( Settings.rampTime.seconds))
+      .protocols( Settings.httpConf.acceptHeader("application/json"))
+  )
 
 }
