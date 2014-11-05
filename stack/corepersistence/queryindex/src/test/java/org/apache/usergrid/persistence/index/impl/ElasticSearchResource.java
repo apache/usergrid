@@ -108,7 +108,7 @@ public class ElasticSearchResource extends EnvironResource {
                 .put("node.http.enabled", false)
                 .put("path.logs", tempDir.toString())
                 .put("path.data", tempDir.toString())
-                .put("index.store.type", "memory")
+                .put("index.store.type", "default")
                 .put("index.number_of_shards", 1)
                 .put("index.number_of_replicas", 1)
                 .build();

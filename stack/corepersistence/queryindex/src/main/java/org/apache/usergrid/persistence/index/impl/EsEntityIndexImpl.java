@@ -54,6 +54,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexBatch;
@@ -183,14 +184,14 @@ public class EsEntityIndexImpl implements EntityIndex {
             public boolean doOp() {
                 final String tempId = UUIDGenerator.newTimeUUID().toString();
 
-                client.prepareIndex( indexName, VERIFY_TYPE, tempId )
+                esProvider.getClient().prepareIndex( indexName, VERIFY_TYPE, tempId )
                         .setSource( DEFAULT_PAYLOAD ).get();
 
                 logger.info( "Successfully created new document with docId {} in index {} and type {}", 
                         tempId, indexName, VERIFY_TYPE );
 
                 // delete all types, this way if we miss one it will get cleaned up
-                client.prepareDeleteByQuery( indexName ).setTypes( VERIFY_TYPE )
+                esProvider.getClient().prepareDeleteByQuery( indexName ).setTypes( VERIFY_TYPE )
                         .setQuery( MATCH_ALL_QUERY_BUILDER ).get();
 
                 logger.info( "Successfully deleted all documents in index {} and type {}", 
@@ -437,7 +438,7 @@ public class EsEntityIndexImpl implements EntityIndex {
     public Health getClusterHealth() {
 
         try {
-            ClusterHealthResponse chr = client.admin().cluster()
+            ClusterHealthResponse chr = esProvider.getClient().admin().cluster()
                 .health( new ClusterHealthRequest() ).get();
             return Health.valueOf( chr.getStatus().name() );
         } 
@@ -457,7 +458,7 @@ public class EsEntityIndexImpl implements EntityIndex {
     public Health getIndexHealth() {
         
         try {
-            ClusterHealthResponse chr = client.admin().cluster()
+            ClusterHealthResponse chr = esProvider.getClient().admin().cluster()
                 .health( new ClusterHealthRequest( new String[] { indexName } ) ).get();
             return Health.valueOf( chr.getStatus().name() );
         } 
