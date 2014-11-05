@@ -62,15 +62,19 @@ es.logger.level: INFO
 #Set our threadpool size.  Our bulk pool and search pools are quite large.  We may want to turn these down if we
 #overload the system
 
-threadpool.index.type: fixed
-threadpool.index.size: 160
-threadpool.index.queue_size: 0
-threadpool.bulk.type: fixed
-threadpool.bulk.size: 1000
-threadpool.bulk.queue_size: 0
-threadpool.search.size: 10000
-threadpool.search.type: fixed
-threadpool.search.queue_size: 0
+threadpool:
+    index:
+        type: fixed
+        size: 160
+        queue_size: 0
+    bulk:
+        type: fixed
+        size: 5000
+        queue_size: 100
+    search:
+        size: 10000
+        type: fixed
+        queue_size: 100
 
 action.auto_create_index: false
 
@@ -88,7 +92,7 @@ bootstrap.mlockall: true
 indices.fielddata.cache.size: 25%
 
 #If you haven't used it in 10 minutes, evict it from the cache
-indices.fielddata.cache.expire: 10m
+#indices.fielddata.cache.expire: 10m
 
 #Only allow rebalancing of 2 shards at a time
 cluster.routing.allocation.cluster_concurrent_rebalance: 2
@@ -103,6 +107,29 @@ cluster.routing.allocation.node_concurrent_recoveries: 4
 cluster.routing.allocation.node_initial_primaries_recoveries: 18
 indices.recovery.concurrent_streams: 4
 indices.recovery.max_bytes_per_sec: 40mb
+
+
+###############
+# Logging options
+# We want to turn on logging for slow queries and executions, so
+###############
+
+index.search.slowlog.threshold.query.warn: 10s
+index.search.slowlog.threshold.query.info: 5s
+index.search.slowlog.threshold.query.debug: 2s
+index.search.slowlog.threshold.query.trace: 500ms
+
+index.search.slowlog.threshold.fetch.warn: 1s
+index.search.slowlog.threshold.fetch.info: 800ms
+index.search.slowlog.threshold.fetch.debug: 500ms
+index.search.slowlog.threshold.fetch.trace: 200ms
+
+
+index.indexing.slowlog.threshold.index.warn: 10s
+index.indexing.slowlog.threshold.index.info: 5s
+index.indexing.slowlog.threshold.index.debug: 2s
+index.indexing.slowlog.threshold.index.trace: 500ms
+
 
 """
 

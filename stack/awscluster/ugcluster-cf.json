@@ -144,7 +144,7 @@
         "OpsCenterInstanceType": {
                    "Description": "Instance type for Opscenter server",
                    "Type": "String",
-                   "Default": "c3.xlarge",
+                   "Default": "c3.large",
                    "AllowedValues": [
                        "c3.large",
                        "c3.xlarge",
@@ -886,7 +886,7 @@
                         "export TYPE=es\n",
                         "export STACK_NAME=", { "Ref":"AWS::StackName" }, "\n", "\n",
                         "export PUBLIC_HOSTNAME=`(curl -s http://169.254.169.254/latest/meta-data/public-hostname)`\n",
-                        "export INTERNAL_HOSTNAME=`(curl http://169.254.169.254/latest/meta-data/local-ipv4)`\n", 
+                        "export INTERNAL_HOSTNAME=`(curl http://169.254.169.254/latest/meta-data/local-ipv4)`\n",
                         "\n",
                         "export EC2_INSTANCE_ID=`ec2metadata --instance-id`\n",
                         "export EC2_REGION=", { "Ref":"AWS::Region" },
@@ -1098,9 +1098,11 @@
                         "apt-get update\n",
                         "apt-get -y install s3cmd\n",
                         "cd /usr/share/usergrid\n",
-                        "s3cmd --config=/etc/s3cfg get s3://", { "Ref":"ReleaseBucket" }, "/awscluster-1.0-SNAPSHOT-any.tar.gz\n",
+                        "s3cmd --config=/etc/s3cfg get s3://", {"Ref": "ReleaseBucket"}, "/awscluster-1.0-SNAPSHOT-any.tar.gz\n",
+                        "s3cmd --config=/etc/s3cfg get s3://", {"Ref": "ReleaseBucket"}, "/ROOT.war\n",
                         "tar xvf awscluster-1.0-SNAPSHOT-any.tar.gz\n",
                         "rm -fr awscluster-1.0-SNAPSHOT-any.tar.gz\n",
+                        "mv ROOT.war webapps/ROOT.war\n",
                         "chmod 755 ./init_instance/*.sh\n",
                         "cd ./init_instance\n",
                         "# Init as a REST intance \n",
@@ -1484,7 +1486,7 @@
                     }
                 ]
             }
-        },        
+        },
         "AllowCassToCassOnAllPorts": {
             "Type": "AWS::EC2::SecurityGroupIngress",
             "Properties": {

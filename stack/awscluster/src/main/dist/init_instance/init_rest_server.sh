@@ -200,6 +200,18 @@ apt-get install -y postfix
 # Go
 sh /etc/init.d/tomcat7 start
 
+#Wait for tomcat to start, then run our migrations
+
+
+#Wait until tomcat starts and we can hit our status page
+until curl -m 1 -I -X GET http://localhost:8080/status | grep "200 OK";  do sleep 5; done
+
+#Run the migration
+curl -X PUT http://ugtest.usergrid.com/system/migrate/run  -u superuser:test
+
+#Run the system database setup
+curl -X GET http://localhost:8080/system/database/setup -u superuser:test
+
 # tag last so we can see in the console that the script ran to completion
 cd /usr/share/usergrid/scripts
 groovy tag_instance.groovy

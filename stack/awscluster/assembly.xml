@@ -24,15 +24,15 @@
 
     <includeBaseDirectory>false</includeBaseDirectory>
 
-    <files>
+    <!-- <files>
 
         <file>
-            <outputDirectory>webapps</outputDirectory> 
+            <outputDirectory>webapps</outputDirectory>
             <source>${stack.war}</source>
-            <destName>ROOT.war</destName> 
+            <destName>ROOT.war</destName>
         </file>
 
-    </files>
+    </files> -->
 
     <fileSets>
 
