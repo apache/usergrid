@@ -188,6 +188,9 @@
             "m3.xlarge": {
                 "Arch": "64"
             },
+            "c3.large": {
+                "Arch": "64"
+            },
             "c3.xlarge": {
                 "Arch": "64"
             },

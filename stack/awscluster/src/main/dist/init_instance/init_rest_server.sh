@@ -207,7 +207,7 @@ sh /etc/init.d/tomcat7 start
 until curl -m 1 -I -X GET http://localhost:8080/status | grep "200 OK";  do sleep 5; done
 
 #Run the migration
-curl -X PUT http://ugtest.usergrid.com/system/migrate/run  -u superuser:test
+curl -X PUT http://localhost:8080/system/migrate/run  -u superuser:test
 
 #Run the system database setup
 curl -X GET http://localhost:8080/system/database/setup -u superuser:test
