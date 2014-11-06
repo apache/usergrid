@@ -25,26 +25,39 @@ import io.gatling.core.scenario.Simulation
 import org.apache.usergrid.helpers.Setup
 import org.apache.usergrid.scenarios.NotificationScenarios
 import org.apache.usergrid.settings.Settings
+import scala.annotation.switch
 import scala.concurrent.duration._
 
 /**
  * Classy class class.
  */
 class AppSimulation extends Simulation{
-  before{
-    println("Begin setup")
-    Setup.setupOrg()
-    Setup.setupApplication()
-    Setup.setupNotifier()
-    Setup.setupUsers()
-    println("End Setup")
+
+  val simulation = Settings.simulation
+  println(s"Running simulation $simulation")
+
+  println("Begin setup")
+  Setup.setupOrg()
+  Setup.setupApplication()
+  Setup.setupNotifier()
+  Setup.setupUsers()
+  println("End Setup")
+
+  def sim(choice:String) = (choice: @switch) match {
+    case "connections" =>
+      setUp(
+        NotificationScenarios.createScenario
+          .inject(constantUsersPerSec(Settings.constantUsers) during (Settings.duration)) // wait for 15 seconds so create org can finish, need to figure out coordination
+          .throttle(reachRps(Settings.throttle) in ( Settings.rampTime.seconds))
+          .protocols( Settings.httpConf.acceptHeader("application/json"))
+      )
+    case "all" =>
+      setUp(
+        NotificationScenarios.createScenario
+          .inject(constantUsersPerSec(Settings.constantUsers) during (Settings.duration)) // wait for 15 seconds so create org can finish, need to figure out coordination
+          .throttle(reachRps(Settings.throttle) in (Settings.rampTime.seconds))
+          .protocols(Settings.httpConf.acceptHeader("application/json"))
+      )
   }
-  setUp(
-    NotificationScenarios.createScenario
-      .inject(constantUsersPerSec(Settings.constantUsers) during (Settings.duration)) // wait for 15 seconds so create org can finish, need to figure out coordination
-      .throttle(reachRps(Settings.throttle) in ( Settings.rampTime.seconds))
-      .protocols( Settings.httpConf.acceptHeader("application/json"))
-  )
-
-
+  sim(simulation)
 }
