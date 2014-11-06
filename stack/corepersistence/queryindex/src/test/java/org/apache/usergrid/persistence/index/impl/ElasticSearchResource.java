@@ -63,7 +63,7 @@ public class ElasticSearchResource extends EnvironResource {
             props.load( ClassLoader.getSystemResourceAsStream( "project.properties" ) );
             host=(String)props.getProperty( "elasticsearch.host", "127.0.0.1" );
             port=Integer.valueOf(props.getProperty( "elasticsearch.port", "9300" )).intValue();
-            String forkString = props.getProperty("elasticsearch.startup");
+            String forkString = props.getProperty("elasticsearch.startup", "external");
             externalElasticSearch = "external".equals( forkString );
 
         } catch (Exception ex) {

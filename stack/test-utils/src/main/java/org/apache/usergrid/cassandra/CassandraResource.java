@@ -317,7 +317,6 @@ public class CassandraResource extends ExternalResource {
         LOG.info( "-------------------------------------------------------------------");
         LOG.info( "Initializing Embedded Cassandra at {} ...", tempDir.toString() );
         LOG.info( "-------------------------------------------------------------------");
-
         // Create temp directory, setup to create new File configuration there
         File newYamlFile = new File( tempDir, "cassandra.yaml" );
         URL newYamlUrl = FileUtils.toURLs( new File[] { newYamlFile } )[0];
@@ -403,7 +402,6 @@ public class CassandraResource extends ExternalResource {
         LOG.info( "-------------------------------------------------------------------");
         LOG.info( "Initializing Forked Cassandra at {} ...", tempDir.toString() );
         LOG.info( "-------------------------------------------------------------------");
-
         // Create temp directory, setup to create new File configuration there
         File newYamlFile = new File( tempDir, "cassandra.yaml" );
         URL newYamlUrl = FileUtils.toURLs( new File[] { newYamlFile } )[0];
@@ -698,7 +696,7 @@ public class CassandraResource extends ExternalResource {
 //          int nativeTransportPort = CassandraResource.DEFAULT_NATIVE_TRANSPORT_PORT;
 
           System.setProperty( "cassandra.url", host+":" + Integer.toString( rpcPort ) );
-          System.setProperty( "cassandra.cluster", props.getProperty("cassandra.cluster","Test Cluster") );
+          System.setProperty( "cassandra.cluster", props.getProperty("cassandra.cluster","Usergrid") );
           System.setProperty( "cassandra-foreground", "true" );
           System.setProperty( "log4j.defaultInitOverride", "true" );
           System.setProperty( "log4j.configuration", "log4j.properties" );
