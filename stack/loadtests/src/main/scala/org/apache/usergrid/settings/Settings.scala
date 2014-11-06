@@ -64,6 +64,4 @@ object Settings {
   val constantUsers:Int = Settings.numUsers/Settings.duration
   println(s"Will inject $constantUsers users per sec")
 
-  var simulation:String =  if(System.getProperty("simulation") != null) System.getProperty("simulation") else "all"
-
 }
