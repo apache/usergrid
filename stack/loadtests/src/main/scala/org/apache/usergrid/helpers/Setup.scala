@@ -105,7 +105,7 @@ object Setup {
   }
 
   def setupUsers() = {
-    val userFeeder = FeederGenerator.generateUserWithGeolocationFeeder(Settings.numUsers , Settings.userLocationRadius, Settings.centerLatitude, Settings.centerLongitude)
+    val userFeeder = Settings.userFeeder
     val numUsers = userFeeder.length
     println(s"setupUsers: Sending requests for $numUsers users")
 

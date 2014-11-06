@@ -32,6 +32,8 @@ object Settings {
   val baseAppUrl = baseUrl + "/" + org + "/" + app
   val httpConf = http.baseURL(baseAppUrl)
 
+  val skipSetup:Boolean = System.getProperty("skipSetup") == "true"
+
   // Simulation settings
   var numUsers:Int = Integer.getInteger("numUsers", 10).toInt
 
@@ -63,5 +65,8 @@ object Settings {
 
   val constantUsers:Int = Settings.numUsers/Settings.duration
   println(s"Will inject $constantUsers users per sec")
+
+  val userFeeder = FeederGenerator.generateUserWithGeolocationFeeder(numUsers, userLocationRadius, centerLatitude, centerLongitude)
+
 
 }

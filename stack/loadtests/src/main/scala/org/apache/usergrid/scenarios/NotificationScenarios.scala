@@ -68,10 +68,9 @@ object NotificationScenarios {
   )
 
   val numEntities:Int = Settings.numUsers * 3 * Settings.duration
-  val userFeeder = FeederGenerator.generateUserWithGeolocationFeeder(Settings.numUsers, Settings.userLocationRadius, Settings.centerLatitude, Settings.centerLongitude)
 
   val createScenario = scenario("Create Push Notification")
-    .feed(userFeeder)
+    .feed(Settings.userFeeder)
     .exec(TokenScenarios.getUserToken)
     .exec( UserScenarios.getUserByUsername)
     .repeat(2){

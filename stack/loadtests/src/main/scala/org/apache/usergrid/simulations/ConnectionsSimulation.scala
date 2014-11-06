@@ -21,13 +21,33 @@
 package org.apache.usergrid.simulations
 
 import io.gatling.core.Predef._
-import io.gatling.http.Predef._
-import org.apache.usergrid.scenarios.{OrganizationScenarios, UserScenarios}
+import io.gatling.core.scenario.Simulation
+import org.apache.usergrid.helpers.Setup
+import org.apache.usergrid.scenarios.{ConnectionScenarios, NotificationScenarios}
 import org.apache.usergrid.settings.Settings
+import scala.concurrent.duration._
 
 /**
  * Classy class class.
  */
-class GeoProfileSimulation extends Simulation {
+class ConnectionsSimulation extends Simulation{
+
+  if(!Settings.skipSetup) {
+    println("Begin setup")
+    Setup.setupOrg()
+    Setup.setupApplication()
+    Setup.setupNotifier()
+    Setup.setupUsers()
+    println("End Setup")
+  }else{
+    println("Skipping Setup")
+  }
+
+  setUp(
+    ConnectionScenarios.createScenario
+      .inject(constantUsersPerSec(Settings.constantUsers) during (Settings.duration)) // wait for 15 seconds so create org can finish, need to figure out coordination
+      .throttle(reachRps(Settings.throttle) in ( Settings.rampTime.seconds))
+      .protocols( Settings.httpConf.acceptHeader("application/json"))
+  )
 
 }
