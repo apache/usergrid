@@ -10,10 +10,10 @@ Gatling will run through mvn
 
 	*Addional optional settings 
 		
-	>-DpushNotifier={notifierName} -DpushProvider=noop
+	>-DpushNotifier={notifierName} -DpushProvider={noop_apns_or_gcm} -Dsimulation={simulationNameOrAll}
 
 	So running will look something like this
-	>mvn gatling:execute -Dthrottle=100 -Dduration={durationInSecs} -Dorg={org}  -Dapp={appName} -Dbaseurl={uriNoProceedingSlash} -DnumEntities={numberOfEntitiesYouWantToCreateInteger} -DnumUsers={totalUsersInteger} -DrampTime={rampTimeIntegerSeconds} -DadminUser={username} -DadminPassword={pwd}
+	>mvn gatling:execute -Dthrottle=100 -Dduration=300 -Dorg=usergrid  -Dapp=load -Dbaseurl=http://load.usergrid.com -DnumEntities=300 -DnumUsers=600 -DrampTime=30 -DadminUser=usergrid -DadminPassword=test -Dsimulation=all
 	
 	Setting the rampTime => Injects a given number of users with a linear ramp over a given duration.
 	
