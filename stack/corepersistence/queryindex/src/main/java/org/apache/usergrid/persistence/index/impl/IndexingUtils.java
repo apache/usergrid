@@ -37,16 +37,22 @@ public class IndexingUtils {
     public static final String NUMBER_PREFIX = "nu_";
     public static final String BOOLEAN_PREFIX = "bu_";
 
-    public static final String ENTITYID_FIELDNAME = "zzz_entityid_zzz";
+    public static final String ENTITYID_FIELDNAME = "entityId";
 
     public static final String DOC_ID_SEPARATOR = "|";
     public static final String DOC_ID_SEPARATOR_SPLITTER = "\\|";
 
     // These are not allowed in document type names: _ . , | #
     public static final String DOC_TYPE_SEPARATOR = "^";
-    public static final String DOC_TYPE_SEPARATOR_SPLITTER = "\\^";
 
     public static final String INDEX_NAME_SEPARATOR = "^";
+
+    public static final String ENTITY_CONTEXT = "_context";
+
+    /**
+     * To be used when we want to search all types within a scope
+     */
+    public static final String ALL_TYPES = "ALL";
 
 
     /**
@@ -54,7 +60,7 @@ public class IndexingUtils {
       * @param scope
       * @return
       */
-     public static String createCollectionScopeTypeName( IndexScope scope ) {
+     public static String createContextName( IndexScope scope ) {
          StringBuilder sb = new StringBuilder();
          sb.append( scope.getOwner().getUuid() ).append(DOC_TYPE_SEPARATOR);
          sb.append( scope.getOwner().getType() ).append(DOC_TYPE_SEPARATOR);
@@ -86,8 +92,8 @@ public class IndexingUtils {
      * @param entity
      * @return
      */
-    public static String createIndexDocId(Entity entity) {
-        return createIndexDocId(entity.getId(), entity.getVersion());
+    public static String createIndexDocId(final Entity entity, final String scopeType) {
+        return createIndexDocId(entity.getId(), entity.getVersion(), scopeType);
     }
 
 
@@ -97,11 +103,12 @@ public class IndexingUtils {
      * @param version
      * @return
      */
-    public static String createIndexDocId(Id entityId, UUID version) {
+    public static String createIndexDocId(final Id entityId, final UUID version, final String scopeType) {
         StringBuilder sb = new StringBuilder();
         sb.append( entityId.getUuid() ).append(DOC_ID_SEPARATOR);
         sb.append( entityId.getType() ).append(DOC_ID_SEPARATOR);
-        sb.append( version.toString() );
+        sb.append( version.toString() ).append( DOC_ID_SEPARATOR );
+        sb.append( scopeType);
         return sb.toString();
     }
 
@@ -117,7 +124,7 @@ public class IndexingUtils {
      *
      * @throws java.io.IOException On JSON generation error.
      */
-    public static XContentBuilder createDoubleStringIndexMapping( 
+    public static XContentBuilder createDoubleStringIndexMapping(
             XContentBuilder builder, String type ) throws IOException {
 
         builder = builder
@@ -142,6 +149,7 @@ public class IndexingUtils {
                             // all other strings are not analyzed
                         .startObject()
                             .startObject( "template_2" )
+                //todo, should be string prefix, remove 2 field mapping
                                 .field( "match", "*" )
                                 .field( "match_mapping_type", "string" )
                                 .startObject( "mapping" )
@@ -160,6 +168,17 @@ public class IndexingUtils {
                                 .endObject()
                             .endObject()
                         .endObject()
+
+                //types for context direct string matching
+                .startObject( "context_template" )
+                        .field( "match", IndexingUtils.ENTITY_CONTEXT )
+                        .field( "match_mapping_type", "string" )
+                        .startObject( "mapping" )
+                            .field( "type", "string" )
+                            .field( "index", "not_analyzed" )
+                        .endObject()
+                    .endObject()
+                .endObject()
 
                     .endArray()
 

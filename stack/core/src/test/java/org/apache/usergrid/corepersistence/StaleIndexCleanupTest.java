@@ -240,7 +240,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
         IndexScope is = new IndexScopeImpl(
             new SimpleId( em.getApplicationId(), TYPE_APPLICATION),
-            CpNamingUtils.getCollectionScopeNameFromCollectionName( collName ));
+            CpNamingUtils.getCollectionScopeNameFromCollectionName( collName ), entityType );
         Query rcq = Query.fromQL(query);
         rcq.setLimit(10000); // no paging
 

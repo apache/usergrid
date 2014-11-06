@@ -21,7 +21,6 @@ package org.apache.usergrid.persistence.index.impl;
 import java.io.IOException;
 import java.util.HashMap;
 
-import org.apache.usergrid.persistence.core.test.UseModules;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -29,17 +28,17 @@ import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
-import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
+import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexScope;
+import org.apache.usergrid.persistence.index.SearchTypes;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
 import org.apache.usergrid.persistence.index.query.Query;
@@ -52,7 +51,6 @@ import com.google.inject.Inject;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 
 @RunWith( EsRunner.class )
@@ -74,6 +72,7 @@ public class EntityConnectionIndexImplTest extends BaseIT {
     @Inject
     public EntityIndexFactory ecif;
 
+
     @Test
     public void testBasicOperation() throws IOException {
 
@@ -81,47 +80,123 @@ public class EntityConnectionIndexImplTest extends BaseIT {
         ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
 
         // create a muffin
-        CollectionScope muffinScope = new CollectionScopeImpl( appId, appId, "muffins" );
-        Entity muffin = new Entity( 
-                new SimpleId( UUIDGenerator.newTimeUUID(), muffinScope.getName() ) );
+        Entity muffin = new Entity( new SimpleId( UUIDGenerator.newTimeUUID(), "muffin" ) );
 
         muffin = EntityIndexMapUtils.fromMap( muffin, new HashMap<String, Object>() {{
             put( "size", "Large" );
             put( "flavor", "Blueberry" );
+            put( "stars", 5 );
         }} );
         EntityUtils.setVersion( muffin, UUIDGenerator.newTimeUUID() );
 
+        Entity egg = new Entity( new SimpleId( UUIDGenerator.newTimeUUID(), "egg" ) );
+
+        egg = EntityIndexMapUtils.fromMap( egg, new HashMap<String, Object>() {{
+            put( "size", "Large" );
+            put( "type", "scramble" );
+            put( "stars", 5 );
+        }} );
+        EntityUtils.setVersion( egg, UUIDGenerator.newTimeUUID() );
+
+        Entity oj = new Entity( new SimpleId( UUIDGenerator.newTimeUUID(), "juice" ) );
+
+        oj = EntityIndexMapUtils.fromMap( oj, new HashMap<String, Object>() {{
+            put( "size", "Large" );
+            put( "type", "pulpy" );
+            put( "stars", 3 );
+        }} );
+        EntityUtils.setVersion( oj, UUIDGenerator.newTimeUUID() );
+
 
         // create a person who likes muffins
-        CollectionScope peopleScope = new CollectionScopeImpl( appId, appId, "people" );
-        Entity person = new Entity( new SimpleId( 
-                UUIDGenerator.newTimeUUID(), peopleScope.getName() ) );
-        person = EntityIndexMapUtils.fromMap( person, new HashMap<String, Object>() {{
-            put( "name", "Dave" );
-            put( "hometown", "Chapel Hill" );
-        }} );
-        EntityUtils.setVersion( person, UUIDGenerator.newTimeUUID() );
+        Id personId =   new SimpleId( UUIDGenerator.newTimeUUID(), "person" ) ;
 
 
-        assertNotNull( person.getId() );
-        assertNotNull( person.getId().getUuid() );
+        assertNotNull( personId );
+        assertNotNull( personId.getType() );
+        assertNotNull( personId.getUuid() );
 
         // index connection of "person Dave likes Large Blueberry muffin"
 
-        IndexScope scope = new IndexScopeImpl(  person.getId(), "likes" );
+        IndexScope searchScope = new IndexScopeImpl( personId, "likes" );
+
+        //create another scope we index in, want to be sure these scopes are filtered
+        IndexScope otherIndexScope = new IndexScopeImpl( new SimpleId( UUIDGenerator.newTimeUUID(), "person" ), "likes" );
 
         EntityIndex personLikesIndex = ecif.createEntityIndex( applicationScope );
 
         EntityIndexBatch batch = personLikesIndex.createBatch();
 
-        batch.index( scope, muffin );
+        //add to both scopes
+
+        //add a muffin
+        batch.index( searchScope, muffin );
+        batch.index( otherIndexScope, muffin );
+
+        //add the eggs
+        batch.index( searchScope, egg );
+        batch.index( otherIndexScope, egg );
+
+        //add the oj
+        batch.index( searchScope, oj );
+        batch.index( otherIndexScope, oj );
+
         batch.executeAndRefresh();
 
-        // now, let's search for things that Dave likes
-        CandidateResults likes = personLikesIndex.search(scope,  Query.fromQL( "select *" ) );
+        // now, let's search for muffins
+        CandidateResults likes = personLikesIndex
+                .search( searchScope, SearchTypes.fromTypes( muffin.getId().getType() ), Query.fromQL( "select *" ) );
         assertEquals( 1, likes.size() );
-        assertEquals(muffin.getId(), likes.get(0).getId());
+        assertEquals( muffin.getId(), likes.get( 0 ).getId() );
+
+        // now, let's search for egg
+        likes = personLikesIndex
+                .search( searchScope, SearchTypes.fromTypes( egg.getId().getType() ), Query.fromQL( "select *" ) );
+        assertEquals( 1, likes.size() );
+        assertEquals( egg.getId(), likes.get( 0 ).getId() );
+
+        // search for OJ
+        likes = personLikesIndex
+                .search( searchScope, SearchTypes.fromTypes( oj.getId().getType() ), Query.fromQL( "select *" ) );
+        assertEquals( 1, likes.size() );
+        assertEquals( oj.getId(), likes.get( 0 ).getId() );
+
+
+        //now lets search for all explicitly
+        likes = personLikesIndex.search( searchScope,
+                SearchTypes.fromTypes( muffin.getId().getType(), egg.getId().getType(), oj.getId().getType() ),
+                Query.fromQL( "select *" ) );
+        assertEquals( 3, likes.size() );
+        assertEquals( muffin.getId(), likes.get( 0 ).getId() );
+        assertEquals( egg.getId(), likes.get( 1 ).getId() );
+        assertEquals( oj.getId(), likes.get( 2 ).getId() );
+
+          //now lets search for all explicitly
+        likes = personLikesIndex.search( searchScope,
+                SearchTypes.allTypes(),
+                Query.fromQL( "select *" ) );
+        assertEquals( 3, likes.size() );
+        assertEquals( muffin.getId(), likes.get( 0 ).getId() );
+        assertEquals( egg.getId(), likes.get( 1 ).getId() );
+        assertEquals( oj.getId(), likes.get( 2 ).getId() );
+
+
+
+        //now search all entity types with a query that returns a subset
+        likes = personLikesIndex.search( searchScope,
+                SearchTypes.fromTypes( muffin.getId().getType(), egg.getId().getType(), oj.getId().getType() ),
+                Query.fromQL( "select * where stars = 5" ) );
+        assertEquals( 2, likes.size() );
+        assertEquals( muffin.getId(), likes.get( 0 ).getId() );
+        assertEquals( egg.getId(), likes.get( 1 ).getId() );
+
+
+
+        //now search with no types, we should get only the results that match
+        likes = personLikesIndex.search( searchScope, SearchTypes.allTypes(), Query.fromQL( "select * where stars = 5" ) );
+        assertEquals( 2, likes.size() );
+        assertEquals( muffin.getId(), likes.get( 0 ).getId() );
+        assertEquals( egg.getId(), likes.get( 1 ).getId() );
 
     }
-
 }

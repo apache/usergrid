@@ -44,7 +44,7 @@ public interface EntityIndex {
     /**
      * Execute query in Usergrid syntax.
      */
-    public CandidateResults search(final IndexScope indexScope,  Query query );
+    public CandidateResults search(final IndexScope indexScope, final SearchTypes searchType, Query query );
 
     /**
      * Get the candidate results of all versions of the entity for this id.
@@ -67,3 +67,5 @@ public interface EntityIndex {
     public Health getIndexHealth();
 
 }
+
+

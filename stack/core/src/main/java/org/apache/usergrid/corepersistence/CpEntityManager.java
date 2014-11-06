@@ -637,7 +637,7 @@ public class CpEntityManager implements EntityManager {
 
                         IndexScope indexScope = new IndexScopeImpl(
                                 new SimpleId( uuid, ownerType ), 
-                                CpNamingUtils.getCollectionScopeNameFromCollectionName( coll ) );
+                                CpNamingUtils.getCollectionScopeNameFromCollectionName( coll ), entityType );
 
 
                         batch.index( indexScope, entity );
@@ -650,13 +650,13 @@ public class CpEntityManager implements EntityManager {
             // deindex from default index scope
             IndexScope defaultIndexScope = new IndexScopeImpl(
                     getApplicationScope().getApplication(),
-                    CpNamingUtils.getCollectionScopeNameFromEntityType( entityRef.getType() ) );
+                    CpNamingUtils.getCollectionScopeNameFromEntityType( entityRef.getType() ), entityType );
 
             batch.deindex(defaultIndexScope,  entity );
 
             IndexScope allTypesIndexScope = new IndexScopeImpl(
                 getApplicationScope().getApplication(), 
-                    CpNamingUtils.ALL_TYPES);
+                    CpNamingUtils.ALL_TYPES, entityType );
 
             batch.deindex( allTypesIndexScope,  entity );
 
@@ -1048,7 +1048,7 @@ public class CpEntityManager implements EntityManager {
 
         IndexScope defaultIndexScope = new IndexScopeImpl(
                 getApplicationScope().getApplication(), 
-                CpNamingUtils.getCollectionScopeNameFromEntityType( entityRef.getType() ) );
+                CpNamingUtils.getCollectionScopeNameFromEntityType( entityRef.getType() ), entityType );
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
         EntityIndex ei = managerCache.getEntityIndex(getApplicationScope());
@@ -2976,21 +2976,21 @@ public class CpEntityManager implements EntityManager {
         // index member into entity collection | type scope
         IndexScope collectionIndexScope = new IndexScopeImpl(
                 collectionEntity.getId(),
-                CpNamingUtils.getCollectionScopeNameFromCollectionName( collName ));
+                CpNamingUtils.getCollectionScopeNameFromCollectionName( collName ), entityType );
 
         batch.index(collectionIndexScope, memberEntity);
         
         // index member into entity | all-types scope
         IndexScope entityAllTypesScope = new IndexScopeImpl(
                 collectionEntity.getId(),
-                CpNamingUtils.ALL_TYPES);
+                CpNamingUtils.ALL_TYPES, entityType );
 
         batch.index(entityAllTypesScope, memberEntity);
         
         // index member into application | all-types scope
         IndexScope appAllTypesScope = new IndexScopeImpl(
                 getApplicationScope().getApplication(),
-                CpNamingUtils.ALL_TYPES);
+                CpNamingUtils.ALL_TYPES, entityType );
 
         batch.index(appAllTypesScope, memberEntity);
 

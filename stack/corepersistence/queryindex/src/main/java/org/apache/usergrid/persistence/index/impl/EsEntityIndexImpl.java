@@ -26,8 +26,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
-import org.elasticsearch.action.admin.cluster.health.ClusterHealthStatus;
-import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
 import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateResponse;
@@ -35,14 +33,17 @@ import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequestBuilder;
 import org.elasticsearch.client.AdminClient;
+import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.index.query.FilterBuilder;
+import org.elasticsearch.index.query.FilterBuilders;
 import org.elasticsearch.index.query.MatchAllQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.TermFilterBuilder;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.elasticsearch.indices.IndexMissingException;
 import org.elasticsearch.search.SearchHit;
@@ -53,6 +54,8 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.lucene.queryparser.xml.FilterBuilderFactory;
+
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
@@ -60,6 +63,7 @@ import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.index.IndexScope;
+import org.apache.usergrid.persistence.index.SearchTypes;
 import org.apache.usergrid.persistence.index.query.CandidateResult;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
 import org.apache.usergrid.persistence.index.query.Query;
@@ -228,29 +232,43 @@ public class EsEntityIndexImpl implements EntityIndex {
 
 
     @Override
-    public CandidateResults search( final IndexScope indexScope, final Query query ) {
+    public CandidateResults search( final IndexScope indexScope, final SearchTypes searchTypes, final Query query ) {
 
-        final String indexType = IndexingUtils.createCollectionScopeTypeName( indexScope );
+        final String context = IndexingUtils.createContextName( indexScope );
+        final String[] entityTypes = searchTypes.getTypeNames();
 
         QueryBuilder qb = query.createQueryBuilder();
 
         if ( logger.isDebugEnabled() ) {
-            logger.debug( "Searching index {}\n   type {}\n   query {} limit {}", new Object[] {
-                    this.indexName, indexType, qb.toString().replace( "\n", " " ), query.getLimit()
+            logger.debug( "Searching index {}\n  scope{} \n type {}\n   query {} limit {}", new Object[] {
+                    this.indexName, context, entityTypes, qb.toString().replace( "\n", " " ), query.getLimit()
             } );
         }
 
         SearchResponse searchResponse;
-        if ( query.getCursor() == null ) {
 
+        if ( query.getCursor() == null ) {
             SearchRequestBuilder srb =
-                    esProvider.getClient().prepareSearch( indexName ).setTypes( indexType ).setScroll( cursorTimeout + "m" )
+                    esProvider.getClient().prepareSearch( indexName ).setTypes( entityTypes ).setScroll(
+                            cursorTimeout + "m" )
                           .setQuery( qb );
 
-            FilterBuilder fb = query.createFilterBuilder();
+            final TermFilterBuilder contextFilter = FilterBuilders.termFilter( IndexingUtils.ENTITY_CONTEXT, context );
+
+            final FilterBuilder fb = query.createFilterBuilder();
+
+
+
+            //we have post filters, apply them
             if ( fb != null ) {
+//                final FilterBuilder postFilters = FilterBuilders.andFilter(fb, contextFilter  );
+
                 logger.debug( "   Filter: {} ", fb.toString() );
-                srb = srb.setPostFilter( fb );
+//                srb = srb.setPostFilter( postFilters );
+            }
+            //no other post filters, just the types
+            else{
+//                srb.setPostFilter( contextFilter );
             }
 
             srb = srb.setFrom( 0 ).setSize( query.getLimit() );
@@ -384,7 +402,7 @@ public class EsEntityIndexImpl implements EntityIndex {
     public CandidateResults getEntityVersions( final IndexScope scope, final Id id ) {
         Query query = new Query();
         query.addEqualityFilter( ENTITYID_FIELDNAME, id.getUuid().toString() );
-        CandidateResults results = search( scope, query );
+        CandidateResults results = search( scope, SearchTypes.fromTypes( id.getType() ), query );
         return results;
     }
 
