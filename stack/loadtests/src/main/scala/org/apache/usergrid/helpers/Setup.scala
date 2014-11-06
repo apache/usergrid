@@ -107,16 +107,22 @@ object Setup {
   def setupUsers() = {
     val userFeeder = FeederGenerator.generateUserWithGeolocationFeeder(Settings.numUsers , Settings.userLocationRadius, Settings.centerLatitude, Settings.centerLongitude)
     val numUsers = userFeeder.length
-    println(s"Sending requests for $numUsers users")
+    println(s"setupUsers: Sending requests for $numUsers users")
 
     val list:ArrayBuffer[ListenableFuture[Response]] = new ArrayBuffer[ListenableFuture[Response]]
     userFeeder.foreach(user => {
       list += setupUser(user);
     });
+    var successCount:Int = 0;
     list.foreach(f => {
       val response = f.get()
-      printResponse("Post user",response.getStatusCode,response.getResponseBody())
+      if(response.getStatusCode != 200) {
+        printResponse("Post User", response.getStatusCode, response.getResponseBody())
+      }else{
+        successCount+=1
+      }
     })
+    println(s"setupUsers: Received $successCount successful responses out of $numUsers requests.")
 
   }
 
