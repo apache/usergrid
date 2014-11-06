@@ -105,7 +105,10 @@ object Setup {
   }
 
   def setupUsers() = {
-    val userFeeder = FeederGenerator.generateUserWithGeolocationFeeder(Settings.numUsers * Settings.duration, Settings.userLocationRadius, Settings.centerLatitude, Settings.centerLongitude)
+    val userFeeder = FeederGenerator.generateUserWithGeolocationFeeder(Settings.numUsers , Settings.userLocationRadius, Settings.centerLatitude, Settings.centerLongitude)
+    val numUsers = userFeeder.length
+    println(s"Sending requests for $numUsers users")
+
     val list:ArrayBuffer[ListenableFuture[Response]] = new ArrayBuffer[ListenableFuture[Response]]
     userFeeder.foreach(user => {
       list += setupUser(user);
@@ -138,7 +141,6 @@ object Setup {
       "displayName":"$displayName","age":"$age","seen":"$seen","weight":"$weight",
       "height":"$height","aboutMe":"$aboutMe","profileId":"$profileId","headline":"$headline",
       "showAge":"$showAge","relationshipStatus":"$relationshipStatus","ethnicity":"$ethnicity","password":"$password"}"""
-
     val authToken = getManagementToken()
     val createUser = client
       .preparePost(Settings.baseAppUrl + "/users")

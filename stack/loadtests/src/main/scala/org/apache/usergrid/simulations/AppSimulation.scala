@@ -32,10 +32,12 @@ import scala.concurrent.duration._
  */
 class AppSimulation extends Simulation{
   before{
+    println("Begin setup")
     Setup.setupOrg()
     Setup.setupApplication()
     Setup.setupNotifier()
     Setup.setupUsers()
+    println("End Setup")
   }
   setUp(
     NotificationScenarios.createScenario
