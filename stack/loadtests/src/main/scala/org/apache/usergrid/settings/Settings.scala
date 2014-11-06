@@ -46,6 +46,9 @@ object Settings {
     println(s"Changing numUsers $numUsers to duration length $duration")
     numUsers = duration
   }
+  if(numUsers % duration != 0){
+    throw new Exception(s"please use numUsers ($numUsers) that is evenly divisible by duration($duration)")
+  }
   // Geolocation settings
   val centerLatitude:Double = 37.442348 // latitude of center point
   val centerLongitude:Double = -122.138268 // longitude of center point
