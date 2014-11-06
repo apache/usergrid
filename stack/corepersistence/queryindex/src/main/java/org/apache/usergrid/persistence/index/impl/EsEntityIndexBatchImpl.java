@@ -61,8 +61,8 @@ import com.google.common.base.Joiner;
 
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ANALYZED_STRING_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.BOOLEAN_PREFIX;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ENTITYID_FIELDNAME;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ENTITY_CONTEXT;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ENTITYID_ID_FIELDNAME;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ENTITY_CONTEXT_FIELDNAME;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.GEO_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.NUMBER_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.STRING_PREFIX;
@@ -116,7 +116,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
         if ( log.isDebugEnabled() ) {
             log.debug( "Indexing entity {}:{} in scope\n   app {}\n   "
-                    + "owner {}\n   name {}\n   type {} \n scope type{}", new Object[] {
+                    + "owner {}\n   name {}\n   type {} \n scope type {}", new Object[] {
                     entity.getId().getType(), entity.getId().getUuid(), applicationScope.getApplication(),
                     indexScope.getOwner(), indexScope.getName(), entityType, context
             } );
@@ -255,10 +255,11 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         final Map entityMap = entityToMap( entity );
 
         //add the context for filtering later
-        entityMap.put( ENTITY_CONTEXT, context );
+        entityMap.put( ENTITY_CONTEXT_FIELDNAME, context );
 
         //but the fieldname
-        entityMap.put( ENTITYID_FIELDNAME, entity.getId().getUuid().toString().toLowerCase() );
+        //we have to prefix because we use query equality to seek this later.  TODO see if we can make this more declarative
+        entityMap.put( STRING_PREFIX+ ENTITYID_ID_FIELDNAME, IndexingUtils.idString(entity.getId()).toLowerCase() );
 
         return entityMap;
     }

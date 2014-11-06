@@ -40,6 +40,7 @@ import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.SearchTypes;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
+import org.apache.usergrid.persistence.index.query.CandidateResult;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -51,6 +52,7 @@ import com.google.inject.Inject;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 
 @RunWith( EsRunner.class )
@@ -59,15 +61,9 @@ public class EntityConnectionIndexImplTest extends BaseIT {
 
     private static final Logger log = LoggerFactory.getLogger( EntityConnectionIndexImplTest.class );
 
-    @ClassRule
-    public static ElasticSearchResource es = new ElasticSearchResource();
+//    @ClassRule
+//    public static ElasticSearchResource es = new ElasticSearchResource();
 
-    @ClassRule
-    public static CassandraRule cass = new CassandraRule();
-
-    @Inject
-    @Rule
-    public MigrationManagerRule migrationManagerRule;
 
     @Inject
     public EntityIndexFactory ecif;
@@ -121,7 +117,7 @@ public class EntityConnectionIndexImplTest extends BaseIT {
         IndexScope searchScope = new IndexScopeImpl( personId, "likes" );
 
         //create another scope we index in, want to be sure these scopes are filtered
-        IndexScope otherIndexScope = new IndexScopeImpl( new SimpleId( UUIDGenerator.newTimeUUID(), "person" ), "likes" );
+        IndexScope otherIndexScope = new IndexScopeImpl( new SimpleId( UUIDGenerator.newTimeUUID(), "animal" ), "likes" );
 
         EntityIndex personLikesIndex = ecif.createEntityIndex( applicationScope );
 
@@ -142,6 +138,7 @@ public class EntityConnectionIndexImplTest extends BaseIT {
         batch.index( otherIndexScope, oj );
 
         batch.executeAndRefresh();
+        personLikesIndex.refresh();
 
         // now, let's search for muffins
         CandidateResults likes = personLikesIndex
@@ -167,18 +164,18 @@ public class EntityConnectionIndexImplTest extends BaseIT {
                 SearchTypes.fromTypes( muffin.getId().getType(), egg.getId().getType(), oj.getId().getType() ),
                 Query.fromQL( "select *" ) );
         assertEquals( 3, likes.size() );
-        assertEquals( muffin.getId(), likes.get( 0 ).getId() );
-        assertEquals( egg.getId(), likes.get( 1 ).getId() );
-        assertEquals( oj.getId(), likes.get( 2 ).getId() );
+        assertContains( egg.getId(), likes );
+        assertContains( muffin.getId(), likes );
+        assertContains( oj.getId(), likes );
 
           //now lets search for all explicitly
         likes = personLikesIndex.search( searchScope,
                 SearchTypes.allTypes(),
                 Query.fromQL( "select *" ) );
         assertEquals( 3, likes.size() );
-        assertEquals( muffin.getId(), likes.get( 0 ).getId() );
-        assertEquals( egg.getId(), likes.get( 1 ).getId() );
-        assertEquals( oj.getId(), likes.get( 2 ).getId() );
+        assertContains( egg.getId(), likes );
+        assertContains( muffin.getId(), likes);
+        assertContains( oj.getId(), likes );
 
 
 
@@ -187,16 +184,26 @@ public class EntityConnectionIndexImplTest extends BaseIT {
                 SearchTypes.fromTypes( muffin.getId().getType(), egg.getId().getType(), oj.getId().getType() ),
                 Query.fromQL( "select * where stars = 5" ) );
         assertEquals( 2, likes.size() );
-        assertEquals( muffin.getId(), likes.get( 0 ).getId() );
-        assertEquals( egg.getId(), likes.get( 1 ).getId() );
+        assertContains( egg.getId(), likes);
+        assertContains( muffin.getId(), likes );
 
 
 
         //now search with no types, we should get only the results that match
         likes = personLikesIndex.search( searchScope, SearchTypes.allTypes(), Query.fromQL( "select * where stars = 5" ) );
         assertEquals( 2, likes.size() );
-        assertEquals( muffin.getId(), likes.get( 0 ).getId() );
-        assertEquals( egg.getId(), likes.get( 1 ).getId() );
+        assertContains( egg.getId(), likes);
+        assertContains( muffin.getId(), likes );
+    }
 
+
+    private void assertContains(final Id id, final CandidateResults results ){
+        for( CandidateResult result: results){
+            if(result.getId().equals(id)){
+                return;
+            }
+        }
+
+        fail(String.format("Could not find id %s in candidate results", id));
     }
 }

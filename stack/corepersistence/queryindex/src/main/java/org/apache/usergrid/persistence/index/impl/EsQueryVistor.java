@@ -219,9 +219,10 @@ public class EsQueryVistor implements QueryVisitor {
             String svalue = (String)value;
 
             BoolQueryBuilder qb = QueryBuilders.boolQuery();  // let's do a boolean OR
-            qb.minimumNumberShouldMatch(1); 
+            qb.minimumNumberShouldMatch(1);
 
             // field is an entity/array that does not need a prefix on its name
+            //TODO is this right now that we've updated our doc structure?  Should this be "must" instead of should?
             qb = qb.should( QueryBuilders.wildcardQuery( name, svalue ) );
            
             // or field is just a string that does need a prefix

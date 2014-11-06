@@ -43,6 +43,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.persistence.index.exceptions.IndexException;
 import org.apache.usergrid.persistence.index.exceptions.QueryParseException;
 import org.apache.usergrid.persistence.index.impl.EsQueryVistor;
+import org.apache.usergrid.persistence.index.impl.IndexingUtils;
 import org.apache.usergrid.persistence.index.query.tree.AndOperand;
 import org.apache.usergrid.persistence.index.query.tree.ContainsOperand;
 import org.apache.usergrid.persistence.index.query.tree.CpQueryFilterLexer;
@@ -142,10 +143,23 @@ public class Query {
     }
 
 
-    public QueryBuilder createQueryBuilder() {
+    public QueryBuilder createQueryBuilder(final String context) {
 
-        QueryBuilder queryBuilder = null;
 
+        QueryBuilder queryBuilder;
+
+
+        /**
+         * Add our filter for context to our query for fast execution.  Fast because it utilizes bitsets
+         * internally. See this post for more detail.
+         * http://www.elasticsearch.org/blog/all-about-elasticsearch-filter-bitsets/
+         */
+
+
+
+
+
+        //we have a root operand.  Translate our AST into an ES search
         if ( getRootOperand() != null ) {
             QueryVisitor v = new EsQueryVistor();
             try {
@@ -154,11 +168,15 @@ public class Query {
             } catch ( IndexException ex ) {
                 throw new RuntimeException( "Error building ElasticSearch query", ex );
             }
-            queryBuilder = v.getQueryBuilder();
+
+            // TODO evaluate performance when it's an all query.  Do we need to put the context term first for performance?
+            queryBuilder = QueryBuilders.boolQuery().must(  v.getQueryBuilder() )
+                                        .must( QueryBuilders.termQuery( IndexingUtils.ENTITY_CONTEXT_FIELDNAME, context ) );
         } 
 
-		if ( queryBuilder == null ) {
-            queryBuilder = QueryBuilders.matchAllQuery();
+        //nothing was specified ensure we specify the context in the search
+		else {
+            queryBuilder = QueryBuilders.termQuery( IndexingUtils.ENTITY_CONTEXT_FIELDNAME, context );
 		}
 
         return queryBuilder;
