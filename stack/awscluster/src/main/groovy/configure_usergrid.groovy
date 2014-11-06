@@ -42,16 +42,18 @@ def testAdminUserEmail = System.getenv().get("TEST_ADMIN_USER_EMAIL")
 
 def numEsNodes = Integer.parseInt(System.getenv().get("ES_NUM_SERVERS"))
 //Override number of shards.  Set it to 2x the cluster size
-def esShards = numEsNodes*2;
+def esShards = numEsNodes*4;
 
 
+//This gives us 3 copies, which means we'll have a quorum with primary + 1 replica
 def esReplicas = 2;
 
 def cassThreads = System.getenv().get("TOMCAT_THREADS")
 def hystrixThreads = Integer.parseInt(cassThreads) / 100
 
 //if we end in -1, we remove it
-def ec2Region = System.getenv().get("EC2_REGION").replace("-1", "")
+def ec2Region = System.getenv().get("EC2_REGION")
+def cassEc2Region = ec2Region.replace("-1", "")
 
 
 NodeRegistry registry = new NodeRegistry();
@@ -91,7 +93,7 @@ def usergridConfig = """
 cassandra.url=${cassandras}
 cassandra.cluster=${clusterName}
 cassandra.keyspace.strategy=org.apache.cassandra.locator.NetworkTopologyStrategy
-cassandra.keyspace.replication=${ec2Region}:${replFactor}
+cassandra.keyspace.replication=${cassEc2Region}:${replFactor}
 
 cassandra.timeout=5000
 cassandra.connections=${cassThreads}

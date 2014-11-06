@@ -118,6 +118,7 @@ import org.apache.usergrid.persistence.collection.exception.WriteOptimisticVerif
 import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.Event;
 import org.apache.usergrid.persistence.entities.Group;
@@ -222,12 +223,19 @@ public class CpEntityManager implements EntityManager {
             .maximumSize( entityCacheSize )
             .expireAfterWrite( entityCacheTimeout, TimeUnit.MILLISECONDS )
             .build( new CacheLoader<EntityScope, org.apache.usergrid.persistence.model.entity.Entity>() {
-                public org.apache.usergrid.persistence.model.entity.Entity load( EntityScope entityScope ) { 
+                public org.apache.usergrid.persistence.model.entity.Entity load( EntityScope es) { 
                     return managerCache.getEntityCollectionManager( 
-                        entityScope.scope ).load( entityScope.entityId ).toBlocking().lastOrDefault(null);
+                        es.scope ).load( es.entityId ).toBlocking().lastOrDefault(null);
                 }
             }
         );
+    }
+
+
+    @Override
+    public Health getIndexHealth() {
+        EntityIndex ei = managerCache.getEntityIndex( applicationScope );
+        return ei.getIndexHealth();
     }
 
 

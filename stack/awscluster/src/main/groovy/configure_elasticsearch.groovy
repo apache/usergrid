@@ -70,9 +70,11 @@ threadpool:
     bulk:
         type: fixed
         size: 5000
+#        size: 16
         queue_size: 100
     search:
         size: 10000
+#        size: 48
         type: fixed
         queue_size: 100
 

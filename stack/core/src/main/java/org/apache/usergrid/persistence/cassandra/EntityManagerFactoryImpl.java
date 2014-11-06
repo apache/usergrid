@@ -67,6 +67,7 @@ import static org.apache.usergrid.persistence.cassandra.CassandraService.PROPERT
 import static org.apache.usergrid.persistence.cassandra.CassandraService.RETRY_COUNT;
 import static org.apache.usergrid.utils.ConversionUtils.uuid;
 import static org.apache.usergrid.persistence.cassandra.Serializers.*;
+import org.apache.usergrid.persistence.core.util.Health;
 
 
 /**
@@ -459,12 +460,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
     }
 
     @Override
-    public boolean verifyCollectionsModuleHealthy() {
-        return true;
-    }
-
-    @Override
-    public boolean verifyQueryIndexModuleHealthy() {
-        return true;
+    public Health getEntityStoreHealth() {
+        throw new UnsupportedOperationException("Not supported yet."); 
     }
 }

@@ -17,8 +17,8 @@
 package org.apache.usergrid.rest;
 
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.ContextResolver;
@@ -39,12 +39,11 @@ public class JacksonCustomMapperProvider implements ContextResolver<ObjectMapper
     private static final Logger logger = LoggerFactory.getLogger( JacksonCustomMapperProvider.class );
 
     ObjectMapper mapper = new ObjectMapper();
+    
 
     public JacksonCustomMapperProvider() {
         logger.info( "JacksonCustomMapperProvider installed" );
-
-        // Should not be necessary
-        //mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        mapper.configure( SerializationFeature.INDENT_OUTPUT, true); // pretty print 
     }
 
 
