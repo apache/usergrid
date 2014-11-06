@@ -63,4 +63,10 @@ import io.gatling.core.Predef._
      exec(getUserByUsername)
    }
 
+   val deleteUserByUsername = exec(
+     http("DELETE user")
+       .delete("/users/${username}")
+       .headers(Headers.jsonAuthorized)
+       .check(status.is(200), jsonPath("$..entities[0].uuid").saveAs("userId"))
+   )
  }
