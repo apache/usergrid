@@ -32,13 +32,13 @@ import org.safehaus.guicyfig.EnvironResource;
 import org.safehaus.guicyfig.GuicyFigModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.RandomStringUtils;
-
 import org.apache.usergrid.persistence.core.util.AvailablePortFinder;
 import org.apache.usergrid.persistence.index.IndexFig;
 
+import com.amazonaws.util.StringUtils;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
@@ -50,17 +50,37 @@ public class ElasticSearchResource extends EnvironResource {
     private static Node node;
 
     private static int port;
+    private static String host;
+    
+    private static boolean externalElasticSearch = false;
 
 
 
     public ElasticSearchResource() {
         super( Env.UNIT );
+        try {
+            Properties props = new Properties();
+            props.load( ClassLoader.getSystemResourceAsStream( "project.properties" ) );
+            host=(String)props.getProperty( "elasticsearch.host", "127.0.0.1" );
+            port=Integer.valueOf(props.getProperty( "elasticsearch.port", "9300" )).intValue();
+            String forkString = props.getProperty("elasticsearch.startup");
+            externalElasticSearch = "external".equals( forkString );
+
+        } catch (Exception ex) {
+            throw new RuntimeException("Error getting properties", ex);
+        }
     }
 
 
     @Override
     protected void before() throws Throwable {
-        startEs();
+    	if(externalElasticSearch){
+            System.setProperty( IndexFig.ELASTICSEARCH_HOSTS, host );
+            System.setProperty( IndexFig.ELASTICSEARCH_PORT, port+"" );
+    		
+    	}else{
+            startEs();
+    	}
     }
 
 
@@ -133,7 +153,9 @@ public class ElasticSearchResource extends EnvironResource {
 
 
     public static void shutdown() {
-        node.stop();
+    	if(!externalElasticSearch){
+            node.stop();
+    	}
     }
 
 
