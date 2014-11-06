@@ -26,7 +26,7 @@ object Engine extends App {
 	props.requestBodiesDirectory(IDEPathHelper.requestBodiesDirectory.toString)
 	props.binariesDirectory(IDEPathHelper.mavenBinariesDirectory.toString)
 
-  props.simulationClass("org.apache.usergrid.simulations.PushNotificationTargetUserSimulation")
+  props.simulationClass("org.apache.usergrid.simulations.AppSimulation")
 
 	Gatling.fromMap(props.build)
 }

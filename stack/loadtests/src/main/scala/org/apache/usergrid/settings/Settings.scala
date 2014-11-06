@@ -33,7 +33,8 @@ object Settings {
   val httpConf = http.baseURL(baseAppUrl)
 
   // Simulation settings
-  val numUsers:Int = Integer.getInteger("numUsers", 10).toInt
+  var numUsers:Int = Integer.getInteger("numUsers", 10).toInt
+
   val numEntities:Int = Integer.getInteger("numEntities", 5000).toInt
   val numDevices:Int = Integer.getInteger("numDevices", 2000).toInt
 
@@ -41,6 +42,10 @@ object Settings {
   val duration:Int = Integer.getInteger("duration", 300).toInt // in seconds
   val throttle:Int = Integer.getInteger("throttle", 50).toInt // in seconds
 
+  if(numUsers<duration){
+    println(s"Changing numUsers $numUsers to duration length $duration")
+    numUsers = duration
+  }
   // Geolocation settings
   val centerLatitude:Double = 37.442348 // latitude of center point
   val centerLongitude:Double = -122.138268 // longitude of center point
