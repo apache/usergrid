@@ -60,5 +60,6 @@ object Settings {
   val pushProvider = System.getProperty("pushProvider")
 
   val constantUsers:Int = Settings.numUsers/Settings.duration
+  println(s"Will inject $constantUsers users per sec")
 
 }
