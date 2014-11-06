@@ -18,6 +18,7 @@ package org.apache.usergrid.settings
 
 import io.gatling.core.Predef._
 import io.gatling.http.Predef._
+import org.apache.usergrid.datagenerators.FeederGenerator
 import scala.concurrent.duration._
 
 object Settings {
@@ -49,5 +50,7 @@ object Settings {
   // Push Notification settings
   val pushNotifier = System.getProperty("pushNotifier")
   val pushProvider = System.getProperty("pushProvider")
+
+  val constantUsers:Int = Settings.numUsers/Settings.duration
 
 }

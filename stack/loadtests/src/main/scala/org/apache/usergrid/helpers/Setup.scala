@@ -20,8 +20,10 @@
 
 package org.apache.usergrid.helpers
 
+import java.util
+
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.ning.http.client.AsyncHttpClient
+import com.ning.http.client.{ListenableFuture, AsyncHttpClient,Response}
 import io.gatling.core.Predef._
 import io.gatling.http.Predef._
 import io.gatling.http.request.StringBody
@@ -29,26 +31,28 @@ import io.gatling.jsonpath.JsonPath
 import org.apache.usergrid.datagenerators.FeederGenerator
 import org.apache.usergrid.settings.{Settings, Headers}
 
+import scala.collection.mutable.ArrayBuffer
+
 /**
  * Classy class class.
  */
 object Setup {
   var token:String = null
+  val client = new AsyncHttpClient()
+
   def setupOrg(): Integer = {
-    val client = new AsyncHttpClient()
 
     val createOrgPost = client
       .preparePost(Settings.baseUrl + "/management/organizations")
-      .setBody("{\"organization\":\"" + Settings.org + "\",\"username\":\"" + Settings.admin + "\",\"name\":\"" + Settings.admin + "\",\"email\":\"" + Settings.admin + "@apigee.com\",\"password\":\"" + Settings.password + "\"}")
-      .setHeader("Cache-Control", "no-cache")
+       .setHeader("Cache-Control", "no-cache")
       .setHeader("Content-Type", "application/json; charset=UTF-8")
-
-    val orgResponse = createOrgPost.execute().get();
-
+      .setBody("{\"organization\":\"" + Settings.org + "\",\"username\":\"" + Settings.admin + "\",\"name\":\"" + Settings.admin + "\",\"email\":\"" + Settings.admin + "@apigee.com\",\"password\":\"" + Settings.password + "\"}")
+    .build()
+    val orgResponse = client.executeRequest(createOrgPost).get()
+    printResponse("POST ORG",orgResponse.getStatusCode,orgResponse.getResponseBody())
     return orgResponse.getStatusCode
   }
   def setupApplication():Integer = {
-    val client = new AsyncHttpClient()
 
     val authToken = getManagementToken()
     val createAppPost = client
@@ -57,16 +61,15 @@ object Setup {
       .setHeader("Cache-Control", "no-cache")
       .setHeader("Content-Type", "application/json; charset=UTF-8")
       .setHeader("Authorization","Bearer "+authToken)
+      .build()
 
-
-    val appResponse = createAppPost.execute().get();
-
+    val appResponse = client.executeRequest(createAppPost).get();
+    printResponse("POST Application",appResponse.getStatusCode, appResponse.getResponseBody())
 
     return appResponse.getStatusCode
   }
 
   def setupNotifier():Integer = {
-    val client = new AsyncHttpClient()
 
     val authToken = getManagementToken()
     val createNotifier = client
@@ -75,57 +78,82 @@ object Setup {
       .setHeader("Cache-Control", "no-cache")
       .setHeader("Content-Type", "application/json; charset=UTF-8")
       .setHeader("Authorization","Bearer "+authToken)
+      .build()
 
-    val notifierResponse = createNotifier.execute().get();
+    val notifierResponse = client.executeRequest(createNotifier).get();
+    printResponse("POST Notifier", notifierResponse.getStatusCode ,notifierResponse.getResponseBody())
 
     return notifierResponse.getStatusCode
   }
 
   def getManagementToken():String = {
-//    if(token==null) {
-
-      val client = new AsyncHttpClient()
+    if(token == null) {
       val getToken = client
         .preparePost(Settings.baseUrl + "/management/token")
         .setBody("{\"username\":\"" + Settings.admin + "\",\"password\":\"" + Settings.password + "\",\"grant_type\":\"password\"}")
         .setHeader("Cache-Control", "no-cache")
         .setHeader("Content-Type", "application/json; charset=UTF-8")
-      val body = getToken.execute().get().getResponseBody()
+        .build()
+      val response = client.executeRequest(getToken).get()
       val omapper = new ObjectMapper();
-      val tree = omapper.readTree(body)
+      val tree = omapper.readTree(response.getResponseBody())
       val node = tree.get("access_token");
-      token = node.toString
-//    }
+      token = node.asText()
+      println("Token is "+token)
+    }
     return token
   }
 
   def setupUsers() = {
-    val userFeeder = FeederGenerator.generateUserWithGeolocationFeeder(Settings.numUsers *  Settings.duration, Settings.userLocationRadius, Settings.centerLatitude, Settings.centerLongitude)
+    val userFeeder = FeederGenerator.generateUserWithGeolocationFeeder(Settings.numUsers * Settings.duration, Settings.userLocationRadius, Settings.centerLatitude, Settings.centerLongitude)
+    val list:ArrayBuffer[ListenableFuture[Response]] = new ArrayBuffer[ListenableFuture[Response]]
     userFeeder.foreach(user => {
-      setupUser(user);
+      list += setupUser(user);
     });
+    list.foreach(f => {
+      val response = f.get()
+      printResponse("Post user",response.getStatusCode,response.getResponseBody())
+    })
 
   }
 
-  def setupUser(user:Map[String,String]):Integer = {
+  def setupUser(user:Map[String,String]):ListenableFuture[Response] = {
 
-    val client = new AsyncHttpClient()
+    val latitude = user.get("latitude").get
+    val longitude = user.get("longitude").get
+    val username = user.get("username").get
+    val displayName = user.get("displayName").get
+    val age = user.get("age").get
+    val seen = user.get("seen").get
+    val weight = user.get("weight").get
+    val height = user.get("height").get
+    val aboutMe = user.get("aboutMe").get
+    val profileId = user.get("profileId").get
+    val headline = user.get("headline").get
+    val showAge = user.get("showAge").get
+    val relationshipStatus = user.get("relationshipStatus").get
+    val ethnicity = user.get("ethnicity").get
+    val password= user.get("password").get
+    val body = s"""{"location":{"latitude":"$latitude","longitude":"$longitude"},"username":"$username",
+      "displayName":"$displayName","age":"$age","seen":"$seen","weight":"$weight",
+      "height":"$height","aboutMe":"$aboutMe","profileId":"$profileId","headline":"$headline",
+      "showAge":"$showAge","relationshipStatus":"$relationshipStatus","ethnicity":"$ethnicity","password":"$password"}"""
 
     val authToken = getManagementToken()
     val createUser = client
       .preparePost(Settings.baseAppUrl + "/users")
-      .setBody("{\"location\":{\"latitude\":\"" + user.get("latitude") + "\",\"longitude\":\"" + user.get("longitude") + "\"},\"username\":\"" + user.get("username") + "\"," +
-      "\"displayName\":\""+user.get("displayName")+"\",\"age\":\""+user.get("age")+"\",\"seen\":\""+user.get("seen")+"\",\"weight\":\""+user.get("weight")+"\"," +
-      "\"height\":\""+user.get("height")+"\",\"aboutMe\":\""+user.get("aboutMe")+"\",\"profileId\":\""+user.get("profileId")+"\",\"headline\":\""+user.get("headline")+"\"," +
-      "\"showAge\":\""+user.get("showAge")+"\",\"relationshipStatus\":\""+user.get("relationshipStatus")+"\",\"ethnicity\":\""+user.get("ethnicity")+"\",\"password\":\""+user.get("password")+"\"}"
-      )
-      .setHeader("Cache-Control", "no-cache")
-      .setHeader("Content-Type", "application/json; charset=UTF-8")
+      .setBody(body)
+      .setBodyEncoding("UTF-8")
       .setHeader("Authorization","Bearer "+authToken)
+      .build()
 
-    val createUserResponse = createUser.execute().get();
+    return client.executeRequest(createUser)
 
-    return createUserResponse.getStatusCode
+
+  }
+
+  def printResponse(caller:String, status:Int, body:String) = {
+    println(caller + ": status: "+status.toString+" body:"+body)
 
   }
 

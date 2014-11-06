@@ -62,8 +62,5 @@ import io.gatling.core.Predef._
      .doIf("${userStatus}", "400") {
      exec(getUserByUsername)
    }
-   val numEntities:Int = Settings.numEntities
-
-   val userFeeder = FeederGenerator.generateUserWithGeolocationFeeder(Settings.numUsers *  Settings.duration, Settings.userLocationRadius, Settings.centerLatitude, Settings.centerLongitude)
 
  }
