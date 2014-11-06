@@ -16,6 +16,8 @@ Gatling will run through mvn
 	>mvn gatling:execute -Dthrottle=100 -Dduration=300 -Dorg=usergrid  -Dapp=load -Dbaseurl=http://load.usergrid.com -DnumEntities=300 -DnumUsers=600 -DrampTime=30 -DadminUser=usergrid -DadminPassword=test -Dsimulation=all
 	
 	Setting the rampTime => Injects a given number of users with a linear ramp over a given duration.
+
+	Values for simulation are 'all','connections'
 	
 	Also see http://gatling.io/docs/2.0.2/general/simulation_setup.html
 
