@@ -47,7 +47,9 @@ object Settings {
     numUsers = duration
   }
   if(numUsers % duration != 0){
-    throw new Exception(s"please use numUsers ($numUsers) that is evenly divisible by duration($duration)")
+    val message = s"please use numUsers ($numUsers) that is evenly divisible by duration($duration)"
+    println(message)
+    throw new Exception(message)
   }
   // Geolocation settings
   val centerLatitude:Double = 37.442348 // latitude of center point
@@ -56,8 +58,8 @@ object Settings {
   val geosearchRadius:Int = 8000 // search area in meters
 
   // Push Notification settings
-  val pushNotifier = System.getProperty("pushNotifier")
-  val pushProvider = System.getProperty("pushProvider")
+  val pushNotifier = if (System.getProperty("pushNotifier") != null)  System.getProperty("pushNotifier") else "loadNotifier"
+  val pushProvider =  if (System.getProperty("pushProvider") != null)  System.getProperty("pushProvider")  else "noop"
 
   val constantUsers:Int = Settings.numUsers/Settings.duration
   println(s"Will inject $constantUsers users per sec")
