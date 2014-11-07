@@ -72,15 +72,6 @@ public class EntityIndexTest extends BaseIT {
 
     private static final Logger log = LoggerFactory.getLogger( EntityIndexTest.class );
 
-    @ClassRule
-    public static CassandraRule cass = new CassandraRule();
-
-    @Rule
-    public ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
-
-    @Inject
-    @Rule
-    public MigrationManagerRule migrationManagerRule;
 
     @Inject
     public EntityIndexFactory eif;

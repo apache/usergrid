@@ -259,7 +259,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
         //but the fieldname
         //we have to prefix because we use query equality to seek this later.  TODO see if we can make this more declarative
-        entityMap.put( STRING_PREFIX+ ENTITYID_ID_FIELDNAME, IndexingUtils.idString(entity.getId()).toLowerCase() );
+        entityMap.put( ENTITYID_ID_FIELDNAME, IndexingUtils.idString(entity.getId()).toLowerCase() );
 
         return entityMap;
     }

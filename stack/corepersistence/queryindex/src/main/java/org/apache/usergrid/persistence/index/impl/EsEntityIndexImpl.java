@@ -232,28 +232,21 @@ public class EsEntityIndexImpl implements EntityIndex {
         final String context = IndexingUtils.createContextName( indexScope );
         final String[] entityTypes = searchTypes.getTypeNames();
 
-        QueryBuilder qb = query.createQueryBuilder(context);
+        QueryBuilder qb = query.createQueryBuilder( context );
 
 
         SearchResponse searchResponse;
 
         if ( query.getCursor() == null ) {
             SearchRequestBuilder srb = esProvider.getClient().prepareSearch( indexName ).setTypes( entityTypes )
-                                                 .setScroll( cursorTimeout + "m" ).setQuery( qb );;
-
-
-            //we must add a "must" operation to our entity context.
-
-
-            //set our final query
+                                                 .setScroll( cursorTimeout + "m" ).setQuery( qb );
 
 
             if ( logger.isDebugEnabled() ) {
-                        logger.debug( "Searching index {}\n  scope{} \n type {}\n   query {} limit {}", new Object[] {
-                                this.indexName, context, entityTypes, qb.toString().replace( "\n", " " ), query.getLimit()
-                        } );
-                    }
-
+                logger.debug( "Searching index {}\n  scope{} \n type {}\n   query {} limit {}", new Object[] {
+                        this.indexName, context, entityTypes, qb.toString().replace( "\n", " " ), query.getLimit()
+                } );
+            }
 
 
             final FilterBuilder fb = query.createFilterBuilder();
@@ -287,6 +280,7 @@ public class EsEntityIndexImpl implements EntityIndex {
                 final FieldSortBuilder stringSort =
                         SortBuilders.fieldSort( stringFieldName ).order( order ).ignoreUnmapped( true );
                 srb.addSort( stringSort );
+
                 logger.debug( "   Sort: {} order by {}", stringFieldName, order.toString() );
 
                 final String numberFieldName = NUMBER_PREFIX + sp.getPropertyName();
@@ -340,12 +334,21 @@ public class EsEntityIndexImpl implements EntityIndex {
             failureMonitor.success();
         }
 
-        SearchHits hits = searchResponse.getHits();
-        logger.debug( "   Hit count: {} Total hits: {}", hits.getHits().length, hits.getTotalHits() );
+        return parseResults( searchResponse, query );
+    }
 
-        List<CandidateResult> candidates = new ArrayList<CandidateResult>();
 
-        for ( SearchHit hit : hits.getHits() ) {
+    private CandidateResults parseResults( final SearchResponse searchResponse, final Query query ) {
+
+        final SearchHits searchHits = searchResponse.getHits();
+        final SearchHit[] hits = searchHits.getHits();
+        final int length = hits.length;
+
+        logger.debug( "   Hit count: {} Total hits: {}", length, searchHits.getTotalHits() );
+
+        List<CandidateResult> candidates = new ArrayList<>( length );
+
+        for ( SearchHit hit : hits ) {
 
             String[] idparts = hit.getId().split( SPLITTER );
             String id = idparts[0];
@@ -396,10 +399,34 @@ public class EsEntityIndexImpl implements EntityIndex {
 
     @Override
     public CandidateResults getEntityVersions( final IndexScope scope, final Id id ) {
-        Query query = new Query();
-        query.addEqualityFilter( ENTITYID_ID_FIELDNAME, IndexingUtils.idString( id ).toLowerCase() );
-        CandidateResults results = search( scope, SearchTypes.fromTypes( id.getType() ), query );
-        return results;
+
+        //since we don't have paging inputs, there's no point in executing a query for paging.
+
+        final String context = IndexingUtils.createContextName( scope );
+        final SearchTypes searchTypes = SearchTypes.fromTypes( id.getType() );
+
+        final QueryBuilder queryBuilder = QueryBuilders.termQuery( IndexingUtils.ENTITY_CONTEXT_FIELDNAME, context );
+
+
+        final SearchRequestBuilder srb =
+                esProvider.getClient().prepareSearch( indexName ).setTypes( searchTypes.getTypeNames() )
+                          .setScroll( cursorTimeout + "m" ).setQuery( queryBuilder );
+
+
+        final SearchResponse searchResponse;
+        try {
+            searchResponse = srb.execute().actionGet();
+        }
+        catch ( Throwable t ) {
+            logger.error( "Unable to communicate with elasticsearch" );
+            failureMonitor.fail( "Unable to execute batch", t );
+            throw t;
+        }
+
+
+        failureMonitor.success();
+
+        return parseResults( searchResponse, new Query(  ) );
     }
 
 
