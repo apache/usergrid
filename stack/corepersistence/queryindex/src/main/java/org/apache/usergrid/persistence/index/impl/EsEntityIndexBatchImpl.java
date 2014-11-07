@@ -258,9 +258,9 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
         try {
             responses = request.execute().actionGet();
-        }catch(Throwable t){
-            log.error( "Unable to communicate with elasticsearch" );
-            failureMonitor.fail( "Unable to execute batch", t );
+        } catch (Throwable t) {
+            logger.error("Unable to communicate with elasticsearch");
+            failureMonitor.fail("Unable to execute batch", t);
             throw t;
         }
 
