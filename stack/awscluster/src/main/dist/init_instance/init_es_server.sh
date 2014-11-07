@@ -31,8 +31,6 @@ dpkg-reconfigure -f noninteractive tzdata
 . /etc/profile.d/aws-credentials.sh
 . /etc/profile.d/usergrid-env.sh
 
-cd /usr/share/usergrid/init_instance
-./create_raid0.sh
 
 # Install the easy stuff
 PKGS="ntp unzip groovy curl"
@@ -54,6 +52,12 @@ ln -s /home/ubuntu/.groovy /root/.groovy
 # tag last so we can see in the console so that we know what's running
 cd /usr/share/usergrid/scripts
 groovy tag_instance.groovy -BUILD-IN-PROGRESS
+
+
+#Configure our RAID 0 arrays
+cd /usr/share/usergrid/init_instance
+./create_raid0.sh
+
 
 cd /usr/share/usergrid/init_instance
 ./install_oraclejdk.sh 

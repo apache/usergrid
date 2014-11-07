@@ -53,6 +53,7 @@ import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
+import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.util.Health;
@@ -124,6 +125,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
 
     private CpManagerCache managerCache;
+    private DataMigrationManager dataMigrationManager;
 
     CassandraService cass;
     CounterUtils counterUtils;
@@ -185,6 +187,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             mmf = injector.getInstance( MapManagerFactory.class );
 
             managerCache = new CpManagerCache( ecmf, eif, gmf, mmf );
+
+            dataMigrationManager = injector.getInstance( DataMigrationManager.class );
         }
         return managerCache;
     }
@@ -705,6 +709,24 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         em.reindex( po );
 
         logger.info("\n\nRebuilt index for application {} id {}\n", app.getName(), appId );
+    }
+
+
+    @Override
+    public void migrateData() throws Exception {
+         dataMigrationManager.migrate();
+    }
+
+
+    @Override
+    public String getMigrateDataStatus() {
+        return dataMigrationManager.getLastStatus();
+    }
+
+
+    @Override
+    public int getMigrateDataVersion() {
+        return dataMigrationManager.getCurrentVersion();
     }
 
 

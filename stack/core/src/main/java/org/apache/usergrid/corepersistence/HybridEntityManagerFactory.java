@@ -160,6 +160,25 @@ public class HybridEntityManagerFactory implements EntityManagerFactory, Applica
         factory.rebuildApplicationIndexes(appId, po);
     }
 
+
+    @Override
+    public void migrateData() throws Exception {
+        factory.migrateData();
+    }
+
+
+    @Override
+    public String getMigrateDataStatus() {
+        return factory.getMigrateDataStatus();
+    }
+
+
+    @Override
+    public int getMigrateDataVersion() {
+        return factory.getMigrateDataVersion();
+    }
+
+
     @Override
     public void rebuildCollectionIndex(UUID appId, String collection, ProgressObserver po) {
         factory.rebuildCollectionIndex(appId, collection, po);

@@ -23,11 +23,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
-import org.jukito.JukitoRunner;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.MvccEntity;
@@ -56,7 +54,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@RunWith( JukitoRunner.class )
 @Ignore("Needs updated")
 public class CpEntityIndexDeleteListenerTest {
     EntityIndex entityIndex;

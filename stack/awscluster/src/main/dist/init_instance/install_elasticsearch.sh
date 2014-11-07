@@ -36,61 +36,56 @@ mkdir -p /mnt/log/elasticsearch
 chown elasticsearch /mnt/log/elasticsearch
 
 # Configure ElasticSearch
-cd /usr/share/usergrid/scripts
+
 
 echo "vm.swappiness = 0" >> /etc/sysctl.conf
 sysctl -p
 
 # No need to do this, elasticsearch nodes are also cassandra nodes
+cd /usr/share/usergrid/scripts
 groovy registry_register.groovy elasticsearch
 groovy wait_for_instances.groovy elasticsearch ${ES_NUM_SERVERS}
 
 # leave room for Cassandra: use about one half of RAM for heap
 case `(curl http://169.254.169.254/latest/meta-data/instance-type)` in
-'m1.small' )
-    # total of 1.7g
-    export ES_HEAP_SIZE=850m
-;;
-'m1.medium' )
-    # total of 3.75g
-    export ES_HEAP_SIZE=1700m
-;;
-'m1.large' )
-    # total of 7.5g
-    export ES_HEAP_SIZE=3500m
-;;
-'m1.xlarge' )
-    # total of 15g
-    export ES_HEAP_SIZE=7500m
-;;
-'m3.large' )
-    # total of 7.5g
-    export ES_HEAP_SIZE=3500m
-;;
-'m3.xlarge' )
+'c3.large' )
     # total of 15g 
-    export ES_HEAP_SIZE=7500m
+    export ES_HEAP_SIZE=1920m
 ;;
 'c3.xlarge' )
     # total of 7.5g
-    export ES_HEAP_SIZE=3500m
+    export ES_HEAP_SIZE=3840m
 ;;
 'c3.2xlarge' )
     # total of 15g
-    export ES_HEAP_SIZE=7500m
+    export ES_HEAP_SIZE=7680m
 ;;
 'c3.4xlarge' )
     # total of 30g
-    export ES_HEAP_SIZE=24g
+    export ES_HEAP_SIZE=15g
 esac
+
+
+
 
 cat >> /etc/default/elasticsearch << EOF
 ES_HEAP_SIZE=${ES_HEAP_SIZE}
 MAX_OPEN_FILES=65535
-MAX_LOCKED_MEMORY=unlimited
+MAX_MAP_COUNT=262144
+#MAX_LOCKED_MEMORY=unlimited
 JAVA_HOME=/usr/lib/jvm/jdk1.7.0
 EOF
 
+#Set it because Matt says so
+ulimit -l unlimited
+
+cat >> /etc/security/limits.conf << EOF
+elasticsearch - nofile 65535
+elasticsearch - memlock unlimited
+EOF
+
+
+cd /usr/share/usergrid/scripts
 groovy ./configure_elasticsearch.groovy > /etc/elasticsearch/elasticsearch.yml
 
 update-rc.d elasticsearch defaults 95 10
@@ -104,6 +99,14 @@ pushd /usr/share/elasticsearch/bin
 #Install bigdesk
 
 ./plugin --install lukas-vlcek/bigdesk
+
+./plugin --install mobz/elasticsearch-head
+
+./plugin -install royrusso/elasticsearch-HQ
+
+./plugin -install karmi/elasticsearch-paramedic
+
+./plugin -install xyu/elasticsearch-whatson/0.1.3
 
 popd
 

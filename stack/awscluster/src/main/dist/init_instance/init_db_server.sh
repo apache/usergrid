@@ -32,8 +32,6 @@ dpkg-reconfigure -f noninteractive tzdata
 . /etc/profile.d/aws-credentials.sh
 . /etc/profile.d/usergrid-env.sh
 
-cd /usr/share/usergrid/init_instance
-./create_raid0.sh
 
 # Install the easy stuff
 PKGS="ntp unzip groovy curl"
@@ -52,9 +50,15 @@ cp /usr/share/aws-java-sdk-*/lib/* /home/ubuntu/.groovy/lib
 rm /home/ubuntu/.groovy/lib/stax*
 ln -s /home/ubuntu/.groovy /root/.groovy
 
+
+
 # tag last so we can see in the console so that we know what's running
 cd /usr/share/usergrid/scripts
 groovy tag_instance.groovy -BUILD-IN-PROGRESS
+
+#Create our raid 0 array
+cd /usr/share/usergrid/init_instance
+./create_raid0.sh
 
 cd /usr/share/usergrid/init_instance
 ./install_oraclejdk.sh 
@@ -63,12 +67,13 @@ cd /usr/share/usergrid/init_instance
 cd /usr/share/usergrid/init_instance
 ./install_cassandra.sh
 
-cd /usr/share/usergrid/init_instance
-./install_opscenter_agent.sh
-
 # Use the CQL to crate the keyspaces
 cd /usr/share/usergrid/init_instance
 ./create_keyspaces.sh
+
+# Install the opscenter agent
+cd /usr/share/usergrid/init_instance
+./install_opscenter_agent.sh
 
 # tag last so we can see in the console that the script ran to completion
 cd /usr/share/usergrid/scripts

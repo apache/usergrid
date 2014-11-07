@@ -14,59 +14,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- package org.apache.usergrid.simulations
+package org.apache.usergrid.simulations
 
+import com.ning.http.client.AsyncHttpClient
 import io.gatling.core.Predef._
 import io.gatling.http.Predef._
-import org.apache.usergrid.settings.Utils
-import org.apache.usergrid.datagenerators.FeederGenerator
 import org.apache.usergrid.scenarios._
 import org.apache.usergrid.settings.Settings
 import scala.concurrent.duration._
+import org.apache.usergrid.helpers.Setup
 
 class PushNotificationTargetUserSimulation extends Simulation {
 
-  val duration:Int = Settings.duration
-  val numUsersPerSecond:Int = Settings.numUsers
-  val numEntities:Int = numUsersPerSecond * 3 * duration
-  val rampTime:Int = Settings.rampTime
-  val throttle:Int = Settings.throttle
 
-  val httpConf = Settings.httpConf.acceptHeader("application/json")
-  val notifier = Settings.pushNotifier
-
-  val createNotifier = NotifierScenarios.createNotifier
-  val createDevice = DeviceScenarios.postDeviceWithNotifier
-  val sendNotification = NotificationScenarios.sendNotificationToUser
-  val createUser = UserScenarios.postUser
-  val createOrg = OrganizationScenarios.createOrgAndAdmin
-  val connectUserToDevice = ConnectionScenarios.postUserToDeviceConnection
-
-  val deviceNameFeeder = FeederGenerator.generateEntityNameFeeder("device", numEntities)
-  val userFeeder = FeederGenerator.generateUserWithGeolocationFeeder(numUsersPerSecond * duration, Settings.userLocationRadius, Settings.centerLatitude, Settings.centerLongitude)
-  val orgFeeder = FeederGenerator.generateRandomEntityNameFeeder("org", 1)
-
-  val scnCreateOrg = scenario("Create org")
-    .feed(orgFeeder)
-    .exec(createOrg)
-
-  val scnCreateNotifier = scenario("Create notifier")
-    .exec(createNotifier)
-
-  val scnToRun = scenario("Create Push Notification")
-    .feed(userFeeder)
-    .exec(createUser)
-    .repeat(2){
-      feed(deviceNameFeeder)
-      .exec(createDevice)
-      .exec(connectUserToDevice)
-    }
-    .exec(sendNotification)
-
-
-
-  setUp(scnCreateOrg.inject(atOnceUsers(1)).protocols(http.baseURL(Settings.baseUrl)),
-    scnCreateNotifier.inject(nothingFor(5), atOnceUsers(1)).protocols(httpConf),
-    scnToRun.inject(nothingFor(7), constantUsersPerSec(numUsersPerSecond) during (duration)).throttle(reachRps(throttle) in (rampTime.seconds)).protocols(httpConf))
+  before{
+    Setup.setupOrg()
+    Setup.setupApplication()
+    Setup.setupNotifier()
+    Setup.setupUsers()
+  }
+  setUp(
+    NotificationScenarios.createScenario
+      .inject(constantUsersPerSec(Settings.constantUsers) during (Settings.duration)) // wait for 15 seconds so create org can finish, need to figure out coordination
+      .throttle(reachRps(Settings.throttle) in ( Settings.rampTime.seconds))
+      .protocols( Settings.httpConf.acceptHeader("application/json"))
+  )
 
 }

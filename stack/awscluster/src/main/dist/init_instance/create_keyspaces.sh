@@ -28,6 +28,8 @@ FIRSTHOST="$(groovy get_first_instance.groovy cassandra)"
 
 if [ "$FIRSTHOST"=="$PUBLIC_HOSTNAME" ]; then
 
+#We have to wait for cass to actually start before we can run our CQL.   Sleep 5 seconds between retries
+while ! echo exit | nc localhost 9160; do sleep 5; done
 
 #WE have to remove our -1 from the end, since us-east and us-west dont support -1 in cassandra
 CASS_REGION=${EC2_REGION%-1}

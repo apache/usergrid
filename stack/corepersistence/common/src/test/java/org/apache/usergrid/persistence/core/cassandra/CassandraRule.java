@@ -61,7 +61,7 @@ public class CassandraRule extends EnvironResource {
     }
 
     @Override
-    protected void before() throws Throwable {
+    public void before() throws Throwable {
 
         if ( !cassandraFig.isEmbedded()) {
             LOG.info("Using external Cassandra");

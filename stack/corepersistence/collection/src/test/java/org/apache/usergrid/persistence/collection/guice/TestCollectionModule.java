@@ -21,6 +21,7 @@ package org.apache.usergrid.persistence.collection.guice;
 
 
 import org.apache.usergrid.persistence.core.guice.CommonModule;
+import org.apache.usergrid.persistence.core.guice.TestModule;
 
 
 public class TestCollectionModule extends TestModule {
@@ -28,6 +29,6 @@ public class TestCollectionModule extends TestModule {
     @Override
     protected void configure() {
         install( new CommonModule() );
-        install(new CollectionModule());
+        install( new CollectionModule() );
     }
 }

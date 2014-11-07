@@ -21,7 +21,7 @@ package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jukito.UseModules;
+import org.apache.usergrid.persistence.core.test.UseModules;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

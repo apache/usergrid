@@ -19,7 +19,7 @@ package org.apache.usergrid.scenarios
 import io.gatling.core.Predef._
 import io.gatling.http.Predef.StringBody
 import io.gatling.http.Predef._
-import org.apache.usergrid.settings.Settings
+import org.apache.usergrid.settings.{Headers, Settings}
 
 /**
  *
@@ -46,6 +46,7 @@ object DeviceScenarios {
    */
   val postDeviceWithNotifier = exec(http("Create device with notifier")
     .post("/devices")
+    .headers(Headers.jsonAuthorized)
     .body(StringBody("""{"deviceModel":"Fake Device",
     "deviceOSVerion":"Negative Version",
     """" + notifier + """.notifier.id":"${entityName}"}"""))
@@ -54,6 +55,7 @@ object DeviceScenarios {
 
   val postDeviceWithNotifier400ok = exec(http("Create device with notifier")
     .post("/devices")
+    .headers(Headers.jsonAuthorized)
     .body(StringBody("""{"name":"${entityName}",
     "deviceModel":"Fake Device",
     "deviceOSVerion":"Negative Version",
@@ -66,13 +68,13 @@ object DeviceScenarios {
    */
   val maybeCreateDevice = exec(
     //try to do a GET on device name, if it 404's create it
-    http("Check and create device").get("/devices/${entityName}").check(status.not(404).saveAs("deviceExists")))
+    http("Check and create device").get("/devices/${entityName}").headers(Headers.jsonAuthorized).check(status.not(404).saveAs("deviceExists")))
     //create the device if we got a 404
     .doIf("${deviceExists}", "404") {
 
     exec(
 
-      http("Create device and save deviceId").post("/devices").body(StringBody(
+      http("Create device and save deviceId").post("/devices").headers(Headers.jsonAuthorized).body(StringBody(
         """{"name":"${entityName}",
           "deviceModel":"Fake Device",
           "deviceOSVerion":"Negative Version",

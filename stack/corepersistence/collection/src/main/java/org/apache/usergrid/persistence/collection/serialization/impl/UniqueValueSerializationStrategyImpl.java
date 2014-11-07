@@ -38,7 +38,7 @@ import org.apache.usergrid.persistence.core.astyanax.ColumnTypes;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
-import org.apache.usergrid.persistence.core.migration.Migration;
+import org.apache.usergrid.persistence.core.migration.schema.Migration;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
@@ -50,7 +50,6 @@ import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.model.Column;
-import com.netflix.astyanax.model.ColumnList;
 import com.netflix.astyanax.model.Row;
 import com.netflix.astyanax.util.RangeBuilder;
 
@@ -68,8 +67,8 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
 
     private static final EntityVersionSerializer ENTITY_VERSION_SER = new EntityVersionSerializer();
 
-    private static final MultiTennantColumnFamily<CollectionScope, Field, EntityVersion> CF_UNIQUE_VALUES =
-            new MultiTennantColumnFamily<CollectionScope, Field, EntityVersion>( "Unique_Values", ROW_KEY_SER,
+    private static final MultiTennantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Field>>, EntityVersion> CF_UNIQUE_VALUES =
+            new MultiTennantColumnFamily<>( "Unique_Values", ROW_KEY_SER,
                     ENTITY_VERSION_SER );
 
     protected final Keyspace keyspace;
@@ -164,7 +163,10 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
      */
     private MutationBatch doWrite( CollectionScope context, Field field, RowOp op ) {
         final MutationBatch batch = keyspace.prepareMutationBatch();
-        op.doOp( batch.withRow( CF_UNIQUE_VALUES, ScopedRowKey.fromKey( context, field ) ) );
+        final CollectionPrefixedKey<Field> collectionPrefixedKey = new CollectionPrefixedKey<>( context.getName(), context.getOwner(), field );
+
+
+        op.doOp( batch.withRow( CF_UNIQUE_VALUES, ScopedRowKey.fromKey( context.getApplication(), collectionPrefixedKey ) ) );
         return batch;
     }
 
@@ -176,17 +178,26 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
         Preconditions.checkNotNull( fields, "fields are required" );
         Preconditions.checkArgument( fields.size() > 0, "More than 1 field msut be specified" );
 
-        final List<ScopedRowKey<CollectionScope, Field>> keys = new ArrayList<>( fields.size() );
+
+        final List<ScopedRowKey<CollectionPrefixedKey<Field>>> keys = new ArrayList<>( fields.size() );
+
+        final Id applicationId = colScope.getApplication();
+        final Id ownerId = colScope.getOwner();
+        final String collectionName = colScope.getName();
 
         for ( Field field : fields ) {
-            final ScopedRowKey<CollectionScope, Field> rowKey = ScopedRowKey.fromKey( colScope, field );
+
+            final CollectionPrefixedKey<Field> collectionPrefixedKey = new CollectionPrefixedKey<>( collectionName, ownerId, field );
+
+
+            final ScopedRowKey<CollectionPrefixedKey<Field>> rowKey = ScopedRowKey.fromKey(applicationId, collectionPrefixedKey );
 
             keys.add( rowKey );
         }
 
         final UniqueValueSetImpl uniqueValueSet = new UniqueValueSetImpl( fields.size() );
 
-        Iterator<Row<ScopedRowKey<CollectionScope, Field>, EntityVersion>> results =
+        Iterator<Row<ScopedRowKey<CollectionPrefixedKey<Field>>, EntityVersion>> results =
                 keyspace.prepareQuery( CF_UNIQUE_VALUES ).getKeySlice( keys )
                         .withColumnRange( new RangeBuilder().setLimit( 1 ).build() ).execute().getResult().iterator();
 
@@ -195,10 +206,10 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
 
         {
 
-            final Row<ScopedRowKey<CollectionScope, Field>, EntityVersion> unique = results.next();
+            final Row<ScopedRowKey<CollectionPrefixedKey<Field>>, EntityVersion> unique = results.next();
 
 
-            final Field field = unique.getKey().getKey();
+            final Field field = unique.getKey().getKey().getSubKey();
 
             final Iterator<Column<EntityVersion>> columnList = unique.getColumns().iterator();
 

@@ -62,7 +62,12 @@ cd /usr/share/usergrid/init_instance
 
 # set Tomcat memory and threads based on instance type
 # use about 70% of RAM for heap
-export NOFILE=100000
+export NOFILE=150000
+export TOMCAT_CONNECTIONS=10000
+export ACCEPT_COUNT=1600
+export NR_OPEN=1048576
+export FILE_MAX=761773
+
 case `(curl http://169.254.169.254/latest/meta-data/instance-type)` in
 'm1.small' )
     # total of 1.7g
@@ -96,8 +101,8 @@ case `(curl http://169.254.169.254/latest/meta-data/instance-type)` in
 ;;
 'c3.xlarge' )
     # total of 7.5g
-    export TOMCAT_RAM=5250m
-    export TOMCAT_THREADS=1000
+    export TOMCAT_RAM=4096m
+    export TOMCAT_THREADS=7000
 ;;
 'c3.2xlarge' )
     # total of 15g
@@ -110,29 +115,60 @@ case `(curl http://169.254.169.254/latest/meta-data/instance-type)` in
     export TOMCAT_THREADS=4000
 esac
 
-export TOMCAT_CONNECTIONS=10000
+
 sed -i.bak "s/Xmx128m/Xmx${TOMCAT_RAM} -Xms${TOMCAT_RAM} -Dlog4j\.configuration=file:\/usr\/share\/usergrid\/lib\/log4j\.properties/g" /etc/default/tomcat7
-sed -i.bak "s/<Connector/<Connector maxThreads=\"${TOMCAT_THREADS}\" acceptCount=\"${TOMCAT_THREADS}\" maxConnections=\"${TOMCAT_CONNECTIONS}\"/g" /var/lib/tomcat7/conf/server.xml
+sed -i.bak "s/<Connector/<Connector maxThreads=\"${TOMCAT_THREADS}\" acceptCount=\"${ACCEPT_COUNT}\" maxConnections=\"${TOMCAT_CONNECTIONS}\"/g" /var/lib/tomcat7/conf/server.xml
 
 
 #Append our java opts for secret key
 echo "JAVA_OPTS=\"\${JAVA_OPTS} -DAWS_SECRET_KEY=${AWS_SECRET_KEY} -DAWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY}\"" >> /etc/default/tomcat7
 
+ulimit -n $NOFILE
 
 # set file limits
 sed -i.bak "s/# \/etc\/init\.d\/tomcat7 -- startup script for the Tomcat 6 servlet engine/ulimit -n ${NOFILE}/" /etc/init.d/tomcat7
-sed -i.bak "s/@student/a *\t\thard\tnofile\t\t${NOFILE}\n*\t\tsoft\tnofile\t\t${NOFILE}" /etc/security/limits.conf
-echo "$NOFILE" | sudo tee > /proc/sys/fs/nr_open
-echo "$NOFILE" | sudo tee > /proc/sys/fs/file-max
+
+
+cat >>  /etc/security/limits.conf  << EOF
+* - nofile ${NOFILE}
+root - nofile ${NOFILE}
+EOF
+
+
+
+echo "${NR_OPEN}" | sudo tee > /proc/sys/fs/nr_open
+echo "${FILE_MAX}" | sudo tee > /proc/sys/fs/file-max
+
+
 cat >> /etc/pam.d/su << EOF
 session    required   pam_limits.so
 EOF
-ulimit -n $NOFILE
+
+
 
 # increase system IP port limits (do we really need this for Tomcat?)
 sysctl -w net.ipv4.ip_local_port_range="1024 65535"
 cat >> /etc/sysctl.conf << EOF
+####
+# Set by usergrid rest setup
+####
 net.ipv4.ip_local_port_range = 1024 65535
+
+# Controls the default maxmimum size of a mesage queue
+kernel.msgmnb = 65536
+
+# Controls the maximum size of a message, in bytes
+kernel.msgmax = 65536
+
+# Controls the maximum shared segment size, in bytes
+kernel.shmmax = 68719476736
+
+# Controls the maximum number of shared memory segments, in pages
+kernel.shmall = 4294967296
+
+######
+# End usergrid setup
+######
 EOF
 
 # wait for enough Cassandra nodes then delpoy and configure Usergrid 
@@ -163,6 +199,18 @@ apt-get install -y postfix
 
 # Go
 sh /etc/init.d/tomcat7 start
+
+#Wait for tomcat to start, then run our migrations
+
+
+#Wait until tomcat starts and we can hit our status page
+until curl -m 1 -I -X GET http://localhost:8080/status | grep "200 OK";  do sleep 5; done
+
+#Run the migration
+curl -X PUT http://localhost:8080/system/migrate/run  -u superuser:test
+
+#Run the system database setup
+curl -X GET http://localhost:8080/system/database/setup -u superuser:test
 
 # tag last so we can see in the console that the script ran to completion
 cd /usr/share/usergrid/scripts

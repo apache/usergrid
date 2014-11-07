@@ -23,7 +23,7 @@ package org.apache.usergrid.persistence.collection.serialization.impl;
 import java.util.*;
 
 import junit.framework.Assert;
-import org.jukito.UseModules;
+import org.apache.usergrid.persistence.core.test.UseModules;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -44,8 +44,8 @@ import org.apache.usergrid.persistence.collection.serialization.SerializationFig
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.core.astyanax.AstyanaxKeyspaceProvider;
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
-import org.apache.usergrid.persistence.core.cassandra.ITRunner;
-import org.apache.usergrid.persistence.core.migration.MigrationManagerFig;
+import org.apache.usergrid.persistence.core.test.ITRunner;
+import org.apache.usergrid.persistence.core.migration.schema.MigrationManagerFig;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
@@ -91,14 +91,6 @@ public class MvccEntitySerializationStrategyImplTest {
     public MigrationManagerRule migrationManagerRule;
 
     @Inject
-    @Overrides(
-        name = "unit-test",
-        environments = Env.UNIT,
-        options = {
-            @Option( method = "getHosts", override = "localhost" ),
-            @Option( method = "getConnections", override = CONNECTION_COUNT )
-        }
-    )
     public CassandraFig cassandraFig;
 
 

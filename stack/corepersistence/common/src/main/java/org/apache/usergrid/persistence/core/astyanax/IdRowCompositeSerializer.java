@@ -60,6 +60,7 @@ public class IdRowCompositeSerializer implements CompositeFieldSerializer<Id> {
     }
 
 
+
     /**
      * Get the singleton serializer
      */

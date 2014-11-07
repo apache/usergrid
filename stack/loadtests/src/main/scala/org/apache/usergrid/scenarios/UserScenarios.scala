@@ -17,22 +17,24 @@
  package org.apache.usergrid.scenarios
 
 import io.gatling.core.Predef._
- import io.gatling.http.Predef.StringBody
  import io.gatling.http.Predef._
  import io.gatling.http.request.StringBody
- import org.apache.usergrid.settings.{Settings, Utils}
+ import org.apache.usergrid.datagenerators.FeederGenerator
+ import org.apache.usergrid.settings.{Headers, Settings, Utils}
 
  object UserScenarios {
 
   val getRandomUser = exec(
     http("GET user")
       .get("/users/user" + Utils.generateRandomInt(1, Settings.numEntities))
+      .headers(Headers.jsonAuthorized)
       .check(status.is(200))
   )
 
    val getUserByUsername = exec(
      http("GET user")
        .get("/users/${username}")
+       .headers(Headers.jsonAuthorized)
        .check(status.is(200), jsonPath("$..entities[0].uuid").saveAs("userId"))
    )
 
@@ -47,4 +49,24 @@ import io.gatling.core.Predef._
     .doIf ("${userStatus}", "400") {
       exec(getUserByUsername)
     }
-}
+
+   val putUser = exec(
+     http("POST geolocated Users")
+       .put("/users")
+       .body(new StringBody( """{"location":{"latitude":"${latitude}","longitude":"${longitude}"},"username":"${username}",
+      "displayName":"${displayName}","age":"${age}","seen":"${seen}","weight":"${weight}",
+      "height":"${height}","aboutMe":"${aboutMe}","profileId":"${profileId}","headline":"${headline}",
+      "showAge":"${showAge}","relationshipStatus":"${relationshipStatus}","ethnicity":"${ethnicity}","password":"password"}"""))
+       .check(status.is(200), status.saveAs("userStatus"), jsonPath("$..entities[0].uuid").saveAs("userId"))
+   )
+     .doIf("${userStatus}", "400") {
+     exec(getUserByUsername)
+   }
+
+   val deleteUserByUsername = exec(
+     http("DELETE user")
+       .delete("/users/${username}")
+       .headers(Headers.jsonAuthorized)
+       .check(status.is(200), jsonPath("$..entities[0].uuid").saveAs("userId"))
+   )
+ }

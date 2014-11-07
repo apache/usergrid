@@ -20,8 +20,6 @@ package org.apache.usergrid.persistence.collection.serialization.impl;
 
 import java.nio.ByteBuffer;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.core.astyanax.CompositeFieldSerializer;
 import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
@@ -37,7 +35,7 @@ import com.netflix.astyanax.serializers.AbstractSerializer;
  * Serializer for serializing CollectionScope + any type into row keys
  */
 public class CollectionScopedRowKeySerializer<K> 
-    extends AbstractSerializer<ScopedRowKey<CollectionScope, K>> {
+    extends AbstractSerializer<ScopedRowKey<CollectionPrefixedKey<K>>> {
 
     private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
 
@@ -52,21 +50,23 @@ public class CollectionScopedRowKeySerializer<K>
     }
 
     @Override
-    public ByteBuffer toByteBuffer( final ScopedRowKey<CollectionScope, K> scopedRowKey ) {
+    public ByteBuffer toByteBuffer( final ScopedRowKey<CollectionPrefixedKey<K>> scopedRowKey ) {
 
         final CompositeBuilder builder = Composites.newCompositeBuilder();
 
         //add the organization's id
-        ID_SER.toComposite( builder, scopedRowKey.getScope().getApplication() );
+        ID_SER.toComposite( builder, scopedRowKey.getScope() );
+
+        final CollectionPrefixedKey<K> key = scopedRowKey.getKey();
 
         //add the scope's owner id to the composite
-        ID_SER.toComposite( builder, scopedRowKey.getScope().getOwner() );
+        ID_SER.toComposite( builder, key.getOwner() );
 
         //add the scope's name
-        builder.addString( scopedRowKey.getScope().getName() );
+        builder.addString( key.getCollectionName() );
 
         //add the key type
-        keySerializer.toComposite( builder, scopedRowKey.getKey() );
+        keySerializer.toComposite( builder, key.getSubKey() );
 
         //addOtherComponents( builder, scopedRowKey );
 
@@ -74,7 +74,7 @@ public class CollectionScopedRowKeySerializer<K>
     }
 
     @Override
-    public ScopedRowKey<CollectionScope, K> fromByteBuffer( final ByteBuffer byteBuffer ) {
+    public ScopedRowKey<CollectionPrefixedKey<K>> fromByteBuffer( final ByteBuffer byteBuffer ) {
         final CompositeParser parser = Composites.newCompositeParser( byteBuffer );
 
         //read back the id
@@ -83,8 +83,11 @@ public class CollectionScopedRowKeySerializer<K>
         final String scopeName = parser.readString();
         final K value = keySerializer.fromComposite( parser );
 
-        return new ScopedRowKey<CollectionScope, K>( 
-                new CollectionScopeImpl( orgId, scopeId, scopeName ), value ); 
+
+        final CollectionPrefixedKey<K> collectionPrefixedKey = new CollectionPrefixedKey<>( scopeName,  scopeId, value );
+
+
+        return new ScopedRowKey<>( orgId, collectionPrefixedKey );
     }
 }
 

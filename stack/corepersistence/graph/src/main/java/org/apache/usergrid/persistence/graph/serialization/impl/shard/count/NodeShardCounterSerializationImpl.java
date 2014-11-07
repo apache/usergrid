@@ -33,7 +33,7 @@ import org.apache.usergrid.persistence.core.astyanax.CompositeFieldSerializer;
 import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
-import org.apache.usergrid.persistence.core.astyanax.OrganizationScopedRowKeySerializer;
+import org.apache.usergrid.persistence.core.astyanax.ScopedRowKeySerializer;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.core.hystrix.HystrixCassandra;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -66,9 +66,9 @@ public class NodeShardCounterSerializationImpl implements NodeShardCounterSerial
     /**
      * Edge shards
      */
-    private static final MultiTennantColumnFamily<ApplicationScope, ShardKey, Boolean> EDGE_SHARD_COUNTS =
+    private static final MultiTennantColumnFamily<ScopedRowKey<ShardKey>, Boolean> EDGE_SHARD_COUNTS =
             new MultiTennantColumnFamily<>( "Edge_Shard_Counts",
-                    new OrganizationScopedRowKeySerializer<>( SHARD_KEY_SERIALIZER ), BooleanSerializer.get() );
+                    new ScopedRowKeySerializer<>( SHARD_KEY_SERIALIZER ), BooleanSerializer.get() );
 
 
     protected final Keyspace keyspace;
@@ -100,7 +100,7 @@ public class NodeShardCounterSerializationImpl implements NodeShardCounterSerial
             final long value = entry.getValue().get();
 
 
-            final ScopedRowKey rowKey = ScopedRowKey.fromKey( key.scope, key );
+            final ScopedRowKey rowKey = ScopedRowKey.fromKey( key.scope.getApplication(), key );
 
 
             batch.withRow( EDGE_SHARD_COUNTS, rowKey ).incrementCounterColumn(true , value );
@@ -114,7 +114,7 @@ public class NodeShardCounterSerializationImpl implements NodeShardCounterSerial
     @Override
     public long getCount( final ShardKey key ) {
 
-        final ScopedRowKey rowKey = ScopedRowKey.fromKey( key.scope, key );
+        final ScopedRowKey rowKey = ScopedRowKey.fromKey( key.scope.getApplication(), key );
 
 
         try {

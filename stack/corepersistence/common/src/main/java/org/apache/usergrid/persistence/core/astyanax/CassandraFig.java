@@ -37,6 +37,8 @@ public interface CassandraFig extends GuicyFig {
 
     public static final String WRITE_CL = "usergrid.write.cl";
 
+    public static final String SHARD_VALUES = "cassandra.shardvalues";
+
     @Key( "cassandra.hosts" )
     String getHosts();
 
@@ -80,5 +82,17 @@ public interface CassandraFig extends GuicyFig {
     @Default("CL_QUORUM")
     @Key(WRITE_CL)
     String getWriteCL();
+
+    /**
+     * Return the history of all shard values which are immutable.  For instance, if shard values
+     * are initially set to 20 (the default) then increased to 40, the property should contain the string of
+     * "20, 40" so that we can read historic data.
+     *
+     * @return
+     */
+    @Default("20")
+    @Key(SHARD_VALUES)
+    String getShardValues();
+
 
 }
