@@ -65,10 +65,12 @@ $usergrid = $bootstrapper->createUsergrid();
 
 /** Note: I'm using Users for the first lot of example's but you could do the same for all default collections eg: groups, devices, roles, notification etc*/
 
+// All responses are model objects that subclass the baseCollection class so all collection methods are available eg: first(), map(), fetch(), hasValue(), hasKey() etc.
+
 //find users with query
 $user = $usergrid->users()->find(['ql' => 'select * where activated=true']);
 
-//var_dump($user->first());
+//var_dump($user->entities->first());
 
 //request that throw exception in this case 404 not found
 try {
@@ -103,12 +105,12 @@ foreach ($user_iterator as $iUser) {
 // create new user
 $new_user = ['name' => 'jasonk', 'username' => 'JasonK', 'email' => 'jason@example.com', 'password' => 'some_password'];
 //$created_user = $usergrid->users()->create($new_user);
-//var_dump($created_user);
+//var_dump($created_user->entities);
 
 //Update Users by name or uuid
 $new_email = ['email' => 'jason@example', 'entity_name_or_uuid' => 'benn'];
 $updated_user = $usergrid->users()->update($new_email);
-//var_dump($updated_user);
+//var_dump($updated_user->entities);
 
 // delete a user
 //$deleted_user = $usergrid->users()->delete(['entity_name_or_uuid' => 'benn']);
@@ -116,7 +118,7 @@ $updated_user = $usergrid->users()->update($new_email);
 
 //get custom collection
 $custom_collection = $usergrid->application()->EntityGet(['collection' => 'shops']);
-//var_dump($custom_collection->get('entities'));
+//var_dump($custom_collection->entities->get('name'));
 
 //get custom collection with query
 $custom_collection_query = $usergrid->application()->EntityGet([
@@ -133,7 +135,7 @@ $custom_entity = [
     'type' => 'pet_shop'
 ];
 //$created_entity = $usergrid->application()->EntityJsonPost($custom_entity);
-//var_dump($created_entity);
+//var_dump($created_entity->entities);
 
 // update custom Entity
 $custom_entity_edit = [
@@ -169,16 +171,16 @@ $fNew_user = [
     'password' => 'some_password'
 ];
 $fCreated_user = Usergrid::users()->create($fNew_user);
-//var_dump($fCreated_user);
+//var_dump($fCreated_user->entities);
 
 //Update Users by name or uuid
 $fNew_email = ['email' => 'jason@example', 'entity_name_or_uuid' => 'benn'];
 $fUpdated_user = Usergrid::users()->update($fNew_email);
-//var_dump($fUpdated_user);
+//var_dump($fUpdated_user->entities);
 
 // delete a user
 $fDeleted_user = Usergrid::users()->delete(['entity_name_or_uuid' => 'benn']);
-//var_dump($fDeleted_user);
+//var_dump($fDeleted_user->entities);
 
 //get custom collection
 $fCustom_collection = Usergrid::application()->EntityGet(['collection' => 'shops']);
@@ -189,7 +191,7 @@ $fCustom_collection_query = Usergrid::application()->EntityGet([
     'collection' => 'shops',
     'ql' => "select * where country='aus'"
 ]);
-//var_dump($custom_collection_query->get('entities'));
+//var_dump($custom_collection_query->get('name'));
 
 // Post custom collection as JSON data
 $fCustom_entity = [
@@ -199,7 +201,7 @@ $fCustom_entity = [
     'type' => 'pet_shop'
 ];
 $fCreated_entity = Usergrid::applictions()->EntityJsonPost($custom_entity);
-//var_dump($fCreated_entity);
+//var_dump($fCreated_entity->entities);
 
 // update entity
 $fCustom_entity_edit = [
@@ -208,7 +210,7 @@ $fCustom_entity_edit = [
     ['adr' => ['street' => '3 main st', 'location' => 'act', 'post_code' => '3323']]
 ];
 $fEdited_entity = Usergrid::applications()->EntityPut($fCustom_entity_edit);
-//var_dump($fEdited_entity);
+//var_dump($fEdited_entity->entities);
 
 
 

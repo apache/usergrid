@@ -95,7 +95,7 @@ class UsergridTest extends PHPUnit_Framework_TestCase
     public function it_can_retrieve_the_manifest_path()
     {
 
-        $this->assertEquals('/Users/admin/PhpstormProjects/Apache-Usergrid/src/Manifests', $this->usergrid->getManifestPath());
+        $this->assertEquals('./src/Manifests', $this->usergrid->getManifestPath());
     }
 
     /** @test */

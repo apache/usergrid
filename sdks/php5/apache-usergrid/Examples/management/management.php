@@ -15,12 +15,16 @@
  */
 include('vendor/autoload.php');
 
-include('data.php');
 
 use Apache\Usergrid\Native\UsergridBootstrapper;
 use Apache\Usergrid\Native\Facades\Usergrid;
 
-/** The PHP SDK returns all responses as Illuminate\Support\Collection subclasses so the word collection below is php collection class not usergrid collection */
+/**
+ * When working with the management api any calls that require a application to target will use the default app name set in the config but some times you may want to
+ * make a api call to a different application which is possible when the url requires a application name it taken from the config but if you pass in a different application
+ * name in the method arguments it will override the default application name just for that api call so If I wanted to add a user to two application I could make the same call
+ * twice but pass in a application name only for the 2nd call.
+ */
 
 /** Source your config from file I'm using array here just for ease of use.
  * When using Laravel Framework publish the package config file when using with
@@ -63,63 +67,25 @@ $bootstrapper = new UsergridBootstrapper($config);
 Usergrid::instance($bootstrapper);
 
 
-foreach($books_data as $book){
-    Usergrid::application()->EntityJsonPost($book);
-}
+// Get organization activity
+$activity_feed = Usergrid::management()->OrgFeedGet();
 
+// get org details
+$organization_details = Usergrid::management()->OrgGet();
 
-$books = Usergrid::application()->EntityGet(['collection' => 'books', 'limit' => 25]);
+//get organizations application
+$organization_applications  = Usergrid::management()->OrgAppsGet();
 
+//create application
+$app = ['name' => 'app name -- required'];
+$new_application = Usergrid::management()->OrgAppsJsonPost($app);
 
-// get result count just call the Illuminate\Support\Collection  count method
-var_dump($books->entities->count());
+// delete application
+$deleted_application = Usergrid::management()->OrgAppDelete($app);
 
+//get irg admin users
+$organization_admin_users = Usergrid::management()->OrgUsersGet();
 
-// As responses are model object you can treat them like a assoc arrays
-var_dump($books[0]['uuid']);
-
-// if you like a more object orientated way then use the Collection Class methods
-
-// get all uuid
-var_dump($books->entities->fetch('uuid'));
-
-// get first item in collection -- this is the first item in my response php collection not the Usergrid Collection (table).
-var_dump($books->entities->first());
-
-// get last item in collection -- this is the last item in my response php collection not the Usergrid Collection (table).
-var_dump($books->entities->last());
-
-
-
-// Illuminate\Support\Collection class support all advanced collection methods
-
-// pop last item off collection
-$book = $books->entities->pop();
-
-// Converting methods
-$json_ = $books->entities->toJson();
-
-//Convert the object into something JSON serializable.
-$books->entities->jsonSerialize();
-
-// Get an iterator for the items in collection
-$iterator = $books->entities->getIterator();
-
-//Get a CachingIterator instance
-$caching_iterator = $books->entities->getCachingIterator();
-
-/// Here are some more Methods that you can call on your responses .. To get the most out of this SDK please look at the Illuminate\Support\Collection class
-/// which is the supper class of Apache/Usergrid/Api/Models/BaseCollection class
-/**
-    $books->unique();
-    $books->transform();
-    $books->take();
-    $books->splice();
-    $books->sum($callback );
-    $books->values();
-    $books->sortByDesc($callback);
-    $books->sortBy();
-    $books->shuffle();
-    $books->chunk();
+/** There are many more api calls just look at the management manifest file to get the method name's and arguments to pass .
+ * The management manifest file is a copy of the swagger file for usergrid so you can also run the swagger UI tool on your usergrid install as well.
  */
-

@@ -3,6 +3,7 @@
 This a Guzzle Web Service Client and Service Descriptor to work with the Apache Usergrid Management and Application API . 
 
 ## Getting Started ##
+
 install as composer package by adding this to your composer.json file.
 
 ``` 
@@ -23,9 +24,10 @@ import the classes ``` include autoload.php ``` then create a new instance of th
 For native use just create a config file.
 
 ```
-use Apache\Usergrid\UsergridBootstrapper;
+    use Apache\Usergrid\UsergridBootstrapper;
 
-    $config = [    'usergrid' => [
+    $config = [    
+    'usergrid' => [
                        'url' => 'https://api.usergrid.com',
                        'version' => '1.0.0',
                        'orgName' => '',
@@ -53,7 +55,8 @@ use Apache\Usergrid\UsergridBootstrapper;
                         * if you want to manage your own auth flow by calling the token api and setting the token your self just set this to false
                         * */
                        'enable_oauth2_plugin' => true
-                   ]];
+                   ]
+             ];
                    
                    $bootstrap = new UsergridBootstrapper($config);
                    $usergrid = $bootstrap->createUsergrid();
@@ -64,16 +67,16 @@ use Apache\Usergrid\UsergridBootstrapper;
 Or if you like Static Facades
 
 ```
-use Apache\Usergrid\Native\Facades\Usergrid;
-
-$bootstrap = new UsergridBootstrapper($config);
-Usergrid::instance($boostraper);
-$res = Usergrid::application()->EntityGet(['collection' => 'shops']);
+    use Apache\Usergrid\Native\Facades\Usergrid;
+    $bootstrap = new UsergridBootstrapper($config);
+    Usergrid::instance($boostraper);
+    $res = Usergrid::application()->EntityGet(['collection' => 'shops']);
 
 ```
 
 
 ### Laravel ###
+
 In Laravel once you have install the composer package you then publish the config file like ```php artisan config:publish apache/usergrid ``` which will publish the config file to the app/config/packages/apache/usergrid/config.php 
 then add your client_id and secret to the config file the set the service provider in the app/config.php providers array ```Apache\Usergrid\Laravel\ApacheUsergridServiceProvider``` and add the alias to
 the aliases array ```'Usergrid' => 'Apache\Usergrid\Laravel\Facades\Usergrid``` to be able to access class via a Facade. Example for Laravel
@@ -92,11 +95,14 @@ the aliases array ```'Usergrid' => 'Apache\Usergrid\Laravel\Facades\Usergrid``` 
  and they are cached by the Usergrid web service client. Calls on the Usergrid client are like magic method in the sense that ```php Usergrid::Management()-> method``` call is not
  backed by a Management class or method its the Manifest that it being selected . Also by using Facades all method are like static method and fit in with newer PHP frameworks just like using the
  AWS PHP SDK when calling enableFacades() on the AWS factory method.
-  
+ 
  All responses are subclasses of Illuminate\Support\Collection class so all collection methods are available to call on your response model eg: first(), get(), map(), fetch(), hasKey(), hasValue(), etc.
  this is not to mistake this with a Usergrid collection which is like your DB table they too are collection object but if you get a response of a single entiry then its a Collection with a count of 1.
-  
+ 
+ 
+ 
 ### Error Handling ### 
+
 All HTTP and Server error returned by the Usergrid API have error classes attached to the services descriptors so to handle error's that you want too, Just catch the correct exception eg. resource not found.
 
 ```
@@ -109,13 +115,14 @@ try {
 ```
  
 ### Authentication ###
+
   You can manage your own Oauth 2 flow by setting the enable_oauth2_plugin config setting to false then you need to call the Token api or get the token from elsewhere and then set the token on the usergrid instance.
   By default this will manage Oauth2 flow for you and I recommend that you leave it set to true. But if you want to do it yourself set the config setting to false and then do something like this.
   
 ```
  $res  =  Usergrid::management()->authPasswordGet($array);
  $token = $res->get('access_token');
- Usergrid::setToken($token);
+ Usergrid::setToken($token)->users()->findById(['uuid' => '1234']);
  
 ```
  
@@ -147,19 +154,23 @@ foreach($allDevices as $device) {
 // this will have all devices. 
 }
 ```
-
 ### HTTP headers and UserAgents ###
+
  When working with http clients & server system you may want to sett additional HTTP Headers. Ive have made this easy as well on the Usergrid class you 
  can set any http headers or access token or user agent when calling the set method it will append new headers or replace headers already set so if you 
  have some customer analytics set up on your version of usergrid server then just pass the headers you like in a fluent way eg:
  ``` Usergrid::setHeaders(['BAAS-PLATFORM-ANALYTICS' => 'user001'])->users()->findById(['uuid' => '12343']); ```
  
+
+
 ## Manifest Files (Guzzle & Swagger  Service Descriptors) ## 
+
 All the files in the manifest folder are just temp file the final Service Descriptors are versioned so
 the real files are in the manifest/1.0.0 folder so as usergrid is updated new versions can be added like 1.1.0 etc.
 Ill leave the other manifest file there for now but will cleanup when Apache Usergrid accepts this library.
 
 ## designs guidelines ##
+
 The design of this is to make it easy to add to existing project and be able to map Model objects in your project 
 to response models for example in my project I have a organization object that is saved in a mysql database and I can
 call a Usergrid Api call on that model object just like using the Usergrid api class eg:
@@ -167,8 +178,12 @@ call a Usergrid Api call on that model object just like using the Usergrid api c
 ``` Organization::put($data_array) ``` how to do this is beyond the scope of the SDK but its not hard to create 
 Gateway Objects using php Traits
 
+## PHPUnit Tests ##
+Some unit tests require a internet connection and a usergrid install so they have been marked with a phpunit @group annotation so to run the tests without a usergrid install just pass the ```--exclude-group internet``` as a option on the command line or IDE setting
+that will exclude the few tests that require access to usergrid which I've limited to only a few unit tests like testing if it can get a oauth2 access_token. 
 
 ## Javascript ##
+
 There is a javascript api to go with this for example I have a site that uses the javascript sdk to login to Apache Usergrid then it send the token server side 
 to be used in api calls on behalf of the logged in user. You can find this javascript sdk in my public git repo it requires one extra config setting and then you include
 the javascript file in your page  It's set to works with Laravel as it posts the token to a route but it would not be hard to use else where just create uri it can post the token too. Its not part of this SDK so think
