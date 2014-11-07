@@ -92,62 +92,65 @@ public class ElasticSearchResource extends EnvironResource {
 
 
     public synchronized ElasticSearchResource startEs(){
-        if ( node != null ) {
-            return this;
-        }
 
-
-        //override the system properties in the Archiaus env
-        port = AvailablePortFinder.getNextAvailable( 9300 );
-
-        final String host = "127.0.0.1";
-        System.setProperty( IndexFig.ELASTICSEARCH_HOSTS, host );
-        System.setProperty( IndexFig.ELASTICSEARCH_PORT, port + "" );
-
-        //we have to create this AFTER we set our system properties, or they won't get picked upt
-        Injector injector = Guice.createInjector( new GuicyFigModule( IndexFig.class ) );
-        IndexFig indexFig = injector.getInstance( IndexFig.class );
-
-
-        final String clusterName = indexFig.getClusterName();
-
-        File tempDir;
-        try {
-            tempDir = getTempDirectory();
-        }
-        catch ( Exception ex ) {
-            throw new RuntimeException( "Fatal error unable to create temp dir, start embedded ElasticSearch", ex );
-        }
-
-
-        Settings settings = ImmutableSettings.settingsBuilder()
-                .put("cluster.name", clusterName)
-                .put("network.publish_host", host)
-                .put("transport.tcp.port", port)
-                .put("discovery.zen.ping.multicast.enabled", "false")
-                .put("node.http.enabled", false)
-                .put("path.logs", tempDir.toString())
-                .put("path.data", tempDir.toString())
-                .put("index.store.type", "default")
-                .put("index.number_of_shards", 1)
-                .put("index.number_of_replicas", 1)
-                .build();
-
-
-        log.info( "-----------------------------------------------------------------------" );
-        log.info( "Starting ElasticSearch embedded server settings: \n" + settings.getAsMap() );
-        log.info( "-----------------------------------------------------------------------" );
-
-
-        node = NodeBuilder.nodeBuilder().settings( settings ).clusterName( indexFig.getClusterName() ).client( false ).data( true ).build().start();
-
-        Runtime.getRuntime().addShutdownHook( new Thread() {
-            @Override
-            public void run() {
-                shutdown();
-            }
-        } );
-
+//
+//        if ( node != null ) {
+//            return this;
+//        }
+//
+//
+//        //override the system properties in the Archiaus env
+//        port = AvailablePortFinder.getNextAvailable( 9300 );
+//
+//        final String host = "127.0.0.1";
+//        System.setProperty( IndexFig.ELASTICSEARCH_HOSTS, host );
+//        System.setProperty( IndexFig.ELASTICSEARCH_PORT, port + "" );
+//
+//        //we have to create this AFTER we set our system properties, or they won't get picked upt
+//        Injector injector = Guice.createInjector( new GuicyFigModule( IndexFig.class ) );
+//        IndexFig indexFig = injector.getInstance( IndexFig.class );
+//
+//
+//        final String clusterName = indexFig.getClusterName();
+//
+//        File tempDir;
+//        try {
+//            tempDir = getTempDirectory();
+//        }
+//        catch ( Exception ex ) {
+//            throw new RuntimeException( "Fatal error unable to create temp dir, start embedded ElasticSearch", ex );
+//        }
+//
+//
+//        Settings settings = ImmutableSettings.settingsBuilder()
+//                .put("cluster.name", clusterName)
+//                .put("network.publish_host", host)
+//                .put("transport.tcp.port", port)
+//                .put("discovery.zen.ping.multicast.enabled", "false")
+//                .put("node.http.enabled", false)
+//                .put("path.logs", tempDir.toString())
+//                .put("path.data", tempDir.toString())
+//                .put("index.store.type", "default")
+//                .put("index.number_of_shards", 1)
+//                .put("index.number_of_replicas", 1)
+//                .build();
+//
+//
+//        log.info( "-----------------------------------------------------------------------" );
+//        log.info( "Starting ElasticSearch embedded server settings: \n" + settings.getAsMap() );
+//        log.info( "-----------------------------------------------------------------------" );
+//
+//
+//        node = NodeBuilder.nodeBuilder().settings( settings ).clusterName( indexFig.getClusterName() ).client( false ).data( true ).build().start();
+//
+//        Runtime.getRuntime().addShutdownHook( new Thread() {
+//            @Override
+//            public void run() {
+//                shutdown();
+//            }
+//        } );
+//
+//        return this;
         return this;
     }
 

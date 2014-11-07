@@ -58,6 +58,8 @@ import org.apache.commons.lang.math.RandomUtils;
  * The following property expansion macro should be placed in this project.properties file:
  * <p/>
  * target.directory=${pom.build.directory}
+ *
+ * TODO this class does 2 things.  It loads spring and starts cassandra.  We should separate these concerns.
  */
 public class CassandraResource extends ExternalResource {
     public static final Logger LOG = LoggerFactory.getLogger( CassandraResource.class );
@@ -293,14 +295,14 @@ public class CassandraResource extends ExternalResource {
                 return;
             }
             
-            if ( forkCassandra ) {
-                startCassandraForked();
-            } else if (externalCassandra) {
-              startCassandraExternal();
-            }else {
-              
-                startCassandraEmbedded();
-            }
+//            if ( forkCassandra ) {
+//                startCassandraForked();
+//            } else if (externalCassandra) {
+//              startCassandraExternal();
+//            }else {
+//
+//                startCassandraEmbedded();
+//            }
         }
     }
     private void addShutdownHook(){
