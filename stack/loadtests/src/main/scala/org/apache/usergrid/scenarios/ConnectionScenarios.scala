@@ -47,7 +47,7 @@ import io.gatling.http.Predef._
 
    val entityNameFeeder = FeederGenerator.generateEntityNameFeeder("device", Settings.numEntities)
    val createScenario = scenario("Create Connections")
-     .feed(Settings.userFeeder)
+     .feed(Settings.getUserFeeder)
      .exec(TokenScenarios.getUserToken)
      .exec( UserScenarios.getUserByUsername)
      .repeat(2){

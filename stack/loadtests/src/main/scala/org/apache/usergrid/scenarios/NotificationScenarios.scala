@@ -67,10 +67,10 @@ object NotificationScenarios {
     .check(status.is(200))
   )
 
-  val numEntities:Int = Settings.numUsers * 3 * Settings.duration
+  val numEntities:Int = Settings.numUsers * 2
 
   val createScenario = scenario("Create Push Notification")
-    .feed(Settings.userFeeder)
+    .feed(Settings.getUserFeeder)
     .exec(TokenScenarios.getUserToken)
     .exec( UserScenarios.getUserByUsername)
     .repeat(2){
