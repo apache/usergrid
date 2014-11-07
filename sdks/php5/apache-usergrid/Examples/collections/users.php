@@ -89,7 +89,7 @@ var_dump($find_user_by_uuid->entities);
 $user_addr = Usergrid::users()->findById(['uuid' => 'Jason']);
 echo $user_addr->entities->fetch('adr.addr1');
 //or
-echo $user_addr->entities->fetch('adr.street');
+echo $user_addr->entities->fetch('adr.addr1');
 
 // add user to group
 //$user_to_group = Usergrid::groups()->addUser(['entity_name_or_uuid' => 'group_name_or_uuid', 'user_name_or_uuid' => 'user name or uuid']);
