@@ -15,10 +15,169 @@
  */
 
 return [
+    'ToGroup' => [
+        'httpMethod' => 'POST',
+        'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/groups/{group}/notifications',
+        'notes' => 'Create Notification for group.  See Usergrid documentation for JSON format of body.',
+        'summary' => 'Create new app notification',
+        'responseClass' => '',
+        'responseType' => 'model',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'access_token' => [
+                'description' => 'The OAuth2 access token',
+                'location' => 'query',
+                'type' => 'string',
+                'required' => false,
+            ],
+            'app_name_or_uuid' => [
+                'description' => 'app name or uuid',
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+            ],
+            'org_name_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Organization name or uuid'
+            ],
+            'group' => [
+                'description' => 'group name',
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+            ],
 
-    'all' => [],
-    'find' => [],
-    'create' => [],
-    'destroy' => [],
-    'update' => []
+        ]
+    ],
+    'ToGroups' => [
+        'httpMethod' => 'POST',
+        'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/groups/*/notifications',
+        'notes' => 'Create Notification for group.  See Usergrid documentation for JSON format of body.',
+        'summary' => 'Create new app notification',
+        'responseClass' => '',
+        'responseType' => 'model',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'access_token' => [
+                'description' => 'The OAuth2 access token',
+                'location' => 'query',
+                'type' => 'string',
+                'required' => false,
+            ],
+            'app_name_or_uuid' => [
+                'description' => 'app name or uuid',
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+            ],
+            'org_name_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Organization name or uuid'
+            ],
+        ]
+    ],
+    'ToDevice' => [
+        'httpMethod' => 'POST',
+        'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/devices/{device_uuid}/notifications',
+        'notes' => 'Create Notification for single Device.  See Usergrid documentation for JSON format of body.',
+        'summary' => 'Create new app notification',
+        'responseClass' => '',
+        'responseType' => 'model',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'access_token' => [
+                'description' => 'The OAuth2 access token',
+                'location' => 'query',
+                'type' => 'string',
+                'required' => false,
+            ],
+            'app_name_or_uuid' => [
+                'description' => 'app name or uuid',
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+            ],
+            'org_name_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Organization name or uuid'
+            ],
+            'device_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'device name or uuid'
+            ],
+
+        ]
+    ],
+    'ToDevices' => [
+        'httpMethod' => 'POST',
+        'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/devices/*/notifications',
+        'notes' => 'Create Notification all Devices.  See Usergrid documentation for JSON format of body.',
+        'summary' => 'Create new app notification',
+        'responseClass' => '',
+        'responseType' => 'model',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'access_token' => [
+                'description' => 'The OAuth2 access token',
+                'location' => 'query',
+                'type' => 'string',
+                'required' => false,
+            ],
+            'app_name_or_uuid' => [
+                'description' => 'app name or uuid',
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+            ],
+            'org_name_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Organization name or uuid'
+            ]
+        ]
+    ],
+    'ToUser' => [
+        'httpMethod' => 'POST',
+        'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/users/{user_name}/notifications',
+        'notes' => 'Create Notification single User.  See Usergrid documentation for JSON format of body.',
+        'summary' => 'Create new app notification',
+        'responseClass' => '',
+        'responseType' => 'model',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'access_token' => [
+                'description' => 'The OAuth2 access token',
+                'location' => 'query',
+                'type' => 'string',
+                'required' => false,
+            ],
+            'app_name_or_uuid' => [
+                'description' => 'app name or uuid',
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+            ],
+            'org_name_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Organization name or uuid'
+            ],
+            'user_name' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'User name or uuid'
+            ],
+        ]
+    ]
 ];
