@@ -85,6 +85,12 @@ $find_user_by_uuid = Usergrid::users()->findById(['uuid' => $find_user_by_query-
 var_dump($find_user_by_uuid->entities);
 
 
+// AS all results as PHP Collections and the entities propery is always returned as a PHP Collection you can fetch nested records
+$user_addr = Usergrid::users()->findById(['uuid' => 'Jason']);
+echo $user_addr->entities->fetch('adr.addr1');
+//or
+echo $user_addr->entities->fetch('adr.street');
+
 // add user to group
 //$user_to_group = Usergrid::groups()->addUser(['entity_name_or_uuid' => 'group_name_or_uuid', 'user_name_or_uuid' => 'user name or uuid']);
 
