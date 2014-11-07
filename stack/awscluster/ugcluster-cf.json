@@ -212,18 +212,24 @@
                 "64": "ami-194a0429"
             }
         },
-        "TwoAZs": {
+        "FourAZs": {
             "ap-southeast-2": {
                 "AZ1": "ap-southeast-2a",
-                "AZ2": "ap-southeast-2b"
+                "AZ2": "ap-southeast-2b",
+                "AZ3": "ap-southeast-2a",
+                "AZ4": "ap-southeast-2b"
             },
             "us-east-1": {
                 "AZ1": "us-east-1b",
-                "AZ2": "us-east-1c"
+                "AZ2": "us-east-1c",
+                "AZ3": "us-east-1d",
+                "AZ4": "us-east-1e"
             },
             "us-west-2": {
                 "AZ1": "us-west-2a",
-                "AZ2": "us-west-2b"
+                "AZ2": "us-west-2b",
+                "AZ3": "us-west-2c",
+                "AZ4": "us-west-2a"
             }
         }
     },
@@ -375,7 +381,7 @@
                 "AvailabilityZones": [
                     {
                         "Fn::FindInMap": [
-                            "TwoAZs",
+                            "FourAZs",
                             {
                                 "Ref": "AWS::Region"
                             },
@@ -384,13 +390,31 @@
                     },
                     {
                         "Fn::FindInMap": [
-                            "TwoAZs",
+                            "FourAZs",
                             {
                                 "Ref": "AWS::Region"
                             },
                             "AZ2"
                         ]
-                    }
+                    },
+                    {
+                         "Fn::FindInMap": [
+                             "FourAZs",
+                             {
+                                 "Ref": "AWS::Region"
+                             },
+                             "AZ3"
+                         ]
+                     },
+                    {
+                         "Fn::FindInMap": [
+                             "FourAZs",
+                             {
+                                 "Ref": "AWS::Region"
+                             },
+                             "AZ4"
+                         ]
+                     }
                 ],
                 "LaunchConfigurationName": {
                     "Ref": "GraphiteAutoScalingLaunchConfiguration"
@@ -573,10 +597,10 @@
                         "Type": "AWS::AutoScaling::AutoScalingGroup",
                         "Version": "2014-07-24",
                         "Properties": {
-                            "AvailabilityZones": [
+                          "AvailabilityZones": [
                                 {
                                     "Fn::FindInMap": [
-                                        "TwoAZs",
+                                        "FourAZs",
                                         {
                                             "Ref": "AWS::Region"
                                         },
@@ -585,13 +609,31 @@
                                 },
                                 {
                                     "Fn::FindInMap": [
-                                        "TwoAZs",
+                                        "FourAZs",
                                         {
                                             "Ref": "AWS::Region"
                                         },
                                         "AZ2"
                                     ]
-                                }
+                                },
+                                {
+                                     "Fn::FindInMap": [
+                                         "FourAZs",
+                                         {
+                                             "Ref": "AWS::Region"
+                                         },
+                                         "AZ3"
+                                     ]
+                                 },
+                                {
+                                     "Fn::FindInMap": [
+                                         "FourAZs",
+                                         {
+                                             "Ref": "AWS::Region"
+                                         },
+                                         "AZ4"
+                                     ]
+                                 }
                             ],
                             "LaunchConfigurationName": {
                                 "Ref": "OpsCenterAutoScalingLaunchConfiguration"
@@ -827,10 +869,10 @@
             "Type": "AWS::AutoScaling::AutoScalingGroup",
             "Version": "2009-05-15",
             "Properties": {
-                "AvailabilityZones": [
+              "AvailabilityZones": [
                     {
                         "Fn::FindInMap": [
-                            "TwoAZs",
+                            "FourAZs",
                             {
                                 "Ref": "AWS::Region"
                             },
@@ -839,13 +881,31 @@
                     },
                     {
                         "Fn::FindInMap": [
-                            "TwoAZs",
+                            "FourAZs",
                             {
                                 "Ref": "AWS::Region"
                             },
                             "AZ2"
                         ]
-                    }
+                    },
+                    {
+                         "Fn::FindInMap": [
+                             "FourAZs",
+                             {
+                                 "Ref": "AWS::Region"
+                             },
+                             "AZ3"
+                         ]
+                     },
+                    {
+                         "Fn::FindInMap": [
+                             "FourAZs",
+                             {
+                                 "Ref": "AWS::Region"
+                             },
+                             "AZ4"
+                         ]
+                     }
                 ],
                 "LaunchConfigurationName": {
                     "Ref": "CassAutoScalingLaunchConfiguration"
@@ -988,26 +1048,44 @@
             "Type": "AWS::AutoScaling::AutoScalingGroup",
             "Version": "2009-05-15",
             "Properties": {
-                "AvailabilityZones": [
-                    {
-                        "Fn::FindInMap": [
-                            "TwoAZs",
-                            {
-                                "Ref": "AWS::Region"
-                            },
-                            "AZ1"
-                        ]
-                    },
-                    {
-                        "Fn::FindInMap": [
-                            "TwoAZs",
-                            {
-                                "Ref": "AWS::Region"
-                            },
-                            "AZ2"
-                        ]
-                    }
-                ],
+              "AvailabilityZones": [
+                      {
+                          "Fn::FindInMap": [
+                              "FourAZs",
+                              {
+                                  "Ref": "AWS::Region"
+                              },
+                              "AZ1"
+                          ]
+                      },
+                      {
+                          "Fn::FindInMap": [
+                              "FourAZs",
+                              {
+                                  "Ref": "AWS::Region"
+                              },
+                              "AZ2"
+                          ]
+                      },
+                      {
+                           "Fn::FindInMap": [
+                               "FourAZs",
+                               {
+                                   "Ref": "AWS::Region"
+                               },
+                               "AZ3"
+                           ]
+                       },
+                      {
+                           "Fn::FindInMap": [
+                               "FourAZs",
+                               {
+                                   "Ref": "AWS::Region"
+                               },
+                               "AZ4"
+                           ]
+                       }
+                  ],
                 "LaunchConfigurationName": {
                     "Ref": "ESAutoScalingLaunchConfiguration"
                 },
@@ -1151,26 +1229,44 @@
             "Type": "AWS::AutoScaling::AutoScalingGroup",
             "Version": "2009-05-15",
             "Properties": {
-                "AvailabilityZones": [
-                    {
-                        "Fn::FindInMap": [
-                            "TwoAZs",
-                            {
-                                "Ref": "AWS::Region"
-                            },
-                            "AZ1"
-                        ]
-                    },
-                    {
-                        "Fn::FindInMap": [
-                            "TwoAZs",
-                            {
-                                "Ref": "AWS::Region"
-                            },
-                            "AZ2"
-                        ]
-                    }
-                ],
+              "AvailabilityZones": [
+                      {
+                          "Fn::FindInMap": [
+                              "FourAZs",
+                              {
+                                  "Ref": "AWS::Region"
+                              },
+                              "AZ1"
+                          ]
+                      },
+                      {
+                          "Fn::FindInMap": [
+                              "FourAZs",
+                              {
+                                  "Ref": "AWS::Region"
+                              },
+                              "AZ2"
+                          ]
+                      },
+                      {
+                           "Fn::FindInMap": [
+                               "FourAZs",
+                               {
+                                   "Ref": "AWS::Region"
+                               },
+                               "AZ3"
+                           ]
+                       },
+                      {
+                           "Fn::FindInMap": [
+                               "FourAZs",
+                               {
+                                   "Ref": "AWS::Region"
+                               },
+                               "AZ4"
+                           ]
+                       }
+                  ],
                 "LaunchConfigurationName": {
                     "Ref": "RestAutoScalingLaunchConfiguration"
                 },
@@ -1277,10 +1373,10 @@
         "RestElasticLoadBalancer": {
             "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
             "Properties": {
-                "AvailabilityZones": [
+              "AvailabilityZones": [
                     {
                         "Fn::FindInMap": [
-                            "TwoAZs",
+                            "FourAZs",
                             {
                                 "Ref": "AWS::Region"
                             },
@@ -1289,13 +1385,31 @@
                     },
                     {
                         "Fn::FindInMap": [
-                            "TwoAZs",
+                            "FourAZs",
                             {
                                 "Ref": "AWS::Region"
                             },
                             "AZ2"
                         ]
-                    }
+                    },
+                    {
+                         "Fn::FindInMap": [
+                             "FourAZs",
+                             {
+                                 "Ref": "AWS::Region"
+                             },
+                             "AZ3"
+                         ]
+                     },
+                    {
+                         "Fn::FindInMap": [
+                             "FourAZs",
+                             {
+                                 "Ref": "AWS::Region"
+                             },
+                             "AZ4"
+                         ]
+                     }
                 ],
                 "Listeners": [
                     {
