@@ -62,7 +62,7 @@ public class MigrationInfoSerializationImpl implements MigrationInfoSerializatio
     private static final StringSerializer STRING_SERIALIZER = StringSerializer.get();
 
 
-    private static final MultiTennantColumnFamily<ScopedRowKey<String>, String> CF_MIGRATION_INFO =
+    public static final MultiTennantColumnFamily<ScopedRowKey<String>, String> CF_MIGRATION_INFO =
             new MultiTennantColumnFamily<>( "Data_Migration_Info", ROW_KEY_SER, STRING_SERIALIZER );
 
 
