@@ -65,7 +65,7 @@ public class CpEntityIndexDeleteListener {
 
         final CollectionScope collectionScope = event.getCollectionScope();
         final IndexScope indexScope = 
-                new IndexScopeImpl(collectionScope.getOwner(), collectionScope.getName(), entityType );
+                new IndexScopeImpl(collectionScope.getOwner(), collectionScope.getName() );
         final EntityIndex entityIndex = entityIndexFactory.createEntityIndex(
                 new ApplicationScopeImpl( collectionScope.getApplication()));
 

@@ -36,7 +36,7 @@ public class EsRunner extends ITRunner {
         ElasticSearchResource rule = new ElasticSearchResource();
 
         try {
-//            rule.before();
+            rule.before();
         }
         catch ( Throwable throwable ) {
             throw new RuntimeException( "Unable to start ES", throwable );

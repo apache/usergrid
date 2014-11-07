@@ -241,7 +241,7 @@ public class FilteringLoader implements ResultsLoader {
 
         IndexScope indexScope = new IndexScopeImpl( 
             ownerId,
-            CpNamingUtils.getCollectionScopeNameFromEntityType( candidateResult.getId().getType()), entityType );
+            CpNamingUtils.getCollectionScopeNameFromEntityType( candidateResult.getId().getType()) );
 
         batch.deindex( indexScope, candidateResult );
     }

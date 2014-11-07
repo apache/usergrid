@@ -20,6 +20,9 @@ package org.apache.usergrid.persistence.index;/*
  */
 
 
+import java.util.Arrays;
+
+
 /**
  * Class to encapsulate search types
  */
@@ -55,5 +58,54 @@ public class SearchTypes {
      */
     public static SearchTypes allTypes(){
         return ALL_TYPES;
+    }
+
+
+    /**
+     * Create a search type from a potentially nullable set of string.  If they are null, or empty, then allTypes is returned
+     * otherwise the type will be returned
+     * @param types
+     * @return
+     */
+    public static SearchTypes fromNullableTypes(final String... types){
+
+        if(types == null || types.length == 0){
+            return allTypes();
+        }
+
+        return fromTypes( types );
+    }
+
+
+    @Override
+    public boolean equals( final Object o ) {
+        if ( this == o ) {
+            return true;
+        }
+        if ( !( o instanceof SearchTypes ) ) {
+            return false;
+        }
+
+        final SearchTypes that = ( SearchTypes ) o;
+
+        if ( !Arrays.equals( types, that.types ) ) {
+            return false;
+        }
+
+        return true;
+    }
+
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode( types );
+    }
+
+
+    @Override
+    public String toString() {
+        return "SearchTypes{" +
+                "types=" + Arrays.toString( types ) +
+                '}';
     }
 }

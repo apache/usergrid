@@ -1,4 +1,5 @@
-package org.apache.usergrid.corepersistence.util;/*
+package org.apache.usergrid.corepersistence.util;
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -27,11 +28,6 @@ import org.apache.usergrid.persistence.Schema;
 public class CpNamingUtils {
 
     /**
-     * Edge types for all types
-     */
-    public static final String ALL_TYPES = "zzzalltypeszzz";
-
-    /**
      * Edge types for collection suffix
      */
     public static final String EDGE_COLL_SUFFIX = "zzzcollzzz";
@@ -54,8 +50,8 @@ public class CpNamingUtils {
     }
 
 
-    public static String getConnectionScopeName( String entityType, String connectionType ) {
-        String csn = EDGE_CONN_SUFFIX + connectionType + entityType;
+    public static String getConnectionScopeName( String connectionType ) {
+        String csn = EDGE_CONN_SUFFIX + connectionType ;
         return csn.toLowerCase();
     }
 
@@ -65,7 +61,7 @@ public class CpNamingUtils {
     }
 
 
-    public  static boolean isConnectionEdgeType( String type ) {
+    public static boolean isConnectionEdgeType( String type ) {
         return type.startsWith( EDGE_CONN_SUFFIX );
     }
 
