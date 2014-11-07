@@ -62,15 +62,6 @@
       <scope>test</scope>
     </dependency>
 
-
-    <dependency>
-      <groupId>org.jukito</groupId>
-      <artifactId>jukito</artifactId>
-      <version>${jukito.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-
     <dependency>
       <groupId>org.apache.usergrid</groupId>
       <artifactId>collection</artifactId>

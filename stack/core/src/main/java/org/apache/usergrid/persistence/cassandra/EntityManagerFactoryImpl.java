@@ -435,6 +435,25 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
         throw new UnsupportedOperationException("Not supported."); 
     }
 
+
+    @Override
+    public void migrateData() throws Exception {
+
+    }
+
+
+    @Override
+    public String getMigrateDataStatus() {
+        return null;
+    }
+
+
+    @Override
+    public int getMigrateDataVersion() {
+        return 0;
+    }
+
+
     @Override
     public void rebuildCollectionIndex(UUID appId, String collection, ProgressObserver po) {
         throw new UnsupportedOperationException("Not supported."); 

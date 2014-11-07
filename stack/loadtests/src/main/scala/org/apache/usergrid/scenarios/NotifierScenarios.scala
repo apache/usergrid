@@ -18,7 +18,7 @@
 
 import io.gatling.core.Predef._
 import io.gatling.http.Predef._
- import org.apache.usergrid.settings.Settings
+ import org.apache.usergrid.settings.{Headers, Settings}
  import scala.concurrent.duration._
 
 /**
@@ -41,6 +41,8 @@ object NotifierScenarios {
   
   val notifier = Settings.pushNotifier
   val provider = Settings.pushProvider
+  val org = Settings.org
+  val app = Settings.app
 
   /**
    * Create a notifier
@@ -53,14 +55,16 @@ object NotifierScenarios {
     )
 
     .exec(http("Create Notifier")
-    .post("/notifiers")
+    .post(Settings.baseAppUrl+"/notifiers")
+    .headers(Headers.jsonAuthorized)
     .body(StringBody("{\"name\":\"" + notifier + "\",\"provider\":\"" + provider + "\"}"))
-    //remnants of trying to upload an apple certificate
-//    .param("name", "${notifierName}")
-//    .param("provider", "apple")
-//    .param("environment", "mock")
-//    .fileBody("p12Certificate", Map).fileBody(pkcs12Cert)
-    .check(status.is(200)))
+    .check(status.in(200 to 400)))
+
+  val checkNotifier = exec(http("Get Notifier")
+    .get(Settings.baseAppUrl+"/notifiers/"+notifier)
+    .headers(Headers.jsonAuthorized)
+    .check(status.is(200),status.saveAs("notifierStatus"))
+  )
 
 
 }

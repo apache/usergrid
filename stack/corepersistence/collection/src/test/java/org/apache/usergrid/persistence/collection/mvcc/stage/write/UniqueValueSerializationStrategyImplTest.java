@@ -21,7 +21,7 @@ package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 import java.util.Collections;
 import java.util.UUID;
 
-import org.jukito.UseModules;
+import org.apache.usergrid.persistence.core.test.UseModules;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -37,7 +37,7 @@ import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
 import org.apache.usergrid.persistence.collection.serialization.impl.UniqueValueImpl;
-import org.apache.usergrid.persistence.core.cassandra.ITRunner;
+import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.Field;

@@ -14,10 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- package org.apache.usergrid.settings
+package org.apache.usergrid.settings
 
 import io.gatling.core.Predef._
 import io.gatling.http.Predef._
+import org.apache.usergrid.datagenerators.FeederGenerator
 import scala.concurrent.duration._
 
 object Settings {
@@ -25,11 +26,17 @@ object Settings {
   // Target settings
   val org = System.getProperty("org")
   val app = System.getProperty("app")
+  val admin = System.getProperty("adminUser")
+  val password = System.getProperty("adminPassword")
   val baseUrl = System.getProperty("baseurl")
-  val httpConf = http.baseURL(baseUrl + "/" + org + "/" + app)
+  val baseAppUrl = baseUrl + "/" + org + "/" + app
+  val httpConf = http.baseURL(baseAppUrl)
+
+  val skipSetup:Boolean = System.getProperty("skipSetup") == "true"
 
   // Simulation settings
-  val numUsers:Int = Integer.getInteger("numUsers", 10).toInt
+  var numUsers:Int = Integer.getInteger("numUsers", 10).toInt
+
   val numEntities:Int = Integer.getInteger("numEntities", 5000).toInt
   val numDevices:Int = Integer.getInteger("numDevices", 2000).toInt
 
@@ -37,6 +44,15 @@ object Settings {
   val duration:Int = Integer.getInteger("duration", 300).toInt // in seconds
   val throttle:Int = Integer.getInteger("throttle", 50).toInt // in seconds
 
+  if(numUsers<duration){
+    println(s"Changing numUsers $numUsers to duration length $duration")
+    numUsers = duration
+  }
+  if(numUsers % duration != 0){
+    val message = s"please use numUsers ($numUsers) that is evenly divisible by duration($duration)"
+    println(message)
+    throw new Exception(message)
+  }
   // Geolocation settings
   val centerLatitude:Double = 37.442348 // latitude of center point
   val centerLongitude:Double = -122.138268 // longitude of center point
@@ -44,7 +60,13 @@ object Settings {
   val geosearchRadius:Int = 8000 // search area in meters
 
   // Push Notification settings
-  val pushNotifier = System.getProperty("pushNotifier")
-  val pushProvider = System.getProperty("pushProvider")
+  val pushNotifier = if (System.getProperty("pushNotifier") != null)  System.getProperty("pushNotifier") else "loadNotifier"
+  val pushProvider =  if (System.getProperty("pushProvider") != null)  System.getProperty("pushProvider")  else "noop"
+
+  val constantUsers:Int = Settings.numUsers/Settings.duration
+  println(s"Will inject $constantUsers users per sec")
+
+  val userFeeder = FeederGenerator.generateUserWithGeolocationFeeder(numUsers, userLocationRadius, centerLatitude, centerLongitude)
+
 
 }

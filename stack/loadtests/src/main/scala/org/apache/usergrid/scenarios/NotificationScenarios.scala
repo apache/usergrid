@@ -21,11 +21,12 @@ import java.nio.file.{Paths, Files}
 
 import io.gatling.core.Predef._
 import io.gatling.http.Predef._
-import scala.concurrent.duration._
+ import org.apache.usergrid.datagenerators.FeederGenerator
+ import scala.concurrent.duration._
 
 import scala.io.Source
 
-import org.apache.usergrid.settings.Settings
+import org.apache.usergrid.settings.{Headers, Settings}
 
 /**
  *
@@ -55,14 +56,34 @@ object NotificationScenarios {
   val sendNotification = exec(http("Send Single Notification")
       .post("/devices/${entityName}/notifications")
       .body(StringBody("{\"payloads\":{\"" + notifier + "\":\"testmessage\"}}"))
+      .headers(Headers.jsonAuthorized)
       .check(status.is(200))
     )
 
   val sendNotificationToUser= exec(http("Send Notification to All Devices")
     .post("/users/${userId}/notifications")
     .body(StringBody("{\"payloads\":{\"" + notifier + "\":\"testmessage\"}}"))
+    .headers(Headers.jsonAuthorized)
     .check(status.is(200))
   )
+
+  val numEntities:Int = Settings.numUsers * 3 * Settings.duration
+
+  val createScenario = scenario("Create Push Notification")
+    .feed(Settings.userFeeder)
+    .exec(TokenScenarios.getUserToken)
+    .exec( UserScenarios.getUserByUsername)
+    .repeat(2){
+    feed(FeederGenerator.generateEntityNameFeeder("device", numEntities))
+      .exec( DeviceScenarios.postDeviceWithNotifier)
+      .exec(ConnectionScenarios.postUserToDeviceConnection)
+  }
+    .exec(session => {
+    // print the Session for debugging, don't do that on real Simulations
+    println(session)
+    session
+  })
+    .exec( sendNotificationToUser)
 
   /**
    * TODO: Add posting to users, which would expect a user in the session

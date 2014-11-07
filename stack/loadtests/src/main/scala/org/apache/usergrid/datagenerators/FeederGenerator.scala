@@ -16,7 +16,9 @@
  */
  package org.apache.usergrid.datagenerators
 
-import io.gatling.core.Predef._
+ import java.util.UUID
+
+ import io.gatling.core.Predef._
  import org.apache.usergrid.settings.Utils
  import scala.collection.mutable.ArrayBuffer
 
@@ -92,7 +94,7 @@ object FeederGenerator {
     var nameArray: ArrayBuffer[Map[String, String]] = new ArrayBuffer[Map[String, String]]
 
     for (entityCount <- 1 to numEntities) {
-      nameArray += Map("entityName" -> prefix.concat(entityCount.toString))
+      nameArray += Map("entityName" -> prefix.concat(entityCount.toString).concat(UUID.randomUUID().toString))
     }
 
     return nameArray.toArray
@@ -109,6 +111,15 @@ object FeederGenerator {
 
     return nameArray.toArray
 
+  }
+
+  def generateCustomEntityFeeder(numEntities: Int): Array[Map[String, String]] = {
+    var entityArray: ArrayBuffer[Map[String, String]] = new ArrayBuffer[Map[String, String]]
+    for (entityCount <- 1 to numEntities) {
+      var entity: Map[String, String] = EntityDataGenerator.generateCustomEntity(entityCount.toString)
+      entityArray += entity
+    }
+    return entityArray.toArray
   }
 
 }

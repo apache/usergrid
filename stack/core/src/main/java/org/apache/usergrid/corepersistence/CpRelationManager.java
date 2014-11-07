@@ -601,7 +601,25 @@ public class CpRelationManager implements RelationManager {
     }
 
 
-    public Entity addToCollection( String collName, EntityRef itemRef, boolean connectBack ) throws Exception {
+    public Entity addToCollection( String collName, EntityRef itemRef, boolean connectBack ) 
+            throws Exception {
+
+        CollectionScope memberScope = new CollectionScopeImpl( 
+            applicationScope.getApplication(),
+            applicationScope.getApplication(),
+            CpNamingUtils.getCollectionScopeNameFromEntityType( itemRef.getType() ) );
+
+        Id entityId = new SimpleId( itemRef.getUuid(), itemRef.getType() ); 
+        org.apache.usergrid.persistence.model.entity.Entity memberEntity = 
+            ((CpEntityManager)em).load( new CpEntityManager.EntityScope( memberScope, entityId));
+
+        return addToCollection(collName, itemRef, memberEntity, connectBack);
+    }
+
+
+    public Entity addToCollection( String collName, EntityRef itemRef,
+            org.apache.usergrid.persistence.model.entity.Entity memberEntity, boolean connectBack ) 
+        throws Exception {
 
         // don't fetch entity if we've already got one
         final Entity itemEntity;
@@ -619,36 +637,6 @@ public class CpRelationManager implements RelationManager {
         CollectionInfo collection = getDefaultSchema().getCollection( headEntity.getType(), collName );
         if ( ( collection != null ) && !collection.getType().equals( itemRef.getType() ) ) {
             return null;
-        }
-
-        // load the new member entity to be added to the collection from its default scope
-        CollectionScope memberScope = new CollectionScopeImpl( 
-                applicationScope.getApplication(),
-                applicationScope.getApplication(),
-                CpNamingUtils.getCollectionScopeNameFromEntityType( itemRef.getType() ) );
-        EntityCollectionManager memberMgr = managerCache.getEntityCollectionManager( memberScope );
-
-        //TODO, this double load should disappear once events are in
-        Id entityId = new SimpleId( itemRef.getUuid(), itemRef.getType() ); 
-        org.apache.usergrid.persistence.model.entity.Entity memberEntity = 
-            ((CpEntityManager)em).load( new CpEntityManager.EntityScope( memberScope, entityId));
-
-        if ( memberEntity == null ) {
-            throw new RuntimeException(
-                    "Unable to load entity uuid=" + itemRef.getUuid() + " type=" + itemRef.getType() );
-        }
-
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( "Loaded member entity {}:{} from scope\n   app {}\n   " 
-                + "owner {}\n   name {} data {}",
-                new Object[] {
-                    itemRef.getType(),
-                    itemRef.getUuid(),
-                    memberScope.getApplication(),
-                    memberScope.getOwner(),
-                    memberScope.getName(),
-                    CpEntityMapUtils.toMap( memberEntity )
-                } );
         }
 
         String edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( collName );
@@ -688,7 +676,7 @@ public class CpRelationManager implements RelationManager {
 
         if ( connectBack && collection != null && collection.getLinkedCollection() != null ) {
             getRelationManager( itemEntity ).addToCollection( 
-                    collection.getLinkedCollection(), headEntity, false );
+                    collection.getLinkedCollection(), headEntity, cpHeadEntity, false );
         }
 
         return itemEntity;

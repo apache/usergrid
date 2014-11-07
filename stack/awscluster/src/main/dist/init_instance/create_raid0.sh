@@ -20,7 +20,7 @@
 
 
 
-# WARNING: this does not work yet (and is not used by any other script)
+# WARNING: this does not work for any instances that have more than 2 ephemeral disks
 
 
 
@@ -38,8 +38,11 @@ umount /mnt
 
 
 #We only support 2 ephemeral disks.  Most c3.x instances only have 2 disks and they're our target
-# create striped RAID0 device with our four disks
-yes | mdadm --create --verbose /dev/md0 --level=stripe --raid-devices=2 -c 256  /dev/xvdb /dev/xvdc
+# create striped RAID0 device with our 2 disks
+yes | mdadm --create --verbose /dev/md0 --level=0 --raid-devices=2 -c 256  /dev/xvdb /dev/xvdc
+
+
+
 
 # save config
 mdadm --detail --scan | tee /etc/mdadm/mdadm.conf

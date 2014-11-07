@@ -23,21 +23,17 @@ package org.apache.usergrid.persistence.graph.serialization.impl.shard;
 
 
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Set;
 
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Matchers;
 
 import org.apache.usergrid.persistence.core.consistency.TimeService;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.task.TaskExecutor;
 import org.apache.usergrid.persistence.graph.GraphFig;
-import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.ShardGroupCompactionImpl;
 
 import com.netflix.astyanax.Keyspace;
@@ -45,9 +41,6 @@ import com.netflix.astyanax.Keyspace;
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createId;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -85,7 +78,7 @@ public class ShardGroupCompactionTest {
 
         final EdgeShardSerialization edgeShardSerialization = mock( EdgeShardSerialization.class );
 
-        final TaskExecutor taskExecutor = mock(TaskExecutor.class);
+        final TaskExecutor taskExecutor = mock( TaskExecutor.class );
 
         final long delta = 10000;
 
@@ -106,90 +99,96 @@ public class ShardGroupCompactionTest {
                         edgeColumnFamilies, keyspace, edgeShardSerialization, taskExecutor );
 
 
-        DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromSourceNode( createId("source"), "test" );
+        DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromSourceNode( createId( "source" ), "test" );
 
         try {
             compaction.compact( this.scope, directedEdgeMeta, group );
             fail( "I should not reach this point" );
-        }catch(Throwable t){
-            assertEquals("Correct error message returned", "Compaction cannot be run yet.  Ignoring compaction.", t.getMessage());
         }
-
+        catch ( Throwable t ) {
+            assertEquals( "Correct error message returned", "Compaction cannot be run yet.  Ignoring compaction.",
+                    t.getMessage() );
+        }
     }
 
 
-//    /**
-//     * Tests that when we copy edges, we do not actually run the compaction, we can only run it after we get nothing
-//     * and the timeout has elapsed
-//     */
-//    @Test
-//    public void shouldOnlyCopy() {
-//
-//        final TimeService timeService = mock( TimeService.class );
-//
-//        final NodeShardAllocation nodeShardAllocation = mock( NodeShardAllocation.class );
-//
-//        final ShardedEdgeSerialization shardedEdgeSerialization = mock( ShardedEdgeSerialization.class );
-//
-//        final EdgeColumnFamilies edgeColumnFamilies = mock( EdgeColumnFamilies.class );
-//
-//        final Keyspace keyspace = mock( Keyspace.class );
-//
-//        final EdgeShardSerialization edgeShardSerialization = mock( EdgeShardSerialization.class );
-//
-//        final long delta = 10000;
-//
-//        final long createTime = 20000;
-//
-//        //we shouldn't be able to compact, should throw an exception
-//        final long timeNow = createTime + delta ;
-//
-//
-//        final Shard targetShard = new Shard( 2000, createTime, false ) ;
-//        final Shard sourceShard =  new Shard( 1000, 5000, true );
-//        ShardEntryGroup group = new ShardEntryGroup( delta );
-//        group.addShard( targetShard );
-//        group.addShard( sourceShard );
-//
-//
-//        when( timeService.getCurrentTime() ).thenReturn( timeNow );
-//
-//        ShardGroupCompaction compaction =
-//                new ShardGroupCompactionImpl( timeService, graphFig, nodeShardAllocation, shardedEdgeSerialization,
-//                        edgeColumnFamilies, keyspace, edgeShardSerialization );
-//
-//
-//        DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromSourceNode( createId("source"), "test" );
-//
-//
-//        /**
-//         * Mock up returning edges from the source
-//         */
-//
-//        int count = 100;
-//
-//        for(int i = 0; i < count; i ++){
-//
-//
-//
-//            when(shardedEdgeSerialization.getEdgesFromSource( same(edgeColumnFamilies), same(scope), any(
-//                    SearchByEdgeType.class), Matchers.argThat(new ShardSetMatcher( Collections.singleton( sourceShard ) ))/*any(Set.class)*/ ));
-//            edgeMeta.loadEdges( shardedEdgeSerialization, edgeColumnFamilies, scope,
-//
-//                                Collections.singleton( sourceShard ),  SearchByEdgeType.Order.DESCENDING, Long.MAX_VALUE );
-//        }
-//
-//        try {
-//            compaction.compact( this.scope, directedEdgeMeta, group );
-//            fail( "I should not reach this point" );
-//        }catch(Throwable t){
-//            assertEquals("Correct error message returned", "Compaction cannot be run yet.  Ignoring compaction.", t.getMessage());
-//        }
-//
-//    }
+    //    /**
+    //     * Tests that when we copy edges, we do not actually run the compaction,
+    // we can only run it after we get nothing
+    //     * and the timeout has elapsed
+    //     */
+    //    @Test
+    //    public void shouldOnlyCopy() {
+    //
+    //        final TimeService timeService = mock( TimeService.class );
+    //
+    //        final NodeShardAllocation nodeShardAllocation = mock( NodeShardAllocation.class );
+    //
+    //        final ShardedEdgeSerialization shardedEdgeSerialization = mock( ShardedEdgeSerialization.class );
+    //
+    //        final EdgeColumnFamilies edgeColumnFamilies = mock( EdgeColumnFamilies.class );
+    //
+    //        final Keyspace keyspace = mock( Keyspace.class );
+    //
+    //        final EdgeShardSerialization edgeShardSerialization = mock( EdgeShardSerialization.class );
+    //
+    //        final long delta = 10000;
+    //
+    //        final long createTime = 20000;
+    //
+    //        //we shouldn't be able to compact, should throw an exception
+    //        final long timeNow = createTime + delta ;
+    //
+    //
+    //        final Shard targetShard = new Shard( 2000, createTime, false ) ;
+    //        final Shard sourceShard =  new Shard( 1000, 5000, true );
+    //        ShardEntryGroup group = new ShardEntryGroup( delta );
+    //        group.addShard( targetShard );
+    //        group.addShard( sourceShard );
+    //
+    //
+    //        when( timeService.getCurrentTime() ).thenReturn( timeNow );
+    //
+    //        ShardGroupCompaction compaction =
+    //                new ShardGroupCompactionImpl( timeService, graphFig, nodeShardAllocation,
+    // shardedEdgeSerialization,
+    //                        edgeColumnFamilies, keyspace, edgeShardSerialization );
+    //
+    //
+    //        DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromSourceNode( createId("source"), "test" );
+    //
+    //
+    //        /**
+    //         * Mock up returning edges from the source
+    //         */
+    //
+    //        int count = 100;
+    //
+    //        for(int i = 0; i < count; i ++){
+    //
+    //
+    //
+    //            when(shardedEdgeSerialization.getEdgesFromSource( same(edgeColumnFamilies), same(scope), any(
+    //                    SearchByEdgeType.class), Matchers.argThat(new ShardSetMatcher( Collections.singleton(
+    // sourceShard ) ))/*any(Set.class)*/ ));
+    //            edgeMeta.loadEdges( shardedEdgeSerialization, edgeColumnFamilies, scope,
+    //
+    //                                Collections.singleton( sourceShard ),  SearchByEdgeType.Order.DESCENDING,
+    // Long.MAX_VALUE );
+    //        }
+    //
+    //        try {
+    //            compaction.compact( this.scope, directedEdgeMeta, group );
+    //            fail( "I should not reach this point" );
+    //        }catch(Throwable t){
+    //            assertEquals("Correct error message returned", "Compaction cannot be run yet.  Ignoring compaction
+    // .", t.getMessage());
+    //        }
+    //
+    //    }
 
 
-    private final class ShardSetMatcher extends BaseMatcher<Collection<Shard>>{
+    private final class ShardSetMatcher extends BaseMatcher<Collection<Shard>> {
 
         private final Collection<Shard> expected;
 
@@ -199,7 +198,7 @@ public class ShardGroupCompactionTest {
 
         @Override
         public boolean matches( final Object o ) {
-            if(! (o instanceof Collection)){
+            if ( !( o instanceof Collection ) ) {
                 return false;
             }
 
@@ -213,17 +212,17 @@ public class ShardGroupCompactionTest {
         @Override
         public void describeTo( final Description description ) {
 
-           StringBuilder builder = new StringBuilder(  );
+            StringBuilder builder = new StringBuilder();
 
-            builder.append("Collection of shards with shards {");
+            builder.append( "Collection of shards with shards {" );
 
-            for(Shard shard: expected){
-              builder.append(shard).append( "," );
+            for ( Shard shard : expected ) {
+                builder.append( shard ).append( "," );
             }
 
-            builder.setLength( builder.length()-1 );
+            builder.setLength( builder.length() - 1 );
 
-           description.appendText( builder.toString() );
+            description.appendText( builder.toString() );
         }
     }
 }

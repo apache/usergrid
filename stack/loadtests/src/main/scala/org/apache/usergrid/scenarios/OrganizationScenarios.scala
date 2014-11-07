@@ -18,6 +18,7 @@
 
 import io.gatling.core.Predef._
 import io.gatling.http.Predef._
+ import org.apache.usergrid.datagenerators.FeederGenerator
  import org.apache.usergrid.settings.{Settings, Headers}
  import scala.concurrent.duration._
 
@@ -34,10 +35,26 @@ import io.gatling.http.Predef._
 object OrganizationScenarios {
 
   //register the org with the randomly generated org
-  val createOrgAndAdmin = exec(http("Create Organization")
-  .post("/management/organizations")
-  .headers(Headers.jsonAnonymous)
-  .body(StringBody("{\"organization\":\"" + Settings.org + "\",\"username\":\"${entityName}\",\"name\":\"${entityName}\",\"email\":\"${entityName}@apigee.com\",\"password\":\"test\"}"))
-  .check(status.is(200)))
+  val createOrgAndAdmin =
+    exec(http("Create Organization")
+      .post(Settings.baseUrl + "/management/organizations")
+      .headers(Headers.jsonAnonymous)
+      .body(StringBody("{\"organization\":\"" + Settings.org + "\",\"username\":\"" + Settings.admin + "\",\"name\":\"${entityName}\",\"email\":\"${entityName}@apigee.com\",\"password\":\"" + Settings.password + "\"}"))
+      .check(status.in(200 to 400))
+    )
+  val createOrgBatch =
+    feed(FeederGenerator.generateRandomEntityNameFeeder("org", 1))
+      .exec(createOrgAndAdmin)
+      .exec(TokenScenarios.getManagementToken)
+      .exec(ApplicationScenarios.createApplication)
+      .exec(NotifierScenarios.createNotifier)
+      .exec(session => {
+      // print the Session for debugging, don't do that on real Simulations
+      println(session)
+      session
+    })
+
+  val createOrgScenario = scenario("Create org").exec(createOrgBatch)
+
 
 }

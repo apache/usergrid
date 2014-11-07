@@ -94,15 +94,15 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
     private int count;
 
+    private final FailureMonitor failureMonitor;
 
-    public EsEntityIndexBatchImpl( 
-            final ApplicationScope applicationScope, 
-            final Client client, 
-            final IndexFig config,
-            final int autoFlushSize ) {
+
+    public EsEntityIndexBatchImpl( final ApplicationScope applicationScope, final Client client, final IndexFig config,
+                                   final int autoFlushSize, final FailureMonitor failureMonitor ) {
 
         this.applicationScope = applicationScope;
         this.client = client;
+        this.failureMonitor = failureMonitor;
         this.indexName = createIndexName( config.getIndexPrefix(), applicationScope );
         this.refresh = config.isForcedRefresh();
         this.autoFlushSize = autoFlushSize;
@@ -254,7 +254,18 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
             return;
         }
 
-        final BulkResponse responses = request.execute().actionGet();
+        final BulkResponse responses;
+
+        try {
+            responses = request.execute().actionGet();
+        }catch(Throwable t){
+            log.error( "Unable to communicate with elasticsearch" );
+            failureMonitor.fail( "Unable to execute batch", t );
+            throw t;
+        }
+
+
+        failureMonitor.success();
 
         for ( BulkItemResponse response : responses ) {
             if ( response.isFailed() ) {

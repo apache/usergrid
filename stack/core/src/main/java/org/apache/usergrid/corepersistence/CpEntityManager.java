@@ -2652,6 +2652,8 @@ public class CpEntityManager implements EntityManager {
 
             logger.debug("Wrote {}:{} version {}", new Object[] { 
                 cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion() });
+
+            entityCache.put( new EntityScope( collectionScope, cpEntity.getId() ), cpEntity);
         }
         catch ( WriteUniqueVerifyException wuve ) {
             handleWriteUniqueVerifyException( entity, wuve );
@@ -2681,7 +2683,8 @@ public class CpEntityManager implements EntityManager {
         if ( !is_application ) {
 
             String collectionName = Schema.defaultCollectionName( eType );
-            getRelationManager( getApplication() ).addToCollection( collectionName, entity );
+            CpRelationManager cpr = (CpRelationManager)getRelationManager( getApplication() ); 
+            cpr.addToCollection( collectionName, entity, cpEntity, false );
 
             // Invoke counters
             incrementEntityCollection( collectionName, timestamp );
