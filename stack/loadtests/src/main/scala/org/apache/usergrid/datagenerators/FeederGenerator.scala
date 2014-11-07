@@ -113,4 +113,13 @@ object FeederGenerator {
 
   }
 
+  def generateCustomEntityFeeder(numEntities: Int): Array[Map[String, String]] = {
+    var entityArray: ArrayBuffer[Map[String, String]] = new ArrayBuffer[Map[String, String]]
+    for (entityCount <- 1 to numEntities) {
+      var entity: Map[String, String] = EntityDataGenerator.generateCustomEntity(entityCount.toString)
+      entityArray += entity
+    }
+    return entityArray.toArray
+  }
+
 }
