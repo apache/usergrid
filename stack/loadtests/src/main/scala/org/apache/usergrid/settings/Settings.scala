@@ -41,7 +41,7 @@ object Settings {
   var numUsers:Int = constantUsers * duration
 
   val numEntities:Int = Integer.getInteger("numEntities", 5000).toInt
-  val numDevices:Int = Integer.getInteger("numDevices", 2000).toInt
+  val numDevices:Int = Integer.getInteger("numDevices", 4000).toInt
 
   val rampTime:Int = Integer.getInteger("rampTime", 0).toInt // in seconds
   val throttle:Int = Integer.getInteger("throttle", 50).toInt // in seconds
