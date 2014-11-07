@@ -42,7 +42,7 @@ return [
                 'location' => 'uri',
                 'type' => 'string',
                 'required' => true,
-                'default' => 'shops'
+                'default' => 'users'
             ],
             'access_token' => [
                 'description' => 'The OAuth2 access token',
