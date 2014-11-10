@@ -59,7 +59,9 @@ class ResourceIterator extends BaseIterator
 
         $data = $result['entities'];
 
-        $this->nextToken = $result['cursor'] ? $result['cursor'] : false;
+        if ($result->has('cursor')) {
+            $this->nextToken = $result['cursor'] ? $result['cursor'] : false;
+        }
 
         return $data;
     }
