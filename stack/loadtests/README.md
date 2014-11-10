@@ -6,7 +6,7 @@ Gatling will run through mvn
 1. execute mvn gatling:execute with these options
 
 	*Required
-	> -Dthrottle={maxReqsSec} -Dduration={durationInSecs} -Dorg={org}  -Dapp={appName} -Dbaseurl={uriNoProceedingSlash} -DnumEntities={numberOfEntitiesYouWantToCreateInteger} -DnumUsers={totalUsersInteger} -DrampTime={rampTimeIntegerSeconds} -DadminUser={username} -DadminPassword={pwd} -Dgatling.simulationClass={simulationFQDN}
+	> -Dthrottle={maxReqsSec} -Dduration={durationInSecs} -Dorg={org}  -Dapp={appName} -Dbaseurl={uriNoProceedingSlash} -DnumEntities={numberOfEntitiesYouWantToCreateInteger} -DrampUsers={totalUsersInteger} -DrampTime={rampTimeIntegerSeconds} -DadminUser={username} -DadminPassword={pwd} -Dgatling.simulationClass={simulationFQDN}
 
 	*Addional optional settings 
 		
@@ -15,7 +15,7 @@ Gatling will run through mvn
 	skipSetup will skip the setup steps
 
 	So running will look something like this
-	>mvn gatling:execute -Dthrottle=100 -Dduration=300 -Dorg=usergrid  -Dapp=load -Dbaseurl=http://load.usergrid.com -DnumEntities=300 -DnumUsers=600 -DrampTime=30 -DadminUser=usergrid -DadminPassword=test -Dgatling.simulationClass=org.apache.usergrid.simulations.AppSimulation
+	>mvn gatling:execute -Dthrottle=100 -Dduration=300 -Dorg=usergrid  -Dapp=load -Dbaseurl=http://load.usergrid.com -DnumEntities=300 -DrampUsers=600 -DrampTime=30 -DadminUser=usergrid -DadminPassword=test -Dgatling.simulationClass=org.apache.usergrid.simulations.AppSimulation
 	
 	Setting the users and duration => Injects a given number of users with a linear ramp over a given duration. users must be greater than duration
 	

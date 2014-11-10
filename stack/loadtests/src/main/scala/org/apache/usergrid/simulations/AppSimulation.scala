@@ -32,17 +32,13 @@ import scala.concurrent.duration._
  * Classy class class.
  */
 class AppSimulation extends Simulation {
+  println("Begin setup")
+  Setup.setupOrg()
+  Setup.setupApplication()
+  Setup.setupNotifier()
+  Setup.setupUsers()
+  println("End Setup")
 
-  if(!Settings.skipSetup) {
-    println("Begin setup")
-    Setup.setupOrg()
-    Setup.setupApplication()
-    Setup.setupNotifier()
-    Setup.setupUsers()
-    println("End Setup")
-  }else{
-    println("Skipping Setup")
-  }
   setUp(
     NotificationScenarios.createScenario
       .inject(constantUsersPerSec(Settings.constantUsers) during (Settings.duration)) // wait for 15 seconds so create org can finish, need to figure out coordination

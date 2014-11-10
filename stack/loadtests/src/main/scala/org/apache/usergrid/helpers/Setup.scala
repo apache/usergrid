@@ -105,25 +105,35 @@ object Setup {
   }
 
   def setupUsers() = {
-    val userFeeder = Settings.userFeeder
-    val numUsers = userFeeder.length
-    println(s"setupUsers: Sending requests for $numUsers users")
+    if (!Settings.skipSetup) {
+      val userFeeder = Settings.getUserFeeder()
+      val numUsers = userFeeder.length
+      println(s"setupUsers: Sending requests for $numUsers users")
 
-    val list:ArrayBuffer[ListenableFuture[Response]] = new ArrayBuffer[ListenableFuture[Response]]
-    userFeeder.foreach(user => {
-      list += setupUser(user);
-    });
-    var successCount:Int = 0;
-    list.foreach(f => {
-      val response = f.get()
-      if(response.getStatusCode != 200) {
-        printResponse("Post User", response.getStatusCode, response.getResponseBody())
-      }else{
-        successCount+=1
+      val list: ArrayBuffer[ListenableFuture[Response]] = new ArrayBuffer[ListenableFuture[Response]]
+      var successCount: Int = 0;
+      def purgeList = {
+        list.foreach(f => {
+          val response = f.get()
+          if (response.getStatusCode != 200) {
+            printResponse("Post User", response.getStatusCode, response.getResponseBody())
+          } else {
+            successCount += 1
+          }
+        })
+        list.clear()
       }
-    })
-    println(s"setupUsers: Received $successCount successful responses out of $numUsers requests.")
+      userFeeder.foreach(user => {
+        list += setupUser(user);
+        if(list.length == Integer.getInteger("purgeUsers",100)){
+          purgeList
+        }
+      });
 
+      println(s"setupUsers: Received $successCount successful responses out of $numUsers requests.")
+    } else {
+      println("Skipping Adding Users due to skipSetup=true")
+    }
   }
 
   def setupUser(user:Map[String,String]):ListenableFuture[Response] = {
