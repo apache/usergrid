@@ -67,14 +67,14 @@ object NotificationScenarios {
     .check(status.is(200))
   )
 
-  val numEntities:Int = Settings.numUsers * 2
 
+  val userFeeder = Settings.getUserFeeder
   val createScenario = scenario("Create Push Notification")
-    .feed(Settings.getUserFeeder)
+    .feed(userFeeder)
     .exec(TokenScenarios.getUserToken)
     .exec( UserScenarios.getUserByUsername)
     .repeat(2){
-    feed(FeederGenerator.generateEntityNameFeeder("device", numEntities))
+    feed(FeederGenerator.generateEntityNameFeeder("device", Settings.numDevices))
       .exec( DeviceScenarios.postDeviceWithNotifier)
       .exec(ConnectionScenarios.postUserToDeviceConnection)
   }
