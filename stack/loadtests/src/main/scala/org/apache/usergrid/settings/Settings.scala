@@ -38,7 +38,10 @@ object Settings {
   // Simulation settings
   val constantUsers:Int = Integer.getInteger("rampUsers", 10).toInt
 
-  var numUsers:Int = constantUsers * duration
+  val numUsers:Int = constantUsers * duration
+
+  // Simulation settings
+  val maxPossibleUsers:Int = Integer.getInteger("maxPossibleUsers", 10).toInt
 
   val numEntities:Int = Integer.getInteger("numEntities", 5000).toInt
   val numDevices:Int = Integer.getInteger("numDevices", 4000).toInt
@@ -58,8 +61,13 @@ object Settings {
 
   println(s"Will inject $constantUsers users per sec")
 
-  def getUserFeeder():Array[Map[String, String]]= {
+   def getUserFeeder():Array[Map[String, String]]= {
     val userFeeder = FeederGenerator.generateUserWithGeolocationFeeder(numUsers, userLocationRadius, centerLatitude, centerLongitude)
+    return userFeeder
+  }
+
+  def getInfiniteUserFeeder():Iterator[Map[String, String]]= {
+    val userFeeder = FeederGenerator.generateUserWithGeolocationFeederInfinite( userLocationRadius, centerLatitude, centerLongitude,maxPossibleUsers)
     return userFeeder
   }
 

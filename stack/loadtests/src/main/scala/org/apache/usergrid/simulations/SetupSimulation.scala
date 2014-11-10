@@ -21,23 +21,24 @@
 package org.apache.usergrid.simulations
 
 import io.gatling.core.Predef._
-import io.gatling.core.scenario.Simulation
 import org.apache.usergrid.helpers.Setup
-import org.apache.usergrid.scenarios.NotificationScenarios
+import org.apache.usergrid.scenarios.{UserScenarios}
 import org.apache.usergrid.settings.Settings
-import scala.annotation.switch
 import scala.concurrent.duration._
 
 /**
  * Classy class class.
  */
-class AppSimulation extends Simulation {
+class SetupSimulation extends Simulation{
+
   println("Begin setup")
+  Setup.setupOrg()
+  Setup.setupApplication()
   Setup.setupNotifier()
   println("End Setup")
 
   setUp(
-    NotificationScenarios.createScenario
+    UserScenarios.createUsersWithDevicesScenario
       .inject(constantUsersPerSec(Settings.maxPossibleUsers) during (Settings.duration))
       .protocols(Settings.httpConf.acceptHeader("application/json"))
   ).throttle(reachRps(Settings.throttle) in (Settings.rampTime seconds), holdFor(Settings.duration))

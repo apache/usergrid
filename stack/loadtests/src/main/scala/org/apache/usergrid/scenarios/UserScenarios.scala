@@ -54,14 +54,14 @@ import io.gatling.core.Predef._
      http("POST geolocated Users")
        .put("/users")
        .body(new StringBody( """{"location":{"latitude":"${latitude}","longitude":"${longitude}"},"username":"${username}",
-      "displayName":"${displayName}","age":"${age}","seen":"${seen}","weight":"${weight}",
-      "height":"${height}","aboutMe":"${aboutMe}","profileId":"${profileId}","headline":"${headline}",
-      "showAge":"${showAge}","relationshipStatus":"${relationshipStatus}","ethnicity":"${ethnicity}","password":"password"}"""))
-       .check(status.is(200), status.saveAs("userStatus"), jsonPath("$..entities[0].uuid").saveAs("userId"))
-   )
+        "displayName":"${displayName}","age":"${age}","seen":"${seen}","weight":"${weight}",
+        "height":"${height}","aboutMe":"${aboutMe}","profileId":"${profileId}","headline":"${headline}",
+        "showAge":"${showAge}","relationshipStatus":"${relationshipStatus}","ethnicity":"${ethnicity}","password":"password"}"""))
+         .check(status.in(200 to 400), status.saveAs("userStatus"), jsonPath("$..entities[0].uuid").saveAs("userId"))
+      )
      .doIf("${userStatus}", "400") {
-     exec(getUserByUsername)
-   }
+       exec(getUserByUsername)
+      }
 
    val deleteUserByUsername = exec(
      http("DELETE user")
@@ -69,4 +69,16 @@ import io.gatling.core.Predef._
        .headers(Headers.jsonAuthorized)
        .check(status.is(200), jsonPath("$..entities[0].uuid").saveAs("userId"))
    )
+
+   val createUsersWithDevicesScenario =  scenario("Create Users")
+     .feed(Settings.getInfiniteUserFeeder())
+     .exec(TokenScenarios.getManagementToken)
+     .exec(UserScenarios.postUser)
+     .exec(TokenScenarios.getUserToken)
+     .exec(UserScenarios.getUserByUsername)
+     .repeat(2){
+       feed(FeederGenerator.generateEntityNameFeeder("device", Settings.numDevices))
+         .exec( DeviceScenarios.postDeviceWithNotifier)
+         .exec(ConnectionScenarios.postUserToDeviceConnection)
+     }
  }

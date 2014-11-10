@@ -68,21 +68,9 @@ object NotificationScenarios {
   )
 
 
-  val userFeeder = Settings.getUserFeeder
+  val userFeeder = Settings.getInfiniteUserFeeder()
   val createScenario = scenario("Create Push Notification")
     .feed(userFeeder)
-    .exec(TokenScenarios.getUserToken)
-    .exec( UserScenarios.getUserByUsername)
-    .repeat(2){
-    feed(FeederGenerator.generateEntityNameFeeder("device", Settings.numDevices))
-      .exec( DeviceScenarios.postDeviceWithNotifier)
-      .exec(ConnectionScenarios.postUserToDeviceConnection)
-  }
-    .exec(session => {
-    // print the Session for debugging, don't do that on real Simulations
-    println(session)
-    session
-  })
     .exec( sendNotificationToUser)
 
   /**
