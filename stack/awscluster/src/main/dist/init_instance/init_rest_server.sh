@@ -63,8 +63,8 @@ cd /usr/share/usergrid/init_instance
 # set Tomcat memory and threads based on instance type
 # use about 70% of RAM for heap
 export NOFILE=150000
-export TOMCAT_CONNECTIONS=10000
-export ACCEPT_COUNT=1600
+#export TOMCAT_CONNECTIONS=10000
+export ACCEPT_COUNT=100
 export NR_OPEN=1048576
 export FILE_MAX=761773
 
@@ -102,7 +102,7 @@ case `(curl http://169.254.169.254/latest/meta-data/instance-type)` in
 'c3.xlarge' )
     # total of 7.5g
     export TOMCAT_RAM=4096m
-    export TOMCAT_THREADS=7000
+    export TOMCAT_THREADS=1000
 ;;
 'c3.2xlarge' )
     # total of 15g
@@ -117,7 +117,7 @@ esac
 
 
 sed -i.bak "s/Xmx128m/Xmx${TOMCAT_RAM} -Xms${TOMCAT_RAM} -Dlog4j\.configuration=file:\/usr\/share\/usergrid\/lib\/log4j\.properties/g" /etc/default/tomcat7
-sed -i.bak "s/<Connector/<Connector maxThreads=\"${TOMCAT_THREADS}\" acceptCount=\"${ACCEPT_COUNT}\" maxConnections=\"${TOMCAT_CONNECTIONS}\"/g" /var/lib/tomcat7/conf/server.xml
+sed -i.bak "s/<Connector/<Connector maxThreads=\"${TOMCAT_THREADS}\" acceptCount=\"${ACCEPT_COUNT}\" maxConnections=\"${TOMCAT_THREADS}\"/g" /var/lib/tomcat7/conf/server.xml
 
 
 #Append our java opts for secret key
