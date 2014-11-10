@@ -16,9 +16,116 @@
 
 return [
 
-    'all' => [],
-    'find' => [],
-    'create' => [],
-    'destroy' => [],
-    'update' => []
+    'createApple' => [
+        'httpMethod' => 'POST',
+        'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/notifiers',
+        'notes' => 'Create new Apple Notifier.  See Usergrid documentation for the format of body.',
+        'summary' => 'Create new Notifier entity',
+        'responseClass' => 'Apache\Usergrid\Api\Models\Collection',
+        'responseType' => 'class',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'app_name_or_uuid' => [
+                'description' => 'app name or uuid',
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+            ],
+            'name' => [
+                'description' => 'notifier name (entity type)',
+                'location' => 'postField',
+                'type' => 'string',
+                'required' => true,
+            ],
+            'provider' => [
+                'description' => 'notifier provider',
+                'location' => 'postField',
+                'type' => 'string',
+                'required' => true,
+                'default' => 'apple'
+            ],
+            'environment' => [
+                'description' => 'notifier environment',
+                'location' => 'postField',
+                'type' => 'string',
+                'required' => true,
+            ],
+            'p12Certificate' => [
+                'description' => 'p12Certificate',
+                'location' => 'postFile',
+                'type' => 'string',
+                'required' => true,
+                'default' => 'users'
+            ],
+            'access_token' => [
+                'description' => 'The OAuth2 access token',
+                'location' => 'query',
+                'type' => 'string',
+                'required' => false,
+            ],
+            'org_name_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Organization name or uuid'
+            ]
+        ],
+        'additionalParameters' => [
+            "description" => "Entity data",
+            'location' => 'postField'
+        ]
+
+    ],
+    'createGoogle' => [
+        'httpMethod' => 'POST',
+        'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/notifiers',
+        'notes' => 'Create new Notifier.  See Usergrid documentation for the format of body.',
+        'summary' => 'Create new Notifier entity',
+        'responseClass' => 'Apache\Usergrid\Api\Models\Collection',
+        'responseType' => 'class',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'app_name_or_uuid' => [
+                'description' => 'app name or uuid',
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+            ],
+            'name' => [
+                'description' => 'notifier name (entity type)',
+                'location' => 'json',
+                'type' => 'string',
+                'required' => false,
+            ],
+            'provider' => [
+                'description' => 'notifier provider',
+                'location' => 'json',
+                'type' => 'string',
+                'required' => true,
+                'default' => 'google'
+            ],
+            'apiKey' => [
+                'description' => 'apiKey',
+                'location' => 'json',
+                'type' => 'string',
+                'required' => true
+            ],
+            'access_token' => [
+                'description' => 'The OAuth2 access token',
+                'location' => 'query',
+                'type' => 'string',
+                'required' => false,
+            ],
+            'org_name_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Organization name or uuid'
+            ]
+        ],
+        'additionalParameters' => [
+            "description" => "Entity data",
+            'location' => 'json'
+        ]
+    ]
 ];

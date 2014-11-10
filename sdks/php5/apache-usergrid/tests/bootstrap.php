@@ -14,26 +14,30 @@
  * permissions and limitations under the License.
  */
 
-return [
+include('vendor/autoload.php');
+
+use Apache\Usergrid\Native\UsergridBootstrapper;
+
+$config =  [
 
     'usergrid' => [
 
         'url' => 'https://api.usergrid.com',
 
-        'version' => '1.0.0',
+        'version' => '1.0.1',
 
-        'orgName' => "",
+        'orgName' => null,
 
-        'appName' => "",
+        'appName' => null,
 
-        'manifestPath' => './src/Manifests',
+        'manifestPath' => null,
 
         //its better not to set the real values here if using laravel set them in a .env file or
         // if your not using Laravel set them as environment variable and include them here using $_ENV global.
         // so that way you can be sure not to commit privates ID to a public repo
-        'clientId' => '',
+        'clientId' => null,
 
-        'clientSecret' => '',
+        'clientSecret' => null,
 
         'username' => null,
 
@@ -63,3 +67,7 @@ return [
         'enable_oauth2_plugin' => true
     ]
 ];
+
+$boot = new UsergridBootstrapper($config);
+$usergrid = $boot->createUsergrid();
+

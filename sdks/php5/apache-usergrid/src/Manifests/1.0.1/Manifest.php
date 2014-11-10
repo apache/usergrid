@@ -16,7 +16,7 @@
 
 return [
 
-    'name' => 'Application',
+    'name' => 'Usergrid',
     'apiVersion' => '1.0.1',
     'baseUrl' => $baseURL,
     'description' => 'Client to Usergrid application service',

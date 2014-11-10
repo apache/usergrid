@@ -14,13 +14,11 @@
  * permissions and limitations under the License.
  */
 include('vendor/autoload.php');
-
 include('data.php');
 
 use Apache\Usergrid\Native\UsergridBootstrapper;
 use Apache\Usergrid\Native\Facades\Usergrid;
 
-/** The PHP SDK returns all responses as Illuminate\Support\Collection subclasses so the word collection below is php collection class not usergrid collection */
 
 /** Source your config from file I'm using array here just for ease of use.
  * When using Laravel Framework publish the package config file when using with
@@ -29,14 +27,14 @@ use Apache\Usergrid\Native\Facades\Usergrid;
 $config = [
     'usergrid' => [
         'url' => 'https://api.usergrid.com',
-        'version' => '1.0.1', // set manifest version
+        'version' => '1.0.1',
         'orgName' => '',
         'appName' => '',
-        'manifestPath' => null, //leave as default or change to your own custom folder
+        'manifestPath' => './src/Manifests',
         'clientId' => '',
         'clientSecret' => '',
-        'username' => '',
-        'password' => '',
+        'username' => null,
+        'password' => null,
         /**
          * The Auth Type setting is the Oauth 2 end point you want to get the OAuth 2
          * Token from.  You have two options here one is 'application' the other is 'organization'
@@ -56,70 +54,25 @@ $config = [
          * if you want to manage your own auth flow by calling the token api and setting the token your self just set this to false
          * */
         'enable_oauth2_plugin' => true
-    ]
-];
+    ]];
+
+// You need to add a push cert to this folder and pass the path in the apple_notifier_data array
 
 $bootstrapper = new UsergridBootstrapper($config);
 Usergrid::instance($bootstrapper);
 
+//create Apple Notifier
+$apple_notifier_data = [
+    'name' => 'apple_test',
+    'environment' => 'development',
+    'p12Certificate' =>  @'pushtest_dev.p12'
+];
+$apple_notifier = Usergrid::notifiers()->createApple($apple_notifier_data);
 
-foreach($books_data as $book){
-    Usergrid::application()->EntityJsonPost($book);
-}
-
-
-$books = Usergrid::application()->EntityGet(['collection' => 'books', 'limit' => 25]);
-
-
-// get result count just call the Illuminate\Support\Collection  count method
-var_dump($books->entities->count());
-
-
-// As responses are model object you can treat them like a assoc arrays
-var_dump($books->entities[0]['uuid']);
-
-// if you like a more object orientated way then use the Collection Class methods
-
-// get all uuid
-var_dump($books->entities->fetch('uuid'));
-
-// get first item in collection -- this is the first item in my response php collection not the Usergrid Collection (table).
-var_dump($books->entities->first());
-
-// get last item in collection -- this is the last item in my response php collection not the Usergrid Collection (table).
-var_dump($books->entities->last());
-
-
-
-// Illuminate\Support\Collection class support all advanced collection methods
-
-// pop last item off collection
-$book = $books->entities->pop();
-
-// Converting methods
-$json_ = $books->entities->toJson();
-
-//Convert the object into something JSON serializable.
-$books->entities->jsonSerialize();
-
-// Get an iterator for the items in collection
-$iterator = $books->entities->getIterator();
-
-//Get a CachingIterator instance
-$caching_iterator = $books->entities->getCachingIterator();
-
-/// Here are some more Methods that you can call on your responses .. To get the most out of this SDK please look at the Illuminate\Support\Collection class
-/// which is the supper class of Apache/Usergrid/Api/Models/BaseCollection class
-/**
-    $books->unique();
-    $books->transform();
-    $books->take();
-    $books->splice();
-    $books->sum($callback );
-    $books->values();
-    $books->sortByDesc($callback);
-    $books->sortBy();
-    $books->shuffle();
-    $books->chunk();
- */
-
+// create Google Notifier
+$google_notifier_data = [
+    'name' => 'google_test',
+    'apiKey' => 'AIzaSyCIH_7WC0mOqBGMOXyQnFgrBpOePgHvQJM',
+    'provider' => 'google'
+];
+$google_notifier = Usergrid::notifiers()->createGoogle($google_notifier_data);

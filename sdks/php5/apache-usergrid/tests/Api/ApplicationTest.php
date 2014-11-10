@@ -17,7 +17,7 @@
 namespace Apache\Usergrid\Tests\Api;
 
 
-use Apache\Usergrid\Native\UsergridBootstrapper;
+use Apache\Usergrid\Api\Exception\UsergridException;
 use PHPUnit_Framework_TestCase;
 
 /**
@@ -47,17 +47,26 @@ class ApplicationTest extends PHPUnit_Framework_TestCase
      */
     public function setUp()
     {
-        /** @noinspection PhpIncludeInspection */
-        $this->config = include  $_SERVER['CONFIG'];
-        $bootstrap = new UsergridBootstrapper($this->config);
-        $this->usergrid = $bootstrap->createUsergrid();
+        $this->usergrid = $GLOBALS['usergrid'];
     }
 
     /**
      * @test
      * @group internet
      */
-    public function it_can_get_entity(){
+    public function it_can_get_entity()
+    {
 
+        $error = null;
+
+        try {
+            $this->usergrid->application()->EntityGet(['collection' => 'users']);
+        } catch (UsergridException  $e) {
+            $error = $e;
+        }
+
+        $this->assertNull($error, 'Exception should be null');
     }
-} 
+
+
+}

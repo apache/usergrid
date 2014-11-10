@@ -17,7 +17,7 @@
 namespace Apache\Usergrid\Tests\Api;
 
 
-use Apache\Usergrid\Native\UsergridBootstrapper;
+use Apache\Usergrid\Api\Exception\UsergridException;
 use PHPUnit_Framework_TestCase;
 
 /**
@@ -37,16 +37,23 @@ class ManagementTest extends PHPUnit_Framework_TestCase
 
     public function setUp()
     {
-        /** @noinspection PhpIncludeInspection */
-        $this->config = include  $_SERVER['CONFIG'];
-        $bootstrap = new UsergridBootstrapper($this->config);
-        $this->usergrid = $bootstrap->createUsergrid();
+        $this->usergrid = $GLOBALS['usergrid'];
     }
+
     /**
      * @test
      * @group internet
      */
-    public function it_can_make_management_call(){
+    public function it_can_make_management_call()
+    {
+        $error = null;
 
+        try {
+            $this->usergrid->management()->OrgAppsGet();
+        } catch (UsergridException $e) {
+            $error = $e;
+        }
+
+        $this->assertNull($error, "Should be no exception if  manifest files exits and sdk can make management calls");
     }
 } 

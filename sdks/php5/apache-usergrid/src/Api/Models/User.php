@@ -31,6 +31,7 @@ use Guzzle\Service\Command\ResponseClassInterface;
  */
 class User extends BaseCollection implements ResponseClassInterface
 {
+
     use GuzzleCommandTrait;
 
 } 

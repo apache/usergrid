@@ -17,7 +17,7 @@
 namespace Apache\Usergrid\Native;
 
 
-use Apache\Usergrid\Api\Models\User;
+
 use Apache\Usergrid\Api\Usergrid;
 use Guzzle\Http\Client;
 use Apache\Usergrid\Guzzle\Plugin\Oauth2\GrantType\ClientCredentials;
