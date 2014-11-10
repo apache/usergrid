@@ -71,6 +71,8 @@ object NotificationScenarios {
   val userFeeder = Settings.getInfiniteUserFeeder()
   val createScenario = scenario("Create Push Notification")
     .feed(userFeeder)
+    .exec(TokenScenarios.getUserToken)
+    .exec(UserScenarios.getUserByUsername)
     .exec( sendNotificationToUser)
 
   /**
