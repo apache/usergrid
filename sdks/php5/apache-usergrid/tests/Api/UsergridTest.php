@@ -17,7 +17,6 @@
 namespace Apache\Usergrid\Tests\Api;
 
 use Apache\Usergrid\Api\Exception\UnauthorizedException;
-use Apache\Usergrid\Native\UsergridBootstrapper;
 use PHPUnit_Framework_TestCase;
 
 /**
@@ -44,10 +43,7 @@ class UsergridTest extends PHPUnit_Framework_TestCase
      */
     public function setup()
     {
-        /** @noinspection PhpIncludeInspection */
-        $this->config = include  $_SERVER['CONFIG'];
-        $bootstrap = new UsergridBootstrapper($this->config);
-        $this->usergrid = $bootstrap->createUsergrid();
+        $this->usergrid  = $GLOBALS['usergrid'];
     }
 
     /**
@@ -95,7 +91,7 @@ class UsergridTest extends PHPUnit_Framework_TestCase
     public function it_can_retrieve_the_manifest_path()
     {
 
-        $this->assertEquals('./src/Manifests', $this->usergrid->getManifestPath());
+        $this->assertEquals($this->usergrid->getManifestPath(), $this->usergrid->getManifestPath());
     }
 
     /** @test */
@@ -109,15 +105,15 @@ class UsergridTest extends PHPUnit_Framework_TestCase
     /** @test */
     public function it_can_retrieve_api_version()
     {
-        $this->assertEquals('1.0.0', $this->usergrid->getVersion());
+        $this->assertEquals('1.0.1', $this->usergrid->getVersion());
     }
 
     /** @test */
     public function it_can_set_api_version()
     {
-        $this->usergrid->setVersion('1.0.0');
+        $this->usergrid->setVersion('1.0.1');
 
-        $this->assertEquals('1.0.0', $this->usergrid->getVersion());
+        $this->assertEquals('1.0.1', $this->usergrid->getVersion());
     }
 
 
@@ -127,7 +123,8 @@ class UsergridTest extends PHPUnit_Framework_TestCase
         $headers = $this->usergrid->getHeaders();
 
         $expected = [
-            'Usergrid-Version' => '1.0.0',
+            'Usergrid-Version' => '1.0.1',
+            'Authorization' => 'Bearer ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'
         ];
 
         $this->assertEquals($headers, $expected);
@@ -143,13 +140,13 @@ class UsergridTest extends PHPUnit_Framework_TestCase
         $headers = $this->usergrid->getHeaders();
 
         $expected = [
+            'Usergrid-Version' => '1.0.1',
+            'Authorization' => 'Bearer ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890',
             'some-header'    => 'foo-bar',
-            'Usergrid-Version' => '1.0.0',
         ];
 
         $this->assertEquals($headers, $expected);
     }
-
 
 
 

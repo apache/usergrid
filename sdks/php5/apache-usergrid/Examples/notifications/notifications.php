@@ -60,3 +60,27 @@ $config = [
 
 $bootstrapper = new UsergridBootstrapper($config);
 Usergrid::instance($bootstrapper);
+
+
+// to user
+$to_user = Usergrid::notifications()->toUser();
+
+
+//to users
+$to_users = Usergrid::notifications()->toUsers();
+
+
+//to group
+$to_group = Usergrid::notifications()->toGroup();
+
+
+// to groups
+$to_groups = Usergrid::notifications()->toGroups();
+
+
+// to device
+$to_device = Usergrid::notifications()->toDevice();
+
+
+// to devices
+$to_devices = Usergrid::notifications()->toDevices();

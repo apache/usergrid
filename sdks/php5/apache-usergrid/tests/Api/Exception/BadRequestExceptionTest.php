@@ -30,29 +30,30 @@ use Apache\Usergrid\Api\Exception\BadRequestException;
  * @copyright  (c) 2008-2014, Baas Platform Pty. Ltd
  * @link       http://baas-platform.com
  */
-class BadRequestExceptionTest extends PHPUnit_Framework_TestCase {
+class BadRequestExceptionTest extends PHPUnit_Framework_TestCase
+{
 
-	/** @test */
-	public function it_can_create_the_exception()
-	{
-		$command = $this->getMock('Guzzle\Service\Command\CommandInterface');
-		$command
-			->expects($this->once())
-			->method('getRequest')
-			->will($this->returnValue(
-				$this->getMock('Guzzle\Http\Message\Request', [], [], '', false)
-			));
+    /** @test */
+    public function it_can_create_the_exception()
+    {
+        $command = $this->getMock('Guzzle\Service\Command\CommandInterface');
+        $command
+            ->expects($this->once())
+            ->method('getRequest')
+            ->will($this->returnValue(
+                $this->getMock('Guzzle\Http\Message\Request', [], [], '', false)
+            ));
 
-		$response = new Response(400);
-		$response->setBody('');
+        $response = new Response(400);
+        $response->setBody('');
 
         /** @noinspection PhpParamsInspection */
         $exception = BadRequestException::fromCommand($command, $response);
 
-		$this->assertInstanceOf(
-			'Apache\Usergrid\Api\Exception\BadRequestException',
-			$exception
-		);
-	}
+        $this->assertInstanceOf(
+            'Apache\Usergrid\Api\Exception\BadRequestException',
+            $exception
+        );
+    }
 
 }

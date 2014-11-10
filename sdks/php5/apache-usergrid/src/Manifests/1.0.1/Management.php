@@ -154,7 +154,7 @@ return [
             'access_token' => [
                 'location' => 'query',
                 'type' => 'string',
-                'required' => true,
+                'required' => false,
                 'description' => 'The OAuth2 access token'
             ],
             'org_name_or_uuid' => [
@@ -179,10 +179,10 @@ return [
                 'required' => true,
                 'description' => 'Organization name or uuid'
             ],
-            'token' => [
+            'access_token' => [
                 'location' => 'query',
                 'type' => 'string',
-                'required' => true,
+                'required' => false,
                 'description' => 'The OAuth2 access token'
             ],
             'confirm' => [
@@ -221,7 +221,7 @@ return [
             'access_token' => [
                 'location' => 'query',
                 'type' => 'string',
-                'required' => true,
+                'required' => false,
                 'description' => 'The OAuth2 access token'
             ],
             'org_name_or_uuid' => [
@@ -243,7 +243,7 @@ return [
             'access_token' => [
                 'location' => 'query',
                 'type' => 'string',
-                'required' => true,
+                'required' => false,
                 'description' => 'The OAuth2 access token'
             ],
             'org_name_or_uuid' => [
@@ -265,7 +265,7 @@ return [
             'access_token' => [
                 'location' => 'query',
                 'type' => 'string',
-                'required' => true,
+                'required' => false,
                 'description' => 'The OAuth2 access token'
             ],
             'org_name_or_uuid' => [
@@ -287,7 +287,7 @@ return [
             'access_token' => [
                 'location' => 'query',
                 'type' => 'string',
-                'required' => true,
+                'required' => false,
                 'description' => 'The OAuth2 access token'
             ],
             'org_name_or_uuid' => [
@@ -309,7 +309,7 @@ return [
             'access_token' => [
                 'location' => 'query',
                 'type' => 'string',
-                'required' => true,
+                'required' => false,
                 'description' => 'The OAuth2 access token'
             ],
             'org_name_or_uuid' => [
@@ -358,7 +358,7 @@ return [
             'access_token' => [
                 'location' => 'query',
                 'type' => 'string',
-                'required' => true,
+                'required' => false,
                 'description' => 'The OAuth2 access token'
             ],
             'org_name_or_uuid' => [
@@ -407,7 +407,7 @@ return [
             'access_token' => [
                 'location' => 'query',
                 'type' => 'string',
-                'required' => true,
+                'required' => false,
                 'description' => 'The OAuth2 access token'
             ],
             'org_name_or_uuid' => [
@@ -435,7 +435,7 @@ return [
             'access_token' => [
                 'location' => 'query',
                 'type' => 'string',
-                'required' => true,
+                'required' => false,
                 'description' => 'The OAuth2 access token'
             ],
             'org_name_or_uuid' => [
@@ -461,10 +461,10 @@ return [
         'errorResponses' => $errors,
         'parameters' => [
             'access_token' => [
+                'description' => 'The OAuth2 access token',
                 'location' => 'query',
                 'type' => 'string',
-                'required' => true,
-                'description' => 'The OAuth2 access token'
+                'required' => false,
             ],
             'org_name_or_uuid' => [
                 'location' => 'uri',
@@ -485,7 +485,7 @@ return [
             'access_token' => [
                 'location' => 'query',
                 'type' => 'string',
-                'required' => true,
+                'required' => false,
                 'description' => 'The OAuth2 access token'
             ],
             'org_name_or_uuid' => [
@@ -516,7 +516,7 @@ return [
             'access_token' => [
                 'location' => 'query',
                 'type' => 'string',
-                'required' => true,
+                'required' => false,
                 'description' => 'The OAuth2 access token'
             ],
             'org_name_or_uuid' => [
@@ -547,7 +547,7 @@ return [
             'access_token' => [
                 'location' => 'query',
                 'type' => 'string',
-                'required' => true,
+                'required' => false,
                 'description' => 'The OAuth2 access token'
             ],
             'org_name_or_uuid' => [
@@ -575,7 +575,7 @@ return [
             'access_token' => [
                 'location' => 'query',
                 'type' => 'string',
-                'required' => true,
+                'required' => false,
                 'description' => 'The OAuth2 access token'
             ],
             'org_name_or_uuid' => [
@@ -603,7 +603,7 @@ return [
             'access_token' => [
                 'location' => 'query',
                 'type' => 'string',
-                'required' => true,
+                'required' => false,
                 'description' => 'The OAuth2 access token'
             ],
             'org_name_or_uuid' => [
@@ -742,7 +742,7 @@ return [
             'access_token' => [
                 'location' => 'query',
                 'type' => 'string',
-                'required' => true,
+                'required' => false,
                 'description' => 'The OAuth2 access token'
             ],
             'user_username_email_or_uuid' => [
@@ -765,7 +765,7 @@ return [
             'access_token' => [
                 'location' => 'query',
                 'type' => 'string',
-                'required' => true,
+                'required' => false,
                 'description' => 'The OAuth2 access token'
             ],
             'user_username_email_or_uuid' => [
@@ -791,7 +791,7 @@ return [
             'access_token' => [
                 'location' => 'query',
                 'type' => 'string',
-                'required' => true,
+                'required' => false,
                 'description' => 'The OAuth2 access token'
             ],
             'user_username_email_or_uuid' => [
@@ -841,7 +841,7 @@ return [
             'access_token' => [
                 'location' => 'query',
                 'type' => 'string',
-                'required' => true,
+                'required' => false,
                 'description' => 'The OAuth2 access token'
             ],
         ]
@@ -863,7 +863,7 @@ return [
             'access_token' => [
                 'location' => 'query',
                 'type' => 'string',
-                'required' => true,
+                'required' => false,
                 'description' => 'The OAuth2 access token'
             ],
             'old_password' => [
@@ -935,7 +935,7 @@ return [
             'access_token' => [
                 'location' => 'query',
                 'type' => 'string',
-                'required' => true,
+                'required' => false,
                 'description' => 'The OAuth2 access token'
             ],
             'user_username_email_or_uuid' => [
@@ -958,7 +958,7 @@ return [
             'access_token' => [
                 'location' => 'query',
                 'type' => 'string',
-                'required' => true,
+                'required' => false,
                 'description' => 'The OAuth2 access token'
             ],
             'user_username_email_or_uuid' => [
@@ -990,7 +990,7 @@ return [
             'access_token' => [
                 'location' => 'query',
                 'type' => 'string',
-                'required' => true,
+                'required' => false,
                 'description' => 'The OAuth2 access token'
             ],
             'user_username_email_or_uuid' => [
@@ -1022,7 +1022,7 @@ return [
             'access_token' => [
                 'location' => 'query',
                 'type' => 'string',
-                'required' => true,
+                'required' => false,
                 'description' => 'The OAuth2 access token'
             ],
             'user_username_email_or_uuid' => [
@@ -1054,7 +1054,7 @@ return [
             'access_token' => [
                 'location' => 'query',
                 'type' => 'string',
-                'required' => true,
+                'required' => false,
                 'description' => 'The OAuth2 access token'
             ],
             'user_username_email_or_uuid' => [

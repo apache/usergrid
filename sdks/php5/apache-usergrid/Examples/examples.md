@@ -13,5 +13,5 @@ then there is a file called custom that you need to copy and edit so for example
 the sdk like ```Usergrid::books()->findById(['uuid'=> '12121']); ``` . All I have to do is copy the manifest file called custom and name it books and then 
 in the file replace the ```$custom``` with the word ```'books'``` .
 From that point on I can make api calls to my custom collection just like any of the default collection usergrid give you its a easy as that Ive designed this
-SDK to be extened so you can get the most out of your usergrid install .
+SDK to be extended so you can get the most out of your usergrid install .
 
