@@ -137,9 +137,7 @@ the ```'auth_type' => 'application' ``` controls the level you get Organization 
 which type of credentials you use which can be either client_id & client_secret or username & password.
 
 ### Result Iteration
-Apache Usergrid has a default paging size of 10 records so if you ask for a collection that has more then 10 result (entities) then it will return 
-a Cursor so you can pass it to the next request to get then next lot of 10 results so Ive made this easier. Using manifest version 1.0.1 and above you can now use a resource iterator  
-that will return all entities for you in one request. So again let the SDK do the hard work for you.
+Apache Usergrid has a default paging size of 10 records so if you ask for a collection that has more then 10 result (entities) then it will return a Cursor so you can pass it to the next request to get then next lot of 10 results so Ive made this easier. Using manifest version 1.0.1 and above you can now use a resource iterator that will return all entities for you in one request. So again let the SDK do the hard work for you. Resource Iterators as lazy loaded so they only make the api call if the data is needed for example when you first make the call no data is requested from the network but as soon as you dereference the data then the first page is requested and the 2nd page is not requested till you request the data for example if I used it in a foreach loop it will make a network request for the next page of data only after the loop has gone through the current page count and if you cancel the foreach loop then it wont request any more data the default page size is 20 for resource iterators.
 
 The SDK will check each response to see if their is a cursor and if there is it will get the next set till all entities are returned.
 ```
