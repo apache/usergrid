@@ -55,8 +55,9 @@ class NodeRegistry {
      * @param defNodeType
      */
     def searchNode(def nodeType) {
+        //order by create time, if we have a conflict, then order by item name
         def selectResult = sdbClient.select(new SelectRequest((String) \
-            "select * from `${domain}` where itemName() is not null and nodetype = '${nodeType}'  order by itemName()"))
+            "select * from `${domain}` where itemName() is not null AND createtime is not null AND nodetype = '${nodeType}'  order by createtime"))
         def result = []
 
         for (item in selectResult.getItems()) {
@@ -96,11 +97,14 @@ class NodeRegistry {
         } else {
             println "Registering..."
             def stackAtt = new ReplaceableAttribute("nodetype", nodeType, true)
+            def nowString = Calendar.getInstance(TimeZone.getTimeZone('UTC')).format("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
+            def createTime = new ReplaceableAttribute("createtime", nowString, true)
             def attrs = new ArrayList()
             attrs.add(stackAtt)
+            attrs.add(createTime)
             def par = new PutAttributesRequest(domain, hostName, attrs)
             sdbClient.putAttributes(par);
-            println "Registraition done."
+            println "Registration done."
             return true;
         }
 

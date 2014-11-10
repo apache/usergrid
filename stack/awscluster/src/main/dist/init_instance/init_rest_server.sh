@@ -206,11 +206,29 @@ sh /etc/init.d/tomcat7 start
 #Wait until tomcat starts and we can hit our status page
 until curl -m 1 -I -X GET http://localhost:8080/status | grep "200 OK";  do sleep 5; done
 
+
+#If we're the first rest server, run the migration, the database setup, then run the Cassanda keyspace updates
+cd /usr/share/usergrid/scripts
+groovy registry_register.groovy rest
+
+FIRSTHOST="$(groovy get_first_instance.groovy rest)"
+
+if [ "$FIRSTHOST"=="$PUBLIC_HOSTNAME" ]; then
+
 #Run the migration
 curl -X PUT http://localhost:8080/system/migrate/run  -u superuser:test
 
-#Run the system database setup
+#Wait since migration is no-op just needs to ideally run to completion to bring the internal state up to date before
+#Running setup
+sleep 10
+
+#Run the system database setup since migration is a no-op
 curl -X GET http://localhost:8080/system/database/setup -u superuser:test
+
+cd /usr/share/usergrid/init_instance
+./update_keyspaces.sh
+
+fi
 
 # tag last so we can see in the console that the script ran to completion
 cd /usr/share/usergrid/scripts

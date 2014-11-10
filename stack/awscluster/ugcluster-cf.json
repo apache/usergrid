@@ -59,8 +59,8 @@
         "CassNumServers": {
             "Description": "Number of Cass servers to start.",
             "Type": "Number",
-            "Default": "3",
-            "MinValue": "1"
+            "Default": "6",
+            "MinValue": "3"
         },
         "CassInstanceType": {
             "Description": "Instance type for Cass servers",
@@ -88,8 +88,8 @@
         "ESNumServers": {
             "Description": "Number of ES servers to start.",
             "Type": "Number",
-            "Default": "3",
-            "MinValue": "1"
+            "Default": "6",
+            "MinValue": "3"
         },
         "ESInstanceType": {
             "Description": "Instance type for ES servers",
@@ -106,17 +106,17 @@
         "SuperUserEmail": {
             "Description": "Email for superuser user",
             "Type": "String",
-            "Default": "dmjohnson+super@apigee.com"
+            "Default": "tnine+super@apigee.com"
         },
         "TestAdminUserEmail": {
             "Description": "Email for test admin user",
             "Type": "String",
-            "Default": "dmjohnson+admin@apigee.com"
+            "Default": "tnine+admin@apigee.com"
         },
         "NotificationEmail": {
             "Description": "Email for notifications",
             "Type": "String",
-            "Default": "dmjohnson+super@apigee.com"
+            "Default": "tnine+super@apigee.com"
         },
         "GraphiteInstanceType": {
             "Description": "Instance type for Graphite server",
