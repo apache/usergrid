@@ -67,30 +67,12 @@ object NotificationScenarios {
     .check(status.is(200))
   )
 
-  val numEntities:Int = Settings.numUsers * 3 * Settings.duration
 
-  val userFeeder = FeederGenerator.generateUserWithGeolocationFeeder(Settings.numUsers *  Settings.duration, Settings.userLocationRadius, Settings.centerLatitude, Settings.centerLongitude)
-
+  val userFeeder = Settings.getInfiniteUserFeeder()
   val createScenario = scenario("Create Push Notification")
-    .asLongAs(session=>session.get("applicationStatus")!="200" && session.get("notifierStatus")!="200"){
-      exec(TokenScenarios.getManagementToken)
-        .exec(ApplicationScenarios.checkApplication)
-        .exec(NotifierScenarios.checkNotifier)
-        .exec(session=>{session.remove("authToken")})
-    }
     .feed(userFeeder)
-    .exec( UserScenarios.postUser)
     .exec(TokenScenarios.getUserToken)
-    .repeat(2){
-    feed(FeederGenerator.generateEntityNameFeeder("device", numEntities))
-      .exec( DeviceScenarios.postDeviceWithNotifier)
-      .exec(ConnectionScenarios.postUserToDeviceConnection)
-  }
-    .exec(session => {
-    // print the Session for debugging, don't do that on real Simulations
-    println(session)
-    session
-  })
+    .exec(UserScenarios.getUserByUsername)
     .exec( sendNotificationToUser)
 
   /**

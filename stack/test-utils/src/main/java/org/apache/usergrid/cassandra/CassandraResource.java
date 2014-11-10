@@ -33,14 +33,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.core.env.PropertySource;
 import org.yaml.snakeyaml.Yaml;
-
 import org.apache.cassandra.service.CassandraDaemon;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.RandomUtils;
-
 
 /**
  * A JUnit {@link org.junit.rules.ExternalResource} designed to start up Cassandra once in a TestSuite or test Class as
@@ -65,6 +65,7 @@ public class CassandraResource extends ExternalResource {
     public static final int DEFAULT_STORAGE_PORT = 7000;
     public static final int DEFAULT_SSL_STORAGE_PORT = 7001;
     public static final int DEFAULT_NATIVE_TRANSPORT_PORT = 9042;
+    public static final String DEFAULT_HOST = "127.0.0.1";
 
     public static final String PROPERTIES_FILE = "project.properties";
     public static final String TARGET_DIRECTORY_KEY = "target.directory";
@@ -101,9 +102,9 @@ public class CassandraResource extends ExternalResource {
     private static Properties properties = null;
 
     private boolean forkCassandra = false;
+    private boolean externalCassandra = false;
 
-
-    /**
+     /**
      * Creates a Cassandra starting ExternalResource for JUnit test cases which uses the 
      * default SchemaManager for Cassandra.
      */
@@ -144,12 +145,15 @@ public class CassandraResource extends ExternalResource {
                     new ClassPathXmlApplicationContext( locations );
             
             Properties properties = (Properties)appContext.getBean("properties");
+            properties.putAll(ArrayUtils.toMap(this.getProjectProperties().entrySet().toArray(new Object[]{})));
             String forkString = properties.getProperty("cassandra.startup");
             forkCassandra = "forked".equals( forkString );
+            externalCassandra = "external".equals( forkString );
 
         } catch (Exception ex) {
             throw new RuntimeException("Error getting properties", ex);
         }
+//        throw new RuntimeException("My debugging skills are terrible!");
     }
 
 
@@ -288,21 +292,31 @@ public class CassandraResource extends ExternalResource {
             if ( isReady() ) {
                 return;
             }
-
+            
             if ( forkCassandra ) {
                 startCassandraForked();
-            } else {
+            } else if (externalCassandra) {
+              startCassandraExternal();
+            }else {
+              
                 startCassandraEmbedded();
             }
         }
     }
+    private void addShutdownHook(){
+        Runtime.getRuntime().addShutdownHook( new Thread() {
+            @Override
+            public void run() {
+                after();
+            }
+        } );
 
+    }
     private void startCassandraEmbedded() throws Throwable {
 
         LOG.info( "-------------------------------------------------------------------");
         LOG.info( "Initializing Embedded Cassandra at {} ...", tempDir.toString() );
         LOG.info( "-------------------------------------------------------------------");
-
         // Create temp directory, setup to create new File configuration there
         File newYamlFile = new File( tempDir, "cassandra.yaml" );
         URL newYamlUrl = FileUtils.toURLs( new File[] { newYamlFile } )[0];
@@ -366,13 +380,13 @@ public class CassandraResource extends ExternalResource {
         cassandraDaemon = new CassandraDaemon();
         cassandraDaemon.activate();
 
-        Runtime.getRuntime().addShutdownHook( new Thread() {
-            @Override
-            public void run() {
-                after();
-            }
-        } );
-
+//        Runtime.getRuntime().addShutdownHook( new Thread() {
+//            @Override
+//            public void run() {
+//                after();
+//            }
+//        } );
+        addShutdownHook();
         String[] locations = { "usergrid-test-context.xml" };
         applicationContext = new ClassPathXmlApplicationContext( locations );
 
@@ -388,7 +402,6 @@ public class CassandraResource extends ExternalResource {
         LOG.info( "-------------------------------------------------------------------");
         LOG.info( "Initializing Forked Cassandra at {} ...", tempDir.toString() );
         LOG.info( "-------------------------------------------------------------------");
-
         // Create temp directory, setup to create new File configuration there
         File newYamlFile = new File( tempDir, "cassandra.yaml" );
         URL newYamlUrl = FileUtils.toURLs( new File[] { newYamlFile } )[0];
@@ -501,13 +514,13 @@ public class CassandraResource extends ExternalResource {
             }
         }).start();
 
-        Runtime.getRuntime().addShutdownHook( new Thread() {
-            @Override
-            public void run() {
-                after();
-            }
-        } );
-
+//        Runtime.getRuntime().addShutdownHook( new Thread() {
+//            @Override
+//            public void run() {
+//                after();
+//            }
+//        } );
+        addShutdownHook();
         // give C* time to start
         Thread.sleep(5000);
 
@@ -519,13 +532,31 @@ public class CassandraResource extends ExternalResource {
         LOG.info( "External Cassandra resource at {} is ready!", tempDir.toString() );
         lock.notifyAll();
     }
-
+    private void startCassandraExternal() throws Throwable {
+        LOG.info( "-------------------------------------------------------------------");
+        LOG.info( "Initializing External Cassandra");
+        LOG.info( "-------------------------------------------------------------------");
+        LOG.info("before() test, setting system properties for ports : "
+                + "[rpc, storage, sslStorage, native] = [{}, {}, {}, {}]", 
+                new Object[] {rpcPort, storagePort, sslStoragePort, nativeTransportPort});
+        Thread.sleep(5000);
+        String[] locations = { "usergrid-test-context.xml" };
+        applicationContext = new ClassPathXmlApplicationContext( locations );
+//        PropertySource ps=new PropertySource<String>();
+//        applicationContext.getEnvironment().getPropertySources().addLast(ps);
+        applicationContext.refresh();
+        loadSchemaManager( schemaManagerName );
+        initialized = true;
+        
+        LOG.info( "External Cassandra resource at {} is ready!", tempDir.toString() );
+        lock.notifyAll();
+      
+    }
 
     /** Stops Cassandra after a TestSuite or test Class executes. */
     @Override
     protected synchronized void after() {
         super.after();
-
         if ( process != null ) {
             process.destroy();
         }
@@ -534,11 +565,15 @@ public class CassandraResource extends ExternalResource {
                 @Override
                 public void run() {
                     try {
-                        Thread.currentThread().sleep( 100L );
+                        Thread.currentThread();
+            Thread.sleep( 100L );
                     }
                     catch ( InterruptedException ignored ) {}
-
-                    LOG.info( "Shutting down Cassandra instance in {}", tempDir.toString() );
+                    if(externalCassandra){
+                        LOG.info( "Cleaning up external Cassandra instance");
+                    }else{
+                        LOG.info( "Shutting down Cassandra instance in {}", tempDir.toString() );
+                    }
 
                     if ( schemaManager != null ) {
                         LOG.info( "Destroying schemaManager..." );
@@ -556,7 +591,7 @@ public class CassandraResource extends ExternalResource {
                     LOG.info( "ApplicationContext stopped..." );
 
                     try {
-                        if ( cassandraDaemon != null ) {
+                        if ( !externalCassandra && cassandraDaemon != null ) {
                             LOG.info( "Deactivating CassandraDaemon..." );
                             cassandraDaemon.deactivate();
                         }
@@ -641,6 +676,51 @@ public class CassandraResource extends ExternalResource {
             return instance;
         }
     }
+    public static CassandraResource newWithMavenAllocatedPorts() {
+      synchronized ( lock ) {
+          Properties props = new Properties();
+          try {
+        props.load(ClassLoader.getSystemResourceAsStream( "project.properties" ));
+
+          } catch (IOException e) {
+        LOG.error("Unable to load project properties: {}", e.getLocalizedMessage());
+      }
+          int rpcPort = Integer.parseInt(props.getProperty("cassandra.rpcPort", Integer.toString(CassandraResource.DEFAULT_RPC_PORT)));
+          int storagePort = Integer.parseInt(props.getProperty("cassandra.storagePort", Integer.toString(CassandraResource.DEFAULT_STORAGE_PORT))) ;
+          int sslStoragePort = Integer.parseInt(props.getProperty("cassandra.sslPort", Integer.toString(CassandraResource.DEFAULT_SSL_STORAGE_PORT)));
+          int nativeTransportPort = Integer.parseInt(props.getProperty("cassandra.nativeTransportPort", Integer.toString(CassandraResource.DEFAULT_NATIVE_TRANSPORT_PORT)));
+          String host = props.getProperty("cassandra.host", DEFAULT_HOST);
+//          int rpcPort = CassandraResource.DEFAULT_RPC_PORT;
+//          int storagePort = CassandraResource.DEFAULT_STORAGE_PORT ;
+//          int sslStoragePort = CassandraResource.DEFAULT_SSL_STORAGE_PORT;
+//          int nativeTransportPort = CassandraResource.DEFAULT_NATIVE_TRANSPORT_PORT;
+
+          System.setProperty( "cassandra.url", host+":" + Integer.toString( rpcPort ) );
+          System.setProperty( "cassandra.cluster", props.getProperty("cassandra.cluster","Usergrid") );
+          System.setProperty( "cassandra-foreground", "true" );
+          System.setProperty( "log4j.defaultInitOverride", "true" );
+          System.setProperty( "log4j.configuration", "log4j.properties" );
+          System.setProperty( "cassandra.ring_delay_ms", "100" );
+          
+          System.setProperty( "cassandra." + RPC_PORT_KEY, Integer.toString( rpcPort ) );
+          System.setProperty( "cassandra." + STORAGE_PORT_KEY, Integer.toString( storagePort ) );
+          System.setProperty( "cassandra." + SSL_STORAGE_PORT_KEY, Integer.toString( sslStoragePort ) );
+          System.setProperty( "cassandra." + NATIVE_TRANSPORT_PORT_KEY, Integer.toString( nativeTransportPort ) );
+
+          LOG.info("project.properties loaded properties for ports : "
+                  + "[rpc, storage, sslStorage, native] = [{}, {}, {}, {}]", 
+                  new Object[] {rpcPort, storagePort, sslStoragePort, nativeTransportPort});
+
+
+          instance = new CassandraResource( 
+              null, rpcPort, storagePort, sslStoragePort, nativeTransportPort );
+  
+          LOG.info("Created a new instance of CassandraResource: {}", instance);
+          LOG.info("Cassandra using ports {} and {}", storagePort, sslStoragePort);
+          
+          return instance;
+      }
+    }
 
 
     /**
@@ -650,7 +730,7 @@ public class CassandraResource extends ExternalResource {
      * @return a new CassandraResource with possibly non-default ports
      */
     public static CassandraResource newWithAvailablePorts() {
-        return newWithAvailablePorts( null );
+        return newWithMavenAllocatedPorts();
     }
 
 

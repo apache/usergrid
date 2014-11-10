@@ -603,7 +603,25 @@ public class CpRelationManager implements RelationManager {
     }
 
 
-    public Entity addToCollection( String collName, EntityRef itemRef, boolean connectBack ) throws Exception {
+    public Entity addToCollection( String collName, EntityRef itemRef, boolean connectBack ) 
+            throws Exception {
+
+        CollectionScope memberScope = new CollectionScopeImpl( 
+            applicationScope.getApplication(),
+            applicationScope.getApplication(),
+            CpNamingUtils.getCollectionScopeNameFromEntityType( itemRef.getType() ) );
+
+        Id entityId = new SimpleId( itemRef.getUuid(), itemRef.getType() ); 
+        org.apache.usergrid.persistence.model.entity.Entity memberEntity = 
+            ((CpEntityManager)em).load( new CpEntityManager.EntityScope( memberScope, entityId));
+
+        return addToCollection(collName, itemRef, memberEntity, connectBack);
+    }
+
+
+    public Entity addToCollection( String collName, EntityRef itemRef,
+            org.apache.usergrid.persistence.model.entity.Entity memberEntity, boolean connectBack ) 
+        throws Exception {
 
         // don't fetch entity if we've already got one
         final Entity itemEntity;
@@ -689,6 +707,8 @@ public class CpRelationManager implements RelationManager {
         //            headEntityScope.getName()});
 
         if ( connectBack && collection != null && collection.getLinkedCollection() != null ) {
+            getRelationManager( itemEntity ).addToCollection( 
+                    collection.getLinkedCollection(), headEntity, cpHeadEntity, false );
             getRelationManager( itemEntity ).addToCollection(
                     collection.getLinkedCollection(), headEntity, false );
         }

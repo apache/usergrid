@@ -18,6 +18,7 @@ package org.apache.usergrid.settings
 
 import io.gatling.core.Predef._
 import io.gatling.http.Predef._
+import org.apache.usergrid.datagenerators.FeederGenerator
 import scala.concurrent.duration._
 
 object Settings {
@@ -31,13 +32,19 @@ object Settings {
   val baseAppUrl = baseUrl + "/" + org + "/" + app
   val httpConf = http.baseURL(baseAppUrl)
 
+  val skipSetup:Boolean = System.getProperty("skipSetup") == "true"
+  val duration:Int = Integer.getInteger("duration", 300).toInt // in seconds
+
+
+
   // Simulation settings
-  val numUsers:Int = Integer.getInteger("numUsers", 10).toInt
+  val maxPossibleUsers:Int = Integer.getInteger("maxPossibleUsers", 10).toInt
+  val numUsers:Int = maxPossibleUsers
+
   val numEntities:Int = Integer.getInteger("numEntities", 5000).toInt
-  val numDevices:Int = Integer.getInteger("numDevices", 2000).toInt
+  val numDevices:Int = Integer.getInteger("numDevices", 4000).toInt
 
   val rampTime:Int = Integer.getInteger("rampTime", 0).toInt // in seconds
-  val duration:Int = Integer.getInteger("duration", 300).toInt // in seconds
   val throttle:Int = Integer.getInteger("throttle", 50).toInt // in seconds
 
   // Geolocation settings
@@ -47,7 +54,20 @@ object Settings {
   val geosearchRadius:Int = 8000 // search area in meters
 
   // Push Notification settings
-  val pushNotifier = System.getProperty("pushNotifier")
-  val pushProvider = System.getProperty("pushProvider")
+  val pushNotifier = if (System.getProperty("pushNotifier") != null)  System.getProperty("pushNotifier") else "loadNotifier"
+  val pushProvider =  if (System.getProperty("pushProvider") != null)  System.getProperty("pushProvider")  else "noop"
+
+  println(s"Will inject $maxPossibleUsers users per sec")
+
+   def getUserFeeder():Array[Map[String, String]]= {
+    val userFeeder = FeederGenerator.generateUserWithGeolocationFeeder(numUsers, userLocationRadius, centerLatitude, centerLongitude)
+    return userFeeder
+  }
+
+  def getInfiniteUserFeeder():Iterator[Map[String, String]]= {
+    val userFeeder = FeederGenerator.generateUserWithGeolocationFeederInfinite( userLocationRadius, centerLatitude, centerLongitude,maxPossibleUsers)
+    return userFeeder
+  }
+
 
 }

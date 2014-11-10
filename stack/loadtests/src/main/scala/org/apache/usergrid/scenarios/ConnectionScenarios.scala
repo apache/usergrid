@@ -18,11 +18,12 @@
 
 import io.gatling.core.Predef._
 import io.gatling.http.Predef._
- import org.apache.usergrid.settings.Headers
+ import org.apache.usergrid.datagenerators.FeederGenerator
+ import org.apache.usergrid.settings.{Settings, Headers}
 
  object ConnectionScenarios {
 
-  val postConnection = exec(
+  val postUserConnection = exec(
     http("POST connection")
     .post("/users/${user1}/likes/users/${user2}")
       .headers(Headers.jsonAuthorized)
@@ -36,5 +37,29 @@ import io.gatling.http.Predef._
       .headers(Headers.jsonAuthorized)
       .check(status.is(200))
   )
+
+   val postConnection = exec(
+     http("Connect user with device")
+       .post("/${collectionName}/${entityId}/${connectionType}/${entityId}")
+       .headers(Headers.jsonAuthorized)
+       .check(status.is(200))
+   )
+
+   val entityNameFeeder = FeederGenerator.generateEntityNameFeeder("device", Settings.numEntities)
+   val createScenario = scenario("Create Connections")
+     .feed(Settings.getUserFeeder)
+     .exec(TokenScenarios.getUserToken)
+     .exec( UserScenarios.getUserByUsername)
+     .repeat(2){
+       feed(entityNameFeeder)
+         .exec( DeviceScenarios.postDeviceWithNotifier)
+         .exec(ConnectionScenarios.postUserToDeviceConnection)
+     }
+     .exec(session => {
+     // print the Session for debugging, don't do that on real Simulations
+     println(session)
+     session
+   })
+     .exec( )
 
 }
