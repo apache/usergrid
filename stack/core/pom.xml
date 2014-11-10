@@ -189,6 +189,7 @@
             <exclude>**/*Test.java</exclude>
           </excludes>
         </configuration>
+        <version>2.15</version>
       </plugin>
 
       <plugin>

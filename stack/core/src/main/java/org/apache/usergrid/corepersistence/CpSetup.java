@@ -126,11 +126,9 @@ public class CpSetup implements Setup {
             cpProps.put("collections.keyspace.strategy.class", 
                     cass.getProperties().get("cassandra.keyspace.strategy"));
 
-            cpProps.put("collections.keyspace.strategy.options", "replication_factor:" +  
+            cpProps.put("collections.keyspace.strategy.options",
                     cass.getProperties().get("cassandra.keyspace.replication"));
 
-            cpProps.put("cassandra.keyspace.strategy.options.replication_factor",
-                    cass.getProperties().get("cassandra.keyspace.replication"));
 
             logger.debug("Set Cassandra properties for Core Persistence: " + cpProps.toString() );
 

@@ -20,25 +20,42 @@
 
 package org.apache.usergrid.simulations
 
-import io.gatling.core.Predef._
+
 import io.gatling.core.scenario.Simulation
 import org.apache.usergrid.helpers.Setup
-import org.apache.usergrid.scenarios.NotificationScenarios
-import org.apache.usergrid.settings.Settings
-import scala.annotation.switch
+import org.apache.usergrid.scenarios.{EntityScenarios, TokenScenarios}
+import java.nio.file.{Paths, Files}
+import io.gatling.core.Predef._
+import org.apache.usergrid.datagenerators.FeederGenerator
 import scala.concurrent.duration._
+import org.apache.usergrid.settings.{Headers, Settings}
 
 /**
  * Classy class class.
  */
-class AppSimulation extends Simulation {
-  println("Begin setup")
-  Setup.setupNotifier()
-  println("End Setup")
+class PostCustomEntitySimulation extends Simulation {
 
-  setUp(
-    NotificationScenarios.createScenario
-      .inject(constantUsersPerSec(Settings.maxPossibleUsers) during (Settings.duration))
-      .protocols(Settings.httpConf.acceptHeader("application/json"))
-  ).throttle(reachRps(Settings.throttle) in (Settings.rampTime seconds), holdFor(Settings.duration))
+  if(!Settings.skipSetup) {
+    println("Begin setup")
+    Setup.setupOrg()
+    Setup.setupApplication()
+    println("End Setup")
+  }else{
+    println("Skipping Setup")
+  }
+
+  val numEntities:Int = Settings.numEntities
+  val collectionType:String = "restaurants"
+  val rampTime:Int = Settings.rampTime
+  val throttle:Int = Settings.throttle
+  val feeder = FeederGenerator.generateCustomEntityFeeder(numEntities).queue
+  val httpConf = Settings.httpConf
+
+  val scnToRun = scenario("POST custom entities")
+    .feed(feeder)
+    .exec(TokenScenarios.getManagementToken)
+    .exec(EntityScenarios.postEntity)
+
+  setUp(scnToRun.inject(atOnceUsers(numEntities)).throttle(reachRps(throttle) in (rampTime.seconds)).protocols(httpConf)).maxDuration(Settings.duration)
+
 }

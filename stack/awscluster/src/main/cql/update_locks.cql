@@ -15,12 +15,9 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-
-drop keyspace Locks;
-
-create keyspace Locks with placement_strategy = 'NetworkTopologyStrategy' and strategy_options = {KEYSPACE_REGION : 3} and durable_writes = false;
 update keyspace Locks with placement_strategy = 'NetworkTopologyStrategy' and strategy_options = {KEYSPACE_REGION : 3} and durable_writes = false;
 
 use Locks;
 
-create column family HLocks with gc_grace=60 and caching=ALL and read_repair_chance=0.00 and compaction_strategy='LeveledCompactionStrategy' and bloom_filter_fp_chance=0.1 and compaction_strategy_options={sstable_size_in_mb:512};
+update column family HLocks with gc_grace=60 and caching=ALL and read_repair_chance=0.00 and compaction_strategy='LeveledCompactionStrategy' and bloom_filter_fp_chance=0.1 and compaction_strategy_options={sstable_size_in_mb:512};
+

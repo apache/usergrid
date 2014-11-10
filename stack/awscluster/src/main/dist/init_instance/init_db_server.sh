@@ -67,10 +67,6 @@ cd /usr/share/usergrid/init_instance
 cd /usr/share/usergrid/init_instance
 ./install_cassandra.sh
 
-# Use the CQL to crate the keyspaces
-cd /usr/share/usergrid/init_instance
-./create_keyspaces.sh
-
 # Install the opscenter agent
 cd /usr/share/usergrid/init_instance
 ./install_opscenter_agent.sh

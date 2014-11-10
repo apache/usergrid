@@ -32,25 +32,21 @@ object Settings {
   val baseAppUrl = baseUrl + "/" + org + "/" + app
   val httpConf = http.baseURL(baseAppUrl)
 
+  val skipSetup:Boolean = System.getProperty("skipSetup") == "true"
+  val duration:Int = Integer.getInteger("duration", 300).toInt // in seconds
+
+
+
   // Simulation settings
-  var numUsers:Int = Integer.getInteger("numUsers", 10).toInt
+  val maxPossibleUsers:Int = Integer.getInteger("maxPossibleUsers", 10).toInt
+  val numUsers:Int = maxPossibleUsers
 
   val numEntities:Int = Integer.getInteger("numEntities", 5000).toInt
-  val numDevices:Int = Integer.getInteger("numDevices", 2000).toInt
+  val numDevices:Int = Integer.getInteger("numDevices", 4000).toInt
 
   val rampTime:Int = Integer.getInteger("rampTime", 0).toInt // in seconds
-  val duration:Int = Integer.getInteger("duration", 300).toInt // in seconds
   val throttle:Int = Integer.getInteger("throttle", 50).toInt // in seconds
 
-  if(numUsers<duration){
-    println(s"Changing numUsers $numUsers to duration length $duration")
-    numUsers = duration
-  }
-  if(numUsers % duration != 0){
-    val message = s"please use numUsers ($numUsers) that is evenly divisible by duration($duration)"
-    println(message)
-    throw new Exception(message)
-  }
   // Geolocation settings
   val centerLatitude:Double = 37.442348 // latitude of center point
   val centerLongitude:Double = -122.138268 // longitude of center point
@@ -61,7 +57,17 @@ object Settings {
   val pushNotifier = if (System.getProperty("pushNotifier") != null)  System.getProperty("pushNotifier") else "loadNotifier"
   val pushProvider =  if (System.getProperty("pushProvider") != null)  System.getProperty("pushProvider")  else "noop"
 
-  val constantUsers:Int = Settings.numUsers/Settings.duration
-  println(s"Will inject $constantUsers users per sec")
+  println(s"Will inject $maxPossibleUsers users per sec")
+
+   def getUserFeeder():Array[Map[String, String]]= {
+    val userFeeder = FeederGenerator.generateUserWithGeolocationFeeder(numUsers, userLocationRadius, centerLatitude, centerLongitude)
+    return userFeeder
+  }
+
+  def getInfiniteUserFeeder():Iterator[Map[String, String]]= {
+    val userFeeder = FeederGenerator.generateUserWithGeolocationFeederInfinite( userLocationRadius, centerLatitude, centerLongitude,maxPossibleUsers)
+    return userFeeder
+  }
+
 
 }
