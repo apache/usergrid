@@ -45,7 +45,9 @@ import io.gatling.core.Predef._
       "displayName":"${displayName}","age":"${age}","seen":"${seen}","weight":"${weight}",
       "height":"${height}","aboutMe":"${aboutMe}","profileId":"${profileId}","headline":"${headline}",
       "showAge":"${showAge}","relationshipStatus":"${relationshipStatus}","ethnicity":"${ethnicity}","password":"password"}"""))
-      .check(status.is(200), status.saveAs("userStatus"), jsonPath("$..entities[0].uuid").saveAs("userId")))
+      .check(status.in(200 to 400), status.saveAs("userStatus"))
+      .check( jsonPath("$..entities[0].uuid").saveAs("userId"))
+  )
     .doIf ("${userStatus}", "400") {
       exec(getUserByUsername)
     }

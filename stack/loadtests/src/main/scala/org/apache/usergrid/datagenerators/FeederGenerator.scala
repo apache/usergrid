@@ -126,16 +126,9 @@
 
   }
 
-  def generateEntityNameFeeder(prefix: String, numEntities: Int): Array[Map[String, String]] = {
-
-    var nameArray: ArrayBuffer[Map[String, String]] = new ArrayBuffer[Map[String, String]]
-
-    for (entityCount <- 1 to numEntities) {
-      nameArray += Map("entityName" -> prefix.concat(entityCount.toString).concat(UUID.randomUUID().toString))
-    }
-
-    return nameArray.toArray
-
+  def generateEntityNameFeeder(prefix: String, numEntities: Int): Iterator[Map[String, String]]  = {
+    val itr = Iterator.from(1).map(i=> Map("entityName" -> prefix.concat(i.toString).concat(UUID.randomUUID().toString)))
+    return itr
   }
 
   def generateRandomEntityNameFeeder(prefix: String, numEntities: Int): Array[Map[String, String]] = {

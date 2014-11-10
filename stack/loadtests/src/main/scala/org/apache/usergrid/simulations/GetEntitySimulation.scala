@@ -34,7 +34,7 @@ class GetEntitySimulation extends Simulation {
   val rampTime:Int = Settings.rampTime
   val throttle:Int = Settings.throttle
 
-  val feeder = FeederGenerator.generateEntityNameFeeder("user", numEntities).circular
+  val feeder = FeederGenerator.generateEntityNameFeeder("user", numEntities)
 
   val scnToRun = scenario("GET entity")
     .exec(UserScenarios.getRandomUser)
