@@ -619,8 +619,8 @@ public class CpRelationManager implements RelationManager {
     }
 
 
-    public Entity addToCollection( String collName, EntityRef itemRef,
-            org.apache.usergrid.persistence.model.entity.Entity memberEntity, boolean connectBack ) 
+    public Entity addToCollection(final String collName, final EntityRef itemRef,
+            final org.apache.usergrid.persistence.model.entity.Entity memberEntity, final boolean connectBack )
         throws Exception {
 
         // don't fetch entity if we've already got one
@@ -646,12 +646,9 @@ public class CpRelationManager implements RelationManager {
                 applicationScope.getApplication(),
                 applicationScope.getApplication(),
                 CpNamingUtils.getCollectionScopeNameFromEntityType( itemRef.getType() ) );
-        EntityCollectionManager memberMgr = managerCache.getEntityCollectionManager( memberScope );
 
         //TODO, this double load should disappear once events are in
         Id entityId = new SimpleId( itemRef.getUuid(), itemRef.getType() );
-        org.apache.usergrid.persistence.model.entity.Entity memberEntity =
-            ((CpEntityManager)em).load( new CpEntityManager.EntityScope( memberScope, entityId));
 
         if ( memberEntity == null ) {
             throw new RuntimeException(
