@@ -66,7 +66,7 @@ public class CpNamingUtils {
     }
 
 
-    static public String getConnectionType( String edgeType ) {
+    static public String  getConnectionType( String edgeType ) {
         String[] parts = edgeType.split( "\\|" );
         return parts[1];
     }

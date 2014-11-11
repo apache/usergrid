@@ -200,11 +200,11 @@ public class GeoIT extends AbstractCoreIT {
         em.refreshIndex();
 
         emSearchResults = em.searchConnectedEntities( user, 
-                Query.fromQL( "location within 2000 of 37.776753, -122.407846" ) );
+                Query.fromQL( "location within 2000 of 37.776753, -122.407846" ).setConnectionType( "likes" ) );
         assertEquals( 1, emSearchResults.size() );
 
         emSearchResults = em.searchConnectedEntities( user, 
-                Query.fromQL( "location within 1000 of 37.776753, -122.407846" ) );
+                Query.fromQL( "location within 1000 of 37.776753, -122.407846" ).setConnectionType( "likes" ) );
         assertEquals( 0, emSearchResults.size() );
     }
 
@@ -380,10 +380,7 @@ public class GeoIT extends AbstractCoreIT {
     @Test
     public void testGeoWithIntersection() throws Exception {
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testGeoWithIntersection" );
-        assertNotNull( applicationId );
-
-        EntityManager em = setup.getEmf().getEntityManager( applicationId );
+        EntityManager em = app.getEntityManager();
         assertNotNull( em );
 
         int size = 100;

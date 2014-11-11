@@ -59,6 +59,7 @@ import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.SearchTypes;
+import org.apache.usergrid.persistence.index.exceptions.IndexException;
 import org.apache.usergrid.persistence.index.query.CandidateResult;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
 import org.apache.usergrid.persistence.index.query.Query;
@@ -217,6 +218,12 @@ public class EsEntityIndexImpl implements EntityIndex {
                           .setTemplate( config.getIndexPrefix() + "*" ).addMapping( "_default_",
                         xcb ) // set mapping as the default for all types
                         .execute().actionGet();
+
+        if(!pitr.isAcknowledged()){
+            throw new IndexException( "Unable to create default mappings" );
+        }
+
+
     }
 
 
@@ -241,12 +248,6 @@ public class EsEntityIndexImpl implements EntityIndex {
             SearchRequestBuilder srb = esProvider.getClient().prepareSearch( indexName ).setTypes( entityTypes )
                                                  .setScroll( cursorTimeout + "m" ).setQuery( qb );
 
-
-            if ( logger.isDebugEnabled() ) {
-                logger.debug( "Searching index {}\n  scope{} \n type {}\n   query {} limit {}", new Object[] {
-                        this.indexName, context, entityTypes, qb.toString().replace( "\n", " " ), query.getLimit()
-                } );
-            }
 
 
             final FilterBuilder fb = query.createFilterBuilder();
@@ -296,11 +297,20 @@ public class EsEntityIndexImpl implements EntityIndex {
                 logger.debug( "   Sort: {} order by {}", booleanFieldName, order.toString() );
             }
 
+
+
+            if ( logger.isDebugEnabled() ) {
+                logger.debug( "Searching index {}\n  scope{} \n type {}\n   query {} ", new Object[] {
+                        this.indexName, context, entityTypes, srb
+                } );
+            }
+
+
             try {
                 searchResponse = srb.execute().actionGet();
             }
             catch ( Throwable t ) {
-                logger.error( "Unable to communicate with elasticsearch" );
+                logger.error( "Unable to communicate with elasticsearch", t );
                 failureMonitor.fail( "Unable to execute batch", t );
                 throw t;
             }
@@ -325,7 +335,7 @@ public class EsEntityIndexImpl implements EntityIndex {
                 searchResponse = ssrb.execute().actionGet();
             }
             catch ( Throwable t ) {
-                logger.error( "Unable to communicate with elasticsearch" );
+                logger.error( "Unable to communicate with elasticsearch", t );
                 failureMonitor.fail( "Unable to execute batch", t );
                 throw t;
             }

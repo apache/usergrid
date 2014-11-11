@@ -91,7 +91,7 @@ public class Query {
     private Map<String, String> selectAssignments = new LinkedHashMap<String, String>();
     private boolean mergeSelectResults = false;
     private Level level = Level.ALL_PROPERTIES;
-    private String connection;
+    private String connectionType;
     private List<String> permissions;
     private boolean reversed;
     private boolean reversedSet = false;
@@ -125,7 +125,7 @@ public class Query {
                     ? new LinkedHashMap<String, String>( q.selectAssignments ) : null;
             mergeSelectResults = q.mergeSelectResults;
             //level = q.level;
-            connection = q.connection;
+            connectionType = q.connectionType;
             permissions = q.permissions != null ? new ArrayList<String>( q.permissions ) : null;
             reversed = q.reversed;
             reversedSet = q.reversedSet;
@@ -143,10 +143,28 @@ public class Query {
     }
 
 
-    public QueryBuilder createQueryBuilder(final String context) {
+    public QueryBuilder createQueryBuilder( final String context ) {
 
 
-        QueryBuilder queryBuilder;
+        QueryBuilder queryBuilder = null;
+
+
+        //we have a root operand.  Translate our AST into an ES search
+        if ( getRootOperand() != null ) {
+            //In the case of geo only queries, this will return null into the query builder.  Once we start
+            //using tiles, we won't need this check any longer, since a geo query will return a tile query + post filter
+            QueryVisitor v = new EsQueryVistor();
+
+            try {
+                getRootOperand().visit( v );
+            }
+            catch ( IndexException ex ) {
+                throw new RuntimeException( "Error building ElasticSearch query", ex );
+            }
+
+
+            queryBuilder = v.getQueryBuilder();
+        }
 
 
         /**
@@ -156,28 +174,16 @@ public class Query {
          */
 
 
-
-
-
-        //we have a root operand.  Translate our AST into an ES search
-        if ( getRootOperand() != null ) {
-            QueryVisitor v = new EsQueryVistor();
-            try {
-                getRootOperand().visit( v );
-
-            } catch ( IndexException ex ) {
-                throw new RuntimeException( "Error building ElasticSearch query", ex );
-            }
-
-            // TODO evaluate performance when it's an all query.  Do we need to put the context term first for performance?
-            queryBuilder = QueryBuilders.boolQuery().must(  v.getQueryBuilder() )
-                                        .must( QueryBuilders.termQuery( IndexingUtils.ENTITY_CONTEXT_FIELDNAME, context ) );
-        } 
+        // TODO evaluate performance when it's an all query.  Do we need to put the context term first for performance?
+        if ( queryBuilder != null ) {
+            queryBuilder = QueryBuilders.boolQuery().must( queryBuilder ).must( QueryBuilders
+                    .termQuery( IndexingUtils.ENTITY_CONTEXT_FIELDNAME, context ) );
+        }
 
         //nothing was specified ensure we specify the context in the search
-		else {
+        else {
             queryBuilder = QueryBuilders.termQuery( IndexingUtils.ENTITY_CONTEXT_FIELDNAME, context );
-		}
+        }
 
         return queryBuilder;
     }
@@ -283,7 +289,7 @@ public class Query {
         String ql = QueryUtils.queryStrFrom( params );
         String type = ListUtils.first( params.get( "type" ) );
         Boolean reversed = ListUtils.firstBoolean( params.get( "reversed" ) );
-        String connection = ListUtils.first( params.get( "connection" ) );
+        String connection = ListUtils.first( params.get( "connectionType" ) );
         UUID start = ListUtils.firstUuid( params.get( "start" ) );
         String cursor = ListUtils.first( params.get( "cursor" ) );
         Integer limit = ListUtils.firstInteger( params.get( "limit" ) );
@@ -562,17 +568,6 @@ public class Query {
     public void setEntityType( String type ) {
         this.type = type;
     }
-
-
-    public String getConnectionType() {
-        return connection;
-    }
-
-
-    public void setConnectionType( String connection ) {
-        this.connection = connection;
-    }
-
 
     public List<String> getPermissions() {
         return permissions;
@@ -1373,18 +1368,29 @@ public class Query {
     }
 
 
-    public void setQl( String ql ) {
+    public Query setQl( String ql ) {
         this.ql = ql;
+        return this;
     }
 
 
-    public List<Identifier> getIdentifiers() {
-        return identifiers;
+    /**
+     * Get the connection type
+     * @return
+     */
+    public String getConnectionType() {
+        return connectionType;
     }
 
 
-    public String getConnection() {
-        return connection;
+    /**
+     * Set the connection type
+     * @param connection
+     * @return
+     */
+    public Query setConnectionType( final String connection ) {
+        this.connectionType = connection;
+        return this;
     }
 
 

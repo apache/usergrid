@@ -69,13 +69,32 @@ public class SearchTypes {
      */
     public static SearchTypes fromNullableTypes(final String... types){
 
-        if(types == null || types.length == 0){
+        if(isEmpty(types) ){
             return allTypes();
         }
 
         return fromTypes( types );
     }
 
+
+    /**
+     * Return true if the array is empty, or it's elements contain a null
+     * @param input
+     * @return
+     */
+    private static boolean isEmpty(final String[] input){
+        if(input == null || input.length == 0){
+            return true;
+        }
+
+        for(int i = 0; i < input.length; i ++){
+            if(input[i] == null){
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     @Override
     public boolean equals( final Object o ) {

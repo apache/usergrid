@@ -106,6 +106,7 @@ import org.apache.usergrid.utils.IndexUtils;
 import org.apache.usergrid.utils.MapUtils;
 import org.apache.usergrid.utils.UUIDUtils;
 
+import com.google.common.base.Preconditions;
 import com.yammer.metrics.annotation.Metered;
 
 import me.prettyprint.hector.api.Keyspace;
@@ -418,7 +419,7 @@ public class CpRelationManager implements RelationManager {
                         }
                         else {
 
-                            String connName = CpNamingUtils.getCollectionName( edge.getType() );
+                            String connName = CpNamingUtils.getConnectionType( edge.getType() );
                             indexScope =
                                     new IndexScopeImpl( new SimpleId( sourceEntity.getUuid(), sourceEntity.getType() ),
                                             CpNamingUtils.getConnectionScopeName( connName ) );
@@ -1432,14 +1433,20 @@ public class CpRelationManager implements RelationManager {
     @Override
     public Results searchConnectedEntities( Query query ) throws Exception {
 
-        if ( query == null ) {
-            query = new Query();
-        }
+        Preconditions.checkNotNull(query, "query cannot be null");
+
+        final String connection = query.getConnectionType();
+
+        Preconditions.checkNotNull( connection, "connection must be specified" );
+
+//        if ( query == null ) {
+//            query = new Query();
+//        }
 
         headEntity = em.validate( headEntity );
 
         final IndexScope indexScope = new IndexScopeImpl( cpHeadEntity.getId(),
-                CpNamingUtils.getConnectionScopeName( query.getConnectionType() ) );
+                CpNamingUtils.getConnectionScopeName( connection ) );
 
         final SearchTypes searchTypes = SearchTypes.fromNullableTypes( query.getEntityType() );
 
@@ -1452,7 +1459,7 @@ public class CpRelationManager implements RelationManager {
         query = adjustQuery( query );
         CandidateResults crs = ei.search( indexScope, searchTypes, query );
 
-        return buildConnectionResults( query, crs, query.getConnectionType() );
+        return buildConnectionResults( query, crs, connection );
     }
 
 
