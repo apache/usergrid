@@ -38,7 +38,7 @@ object Settings {
 
 
   // Simulation settings
-  val maxPossibleUsers:Int = Integer.getInteger("maxPossibleUsers", 10).toInt
+  val maxPossibleUsers:Int = Integer.getInteger("maxPossibleUsers", 1).toInt
   val numUsers:Int = maxPossibleUsers
   val userSeed:Int = Integer.getInteger("userSeed",1).toInt
 
