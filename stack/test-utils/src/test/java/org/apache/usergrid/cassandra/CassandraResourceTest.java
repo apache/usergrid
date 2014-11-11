@@ -80,12 +80,7 @@ public class CassandraResourceTest {
     }
 
 
-    @Test
-    public void testTmpDirectory() throws Exception {
-        File tmpdir = CassandraResource.getTempDirectory();
-        assertTrue( tmpdir.toString().contains( "target" ) );
-        assertTrue( tmpdir.exists() );
-    }
+
 
 
     /**
