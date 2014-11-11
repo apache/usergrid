@@ -21,7 +21,7 @@ return [
         'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/{collection}',
         'notes' => 'Query an app collection.',
         'summary' => 'Query an app collection',
-        'responseClass' => 'Apache\Usergrid\Api\Models\Collection',
+        'responseClass' => 'Apache\Usergrid\Api\Models\User',
         'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [

@@ -442,12 +442,4 @@ class Usergrid
         return file_exists($this->getManifestFilePath($file));
     }
 
-    /**
-     * fetch token from by making api call,
-     * and call $this->setToken which will set the bearer token in the
-     * http header
-     */
-    protected function fetchToken(){
-
-    }
 } 
