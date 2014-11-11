@@ -21,7 +21,7 @@ return [
         'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/{collection}',
         'notes' => 'Get All devices.',
         'summary' => 'Get all Device collection limit 10000',
-        'responseClass' => 'Apache\Usergrid\Api\Models\Collection',
+        'responseClass' => 'Apache\Usergrid\Api\Models\Device',
         'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
@@ -98,7 +98,7 @@ return [
         'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/{collection}',
         'notes' => 'Query Devices.',
         'summary' => 'Query the devices collection',
-        'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
+        'responseClass' => 'Apache\Usergrid\Api\Models\Device',
         'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
@@ -173,7 +173,7 @@ return [
         'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/{collection}/{uuid}',
         'notes' => 'Find Device by uuid.',
         'summary' => 'Find device by uuid',
-        'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
+        'responseClass' => 'Apache\Usergrid\Api\Models\Device',
         'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
@@ -255,7 +255,7 @@ return [
         'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/{collection}',
         'notes' => 'Create new Device.  See Usergrid documentation for JSON format of body.',
         'summary' => 'Create new Device entity',
-        'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
+        'responseClass' => 'Apache\Usergrid\Api\Models\Device',
         'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
@@ -295,7 +295,7 @@ return [
         'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/{collection}/{entity_name_or_uuid}',
         'notes' => 'Delete a Device entity.',
         'summary' => 'Delete a Device entity by name or uuid',
-        'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
+        'responseClass' => 'Apache\Usergrid\Api\Models\Device',
         'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
@@ -337,7 +337,7 @@ return [
         'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/{collection}/{entity_name_or_uuid}',
         'notes' => 'Update a Device entity.',
         'summary' => 'Update a Device entity by name or uuid and using JSON data',
-        'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
+        'responseClass' => 'Apache\Usergrid\Api\Models\Device',
         'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
