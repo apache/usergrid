@@ -78,22 +78,22 @@ then add your client_id and secret to the config file the set the service provid
 the aliases array ```'Usergrid' => 'Apache\Usergrid\Laravel\Facades\Usergrid``` to be able to access class via a Facade. Example for Laravel
 
 ```
-    $collection = Usergrid::application()->getEntity(['collection' => 'shops']);
+    $collection = Usergrid::application()->EntityGet(['collection' => 'shops']);
 ```
 
 ## how it works
 
  You have one main client called Usergrid so if I wanted to call the Management Api and I have Facades enabled then
- I would call like this ```Usergrid::Management->getApps();``` or ```Usergrid::Application->getEntity();```
+ I would call like this ```Usergrid::Management->OrgAppsGet();``` or ```Usergrid::Application->EntityGet();```
  
  There is one top level manifest file called Manifest.php and contain only top level Guzzle service descriptor properties and a empty operations array so 
- when calling ```php Usergrid::Management()->getEntity() ```  the Main Manifest file has the operation array filled in by the Management Manifest files operations array
+ when calling ```php Usergrid::Management()->OrgAppsGet() ```  the Main Manifest file has the operation array filled in by the Management Manifest files operations array
  and they are cached by the Usergrid web service client. Calls on the Usergrid client are like magic method in the sense that ```php Usergrid::Management()-> method``` call is not
  backed by a Management class or method its the Manifest that it being selected . Also by using Facades all method are like static method and fit in with newer PHP frameworks just like using the
  AWS PHP SDK when calling enableFacades() on the AWS factory method.
  
  All responses are subclasses of Illuminate\Support\Collection class so all collection methods are available to call on your response model eg: first(), get(), map(), fetch(), hasKey(), hasValue(), etc.
- this is not to mistake this with a Usergrid collection which is like your DB table they too are collection object but if you get a response of a single entiry then its a Collection with a count of 1.
+ this is not to mistake this with a Usergrid collection which is like your DB table they too are collection object but if you get a response of a single entity then its a Collection with a count of 1.
  
  
  
@@ -134,10 +134,15 @@ All HTTP and Server error returned by the Usergrid API have error classes attach
  
 So there are two settings in the config that controls which type of token you get.
 the ```'auth_type' => 'application' ``` controls the level you get Organization or Application and the ``` 'grant_type' => 'client_credentials'``` controls
-which type of credentials you use which can be either client_id & client_secret or username & password.
+which type of credentials you use which can be either `client_credentials` or `password` using client_id & client_secret or username & password.
 
 ### Result Iteration
-Apache Usergrid has a default paging size of 10 records so if you ask for a collection that has more then 10 result (entities) then it will return a Cursor so you can pass it to the next request to get then next lot of 10 results so Ive made this easier. Using manifest version 1.0.1 and above you can now use a resource iterator that will return all entities for you in one request. So again let the SDK do the hard work for you. Resource Iterators as lazy loaded so they only make the api call if the data is needed for example when you first make the call no data is requested from the network but as soon as you dereference the data then the first page is requested and the 2nd page is not requested till you request the data for example if I used it in a foreach loop it will make a network request for the next page of data only after the loop has gone through the current page count and if you cancel the foreach loop then it wont request any more data the default page size is 20 for resource iterators.
+Apache Usergrid has a default paging size of 10 records so if you ask for a collection that has more then 10 result (entities) then it will return 
+a Cursor so you can pass it to the next request to get then next lot of 10 results so Ive made this easier. Using manifest version 1.0.1 and above you can now use a resource iterator  
+that will return all entities for you in one request. So again let the SDK do the hard work for you. Resource Iterators as lazy loaded so they only make the api call if the data is needed 
+for example when you first make the call no data is requested from the network but as soon as you dereference the data then the first page is requested and the 2nd page is not requested till
+you request the data for example if I used it in a foreach loop it will make a network request for the next page of data only after the loop has gone through the current page count and if you cancel the 
+foreach loop then it wont request any more data the default page size is 20 for resource iterators.
 
 The SDK will check each response to see if their is a cursor and if there is it will get the next set till all entities are returned.
 ```
