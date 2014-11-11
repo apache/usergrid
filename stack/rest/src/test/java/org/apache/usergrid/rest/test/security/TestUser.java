@@ -20,6 +20,8 @@ package org.apache.usergrid.rest.test.security;
 import java.util.UUID;
 
 import com.fasterxml.jackson.databind.JsonNode;
+
+import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.test.resource.TestContext;
 
 
@@ -43,6 +45,7 @@ public abstract class TestUser {
         this.user = user;
         this.password = password;
         this.email = email;
+        this.uuid = UUIDUtils.newTimeUUID();
     }
 
 
