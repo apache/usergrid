@@ -38,7 +38,6 @@ import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
-import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.index.EntityIndex;
@@ -71,9 +70,6 @@ public class CorePerformanceIT extends BaseIT {
 
     @ClassRule
     public static ElasticSearchResource es = new ElasticSearchResource();
-
-    @ClassRule
-    public static CassandraRule cass = new CassandraRule();
 
     // max entities we will write and read
     static int maxEntities = 10; // TODO: make this configurable when you add Chop 

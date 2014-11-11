@@ -29,6 +29,7 @@ import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 
 
 /**
@@ -42,8 +43,11 @@ public class AbstractSchedulerRuntimeIT {
     protected static final String RUNLOOP_PROP = "usergrid.scheduler.job.interval";
     protected static final String FAIL_PROP = "usergrid.scheduler.job.maxfail";
 
+    @ClassRule
     public static CassandraResource cassandraResource = SchedulerITSuite.cassandraResource;
-    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource().startEs();
+
+    @ClassRule
+    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
 
 
     private TestJobListener listener = new TestJobListener();

@@ -80,7 +80,6 @@ public class CoreITSetupImpl implements CoreITSetup {
      */
     protected void before( Description description ) throws Throwable {
         LOG.info( "Setting up for {}", description.getDisplayName() );
-        elasticSearchResource.startEs();
         initialize();
     }
 

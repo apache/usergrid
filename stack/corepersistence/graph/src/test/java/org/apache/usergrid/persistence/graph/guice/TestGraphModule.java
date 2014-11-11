@@ -19,8 +19,8 @@
 package org.apache.usergrid.persistence.graph.guice;
 
 
-import org.apache.usergrid.persistence.core.guice.TestModule;
 import org.apache.usergrid.persistence.core.guice.CommonModule;
+import org.apache.usergrid.persistence.core.guice.TestModule;
 
 
 /**
