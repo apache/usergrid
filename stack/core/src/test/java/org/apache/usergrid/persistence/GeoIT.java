@@ -52,10 +52,10 @@ public class GeoIT extends AbstractCoreIT {
     public void testGeo() throws Exception {
         LOG.info( "GeoIT.testGeo" );
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testGeo" );
-        assertNotNull( applicationId );
 
-        EntityManager em = setup.getEmf().getEntityManager( applicationId );
+
+
+        EntityManager em =  app.getEntityManager();
         assertNotNull( em );
 
         // create user at a location  
@@ -212,10 +212,8 @@ public class GeoIT extends AbstractCoreIT {
     @Test
     public void testPointPaging() throws Exception {
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testPointPaging" );
-        assertNotNull( applicationId );
 
-        EntityManager em = setup.getEmf().getEntityManager( applicationId );
+        EntityManager em = app.getEntityManager();
         assertNotNull( em );
 
         // save objects in a diagonal line from -90 -180 to 90 180
@@ -276,10 +274,7 @@ public class GeoIT extends AbstractCoreIT {
     @Test
     public void testSamePointPaging() throws Exception {
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testSamePointPaging" );
-        assertNotNull( applicationId );
-
-        EntityManager em = setup.getEmf().getEntityManager( applicationId );
+        EntityManager em =  app.getEntityManager();
         assertNotNull( em );
 
         // save objects in a diagonal line from -90 -180 to 90 180
@@ -326,10 +321,9 @@ public class GeoIT extends AbstractCoreIT {
     @Test
     public void testDistanceByLimit() throws Exception {
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testDistanceByLimit" );
-        assertNotNull( applicationId );
 
-        EntityManager em = setup.getEmf().getEntityManager( applicationId );
+
+        EntityManager em =  app.getEntityManager();
         assertNotNull( em );
 
         // save objects in a diagonal line from -90 -180 to 90 180
@@ -445,10 +439,7 @@ public class GeoIT extends AbstractCoreIT {
     @Test
     public void testDenseSearch() throws Exception {
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testDenseSearch" );
-        assertNotNull( applicationId );
-
-        EntityManager em = setup.getEmf().getEntityManager( applicationId );
+        EntityManager em =  app.getEntityManager();
         assertNotNull( em );
 
         // save objects in a diagonal line from -90 -180 to 90 180
