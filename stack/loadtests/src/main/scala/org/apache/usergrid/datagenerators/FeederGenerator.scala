@@ -49,8 +49,8 @@
    * @param centerLongitude
    * @return
    */
-  def generateUserWithGeolocationFeederInfinite(radius: Double, centerLatitude: Double, centerLongitude: Double, maxPossible: Int): Iterator[Map[String, String]] = {
-    val userFeeder = Iterator.from(1).map(i=>generateUserData(i.toString, radius, centerLatitude, centerLongitude))
+  def generateUserWithGeolocationFeederInfinite(seed:Int,radius: Double, centerLatitude: Double, centerLongitude: Double, maxPossible: Int): Iterator[Map[String, String]] = {
+    val userFeeder = Iterator.from(seed).map(i=>generateUserData(i.toString, radius, centerLatitude, centerLongitude))
     return userFeeder
 
   }
