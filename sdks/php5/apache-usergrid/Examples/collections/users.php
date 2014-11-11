@@ -91,6 +91,10 @@ echo $user_addr->entities->fetch('adr.addr1');
 //or
 echo $user_addr->entities->fetch('adr.city');
 
+// get users device URL -- nested fetch on php collection
+$users_nested = Usergrid::users()->all();
+var_dump($users_nested->entities->fetch('metadata.collections.devices')->first());
+
 // add user to group
 //$user_to_group = Usergrid::groups()->addUser(['entity_name_or_uuid' => 'group_name_or_uuid', 'user_name_or_uuid' => 'user name or uuid']);
 
