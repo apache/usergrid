@@ -19,6 +19,7 @@ include('data.php');
 
 use Apache\Usergrid\Native\UsergridBootstrapper;
 use Apache\Usergrid\Native\Facades\Usergrid;
+use Apache\Usergrid\Api\Filters\Date;
 
 /** The PHP SDK returns all responses as Illuminate\Support\Collection subclasses so the word collection below is php collection class not usergrid collection */
 
@@ -83,13 +84,17 @@ var_dump($books->entities[0]['uuid']);
 // get all uuid
 var_dump($books->entities->fetch('uuid'));
 
+//get first uuid
+var_dump($books->entities->fetch('uuid')->first());
+
 // get first item in collection -- this is the first item in my response php collection not the Usergrid Collection (table).
 var_dump($books->entities->first());
 
 // get last item in collection -- this is the last item in my response php collection not the Usergrid Collection (table).
 var_dump($books->entities->last());
 
-
+// convert created date to string
+var_dump(Date::convert($books->entities->fetch('created')->first()));
 
 // Illuminate\Support\Collection class support all advanced collection methods
 

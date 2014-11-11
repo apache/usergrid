@@ -81,15 +81,15 @@ foreach($all_users as $user) {
 $find_user_by_query = Usergrid::users()->find(['ql' => "select * where email='jason@apps4u.com.au'"]);
 var_dump($find_user_by_query->entities->fetch('uuid'));
 
-$find_user_by_uuid = Usergrid::users()->findById(['uuid' => $find_user_by_query->entities->fetch('uuid')[0]]);
+$find_user_by_uuid = Usergrid::users()->findById(['uuid' => $find_user_by_query->entities->fetch('uuid')->first()]);
 var_dump($find_user_by_uuid->entities);
 
 
-// AS all results as PHP Collections and the entities propery is always returned as a PHP Collection you can fetch nested records
+// AS all results as PHP Collections and the entities property is always returned as a PHP Collection you can fetch nested records
 $user_addr = Usergrid::users()->findById(['uuid' => 'Jason']);
 echo $user_addr->entities->fetch('adr.addr1');
 //or
-echo $user_addr->entities->fetch('adr.street');
+echo $user_addr->entities->fetch('adr.city');
 
 // add user to group
 //$user_to_group = Usergrid::groups()->addUser(['entity_name_or_uuid' => 'group_name_or_uuid', 'user_name_or_uuid' => 'user name or uuid']);
