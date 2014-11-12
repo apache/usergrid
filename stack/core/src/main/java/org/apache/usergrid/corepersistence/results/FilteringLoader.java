@@ -62,24 +62,23 @@ public class FilteringLoader implements ResultsLoader {
 
     private final CpManagerCache managerCache;
     private final ResultsVerifier resultsVerifier;
-    private final Id ownerId;
     private final ApplicationScope applicationScope;
+    private final IndexScope indexScope;
     private final EntityIndexBatch indexBatch;
 
 
     /**
      * Create an instance of a filter loader
      * @param managerCache The manager cache to load
-     * @param resultsVerifier
-     * @param ownerId
-     * @param applicationScope
+     * @param resultsVerifier  The verifier to verify the candidate results
+     * @param applicationScope The application scope to perform the load
+     * @param indexScope The index scope used in the search
      */
-    protected FilteringLoader( final CpManagerCache managerCache, final ResultsVerifier resultsVerifier,
-                               final EntityRef ownerId, final ApplicationScope applicationScope ) {
+    protected FilteringLoader( final CpManagerCache managerCache, final ResultsVerifier resultsVerifier,  final ApplicationScope applicationScope, final IndexScope indexScope ) {
         this.managerCache = managerCache;
         this.resultsVerifier = resultsVerifier;
-        this.ownerId = new SimpleId( ownerId.getUuid(), ownerId.getType() );
         this.applicationScope = applicationScope;
+        this.indexScope = indexScope;
 
         final EntityIndex index = managerCache.getEntityIndex( applicationScope );
 
@@ -155,7 +154,7 @@ public class FilteringLoader implements ResultsLoader {
 
                 //deindex this document, and remove the previous maxVersion
                 //we have to deindex this from our ownerId, since this is what gave us the reference
-                deIndex( indexBatch, ownerId, previousMax );
+                indexBatch.deindex( indexScope, previousMax );
                 groupedByScopes.remove( collectionType, previousMax );
 
 
@@ -212,7 +211,7 @@ public class FilteringLoader implements ResultsLoader {
 
                 //ask the loader if this is valid, if not discard it and de-index it
                 if ( !resultsVerifier.isValid( cr ) ) {
-                    deIndex( indexBatch, ownerId, cr );
+                    indexBatch.deindex( indexScope, cr );
                     continue;
                 }
 
@@ -236,13 +235,4 @@ public class FilteringLoader implements ResultsLoader {
     }
 
 
-    protected void deIndex( final EntityIndexBatch batch, final Id ownerId, 
-            final CandidateResult candidateResult ) {
-
-        IndexScope indexScope = new IndexScopeImpl( 
-            ownerId,
-            CpNamingUtils.getCollectionScopeNameFromEntityType( candidateResult.getId().getType()) );
-
-        batch.deindex( indexScope, candidateResult );
-    }
 }

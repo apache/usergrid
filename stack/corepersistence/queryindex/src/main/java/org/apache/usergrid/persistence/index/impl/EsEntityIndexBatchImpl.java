@@ -58,6 +58,7 @@ import org.apache.usergrid.persistence.model.field.UUIDField;
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
 
 import com.google.common.base.Joiner;
+import com.sun.xml.internal.ws.developer.MemberSubmissionAddressing;
 
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ANALYZED_STRING_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.BOOLEAN_PREFIX;
@@ -135,7 +136,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
         String indexId = createIndexDocId( entity, context );
 
-        log.debug( "Indexing entity id {} data {} ", indexId, entityAsMap );
+        log.debug( "Indexing entity documentId {} data {} ", indexId, entityAsMap );
 
         bulkRequest.add( client.prepareIndex( indexName, entityType, indexId ).setSource( entityAsMap ) );
 
@@ -149,20 +150,25 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
     public EntityIndexBatch deindex( final IndexScope indexScope, final Id id, final UUID version ) {
 
         IndexValidationUtils.validateIndexScope( indexScope );
+        ValidationUtils.verifyIdentity( id );
+        ValidationUtils.verifyVersion( version );
 
         final String context = createContextName( indexScope );
         final String entityType = id.getType();
 
+        String indexId = createIndexDocId( id, version, context );
+
 
         if ( log.isDebugEnabled() ) {
-            log.debug( "De-indexing entity {}:{} in scope\n   app {}\n   owner {}\n   " + "name {} context{}, type {}",
+            log.debug( "De-indexing entity {}:{} in scope\n   app {}\n   owner {}\n   " + "name {} context{}, type {},",
                     new Object[] {
                             id.getType(), id.getUuid(), applicationScope.getApplication(), indexScope.getOwner(),
                             indexScope.getName(), context, entityType
                     } );
         }
 
-        String indexId = createIndexDocId( id, version, context );
+
+        log.debug( "De-indexing type {} with documentId '{}'" , entityType, indexId);
 
         bulkRequest.add( client.prepareDelete( indexName, entityType, indexId ).setRefresh( refresh ) );
 

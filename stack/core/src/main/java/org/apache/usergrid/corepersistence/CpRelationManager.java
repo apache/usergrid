@@ -921,6 +921,7 @@ public class CpRelationManager implements RelationManager {
 
         if ( query == null ) {
             query = new Query();
+            query.setCollection( collName );
         }
 
         headEntity = em.validate( headEntity );
@@ -968,11 +969,11 @@ public class CpRelationManager implements RelationManager {
 
             if ( results == null ) {
                 logger.debug( "Calling build results 1" );
-                results = buildResults( query, crs, collName );
+                results = buildResults( indexScope, query, crs, collName );
             }
             else {
                 logger.debug( "Calling build results 2" );
-                Results newResults = buildResults( query, crs, collName );
+                Results newResults = buildResults(indexScope,  query, crs, collName );
                 results.merge( newResults );
             }
 
@@ -1367,7 +1368,7 @@ public class CpRelationManager implements RelationManager {
             query = adjustQuery( query );
             CandidateResults crs = ei.search( indexScope, searchTypes,  query );
 
-            raw = buildResults( query, crs, query.getConnectionType() );
+            raw = buildResults( indexScope, query, crs, query.getConnectionType() );
         }
 
         if ( Level.ALL_PROPERTIES.equals( level ) ) {
@@ -1459,7 +1460,7 @@ public class CpRelationManager implements RelationManager {
         query = adjustQuery( query );
         CandidateResults crs = ei.search( indexScope, searchTypes, query );
 
-        return buildConnectionResults( query, crs, connection );
+        return buildConnectionResults( indexScope, query, crs, connection );
     }
 
 
@@ -1550,11 +1551,11 @@ public class CpRelationManager implements RelationManager {
     }
 
 
-    private Results buildConnectionResults(
-            Query query, CandidateResults crs, String connectionType ) {
+    private Results buildConnectionResults( final IndexScope indexScope,
+            final Query query, final CandidateResults crs, final String connectionType ) {
 
         if ( query.getLevel().equals( Level.ALL_PROPERTIES ) ) {
-            return buildResults( query, crs, connectionType );
+            return buildResults( indexScope, query, crs, connectionType );
         }
 
         final EntityRef sourceRef = new SimpleEntityRef( headEntity.getType(), headEntity.getUuid() );
@@ -1583,13 +1584,13 @@ public class CpRelationManager implements RelationManager {
      * @param crs Candidates to be considered for results
      * @param collName Name of collection or null if querying all types
      */
-    private Results buildResults( Query query, CandidateResults crs, String collName ) {
+    private Results buildResults( final IndexScope indexScope, final Query query, final CandidateResults crs, final String collName ) {
 
         logger.debug( "buildResults() for {} from {} candidates", collName, crs.size() );
 
         //get an instance of our results loader
         final ResultsLoader resultsLoader = this.resultsLoaderFactory.getLoader(
-                applicationScope, this.headEntity, query.getResultsLevel() );
+                applicationScope, indexScope, query.getResultsLevel() );
 
         //load the results
         final Results results = resultsLoader.loadResults( crs );

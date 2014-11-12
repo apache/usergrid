@@ -57,8 +57,8 @@ public class EntityConnectionIndexImplTest extends BaseIT {
 
     private static final Logger log = LoggerFactory.getLogger( EntityConnectionIndexImplTest.class );
 
-//    @ClassRule
-//    public static ElasticSearchResource es = new ElasticSearchResource();
+    //    @ClassRule
+    //    public static ElasticSearchResource es = new ElasticSearchResource();
 
 
     @Inject
@@ -101,7 +101,7 @@ public class EntityConnectionIndexImplTest extends BaseIT {
 
 
         // create a person who likes muffins
-        Id personId =   new SimpleId( UUIDGenerator.newTimeUUID(), "person" ) ;
+        Id personId = new SimpleId( UUIDGenerator.newTimeUUID(), "person" );
 
 
         assertNotNull( personId );
@@ -113,7 +113,8 @@ public class EntityConnectionIndexImplTest extends BaseIT {
         IndexScope searchScope = new IndexScopeImpl( personId, "likes" );
 
         //create another scope we index in, want to be sure these scopes are filtered
-        IndexScope otherIndexScope = new IndexScopeImpl( new SimpleId( UUIDGenerator.newTimeUUID(), "animal" ), "likes" );
+        IndexScope otherIndexScope =
+                new IndexScopeImpl( new SimpleId( UUIDGenerator.newTimeUUID(), "animal" ), "likes" );
 
         EntityIndex personLikesIndex = ecif.createEntityIndex( applicationScope );
 
@@ -164,15 +165,12 @@ public class EntityConnectionIndexImplTest extends BaseIT {
         assertContains( muffin.getId(), likes );
         assertContains( oj.getId(), likes );
 
-          //now lets search for all explicitly
-        likes = personLikesIndex.search( searchScope,
-                SearchTypes.allTypes(),
-                Query.fromQL( "select *" ) );
+        //now lets search for all explicitly
+        likes = personLikesIndex.search( searchScope, SearchTypes.allTypes(), Query.fromQL( "select *" ) );
         assertEquals( 3, likes.size() );
         assertContains( egg.getId(), likes );
-        assertContains( muffin.getId(), likes);
+        assertContains( muffin.getId(), likes );
         assertContains( oj.getId(), likes );
-
 
 
         //now search all entity types with a query that returns a subset
@@ -180,26 +178,121 @@ public class EntityConnectionIndexImplTest extends BaseIT {
                 SearchTypes.fromTypes( muffin.getId().getType(), egg.getId().getType(), oj.getId().getType() ),
                 Query.fromQL( "select * where stars = 5" ) );
         assertEquals( 2, likes.size() );
-        assertContains( egg.getId(), likes);
+        assertContains( egg.getId(), likes );
         assertContains( muffin.getId(), likes );
 
 
-
         //now search with no types, we should get only the results that match
-        likes = personLikesIndex.search( searchScope, SearchTypes.allTypes(), Query.fromQL( "select * where stars = 5" ) );
+        likes = personLikesIndex
+                .search( searchScope, SearchTypes.allTypes(), Query.fromQL( "select * where stars = 5" ) );
         assertEquals( 2, likes.size() );
-        assertContains( egg.getId(), likes);
+        assertContains( egg.getId(), likes );
         assertContains( muffin.getId(), likes );
     }
 
 
-    private void assertContains(final Id id, final CandidateResults results ){
-        for( CandidateResult result: results){
-            if(result.getId().equals(id)){
+    @Test
+    public void testDelete() throws IOException {
+
+        Id appId = new SimpleId( "application" );
+        ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
+
+        // create a muffin
+        Entity muffin = new Entity( new SimpleId( UUIDGenerator.newTimeUUID(), "muffin" ) );
+
+        muffin = EntityIndexMapUtils.fromMap( muffin, new HashMap<String, Object>() {{
+            put( "size", "Large" );
+            put( "flavor", "Blueberry" );
+            put( "stars", 5 );
+        }} );
+        EntityUtils.setVersion( muffin, UUIDGenerator.newTimeUUID() );
+
+        Entity egg = new Entity( new SimpleId( UUIDGenerator.newTimeUUID(), "egg" ) );
+
+        egg = EntityIndexMapUtils.fromMap( egg, new HashMap<String, Object>() {{
+            put( "size", "Large" );
+            put( "type", "scramble" );
+            put( "stars", 5 );
+        }} );
+        EntityUtils.setVersion( egg, UUIDGenerator.newTimeUUID() );
+
+        Entity oj = new Entity( new SimpleId( UUIDGenerator.newTimeUUID(), "juice" ) );
+
+        oj = EntityIndexMapUtils.fromMap( oj, new HashMap<String, Object>() {{
+            put( "size", "Large" );
+            put( "type", "pulpy" );
+            put( "stars", 3 );
+        }} );
+        EntityUtils.setVersion( oj, UUIDGenerator.newTimeUUID() );
+
+
+        // create a person who likes muffins
+        Id personId = new SimpleId( UUIDGenerator.newTimeUUID(), "person" );
+
+
+        assertNotNull( personId );
+        assertNotNull( personId.getType() );
+        assertNotNull( personId.getUuid() );
+
+        // index connection of "person Dave likes Large Blueberry muffin"
+
+        IndexScope searchScope = new IndexScopeImpl( personId, "likes" );
+
+        //create another scope we index in, want to be sure these scopes are filtered
+        IndexScope otherIndexScope =
+                new IndexScopeImpl( new SimpleId( UUIDGenerator.newTimeUUID(), "animal" ), "likes" );
+
+        EntityIndex personLikesIndex = ecif.createEntityIndex( applicationScope );
+
+        EntityIndexBatch batch = personLikesIndex.createBatch();
+
+        //add to both scopes
+
+        //add a muffin
+        batch.index( searchScope, muffin );
+        batch.index( otherIndexScope, muffin );
+
+        //add the eggs
+        batch.index( searchScope, egg );
+        batch.index( otherIndexScope, egg );
+
+        //add the oj
+        batch.index( searchScope, oj );
+        batch.index( otherIndexScope, oj );
+
+        batch.executeAndRefresh();
+        personLikesIndex.refresh();
+
+        // now, let's search for muffins
+        CandidateResults likes = personLikesIndex.search( searchScope,
+                SearchTypes.fromTypes( muffin.getId().getType(), egg.getId().getType(), oj.getId().getType() ),
+                Query.fromQL( "select *" ) );
+        assertEquals( 3, likes.size() );
+        assertContains( egg.getId(), likes );
+        assertContains( muffin.getId(), likes );
+        assertContains( oj.getId(), likes );
+
+
+        //now delete them
+        batch.deindex( searchScope, egg );
+        batch.deindex( searchScope, muffin );
+        batch.deindex( searchScope, oj );
+        batch.executeAndRefresh();
+
+        likes = personLikesIndex.search( searchScope,
+                SearchTypes.fromTypes( muffin.getId().getType(), egg.getId().getType(), oj.getId().getType() ),
+                Query.fromQL( "select *" ) );
+        assertEquals( 0, likes.size() );
+    }
+
+
+    private void assertContains( final Id id, final CandidateResults results ) {
+        for ( CandidateResult result : results ) {
+            if ( result.getId().equals( id ) ) {
                 return;
             }
         }
 
-        fail(String.format("Could not find id %s in candidate results", id));
+        fail( String.format( "Could not find id %s in candidate results", id ) );
     }
 }
