@@ -66,22 +66,24 @@ object DeviceScenarios {
   /**
    * Requires: entityName to feed to the device name.  If it exists, it will be created
    */
-  val maybeCreateDevice = exec(
+  val maybeCreateDevices = exec(
     //try to do a GET on device name, if it 404's create it
-    http("Check and create device").get("/devices/${entityName}").headers(Headers.jsonAuthorized).check(status.not(404).saveAs("deviceExists")))
+    http("Check and create device")
+      .get("/users/${username}/devices")
+      .headers(Headers.jsonAuthorized)
+      .check(jsonPath("$.entities").exists, jsonPath("$.entities").saveAs("devices"))
+      )
+      .exec(session =>{
+        println("found "+session.attributes.get("devices").get+ " devices")
+        session
+      } )
     //create the device if we got a 404
-    .doIf("${deviceExists}", "404") {
-
-    exec(
-
-      http("Create device and save deviceId").post("/devices").headers(Headers.jsonAuthorized).body(StringBody(
-        """{"name":"${entityName}",
-          "deviceModel":"Fake Device",
-          "deviceOSVerion":"Negative Version",
-          "${notifier}.notifier.id":"${entityName}"}"""))
-          .check(status.is(200), jsonPath("$.entities[0].uuid").saveAs("deviceId"))
-    )
-  }
-
-
+    .doIf("${devices}","[]") {
+      exec(session =>{
+        println("adding devices")
+        session
+      } )
+      .exec(postDeviceWithNotifier)
+      .exec(ConnectionScenarios.postUserToDeviceConnection)
+    }
 }
