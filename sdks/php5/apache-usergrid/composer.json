@@ -1,7 +1,7 @@
 {
     "name": "apache/usergrid",
     "description": "Apache Usergrid PHP SDK guzzle web service client and service descriptor to interact with usergrid management and application api",
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "license": "Apache",
     "authors": [
         {
