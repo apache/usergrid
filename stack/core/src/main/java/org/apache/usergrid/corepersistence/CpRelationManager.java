@@ -213,7 +213,7 @@ public class CpRelationManager implements RelationManager {
         this.applicationId = applicationId;
         this.headEntity = headEntity;
         this.managerCache = emf.getManagerCache();
-        this.applicationScope = emf.getApplicationScope( applicationId );
+        this.applicationScope = NamingUtils.getApplicationScope( applicationId );
 
         this.cass = em.getCass(); // TODO: eliminate need for this via Core Persistence
         this.indexBucketLocator = indexBucketLocator; // TODO: this also

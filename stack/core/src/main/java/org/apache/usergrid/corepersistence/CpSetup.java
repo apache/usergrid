@@ -271,7 +271,7 @@ public class CpSetup implements Setup {
     static class SystemDefaults {
 
         private static final Application managementApp = 
-                new Application( CpEntityManagerFactory.MANAGEMENT_APPLICATION_ID);
+                new Application( NamingUtils.MANAGEMENT_APPLICATION_ID);
 
 //        private static final Application defaultApp = 
 //                new Application( CpEntityManagerFactory.DEFAULT_APPLICATION_ID );

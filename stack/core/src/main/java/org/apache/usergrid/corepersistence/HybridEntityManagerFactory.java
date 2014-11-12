@@ -45,7 +45,7 @@ public class HybridEntityManagerFactory implements EntityManagerFactory, Applica
         boolean useCP = cass.getPropertiesMap().get("usergrid.persistence").equals("CP");
         if ( useCP ) {
             logger.info("HybridEntityManagerFactory: configured for New Core Persistence engine");
-            factory = new CpEntityManagerFactory(cass, counterUtils, skipAggCounters );
+            factory = new CpEntityManagerFactory(cass, counterUtils );
         } else {
             logger.info("HybridEntityManagerFactory: configured for Classic Usergrid persistence");
             factory = new EntityManagerFactoryImpl( cass, counterUtils, skipAggCounters );

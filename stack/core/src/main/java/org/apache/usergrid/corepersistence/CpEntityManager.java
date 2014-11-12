@@ -205,7 +205,7 @@ public class CpEntityManager implements EntityManager {
         this.managerCache = this.emf.getManagerCache();
         this.applicationId = applicationId;
 
-        applicationScope = this.emf.getApplicationScope( applicationId );
+        applicationScope = NamingUtils.getApplicationScope( applicationId );
 
         this.cass = this.emf.cass;
         this.counterUtils = this.emf.counterUtils;
