@@ -36,7 +36,7 @@ import static org.junit.Assert.assertFalse;
  * Class to test job runtimes
  */
 @Concurrent
-@Ignore("Ignoring until we can diagnose query issue")
+@Ignore("These tests no longer work with shared spring context. Need to re-evaluate")
 public class SchedulerRuntime8IT extends AbstractSchedulerRuntimeIT {
     
     /**

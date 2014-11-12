@@ -128,6 +128,21 @@ public class QueryTest {
         assertEquals( 5, ( ( LongLiteral ) equal.getLiteral() ).getValue().intValue() );
     }
 
+    @Test
+    public void withinDistanceCorrect(){
+        final Query query = Query.fromQL( "location within 2000 of 37.776753, -122.407846" );
+
+        WithinOperand withinOperand = ( WithinOperand ) query.getRootOperand();
+
+        final float distance = withinOperand.getDistance().getFloatValue();
+        final float lat = withinOperand.getLatitude().getFloatValue();
+        final float lon = withinOperand.getLongitude().getFloatValue();
+
+        assertEquals( 2000f, distance, 0f );
+        assertEquals( 37.776753f, lat, 0f );
+        assertEquals( -122.407846f, lon, 0f );
+    }
+
 
     @Test
     public void testCodeEquals() {

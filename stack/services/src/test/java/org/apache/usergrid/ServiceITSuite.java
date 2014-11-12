@@ -60,5 +60,5 @@ public class ServiceITSuite {
     public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
     
     @ClassRule
-    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource().startEs();
+    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
 }

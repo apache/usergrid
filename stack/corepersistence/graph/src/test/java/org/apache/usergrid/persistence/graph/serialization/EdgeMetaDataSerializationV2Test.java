@@ -22,11 +22,11 @@
 package org.apache.usergrid.persistence.graph.serialization;
 
 
-import org.apache.usergrid.persistence.core.test.UseModules;
 import org.junit.runner.RunWith;
 
-import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.guice.CurrentImpl;
+import org.apache.usergrid.persistence.core.test.ITRunner;
+import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeMetadataSerializationV2Impl;
 

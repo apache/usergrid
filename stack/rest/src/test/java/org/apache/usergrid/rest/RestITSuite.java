@@ -57,7 +57,7 @@ import org.apache.usergrid.rest.management.organizations.AdminEmailEncodingIT;
 public class RestITSuite {
 
     @ClassRule
-    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource().startEs();
+    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
 
     @ClassRule
     public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();

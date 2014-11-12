@@ -80,11 +80,9 @@ import org.apache.usergrid.persistence.schema.CollectionInfo;
 import org.apache.usergrid.utils.IndexUtils;
 import org.apache.usergrid.utils.MapUtils;
 
+import com.google.common.base.Preconditions;
 import com.yammer.metrics.annotation.Metered;
 
-import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
-import me.prettyprint.cassandra.serializers.StringSerializer;
-import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.DynamicComposite;
 import me.prettyprint.hector.api.beans.HColumn;
@@ -139,7 +137,7 @@ import static org.apache.usergrid.utils.InflectionUtils.singularize;
 import static org.apache.usergrid.utils.MapUtils.addMapSet;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
-import static org.apache.usergrid.persistence.cassandra.Serializers.*;
+
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.index.query.Query.Level;
 
@@ -2037,12 +2035,14 @@ public class RelationManagerImpl implements RelationManager {
     @Metered(group = "core", name = "RelationManager_searchConnectedEntities")
     public Results searchConnectedEntities( Query query ) throws Exception {
 
-        if ( query == null ) {
-            query = new Query();
-        }
+        Preconditions.checkNotNull(query, "Query must not be null");
 
-        String connectedEntityType = query.getEntityType();
-        String connectionType = query.getConnectionType();
+
+        final String connectedEntityType = query.getEntityType();
+        final String connectionType = query.getConnectionType();
+
+        Preconditions.checkNotNull( connectedEntityType, "entityType must not be null" );
+        Preconditions.checkNotNull( connectionType, "connectionType must not be null" );
 
         headEntity = em.validate( headEntity );
 

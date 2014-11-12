@@ -37,16 +37,21 @@ public class IndexingUtils {
     public static final String NUMBER_PREFIX = "nu_";
     public static final String BOOLEAN_PREFIX = "bu_";
 
-    public static final String ENTITYID_FIELDNAME = "zzz_entityid_zzz";
 
-    public static final String DOC_ID_SEPARATOR = "|";
-    public static final String DOC_ID_SEPARATOR_SPLITTER = "\\|";
+
+    public static final String SPLITTER = "\\__";
 
     // These are not allowed in document type names: _ . , | #
-    public static final String DOC_TYPE_SEPARATOR = "^";
-    public static final String DOC_TYPE_SEPARATOR_SPLITTER = "\\^";
+    public static final String SEPARATOR = "__";
 
-    public static final String INDEX_NAME_SEPARATOR = "^";
+    /**
+     * Reserved UG fields.
+     */
+
+    public static final String ENTITY_CONTEXT_FIELDNAME = "ug_context";
+
+    public static final String ENTITYID_ID_FIELDNAME = "ug_entityId";
+
 
 
     /**
@@ -54,14 +59,36 @@ public class IndexingUtils {
       * @param scope
       * @return
       */
-     public static String createCollectionScopeTypeName( IndexScope scope ) {
+     public static String createContextName( IndexScope scope ) {
          StringBuilder sb = new StringBuilder();
-         sb.append( scope.getOwner().getUuid() ).append(DOC_TYPE_SEPARATOR);
-         sb.append( scope.getOwner().getType() ).append(DOC_TYPE_SEPARATOR);
+         idString(sb, scope.getOwner());
+         sb.append( SEPARATOR );
          sb.append( scope.getName() );
          return sb.toString();
      }
 
+
+    /**
+     * Append the id to the string
+     * @param builder
+     * @param id
+     */
+    public static final void idString(final StringBuilder builder, final Id id){
+        builder.append( id.getUuid() ).append( SEPARATOR )
+                .append(id.getType());
+    }
+
+
+    /**
+     * Turn the id into a string
+     * @param id
+     * @return
+     */
+    public static final String idString(final Id id){
+        final StringBuilder sb = new StringBuilder(  );
+        idString(sb, id);
+        return sb.toString();
+    }
 
 
     /**
@@ -73,9 +100,8 @@ public class IndexingUtils {
     public static String createIndexName(
             String prefix, ApplicationScope applicationScope) {
         StringBuilder sb = new StringBuilder();
-        sb.append( prefix ).append(INDEX_NAME_SEPARATOR);
-        sb.append( applicationScope.getApplication().getUuid() ).append(INDEX_NAME_SEPARATOR);
-        sb.append( applicationScope.getApplication().getType() );
+        sb.append( prefix ).append( SEPARATOR );
+        idString( sb, applicationScope.getApplication() );
         return sb.toString();
     }
 
@@ -86,8 +112,8 @@ public class IndexingUtils {
      * @param entity
      * @return
      */
-    public static String createIndexDocId(Entity entity) {
-        return createIndexDocId(entity.getId(), entity.getVersion());
+    public static String createIndexDocId(final Entity entity, final String context) {
+        return createIndexDocId(entity.getId(), entity.getVersion(), context);
     }
 
 
@@ -95,13 +121,15 @@ public class IndexingUtils {
      * Create the doc Id. This is the entitie's type + uuid + version
      * @param entityId
      * @param version
+     * @para context The context it's indexed in
      * @return
      */
-    public static String createIndexDocId(Id entityId, UUID version) {
+    public static String createIndexDocId(final Id entityId, final UUID version, final String context) {
         StringBuilder sb = new StringBuilder();
-        sb.append( entityId.getUuid() ).append(DOC_ID_SEPARATOR);
-        sb.append( entityId.getType() ).append(DOC_ID_SEPARATOR);
-        sb.append( version.toString() );
+        idString(sb, entityId);
+        sb.append( SEPARATOR );
+        sb.append( version.toString() ).append( SEPARATOR );
+        sb.append( context);
         return sb.toString();
     }
 
@@ -117,7 +145,7 @@ public class IndexingUtils {
      *
      * @throws java.io.IOException On JSON generation error.
      */
-    public static XContentBuilder createDoubleStringIndexMapping( 
+    public static XContentBuilder createDoubleStringIndexMapping(
             XContentBuilder builder, String type ) throws IOException {
 
         builder = builder
@@ -128,24 +156,41 @@ public class IndexingUtils {
 
                     .startArray( "dynamic_templates" )
 
+                           //we need most specific mappings first since it's a stop on match algorithm
+
+                        .startObject()
+                        .startObject( "context_template" )
+                            .field( "match", IndexingUtils.ENTITYID_ID_FIELDNAME )
+                                 .field( "match_mapping_type", "string" )
+                                        .startObject( "mapping" ).field( "type", "string" )
+                                             .field( "index", "not_analyzed" )
+                                        .endObject()
+                                 .endObject()
+                             .endObject()
+
+
+                        .startObject()
+                        .startObject( "context_template" )
+                            .field( "match", IndexingUtils.ENTITY_CONTEXT_FIELDNAME )
+                            .field( "match_mapping_type", "string" )
+                                .startObject( "mapping" ).field( "type", "string" )
+                                    .field( "index", "not_analyzed" ).endObject()
+                                .endObject()
+                         .endObject()
+
                         // any string with field name that starts with sa_ gets analyzed
                         .startObject()
-                            .startObject( "template_1" )
-                                .field( "match", ANALYZED_STRING_PREFIX + "*" )
-                                .field( "match_mapping_type", "string" )
-                                .startObject( "mapping" ).field( "type", "string" )
-                                    .field( "index", "analyzed" )
-                                .endObject()
-                            .endObject()
+                            .startObject( "template_1" ).field( "match", ANALYZED_STRING_PREFIX + "*" )
+                            .field( "match_mapping_type", "string" ).startObject( "mapping" ).field( "type", "string" )
+                            .field( "index", "analyzed" ).endObject().endObject()
                         .endObject()
 
-                            // all other strings are not analyzed
+                                // all other strings are not analyzed
                         .startObject()
                             .startObject( "template_2" )
-                                .field( "match", "*" )
-                                .field( "match_mapping_type", "string" )
-                                .startObject( "mapping" )
-                                    .field( "type", "string" )
+                                    //todo, should be string prefix, remove 2 field mapping
+                                .field( "match", "*" ).field( "match_mapping_type", "string" ).startObject( "mapping" )
+                                .field( "type", "string" )
                                     .field( "index", "not_analyzed" )
                                 .endObject()
                             .endObject()
@@ -160,6 +205,8 @@ public class IndexingUtils {
                                 .endObject()
                             .endObject()
                         .endObject()
+
+
 
                     .endArray()
 

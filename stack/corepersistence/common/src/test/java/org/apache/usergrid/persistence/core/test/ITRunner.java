@@ -27,8 +27,6 @@ import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.Statement;
 
-import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
-
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -36,25 +34,11 @@ import com.google.inject.Module;
 
 
 /**
- * Run jukito with cassandra
+ * Run guice and inject it into our tests
  */
-public class ITRunner extends BlockJUnit4ClassRunner {// extends JukitoRunner {
-
-    //this is fugly, but we have no other way to start cassandra before the jukito runner
-    static{
-      CassandraRule rule = new CassandraRule();
-
-        try {
-            rule.before();
-        }
-        catch ( Throwable throwable ) {
-            //super nasty, but we need to bail if this happens
-            throwable.printStackTrace();
-            System.exit( -1 );
-        }
+public class ITRunner extends BlockJUnit4ClassRunner {
 
 
-    }
 
     private Injector injector;
 

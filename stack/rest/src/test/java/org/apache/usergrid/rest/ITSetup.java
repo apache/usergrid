@@ -55,7 +55,7 @@ public class ITSetup extends ExternalResource {
     private SignInProviderFactory providerFactory;
     private Properties properties;
 
-    private boolean setupCalled = false;
+//    private boolean setupCalled = false;
     private boolean ready = false;
     private URI uri;
 
@@ -78,7 +78,9 @@ public class ITSetup extends ExternalResource {
         tomcatResource = TomcatResource.instance;
         tomcatResource.setWebAppsPath( "src/main/webapp" );
 
-        elasticSearchResource = new ElasticSearchResource().startEs();
+//        elasticSearchResource = new ElasticSearchResource().startEs();
+
+        elasticSearchResource = new ElasticSearchResource();
 
     }
 
@@ -100,12 +102,12 @@ public class ITSetup extends ExternalResource {
             tokenService =       cassandraResource.getBean( TokenService.class );
             providerFactory =    cassandraResource.getBean( SignInProviderFactory.class );
             applicationCreator = cassandraResource.getBean( ApplicationCreator.class );
-            managementService =  cassandraResource.getBean( ManagementService.class );
+//            managementService =  cassandraResource.getBean( ManagementService.class );
 
-            if ( !setupCalled ) {
-                managementService.setup();
-                setupCalled = true;
-            }
+//            if ( !setupCalled ) {
+//                managementService.setup();
+//                setupCalled = true;
+//            }
 
             String esStartup = properties.getProperty("elasticsearch.startup");
             if ( "embedded".equals(esStartup)) {

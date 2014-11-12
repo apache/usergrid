@@ -26,7 +26,6 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -34,7 +33,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
-import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphFig;
@@ -72,13 +70,10 @@ import static org.mockito.Mockito.when;
  *
  *
  */
+
 public abstract class EdgeSerializationTest {
 
     private static final Logger log = LoggerFactory.getLogger( EdgeSerializationTest.class );
-
-    @ClassRule
-    public static CassandraRule rule = new CassandraRule();
-
 
     @Inject
     @Rule

@@ -654,11 +654,12 @@ public class CpEntityManager implements EntityManager {
 
             batch.deindex(defaultIndexScope,  entity );
 
-            IndexScope allTypesIndexScope = new IndexScopeImpl(
-                getApplicationScope().getApplication(), 
-                    CpNamingUtils.ALL_TYPES);
-
-            batch.deindex( allTypesIndexScope,  entity );
+//            TODO REMOVE INDEX CODE
+//            IndexScope allTypesIndexScope = new IndexScopeImpl(
+//                getApplicationScope().getApplication(),
+//                    CpNamingUtils.ALL_TYPES, entityType );
+//
+//            batch.deindex( allTypesIndexScope,  entity );
 
             batch.execute();
 
@@ -2979,23 +2980,24 @@ public class CpEntityManager implements EntityManager {
         // index member into entity collection | type scope
         IndexScope collectionIndexScope = new IndexScopeImpl(
                 collectionEntity.getId(),
-                CpNamingUtils.getCollectionScopeNameFromCollectionName( collName ));
+                CpNamingUtils.getCollectionScopeNameFromCollectionName( collName ) );
 
         batch.index(collectionIndexScope, memberEntity);
-        
-        // index member into entity | all-types scope
-        IndexScope entityAllTypesScope = new IndexScopeImpl(
-                collectionEntity.getId(),
-                CpNamingUtils.ALL_TYPES);
 
-        batch.index(entityAllTypesScope, memberEntity);
-        
-        // index member into application | all-types scope
-        IndexScope appAllTypesScope = new IndexScopeImpl(
-                getApplicationScope().getApplication(),
-                CpNamingUtils.ALL_TYPES);
-
-        batch.index(appAllTypesScope, memberEntity);
+        //TODO REMOVE INDEX CODE
+//        // index member into entity | all-types scope
+//        IndexScope entityAllTypesScope = new IndexScopeImpl(
+//                collectionEntity.getId(),
+//                CpNamingUtils.ALL_TYPES, entityType );
+//
+//        batch.index(entityAllTypesScope, memberEntity);
+//
+//        // index member into application | all-types scope
+//        IndexScope appAllTypesScope = new IndexScopeImpl(
+//                getApplicationScope().getApplication(),
+//                CpNamingUtils.ALL_TYPES, entityType );
+//
+//        batch.index(appAllTypesScope, memberEntity);
 
         batch.execute();
     }
