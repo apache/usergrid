@@ -52,7 +52,8 @@ import static org.junit.Assert.fail;
 //@RunWith(JukitoRunner.class)
 //@UseModules({ GuiceModule.class })
 @Concurrent()
-public class CollectionIT extends AbstractCoreIT {
+public class
+        CollectionIT extends AbstractCoreIT {
     private static final Logger LOG = LoggerFactory.getLogger( CollectionIT.class );
 
     @Rule

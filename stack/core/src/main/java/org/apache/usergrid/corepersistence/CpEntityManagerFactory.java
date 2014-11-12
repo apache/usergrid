@@ -94,20 +94,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     private Setup setup = null;
 
-    public static final Class<DynamicEntity> APPLICATION_ENTITY_CLASS = DynamicEntity.class;
-
-    /** The System Application where we store app and org metadata */
-    public static final UUID SYSTEM_APP_ID =
-            UUID.fromString("b6768a08-b5d5-11e3-a495-10ddb1de66c3");
-
-    /** App where we store management info */
-    public static final  UUID MANAGEMENT_APPLICATION_ID =
-            UUID.fromString("b6768a08-b5d5-11e3-a495-11ddb1de66c8");
-
-    /** TODO Do we need this in two-dot-o? */
-    public static final  UUID DEFAULT_APPLICATION_ID =
-            UUID.fromString("b6768a08-b5d5-11e3-a495-11ddb1de66c9");
-
     /** Have we already initialized the index for the management app? */
     private AtomicBoolean indexInitialized = new AtomicBoolean(  );
 
@@ -130,34 +116,27 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     CassandraService cass;
     CounterUtils counterUtils;
 
-    private boolean skipAggregateCounters;
-
-    private static final int REBUILD_PAGE_SIZE = 100;
-
 
     public CpEntityManagerFactory(
-            CassandraService cass, CounterUtils counterUtils, boolean skipAggregateCounters) {
+            CassandraService cass, CounterUtils counterUtils) {
 
         this.cass = cass;
         this.counterUtils = counterUtils;
-        this.skipAggregateCounters = skipAggregateCounters;
-        if (skipAggregateCounters) {
-            logger.warn("NOTE: Counters have been disabled by configuration...");
-        }
+
 
     }
 
 
     private void init() {
 
-        EntityManager em = getEntityManager(SYSTEM_APP_ID);
+        EntityManager em = getEntityManager( NamingUtils.SYSTEM_APP_ID);
 
         try {
             if ( em.getApplication() == null ) {
                 logger.info("Creating system application");
                 Map sysAppProps = new HashMap<String, Object>();
                 sysAppProps.put( PROPERTY_NAME, "systemapp");
-                em.create( SYSTEM_APP_ID, TYPE_APPLICATION, sysAppProps );
+                em.create( NamingUtils.SYSTEM_APP_ID, TYPE_APPLICATION, sysAppProps );
                 em.getApplication();
                 em.createIndex();
                 em.refreshIndex();
@@ -265,7 +244,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                                        Map<String, Object> properties ) throws Exception {
 
 
-        EntityManager em = getEntityManager(SYSTEM_APP_ID);
+        EntityManager em = getEntityManager( NamingUtils.SYSTEM_APP_ID);
 
         final String appName = buildAppName( organizationName, name );
 
@@ -315,14 +294,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     }
 
 
-    public ApplicationScope getApplicationScope( UUID applicationId ) {
-
-        // We can always generate a scope, it doesn't matter if  the application exists yet or not.
-        final ApplicationScopeImpl scope =
-                new ApplicationScopeImpl( generateApplicationId( applicationId ) );
-
-        return scope;
-    }
 
 
     @Override
@@ -339,7 +310,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
 
         //        Query q = Query.fromQL(PROPERTY_NAME + " = '" + name + "'");
-        EntityManager em = getEntityManager( SYSTEM_APP_ID );
+        EntityManager em = getEntityManager( NamingUtils.SYSTEM_APP_ID );
 
 
         final EntityRef alias = em.getAlias( "organizations", name );
@@ -369,7 +340,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     public UUID lookupApplication( String name ) throws Exception {
         init();
 
-        EntityManager em = getEntityManager( SYSTEM_APP_ID );
+        EntityManager em = getEntityManager( NamingUtils.SYSTEM_APP_ID );
 
 
         final EntityRef alias = em.getAlias( "appinfos", name );
@@ -416,10 +387,10 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         Map<String, UUID> appMap = new HashMap<String, UUID>();
 
-        ApplicationScope appScope = getApplicationScope(SYSTEM_APP_ID);
+        ApplicationScope appScope = NamingUtils.getApplicationScope( NamingUtils.SYSTEM_APP_ID );
         GraphManager gm = managerCache.getGraphManager(appScope);
 
-        EntityManager em = getEntityManager(SYSTEM_APP_ID);
+        EntityManager em = getEntityManager( NamingUtils.SYSTEM_APP_ID);
         Application app = em.getApplication();
         Id fromEntityId = new SimpleId( app.getUuid(), app.getType() );
 
@@ -472,7 +443,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         Map<String, String> props = new HashMap<String,String>();
 
-        EntityManager em = getEntityManager(SYSTEM_APP_ID);
+        EntityManager em = getEntityManager( NamingUtils.SYSTEM_APP_ID);
         Query q = Query.fromQL("select *");
         Results results = null;
         try {
@@ -497,7 +468,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     @Override
     public boolean updateServiceProperties(Map<String, String> properties) {
 
-        EntityManager em = getEntityManager(SYSTEM_APP_ID);
+        EntityManager em = getEntityManager( NamingUtils.SYSTEM_APP_ID);
         Query q = Query.fromQL("select *");
         Results results = null;
         try {
@@ -546,7 +517,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     @Override
     public boolean deleteServiceProperty(String name) {
 
-        EntityManager em = getEntityManager(SYSTEM_APP_ID);
+        EntityManager em = getEntityManager( NamingUtils.SYSTEM_APP_ID);
 
 
         Query q = Query.fromQL("select *");
@@ -604,19 +575,17 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     @Override
     public UUID getManagementAppId() {
-        return MANAGEMENT_APPLICATION_ID;
+        return NamingUtils.MANAGEMENT_APPLICATION_ID;
     }
 
 
     @Override
     public UUID getDefaultAppId() {
-        return DEFAULT_APPLICATION_ID;
+        return NamingUtils.DEFAULT_APPLICATION_ID;
     }
 
 
-    private Id generateApplicationId(UUID id){
-        return new SimpleId( id, Application.ENTITY_TYPE );
-    }
+
 
     /**
      * Gets the setup.
@@ -661,7 +630,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         return Arrays.asList(
             getManagerCache().getEntityIndex(
-                new ApplicationScopeImpl( new SimpleId( SYSTEM_APP_ID, "application" ))),
+                new ApplicationScopeImpl( new SimpleId( NamingUtils.SYSTEM_APP_ID, "application" ))),
 
             // management app
             getManagerCache().getEntityIndex(
@@ -691,9 +660,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     @Override
     public void rebuildInternalIndexes( ProgressObserver po ) throws Exception {
-        rebuildApplicationIndexes(SYSTEM_APP_ID, po);
-        rebuildApplicationIndexes( MANAGEMENT_APPLICATION_ID, po );
-        rebuildApplicationIndexes( DEFAULT_APPLICATION_ID, po );
+        rebuildApplicationIndexes( NamingUtils.SYSTEM_APP_ID, po);
+        rebuildApplicationIndexes( NamingUtils.MANAGEMENT_APPLICATION_ID, po );
+        rebuildApplicationIndexes( NamingUtils.DEFAULT_APPLICATION_ID, po );
     }
 
 
@@ -750,8 +719,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         // could use any collection scope here, does not matter
         EntityCollectionManager ecm = getManagerCache().getEntityCollectionManager( 
             new CollectionScopeImpl( 
-                new SimpleId( SYSTEM_APP_ID, "application"), 
-                new SimpleId( SYSTEM_APP_ID, "application"), 
+                new SimpleId( NamingUtils.SYSTEM_APP_ID, "application"),
+                new SimpleId( NamingUtils.SYSTEM_APP_ID, "application"),
                 "dummy"
         ));
                  
