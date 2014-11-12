@@ -1341,6 +1341,8 @@ public class CpRelationManager implements RelationManager {
 
         Results raw = null;
 
+        Preconditions.checkNotNull( connectionType, "connectionType cannot be null" );
+
         Query query = new Query();
         query.setConnectionType( connectionType );
         query.setEntityType( connectedEntityType );

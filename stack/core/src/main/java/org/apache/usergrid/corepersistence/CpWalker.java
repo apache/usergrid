@@ -87,14 +87,7 @@ public class CpWalker {
             @Override
             public Observable<Edge> call( final String edgeType ) {
 
-                logger.debug( "Loading edges of edgeType {} from {}:{}\n   scope {}:{}", 
-                    new Object[] {
-                        edgeType,
-                        applicationId.getType(),
-                        applicationId.getUuid(),
-                        applicationScope.getApplication().getType(),
-                        applicationScope.getApplication().getUuid()
-                } );
+                logger.debug( "Loading edges of type {} from node {}", edgeType, applicationId );
 
                 return gm.loadEdgesFromSource( new SimpleSearchByEdgeType( 
                     applicationId,

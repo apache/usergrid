@@ -257,7 +257,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
                 assertEquals( 2000, e.getProperty("key2"));
 
-                Results catResults = em.searchConnectedEntities(e, Query.fromQL("select *"));
+                Results catResults = em.searchConnectedEntities(e, Query.fromQL("select *").setConnectionType( "herds" ));
                 assertEquals( 3, catResults.size() );
 
                 if ( count % 100 == 0 ) {
