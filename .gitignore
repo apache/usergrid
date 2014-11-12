@@ -27,8 +27,9 @@ Icon
 /portal/test/coverage/instrument/js/usergrid-coverage.min.js
 /portal/test/coverage/instrument/js/usergrid.min.js
 /stack/corepersistence/priamcluster/aws.properties
-#Webstorm artifacts
+#Webstorm/IntelliJ artifacts
 .idea/
+*.iml
 stack/corepersistence/collection/nbactions.xml
 stack/corepersistence/graph/nbactions.xml
 stack/corepersistence/model/nbactions.xml
