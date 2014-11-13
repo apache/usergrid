@@ -9,7 +9,6 @@
 
 # variables used for javadoc generation
 MAVEN_REPO="${HOME}/.m2/repository"
-ANDROID_SDK_PATH="/Applications/adt-bundle-mac/sdk/platforms/android-4.2"
 JAVADOC_EXE_PATH="${JAVA_HOME}/bin"
 JAVA_VERSION="1.6"
 
@@ -145,7 +144,7 @@ if [ -f "${DEST_ZIP_DIR}/build_release_zip.sh" ]; then
 fi
 
 # generate javadocs
-JAVADOC_OUTPUT_DIR="${DEST_ZIP_DIR}/docs"
+JAVADOC_OUTPUT_DIR="target/docs"
 if [ -d "${JAVADOC_OUTPUT_DIR}" ]; then
   # delete everything that may be there
   rm -r "${JAVADOC_OUTPUT_DIR}/*"
