@@ -579,6 +579,9 @@ public interface EntityManager {
             String entityType, String propertyName, Object propertyValue ) throws Exception;
 
     @Deprecated
+    /**
+     * Get an entity by UUID.  This will return null if the entity is not found
+     */
     public Entity get( UUID id ) throws Exception;
 
     public <A extends Entity> A get( EntityRef entityRef, Class<A> entityClass ) throws Exception;

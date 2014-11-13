@@ -20,6 +20,8 @@
 package org.apache.usergrid.corepersistence.rx;
 
 
+import java.util.Arrays;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +38,7 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import rx.Observable;
 import rx.Subscriber;
 import rx.functions.Action1;
+import rx.functions.Func1;
 
 import static org.apache.usergrid.corepersistence.NamingUtils.generateApplicationId;
 import static org.apache.usergrid.corepersistence.NamingUtils.getApplicationScope;
@@ -44,27 +47,26 @@ import static org.apache.usergrid.corepersistence.NamingUtils.getApplicationScop
 /**
  * An observable that will emit all application stored in the system.
  */
-public class ApplicationObservable implements Observable.OnSubscribe<Id> {
-
-    private static final Logger logger = LoggerFactory.getLogger( ApplicationObservable.class );
-
-    private final GraphManagerFactory graphManagerFactory;
+public class ApplicationObservable  {
 
 
-    public ApplicationObservable( final GraphManagerFactory graphManagerFactory ) {
-        this.graphManagerFactory = graphManagerFactory;
-    }
 
-
-    @Override
-    public void call( final Subscriber<? super Id> subscriber ) {
-
+    /**
+     * Get all applicationIds as an observable
+     * @param graphManagerFactory
+     * @return
+     */
+    public static Observable<Id> getAllApplicationIds( final GraphManagerFactory graphManagerFactory ) {
 
         //emit our 3 hard coded applications that are used the manage the system first.
         //this way consumers can perform whatever work they need to on the root system first
-        emit( generateApplicationId( NamingUtils.DEFAULT_APPLICATION_ID ), subscriber );
-        emit( generateApplicationId( NamingUtils.MANAGEMENT_APPLICATION_ID ), subscriber );
-        emit( generateApplicationId( NamingUtils.SYSTEM_APP_ID ), subscriber );
+
+
+       final Observable<Id> systemIds =  Observable.from( Arrays.asList( generateApplicationId( NamingUtils.DEFAULT_APPLICATION_ID ),
+                generateApplicationId( NamingUtils.MANAGEMENT_APPLICATION_ID ),
+                generateApplicationId( NamingUtils.SYSTEM_APP_ID ) ) );
+
+
 
 
         ApplicationScope appScope = getApplicationScope( NamingUtils.SYSTEM_APP_ID );
@@ -75,45 +77,17 @@ public class ApplicationObservable implements Observable.OnSubscribe<Id> {
         Id rootAppId = appScope.getApplication();
 
 
-        Observable<Edge> edges = gm.loadEdgesFromSource(
+        Observable<Id> appIds = gm.loadEdgesFromSource(
                 new SimpleSearchByEdgeType( rootAppId, edgeType, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
-                        null ) );
-
-
-        final int count = edges.doOnNext( new Action1<Edge>() {
+                        null ) ).map( new Func1<Edge, Id>() {
             @Override
-            public void call( final Edge edge ) {
-                Id applicationId = edge.getTargetNode();
-
-
-                logger.debug( "Emitting applicationId of {}", applicationId );
-
-                emit( applicationId, subscriber );
+            public Id call( final Edge edge ) {
+                return edge.getTargetNode();
             }
-        } )
-                //if we don't want the count, not sure we need to block.  We may just need to subscribe
-                .count().toBlocking().last();
+        } );
 
-        logger.debug( "Emitted {} application ids", count );
+        return Observable.merge( systemIds, appIds);
     }
 
 
-    /**
-     * Return false if no more items should be emitted, true otherwise
-     */
-    private boolean emit( final Id appId, final Subscriber<? super Id> subscriber ) {
-
-        if ( subscriber.isUnsubscribed() ) {
-            return false;
-        }
-
-        try {
-            subscriber.onNext( appId );
-        }
-        catch ( Throwable t ) {
-            subscriber.onError( t );
-        }
-
-        return true;
-    }
 }

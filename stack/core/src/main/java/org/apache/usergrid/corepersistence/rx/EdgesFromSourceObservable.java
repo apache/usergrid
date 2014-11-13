@@ -32,42 +32,29 @@ import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import rx.Observable;
-import rx.Subscriber;
 import rx.functions.Func1;
 
 
 /**
  * Emits the id of all nodes that are target nodes for the given source node
  */
-public class EdgesFromSourceObservable implements Observable.OnSubscribe<Edge> {
+public class EdgesFromSourceObservable {
 
     private static final Logger logger = LoggerFactory.getLogger( EdgesFromSourceObservable.class );
 
-    private final ApplicationScope applicationScope;
-    private final Id sourceNode;
-    private final GraphManager gm;
 
-
-    public EdgesFromSourceObservable( final ApplicationScope applicationScope, final Id sourceNode,
-                                      final GraphManager gm ) {
-        this.applicationScope = applicationScope;
-        this.sourceNode = sourceNode;
-        this.gm = gm;
-    }
-
-
-    @Override
-    public void call( final Subscriber<? super Edge> subscriber ) {
-
-
+    /**
+     * Get all edges from the source
+     */
+    public static Observable<Edge> edgesFromSource( final ApplicationScope applicationScope, final Id sourceNode,
+                                                    final GraphManager gm ) {
         final Id applicationId = applicationScope.getApplication();
         //only search edge types that start with collections
 
 
-        Observable<String> edgeTypes = gm.getEdgeTypesFromSource(
-                new SimpleSearchEdgeType( sourceNode, null, null ) );
+        Observable<String> edgeTypes = gm.getEdgeTypesFromSource( new SimpleSearchEdgeType( sourceNode, null, null ) );
 
-        edgeTypes.flatMap( new Func1<String, Observable<Edge>>() {
+        return edgeTypes.flatMap( new Func1<String, Observable<Edge>>() {
             @Override
             public Observable<Edge> call( final String edgeType ) {
 

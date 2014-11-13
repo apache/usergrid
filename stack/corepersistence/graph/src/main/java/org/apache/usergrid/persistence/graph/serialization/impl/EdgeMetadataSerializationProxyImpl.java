@@ -46,7 +46,7 @@ import com.netflix.astyanax.MutationBatch;
 @Singleton
 public class EdgeMetadataSerializationProxyImpl implements EdgeMetadataSerialization {
 
-    public static final int MIGRATION_VERSION = 1;
+    public static final int MIGRATION_VERSION = 2;
 
     private final DataMigrationManager dataMigrationManager;
     private final Keyspace keyspace;

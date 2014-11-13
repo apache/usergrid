@@ -29,47 +29,39 @@ import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import rx.Observable;
-import rx.Subscriber;
-import rx.functions.Action1;
+import rx.functions.Func1;
 
 
 /**
  * Emits the id of all nodes that are target nodes from the given source node
  */
-public class TargetIdObservable implements Observable.OnSubscribe<Id> {
+public class TargetIdObservable {
 
     private static final Logger logger = LoggerFactory.getLogger( TargetIdObservable.class );
 
-    private final ApplicationScope applicationScope;
-    private final Id sourceNode;
-    private final GraphManager gm;
 
-
-    public TargetIdObservable( final ApplicationScope applicationScope, final Id sourceNode, final GraphManager gm ) {
-        this.applicationScope = applicationScope;
-        this.sourceNode = sourceNode;
-        this.gm = gm;
-    }
-
-
-    @Override
-    public void call( final Subscriber<? super Id> subscriber ) {
-
+    /**
+     * Get all nodes that are target nodes from the sourceNode
+     * @param applicationScope
+     * @param sourceNode
+     * @param gm
+     * @return
+     */
+    public static Observable<Id> getTargetNodes(final ApplicationScope applicationScope, final Id sourceNode, final GraphManager gm) {
 
         //only search edge types that start with collections
-        Observable.create( new EdgesFromSourceObservable( applicationScope, sourceNode, gm ) )
-                  .doOnNext( new Action1<Edge>() {
-
-                      @Override
-                      public void call( Edge edge ) {
-
-                          logger.info( "Emitting targetId of  {}", edge );
-
-                          final Id targetNode = edge.getTargetNode();
+       return EdgesFromSourceObservable.edgesFromSource( applicationScope, sourceNode, gm ).map( new Func1<Edge, Id>() {
 
 
-                          subscriber.onNext( targetNode );
-                      }
-                  } ).toBlocking().lastOrDefault( null ); // end foreach on edges
+           @Override
+           public Id call( final Edge edge ) {
+               final Id targetNode = edge.getTargetNode();
+
+               logger.info( "Emitting targetId of {}", edge );
+
+
+               return targetNode;
+           }
+       } );
     }
 }

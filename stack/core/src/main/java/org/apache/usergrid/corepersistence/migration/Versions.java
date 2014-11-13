@@ -31,7 +31,12 @@ import org.apache.usergrid.persistence.graph.serialization.impl.EdgeMetadataSeri
 public class Versions {
 
     /**
-     * Version 1
+     * Version 1 of our mappings
      */
-    public static final int VERSION_1 = EdgeMetadataSerializationProxyImpl.MIGRATION_VERSION;
+    public static final int VERSION_1 = 1;
+
+    /**
+     * Version 2.  Edge meta changes
+     */
+    public static final int VERSION_2 = EdgeMetadataSerializationProxyImpl.MIGRATION_VERSION;
 }

@@ -45,6 +45,11 @@ public class NamingUtils {
     public static final  UUID DEFAULT_APPLICATION_ID =
             UUID.fromString("b6768a08-b5d5-11e3-a495-11ddb1de66c9");
 
+    /**
+     * The name of the map that holds our entity id->type mapping
+     */
+    public static String TYPES_BY_UUID_MAP = "zzz_typesbyuuid_zzz";
+
 
     /**
      * Get the application scope from the given uuid
