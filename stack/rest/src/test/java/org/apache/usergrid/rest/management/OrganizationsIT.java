@@ -59,7 +59,6 @@ import static org.junit.Assert.assertTrue;
 public class OrganizationsIT extends AbstractRestIT {
     private static final Logger LOG = LoggerFactory.getLogger( OrganizationsIT.class );
 
-    //For Testing OrganizationUpdate
     @Rule
     public TestContextSetup context = new TestContextSetup( this );
 
