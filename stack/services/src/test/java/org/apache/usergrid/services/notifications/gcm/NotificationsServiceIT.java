@@ -85,12 +85,12 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         Entity e = app.testRequest(ServiceAction.POST, 1, "devices") .getEntity();
         app.testRequest(ServiceAction.GET, 1, "devices", e.getUuid());
 
-        device1 = app.getEm().get(e.getUuid(), Device.class);
+        device1 = app.getEntityManager().get(e.getUuid(), Device.class);
         assertEquals(device1.getProperty(key), PUSH_TOKEN);
 
         app.put(key, PUSH_TOKEN);
         e = app.testRequest(ServiceAction.POST, 1, "devices").getEntity();
-        device2 = app.getEm().get(e.getUuid(), Device.class);
+        device2 = app.getEntityManager().get(e.getUuid(), Device.class);
         ns = getNotificationService();
 
         TestQueueManager qm = new TestQueueManager();
@@ -134,7 +134,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
                 .getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
 
-        Notification notification = app.getEm().get(e.getUuid(),
+        Notification notification = app.getEntityManager().get(e.getUuid(),
                 Notification.class);
 
         // perform push //
@@ -156,7 +156,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         Entity e = app.testRequest(ServiceAction.POST, 1, "devices",device1.getUuid(),"notifications").getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
 
-        Notification notification = app.getEm().get(e.getUuid(), Notification.class);
+        Notification notification = app.getEntityManager().get(e.getUuid(), Notification.class);
         assertEquals(
                 notification.getPayloads().get(notifier.getUuid().toString()),
                 payload);
@@ -191,13 +191,13 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         Entity e = app.testRequest(ServiceAction.POST, 1,"users",user.getUuid(), "notifications").getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
 
-        app.getEm().refreshIndex();
+        app.getEntityManager().refreshIndex();
 
         // perform push //
-        Notification notification = app.getEm().get(e.getUuid(), Notification.class);
+        Notification notification = app.getEntityManager().get(e.getUuid(), Notification.class);
         notification = scheduleNotificationAndWait(notification);
 
-        app.getEm().refreshIndex();
+        app.getEntityManager().refreshIndex();
 
         checkReceipts(notification, 1);
     }
@@ -216,7 +216,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         Entity e = app.testRequest(ServiceAction.POST, 1, "devices","notifications")   .getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
 
-        Notification notification = app.getEm().get(e.getUuid(),  Notification.class);
+        Notification notification = app.getEntityManager().get(e.getUuid(),  Notification.class);
         assertEquals(
                 notification.getPayloads().get(notifier.getUuid().toString()),
                 payload);
@@ -276,7 +276,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         app.put("apiKey", API_KEY);
         Entity e = app.testRequest(ServiceAction.POST, 1, "notifiers")
                 .getEntity();
-        Notifier notifier2 = app.getEm().get(e.getUuid(), Notifier.class);
+        Notifier notifier2 = app.getEntityManager().get(e.getUuid(), Notifier.class);
 
         payloads.clear();
         StringBuilder sb = new StringBuilder();
@@ -320,7 +320,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
                 .getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
 
-        Notification notification = app.getEm().get(e.getUuid(),
+        Notification notification = app.getEntityManager().get(e.getUuid(),
                 Notification.class);
         assertEquals(
                 notification.getPayloads().get(notifier.getUuid().toString()),
@@ -331,7 +331,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         app.put(notifier.getName() + NOTIFIER_ID_POSTFIX, PUSH_TOKEN + "x");
 
         e = app.testRequest(ServiceAction.POST, 1, "devices").getEntity();
-        device1 = app.getEm().get(e.getUuid(), Device.class);
+        device1 = app.getEntityManager().get(e.getUuid(), Device.class);
 
         ns.addDevice(notification, device1);
 
@@ -340,7 +340,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         List<EntityRef> receipts = getNotificationReceipts(notification);
         assertEquals(1, receipts.size());
-        Receipt receipt = app.getEm().get(receipts.get(0), Receipt.class);
+        Receipt receipt = app.getEntityManager().get(receipts.get(0), Receipt.class);
         assertEquals("InvalidRegistration", receipt.getErrorCode());
     }
 
@@ -362,7 +362,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
                 .getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
 
-        Notification notification = app.getEm().get(e.getUuid(),
+        Notification notification = app.getEntityManager().get(e.getUuid(),
                 Notification.class);
         assertEquals(
                 notification.getPayloads().get(notifier.getUuid().toString()),
@@ -371,7 +371,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         ns.addDevice(notification, device1);
 
         // save bad API key
-        app.getEm().setProperty(notifier, "apiKey", API_KEY + "x");
+        app.getEntityManager().setProperty(notifier, "apiKey", API_KEY + "x");
 
         // perform push //
 

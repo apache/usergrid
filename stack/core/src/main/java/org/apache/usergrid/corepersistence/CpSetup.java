@@ -27,6 +27,8 @@ import me.prettyprint.cassandra.service.CassandraHost;
 import me.prettyprint.hector.api.ddl.ComparatorType;
 import static me.prettyprint.hector.api.factory.HFactory.createColumnFamilyDefinition;
 import org.apache.commons.lang.StringUtils;
+
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.mq.cassandra.QueuesCF;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.cassandra.ApplicationCF;
@@ -59,10 +61,14 @@ public class CpSetup implements Setup {
 
     private static final Logger logger = LoggerFactory.getLogger( CpSetup.class );
 
+    private static Injector injector = null;
+
+
     private final org.apache.usergrid.persistence.EntityManagerFactory emf;
     private final CassandraService cass;
 
-    private GuiceModule gm;
+
+
 
 
     /**
@@ -76,7 +82,7 @@ public class CpSetup implements Setup {
     }
 
 
-    private static Injector injector = null;
+
 
     public static Injector getInjector() {
         if ( injector == null ) {
@@ -181,10 +187,6 @@ public class CpSetup implements Setup {
     }
 
 
-    /** @return staticly constructed reference to the management application */
-    public static Application getManagementApp() {
-        return SystemDefaults.managementApp;
-    }
 
     
     @Override
@@ -271,7 +273,7 @@ public class CpSetup implements Setup {
     static class SystemDefaults {
 
         private static final Application managementApp = 
-                new Application( NamingUtils.MANAGEMENT_APPLICATION_ID);
+                new Application( CpNamingUtils.MANAGEMENT_APPLICATION_ID);
 
 //        private static final Application defaultApp = 
 //                new Application( CpEntityManagerFactory.DEFAULT_APPLICATION_ID );

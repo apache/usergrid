@@ -22,6 +22,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.model.entity.Id;
+
 
 public class SimpleEntityRef implements EntityRef {
 
@@ -50,6 +52,10 @@ public class SimpleEntityRef implements EntityRef {
         uuid = entityRef.getUuid();
     }
 
+
+    public static SimpleEntityRef fromId(final Id id){
+        return new SimpleEntityRef(id.getType(), id.getUuid()  );
+    }
 
     public static EntityRef ref() {
         return new SimpleEntityRef( null, null );

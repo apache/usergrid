@@ -37,7 +37,6 @@ import org.apache.commons.lang.StringUtils;
 
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.AbstractEntity;
-import org.apache.usergrid.persistence.DynamicEntity;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityFactory;
 import org.apache.usergrid.persistence.EntityManager;
@@ -110,7 +109,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         });
 
 
-    private CpManagerCache managerCache;
+    private ManagerCache managerCache;
     private DataMigrationManager dataMigrationManager;
 
     CassandraService cass;
@@ -129,14 +128,14 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     private void init() {
 
-        EntityManager em = getEntityManager( NamingUtils.SYSTEM_APP_ID);
+        EntityManager em = getEntityManager( CpNamingUtils.SYSTEM_APP_ID);
 
         try {
             if ( em.getApplication() == null ) {
                 logger.info("Creating system application");
                 Map sysAppProps = new HashMap<String, Object>();
                 sysAppProps.put( PROPERTY_NAME, "systemapp");
-                em.create( NamingUtils.SYSTEM_APP_ID, TYPE_APPLICATION, sysAppProps );
+                em.create( CpNamingUtils.SYSTEM_APP_ID, TYPE_APPLICATION, sysAppProps );
                 em.getApplication();
                 em.createIndex();
                 em.refreshIndex();
@@ -148,24 +147,14 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     }
 
 
-    public CpManagerCache getManagerCache() {
+    public ManagerCache getManagerCache() {
 
         if ( managerCache == null ) {
 
-            // TODO: better solution for getting injector? 
+            // TODO: better solution for getting injector?
             Injector injector = CpSetup.getInjector();
 
-            EntityCollectionManagerFactory ecmf;
-            EntityIndexFactory eif;
-            GraphManagerFactory gmf;
-            MapManagerFactory mmf;
-
-            ecmf = injector.getInstance( EntityCollectionManagerFactory.class );
-            eif = injector.getInstance( EntityIndexFactory.class );
-            gmf = injector.getInstance( GraphManagerFactory.class );
-            mmf = injector.getInstance( MapManagerFactory.class );
-
-            managerCache = new CpManagerCache( ecmf, eif, gmf, mmf );
+            managerCache = injector.getInstance( ManagerCache.class );
 
             dataMigrationManager = injector.getInstance( DataMigrationManager.class );
         }
@@ -244,7 +233,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                                        Map<String, Object> properties ) throws Exception {
 
 
-        EntityManager em = getEntityManager( NamingUtils.SYSTEM_APP_ID);
+        EntityManager em = getEntityManager( CpNamingUtils.SYSTEM_APP_ID);
 
         final String appName = buildAppName( organizationName, name );
 
@@ -310,7 +299,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
 
         //        Query q = Query.fromQL(PROPERTY_NAME + " = '" + name + "'");
-        EntityManager em = getEntityManager( NamingUtils.SYSTEM_APP_ID );
+        EntityManager em = getEntityManager( CpNamingUtils.SYSTEM_APP_ID );
 
 
         final EntityRef alias = em.getAlias( "organizations", name );
@@ -340,10 +329,10 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     public UUID lookupApplication( String name ) throws Exception {
         init();
 
-        EntityManager em = getEntityManager( NamingUtils.SYSTEM_APP_ID );
+        EntityManager em = getEntityManager( CpNamingUtils.SYSTEM_APP_ID );
 
 
-        final EntityRef alias = em.getAlias( "appinfos", name );
+        final EntityRef alias = em.getAlias( CpNamingUtils.APPINFOS, name );
 
         if ( alias == null ) {
             return null;
@@ -359,25 +348,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         final UUID property = ( UUID ) entity.getProperty( "applicationUuid" );
 
         return property;
-
-
-        //        Query q = Query.fromQL( PROPERTY_NAME + " = '" + name + "'");
-        //
-        //        EntityManager em = getEntityManager(SYSTEM_APP_ID);
-        //
-        //
-        //        Results results = em.searchCollection( em.getApplicationRef(), "appinfos", q);
-        //
-        //        if ( results.isEmpty() ) {
-        //            return null;
-        //        }
-        //
-        //        Entity entity = results.iterator().next();
-        //        Object uuidObject = entity.getProperty("applicationUuid");
-        //        if ( uuidObject instanceof UUID ) {
-        //            return (UUID)uuidObject;
-        //        }
-        //        return UUIDUtils.tryExtractUUID( entity.getProperty("applicationUuid").toString() );
     }
 
 
@@ -387,14 +357,14 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         Map<String, UUID> appMap = new HashMap<String, UUID>();
 
-        ApplicationScope appScope = NamingUtils.getApplicationScope( NamingUtils.SYSTEM_APP_ID );
+        ApplicationScope appScope = CpNamingUtils.getApplicationScope( CpNamingUtils.SYSTEM_APP_ID );
         GraphManager gm = managerCache.getGraphManager(appScope);
 
-        EntityManager em = getEntityManager( NamingUtils.SYSTEM_APP_ID);
+        EntityManager em = getEntityManager( CpNamingUtils.SYSTEM_APP_ID);
         Application app = em.getApplication();
         Id fromEntityId = new SimpleId( app.getUuid(), app.getType() );
 
-        String edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( "appinfos" );
+        String edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( CpNamingUtils.APPINFOS );
 
         logger.debug("getApplications(): Loading edges of edgeType {} from {}:{}",
             new Object[] { edgeType, fromEntityId.getType(), fromEntityId.getUuid() } );
@@ -417,7 +387,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             CollectionScope collScope = new CollectionScopeImpl(
                     appScope.getApplication(),
                     appScope.getApplication(),
-                    CpNamingUtils.getCollectionScopeNameFromCollectionName( "appinfos" ));
+                    CpNamingUtils.getCollectionScopeNameFromCollectionName( CpNamingUtils.APPINFOS ));
 
             org.apache.usergrid.persistence.model.entity.Entity e =
                     managerCache.getEntityCollectionManager( collScope ).load( targetId )
@@ -443,7 +413,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         Map<String, String> props = new HashMap<String,String>();
 
-        EntityManager em = getEntityManager( NamingUtils.SYSTEM_APP_ID);
+        EntityManager em = getEntityManager( CpNamingUtils.SYSTEM_APP_ID);
         Query q = Query.fromQL("select *");
         Results results = null;
         try {
@@ -468,7 +438,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     @Override
     public boolean updateServiceProperties(Map<String, String> properties) {
 
-        EntityManager em = getEntityManager( NamingUtils.SYSTEM_APP_ID);
+        EntityManager em = getEntityManager( CpNamingUtils.SYSTEM_APP_ID);
         Query q = Query.fromQL("select *");
         Results results = null;
         try {
@@ -517,7 +487,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     @Override
     public boolean deleteServiceProperty(String name) {
 
-        EntityManager em = getEntityManager( NamingUtils.SYSTEM_APP_ID);
+        EntityManager em = getEntityManager( CpNamingUtils.SYSTEM_APP_ID);
 
 
         Query q = Query.fromQL("select *");
@@ -575,13 +545,13 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     @Override
     public UUID getManagementAppId() {
-        return NamingUtils.MANAGEMENT_APPLICATION_ID;
+        return CpNamingUtils.MANAGEMENT_APPLICATION_ID;
     }
 
 
     @Override
     public UUID getDefaultAppId() {
-        return NamingUtils.DEFAULT_APPLICATION_ID;
+        return CpNamingUtils.DEFAULT_APPLICATION_ID;
     }
 
 
@@ -630,7 +600,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         return Arrays.asList(
             getManagerCache().getEntityIndex(
-                new ApplicationScopeImpl( new SimpleId( NamingUtils.SYSTEM_APP_ID, "application" ))),
+                new ApplicationScopeImpl( new SimpleId( CpNamingUtils.SYSTEM_APP_ID, "application" ))),
 
             // management app
             getManagerCache().getEntityIndex(
@@ -660,9 +630,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     @Override
     public void rebuildInternalIndexes( ProgressObserver po ) throws Exception {
-        rebuildApplicationIndexes( NamingUtils.SYSTEM_APP_ID, po);
-        rebuildApplicationIndexes( NamingUtils.MANAGEMENT_APPLICATION_ID, po );
-        rebuildApplicationIndexes( NamingUtils.DEFAULT_APPLICATION_ID, po );
+        rebuildApplicationIndexes( CpNamingUtils.SYSTEM_APP_ID, po);
+        rebuildApplicationIndexes( CpNamingUtils.MANAGEMENT_APPLICATION_ID, po );
+        rebuildApplicationIndexes( CpNamingUtils.DEFAULT_APPLICATION_ID, po );
     }
 
 
@@ -719,8 +689,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         // could use any collection scope here, does not matter
         EntityCollectionManager ecm = getManagerCache().getEntityCollectionManager( 
             new CollectionScopeImpl( 
-                new SimpleId( NamingUtils.SYSTEM_APP_ID, "application"),
-                new SimpleId( NamingUtils.SYSTEM_APP_ID, "application"),
+                new SimpleId( CpNamingUtils.SYSTEM_APP_ID, "application"),
+                new SimpleId( CpNamingUtils.SYSTEM_APP_ID, "application"),
                 "dummy"
         ));
                  

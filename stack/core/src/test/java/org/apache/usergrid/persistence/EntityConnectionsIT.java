@@ -299,7 +299,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         UUID applicationId = app.getId( );
         assertNotNull( applicationId );
 
-        EntityManager em = app.getEm();
+        EntityManager em = app.getEntityManager();
         assertNotNull( em );
 
         User fred = new User();

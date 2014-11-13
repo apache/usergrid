@@ -160,10 +160,6 @@ public class CoreApplication implements Application, TestRule {
     }
 
 
-    public EntityManager getEm() {
-        return em;
-    }
-
 
     public QueueManager getQm() {
         return setup.getQmf().getQueueManager( getId() );

@@ -20,8 +20,7 @@
 package org.apache.usergrid.corepersistence.results;
 
 
-import org.apache.usergrid.corepersistence.CpManagerCache;
-import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.corepersistence.ManagerCache;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.query.Query;
@@ -34,11 +33,11 @@ import com.google.inject.Inject;
  */
 public class ResultsLoaderFactoryImpl implements ResultsLoaderFactory {
 
-    private final CpManagerCache managerCache;
+    private final ManagerCache managerCache;
 
 
     @Inject
-    public ResultsLoaderFactoryImpl( final CpManagerCache managerCache ) {
+    public ResultsLoaderFactoryImpl( final ManagerCache managerCache ) {
         this.managerCache = managerCache;
     }
 

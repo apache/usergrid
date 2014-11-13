@@ -41,7 +41,7 @@ import java.util.Map;
 import java.util.UUID;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.corepersistence.CpSetup;
-import org.apache.usergrid.corepersistence.NamingUtils;
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.index.EntityIndex;
@@ -165,7 +165,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
         // ----------------- delete the system and application indexes
 
         logger.debug("Deleting app index and system app index");
-        deleteIndex( NamingUtils.SYSTEM_APP_ID );
+        deleteIndex( CpNamingUtils.SYSTEM_APP_ID );
         deleteIndex( em.getApplicationId() );
 
         // ----------------- test that we can read them, should fail

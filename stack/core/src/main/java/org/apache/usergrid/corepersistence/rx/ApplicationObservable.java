@@ -21,12 +21,14 @@ package org.apache.usergrid.corepersistence.rx;
 
 
 import java.util.Arrays;
+import java.util.UUID;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.apache.usergrid.corepersistence.NamingUtils;
+import org.apache.usergrid.corepersistence.ManagerCache;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
@@ -36,12 +38,10 @@ import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import rx.Observable;
-import rx.Subscriber;
-import rx.functions.Action1;
 import rx.functions.Func1;
 
-import static org.apache.usergrid.corepersistence.NamingUtils.generateApplicationId;
-import static org.apache.usergrid.corepersistence.NamingUtils.getApplicationScope;
+import static org.apache.usergrid.corepersistence.util.CpNamingUtils.generateApplicationId;
+import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getApplicationScope;
 
 
 /**
@@ -53,36 +53,60 @@ public class ApplicationObservable  {
 
     /**
      * Get all applicationIds as an observable
-     * @param graphManagerFactory
+     * @param managerCache
      * @return
      */
-    public static Observable<Id> getAllApplicationIds( final GraphManagerFactory graphManagerFactory ) {
+    public static Observable<Id> getAllApplicationIds( final ManagerCache managerCache ) {
 
         //emit our 3 hard coded applications that are used the manage the system first.
         //this way consumers can perform whatever work they need to on the root system first
 
 
-       final Observable<Id> systemIds =  Observable.from( Arrays.asList( generateApplicationId( NamingUtils.DEFAULT_APPLICATION_ID ),
-                generateApplicationId( NamingUtils.MANAGEMENT_APPLICATION_ID ),
-                generateApplicationId( NamingUtils.SYSTEM_APP_ID ) ) );
+       final Observable<Id> systemIds =  Observable.from( Arrays.asList( generateApplicationId( CpNamingUtils.DEFAULT_APPLICATION_ID ),
+                generateApplicationId( CpNamingUtils.MANAGEMENT_APPLICATION_ID ),
+                generateApplicationId( CpNamingUtils.SYSTEM_APP_ID ) ) );
 
 
 
 
-        ApplicationScope appScope = getApplicationScope( NamingUtils.SYSTEM_APP_ID );
-        GraphManager gm = graphManagerFactory.createEdgeManager( appScope );
+        final ApplicationScope appScope = getApplicationScope( CpNamingUtils.SYSTEM_APP_ID );
 
-        String edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( "appinfos" );
+        final CollectionScope appInfoCollectionScope = new CollectionScopeImpl(
+                appScope.getApplication(),
+                appScope.getApplication(),
+                CpNamingUtils.getCollectionScopeNameFromCollectionName( CpNamingUtils.APPINFOS ));
+
+        final EntityCollectionManager
+                collectionManager = managerCache.getEntityCollectionManager( appInfoCollectionScope );
+
+
+        final GraphManager gm = managerCache.getGraphManager( appScope );
+
+
+        String edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( CpNamingUtils.APPINFOS );
 
         Id rootAppId = appScope.getApplication();
 
 
+        //we have app infos.  For each of these app infos, we have to load the application itself
         Observable<Id> appIds = gm.loadEdgesFromSource(
                 new SimpleSearchByEdgeType( rootAppId, edgeType, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
-                        null ) ).map( new Func1<Edge, Id>() {
+                        null ) ).flatMap( new Func1<Edge, Observable<Id>>() {
             @Override
-            public Id call( final Edge edge ) {
-                return edge.getTargetNode();
+            public Observable<Id> call( final Edge edge ) {
+                //get the app info and load it
+                final Id appInfo = edge.getTargetNode();
+
+                return collectionManager.load( appInfo ).map( new Func1<org.apache.usergrid.persistence.model.entity.Entity, Id>() {
+
+
+                    @Override
+                    public Id call( final org.apache.usergrid.persistence.model.entity.Entity entity ) {
+                        final UUID  uuid = (UUID )entity.getField( "applicationUuid" ).getValue();
+
+                        return CpNamingUtils.generateApplicationId(uuid);
+                    }
+                } );
             }
         } );
 

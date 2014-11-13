@@ -168,7 +168,7 @@ public class CpRelationManager implements RelationManager {
 
     private CpEntityManagerFactory emf;
 
-    private CpManagerCache managerCache;
+    private ManagerCache managerCache;
 
     private EntityManager em;
 
@@ -213,7 +213,7 @@ public class CpRelationManager implements RelationManager {
         this.applicationId = applicationId;
         this.headEntity = headEntity;
         this.managerCache = emf.getManagerCache();
-        this.applicationScope = NamingUtils.getApplicationScope( applicationId );
+        this.applicationScope = CpNamingUtils.getApplicationScope( applicationId );
 
         this.cass = em.getCass(); // TODO: eliminate need for this via Core Persistence
         this.indexBucketLocator = indexBucketLocator; // TODO: this also
@@ -224,7 +224,6 @@ public class CpRelationManager implements RelationManager {
             this.applicationScope.getApplication(),
             CpNamingUtils.getCollectionScopeNameFromEntityType( headEntity.getType() ) );
 
-        EntityCollectionManager ecm = managerCache.getEntityCollectionManager( headEntityScope );
         if ( logger.isDebugEnabled() ) {
             logger.debug( "Loading head entity {}:{} from scope\n   app {}\n   owner {}\n   name {}",
                 new Object[] {
@@ -1022,8 +1021,6 @@ public class CpRelationManager implements RelationManager {
             applicationScope.getApplication(),
             applicationScope.getApplication(),
             CpNamingUtils.getCollectionScopeNameFromEntityType( connectedEntityRef.getType() ) );
-
-        EntityCollectionManager targetEcm = managerCache.getEntityCollectionManager( targetScope );
 
         if ( logger.isDebugEnabled() ) {
             logger.debug("createConnection(): "

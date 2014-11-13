@@ -23,7 +23,6 @@ package org.apache.usergrid.corepersistence.rx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -42,15 +41,15 @@ public class TargetIdObservable {
 
     /**
      * Get all nodes that are target nodes from the sourceNode
-     * @param applicationScope
-     * @param sourceNode
      * @param gm
+     * @param sourceNode
+     *
      * @return
      */
-    public static Observable<Id> getTargetNodes(final ApplicationScope applicationScope, final Id sourceNode, final GraphManager gm) {
+    public static Observable<Id> getTargetNodes( final GraphManager gm,  final Id sourceNode) {
 
         //only search edge types that start with collections
-       return EdgesFromSourceObservable.edgesFromSource( applicationScope, sourceNode, gm ).map( new Func1<Edge, Id>() {
+       return EdgesFromSourceObservable.edgesFromSource(gm, sourceNode ).map( new Func1<Edge, Id>() {
 
 
            @Override

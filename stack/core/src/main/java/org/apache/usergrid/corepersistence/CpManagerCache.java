@@ -15,11 +15,9 @@
  */
 package org.apache.usergrid.corepersistence;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
+
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
+
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
@@ -32,8 +30,13 @@ import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapManagerFactory;
 import org.apache.usergrid.persistence.map.MapScope;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.inject.Inject;
 
-public class CpManagerCache {
+
+public class CpManagerCache implements ManagerCache {
 
     private final EntityCollectionManagerFactory ecmf;
     private final EntityIndexFactory eif;
@@ -42,51 +45,40 @@ public class CpManagerCache {
 
     // TODO: consider making these cache sizes and timeouts configurable
 
-    private LoadingCache<CollectionScope, EntityCollectionManager> ecmCache = 
-        CacheBuilder.newBuilder()
-            .maximumSize(1000)
-            .build( new CacheLoader<CollectionScope, EntityCollectionManager>() {
-                public EntityCollectionManager load( CollectionScope scope ) { 
-                    return ecmf.createCollectionManager( scope );
-                }
-            }
-        );
+    private LoadingCache<CollectionScope, EntityCollectionManager> ecmCache =
+            CacheBuilder.newBuilder().maximumSize( 1000 )
+                        .build( new CacheLoader<CollectionScope, EntityCollectionManager>() {
+                                    public EntityCollectionManager load( CollectionScope scope ) {
+                                        return ecmf.createCollectionManager( scope );
+                                    }
+                                } );
 
-    private LoadingCache<ApplicationScope, EntityIndex> eiCache = 
-        CacheBuilder.newBuilder()
-            .maximumSize(1000)
-            .build( new CacheLoader<ApplicationScope, EntityIndex>() {
-                public EntityIndex load( ApplicationScope scope ) { 
-                    return eif.createEntityIndex( scope );
-                }
-            }
-        );
+    private LoadingCache<ApplicationScope, EntityIndex> eiCache =
+            CacheBuilder.newBuilder().maximumSize( 1000 ).build( new CacheLoader<ApplicationScope, EntityIndex>() {
+                                                                     public EntityIndex load( ApplicationScope scope ) {
+                                                                         return eif.createEntityIndex( scope );
+                                                                     }
+                                                                 } );
 
-    private LoadingCache<ApplicationScope, GraphManager> gmCache = 
-        CacheBuilder.newBuilder()
-            .maximumSize(1000)
-            .build( new CacheLoader<ApplicationScope, GraphManager>() {
-                public GraphManager load( ApplicationScope scope ) { 
-                    return gmf.createEdgeManager( scope );
-                }
-            }
-        );
+    private LoadingCache<ApplicationScope, GraphManager> gmCache =
+            CacheBuilder.newBuilder().maximumSize( 1000 ).build( new CacheLoader<ApplicationScope, GraphManager>() {
+                                                                     public GraphManager load(
+                                                                             ApplicationScope scope ) {
+                                                                         return gmf.createEdgeManager( scope );
+                                                                     }
+                                                                 } );
 
-    private LoadingCache<MapScope, MapManager> mmCache = 
-        CacheBuilder.newBuilder()
-            .maximumSize(1000)
-            .build( new CacheLoader<MapScope, MapManager>() {
-                public MapManager load( MapScope scope ) { 
-                    return mmf.createMapManager( scope );
-                }
-            }
-        );
+    private LoadingCache<MapScope, MapManager> mmCache =
+            CacheBuilder.newBuilder().maximumSize( 1000 ).build( new CacheLoader<MapScope, MapManager>() {
+                                                                     public MapManager load( MapScope scope ) {
+                                                                         return mmf.createMapManager( scope );
+                                                                     }
+                                                                 } );
 
-    public CpManagerCache(
-            EntityCollectionManagerFactory ecmf, 
-            EntityIndexFactory eif, 
-            GraphManagerFactory gmf,
-            MapManagerFactory mmf) {
+
+    @Inject
+    public CpManagerCache( final EntityCollectionManagerFactory ecmf, final EntityIndexFactory eif,
+                           final GraphManagerFactory gmf, final MapManagerFactory mmf ) {
 
         this.ecmf = ecmf;
         this.eif = eif;
@@ -94,39 +86,53 @@ public class CpManagerCache {
         this.mmf = mmf;
     }
 
-    public EntityCollectionManager getEntityCollectionManager(CollectionScope scope) {
+
+    @Override
+    public EntityCollectionManager getEntityCollectionManager( CollectionScope scope ) {
         try {
             return ecmCache.get( scope );
-        } catch (ExecutionException ex) {
-            throw new RuntimeException("Error getting manager", ex);
+        }
+        catch ( ExecutionException ex ) {
+            throw new RuntimeException( "Error getting manager", ex );
         }
     }
 
-    public EntityIndex getEntityIndex(ApplicationScope appScope) {
+
+    @Override
+    public EntityIndex getEntityIndex( ApplicationScope appScope ) {
         try {
             return eiCache.get( appScope );
-        } catch (ExecutionException ex) {
-            throw new RuntimeException("Error getting manager", ex);
+        }
+        catch ( ExecutionException ex ) {
+            throw new RuntimeException( "Error getting manager", ex );
         }
     }
 
-    public GraphManager getGraphManager(ApplicationScope appScope) {
+
+    @Override
+    public GraphManager getGraphManager( ApplicationScope appScope ) {
         try {
             return gmCache.get( appScope );
-        } catch (ExecutionException ex) {
-            throw new RuntimeException("Error getting manager", ex);
+        }
+        catch ( ExecutionException ex ) {
+            throw new RuntimeException( "Error getting manager", ex );
         }
     }
 
-    public MapManager getMapManager( MapScope mapScope) {
+
+    @Override
+    public MapManager getMapManager( MapScope mapScope ) {
         try {
             return mmCache.get( mapScope );
-        } catch (ExecutionException ex) {
-            throw new RuntimeException("Error getting manager", ex);
+        }
+        catch ( ExecutionException ex ) {
+            throw new RuntimeException( "Error getting manager", ex );
         }
     }
 
-    void flush() {
+
+    @Override
+    public void invalidate() {
         ecmCache.invalidateAll();
         eiCache.invalidateAll();
         gmCache.invalidateAll();

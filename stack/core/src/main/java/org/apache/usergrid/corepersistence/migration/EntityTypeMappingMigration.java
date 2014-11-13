@@ -26,8 +26,10 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.corepersistence.NamingUtils;
+import org.apache.usergrid.corepersistence.ManagerCache;
 import org.apache.usergrid.corepersistence.rx.AllEntitiesInSystemObservable;
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.core.migration.data.DataMigration;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.map.MapManager;
@@ -48,15 +50,13 @@ public class EntityTypeMappingMigration implements DataMigration {
 
     private static final Logger logger = LoggerFactory.getLogger( EntityTypeMappingMigration.class );
 
-    private final GraphManagerFactory graphManagerFactory;
-    private final MapManagerFactory mapManagerFactory;
+    private final ManagerCache managerCache;
+
 
 
     @Inject
-    public EntityTypeMappingMigration( final GraphManagerFactory graphManagerFactory,
-                                       final MapManagerFactory mapManagerFactory ) {
-        this.graphManagerFactory = graphManagerFactory;
-        this.mapManagerFactory = mapManagerFactory;
+    public EntityTypeMappingMigration( final ManagerCache managerCache) {
+       this.managerCache = managerCache;
     }
 
 
@@ -65,7 +65,7 @@ public class EntityTypeMappingMigration implements DataMigration {
 
         final AtomicLong atomicLong = new AtomicLong();
 
-        AllEntitiesInSystemObservable.getAllEntitiesInSystem( graphManagerFactory )
+        AllEntitiesInSystemObservable.getAllEntitiesInSystem(managerCache )
                                      .doOnNext( new Action1<AllEntitiesInSystemObservable.EntityData>() {
 
 
@@ -73,10 +73,10 @@ public class EntityTypeMappingMigration implements DataMigration {
                                          public void call( final AllEntitiesInSystemObservable.EntityData entityData ) {
 
                                              final MapScope ms = new MapScopeImpl( entityData.entityId,
-                                                     NamingUtils.TYPES_BY_UUID_MAP );
+                                                     CpNamingUtils.TYPES_BY_UUID_MAP );
 
 
-                                             final MapManager mapManager = mapManagerFactory.createMapManager( ms );
+                                             final MapManager mapManager = managerCache.getMapManager(  ms );
 
                                              final UUID entityUuid = entityData.entityId.getUuid();
                                              final String entityType = entityData.entityId.getType();

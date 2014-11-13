@@ -20,13 +20,10 @@
 package org.apache.usergrid.corepersistence.rx;
 
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import org.apache.usergrid.corepersistence.ManagerCache;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.graph.GraphManager;
-import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import rx.Observable;
@@ -35,7 +32,7 @@ import rx.functions.Func1;
 
 /**
  * An observable that will emit every entity Id stored in our entire system across all apps.
- * Note that this only walks each application id graph, and emits edges from the applicationId and it's edges as the s
+ * Note that this only walks each application applicationId graph, and emits edges from the applicationId and it's edges as the s
  * source node
  */
 public class AllEntitiesInSystemObservable {
@@ -44,29 +41,30 @@ public class AllEntitiesInSystemObservable {
     /**
      * Return an observable that emits all entities in the system.
      */
-    public static Observable<EntityData> getAllEntitiesInSystem( final GraphManagerFactory graphManagerFactory ) {
+    public static Observable<EntityData> getAllEntitiesInSystem( final ManagerCache managerCache) {
         //traverse all nodes in the graph, load all source edges from them, then re-save the meta data
-        return ApplicationObservable.getAllApplicationIds( graphManagerFactory )
+        return ApplicationObservable.getAllApplicationIds( managerCache )
 
                                     .flatMap( new Func1<Id, Observable<EntityData>>() {
                                         @Override
-                                        public Observable<EntityData> call( final Id id ) {
+                                        public Observable<EntityData> call( final Id applicationId ) {
 
                                             //set up our application scope and graph manager
-                                            final ApplicationScope applicationScope = new ApplicationScopeImpl( id );
+                                            final ApplicationScope applicationScope = new ApplicationScopeImpl(
+                                                    applicationId );
 
 
                                             final GraphManager gm =
-                                                    graphManagerFactory.createEdgeManager( applicationScope );
+                                                    managerCache.getGraphManager( applicationScope );
 
 
                                             //load all nodes that are targets of our application node.  I.E.
                                             // entities that have been saved
                                             final Observable<Id> entityNodes =
-                                                    TargetIdObservable.getTargetNodes( applicationScope, id, gm );
+                                                    TargetIdObservable.getTargetNodes(gm, applicationId );
 
-                                            //create our application node
-                                            final Observable<Id> applicationNode = Observable.just( id );
+                                            //create our application node to emit since it's an entity as well
+                                            final Observable<Id> applicationNode = Observable.just( applicationId );
 
                                             //merge both the specified application node and the entity node
                                             // so they all get used

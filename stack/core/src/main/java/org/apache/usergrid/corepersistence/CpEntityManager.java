@@ -180,7 +180,7 @@ public class CpEntityManager implements EntityManager {
 
     private CpEntityManagerFactory emf;
 
-    private CpManagerCache managerCache;
+    private ManagerCache managerCache;
 
     private ApplicationScope applicationScope;
 
@@ -207,7 +207,7 @@ public class CpEntityManager implements EntityManager {
         this.managerCache = this.emf.getManagerCache();
         this.applicationId = applicationId;
 
-        applicationScope = NamingUtils.getApplicationScope( applicationId );
+        applicationScope = CpNamingUtils.getApplicationScope( applicationId );
 
         this.cass = this.emf.cass;
         this.counterUtils = this.emf.counterUtils;
@@ -277,7 +277,7 @@ public class CpEntityManager implements EntityManager {
     }
 
 
-    public CpManagerCache getManagerCache() {
+    public ManagerCache getManagerCache() {
         return managerCache;
     }
 
@@ -2227,7 +2227,7 @@ public class CpEntityManager implements EntityManager {
      */
     private MapManager getMapManagerForTypes() {
         Id mapOwner = new SimpleId( applicationId, TYPE_APPLICATION );
-        MapScope ms = new MapScopeImpl( mapOwner, NamingUtils.TYPES_BY_UUID_MAP );
+        MapScope ms = new MapScopeImpl( mapOwner, CpNamingUtils.TYPES_BY_UUID_MAP );
         MapManager mm = managerCache.getMapManager( ms );
 
         return mm;
@@ -2804,7 +2804,7 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public void flushManagerCaches() {
-        managerCache.flush();
+        managerCache.invalidate();
     }
 
 

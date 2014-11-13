@@ -23,19 +23,18 @@ package org.apache.usergrid.corepersistence.migration;
 
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.usergrid.corepersistence.ManagerCache;
 import org.apache.usergrid.corepersistence.rx.AllEntitiesInSystemObservable;
 import org.apache.usergrid.corepersistence.rx.EdgesFromSourceObservable;
 import org.apache.usergrid.persistence.core.guice.CurrentImpl;
 import org.apache.usergrid.persistence.core.migration.data.DataMigration;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
-import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 
 import com.google.inject.Inject;
@@ -59,15 +58,16 @@ public class GraphShardVersionMigration implements DataMigration {
 
     private final EdgeMetadataSerialization v2Serialization;
 
-    private final GraphManagerFactory graphManagerFactory;
+    private final ManagerCache managerCache;
     private final Keyspace keyspace;
 
 
     @Inject
     public GraphShardVersionMigration( @CurrentImpl final EdgeMetadataSerialization v2Serialization,
-                                       final GraphManagerFactory graphManagerFactory, final Keyspace keyspace ) {
+                                       final ManagerCache managerCache, final
+    Keyspace keyspace ) {
         this.v2Serialization = v2Serialization;
-        this.graphManagerFactory = graphManagerFactory;
+        this.managerCache = managerCache;
         this.keyspace = keyspace;
     }
 
@@ -77,7 +77,7 @@ public class GraphShardVersionMigration implements DataMigration {
 
         final AtomicLong counter = new AtomicLong();
 
-        AllEntitiesInSystemObservable.getAllEntitiesInSystem( graphManagerFactory ).flatMap(
+        AllEntitiesInSystemObservable.getAllEntitiesInSystem( managerCache).flatMap(
                 new Func1<AllEntitiesInSystemObservable.EntityData, Observable<List<Edge>>>() {
 
 
@@ -86,11 +86,10 @@ public class GraphShardVersionMigration implements DataMigration {
                         logger.info( "Migrating edges from node {} in scope {}", entityData.entityId,
                                 entityData.applicationScope );
 
-                        final GraphManager gm = graphManagerFactory.createEdgeManager( entityData.applicationScope );
+                        final GraphManager gm = managerCache.getGraphManager( entityData.applicationScope );
 
                         //get each edge from this node as a source
-                        return EdgesFromSourceObservable.edgesFromSource( entityData.applicationScope,
-                                entityData.entityId, gm )
+                        return EdgesFromSourceObservable.edgesFromSource( gm, entityData.entityId )
 
                                 //for each edge, re-index it in v2  every 1000 edges or less
                                 .buffer( 1000 ).doOnNext( new Action1<List<Edge>>() {

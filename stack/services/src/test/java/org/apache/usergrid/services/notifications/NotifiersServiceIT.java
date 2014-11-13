@@ -201,7 +201,7 @@ public class NotifiersServiceIT extends AbstractServiceIT {
         f.set(Schema.class, originalSeed);
 
         try {
-            app.getEm().get(notifier.getUuid());
+            app.getEntityManager().get(notifier.getUuid());
             fail("Should have failed to retrieve the encrypted entity.");
         } catch (IllegalStateException e) {
             // ok! This should happen.

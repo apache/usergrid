@@ -36,26 +36,26 @@ import rx.functions.Func1;
 
 
 /**
- * Emits the edges that are edges from the specified source node
+ * Emits the id of all edges where the given node is the target node
  */
-public class EdgesFromSourceObservable {
+public class EdgesToTargetObservable {
 
-    private static final Logger logger = LoggerFactory.getLogger( EdgesFromSourceObservable.class );
+    private static final Logger logger = LoggerFactory.getLogger( EdgesToTargetObservable.class );
 
 
     /**
      * Get all edges from the source
      */
-    public static Observable<Edge> edgesFromSource( final GraphManager gm, final Id sourceNode){
-        Observable<String> edgeTypes = gm.getEdgeTypesFromSource( new SimpleSearchEdgeType( sourceNode, null, null ) );
+    public static Observable<Edge> getEdgesToTarget(final GraphManager gm,  final Id targetNode) {
+        Observable<String> edgeTypes = gm.getEdgeTypesToTarget( new SimpleSearchEdgeType( targetNode, null, null ) );
 
         return edgeTypes.flatMap( new Func1<String, Observable<Edge>>() {
             @Override
             public Observable<Edge> call( final String edgeType ) {
 
-                logger.debug( "Loading edges of edgeType {} from {}", edgeType, sourceNode );
+                logger.debug( "Loading edges of edgeType {} to {}", edgeType, targetNode);
 
-                return gm.loadEdgesFromSource( new SimpleSearchByEdgeType( sourceNode, edgeType, Long.MAX_VALUE,
+                return gm.loadEdgesToTarget( new SimpleSearchByEdgeType( targetNode, edgeType, Long.MAX_VALUE,
                         SearchByEdgeType.Order.DESCENDING, null ) );
             }
         } );
