@@ -20,6 +20,7 @@ buildMain(){
   echo grunt $1
   echo #####
   ./node_modules/grunt-cli/bin/grunt $1
+  ./node_modules/grunt-cli/bin/grunt compress
 }
 
 

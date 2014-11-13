@@ -51,6 +51,11 @@ If you want to run the e2e tests:
 
 To version open a terminal and run 'npm version x.x.x' this will add a tag and increment the package.json.
 
+If you are building via maven:
+
+1. The maven profile supports the default install options currently, just run `mvn clean install` to create the bundle.
+2. To override to another option, run maven via `mvn clean install -Dbuild.mode=e2e` or `mvn clean install -Dbuild.mode=dev`.
+
 ##Using a different api location
 1. You can use api from usergrid at any location by navigating to the portal and adding a querystring http://myurl/?api_url=http://someurl
 2. Another option is to change the Usergrid.overrideUrl in config.js
