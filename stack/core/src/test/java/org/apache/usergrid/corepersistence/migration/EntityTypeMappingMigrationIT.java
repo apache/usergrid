@@ -77,6 +77,7 @@ public class EntityTypeMappingMigrationIT extends AbstractCoreIT {
     @Test
     public void testIdMapping() throws Throwable {
 
+        assertEquals("version 1 expected", 1, entityTypeMappingMigration.getVersion());
 
         final EntityManager newAppEm = app.getEntityManager();
 
@@ -108,6 +109,7 @@ public class EntityTypeMappingMigrationIT extends AbstractCoreIT {
         final TestProgressObserver progressObserver = new TestProgressObserver();
 
         entityTypeMappingMigration.migrate( progressObserver );
+
 
 
 

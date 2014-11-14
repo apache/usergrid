@@ -82,6 +82,7 @@ public class GraphShardVersionMigrationIT extends AbstractCoreIT {
     @Test
     public void testIdMapping() throws Throwable {
 
+        assertEquals("version 2 expected", 2, graphShardVersionMigration.getVersion());
 
         /**
          * Drop our migration keyspaces to ensure we don't have a "new version in there"
