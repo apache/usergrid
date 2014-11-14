@@ -17,6 +17,7 @@
 package org.apache.usergrid.rest;
 
 
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -41,8 +42,10 @@ import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.EntityManagerFactory.ProgressObserver;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
+import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
 
+import com.clearspring.analytics.util.Preconditions;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.sun.jersey.api.json.JSONWithPadding;
@@ -113,64 +116,10 @@ public class SystemResource extends AbstractContextResource {
         return new JSONWithPadding( response, callback );
     }
 
-
-    @RequireSystemAccess
-    @PUT
-    @Path( "migrate/run" )
-    public JSONWithPadding migrateData( @Context UriInfo ui,
-                                        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
-            throws Exception {
-
-        ApiResponse response = createApiResponse();
-        response.setAction( "Migrate Data" );
-
-
-        final Thread migrate = new Thread() {
-
-            @Override
-            public void run() {
-                logger.info( "Rebuilding all indexes" );
-
-                try {
-                    emf.migrateData();
-                }
-                catch ( Exception e ) {
-                    logger.error( "Unable to rebuild indexes", e );
-                }
-            }
-        };
-
-        migrate.setName( "Index migrate data formats" );
-        migrate.setDaemon( true );
-        migrate.start();
-
-
-        response.setSuccess();
-
-        return new JSONWithPadding( response, callback );
+    @Path( "migrate" )
+    public MigrateResource doSomething(){
+        return getSubResource( MigrateResource.class );
     }
-
-
-    @RequireSystemAccess
-    @GET
-    @Path( "migrate/status" )
-    public JSONWithPadding migrateStatus( @Context UriInfo ui,
-                                          @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
-            throws Exception {
-
-        ApiResponse response = createApiResponse();
-        response.setAction( "Migrate Schema indexes" );
-
-        ObjectNode node = JsonNodeFactory.instance.objectNode();
-        node.put( "currentVersion", emf.getMigrateDataVersion() );
-        node.put( "lastMessage", emf.getMigrateDataStatus() );
-        response.setProperty( "status", node );
-
-        response.setSuccess();
-
-        return new JSONWithPadding( response, callback );
-    }
-
 
     @RequireSystemAccess
     @PUT

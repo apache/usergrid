@@ -60,7 +60,6 @@ public class GraphShardVersionMigrationIT extends AbstractCoreIT {
     private GraphShardVersionMigration graphShardVersionMigration;
     private Keyspace keyspace;
     private MigrationManager migrationManager;
-    private EntityManagerFactory emf;
     private ManagerCache managerCache;
     private DataMigrationManager dataMigrationManager;
     private MigrationInfoSerialization migrationInfoSerialization;
@@ -69,7 +68,6 @@ public class GraphShardVersionMigrationIT extends AbstractCoreIT {
     @Before
     public void setup() {
         injector = CpSetup.getInjector();
-        emf = setup.getEmf();
         graphShardVersionMigration = injector.getInstance( GraphShardVersionMigration.class );
         keyspace = injector.getInstance( Keyspace.class );
         migrationManager = injector.getInstance( MigrationManager.class );

@@ -35,6 +35,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.lang.StringUtils;
 
+import org.apache.usergrid.corepersistence.rx.AllEntitiesInSystemObservable;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.AbstractEntity;
 import org.apache.usergrid.persistence.Entity;
@@ -535,6 +536,15 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         }
     }
 
+
+    @Override
+    public long performEntityCount() {
+        //TODO, this really needs to be a task that writes this data somewhere since this will get
+        //progressively slower as the system expands
+        return AllEntitiesInSystemObservable.getAllEntitiesInSystem( managerCache ).longCount().toBlocking().last();
+    }
+
+
     /**
      * @param managerCache the managerCache to set
      */
@@ -666,6 +676,13 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     @Override
     public int getMigrateDataVersion() {
         return dataMigrationManager.getCurrentVersion();
+    }
+
+
+    @Override
+    public void setMigrationVersion( final int version ) {
+        dataMigrationManager.resetToVersion( version );
+        dataMigrationManager.invalidate();
     }
 
 

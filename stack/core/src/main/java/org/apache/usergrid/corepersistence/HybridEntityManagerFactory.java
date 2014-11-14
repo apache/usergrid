@@ -140,6 +140,13 @@ public class HybridEntityManagerFactory implements EntityManagerFactory, Applica
         factory.setApplicationContext(ac);
     }
 
+
+    @Override
+    public long performEntityCount() {
+        return factory.performEntityCount();
+    }
+
+
     @Override
     public void flushEntityManagerCaches() {
         factory.flushEntityManagerCaches();
@@ -176,6 +183,12 @@ public class HybridEntityManagerFactory implements EntityManagerFactory, Applica
     @Override
     public int getMigrateDataVersion() {
         return factory.getMigrateDataVersion();
+    }
+
+
+    @Override
+    public void setMigrationVersion( final int version ) {
+        factory.setMigrationVersion( version );
     }
 
 

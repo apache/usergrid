@@ -48,6 +48,12 @@ public interface DataMigrationManager {
     public int getCurrentVersion();
 
     /**
+     * Reset the system version to the version specified
+     * @param version
+     */
+    public void resetToVersion(final int version);
+
+    /**
      * Invalidate the cache for versions
      */
     public void invalidate();

@@ -138,7 +138,7 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
             catch ( Throwable throwable ) {
                 observer.failed( migrationVersion, "Exception thrown during migration", throwable );
 
-                LOG.error( "Unable to migration version {}.", migrationVersion, throwable );
+                LOG.error( "Unable to migrate to version {}.", migrationVersion, throwable );
 
                 return;
             }
@@ -181,6 +181,17 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
         catch ( ExecutionException e ) {
             throw new DataMigrationException( "Unable to get current version", e );
         }
+    }
+
+
+    @Override
+    public void resetToVersion( final int version ) {
+        final int highestAllowed = migrationTreeMap.lastKey();
+
+        Preconditions.checkArgument( version <= highestAllowed, "You cannot set a version higher than the max of " + highestAllowed);
+        Preconditions.checkArgument( version >= 0, "You must specify a version of 0 or greater" );
+
+        migrationInfoSerialization.setVersion( version );
     }
 
 
@@ -248,9 +259,12 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
 
         @Override
         public void update( final int migrationVersion, final String message ) {
-            final String error = String.format( "Migration version %d.  %s", migrationVersion, message );
+            final String formattedOutput = String.format( "Migration version %d.  %s", migrationVersion, message );
 
-            migrationInfoSerialization.setStatusMessage( error );
+            //Print this to the info log
+            LOG.info( formattedOutput );
+
+            migrationInfoSerialization.setStatusMessage( formattedOutput );
         }
 
 
