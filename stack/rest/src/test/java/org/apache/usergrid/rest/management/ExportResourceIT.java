@@ -67,7 +67,7 @@ public class ExportResourceIT extends AbstractRestIT {
         try {
             node = mapper.readTree(
                     resource().path( "/management/orgs/" + orgName + "/apps/" + appName + "/collection/users/export" )
-                              .queryParam( "access_token", context.getActiveUser().getToken() )
+                              .queryParam( "access_token", token )
                               .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
                               .post( String.class, payload ) );
         }
