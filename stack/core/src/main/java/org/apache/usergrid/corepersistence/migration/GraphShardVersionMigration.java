@@ -115,7 +115,7 @@ public class GraphShardVersionMigration implements DataMigration {
                                         //update the observer so the admin can see it
                                         final long newCount = counter.addAndGet( edges.size() );
 
-                                        observer.update( getVersion(), String.format("Finished re-writing %d edges", newCount) );
+                                        observer.update( getVersion(), String.format("Currently running.  Rewritten %d edge types", newCount) );
 
 
                                     }

@@ -168,6 +168,12 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
 
 
     @Override
+    public void invalidate() {
+        versionCache.invalidateAll();
+    }
+
+
+    @Override
     public int getCurrentVersion() {
         try {
             return versionCache.get( "currentVersion" );

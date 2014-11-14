@@ -56,7 +56,7 @@ public class TargetIdObservable {
            public Id call( final Edge edge ) {
                final Id targetNode = edge.getTargetNode();
 
-               logger.info( "Emitting targetId of {}", edge );
+               logger.debug( "Emitting targetId of {}", edge );
 
 
                return targetNode;

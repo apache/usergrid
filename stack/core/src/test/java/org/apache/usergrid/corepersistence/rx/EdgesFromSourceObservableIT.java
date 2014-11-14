@@ -29,6 +29,7 @@ import org.junit.Test;
 
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.corepersistence.CpSetup;
+import org.apache.usergrid.corepersistence.EntityWriteHelper;
 import org.apache.usergrid.corepersistence.ManagerCache;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.Entity;
@@ -70,7 +71,7 @@ public class EdgesFromSourceObservableIT extends AbstractCoreIT {
 
 
 
-        final Set<Id> sourceIdentities = createTypes( em, type2, size );
+        final Set<Id> sourceIdentities = EntityWriteHelper.createTypes( em, type2, size );
 
 
         final Entity entity = em.create( type1, new HashMap<String, Object>(){{put("property", "value");}} );
@@ -136,17 +137,4 @@ public class EdgesFromSourceObservableIT extends AbstractCoreIT {
     }
 
 
-    private Set<Id> createTypes( final EntityManager em, final String type, final int size ) throws Exception {
-
-        final Set<Id> identities = new HashSet<>();
-
-        for ( int i = 0; i < size; i++ ) {
-            final Entity entity = em.create( type, new HashMap<String, Object>(){{put("property", "value");}} );
-            final Id createdId = new SimpleId( entity.getUuid(), entity.getType() );
-
-            identities.add( createdId );
-        }
-
-        return identities;
-    }
 }

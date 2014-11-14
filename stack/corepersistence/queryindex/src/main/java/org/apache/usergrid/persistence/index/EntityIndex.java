@@ -57,6 +57,12 @@ public interface EntityIndex {
     public void refresh();
 
     /**
+     * Return the number of pending tasks in the cluster
+     * @return
+     */
+    public int getPendingTasks();
+
+    /**
      * Check health of cluster.
      */
     public Health getClusterHealth();

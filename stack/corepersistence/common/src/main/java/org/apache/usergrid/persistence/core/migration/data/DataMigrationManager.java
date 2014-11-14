@@ -47,6 +47,11 @@ public interface DataMigrationManager {
      */
     public int getCurrentVersion();
 
+    /**
+     * Invalidate the cache for versions
+     */
+    public void invalidate();
+
 
     /**
      * Return that last status of the migration

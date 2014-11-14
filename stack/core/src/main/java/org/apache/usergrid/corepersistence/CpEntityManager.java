@@ -91,7 +91,6 @@ import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Query.Level;
 import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapScope;
-import org.apache.usergrid.persistence.map.impl.MapScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.Field;
@@ -2227,7 +2226,9 @@ public class CpEntityManager implements EntityManager {
      */
     private MapManager getMapManagerForTypes() {
         Id mapOwner = new SimpleId( applicationId, TYPE_APPLICATION );
-        MapScope ms = new MapScopeImpl( mapOwner, CpNamingUtils.TYPES_BY_UUID_MAP );
+
+        final MapScope ms = CpNamingUtils.getEntityTypeMapScope( mapOwner );
+
         MapManager mm = managerCache.getMapManager( ms );
 
         return mm;

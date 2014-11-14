@@ -26,6 +26,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
+import org.elasticsearch.action.admin.cluster.tasks.PendingClusterTasksRequest;
+import org.elasticsearch.action.admin.cluster.tasks.PendingClusterTasksResponse;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
 import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateResponse;
@@ -404,6 +406,15 @@ public class EsEntityIndexImpl implements EntityIndex {
         doInRetry( retryOperation );
 
         logger.debug( "Refreshed index: " + indexName );
+    }
+
+
+    @Override
+    public int getPendingTasks() {
+
+        final PendingClusterTasksResponse tasksResponse = esProvider.getClient().admin().cluster().pendingClusterTasks( new PendingClusterTasksRequest() ).actionGet();
+
+        return tasksResponse.pendingTasks().size();
     }
 
 

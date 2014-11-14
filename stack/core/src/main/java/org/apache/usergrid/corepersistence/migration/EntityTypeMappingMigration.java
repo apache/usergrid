@@ -72,11 +72,10 @@ public class EntityTypeMappingMigration implements DataMigration {
                                          @Override
                                          public void call( final AllEntitiesInSystemObservable.EntityData entityData ) {
 
-                                             final MapScope ms = new MapScopeImpl( entityData.entityId,
-                                                     CpNamingUtils.TYPES_BY_UUID_MAP );
+                                             final MapScope ms = CpNamingUtils.getEntityTypeMapScope( entityData.applicationScope.getApplication() );
 
 
-                                             final MapManager mapManager = managerCache.getMapManager(  ms );
+                                             final MapManager mapManager = managerCache.getMapManager( ms );
 
                                              final UUID entityUuid = entityData.entityId.getUuid();
                                              final String entityType = entityData.entityId.getType();

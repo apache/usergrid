@@ -66,7 +66,7 @@ public class EntityConnectionIndexImplTest extends BaseIT {
 
 
     @Test
-    public void testBasicOperation() throws IOException {
+    public void testBasicOperation() throws IOException, InterruptedException {
 
         Id appId = new SimpleId( "application" );
         ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
@@ -136,6 +136,10 @@ public class EntityConnectionIndexImplTest extends BaseIT {
 
         batch.executeAndRefresh();
         personLikesIndex.refresh();
+
+
+        EsTestUtils.waitForTasks(personLikesIndex);
+        Thread.sleep( 1000 );
 
         // now, let's search for muffins
         CandidateResults likes = personLikesIndex
@@ -192,7 +196,7 @@ public class EntityConnectionIndexImplTest extends BaseIT {
 
 
     @Test
-    public void testDelete() throws IOException {
+    public void testDelete() throws IOException, InterruptedException {
 
         Id appId = new SimpleId( "application" );
         ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
@@ -262,6 +266,9 @@ public class EntityConnectionIndexImplTest extends BaseIT {
 
         batch.executeAndRefresh();
         personLikesIndex.refresh();
+
+        EsTestUtils.waitForTasks( personLikesIndex );
+        Thread.sleep( 1000 );
 
         // now, let's search for muffins
         CandidateResults likes = personLikesIndex.search( searchScope,

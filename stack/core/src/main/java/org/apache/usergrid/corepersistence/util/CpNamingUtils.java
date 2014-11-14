@@ -25,6 +25,8 @@ import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.entities.Application;
+import org.apache.usergrid.persistence.map.MapScope;
+import org.apache.usergrid.persistence.map.impl.MapScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 
@@ -151,5 +153,16 @@ public class CpNamingUtils {
      */
     public static Id generateApplicationId( UUID applicationId ) {
         return new SimpleId( applicationId, Application.ENTITY_TYPE );
+    }
+
+
+    /**
+     * Get the map scope for the applicationId to store entity uuid to type mapping
+     *
+     * @param applicationId
+     * @return
+     */
+    public static MapScope getEntityTypeMapScope( final Id applicationId ){
+        return new MapScopeImpl(applicationId, CpNamingUtils.TYPES_BY_UUID_MAP );
     }
 }

@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.corepersistence.CpSetup;
+import org.apache.usergrid.corepersistence.EntityWriteHelper;
 import org.apache.usergrid.corepersistence.ManagerCache;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.Entity;
@@ -63,8 +64,8 @@ public class AllEntitiesInSystemObservableIT extends AbstractCoreIT {
         final String type2 = "type2thing";
         final int size = 10;
 
-        final Set<Id> type1Identities = createTypes( em, type1, size );
-        final Set<Id> type2Identities = createTypes( em, type2, size );
+        final Set<Id> type1Identities = EntityWriteHelper.createTypes( em, type1, size );
+        final Set<Id> type2Identities = EntityWriteHelper.createTypes( em, type2, size );
 
         //create a connection and put that in our connection types
         final Id source = type1Identities.iterator().next();
@@ -136,18 +137,4 @@ public class AllEntitiesInSystemObservableIT extends AbstractCoreIT {
         assertEquals( "Every connection should have been encountered", 0, connections.size() );
     }
 
-
-    private Set<Id> createTypes( final EntityManager em, final String type, final int size ) throws Exception {
-
-        final Set<Id> identities = new HashSet<>();
-
-        for ( int i = 0; i < size; i++ ) {
-            final Entity entity = em.create( type, new HashMap<String, Object>(){{put("property", "value");}} );
-            final Id createdId = new SimpleId( entity.getUuid(), entity.getType() );
-
-            identities.add( createdId );
-        }
-
-        return identities;
-    }
 }
