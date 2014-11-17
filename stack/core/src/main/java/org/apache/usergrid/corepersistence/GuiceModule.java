@@ -18,6 +18,7 @@ package org.apache.usergrid.corepersistence;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
 
+import org.apache.usergrid.corepersistence.migration.EntityTypeMappingMigration;
 import org.apache.usergrid.corepersistence.migration.GraphShardVersionMigration;
 import org.apache.usergrid.corepersistence.events.EntityDeletedHandler;
 import org.apache.usergrid.corepersistence.events.EntityVersionCreatedHandler;
@@ -66,6 +67,7 @@ public class GuiceModule extends AbstractModule {
         versionCreatedMultibinder.addBinding().to(EntityVersionCreatedHandler.class);
 
         Multibinder<DataMigration> dataMigrationMultibinder = Multibinder.newSetBinder( binder(), DataMigration.class );
+        dataMigrationMultibinder.addBinding().to( EntityTypeMappingMigration.class );
         dataMigrationMultibinder.addBinding().to( GraphShardVersionMigration.class );
 
 

@@ -20,9 +20,9 @@
 package org.apache.usergrid.corepersistence.results;
 
 
-import org.apache.usergrid.corepersistence.CpManagerCache;
-import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.corepersistence.ManagerCache;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.query.Query;
 
 import com.google.inject.Inject;
@@ -33,18 +33,17 @@ import com.google.inject.Inject;
  */
 public class ResultsLoaderFactoryImpl implements ResultsLoaderFactory {
 
-    private final CpManagerCache managerCache;
+    private final ManagerCache managerCache;
 
 
     @Inject
-    public ResultsLoaderFactoryImpl( final CpManagerCache managerCache ) {
+    public ResultsLoaderFactoryImpl( final ManagerCache managerCache ) {
         this.managerCache = managerCache;
     }
 
 
     @Override
-    public ResultsLoader getLoader( final ApplicationScope applicationScope, 
-            final EntityRef ownerId, final Query.Level resultsLevel ) {
+    public ResultsLoader getLoader( final ApplicationScope applicationScope, final IndexScope scope, final Query.Level resultsLevel ) {
 
         ResultsVerifier verifier;
 
@@ -58,6 +57,6 @@ public class ResultsLoaderFactoryImpl implements ResultsLoaderFactory {
             verifier = new EntityVerifier(Query.MAX_LIMIT);
         }
 
-        return new FilteringLoader( managerCache, verifier, ownerId, applicationScope );
+        return new FilteringLoader( managerCache, verifier, applicationScope, scope );
     }
 }

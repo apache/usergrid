@@ -38,8 +38,7 @@ public class TestContext {
 
     private JerseyTest test;
     private TestUser activeUser;
-    private String orgName;
-    private UUID orgUuid;
+    private TestOrganization testOrganization;
     private String appName;
     private UUID appUuid;
 
@@ -75,7 +74,7 @@ public class TestContext {
 
 
     public TestContext withOrg( String orgName ) {
-        this.orgName = orgName;
+        testOrganization = new TestOrganization( orgName );
         return this;
     }
 
@@ -87,7 +86,7 @@ public class TestContext {
 
 
     public String getOrgName() {
-        return orgName;
+        return testOrganization.getOrgName();
     }
 
 
@@ -98,16 +97,18 @@ public class TestContext {
 
     /** Creates the org specified */
     public TestContext createNewOrgAndUser() throws IOException {
-        orgUuid = management().orgs().create( orgName, activeUser );
-        refreshIndex( orgName, appName );
+        OrgUserUUIDWrapper ouuw = management().orgs().create( getOrgName(),activeUser );
+        testOrganization.setUuid( ouuw.getOrgUUID() );
+        activeUser.setUUID( ouuw.getUserUUID() );
+        refreshIndex( getOrgName(), appName );
         return this;
     }
 
 
     /** Creates the org specified */
     public TestContext createAppForOrg() throws IOException {
-        appUuid = management().orgs().organization( orgName ).apps().create( appName );
-        refreshIndex( orgName, appName );
+        appUuid = management().orgs().organization( getOrgName() ).apps().create( appName );
+        refreshIndex( getOrgName(), appName );
         return this;
     }
 
@@ -140,7 +141,7 @@ public class TestContext {
 
     /** @return the orgUuid */
     public UUID getOrgUuid() {
-        return orgUuid;
+        return testOrganization.getUuid();
     }
 
 
@@ -152,7 +153,7 @@ public class TestContext {
 
     /** Get the application resource */
     public Application application() {
-        return new Application( orgName, appName, root() );
+        return new Application( getOrgName(), appName, root() );
     }
 
 

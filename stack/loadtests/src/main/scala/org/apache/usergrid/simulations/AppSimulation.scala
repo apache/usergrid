@@ -33,16 +33,12 @@ import scala.concurrent.duration._
  */
 class AppSimulation extends Simulation {
   println("Begin setup")
-  Setup.setupOrg()
-  Setup.setupApplication()
   Setup.setupNotifier()
-  Setup.setupUsers()
   println("End Setup")
 
   setUp(
     NotificationScenarios.createScenario
-      .inject(constantUsersPerSec(Settings.constantUsers) during (Settings.duration)) // wait for 15 seconds so create org can finish, need to figure out coordination
-      .throttle(reachRps(Settings.throttle) in (Settings.rampTime.seconds))
+      .inject(constantUsersPerSec(Settings.maxPossibleUsers) during (Settings.duration))
       .protocols(Settings.httpConf.acceptHeader("application/json"))
-  )
+  ).throttle(reachRps(Settings.throttle) in (Settings.rampTime seconds), holdFor(Settings.duration))
 }

@@ -35,6 +35,7 @@ import org.apache.usergrid.persistence.Results;
 import static junit.framework.Assert.assertNotNull;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.SimpleEntityRef;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 
 public class CoreApplication implements Application, TestRule {
@@ -145,7 +146,7 @@ public class CoreApplication implements Application, TestRule {
 
 
     protected void before( Description description ) throws Exception {
-        orgName = description.getClassName();
+        orgName = description.getClassName()+ UUIDGenerator.newTimeUUID();
         appName = description.getMethodName();
         id = setup.createApplication( orgName, appName );
         assertNotNull( id );
@@ -158,10 +159,6 @@ public class CoreApplication implements Application, TestRule {
 
     }
 
-
-    public EntityManager getEm() {
-        return em;
-    }
 
 
     public QueueManager getQm() {

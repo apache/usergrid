@@ -32,13 +32,20 @@ import javax.mail.internet.MimeMultipart;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
+import com.eaio.uuid.UUIDGen;
 import com.fasterxml.jackson.databind.JsonNode;
+
+import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.mock_javamail.Mailbox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.management.UserInfo;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.rest.AbstractRestIT;
+import org.apache.usergrid.rest.TestContextSetup;
+import org.apache.usergrid.rest.test.security.TestAppUser;
+import org.apache.usergrid.rest.test.security.TestUser;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -64,6 +71,9 @@ public class RegistrationIT extends AbstractRestIT {
 
     private static final Logger logger = LoggerFactory.getLogger( RegistrationIT.class );
 
+    @Rule
+    public TestContextSetup context = new TestContextSetup( this );
+
 
     @Test
     public void postCreateOrgAndAdmin() throws Exception {
@@ -76,22 +86,32 @@ public class RegistrationIT extends AbstractRestIT {
             setTestProperty( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "false" );
             setTestProperty( PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com" );
 
-            JsonNode node = postCreateOrgAndAdmin( "test-org-1", "test-user-1", "Test User", 
-                    "test-user-1@mockserver.com", "testpassword" );
+//            JsonNode node = postCreateOrgAndAdmin( "test-org-1", "test-user-1", "Test User",
+//                    "test-user-1@mockserver.com", "testpassword" );
 
-            if (true ) return;
+
+            final String username = "registrationUser"+UUIDGenerator.newTimeUUID();
+            final String email = username+"@usergrid.com" ;
+            final String password = "password";
+
+            final TestUser user1 = new TestAppUser(username , password, email);
+
+            context.withOrg( "org" + UUIDGenerator.newTimeUUID() ).withApp( "app" + UUIDGenerator.newTimeUUID() ).withUser( user1 ).createNewOrgAndUser();
+            context.createAppForOrg();
+
+            final UUID owner_uuid = context.getActiveUser().getUuid();
             
-            refreshIndex("test-organization", "test-app");
-
-            UUID owner_uuid =
-                    UUID.fromString( node.findPath( "data" ).findPath( "owner" ).findPath( "uuid" ).textValue() );
+//            refreshIndex("test-organization", "test-app");
+//
+//            UUID owner_uuid =
+//                    UUID.fromString( node.findPath( "data" ).findPath( "owner" ).findPath( "uuid" ).textValue() );
 
             List<Message> inbox = org.jvnet.mock_javamail.Mailbox.get( "test-user-1@mockserver.com" );
 
             assertFalse( inbox.isEmpty() );
 
             Message account_confirmation_message = inbox.get( 0 );
-            assertEquals( "User Account Confirmation: test-user-1@mockserver.com",
+            assertEquals( "User Account Confirmation: " + email,
                     account_confirmation_message.getSubject() );
 
             String token = getTokenFromMessage( account_confirmation_message );
@@ -99,11 +119,11 @@ public class RegistrationIT extends AbstractRestIT {
 
             setup.getMgmtSvc().disableAdminUser( owner_uuid );
 
-            refreshIndex("test-organization", "test-app");
+            refreshIndex(context.getOrgName(), context.getAppName());
 
             try {
                 resource().path( "/management/token" ).queryParam( "grant_type", "password" )
-                        .queryParam( "username", "test-user-1" ).queryParam( "password", "testpassword" )
+                        .queryParam( "username", username ).queryParam( "password", password )
                         .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
                         .get( String.class );
                 fail( "request for disabled user should fail" );
@@ -117,7 +137,7 @@ public class RegistrationIT extends AbstractRestIT {
             setup.getMgmtSvc().deactivateUser( setup.getEmf().getManagementAppId(), owner_uuid );
             try {
                 resource().path( "/management/token" ).queryParam( "grant_type", "password" )
-                        .queryParam( "username", "test-user-1" ).queryParam( "password", "testpassword" )
+                        .queryParam( "username", username ).queryParam( "password", password)
                         .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
                         .get( String.class );
                 fail( "request for deactivated user should fail" );
@@ -155,25 +175,6 @@ public class RegistrationIT extends AbstractRestIT {
         return token;
     }
 
-
-    public JsonNode postCreateOrgAndAdmin( String organizationName, String username, String name, 
-            String email, String password ) throws IOException {
-
-        JsonNode node = null;
-        Map<String, String> payload = hashMap( "email", email )
-                .map( "username", username )
-                .map( "name", name ).map( "password", password )
-                .map( "organization", organizationName );
-
-        node = mapper.readTree( resource().path( "/management/organizations" )
-                .accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE )
-                .post( String.class, payload ));
-
-        assertNotNull( node );
-        logNode( node );
-        return node;
-    }
 
 
     @SuppressWarnings({ "unchecked", "rawtypes" })

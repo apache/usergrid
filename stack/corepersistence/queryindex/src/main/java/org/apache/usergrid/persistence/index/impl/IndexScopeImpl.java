@@ -25,12 +25,12 @@ import org.apache.usergrid.persistence.model.entity.Id;
 
 public class IndexScopeImpl implements IndexScope {
     private final Id ownerId;
-    private final String type;
+    private final String name;
 
 
-    public IndexScopeImpl( final Id ownerId, final String type ) {
+    public IndexScopeImpl( final Id ownerId, final String name ) {
         this.ownerId = ownerId;
-        this.type = type;
+        this.name = name;
 
         IndexValidationUtils.validateIndexScope( this );
     }
@@ -38,7 +38,7 @@ public class IndexScopeImpl implements IndexScope {
 
     @Override
     public String getName() {
-        return  type;
+        return  name;
     }
 
 
@@ -62,7 +62,7 @@ public class IndexScopeImpl implements IndexScope {
         if ( !ownerId.equals( that.ownerId ) ) {
             return false;
         }
-        if ( !type.equals( that.type ) ) {
+        if ( !name.equals( that.name ) ) {
             return false;
         }
 
@@ -73,7 +73,7 @@ public class IndexScopeImpl implements IndexScope {
     @Override
     public int hashCode() {
         int result = ownerId.hashCode();
-        result = 31 * result + type.hashCode();
+        result = 31 * result + name.hashCode();
         return result;
     }
 
@@ -82,7 +82,7 @@ public class IndexScopeImpl implements IndexScope {
     public String toString() {
         return "IndexScopeImpl{" +
                 "ownerId=" + ownerId +
-                ", type='" + type + '\'' +
+                ", name='" + name + '\'' +
                 '}';
     }
 }

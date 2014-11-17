@@ -24,14 +24,18 @@ package org.apache.usergrid.persistence.core.astyanax;
 
 import java.util.HashMap;
 
+import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
-import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
+import org.apache.usergrid.persistence.core.guice.TestCommonModule;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.test.ITRunner;
+import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
+import com.google.inject.Inject;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
@@ -46,11 +50,14 @@ import com.netflix.astyanax.util.RangeBuilder;
 import static org.junit.Assert.assertEquals;
 
 
+
+@RunWith( ITRunner.class )
+@UseModules( TestCommonModule.class )
 public class ColumnNameIteratorTest {
 
 
-    @ClassRule
-    public static CassandraRule rule = new CassandraRule();
+    @Inject
+    public CassandraFig cassandraFig;
 
     protected static Keyspace keyspace;
 
@@ -62,8 +69,8 @@ public class ColumnNameIteratorTest {
     protected static final boolean TRUE = true;
 
 
-    @BeforeClass
-    public static void setup() throws ConnectionException {
+    @Before
+    public void setup() throws ConnectionException {
 
 
         final CassandraConfig cassandraConfig = new CassandraConfig() {
@@ -87,7 +94,7 @@ public class ColumnNameIteratorTest {
 
 
         AstyanaxKeyspaceProvider astyanaxKeyspaceProvider =
-                new AstyanaxKeyspaceProvider( rule.getCassandraFig(), cassandraConfig );
+                new AstyanaxKeyspaceProvider( cassandraFig, cassandraConfig );
 
         keyspace = astyanaxKeyspaceProvider.get();
 

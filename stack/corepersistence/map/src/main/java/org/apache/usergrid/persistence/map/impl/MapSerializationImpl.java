@@ -75,7 +75,7 @@ public class MapSerializationImpl implements MapSerialization {
         /**
          * CFs where the row key contains the source node id
          */
-        private static final MultiTennantColumnFamily<ScopedRowKey<MapEntryKey>, Boolean>
+        public static final MultiTennantColumnFamily<ScopedRowKey<MapEntryKey>, Boolean>
             MAP_ENTRIES = new MultiTennantColumnFamily<>(
                 "Map_Entries", MAP_ENTRY_SERIALIZER, BOOLEAN_SERIALIZER );
 
@@ -83,7 +83,7 @@ public class MapSerializationImpl implements MapSerialization {
         /**
          * CFs where the row key contains the source node id
          */
-        private static final MultiTennantColumnFamily<BucketScopedRowKey<String>, String> MAP_KEYS =
+        public static final MultiTennantColumnFamily<BucketScopedRowKey<String>, String> MAP_KEYS =
                 new MultiTennantColumnFamily<>( "Map_Keys", MAP_KEY_SERIALIZER, STRING_SERIALIZER );
 
     /**

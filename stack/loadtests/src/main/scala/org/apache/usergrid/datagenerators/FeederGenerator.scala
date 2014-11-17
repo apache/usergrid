@@ -16,18 +16,20 @@
  */
  package org.apache.usergrid.datagenerators
 
+ import java.util
  import java.util.UUID
-
+ import java.util.concurrent.atomic.{AtomicInteger, AtomicLong}
  import io.gatling.core.Predef._
  import org.apache.usergrid.settings.Utils
  import scala.collection.mutable.ArrayBuffer
+ import scala.util.Random
 
-object FeederGenerator {
+ object FeederGenerator {
 
   def generateUserWithGeolocationFeeder(numUsers: Int, radius: Double, centerLatitude: Double, centerLongitude: Double): Array[Map[String, String]] = {
     var userArray: ArrayBuffer[Map[String, String]] = new ArrayBuffer[Map[String, String]]
     for (userCount <- 1 to numUsers) {
-      var user: Map[String, String] = EntityDataGenerator.generateUser(userCount)
+      var user: Map[String, String] = EntityDataGenerator.generateUser(userCount.toString)
       var geolocation: Map[String, String] = Utils.generateRandomGeolocation(radius, centerLatitude, centerLongitude)
       var blockLists: Map[String, String] = EntityDataGenerator.generateBlockUserLists(numUsers)
 
@@ -37,6 +39,41 @@ object FeederGenerator {
     }
     return userArray.toArray
   }
+
+
+
+  /**
+   * Generate users forever
+   * @param radius
+   * @param centerLatitude
+   * @param centerLongitude
+   * @return
+   */
+  def generateUserWithGeolocationFeederInfinite(seed:Int,radius: Double, centerLatitude: Double, centerLongitude: Double, maxPossible: Int): Iterator[Map[String, String]] = {
+    val userFeeder = Iterator.from(seed).map(i=>generateUserData(i.toString, radius, centerLatitude, centerLongitude))
+    return userFeeder
+
+  }
+
+  /**
+   * Generate user data based on atomically increasing integers
+   * @param radius
+   * @param centerLatitude
+   * @param centerLongitude
+   * @return
+   */
+  def generateUserData(id: String, radius: Double, centerLatitude: Double, centerLongitude: Double): Map[String, String] = {
+
+
+    var user: Map[String, String] = EntityDataGenerator.generateUser(id)
+    var geolocation: Map[String, String] = Utils.generateRandomGeolocation(radius, centerLatitude, centerLongitude)
+    var blockLists: Map[String, String] = EntityDataGenerator.generateBlockUserLists(1)
+
+    user = user ++ geolocation ++ blockLists
+
+    return user
+  }
+
 
   def generateGeolocationFeeder(radius: Double, centerLatitude: Double, centerLongitude: Double): Feeder[String] = {
 
@@ -89,16 +126,9 @@ object FeederGenerator {
 
   }
 
-  def generateEntityNameFeeder(prefix: String, numEntities: Int): Array[Map[String, String]] = {
-
-    var nameArray: ArrayBuffer[Map[String, String]] = new ArrayBuffer[Map[String, String]]
-
-    for (entityCount <- 1 to numEntities) {
-      nameArray += Map("entityName" -> prefix.concat(entityCount.toString).concat(UUID.randomUUID().toString))
-    }
-
-    return nameArray.toArray
-
+  def generateEntityNameFeeder(prefix: String, numEntities: Int): Iterator[Map[String, String]]  = {
+    val itr = Iterator.from(1).map(i=> Map("entityName" -> prefix.concat(i.toString).concat(UUID.randomUUID().toString)))
+    return itr
   }
 
   def generateRandomEntityNameFeeder(prefix: String, numEntities: Int): Array[Map[String, String]] = {

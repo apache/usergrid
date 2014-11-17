@@ -23,39 +23,44 @@ pushd /etc/apt/sources.list.d
 #Run the cassandra cql to create the keyspaces.  Note this only works for the
 # us-east region for the replication factor on the keyspaces
 
-cd /usr/share/usergrid/scripts
-FIRSTHOST="$(groovy get_first_instance.groovy cassandra)"
 
-if [ "$FIRSTHOST"=="$PUBLIC_HOSTNAME" ]; then
+#Install cassandra so we have the cli
+curl -L http://debian.datastax.com/debian/repo_key | apt-key add -
+
+sudo cat >> /etc/apt/sources.list.d/cassandra.sources.list << EOF
+deb http://debian.datastax.com/community stable main
+EOF
+
+apt-get update
+apt-get -y --force-yes install libcap2 cassandra=1.2.19
+/etc/init.d/cassandra stop
+
+#Get the first instance of cassandra
+cd /usr/share/usergrid/scripts
+CASSHOST=$(groovy get_first_instance.groovy cassandra)
 
 #We have to wait for cass to actually start before we can run our CQL.   Sleep 5 seconds between retries
-while ! echo exit | nc localhost 9160; do sleep 5; done
+while ! echo exit | nc ${CASSHOST} 9160; do sleep 5; done
 
 #WE have to remove our -1 from the end, since us-east and us-west dont support -1 in cassandra
 CASS_REGION=${EC2_REGION%-1}
 
-
 #Update the keyspace replication and run the cql
-sed -i.bak "s/KEYSPACE_REGION/${CASS_REGION}/g" /usr/share/usergrid/cql/create_locks.cql
+sed -i.bak "s/KEYSPACE_REGION/${CASS_REGION}/g" /usr/share/usergrid/cql/update_locks.cql
 
-/usr/bin/cassandra-cli -f  /usr/share/usergrid/cql/create_locks.cql
-
-
+/usr/bin/cassandra-cli -h ${CASSHOST} -f  /usr/share/usergrid/cql/update_locks.cql
 
 
 #Update the keyspace region and run the cql
-sed -i.bak "s/KEYSPACE_REGION/${CASS_REGION}/g" /usr/share/usergrid/cql/create_usergrid.cql
+sed -i.bak "s/KEYSPACE_REGION/${CASS_REGION}/g" /usr/share/usergrid/cql/update_usergrid.cql
 
-/usr/bin/cassandra-cli -f  /usr/share/usergrid/cql/create_usergrid.cql
-
-
+/usr/bin/cassandra-cli -h ${CASSHOST} -f  /usr/share/usergrid/cql/update_usergrid.cql
 
 
 #Update the keyspace region and run the cql
-sed -i.bak "s/KEYSPACE_REGION/${CASS_REGION}/g" /usr/share/usergrid/cql/create_usergrid_applications.cql
+sed -i.bak "s/KEYSPACE_REGION/${CASS_REGION}/g" /usr/share/usergrid/cql/update_usergrid_applications.cql
 
-/usr/bin/cassandra-cli -f  /usr/share/usergrid/cql/create_usergrid_applications.cql
+/usr/bin/cassandra-cli -h ${CASSHOST} -f  /usr/share/usergrid/cql/update_usergrid_applications.cql
 
-fi
 
 popd

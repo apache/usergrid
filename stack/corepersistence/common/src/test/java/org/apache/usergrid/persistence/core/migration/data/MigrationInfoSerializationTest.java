@@ -27,6 +27,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import org.apache.usergrid.persistence.core.migration.schema.MigrationException;
+import org.apache.usergrid.persistence.core.migration.schema.MigrationManager;
 import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.guice.TestCommonModule;
@@ -35,6 +37,7 @@ import org.apache.usergrid.persistence.core.test.UseModules;
 
 import com.google.inject.Inject;
 import com.netflix.astyanax.Keyspace;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -49,6 +52,9 @@ public class MigrationInfoSerializationTest {
     public MigrationManagerRule migrationManagerRule;
 
     @Inject
+    public MigrationManager migrationManager;
+
+    @Inject
     protected Keyspace keyspace;
 
 
@@ -60,7 +66,12 @@ public class MigrationInfoSerializationTest {
 
 
     @Test
-    public void basicTest(){
+    public void basicTest() throws ConnectionException, MigrationException {
+
+        //drop the column family, then run setup
+        keyspace.dropColumnFamily( MigrationInfoSerializationImpl.CF_MIGRATION_INFO.getName() );
+
+         migrationManager.migrate();
 
         //test getting nothing works
         final String emptyStatus = migrationInfoSerialization.getStatusMessage();

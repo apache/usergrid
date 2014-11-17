@@ -141,7 +141,19 @@ public interface EntityManagerFactory {
      */
     public int getMigrateDataVersion();
 
+    /**
+     * Force the migration version to the specified version
+     * @param version
+     */
+    public void setMigrationVersion(int version);
+
     public void setApplicationContext(ApplicationContext ac);
+
+    /**
+     * Perform a realtime count of every entity in the system.  This can be slow as it traverses the entire system graph
+     * @return
+     */
+    public long performEntityCount();
 
     /** For testing purposes */
     public void flushEntityManagerCaches();

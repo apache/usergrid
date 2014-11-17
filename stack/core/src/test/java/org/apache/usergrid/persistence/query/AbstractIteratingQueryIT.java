@@ -901,7 +901,7 @@ public abstract class AbstractIteratingQueryIT {
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        app.getEm().refreshIndex();
+        app.getEntityManager().refreshIndex();
 
         Query query = new Query();
         query.setLimit( 100 );
@@ -1002,7 +1002,7 @@ public abstract class AbstractIteratingQueryIT {
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        app.getEm().refreshIndex();
+        app.getEntityManager().refreshIndex();
 
         Query query = Query.fromQL( "select * order by boolean desc, index asc" );
         query.setLimit( queryLimit );
@@ -1108,7 +1108,7 @@ public abstract class AbstractIteratingQueryIT {
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        app.getEm().refreshIndex();
+        app.getEntityManager().refreshIndex();
 
         Query query =
                 Query.fromQL( "select * where intersect = true OR intersect2 = true order by created, intersect desc" );
@@ -1253,7 +1253,7 @@ public abstract class AbstractIteratingQueryIT {
         @Override
         public Entity writeEntity( Map<String, Object> entity ) throws Exception {
 
-            Entity e = app.getEm().create( "test", entity );
+            Entity e = app.getEntityManager().create( "test", entity );
 
             if ( WRITE_DELAY > 0 ) {
                 Thread.sleep( WRITE_DELAY );
@@ -1265,8 +1265,8 @@ public abstract class AbstractIteratingQueryIT {
 
         @Override
         public Results getResults( Query query ) throws Exception {
-            app.getEm().refreshIndex();
-            return app.getEm().searchCollection( app.getEm().getApplicationRef(), "tests", query );
+            app.getEntityManager().refreshIndex();
+            return app.getEntityManager().searchCollection( app.getEntityManager().getApplicationRef(), "tests", query );
         }
     }
 
@@ -1289,7 +1289,7 @@ public abstract class AbstractIteratingQueryIT {
         public void doSetup() throws Exception {
             Map<String, Object> data = new HashMap<String, Object>();
             data.put( "name", "rootentity" );
-            rootEntity = app.getEm().create( "root", data );
+            rootEntity = app.getEntityManager().create( "root", data );
         }
 
 
@@ -1298,7 +1298,7 @@ public abstract class AbstractIteratingQueryIT {
 
             // write to the collection
             Entity created = super.writeEntity( entity );
-            app.getEm().createConnection( rootEntity, CONNECTION, created );
+            app.getEntityManager().createConnection( rootEntity, CONNECTION, created );
 
             if ( WRITE_DELAY > 0 ) {
                 Thread.sleep( WRITE_DELAY );
@@ -1318,11 +1318,11 @@ public abstract class AbstractIteratingQueryIT {
         @Override
         public Results getResults( Query query ) throws Exception {
 
-            app.getEm().refreshIndex();
+            app.getEntityManager().refreshIndex();
             query.setConnectionType( CONNECTION );
             query.setEntityType( "test" );
 
-            return app.getEm().searchConnectedEntities( rootEntity, query );
+            return app.getEntityManager().searchConnectedEntities( rootEntity, query );
         }
     }
 }

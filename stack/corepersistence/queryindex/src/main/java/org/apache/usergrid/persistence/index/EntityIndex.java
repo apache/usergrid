@@ -44,7 +44,7 @@ public interface EntityIndex {
     /**
      * Execute query in Usergrid syntax.
      */
-    public CandidateResults search(final IndexScope indexScope,  Query query );
+    public CandidateResults search(final IndexScope indexScope, final SearchTypes searchType, Query query );
 
     /**
      * Get the candidate results of all versions of the entity for this id.
@@ -57,6 +57,12 @@ public interface EntityIndex {
     public void refresh();
 
     /**
+     * Return the number of pending tasks in the cluster
+     * @return
+     */
+    public int getPendingTasks();
+
+    /**
      * Check health of cluster.
      */
     public Health getClusterHealth();
@@ -67,3 +73,5 @@ public interface EntityIndex {
     public Health getIndexHealth();
 
 }
+
+

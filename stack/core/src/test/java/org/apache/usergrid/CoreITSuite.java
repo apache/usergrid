@@ -48,10 +48,10 @@ import org.apache.usergrid.system.UsergridSystemMonitorIT;
 public class CoreITSuite {
     
     @ClassRule
-    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts( "coreManager" );
+    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts( );
 
     @ClassRule
-    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource().startEs();
+    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
 
 
 

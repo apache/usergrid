@@ -392,6 +392,12 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
     }
 
 
+    @Override
+    public long performEntityCount() {
+        throw new UnsupportedOperationException("Not supported in v1");
+    }
+
+
     public void setCounterUtils( CounterUtils counterUtils ) {
         this.counterUtils = counterUtils;
     }
@@ -444,13 +450,19 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
 
     @Override
     public String getMigrateDataStatus() {
-        return null;
+        throw new UnsupportedOperationException("Not supported in v1");
     }
 
 
     @Override
     public int getMigrateDataVersion() {
-        return 0;
+        throw new UnsupportedOperationException("Not supported in v1");
+    }
+
+
+    @Override
+    public void setMigrationVersion( final int version ) {
+        throw new UnsupportedOperationException("Not supported in v1");
     }
 
 

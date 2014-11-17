@@ -35,7 +35,7 @@ class PushNotificationTargetUserSimulation extends Simulation {
   }
   setUp(
     NotificationScenarios.createScenario
-      .inject(constantUsersPerSec(Settings.constantUsers) during (Settings.duration)) // wait for 15 seconds so create org can finish, need to figure out coordination
+      .inject(constantUsersPerSec(Settings.maxPossibleUsers) during (Settings.duration)) // wait for 15 seconds so create org can finish, need to figure out coordination
       .throttle(reachRps(Settings.throttle) in ( Settings.rampTime.seconds))
       .protocols( Settings.httpConf.acceptHeader("application/json"))
   )

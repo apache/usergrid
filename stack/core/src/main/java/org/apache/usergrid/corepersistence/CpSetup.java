@@ -27,6 +27,8 @@ import me.prettyprint.cassandra.service.CassandraHost;
 import me.prettyprint.hector.api.ddl.ComparatorType;
 import static me.prettyprint.hector.api.factory.HFactory.createColumnFamilyDefinition;
 import org.apache.commons.lang.StringUtils;
+
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.mq.cassandra.QueuesCF;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.cassandra.ApplicationCF;
@@ -59,30 +61,27 @@ public class CpSetup implements Setup {
 
     private static final Logger logger = LoggerFactory.getLogger( CpSetup.class );
 
-    private static org.apache.usergrid.persistence.EntityManagerFactory emf;
-
     private static Injector injector = null;
 
+
+    private final org.apache.usergrid.persistence.EntityManagerFactory emf;
     private final CassandraService cass;
 
-    private GuiceModule gm;
+
+
 
 
     /**
      * Instantiates a new setup object.
+     *
+     * @param emf the emf
      */
     public CpSetup( EntityManagerFactory emf, CassandraService cass ) {
-        CpSetup.emf = emf;
+        this.emf = emf;
         this.cass = cass;
     }
 
 
-    /**
-     * EntityManagerFactory is created by Spring, but Guice-created classes need access to it. 
-     */
-    public static EntityManagerFactory getEntityManagerFactory() {
-        return emf; 
-    }
 
 
     public static Injector getInjector() {
@@ -133,11 +132,9 @@ public class CpSetup implements Setup {
             cpProps.put("collections.keyspace.strategy.class", 
                     cass.getProperties().get("cassandra.keyspace.strategy"));
 
-            cpProps.put("collections.keyspace.strategy.options", "replication_factor:" +  
+            cpProps.put("collections.keyspace.strategy.options",
                     cass.getProperties().get("cassandra.keyspace.replication"));
 
-            cpProps.put("cassandra.keyspace.strategy.options.replication_factor",
-                    cass.getProperties().get("cassandra.keyspace.replication"));
 
             logger.debug("Set Cassandra properties for Core Persistence: " + cpProps.toString() );
 
@@ -190,10 +187,6 @@ public class CpSetup implements Setup {
     }
 
 
-    /** @return staticly constructed reference to the management application */
-    public static Application getManagementApp() {
-        return SystemDefaults.managementApp;
-    }
 
     
     @Override
@@ -280,7 +273,7 @@ public class CpSetup implements Setup {
     static class SystemDefaults {
 
         private static final Application managementApp = 
-                new Application( CpEntityManagerFactory.MANAGEMENT_APPLICATION_ID);
+                new Application( CpNamingUtils.MANAGEMENT_APPLICATION_ID);
 
 //        private static final Application defaultApp = 
 //                new Application( CpEntityManagerFactory.DEFAULT_APPLICATION_ID );

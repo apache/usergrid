@@ -429,7 +429,7 @@ public class GrammarTreeTest {
         assertEquals( 37f, withinOperand.getLatitude().getFloatValue(), 0 );
         assertEquals( -75f, withinOperand.getLongitude().getFloatValue(), 0 );
 
-        QueryBuilder qb = query.createQueryBuilder();
+        QueryBuilder qb = query.createQueryBuilder("testcontext");
     }
 
 

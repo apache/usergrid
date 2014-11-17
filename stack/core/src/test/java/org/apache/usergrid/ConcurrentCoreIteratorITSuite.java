@@ -76,8 +76,8 @@ import org.apache.usergrid.persistence.query.SingleOrderBySameRangeScanLessThanE
 public class ConcurrentCoreIteratorITSuite {
 
     @ClassRule
-    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts( "coreManager" );
+    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts( );
     
     @ClassRule
-    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource().startEs();
+    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
 }

@@ -104,17 +104,17 @@ public abstract class AbstractRestIT extends JerseyTest {
     @Before
     public void acquireToken() throws Exception {
 
-        setupUsers();
-
-        refreshIndex("test-organization", "test-app");
-
-        LOG.info( "acquiring token" );
-        access_token = userToken( "ed@anuff.com", "sesame" );
-        LOG.info( "with token: {}", access_token );
-
-        loginClient();
-
-        refreshIndex("test-organization", "test-app");
+//        setupUsers();
+//
+//        refreshIndex("test-organization", "test-app");
+//
+//        LOG.info( "acquiring token" );
+//        access_token = userToken( "ed@anuff.com", "sesame" );
+//        LOG.info( "with token: {}", access_token );
+//
+//        loginClient();
+//
+//        refreshIndex("test-organization", "test-app");
     }
 
 

@@ -19,7 +19,6 @@
 package org.apache.usergrid.persistence.graph.serialization.impl.shard.count;
 
 
-import org.apache.usergrid.persistence.core.test.UseModules;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -29,9 +28,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
-import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
-import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.test.ITRunner;
+import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
@@ -55,9 +54,6 @@ import static org.mockito.Mockito.when;
 public class NodeShardCounterSerializationTest {
 
     private static final Logger log = LoggerFactory.getLogger( NodeShardCounterSerializationTest.class );
-
-    @ClassRule
-    public static CassandraRule rule = new CassandraRule();
 
 
     @Inject
