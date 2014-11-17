@@ -20,14 +20,22 @@ package org.apache.usergrid.rest.exceptions;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 
 
 @Provider
 public class IllegalArgumentExceptionMapper extends AbstractExceptionMapper<IllegalArgumentException> {
 
+    private static final Logger logger = LoggerFactory.getLogger(IllegalArgumentExceptionMapper.class);
+
     @Override
     public Response toResponse( IllegalArgumentException e ) {
+
+        logger.error( "Illegal argument was passed, returning bad request to user", e );
+
         return toResponse( BAD_REQUEST, e );
     }
 }
