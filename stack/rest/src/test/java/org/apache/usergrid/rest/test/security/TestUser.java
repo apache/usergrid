@@ -45,7 +45,6 @@ public abstract class TestUser {
         this.user = user;
         this.password = password;
         this.email = email;
-        this.uuid = UUIDUtils.newTimeUUID();
     }
 
 
@@ -101,6 +100,9 @@ public abstract class TestUser {
         return uuid;
     }
 
+    public void setUUID(UUID uuid) {
+        this.uuid = uuid;
+    }
 
     public boolean isLoggedIn() {
         return this.token != null;
