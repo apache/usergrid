@@ -1870,9 +1870,9 @@
                     <exclude>**/**QueryFilterLexer.java</exclude>
                     <exclude>**/**QueryFilterParser.java</exclude>
                     <exclude>**/**.conf</exclude>
-                  <exclude>**/**.csv</exclude>
-                  <exclude>**/aws.properties</exclude>
-                  <exclude>**/tempExport*</exclude>
+                    <exclude>**/**.csv</exclude>
+                    <exclude>**/aws.properties</exclude>
+                    <exclude>**/tempExport*</exclude>
                     <exclude>loadtests/loadtest_setup.sh</exclude>
                     <exclude>loadtests/gatling/user-files/request-bodies/**</exclude>
                     <!-- other -->
