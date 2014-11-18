@@ -551,11 +551,12 @@ public class CpEntityManager implements EntityManager {
         cpEntity = CpEntityMapUtils.fromMap( cpEntity, entity.getProperties(), entity.getType(), true );
 
         try {
-            cpEntity = ecm.update( cpEntity ).toBlockingObservable().last();
-
-
-            // need to reload entity so bypass entity cache
-            cpEntity = ecm.load( entityId ).toBlockingObservable().last();
+            cpEntity = ecm.write( cpEntity ).toBlocking().last();
+//            cpEntity = ecm.update( cpEntity ).toBlockingObservable().last();
+//
+//
+//            // need to reload entity so bypass entity cache
+//            cpEntity = ecm.load( entityId ).toBlockingObservable().last();
 
             logger.debug( "Wrote {}:{} version {}", new Object[] {
                     cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion()

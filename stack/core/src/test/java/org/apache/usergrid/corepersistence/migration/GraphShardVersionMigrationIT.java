@@ -59,7 +59,6 @@ public class GraphShardVersionMigrationIT extends AbstractCoreIT {
     private Injector injector;
     private GraphShardVersionMigration graphShardVersionMigration;
     private Keyspace keyspace;
-    private MigrationManager migrationManager;
     private ManagerCache managerCache;
     private DataMigrationManager dataMigrationManager;
     private MigrationInfoSerialization migrationInfoSerialization;
@@ -70,7 +69,6 @@ public class GraphShardVersionMigrationIT extends AbstractCoreIT {
         injector = CpSetup.getInjector();
         graphShardVersionMigration = injector.getInstance( GraphShardVersionMigration.class );
         keyspace = injector.getInstance( Keyspace.class );
-        migrationManager = injector.getInstance( MigrationManager.class );
         managerCache = injector.getInstance( ManagerCache.class );
         dataMigrationManager = injector.getInstance( DataMigrationManager.class );
         migrationInfoSerialization = injector.getInstance( MigrationInfoSerialization.class );
@@ -83,13 +81,13 @@ public class GraphShardVersionMigrationIT extends AbstractCoreIT {
         assertEquals("version 2 expected", 2, graphShardVersionMigration.getVersion());
 
         /**
-         * Drop our migration keyspaces to ensure we don't have a "new version in there"
-         * This will ensure we have an "old data" version of data written
+         * Reset to our version -1 and start the migration
          */
-        keyspace.dropColumnFamily( MigrationInfoSerializationImpl.CF_MIGRATION_INFO );
+        dataMigrationManager.resetToVersion( graphShardVersionMigration.getVersion()-1 );
 
-        //create the column families again
-        migrationManager.migrate();
+
+
+
 
         final EntityManager newAppEm = app.getEntityManager();
 

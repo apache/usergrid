@@ -17,8 +17,12 @@
 package org.apache.usergrid.rest.exceptions;
 
 
+
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.management.exceptions.ManagementException;
 
@@ -28,12 +32,13 @@ import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 @Provider
 public class ManagementExceptionMapper extends AbstractExceptionMapper<ManagementException> {
 
+    private static final Logger logger = LoggerFactory.getLogger( ManagementExceptionMapper.class );
+
     @Override
     public Response toResponse( ManagementException e ) {
-        String msg = e.getMessage();
-        if ( msg == null ) {
-            msg = e.getClass().getName();
-        }
+
+        logger.error( "Management Exception Found", e );
+
         return toResponse( BAD_REQUEST, e );
     }
 }

@@ -118,6 +118,7 @@ public class EntityConnectionIndexImplTest extends BaseIT {
                 new IndexScopeImpl( new SimpleId( UUIDGenerator.newTimeUUID(), "animal" ), "likes" );
 
         EntityIndex personLikesIndex = ecif.createEntityIndex( applicationScope );
+        personLikesIndex.initializeIndex();
 
         EntityIndexBatch batch = personLikesIndex.createBatch();
 
@@ -248,6 +249,7 @@ public class EntityConnectionIndexImplTest extends BaseIT {
                 new IndexScopeImpl( new SimpleId( UUIDGenerator.newTimeUUID(), "animal" ), "likes" );
 
         EntityIndex personLikesIndex = ecif.createEntityIndex( applicationScope );
+        personLikesIndex.initializeIndex();
 
         EntityIndexBatch batch = personLikesIndex.createBatch();
 
