@@ -340,6 +340,8 @@ public class CassandraResource extends ExternalResource {
             LOG.info( "Created a new instance of CassandraResource: {}", instance );
             LOG.info( "Cassandra using ports {} and {}", storagePort, sslStoragePort );
 
+
+
             return instance;
         }
     }

@@ -58,7 +58,6 @@ public class EntityTypeMappingMigrationIT extends AbstractCoreIT {
 
     private EntityTypeMappingMigration entityTypeMappingMigration;
     private Keyspace keyspace;
-    private MigrationManager migrationManager;
     private EntityManagerFactory emf;
     private ManagerCache managerCache;
 
@@ -69,7 +68,6 @@ public class EntityTypeMappingMigrationIT extends AbstractCoreIT {
         emf = setup.getEmf();
         entityTypeMappingMigration = injector.getInstance( EntityTypeMappingMigration.class );
         keyspace = injector.getInstance( Keyspace.class );
-        migrationManager = injector.getInstance( MigrationManager.class );
         managerCache = injector.getInstance( ManagerCache.class );
     }
 
@@ -99,11 +97,8 @@ public class EntityTypeMappingMigrationIT extends AbstractCoreIT {
          * Drop our map keyspace to ensure we have no entries before migrating after doing our writes.
          * This will ensure we have the data
          */
-        keyspace.dropColumnFamily( MapSerializationImpl.MAP_ENTRIES );
-        keyspace.dropColumnFamily( MapSerializationImpl.MAP_KEYS );
-
-        //create the column families again
-        migrationManager.migrate();
+        keyspace.truncateColumnFamily( MapSerializationImpl.MAP_ENTRIES );
+        keyspace.truncateColumnFamily( MapSerializationImpl.MAP_KEYS );
 
 
         final TestProgressObserver progressObserver = new TestProgressObserver();

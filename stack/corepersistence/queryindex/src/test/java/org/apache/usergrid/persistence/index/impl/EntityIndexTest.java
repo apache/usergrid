@@ -373,6 +373,7 @@ public class EntityIndexTest extends BaseIT {
         IndexScope appScope = new IndexScopeImpl( ownerId, "user" );
 
         EntityIndex ei = eif.createEntityIndex( applicationScope );
+        ei.initializeIndex();
         ei.createBatch();
 
         // Bill has favorites as string, age as string and retirement goal as number
