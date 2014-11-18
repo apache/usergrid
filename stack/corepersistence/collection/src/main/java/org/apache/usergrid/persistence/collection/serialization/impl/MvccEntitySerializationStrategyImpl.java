@@ -38,6 +38,7 @@ import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntitySet;
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
+import org.apache.usergrid.persistence.collection.exception.DataCorruptionException;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.serialization.EntityRepair;
@@ -394,21 +395,34 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         @Override
         public MvccEntity parseColumn( Column<UUID> column ) {
 
-            final EntityWrapper deSerialized = column.getValue( ENTITY_JSON_SER );
+            final EntityWrapper deSerialized;
+            final UUID version = column.getName();
+
+            try {
+                deSerialized = column.getValue( ENTITY_JSON_SER );
+            }
+            catch ( DataCorruptionException e ) {
+              log.error(
+                      "DATA CORRUPTION DETECTED when de-serializing entity with Id {} and version {}.  This means the"
+                              + " write was truncated.",
+                      id, version );
+                //return an empty entity, we can never load this one, and we don't want it to bring the system
+                //to a grinding halt
+                return new MvccEntityImpl( id, version, MvccEntity.Status.DELETED, Optional.<Entity>absent() );
+            }
 
             //Inject the id into it.
             if ( deSerialized.entity.isPresent() ) {
                 EntityUtils.setId( deSerialized.entity.get(), id );
             }
 
-            return new MvccEntityImpl( id, column.getName(), deSerialized.status, deSerialized.entity );
+            return new MvccEntityImpl( id, version, deSerialized.status, deSerialized.entity );
         }
     }
 
 
     public static class EntitySerializer extends AbstractSerializer<EntityWrapper> {
 
-        public static final EntitySerializer INSTANCE = new EntitySerializer();
 
         public static final SmileFactory f = new SmileFactory();
 
@@ -420,9 +434,6 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
         private static byte[] VERSION = new byte[] { 0 };
 
-
-        //the marker for when we're passed a "null" value
-        private static final byte[] EMPTY = new byte[] { 0x0 };
 
 
         public EntitySerializer() {
@@ -479,7 +490,21 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
         @Override
         public EntityWrapper fromByteBuffer( final ByteBuffer byteBuffer ) {
-            CompositeParser parser = Composites.newCompositeParser( byteBuffer );
+
+            /**
+             * We intentionally turn data corruption exceptions when we're unable to de-serialize
+             * the data in cassandra.  If this occurs, we'll never be able to de-serialize it
+             * and it should be considered lost.  This is an error that is occuring due to a bug
+             * in serializing the entity.  This is a lazy recognition + repair signal for deployment with
+             * existing systems.
+             */
+            CompositeParser parser;
+            try {
+                parser = Composites.newCompositeParser( byteBuffer );
+            }
+            catch ( Exception e ) {
+              throw new DataCorruptionException("Unable to de-serialze entity", e);
+            }
 
             byte[] version = parser.read( BYTES_ARRAY_SERIALIZER );
 
@@ -495,7 +520,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
                 return new EntityWrapper( MvccEntity.Status.COMPLETE, Optional.<Entity>absent() );
             }
 
-            Entity storedEntity = null;
+            Entity storedEntity;
 
             ByteBuffer jsonBytes = parser.read( BUFFER_SERIALIZER );
             byte[] array = jsonBytes.array();
@@ -506,7 +531,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
                 storedEntity = mapper.readValue( array, start, length, Entity.class );
             }
             catch ( Exception e ) {
-                throw new RuntimeException( "Unable to read entity data", e );
+                throw new DataCorruptionException( "Unable to read entity data", e );
             }
 
             final Optional<Entity> entity = Optional.of( storedEntity );
