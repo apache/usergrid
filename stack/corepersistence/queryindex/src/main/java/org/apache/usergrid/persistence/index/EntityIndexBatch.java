@@ -56,19 +56,6 @@ public interface EntityIndexBatch {
      */
     public EntityIndexBatch deindex(final IndexScope scope, final Id id, final UUID version);
 
-    /**
-     * Create a delete method that deletes by Id. This will delete all documents from ES with 
-     * the same entity Id, effectively removing all versions of an entity from all index scopes.
-     */
-    public EntityIndexBatch deleteEntity( Id entityId );
-
-    /**
-     * Takes all the previous versions of the current entity and deindexs all previous versions
-     * @param entity
-     * @return
-     */
-    public EntityIndexBatch deindexPreviousVersions(Entity entity);
-
 
         /**
          * Execute the batch

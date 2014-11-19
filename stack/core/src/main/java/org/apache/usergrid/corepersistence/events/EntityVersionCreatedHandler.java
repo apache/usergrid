@@ -58,6 +58,7 @@ public class EntityVersionCreatedHandler implements EntityVersionCreated {
 
         EntityIndexBatch batch = ei.createBatch();
 
+        //TODO why aren't we using a collection fig here? This seems kludgy
         if ( System.getProperty( "allow.stale.entities", "false" ).equals( "false" )) {
             batch.deindexPreviousVersions( entity );
             batch.execute();

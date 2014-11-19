@@ -29,7 +29,14 @@ import java.util.UUID;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.action.deletebyquery.DeleteByQueryRequest;
+import org.elasticsearch.action.deletebyquery.DeleteByQueryRequestBuilder;
+import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.index.query.FilterBuilders;
+import org.elasticsearch.index.query.FilteredQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.TermQueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,18 +64,17 @@ import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.field.UUIDField;
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
 
-import com.google.common.base.Joiner;
-
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ANALYZED_STRING_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.BOOLEAN_PREFIX;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ENTITYID_ID_FIELDNAME;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ENTITY_CONTEXT_FIELDNAME;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ENTITY_ID_FIELDNAME;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ENTITY_VERSION_FIELDNAME;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.GEO_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.NUMBER_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.STRING_PREFIX;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createContextName;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createIndexDocId;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createIndexName;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createContextName;
 
 
 public class EsEntityIndexBatchImpl implements EntityIndexBatch {
@@ -167,7 +173,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         }
 
 
-        log.debug( "De-indexing type {} with documentId '{}'" , entityType, indexId);
+        log.debug( "De-indexing type {} with documentId '{}'", entityType, indexId );
 
         bulkRequest.add( client.prepareDelete( indexName, entityType, indexId ).setRefresh( refresh ) );
 
@@ -192,43 +198,6 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         return deindex( indexScope, entity.getId(), entity.getVersion() );
     }
 
-    
-    @Override
-    public EntityIndexBatch deleteEntity(Id entityId) {
-
-        TermQueryBuilder tqb = QueryBuilders.termQuery(
-            STRING_PREFIX + ENTITYID_FIELDNAME, entityId.getUuid().toString().toLowerCase());
-
-        DeleteByQueryResponse response = client.prepareDeleteByQuery( indexName )
-            .setQuery( tqb ).execute().actionGet();
-
-        logger.debug("Deleted entity {}:{} from all index scopes with response status = {}", 
-            new Object[] { entityId.getType(), entityId.getUuid(), response.status().toString() });
-
-        maybeFlush();
-
-        return this;
-    }
-
-
-    @Override
-    public EntityIndexBatch deindexPreviousVersions( Entity entity ) {
-
-        FilteredQueryBuilder fqb = QueryBuilders.filteredQuery( QueryBuilders
-                        .termQuery( STRING_PREFIX + ENTITYID_FIELDNAME,
-                                entity.getId().getUuid().toString().toLowerCase() ),
-                FilterBuilders.rangeFilter( ENTITYVERSION_FIELDNAME ).lt( entity.getVersion().timestamp() ) );
-
-        DeleteByQueryResponse response = client.prepareDeleteByQuery( indexName ).setQuery( fqb ).execute().actionGet();
-
-        //error message needs to be retooled so that it describes the entity more throughly
-        logger.debug( "Deleted entity {}:{} from all index scopes with response status = {}",
-                new Object[] { entity.getId().getType(), entity.getId().getUuid(), response.status().toString() } );
-
-        maybeFlush();
-
-        return this;
-    }
 
 
     @Override
@@ -251,9 +220,6 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
         try {
             responses = request.execute().actionGet();
-        } catch (Throwable t) {
-            logger.error("Unable to communicate with elasticsearch");
-            failureMonitor.fail("Unable to execute batch", t);
         }
         catch ( Throwable t ) {
             log.error( "Unable to communicate with elasticsearch" );
@@ -293,9 +259,9 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
     /**
      * Set the entity as a map with the context
+     *
      * @param entity The entity
      * @param context The context this entity appears in
-     * @return
      */
     private static Map entityToMap( final Entity entity, final String context ) {
         final Map entityMap = entityToMap( entity );
@@ -304,8 +270,11 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         entityMap.put( ENTITY_CONTEXT_FIELDNAME, context );
 
         //but the fieldname
-        //we have to prefix because we use query equality to seek this later.  TODO see if we can make this more declarative
-        entityMap.put( ENTITYID_ID_FIELDNAME, IndexingUtils.idString(entity.getId()).toLowerCase() );
+        //we have to prefix because we use query equality to seek this later.  TODO see if we can make this more
+        // declarative
+        entityMap.put( ENTITY_ID_FIELDNAME, IndexingUtils.idString( entity.getId() ).toLowerCase() );
+
+        entityMap.put( ENTITY_ID_FIELDNAME, IndexingUtils.idString( entity.getId() ).toLowerCase() );
 
         return entityMap;
     }
@@ -428,5 +397,4 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
     private void initBatch() {
         this.bulkRequest = client.prepareBulk();
     }
-
 }
