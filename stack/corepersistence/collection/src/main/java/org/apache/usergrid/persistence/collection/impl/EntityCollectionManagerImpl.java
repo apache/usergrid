@@ -165,16 +165,6 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         // observable = Concurrent.concurrent( observable, Schedulers.io(), new WaitZip(), 
         //                  writeVerifyUnique, writeOptimisticVerify );
 
-        observable.map(writeCommit).doOnNext(new Action1<Entity>() {
-            @Override
-            public void call(final Entity entity) {
-                //TODO fire a task here
-
-                //post-processing to come later. leave it empty for now.
-            }
-        }).doOnError(rollback);
-
-
         // return the commit result.
         return observable.map(writeCommit).doOnError(rollback);
     }

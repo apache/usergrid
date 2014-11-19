@@ -478,7 +478,8 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
             }
 
             try {
-                builder.addBytes( mapper.writeValueAsBytes( wrapper.entity.get() ) );
+                final byte[] entityBytes = mapper.writeValueAsBytes( wrapper.entity.get() ) ;
+                builder.addBytes( entityBytes );
             }
             catch ( Exception e ) {
                 throw new RuntimeException( "Unable to serialize entity", e );

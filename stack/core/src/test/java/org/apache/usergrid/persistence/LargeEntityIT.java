@@ -60,8 +60,11 @@ public class LargeEntityIT extends AbstractCoreIT {
 
         final Entity loadReturnedRef = em.get( createReturned );
 
+        assertEquals( "Entities should be equal", createReturned, loadReturnedRef );
+
         final Entity loadReturnedId = em.get( createReturned.getUuid() );
-        assertEquals( createReturned, loadReturnedRef );
+
+        assertEquals( "Entities should be equal", createReturned, loadReturnedId );
     }
 
 
