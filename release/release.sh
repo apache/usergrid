@@ -113,7 +113,7 @@ else
 fi
 
 # Make sure the tag does not exist
-if git rev-parse --tags=$current_version >/dev/null 2>&1; then
+if git rev-parse $current_version >/dev/null 2>&1; then
   echo "ERROR: ${current_version} tag exists."
   exit 1
 fi
@@ -190,9 +190,6 @@ echo
 MESSAGE=$(cat <<__EOF__
 To: dev@usergrid.incubator.apache.org
 Subject: [RESULT][VOTE] Release Apache Usergrid ${current_version} (incubating) RC#{rc_tag_version}
-
-All,
-The vote to accept Apache Usergrid ${current_version} RC#{rc_tag_version}
 as the official Apache Usegrid ${current_version} release has passed.
 
 
