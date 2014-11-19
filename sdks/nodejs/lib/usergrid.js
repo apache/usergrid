@@ -467,12 +467,8 @@ var AUTH_NONE = 'NONE';
   *  A private method to get call timing of last call
   */
   Usergrid.Client.prototype.calcTimeDiff = function () {
-   var seconds = 0;
    var time = this._end - this._start;
-   try {
-      seconds = ((time/10) / 60).toFixed(2);
-   } catch(e) { return 0; }
-   return seconds;
+   return (time/1000).toFixed(2);
   }
 
   /*
