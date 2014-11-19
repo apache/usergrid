@@ -173,11 +173,11 @@ if [[ $publish == 1 ]]; then
   svn ci -m "usergrid-${current_version} release"
 
   # Finally delete all release candidate branches
-  for ref in $(git for-each-ref --format='%(refname:short)' 'refs/heads/${current_version}-rc*') do
-    git branch -D ${ref}
-    git push origin --delete ${ref}
-    svn rm ${usergrid_svn_dev_dist_url}/${ref}
-  done
+#  for ref in $(git for-each-ref --format='%(refname:short)' 'refs/heads/${current_version}-rc*') do
+#    git branch -D ${ref} # line 177: syntax error near unexpected token `git'
+#    git push origin --delete ${ref}
+#    svn rm ${usergrid_svn_dev_dist_url}/${ref}
+#  done
 fi
 
 cd ${base_dir}
