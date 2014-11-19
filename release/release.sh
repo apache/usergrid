@@ -126,7 +126,7 @@ fi
 # Create a branch for the release and update the .usergridversion and tag it
 echo "Creating release branch and tag for ${current_version}"
 git checkout -b $current_version
-echo $current_version_tag > .usergridversion
+echo $current_version > .usergridversion
 git add .usergridversion
 git commit -m "Updating .usergridversion to ${current_version}."
 
