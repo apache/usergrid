@@ -62,3 +62,4 @@ portal/js/templates.js
 /portal/seleniumLog.txt
 /stack/core/src/main/java/org/apache/usergrid/persistence/query/tree/QueryFilterLexer.java
 /stack/core/src/main/java/org/apache/usergrid/persistence/query/tree/QueryFilterParser.java
+/sdks/html5-javascript/node_modules/
