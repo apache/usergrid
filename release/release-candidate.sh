@@ -165,7 +165,7 @@ fi
 git clean -fdxq
 
 echo "Generating changelog"
-${base_dir}/build-support/release/changelog $current_version
+${base_dir}/release/changelog.rb $current_version
 git add CHANGELOG
 git commit -m "Updating CHANGELOG for ${current_version} release."
 
