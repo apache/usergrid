@@ -129,7 +129,7 @@ public class MarkCommit implements Action1<CollectionIoEvent<MvccEntity>> {
                     @Override
                     protected Iterator<MvccEntity> getIterator() {
                         Iterator<MvccEntity> entities =
-                                entityStrat.loadHistory( collectionScope, entityId, entity.getVersion(), 100 );
+                                entityStrat.load( collectionScope, entityId, entity.getVersion(), 100 );
 
                         return entities;
                     }

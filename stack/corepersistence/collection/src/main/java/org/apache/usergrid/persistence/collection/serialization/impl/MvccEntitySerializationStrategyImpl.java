@@ -209,6 +209,36 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
 
 
     @Override
+    public Iterator<MvccEntity> load( final CollectionScope collectionScope, final Id entityId, final UUID version,
+                                      final int fetchSize ) {
+
+        Preconditions.checkNotNull( collectionScope, "collectionScope is required" );
+        Preconditions.checkNotNull( entityId, "entity id is required" );
+        Preconditions.checkNotNull( version, "version is required" );
+        Preconditions.checkArgument( fetchSize > 0, "max Size must be greater than 0" );
+
+
+        final Id applicationId = collectionScope.getApplication();
+        final Id ownerId = collectionScope.getOwner();
+        final String collectionName = collectionScope.getName();
+
+        final CollectionPrefixedKey<Id> collectionPrefixedKey =
+                new CollectionPrefixedKey<>( collectionName, ownerId, entityId );
+
+
+        final ScopedRowKey<CollectionPrefixedKey<Id>> rowKey =
+                ScopedRowKey.fromKey( applicationId, collectionPrefixedKey );
+
+
+        RowQuery<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> query =
+                keyspace.prepareQuery( CF_ENTITY_DATA ).getKey( rowKey )
+                        .withColumnRange( version, null, false, fetchSize );
+
+        return new ColumnNameIterator( query, new MvccColumnParser( entityId, entityJsonSerializer ), false );
+    }
+
+
+    @Override
     public Iterator<MvccEntity> loadHistory( final CollectionScope collectionScope, final Id entityId,
                                              final UUID version, final int fetchSize ) {
 

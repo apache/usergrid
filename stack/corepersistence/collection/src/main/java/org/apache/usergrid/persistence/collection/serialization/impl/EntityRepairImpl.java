@@ -69,7 +69,7 @@ public class EntityRepairImpl implements EntityRepair {
         partialEntities.add( targetEntity );
 
         final Iterator<MvccEntity> results = mvccEntitySerializationStrategy
-                .loadHistory( collectionScope, targetEntity.getId(), targetEntity.getVersion(),
+                .load( collectionScope, targetEntity.getId(), targetEntity.getVersion(),
                         serializationFig.getBufferSize() );
 
 
