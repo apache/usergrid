@@ -56,18 +56,6 @@ public interface MvccEntitySerializationStrategy extends Migration {
      */
     public EntitySet load( CollectionScope scope, Collection<Id> entityIds, UUID maxVersion);
 
-    /**
-     * Load a list, from highest to lowest of the entity with versions <= version up to maxSize elements
-     *
-     * @param context The context to persist the entity into
-     * @param entityId The entity id to load
-     * @param version The max version to seek from.  I.E a stored version >= this argument
-     * @param fetchSize The maximum size to return.  If you receive this size, there may be more versions to load.
-     *
-     * @return A list of entities up to max size ordered from max(UUID)=> min(UUID).  The return value should be null
-     *         safe and return an empty list when there are no matches
-     */
-    public Iterator<MvccEntity> load( CollectionScope context, Id entityId, UUID version, int fetchSize );
 
     /**
      * Load a historical list of entities, from highest to lowest of the entity with versions <= version up to maxSize elements

@@ -28,6 +28,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
+import org.apache.usergrid.persistence.collection.util.EntityHelper;
 import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
@@ -43,7 +44,6 @@ import org.apache.usergrid.persistence.model.field.BooleanField;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.model.field.IntegerField;
 import org.apache.usergrid.persistence.model.field.StringField;
-import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.fasterxml.uuid.UUIDComparator;
 import com.google.inject.Inject;
@@ -713,29 +713,8 @@ public class EntityCollectionManagerIT {
     public void largeEntityWriteRead() {
         final int setSize = 65535 * 2;
 
-        int currentLength = 0;
 
-        final Entity entity = new Entity( new SimpleId( "test" ) );
-
-        //generate a really large string value
-        StringBuilder builder = new StringBuilder();
-
-        for ( int i = 0; i < 100; i++ ) {
-            builder.append( UUIDGenerator.newTimeUUID().toString() );
-        }
-
-        final String value = builder.toString();
-
-
-        //loop until our size is beyond the set size
-        for ( int i = 0; currentLength < setSize; i++ ) {
-            final String key = "newStringField" + i;
-
-            entity.setField( new StringField( key, value ) );
-
-            currentLength += key.length() + value.length();
-        }
-
+        final Entity entity =  EntityHelper.generateEntity( setSize );
 
         //now we have one massive, entity, save it and retrieve it.
         CollectionScope context =
@@ -751,6 +730,7 @@ public class EntityCollectionManagerIT {
         //now load it
         final Entity loaded = manager.load( entity.getId() ).toBlocking().last();
 
-        assertEquals( entity, loaded );
+
+        EntityHelper.verifySame( entity, loaded );
     }
 }

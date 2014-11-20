@@ -36,7 +36,7 @@ import com.google.inject.Inject;
 
 @RunWith( ITRunner.class )
 @UseModules( TestCollectionModule.class )
-public class MvccEntitySerializationStrategyProxyV2Test extends MvccEntitySerializationStrategyImplTest {
+public class MvccEntitySerializationStrategyProxyV2Test extends MvccEntitySerializationSTrategyV2FixTests {
 
     @Inject
     @ProxyImpl

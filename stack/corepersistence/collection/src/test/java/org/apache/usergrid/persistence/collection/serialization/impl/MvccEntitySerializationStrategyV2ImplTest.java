@@ -34,7 +34,7 @@ import com.google.inject.Inject;
 
 @RunWith( ITRunner.class )
 @UseModules( TestCollectionModule.class )
-public class MvccEntitySerializationStrategyV2ImplTest extends MvccEntitySerializationStrategyImplTest {
+public class MvccEntitySerializationStrategyV2ImplTest extends MvccEntitySerializationSTrategyV2FixTests {
 
     @Inject
     @CurrentImpl
@@ -44,4 +44,6 @@ public class MvccEntitySerializationStrategyV2ImplTest extends MvccEntitySeriali
     protected MvccEntitySerializationStrategy getMvccEntitySerializationStrategy() {
         return serializationStrategy;
     }
+
+
 }

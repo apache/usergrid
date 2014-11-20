@@ -95,15 +95,6 @@ public class MvccEntitySerializationStrategyProxyImpl implements MvccEntitySeria
     }
 
 
-    @Override
-    public Iterator<MvccEntity> load( final CollectionScope context, final Id entityId, final UUID version,
-                                      final int fetchSize ) {
-        if ( isOldVersion() ) {
-            return previous.load( context, entityId, version, fetchSize );
-        }
-
-        return current.load( context, entityId, version, fetchSize );
-    }
 
 
     @Override

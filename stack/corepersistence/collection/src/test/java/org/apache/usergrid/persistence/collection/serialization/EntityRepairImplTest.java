@@ -101,7 +101,7 @@ public class EntityRepairImplTest {
 
         //mock up returning
         when( mvccEntitySerializationStrategy
-                .load( scope, simpleId, v3.getVersion(), serializationFig.getBufferSize() ) )
+                .loadHistory( scope, simpleId, v3.getVersion(), serializationFig.getBufferSize() ) )
                 .thenReturn( Arrays.<MvccEntity>asList( v3, v2, v1 ).iterator() );
 
 
