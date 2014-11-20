@@ -22,9 +22,7 @@ package org.apache.usergrid.corepersistence.migration;
 
 import java.util.Iterator;
 import java.util.UUID;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.usergrid.corepersistence.ManagerCache;
 import org.apache.usergrid.corepersistence.rx.AllEntitiesInSystemObservable;
@@ -53,9 +51,6 @@ import rx.functions.Action1;
 public class EntityDataMigration implements DataMigration {
 
 
-    private static final Logger logger = LoggerFactory.getLogger( EntityDataMigration.class );
-
-
     private final MvccEntitySerializationStrategy v1Serialization;
     private final MvccEntitySerializationStrategy v2Serialization;
 
@@ -77,58 +72,71 @@ public class EntityDataMigration implements DataMigration {
     @Override
     public void migrate( final ProgressObserver observer ) throws Throwable {
 
+        final AtomicLong atomicLong = new AtomicLong();
 
-        AllEntitiesInSystemObservable.getAllEntitiesInSystem( managerCache, 1000 ).doOnNext(
-                new Action1<AllEntitiesInSystemObservable.ApplicationEntityGroup>() {
-
-
-                    @Override
-                    public void call(
-                            final AllEntitiesInSystemObservable.ApplicationEntityGroup applicationEntityGroup ) {
+        AllEntitiesInSystemObservable.getAllEntitiesInSystem( managerCache, 1000 )
+                                     .doOnNext( new Action1<AllEntitiesInSystemObservable.ApplicationEntityGroup>() {
 
 
-                        final UUID now = UUIDGenerator.newTimeUUID();
-
-                        final Id appScopeId = applicationEntityGroup.applicationScope.getApplication();
-
-
-                        final MutationBatch totalBatch = keyspace.prepareMutationBatch();
-
-                        for ( Id entityId : applicationEntityGroup.entityIds ) {
-
-                            CollectionScope currentScope = CpNamingUtils.getCollectionScopeNameFromEntityType(
-                                    appScopeId, entityId.getType() );
+                                                 @Override
+                                                 public void call(
+                                                         final AllEntitiesInSystemObservable.ApplicationEntityGroup
+                                                                 applicationEntityGroup ) {
 
 
-                            Iterator<MvccEntity> allVersions =
-                                    v1Serialization.loadDescendingHistory( currentScope, entityId, now, 1000 );
+                                                     final UUID now = UUIDGenerator.newTimeUUID();
 
-                            while ( allVersions.hasNext() ) {
-                                final MvccEntity version = allVersions.next();
+                                                     final Id appScopeId =
+                                                             applicationEntityGroup.applicationScope.getApplication();
 
-                                final MutationBatch versionBatch = v2Serialization.write( currentScope, version );
 
-                                totalBatch.mergeShallow( versionBatch );
+                                                     final MutationBatch totalBatch = keyspace.prepareMutationBatch();
 
-                                if ( totalBatch.getRowCount() >= 50 ) {
-                                    try {
-                                        totalBatch.execute();
-                                    }
-                                    catch ( ConnectionException e ) {
-                                        throw new DataMigrationException( "Unable to migrate batches ", e );
-                                    }
-                                }
-                            }
-                        }
+                                                     //go through each entity in the system, and load it's entire
+                                                     // history
+                                                     for ( Id entityId : applicationEntityGroup.entityIds ) {
 
-                        try {
-                            totalBatch.execute();
-                        }
-                        catch ( ConnectionException e ) {
-                            throw new DataMigrationException( "Unable to migrate batches ", e );
-                        }
-                    }
-                } ).toBlocking().last();
+                                                         CollectionScope currentScope = CpNamingUtils
+                                                                 .getCollectionScopeNameFromEntityType( appScopeId,
+                                                                         entityId.getType() );
+
+
+                                                         //for each element in the history in the previous version,
+                                                         // copy it to the CF in v2
+                                                         Iterator<MvccEntity> allVersions = v1Serialization
+                                                                 .loadDescendingHistory( currentScope, entityId, now,
+                                                                         1000 );
+
+                                                         while ( allVersions.hasNext() ) {
+                                                             final MvccEntity version = allVersions.next();
+
+                                                             final MutationBatch versionBatch =
+                                                                     v2Serialization.write( currentScope, version );
+
+                                                             totalBatch.mergeShallow( versionBatch );
+
+                                                             if ( atomicLong.incrementAndGet() % 50 == 0 ) {
+                                                                 executeBatch( totalBatch, observer, atomicLong );
+                                                             }
+                                                         }
+                                                     }
+
+                                                     executeBatch( totalBatch, observer, atomicLong );
+                                                 }
+                                             } ).toBlocking().last();
+    }
+
+
+    private void executeBatch( final MutationBatch batch, final ProgressObserver po, final AtomicLong count ) {
+        try {
+            batch.execute();
+
+            po.update( getVersion(), "Finished copying " + count + " entities to the new format" );
+        }
+        catch ( ConnectionException e ) {
+            po.failed( getVersion(), "Failed to execute mutation in cassandra" );
+            throw new DataMigrationException( "Unable to migrate batches ", e );
+        }
     }
 
 
