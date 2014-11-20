@@ -402,7 +402,7 @@ public abstract class MvccEntitySerializationStrategyImplTest {
         //now ask for up to 10 versions from the current version, we should get cleared, v2, v1
         UUID current = UUIDGenerator.newTimeUUID();
 
-        Iterator<MvccEntity> entities = serializationStrategy.load( context, id, current, 3 );
+        Iterator<MvccEntity> entities = serializationStrategy.loadDescendingHistory( context, id, current, 3 );
 
         MvccEntity first = entities.next();
         assertEquals( clearedV3, first);
@@ -422,7 +422,7 @@ public abstract class MvccEntitySerializationStrategyImplTest {
         serializationStrategy.delete( context, id , version1 ).execute();
         serializationStrategy.delete( context, id , version2 ).execute();
 
-        entities = serializationStrategy.load( context, id, current, 3 );
+        entities = serializationStrategy.loadDescendingHistory( context, id, current, 3 );
 
          first = entities.next();
         assertEquals( clearedV3, first );
@@ -432,7 +432,7 @@ public abstract class MvccEntitySerializationStrategyImplTest {
         serializationStrategy.delete( context,  id , version3 ).execute();
 
 
-        entities = serializationStrategy.load( context, id, current, 3 );
+        entities = serializationStrategy.loadDescendingHistory( context, id, current, 3 );
 
         Assert.assertTrue( !entities.hasNext());
     }
@@ -464,7 +464,8 @@ public abstract class MvccEntitySerializationStrategyImplTest {
         MvccEntity savedV2 = new MvccEntityImpl(id, version2, MvccEntity.Status.COMPLETE, Optional.of(entityv2));
         serializationStrategy.write(context, savedV2).execute();
 
-        Iterator<MvccEntity> entities = serializationStrategy.loadHistory(context,id,savedV2.getVersion(),20);
+        Iterator<MvccEntity> entities = serializationStrategy.loadAscendingHistory( context, id, savedV2.getVersion(),
+                20 );
         assertTrue(entities.hasNext());
         assertEquals(saved.getVersion(), entities.next().getVersion());
         assertEquals(savedV2.getVersion(), entities.next().getVersion());
@@ -639,7 +640,7 @@ public abstract class MvccEntitySerializationStrategyImplTest {
 
     @Test(expected = NullPointerException.class)
     public void loadListParamContext() throws ConnectionException {
-        serializationStrategy.load( null, new SimpleId( "test" ), UUIDGenerator.newTimeUUID(), 1 );
+        serializationStrategy.loadDescendingHistory( null, new SimpleId( "test" ), UUIDGenerator.newTimeUUID(), 1 );
     }
 
 
@@ -647,8 +648,9 @@ public abstract class MvccEntitySerializationStrategyImplTest {
     public void loadListParamEntityId() throws ConnectionException {
 
         serializationStrategy
-                .load( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), null, UUIDGenerator.newTimeUUID(),
-                        1 );
+                .loadDescendingHistory(
+                        new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), null,
+                        UUIDGenerator.newTimeUUID(), 1 );
     }
 
 
@@ -656,15 +658,18 @@ public abstract class MvccEntitySerializationStrategyImplTest {
     public void loadListParamVersion() throws ConnectionException {
 
         serializationStrategy
-                .load( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), new SimpleId( "test" ), null, 1 );
+                .loadDescendingHistory(
+                        new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" ),
+                        new SimpleId( "test" ), null, 1 );
     }
 
 
     @Test(expected = IllegalArgumentException.class)
     public void loadListParamSize() throws ConnectionException {
 
-        serializationStrategy.load( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), new SimpleId( "test" ),
-                UUIDGenerator.newTimeUUID(), 0 );
+        serializationStrategy.loadDescendingHistory(
+                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" ),
+                new SimpleId( "test" ), UUIDGenerator.newTimeUUID(), 0 );
     }
 
 

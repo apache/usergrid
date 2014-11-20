@@ -96,24 +96,24 @@ public class MvccEntitySerializationStrategyProxyImpl implements MvccEntitySeria
 
 
     @Override
-    public Iterator<MvccEntity> load( final CollectionScope context, final Id entityId, final UUID version,
-                                      final int fetchSize ) {
+    public Iterator<MvccEntity> loadDescendingHistory( final CollectionScope context, final Id entityId,
+                                                       final UUID version, final int fetchSize ) {
         if ( isOldVersion() ) {
-            return previous.load( context, entityId, version, fetchSize );
+            return previous.loadDescendingHistory( context, entityId, version, fetchSize );
         }
 
-        return current.load( context, entityId, version, fetchSize );
+        return current.loadDescendingHistory( context, entityId, version, fetchSize );
     }
 
 
     @Override
-    public Iterator<MvccEntity> loadHistory( final CollectionScope context, final Id entityId, final UUID version,
-                                             final int fetchSize ) {
+    public Iterator<MvccEntity> loadAscendingHistory( final CollectionScope context, final Id entityId,
+                                                      final UUID version, final int fetchSize ) {
         if ( isOldVersion() ) {
-            return previous.loadHistory( context, entityId, version, fetchSize );
+            return previous.loadAscendingHistory( context, entityId, version, fetchSize );
         }
 
-        return current.loadHistory( context, entityId, version, fetchSize );
+        return current.loadAscendingHistory( context, entityId, version, fetchSize );
     }
 
 

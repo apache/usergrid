@@ -23,7 +23,6 @@ import java.util.UUID;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
@@ -81,7 +80,8 @@ public class CpEntityDeleteListenerTest {
         ArrayList<MvccEntity> entityList = new ArrayList<>();
         entityList.add(entity);
         when(mvccEntitySerializationStrategy.delete(scope, entityId, id)).thenReturn(batch);
-        when(mvccEntitySerializationStrategy.loadHistory(scope, entityId, id, serializationFig.getHistorySize())).thenReturn(entityList.iterator());
+        when(mvccEntitySerializationStrategy.loadAscendingHistory( scope, entityId, id,
+                serializationFig.getHistorySize() )).thenReturn(entityList.iterator());
 
         Observable<EntityVersion> observable = listener.receive(entityEvent);
         EntityVersion entityEventReturned = observable.toBlocking().last();

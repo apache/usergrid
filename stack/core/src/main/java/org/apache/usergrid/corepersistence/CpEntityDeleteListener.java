@@ -69,10 +69,8 @@ public class CpEntityDeleteListener {
         return Observable.create( new ObservableIterator<MvccEntity>( "deleteEntities" ) {
             @Override
             protected Iterator<MvccEntity> getIterator() {
-                Iterator<MvccEntity> iterator = entityMetadataSerialization.loadHistory( 
-                        entityEvent.getCollectionScope(), 
-                        entity.getId(), 
-                        entity.getVersion(), 
+                Iterator<MvccEntity> iterator = entityMetadataSerialization.loadAscendingHistory(
+                        entityEvent.getCollectionScope(), entity.getId(), entity.getVersion(),
                         serializationFig.getHistorySize() );
                 return iterator;
             }

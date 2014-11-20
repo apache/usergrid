@@ -69,7 +69,7 @@ public abstract class MvccEntitySerializationSTrategyV2FixTests extends MvccEnti
 
         //now load it
         final Iterator<MvccEntity> loaded =
-                getMvccEntitySerializationStrategy().loadHistory( context, entity.getId(), version, 100 );
+                getMvccEntitySerializationStrategy().loadAscendingHistory( context, entity.getId(), version, 100 );
 
         assertTrue( loaded.hasNext() );
 

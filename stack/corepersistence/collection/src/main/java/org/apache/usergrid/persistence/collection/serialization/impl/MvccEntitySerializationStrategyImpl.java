@@ -48,7 +48,6 @@ import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
-import org.apache.usergrid.persistence.core.migration.schema.Migration;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -64,8 +63,6 @@ import com.netflix.astyanax.model.ColumnList;
 import com.netflix.astyanax.model.Row;
 import com.netflix.astyanax.query.RowQuery;
 import com.netflix.astyanax.serializers.AbstractSerializer;
-import com.netflix.astyanax.serializers.ByteBufferSerializer;
-import com.netflix.astyanax.serializers.BytesArraySerializer;
 import com.netflix.astyanax.serializers.UUIDSerializer;
 
 
@@ -75,7 +72,6 @@ import com.netflix.astyanax.serializers.UUIDSerializer;
 public abstract class MvccEntitySerializationStrategyImpl implements MvccEntitySerializationStrategy {
 
     private static final Logger log = LoggerFactory.getLogger( MvccLogEntrySerializationStrategyImpl.class );
-
 
 
     private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
@@ -196,7 +192,8 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
 
             final Column<UUID> column = columns.getColumnByIndex( 0 );
 
-            final MvccEntity parsedEntity = new MvccColumnParser( entityId, entityJsonSerializer ).parseColumn( column );
+            final MvccEntity parsedEntity =
+                    new MvccColumnParser( entityId, entityJsonSerializer ).parseColumn( column );
 
             //we *might* need to repair, it's not clear so check before loading into result sets
             final MvccEntity maybeRepaired = repair.maybeRepair( collectionScope, parsedEntity );
@@ -209,8 +206,8 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
 
 
     @Override
-    public Iterator<MvccEntity> load( final CollectionScope collectionScope, final Id entityId, final UUID version,
-                                      final int fetchSize ) {
+    public Iterator<MvccEntity> loadDescendingHistory( final CollectionScope collectionScope, final Id entityId,
+                                                       final UUID version, final int fetchSize ) {
 
         Preconditions.checkNotNull( collectionScope, "collectionScope is required" );
         Preconditions.checkNotNull( entityId, "entity id is required" );
@@ -239,8 +236,8 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
 
 
     @Override
-    public Iterator<MvccEntity> loadHistory( final CollectionScope collectionScope, final Id entityId,
-                                             final UUID version, final int fetchSize ) {
+    public Iterator<MvccEntity> loadAscendingHistory( final CollectionScope collectionScope, final Id entityId,
+                                                      final UUID version, final int fetchSize ) {
 
         Preconditions.checkNotNull( collectionScope, "collectionScope is required" );
         Preconditions.checkNotNull( entityId, "entity id is required" );
@@ -393,10 +390,9 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
                 deSerialized = column.getValue( entityJsonSerializer );
             }
             catch ( DataCorruptionException e ) {
-              log.error(
-                      "DATA CORRUPTION DETECTED when de-serializing entity with Id {} and version {}.  This means the"
-                              + " write was truncated.",
-                      id, version );
+                log.error(
+                        "DATA CORRUPTION DETECTED when de-serializing entity with Id {} and version {}.  This means the"
+                                + " write was truncated.", id, version );
                 //return an empty entity, we can never load this one, and we don't want it to bring the system
                 //to a grinding halt
                 return new MvccEntityImpl( id, version, MvccEntity.Status.DELETED, Optional.<Entity>absent() );
@@ -414,7 +410,6 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
 
     /**
      * Return the entity serializer for this instance
-     * @return
      */
     protected abstract AbstractSerializer<EntityWrapper> getEntitySerializer();
 }
