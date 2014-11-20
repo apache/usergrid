@@ -20,35 +20,28 @@
 package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.UUID;
 
-import junit.framework.Assert;
-import org.apache.usergrid.persistence.core.test.UseModules;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-//import org.safehaus.chop.api.IterationChop;
-import org.safehaus.guicyfig.Env;
-import org.safehaus.guicyfig.Option;
-import org.safehaus.guicyfig.Overrides;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
-import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
+import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
-import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
-import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
-import org.apache.usergrid.persistence.core.astyanax.AstyanaxKeyspaceProvider;
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
-import org.apache.usergrid.persistence.core.test.ITRunner;
-import org.apache.usergrid.persistence.core.migration.schema.MigrationManagerFig;
+import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.model.field.ArrayField;
 import org.apache.usergrid.persistence.model.field.BooleanField;
 import org.apache.usergrid.persistence.model.field.DoubleField;
 import org.apache.usergrid.persistence.model.field.Field;
@@ -62,29 +55,26 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
+import junit.framework.Assert;
+
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertTrue;
-import org.apache.usergrid.persistence.model.field.ArrayField;
 import static org.mockito.Mockito.mock;
 
-
-/** @author tnine */
-//@IterationChop( iterations = 1000, threads = 2 )
-@RunWith( ITRunner.class )
-@UseModules( TestCollectionModule.class )
-public class MvccEntitySerializationStrategyImplTest {
-    /** Our RX I/O threads and this should have the same value */
-    private static final String CONNECTION_COUNT = "20";
+//import org.safehaus.chop.api.IterationChop;
 
 
-    @Inject
+/**
+ * Tests for serialization strategy
+ */
+public abstract class MvccEntitySerializationStrategyImplTest {
+
+
     private MvccEntitySerializationStrategy serializationStrategy;
 
-    @Inject
-    AstyanaxKeyspaceProvider provider;
 
     @Inject
     @Rule
@@ -94,16 +84,10 @@ public class MvccEntitySerializationStrategyImplTest {
     public CassandraFig cassandraFig;
 
 
-    @Inject
-    public SerializationFig serializationFig;
-
-    @Inject
-    public MigrationManagerFig migrationManagerFig;
-
-
     @Before
     public void setup() {
         assertNotNull( cassandraFig );
+        serializationStrategy = getMvccEntitySerializationStrategy();
     }
 
 
@@ -683,6 +667,12 @@ public class MvccEntitySerializationStrategyImplTest {
                 UUIDGenerator.newTimeUUID(), 0 );
     }
 
+
+    /**
+     * Get the serialization strategy to test
+     * @return
+     */
+    protected abstract MvccEntitySerializationStrategy getMvccEntitySerializationStrategy();
 
 
 }

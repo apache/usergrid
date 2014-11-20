@@ -18,9 +18,7 @@
 package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -54,21 +52,15 @@ import org.apache.usergrid.persistence.core.migration.schema.Migration;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import com.netflix.astyanax.ColumnListMutation;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.model.Column;
 import com.netflix.astyanax.model.ColumnList;
-import com.netflix.astyanax.model.CompositeBuilder;
-import com.netflix.astyanax.model.CompositeParser;
-import com.netflix.astyanax.model.Composites;
 import com.netflix.astyanax.model.Row;
 import com.netflix.astyanax.query.RowQuery;
 import com.netflix.astyanax.serializers.AbstractSerializer;
@@ -80,18 +72,13 @@ import com.netflix.astyanax.serializers.UUIDSerializer;
 /**
  * @author tnine
  */
-@Singleton
-public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializationStrategy, Migration {
+public abstract class MvccEntitySerializationStrategyImpl implements MvccEntitySerializationStrategy {
 
     private static final Logger log = LoggerFactory.getLogger( MvccLogEntrySerializationStrategyImpl.class );
 
-    private static final EntitySerializer ENTITY_JSON_SER = new EntitySerializer();
+
 
     private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
-
-    private static final ByteBufferSerializer BUFFER_SERIALIZER = ByteBufferSerializer.get();
-
-    private static final BytesArraySerializer BYTES_ARRAY_SERIALIZER = BytesArraySerializer.get();
 
 
     private static final CollectionScopedRowKeySerializer<Id> ROW_KEY_SER =
@@ -104,6 +91,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
     protected final Keyspace keyspace;
     protected final SerializationFig serializationFig;
     protected final EntityRepair repair;
+    private final AbstractSerializer<EntityWrapper> entityJsonSerializer;
 
 
     @Inject
@@ -111,6 +99,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         this.keyspace = keyspace;
         this.serializationFig = serializationFig;
         this.repair = new EntityRepairImpl( this, serializationFig );
+        this.entityJsonSerializer = getEntitySerializer();
     }
 
 
@@ -126,7 +115,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
             @Override
             public void doOp( final ColumnListMutation<UUID> colMutation ) {
                 try {
-                    colMutation.putColumn( colName, ENTITY_JSON_SER
+                    colMutation.putColumn( colName, entityJsonSerializer
                             .toByteBuffer( new EntityWrapper( entity.getStatus(), entity.getEntity() ) ) );
                 }
                 catch ( Exception e ) {
@@ -207,7 +196,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
             final Column<UUID> column = columns.getColumnByIndex( 0 );
 
-            final MvccEntity parsedEntity = new MvccColumnParser( entityId ).parseColumn( column );
+            final MvccEntity parsedEntity = new MvccColumnParser( entityId, entityJsonSerializer ).parseColumn( column );
 
             //we *might* need to repair, it's not clear so check before loading into result sets
             final MvccEntity maybeRepaired = repair.maybeRepair( collectionScope, parsedEntity );
@@ -245,7 +234,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
                 keyspace.prepareQuery( CF_ENTITY_DATA ).getKey( rowKey )
                         .withColumnRange( version, null, false, fetchSize );
 
-        return new ColumnNameIterator( query, new MvccColumnParser( entityId ), false );
+        return new ColumnNameIterator( query, new MvccColumnParser( entityId, entityJsonSerializer ), false );
     }
 
 
@@ -275,7 +264,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
                 keyspace.prepareQuery( CF_ENTITY_DATA ).getKey( rowKey )
                         .withColumnRange( null, version, true, fetchSize );
 
-        return new ColumnNameIterator( query, new MvccColumnParser( entityId ), false );
+        return new ColumnNameIterator( query, new MvccColumnParser( entityId, entityJsonSerializer ), false );
     }
 
 
@@ -290,7 +279,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         return doWrite( collectionScope, entityId, new RowOp() {
             @Override
             public void doOp( final ColumnListMutation<UUID> colMutation ) {
-                colMutation.putColumn( version, ENTITY_JSON_SER
+                colMutation.putColumn( version, entityJsonSerializer
                         .toByteBuffer( new EntityWrapper( MvccEntity.Status.COMPLETE, Optional.<Entity>absent() ) ) );
             }
         } );
@@ -367,12 +356,12 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
     /**
      * Simple bean wrapper for state and entity
      */
-    private static class EntityWrapper {
-        private final MvccEntity.Status status;
-        private final Optional<Entity> entity;
+    protected static class EntityWrapper {
+        protected final MvccEntity.Status status;
+        protected final Optional<Entity> entity;
 
 
-        private EntityWrapper( final MvccEntity.Status status, final Optional<Entity> entity ) {
+        protected EntityWrapper( final MvccEntity.Status status, final Optional<Entity> entity ) {
             this.status = status;
             this.entity = entity;
         }
@@ -385,10 +374,12 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
     private static final class MvccColumnParser implements ColumnParser<UUID, MvccEntity> {
 
         private final Id id;
+        private final AbstractSerializer<EntityWrapper> entityJsonSerializer;
 
 
-        private MvccColumnParser( Id id ) {
+        private MvccColumnParser( Id id, final AbstractSerializer<EntityWrapper> entityJsonSerializer ) {
             this.id = id;
+            this.entityJsonSerializer = entityJsonSerializer;
         }
 
 
@@ -399,7 +390,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
             final UUID version = column.getName();
 
             try {
-                deSerialized = column.getValue( ENTITY_JSON_SER );
+                deSerialized = column.getValue( entityJsonSerializer );
             }
             catch ( DataCorruptionException e ) {
               log.error(
@@ -421,128 +412,9 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
     }
 
 
-    public static class EntitySerializer extends AbstractSerializer<EntityWrapper> {
-
-
-        public static final SmileFactory f = new SmileFactory();
-
-        public static ObjectMapper mapper;
-
-        private static byte[] STATE_COMPLETE = new byte[] { 0 };
-        private static byte[] STATE_DELETED = new byte[] { 1 };
-        private static byte[] STATE_PARTIAL = new byte[] { 2 };
-
-        private static byte[] VERSION = new byte[] { 0 };
-
-
-
-        public EntitySerializer() {
-            try {
-                mapper = new ObjectMapper( f );
-                //                mapper.enable(SerializationFeature.INDENT_OUTPUT); don't indent output,
-                // causes slowness
-                mapper.enableDefaultTypingAsProperty( ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT, "@class" );
-            }
-            catch ( Exception e ) {
-                throw new RuntimeException( "Error setting up mapper", e );
-            }
-        }
-
-
-        @Override
-        public ByteBuffer toByteBuffer( final EntityWrapper wrapper ) {
-            if ( wrapper == null ) {
-                return null;
-            }
-
-            CompositeBuilder builder = Composites.newCompositeBuilder();
-
-            builder.addBytes( VERSION );
-
-            //mark this version as empty
-            if ( !wrapper.entity.isPresent() ) {
-                //we're empty
-                builder.addBytes( STATE_DELETED );
-
-                return builder.build();
-            }
-
-            //we have an entity
-
-            if ( wrapper.status == MvccEntity.Status.COMPLETE ) {
-                builder.addBytes( STATE_COMPLETE );
-            }
-
-            else {
-                builder.addBytes( STATE_PARTIAL );
-            }
-
-            try {
-                final byte[] entityBytes = mapper.writeValueAsBytes( wrapper.entity.get() ) ;
-                builder.addBytes( entityBytes );
-            }
-            catch ( Exception e ) {
-                throw new RuntimeException( "Unable to serialize entity", e );
-            }
-
-            return builder.build();
-        }
-
-
-        @Override
-        public EntityWrapper fromByteBuffer( final ByteBuffer byteBuffer ) {
-
-            /**
-             * We intentionally turn data corruption exceptions when we're unable to de-serialize
-             * the data in cassandra.  If this occurs, we'll never be able to de-serialize it
-             * and it should be considered lost.  This is an error that is occuring due to a bug
-             * in serializing the entity.  This is a lazy recognition + repair signal for deployment with
-             * existing systems.
-             */
-            CompositeParser parser;
-            try {
-                parser = Composites.newCompositeParser( byteBuffer );
-            }
-            catch ( Exception e ) {
-              throw new DataCorruptionException("Unable to de-serialze entity", e);
-            }
-
-            byte[] version = parser.read( BYTES_ARRAY_SERIALIZER );
-
-            if ( !Arrays.equals( VERSION, version ) ) {
-                throw new UnsupportedOperationException( "A version of type " + version + " is unsupported" );
-            }
-
-            byte[] state = parser.read( BYTES_ARRAY_SERIALIZER );
-
-            // it's been deleted, remove it
-
-            if ( Arrays.equals( STATE_DELETED, state ) ) {
-                return new EntityWrapper( MvccEntity.Status.COMPLETE, Optional.<Entity>absent() );
-            }
-
-            Entity storedEntity;
-
-            ByteBuffer jsonBytes = parser.read( BUFFER_SERIALIZER );
-            byte[] array = jsonBytes.array();
-            int start = jsonBytes.arrayOffset();
-            int length = jsonBytes.remaining();
-
-            try {
-                storedEntity = mapper.readValue( array, start, length, Entity.class );
-            }
-            catch ( Exception e ) {
-                throw new DataCorruptionException( "Unable to read entity data", e );
-            }
-
-            final Optional<Entity> entity = Optional.of( storedEntity );
-
-            if ( Arrays.equals( STATE_COMPLETE, state ) ) {
-                return new EntityWrapper( MvccEntity.Status.COMPLETE, entity );
-            }
-
-            // it's partial by default
-            return new EntityWrapper( MvccEntity.Status.PARTIAL, entity );
-        }
-    }
+    /**
+     * Return the entity serializer for this instance
+     * @return
+     */
+    protected abstract AbstractSerializer<EntityWrapper> getEntitySerializer();
 }

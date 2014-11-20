@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -16,32 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.graph.guice;
+
+package org.apache.usergrid.persistence.core.guice;
 
 
-import org.apache.usergrid.persistence.core.guice.CommonModule;
-import org.apache.usergrid.persistence.core.guice.MaxMigrationModule;
-import org.apache.usergrid.persistence.core.guice.TestModule;
+import org.apache.usergrid.persistence.core.migration.data.DataMigration;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.Multibinder;
 
 
 /**
- * Wrapper for configuring our guice test env
+ * Install this module in your tests if you want the max version to always be set
+ * this ensures that the system will be on Integer.MAX version, there for
  */
-public class TestGraphModule extends TestModule {
-
+public class MaxMigrationModule extends AbstractModule {
     @Override
     protected void configure() {
-        /**
-         * Runtime modules
-         */
-        install( new CommonModule());
-        install( new GraphModule() );
-
-
-        /**
-         * Test modules
-         */
-        install(new MaxMigrationModule());
-
+        Multibinder<DataMigration> dataMigrationMultibinder = Multibinder.newSetBinder( binder(), DataMigration.class );
+        dataMigrationMultibinder.addBinding().to( MaxMigrationVersion.class );
     }
 }

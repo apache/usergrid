@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -16,32 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.graph.guice;
+
+package org.apache.usergrid.persistence.core.guice;
 
 
-import org.apache.usergrid.persistence.core.guice.CommonModule;
-import org.apache.usergrid.persistence.core.guice.MaxMigrationModule;
-import org.apache.usergrid.persistence.core.guice.TestModule;
+import org.apache.usergrid.persistence.core.migration.data.DataMigration;
 
 
 /**
- * Wrapper for configuring our guice test env
+ * A simple migration that sets the version to max. This way our integration tests always test the latest code
  */
-public class TestGraphModule extends TestModule {
+public class MaxMigrationVersion implements DataMigration {
+    @Override
+    public void migrate( final ProgressObserver observer ) throws Throwable {
+         //no op, just needs to run to be set
+    }
+
 
     @Override
-    protected void configure() {
-        /**
-         * Runtime modules
-         */
-        install( new CommonModule());
-        install( new GraphModule() );
-
-
-        /**
-         * Test modules
-         */
-        install(new MaxMigrationModule());
-
+    public int getVersion() {
+        return Integer.MAX_VALUE;
     }
 }

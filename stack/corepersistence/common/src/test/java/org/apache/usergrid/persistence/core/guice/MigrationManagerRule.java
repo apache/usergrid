@@ -5,6 +5,7 @@ import org.junit.rules.ExternalResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
 import org.apache.usergrid.persistence.core.migration.schema.MigrationException;
 import org.apache.usergrid.persistence.core.migration.schema.MigrationManager;
 
@@ -16,23 +17,33 @@ import com.google.inject.Singleton;
  */
 @Singleton
 public class MigrationManagerRule extends ExternalResource {
-    private static final Logger LOG = LoggerFactory.getLogger( MigrationManagerRule.class );
+    private static final Logger logger = LoggerFactory.getLogger( MigrationManagerRule.class );
+
 
     private MigrationManager migrationManager;
+    private DataMigrationManager dataMigrationManager;
 
 
     @Inject
-    public void setMigrationManager( MigrationManager migrationManager )  {
+    public void setMigrationManager( final MigrationManager migrationManager )  {
         this.migrationManager = migrationManager;
     }
 
+    @Inject
+    public void setDataMigrationManager(final DataMigrationManager dataMigrationManager){
+        this.dataMigrationManager = dataMigrationManager;
+    }
 
     @Override
     protected void before() throws MigrationException {
-        LOG.info( "Starting migration" );
+        logger.info( "Starting migration" );
 
         migrationManager.migrate();
 
-        LOG.info( "Migration complete" );
+        logger.info("Migrating data");
+
+        dataMigrationManager.migrate();
+
+        logger.info( "Migration complete" );
     }
 }

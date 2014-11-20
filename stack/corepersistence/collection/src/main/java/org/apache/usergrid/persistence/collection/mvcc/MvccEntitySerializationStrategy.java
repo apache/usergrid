@@ -26,6 +26,7 @@ import java.util.UUID;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntitySet;
 import org.apache.usergrid.persistence.collection.MvccEntity;
+import org.apache.usergrid.persistence.core.migration.schema.Migration;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.netflix.astyanax.MutationBatch;
@@ -34,7 +35,7 @@ import com.netflix.astyanax.MutationBatch;
 /**
  * The interface that allows us to serialize an entity to disk
  */
-public interface MvccEntitySerializationStrategy {
+public interface MvccEntitySerializationStrategy extends Migration {
 
     /**
      * Serialize the entity to the data store with the given collection context
