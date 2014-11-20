@@ -21,6 +21,12 @@ public class Collection extends SetResource {
     }
 
     /** Create the user in a collection using only the username */
+    /**
+     * POST an entity with only a name
+     * @param name
+     * @return JsonNode
+     * @throws IOException
+     */
     public JsonNode post( String name ) throws IOException {
         Map<String, String> data = MapUtils.hashMap( "name", name );
 
@@ -29,11 +35,25 @@ public class Collection extends SetResource {
         return getEntity( response, 0 );
     }
 
+    /**
+     * POST an entity with a name and a Map (e.g. if you want to add in a location sub-object
+     * @param name
+     * @param entityData
+     * @return JsonNode
+     * @throws IOException
+     */
+    public JsonNode post( String name, Map entityData ) throws IOException {
+        Map<String, String> data = MapUtils.hashMap( "name", name );
+        data.putAll(entityData);
+        JsonNode response = this.postInternal( data );
+
+        return getEntity( response, 0 );
+    }
 
     /**
-     * Create the user in a collection using username,email,password
+     * POST an entity with only a Map
      * @param entityData
-     * @return
+     * @return JsonNode
      * @throws IOException
      */
     public JsonNode post(Map entityData) throws IOException{

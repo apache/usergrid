@@ -57,6 +57,14 @@ public class Application extends ValueResource {
         return new UsersCollection( this );
     }
 
+    public GroupsCollection groups() {
+        return new GroupsCollection( this );
+    }
+
+    public RolesCollection roles() {
+        return new RolesCollection( this );
+    }
+
 
     public QueuesCollection queues() {
         return new QueuesCollection( this );

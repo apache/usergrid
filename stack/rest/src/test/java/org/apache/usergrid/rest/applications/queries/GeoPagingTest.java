@@ -17,13 +17,16 @@
 package org.apache.usergrid.rest.applications.queries;
 
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.jersey.api.client.UniformInterfaceException;
 
 import java.io.IOException;
+
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.Results;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -54,7 +57,7 @@ public class GeoPagingTest extends AbstractRestIT {
     @Test //("Test uses up to many resources to run reliably") // USERGRID-1403
     public void groupQueriesWithGeoPaging() throws IOException {
 
-        CustomCollection groups = context.application().customCollection( "test1groups" );
+        CustomCollection groups = context.application().customCollection("test1groups");
 
         int maxRangeLimit = 2000;
         long[] index = new long[maxRangeLimit];
@@ -93,7 +96,7 @@ public class GeoPagingTest extends AbstractRestIT {
     @Test // USERGRID-1401
     public void groupQueriesWithConsistentResults() throws IOException {
 
-        CustomCollection groups = context.application().customCollection( "test2groups" );
+        CustomCollection groups = context.application().customCollection("test2groups");
 
         int maxRangeLimit = 20;
         JsonNode[] saved = new JsonNode[maxRangeLimit];
@@ -147,8 +150,10 @@ public class GeoPagingTest extends AbstractRestIT {
 
         JsonNode node = null;
         String collectionName = "testFarAwayLocation";
-        Map store1 = entityMapLocationCreator( "usergrid",-33.746369 ,150.952183 );
-        Map store2 = entityMapLocationCreator( "usergrid2",-33.889058, 151.124024  );
+        Map store1 = entityMapLocationCreator( -33.746369 ,150.952183 );
+        store1.put( "name", "usergrid" );
+        Map store2 = entityMapLocationCreator( -33.889058, 151.124024 );
+        store2.put( "name", "usergrid" );
         Point center = new Point( 37.776753, -122.407846 );
         //TODO: make query builder for this
         Query queryClose = locationQuery( 10000 ,center );
@@ -183,11 +188,90 @@ public class GeoPagingTest extends AbstractRestIT {
         // assertEquals(node.get(  ))
     }
 
-    private Map entityMapLocationCreator(String name,Double lat, Double lon){
+
+    /**
+     * Creates two users, then a huge matrix of coordinates, then checks to see if any of the coordinates are near our users
+     * @throws IOException
+     */
+    @Test
+    public void createHugeMatrixOfCoordinates() throws IOException {
+
+
+        JsonNode node = null;
+
+        Map user1Coordinates = entityMapLocationCreator( -33.746369 ,150.952183 );
+        Map user2Coordinates = entityMapLocationCreator( -33.889058, 151.124024 );
+
+        /*Create */
+        try {
+            node = context.users().post("norwest", "norwest@usergrid.com", "norwest", user1Coordinates);
+        }
+        catch ( UniformInterfaceException e ) {
+            JsonNode nodeError = mapper.readTree( e.getResponse().getEntity( String.class ) );
+            fail( node.get( "error" ).textValue() );
+        }
+
+        /*Create */
+        try {
+            node = context.users().post("ashfield", "ashfield@usergrid.com", "ashfield", user2Coordinates);
+        }
+        catch ( UniformInterfaceException e ) {
+            JsonNode nodeError = mapper.readTree( e.getResponse().getEntity( String.class ) );
+            fail( node.get( "error" ).textValue() );
+        }
+
+        refreshIndex( context.getOrgName(),context.getAppName() );
+
+        List<Point> points = new ArrayList<Point>();
+        points.add(new Point( 33.746369,-89 ));//Woodland, MS
+        points.add(new Point( 33.746369,-91 ));//Beulah, MS
+        points.add(new Point( -1.000000, 102.000000 ));//Somewhere in Indonesia
+        points.add(new Point( -90.000000, 90.000000 ));//Antarctica
+        points.add(new Point( 90, 90 ));//Santa's house
+        //and the cartesian product...
+        for(int i= -90;i<=90;i++){
+            for(int j= -180;j<=180;j++){
+                points.add(new Point( i, j ));
+            }
+        }
+        Iterator<Point> pointIterator = points.iterator();
+        for(Point p=pointIterator.next();pointIterator.hasNext();p=pointIterator.next()){
+
+            Point center = new Point( p.getLat(),  p.getLon() );
+            Query query = locationQuery( 10000 ,center );
+
+            try {
+               // node = context.users( ).get(  ).withQuery( query );
+            }
+            catch ( UniformInterfaceException e ) {
+                JsonNode nodeError = mapper.readTree( e.getResponse().getEntity( String.class ) );
+                fail( node.get( "error" ).textValue() );
+            }
+
+/*
+            Query query = Query.fromQL( "select * where location within 10000 of "
+                    + p.getLat() + "," + p.getLon());
+            Results listResults = em.searchCollection( em.getApplicationRef(), "stores", query );
+
+            this.dump( listResults );
+            assertEquals("Results less than 10000m away from center", 0, listResults.size() );
+
+            query = Query.fromQL( "select * where location within 40000000 of "
+                    + p.getLat() + "," + p.getLon());
+            listResults = em.searchCollection( em.getApplicationRef(), "stores", query );
+
+            assertEquals("Results from center point to ridiculously far", 2, listResults.size() );
+*/
+        }
+    }
+
+
+
+
+    private Map entityMapLocationCreator(Double lat, Double lon){
         Map<String, Double> latLon = hashMap( "latitude", lat );
         latLon.put( "longitude", lon );
         Map<String, Object> entityData = new HashMap<String, Object>();
-        entityData.put( "name", name );
         entityData.put( "location", latLon );
 
         return entityData;

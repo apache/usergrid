@@ -23,6 +23,10 @@ import org.apache.usergrid.rest.test.resource.app.Application;
 import org.apache.usergrid.rest.test.resource.app.Collection;
 import org.apache.usergrid.rest.test.resource.app.User;
 import org.apache.usergrid.rest.test.resource.app.UsersCollection;
+import org.apache.usergrid.rest.test.resource.app.Group;
+import org.apache.usergrid.rest.test.resource.app.GroupsCollection;
+import org.apache.usergrid.rest.test.resource.app.Role;
+import org.apache.usergrid.rest.test.resource.app.RolesCollection;
 import org.apache.usergrid.rest.test.resource.mgmt.Management;
 import org.apache.usergrid.rest.test.security.TestUser;
 
@@ -107,7 +111,7 @@ public class TestContext {
         OrgUserUUIDWrapper ouuw = management().orgs().create( getOrgName(),activeUser );
         testOrganization.setUuid( ouuw.getOrgUUID() );
         activeUser.setUUID( ouuw.getUserUUID() );
-        refreshIndex( getOrgName(), appName );
+        refreshIndex(getOrgName(), appName);
         return this;
     }
 
@@ -139,10 +143,31 @@ public class TestContext {
         return application().users();
     }
 
-
     /** Get the app user resource */
     public User user( String username ) {
-        return application().users().user( username );
+        return application().users().user(username);
+    }
+
+
+    /** Get the users resource for the application */
+    public GroupsCollection groups() {
+        return application().groups();
+    }
+
+    /** Get the app group resource */
+    public Group group( String path ) {
+        return application().groups().group( path );
+    }
+
+
+    /** Get the groups resource for the application */
+    public RolesCollection roles() {
+        return application().roles();
+    }
+
+    /** Get the app role resource */
+    public Role role( String name ) {
+        return application().roles().role( name );
     }
 
 
