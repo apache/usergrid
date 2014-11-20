@@ -22,6 +22,8 @@ package org.apache.usergrid.corepersistence.util;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.Schema;
+import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.entities.Application;
@@ -70,6 +72,23 @@ public class CpNamingUtils {
     public static String TYPES_BY_UUID_MAP = "zzz_typesbyuuid_zzz";
 
 
+    /**
+     * Generate a collection scope for a collection within the application's Id for the given type
+     * @param applicationId The applicationId that owns this entity
+     * @param type The type in the collection
+     * @return The collectionScope
+     */
+    public static CollectionScope getCollectionScopeNameFromEntityType(final Id applicationId, final String type){
+       return
+                       new CollectionScopeImpl( applicationId, applicationId,
+                               getCollectionScopeNameFromEntityType( type ) );
+    }
+
+    /**
+     * Get the collection name from the entity/id type
+     * @param type
+     * @return
+     */
     public static String getCollectionScopeNameFromEntityType( String type ) {
         String csn = EDGE_COLL_SUFFIX + Schema.defaultCollectionName( type );
         return csn.toLowerCase();
