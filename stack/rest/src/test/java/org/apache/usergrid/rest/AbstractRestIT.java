@@ -430,7 +430,8 @@ public abstract class AbstractRestIT extends JerseyTest {
         LOG.debug("Refreshed index for appId {}", appId );
     }
 
-
+    //TODO: move refresh index into context so that we automatically refresh the indexs without needing to call
+    //different values of context.
     public void refreshIndex( String orgName, String appName ) {
 
         LOG.debug("Refreshing index for app {}/{}", orgName, appName );

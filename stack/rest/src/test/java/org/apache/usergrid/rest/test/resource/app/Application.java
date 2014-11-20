@@ -67,8 +67,12 @@ public class Application extends ValueResource {
         return new DevicesCollection( this );
     }
 
-
-    public CustomCollection collection( String name ) {
+//TODO: work out differences between CustomCollections and replace tests with a general collection method.
+    public CustomCollection customCollection( String name ) {
         return new CustomCollection( name, this );
+    }
+
+    public Collection collection( String name ) {
+        return new Collection( name,this );
     }
 }

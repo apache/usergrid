@@ -21,15 +21,22 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.sun.jersey.api.client.UniformInterfaceException;
+
 import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
+
+import org.apache.usergrid.persistence.geo.model.Point;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.rest.AbstractRestIT;
 import org.apache.usergrid.rest.TestContextSetup;
 import org.apache.usergrid.rest.test.resource.CustomCollection;
 
 import static org.junit.Assert.assertEquals;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 
 /**
@@ -47,7 +54,7 @@ public class GeoPagingTest extends AbstractRestIT {
     @Test //("Test uses up to many resources to run reliably") // USERGRID-1403
     public void groupQueriesWithGeoPaging() throws IOException {
 
-        CustomCollection groups = context.application().collection( "test1groups" );
+        CustomCollection groups = context.application().customCollection( "test1groups" );
 
         int maxRangeLimit = 2000;
         long[] index = new long[maxRangeLimit];
@@ -73,7 +80,7 @@ public class GeoPagingTest extends AbstractRestIT {
         refreshIndex(context.getOrgName(), context.getAppName());
 
         String query = "select * where location within 20000 of 37,-75 "
-                + " and created > " + index[2] 
+                + " and created > " + index[2]
                 + " and created < " + index[4] + "";
 
         JsonNode node = groups.withQuery( query ).get();
@@ -86,7 +93,7 @@ public class GeoPagingTest extends AbstractRestIT {
     @Test // USERGRID-1401
     public void groupQueriesWithConsistentResults() throws IOException {
 
-        CustomCollection groups = context.application().collection( "test2groups" );
+        CustomCollection groups = context.application().customCollection( "test2groups" );
 
         int maxRangeLimit = 20;
         JsonNode[] saved = new JsonNode[maxRangeLimit];
@@ -110,12 +117,11 @@ public class GeoPagingTest extends AbstractRestIT {
         }
 
         refreshIndex(context.getOrgName(), context.getAppName());
-
         JsonNode node = null;
         for ( int consistent = 0; consistent < 20; consistent++ ) {
 
-            String query = String.format( 
-                "select * where location within 100 of 37, -75 and ordinal >= %d and ordinal < %d", 
+            String query = String.format(
+                "select * where location within 100 of 37, -75 and ordinal >= %d and ordinal < %d",
                 saved[7].get( "ordinal" ).asLong(), saved[10].get( "ordinal" ).asLong() );
 
             node = groups.withQuery( query ).get(); //groups.query(query);
@@ -130,4 +136,67 @@ public class GeoPagingTest extends AbstractRestIT {
             }
         }
     }
+
+
+    /**
+     * Creates a store then queries to check ability to find different store from up to 40 mil meters away
+     * @throws IOException
+     */
+    @Test
+    public void testFarAwayLocationFromCenter() throws IOException {
+
+        JsonNode node = null;
+        String collectionName = "testFarAwayLocation";
+        Map store1 = entityMapLocationCreator( "usergrid",-33.746369 ,150.952183 );
+        Map store2 = entityMapLocationCreator( "usergrid2",-33.889058, 151.124024  );
+        Point center = new Point( 37.776753, -122.407846 );
+        //TODO: make query builder for this
+        Query queryClose = locationQuery( 10000 ,center );
+        Query queryFar = locationQuery( 40000000, center );
+
+        /*Create */
+        try {
+            node = context.collection( collectionName ).post( store1);
+        }
+        catch ( UniformInterfaceException e ) {
+            JsonNode nodeError = mapper.readTree( e.getResponse().getEntity( String.class ) );
+            fail( node.get( "error" ).textValue() );
+        }
+        assertNotNull( node );
+        assertEquals( "usergrid", node.get( "name" ).asText() );
+//TODO: check to see if context.application.collection is broken?
+        try {
+            node = context.collection( collectionName ).post( store2 );
+        }
+        catch ( UniformInterfaceException e ) {
+            JsonNode nodeError = mapper.readTree( e.getResponse().getEntity( String.class ) );
+            fail( node.get( "error" ).textValue() );
+        }
+
+        refreshIndex( context.getOrgName(),context.getAppName() );
+
+        /* run queries */
+        //context.collection( collectionName ).query(  )
+
+
+
+        // assertEquals(node.get(  ))
+    }
+
+    private Map entityMapLocationCreator(String name,Double lat, Double lon){
+        Map<String, Double> latLon = hashMap( "latitude", lat );
+        latLon.put( "longitude", lon );
+        Map<String, Object> entityData = new HashMap<String, Object>();
+        entityData.put( "name", name );
+        entityData.put( "location", latLon );
+
+        return entityData;
+    }
+
+    private Query locationQuery(int  metersAway, Point startingPoint){
+        return Query.fromQL( "select * where location within " + String.valueOf( metersAway ) + " of "
+                + startingPoint.getLat() + "," + startingPoint.getLon());
+    }
+
+
 }

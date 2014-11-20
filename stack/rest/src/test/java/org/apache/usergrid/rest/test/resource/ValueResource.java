@@ -94,6 +94,7 @@ public abstract class ValueResource extends NamedResource {
 
 
     /** post to the entity set */
+    //TODO: fix error reporting 
     protected JsonNode postInternal( Map<String, ?> entity ) throws IOException {
 
         return mapper.readTree( jsonMedia( withParams( withToken( resource() ) ) ).post( String.class, entity ));

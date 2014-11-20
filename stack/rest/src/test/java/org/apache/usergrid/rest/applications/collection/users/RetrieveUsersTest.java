@@ -49,7 +49,7 @@ public class RetrieveUsersTest extends AbstractRestIT {
 
     @Test // USERGRID-1222
     public void queryForUsername() throws IOException {
-        CustomCollection users = context.collection( "users" );
+        CustomCollection users = context.customCollection( "users" );
 
         Map props = new HashMap();
 
@@ -70,7 +70,7 @@ public class RetrieveUsersTest extends AbstractRestIT {
 
     @Test // USERGRID-1727
     public void userEntityDictionaryHasRoles() throws IOException {
-        CustomCollection users = context.collection( "users" );
+        CustomCollection users = context.customCollection( "users" );
 
         Map props = new HashMap();
         props.put( "username", "Nina" );

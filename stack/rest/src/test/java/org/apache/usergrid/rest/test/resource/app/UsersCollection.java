@@ -29,7 +29,7 @@ import org.apache.usergrid.utils.MapUtils;
 
 
 /** @author tnine */
-public class UsersCollection extends CollectionResource {
+public class UsersCollection extends Collection {
 
 
     public UsersCollection( NamedResource parent ) {
@@ -48,7 +48,7 @@ public class UsersCollection extends CollectionResource {
 
 
     /** Create the user */
-    public JsonNode create( String username, String email, String password ) throws IOException {
+    public JsonNode post( String username, String email, String password ) throws IOException {
         Map<String, String> data =
                 MapUtils.hashMap( "username", username ).map( "email", email ).map( "password", password );
 
@@ -57,6 +57,16 @@ public class UsersCollection extends CollectionResource {
         return getEntity( response, 0 );
     }
 
+    /** Create the user */
+    //TODO: delete create method once rest calls are implemented
+    public JsonNode create( String username, String email, String password ) throws IOException {
+        Map<String, String> data =
+                MapUtils.hashMap( "username", username ).map( "email", email ).map( "password", password );
+
+        JsonNode response = this.postInternal( data );
+
+        return getEntity( response, 0 );
+    }
 
     public Me me() {
         return new Me( this );

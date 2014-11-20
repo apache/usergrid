@@ -19,7 +19,7 @@ package org.apache.usergrid.rest.applications.collection.paging;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -66,7 +66,7 @@ public class PagingResourceIT extends AbstractRestIT {
     @Test
     public void collectionPaging() throws Exception {
 
-        CustomCollection things = context.application().collection( "test1things" );
+        CustomCollection things = context.application().customCollection( "test1things" );
 
         int size = 40;
 
@@ -111,7 +111,7 @@ public class PagingResourceIT extends AbstractRestIT {
             + "see also: https://issues.apache.org/jira/browse/USERGRID-211 ")
     public void startPaging() throws Exception {
 
-        CustomCollection things = context.application().collection( "test2things" );
+        CustomCollection things = context.application().customCollection( "test2things" );
 
         int size = 40;
 
@@ -159,7 +159,7 @@ public class PagingResourceIT extends AbstractRestIT {
     @Test
     public void collectionBatchDeleting() throws Exception {
 
-        CustomCollection things = context.application().collection( "test3things" );
+        CustomCollection things = context.application().customCollection( "test3things" );
 
         int size = 40;
 
@@ -202,7 +202,7 @@ public class PagingResourceIT extends AbstractRestIT {
     @Test
     public void emptyQlandLimitIgnored() throws Exception {
 
-        CustomCollection things = context.application().collection( "test4things" );
+        CustomCollection things = context.application().customCollection( "test4things" );
 
         Map<String, String> data = hashMap( "name", "thing1" );
         JsonNode response = things.create( data );
@@ -245,7 +245,7 @@ public class PagingResourceIT extends AbstractRestIT {
         // test that we do get cursor when we need one
         // create 50 widgets
         int widgetsSize = 50;
-        CustomCollection widgets = context.application().collection("widgets");
+        CustomCollection widgets = context.application().customCollection( "widgets" );
         for (int i = 0; i < widgetsSize; i++) {
             Map<String, String> entity = hashMap("name", String.valueOf(i));
             widgets.create(entity);
@@ -264,7 +264,7 @@ public class PagingResourceIT extends AbstractRestIT {
         // test that we DO NOT get cursor when we should not get cursor
         // create 5 trinkets
         int trinketsSize = 5;
-        CustomCollection trinkets = context.application().collection("trinkets");
+        CustomCollection trinkets = context.application().customCollection( "trinkets" );
         for (int i = 0; i < trinketsSize; i++) {
             Map<String, String> entity = hashMap("name", String.valueOf(i));
             trinkets.create(entity);

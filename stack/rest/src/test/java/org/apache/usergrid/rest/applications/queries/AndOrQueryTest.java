@@ -49,7 +49,7 @@ public class AndOrQueryTest extends AbstractRestIT {
     @Test //USERGRID-900
     public void queriesWithAndPastLimit() throws IOException {
 
-        CustomCollection activities = context.collection( "activities" );
+        CustomCollection activities = context.customCollection( "activities" );
 
         long created = 0;
         Map actor = hashMap( "displayName", "Erin" );
@@ -87,7 +87,7 @@ public class AndOrQueryTest extends AbstractRestIT {
     @Test //USERGRID-1475
     public void displayFullQueriesInLimit() throws IOException {
 
-        CustomCollection activities = context.collection( "activities" );
+        CustomCollection activities = context.customCollection( "activities" );
 
         Map actor = hashMap( "displayName", "Erin" );
         Map props = new HashMap();
@@ -124,7 +124,7 @@ public class AndOrQueryTest extends AbstractRestIT {
     @Test //USERGRID-1615
     public void queryReturnCount() throws Exception {
 
-        CustomCollection activities = context.collection( "activities" );
+        CustomCollection activities = context.customCollection( "activities" );
 
         Map actor = hashMap( "displayName", "Erin" );
         Map props = new HashMap();
@@ -149,7 +149,8 @@ public class AndOrQueryTest extends AbstractRestIT {
     @Test //Check to make sure that asc works
     public void queryCheckAsc() throws Exception {
 
-        CustomCollection madeupStuff = context.collection( "imagination" + RandomStringUtils.randomAlphabetic(5));
+        CustomCollection madeupStuff = context.customCollection(
+                "imagination" + RandomStringUtils.randomAlphabetic( 5 ) );
         Map character = hashMap( "WhoHelpedYou", "Ruff" );
 
         JsonNode[] correctValues;
@@ -168,7 +169,7 @@ public class AndOrQueryTest extends AbstractRestIT {
 
     @Ignore("Test to make sure all 1000 exist with a regular query")
     public void queryReturnCheck() throws Exception {
-        CustomCollection madeupStuff = context.collection( "imagination" );
+        CustomCollection madeupStuff = context.customCollection( "imagination" );
         Map character = hashMap( "WhoHelpedYou", "Ruff" );
 
         int numOfEntities = 1000;
@@ -187,7 +188,7 @@ public class AndOrQueryTest extends AbstractRestIT {
 
     @Ignore
     public void queryReturnCheckWithShortHand() throws IOException {
-        CustomCollection madeupStuff = context.collection( "imagination" );
+        CustomCollection madeupStuff = context.customCollection( "imagination" );
         Map character = hashMap( "WhoHelpedYou", "Ruff" );
 
         madeupStuff.createEntitiesWithOrdinal( character, 1000 );

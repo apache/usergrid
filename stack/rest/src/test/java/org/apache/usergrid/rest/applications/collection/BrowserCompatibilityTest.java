@@ -66,7 +66,7 @@ public class BrowserCompatibilityTest extends AbstractRestIT {
     private void testBrowserAccept( String acceptHeader ) throws IOException {
 
 
-        CustomCollection things = context.application().collection( "things" );
+        CustomCollection things = context.application().customCollection( "things" );
 
         Map<String, String> entity = hashMap( "name", "thing1" );
         JsonNode response = things.create( entity );

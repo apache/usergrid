@@ -20,6 +20,7 @@ package org.apache.usergrid.rest.test.resource;
 import java.util.UUID;
 
 import org.apache.usergrid.rest.test.resource.app.Application;
+import org.apache.usergrid.rest.test.resource.app.Collection;
 import org.apache.usergrid.rest.test.resource.app.User;
 import org.apache.usergrid.rest.test.resource.app.UsersCollection;
 import org.apache.usergrid.rest.test.resource.mgmt.Management;
@@ -72,12 +73,18 @@ public class TestContext {
         return withUser( null );
     }
 
+    public TestContext withOrg(){
+        return this;
+    }
 
     public TestContext withOrg( String orgName ) {
         testOrganization = new TestOrganization( orgName );
         return this;
     }
 
+    public TestContext withApp ( ) {
+        return this;
+    }
 
     public TestContext withApp( String appName ) {
         this.appName = appName;
@@ -156,9 +163,13 @@ public class TestContext {
         return new Application( getOrgName(), appName, root() );
     }
 
+//TODO: remove custom collections!
+    public CustomCollection customCollection( String str ) {
+        return application().customCollection( str );
+    }
 
-    public CustomCollection collection( String str ) {
-        return application().collection( str );
+    public Collection collection (String name) {
+        return application().collection( name );
     }
 
 
