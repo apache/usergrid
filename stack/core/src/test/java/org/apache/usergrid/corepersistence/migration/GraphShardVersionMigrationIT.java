@@ -32,12 +32,9 @@ import org.apache.usergrid.corepersistence.EntityWriteHelper;
 import org.apache.usergrid.corepersistence.ManagerCache;
 import org.apache.usergrid.corepersistence.rx.AllEntitiesInSystemObservable;
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationManagerImpl;
 import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerialization;
-import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerializationImpl;
-import org.apache.usergrid.persistence.core.migration.schema.MigrationManager;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -114,40 +111,41 @@ public class GraphShardVersionMigrationIT extends AbstractCoreIT {
 
         //read everything in previous version format and put it into our types.
 
-        AllEntitiesInSystemObservable.getAllEntitiesInSystem( managerCache )
-                                     .doOnNext( new Action1<AllEntitiesInSystemObservable.EntityData>() {
+        AllEntitiesInSystemObservable.getAllEntitiesInSystem( managerCache, 1000)
+                                     .doOnNext( new Action1<AllEntitiesInSystemObservable.ApplicationEntityGroup>() {
                                          @Override
-                                         public void call( final AllEntitiesInSystemObservable.EntityData entity ) {
+                                         public void call( final AllEntitiesInSystemObservable.ApplicationEntityGroup entity ) {
 
                                              final GraphManager gm =
                                                      managerCache.getGraphManager( entity.applicationScope );
 
-                                             /**
-                                              * Get our edge types from the source
-                                              */
-                                             gm.getEdgeTypesFromSource(
-                                                     new SimpleSearchEdgeType( entity.entityId, null, null ) )
-                                               .doOnNext( new Action1<String>() {
-                                                   @Override
-                                                   public void call( final String s ) {
-                                                       sourceTypes.put( entity.entityId, s );
-                                                   }
-                                               } ).toBlocking().lastOrDefault( null );
+                                             for(final Id id: entity.entityIds) {
+                                                 /**
+                                                  * Get our edge types from the source
+                                                  */
+                                                 gm.getEdgeTypesFromSource( new SimpleSearchEdgeType( id, null, null ) )
+                                                   .doOnNext( new Action1<String>() {
+                                                       @Override
+                                                       public void call( final String s ) {
+                                                           sourceTypes.put( id, s );
+                                                       }
+                                                   } ).toBlocking().lastOrDefault( null );
 
 
-                                             /**
-                                              * Get the edge types to the target
-                                              */
-                                             gm.getEdgeTypesToTarget(
-                                                     new SimpleSearchEdgeType( entity.entityId, null, null ) )
-                                               .doOnNext( new Action1<String>() {
-                                                   @Override
-                                                   public void call( final String s ) {
-                                                       targetTypes.put( entity.entityId, s );
-                                                   }
-                                               } ).toBlocking().lastOrDefault( null );
+                                                 /**
+                                                  * Get the edge types to the target
+                                                  */
+                                                 gm.getEdgeTypesToTarget( new SimpleSearchEdgeType( id,
+                                                         null, null ) )
+                                                   .doOnNext( new Action1<String>() {
+                                                       @Override
+                                                       public void call( final String s ) {
+                                                           targetTypes.put( id, s );
+                                                       }
+                                                   } ).toBlocking().lastOrDefault( null );
 
-                                             allEntities.remove( entity.entityId );
+                                                 allEntities.remove( id );
+                                             }
                                          }
                                      } ).toBlocking().lastOrDefault( null );
 
@@ -169,42 +167,66 @@ public class GraphShardVersionMigrationIT extends AbstractCoreIT {
 
 
         //now visit all nodes in the system and remove their types from the multi maps, it should be empty at the end
-        AllEntitiesInSystemObservable.getAllEntitiesInSystem( managerCache )
-                                     .doOnNext( new Action1<AllEntitiesInSystemObservable.EntityData>() {
+        AllEntitiesInSystemObservable.getAllEntitiesInSystem( managerCache, 1000 )
+                                     .doOnNext( new Action1<AllEntitiesInSystemObservable.ApplicationEntityGroup>() {
                                          @Override
-                                         public void call( final AllEntitiesInSystemObservable.EntityData entity ) {
+                                         public void call(
+                                                 final AllEntitiesInSystemObservable.ApplicationEntityGroup entity ) {
 
                                              final GraphManager gm =
                                                      managerCache.getGraphManager( entity.applicationScope );
 
-                                             /**
-                                              * Get our edge types from the source
-                                              */
-                                             gm.getEdgeTypesFromSource(
-                                                     new SimpleSearchEdgeType( entity.entityId, null, null ) )
-                                               .doOnNext( new Action1<String>() {
-                                                   @Override
-                                                   public void call( final String s ) {
-                                                       sourceTypes.remove( entity.entityId, s );
-                                                   }
-                                               } ).toBlocking().lastOrDefault( null );
+                                             for ( final Id id : entity.entityIds ) {
+                                                 /**
+                                                  * Get our edge types from the source
+                                                  */
+                                                 gm.getEdgeTypesFromSource(
+                                                         new SimpleSearchEdgeType( id, null, null ) )
+                                                   .doOnNext( new Action1<String>() {
+                                                       @Override
+                                                       public void call( final String s ) {
+                                                           sourceTypes.remove( id, s );
+                                                       }
+                                                   } ).toBlocking().lastOrDefault( null );
 
 
-                                             /**
-                                              * Get the edge types to the target
-                                              */
-                                             gm.getEdgeTypesToTarget(
-                                                     new SimpleSearchEdgeType( entity.entityId, null, null ) )
-                                               .doOnNext( new Action1<String>() {
-                                                   @Override
-                                                   public void call( final String s ) {
-                                                       targetTypes.remove( entity.entityId, s );
-                                                   }
-                                               } ).toBlocking().lastOrDefault( null );
+                                                 /**
+                                                  * Get the edge types to the target
+                                                  */
+                                                 gm.getEdgeTypesToTarget(
+                                                         new SimpleSearchEdgeType( id, null, null ) )
+                                                   .doOnNext( new Action1<String>() {
+                                                       @Override
+                                                       public void call( final String s ) {
+                                                           targetTypes.remove( id, s );
+                                                       }
+                                                   } ).toBlocking().lastOrDefault( null );
+                                             }
+                                             }
                                          }
-                                     } ).toBlocking().lastOrDefault( null );
 
-        assertEquals( "All source types migrated", 0, sourceTypes.size() );
-        assertEquals( "All target types migrated", 0, targetTypes.size() );
+
+                                         ).
+
+
+                                         toBlocking()
+
+
+                                         .
+
+
+                                         lastOrDefault( null );
+
+
+                                         assertEquals( "All source types migrated",0,sourceTypes.size( )
+
+
+                                         );
+
+
+                                         assertEquals( "All target types migrated",0,targetTypes.size( )
+
+
+                                         );
+                                     }
     }
-}

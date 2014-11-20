@@ -36,6 +36,7 @@ import org.apache.usergrid.persistence.core.migration.data.DataMigration;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.inject.Inject;
 import com.netflix.astyanax.Keyspace;
@@ -64,8 +65,7 @@ public class GraphShardVersionMigration implements DataMigration {
 
     @Inject
     public GraphShardVersionMigration( @CurrentImpl final EdgeMetadataSerialization v2Serialization,
-                                       final ManagerCache managerCache, final
-    Keyspace keyspace ) {
+                                       final ManagerCache managerCache, final Keyspace keyspace ) {
         this.v2Serialization = v2Serialization;
         this.managerCache = managerCache;
         this.keyspace = keyspace;
@@ -77,51 +77,71 @@ public class GraphShardVersionMigration implements DataMigration {
 
         final AtomicLong counter = new AtomicLong();
 
-        AllEntitiesInSystemObservable.getAllEntitiesInSystem( managerCache).flatMap(
-                new Func1<AllEntitiesInSystemObservable.EntityData, Observable<List<Edge>>>() {
+        AllEntitiesInSystemObservable.getAllEntitiesInSystem( managerCache, 1000 ).flatMap(
+                new Func1<AllEntitiesInSystemObservable.ApplicationEntityGroup, Observable<List<Edge>>>() {
 
 
                     @Override
-                    public Observable<List<Edge>> call( final AllEntitiesInSystemObservable.EntityData entityData ) {
-                        logger.info( "Migrating edges from node {} in scope {}", entityData.entityId,
-                                entityData.applicationScope );
+                    public Observable<List<Edge>> call(
+                            final AllEntitiesInSystemObservable.ApplicationEntityGroup applicationEntityGroup ) {
 
-                        final GraphManager gm = managerCache.getGraphManager( entityData.applicationScope );
-
-                        //get each edge from this node as a source
-                        return EdgesFromSourceObservable.edgesFromSource( gm, entityData.entityId )
-
-                                //for each edge, re-index it in v2  every 1000 edges or less
-                                .buffer( 1000 ).doOnNext( new Action1<List<Edge>>() {
-                                    @Override
-                                    public void call( final List<Edge> edges ) {
-
-                                        final MutationBatch batch = keyspace.prepareMutationBatch();
-
-                                        for ( final Edge edge : edges ) {
-                                            logger.info( "Migrating meta for edge {}", edge );
-                                            final MutationBatch edgeBatch =
-                                                    v2Serialization.writeEdge( entityData.applicationScope, edge );
-                                            batch.mergeShallow( edgeBatch );
-                                        }
-
-                                        try {
-                                            batch.execute();
-                                        }
-                                        catch ( ConnectionException e ) {
-                                            throw new RuntimeException( "Unable to perform migration", e );
-                                        }
-
-                                        //update the observer so the admin can see it
-                                        final long newCount = counter.addAndGet( edges.size() );
-
-                                        observer.update( getVersion(), String.format("Currently running.  Rewritten %d edge types", newCount) );
+                        //emit a stream of all ids from this group
+                        return Observable.from( applicationEntityGroup.entityIds )
+                                         .flatMap( new Func1<Id, Observable<List<Edge>>>() {
 
 
-                                    }
-                                } );
+                                             //for each id in the group, get it's edges
+                                             @Override
+                                             public Observable<List<Edge>> call( final Id id ) {
+                                                 logger.info( "Migrating edges from node {} in scope {}", id,
+                                                         applicationEntityGroup.applicationScope );
+
+                                                 final GraphManager gm = managerCache
+                                                         .getGraphManager( applicationEntityGroup.applicationScope );
+
+                                                 //get each edge from this node as a source
+                                                 return EdgesFromSourceObservable.edgesFromSource( gm, id )
+
+                                                         //for each edge, re-index it in v2  every 1000 edges or less
+                                                         .buffer( 1000 ).doOnNext( new Action1<List<Edge>>() {
+                                                             @Override
+                                                             public void call( final List<Edge> edges ) {
+
+                                                                 final MutationBatch batch =
+                                                                         keyspace.prepareMutationBatch();
+
+                                                                 for ( final Edge edge : edges ) {
+                                                                     logger.info( "Migrating meta for edge {}", edge );
+                                                                     final MutationBatch edgeBatch = v2Serialization
+                                                                             .writeEdge(
+                                                                                     applicationEntityGroup
+                                                                                             .applicationScope,
+                                                                                     edge );
+                                                                     batch.mergeShallow( edgeBatch );
+                                                                 }
+
+                                                                 try {
+                                                                     batch.execute();
+                                                                 }
+                                                                 catch ( ConnectionException e ) {
+                                                                     throw new RuntimeException(
+                                                                             "Unable to perform migration", e );
+                                                                 }
+
+                                                                 //update the observer so the admin can see it
+                                                                 final long newCount =
+                                                                         counter.addAndGet( edges.size() );
+
+                                                                 observer.update( getVersion(), String.format(
+                                                                         "Currently running.  Rewritten %d edge types",
+                                                                         newCount ) );
+                                                             }
+                                                         } );
+                                             }
+                                         } );
                     }
                 } ).toBlocking().lastOrDefault( null );
+        ;
     }
 
 

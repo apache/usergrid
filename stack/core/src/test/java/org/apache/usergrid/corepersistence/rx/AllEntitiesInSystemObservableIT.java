@@ -20,7 +20,6 @@
 package org.apache.usergrid.corepersistence.rx;
 
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -33,13 +32,11 @@ import org.apache.usergrid.corepersistence.CpSetup;
 import org.apache.usergrid.corepersistence.EntityWriteHelper;
 import org.apache.usergrid.corepersistence.ManagerCache;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
-import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.model.entity.Id;
-import org.apache.usergrid.persistence.model.entity.SimpleId;
 
 import rx.functions.Action1;
 
@@ -95,26 +92,28 @@ public class AllEntitiesInSystemObservableIT extends AbstractCoreIT {
 
         final GraphManager gm = managerCache.getGraphManager( scope );
 
-        AllEntitiesInSystemObservable.getAllEntitiesInSystem( managerCache ).doOnNext( new Action1<AllEntitiesInSystemObservable.EntityData>() {
+        AllEntitiesInSystemObservable.getAllEntitiesInSystem( managerCache, 1000 ).doOnNext( new Action1<AllEntitiesInSystemObservable.ApplicationEntityGroup>() {
             @Override
-            public void call( final AllEntitiesInSystemObservable.EntityData entity ) {
+            public void call( final AllEntitiesInSystemObservable.ApplicationEntityGroup entity ) {
 
                 assertNotNull(entity);
                 assertNotNull(entity.applicationScope);
-                assertNotNull(entity.entityId);
+                assertNotNull(entity.entityIds);
 
                 //not from our test, don't check it
                 if(!applicationId.equals( entity.applicationScope.getApplication() )){
                     return;
                 }
 
+                for(Id id: entity.entityIds) {
 
-                //we should only emit each node once
-                if ( entity.entityId.getType().equals( type1 ) ) {
-                    assertTrue( "Element should be present on removal", type1Identities.remove( entity.entityId ) );
-                }
-                else if ( entity.entityId.getType().equals( type2 ) ) {
-                    assertTrue( "Element should be present on removal", type2Identities.remove( entity.entityId ) );
+                    //we should only emit each node once
+                    if ( id.getType().equals( type1 ) ) {
+                        assertTrue( "Element should be present on removal", type1Identities.remove( id ) );
+                    }
+                    else if ( id.getType().equals( type2 ) ) {
+                        assertTrue( "Element should be present on removal", type2Identities.remove( id ) );
+                    }
                 }
             }
         } ).toBlocking().lastOrDefault( null );
