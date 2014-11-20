@@ -142,22 +142,30 @@
                     <include>**/*.sh</include>
                     <include>**/stack.json</include>
                     <include>**/*.properties</include>
-                    <include>**/*.xml</include> 
+                    <include>**/*.xml</include>
+
                 </includes>
             </resource>
         </resources>
 
-        <testResources> 
-            <testResource> 
-                <directory>src/test/resources</directory> 
-                <filtering>true</filtering> 
-                <includes>
-                    <include>**/*.yaml</include>
-                    <include>**/*.properties</include> 
-                    <include>**/*.xml</include> 
-                </includes> 
-            </testResource> 
-        </testResources>
+    <testResources>
+      <testResource>
+        <directory>src/test/resources</directory>
+        <filtering>true</filtering>
+        <includes>
+          <include>**/*.yaml</include>
+          <include>**/*.properties</include>
+          <include>**/*.xml</include>
+        </includes>
+      </testResource>
+      <testResource>
+        <directory>src/test/resources</directory>
+        <filtering>true</filtering>
+        <includes>
+          <include>largeentity.json</include>
+        </includes>
+      </testResource>
+    </testResources>
 
     <plugins>
 
