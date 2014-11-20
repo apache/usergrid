@@ -74,20 +74,11 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
     private static final Logger log = LoggerFactory.getLogger( MvccLogEntrySerializationStrategyImpl.class );
 
 
-    private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
-
-
-    private static final CollectionScopedRowKeySerializer<Id> ROW_KEY_SER =
-            new CollectionScopedRowKeySerializer<Id>( ID_SER );
-
-    private static final MultiTennantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> CF_ENTITY_DATA =
-            new MultiTennantColumnFamily<>( "Entity_Version_Data", ROW_KEY_SER, UUIDSerializer.get() );
-
-
     protected final Keyspace keyspace;
     protected final SerializationFig serializationFig;
     protected final EntityRepair repair;
     private final AbstractSerializer<EntityWrapper> entityJsonSerializer;
+    private final MultiTennantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID>  columnFamily;
 
 
     @Inject
@@ -96,6 +87,7 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
         this.serializationFig = serializationFig;
         this.repair = new EntityRepairImpl( this, serializationFig );
         this.entityJsonSerializer = getEntitySerializer();
+        this.columnFamily = getColumnFamily();
     }
 
 
@@ -167,7 +159,7 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
 
 
         try {
-            latestEntityColumns = keyspace.prepareQuery( CF_ENTITY_DATA ).getKeySlice( rowKeys )
+            latestEntityColumns = keyspace.prepareQuery( columnFamily ).getKeySlice( rowKeys )
                                           .withColumnRange( maxVersion, null, false, 1 ).execute().getResult()
                                           .iterator();
         }
@@ -228,7 +220,7 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
 
 
         RowQuery<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> query =
-                keyspace.prepareQuery( CF_ENTITY_DATA ).getKey( rowKey )
+                keyspace.prepareQuery( columnFamily ).getKey( rowKey )
                         .withColumnRange( version, null, false, fetchSize );
 
         return new ColumnNameIterator( query, new MvccColumnParser( entityId, entityJsonSerializer ), false );
@@ -258,7 +250,7 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
 
 
         RowQuery<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> query =
-                keyspace.prepareQuery( CF_ENTITY_DATA ).getKey( rowKey )
+                keyspace.prepareQuery( columnFamily ).getKey( rowKey )
                         .withColumnRange( null, version, true, fetchSize );
 
         return new ColumnNameIterator( query, new MvccColumnParser( entityId, entityJsonSerializer ), false );
@@ -305,7 +297,7 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
         //create the CF entity data.  We want it reversed b/c we want the most recent version at the top of the
         //row for fast seeks
         MultiTennantColumnFamilyDefinition cf =
-                new MultiTennantColumnFamilyDefinition( CF_ENTITY_DATA, BytesType.class.getSimpleName(),
+                new MultiTennantColumnFamilyDefinition( columnFamily, BytesType.class.getSimpleName(),
                         ReversedType.class.getSimpleName() + "(" + UUIDType.class.getSimpleName() + ")",
                         BytesType.class.getSimpleName(), MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
 
@@ -332,7 +324,7 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
                 ScopedRowKey.fromKey( applicationId, collectionPrefixedKey );
 
 
-        op.doOp( batch.withRow( CF_ENTITY_DATA, rowKey ) );
+        op.doOp( batch.withRow( columnFamily, rowKey ) );
 
         return batch;
     }
@@ -412,4 +404,16 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
      * Return the entity serializer for this instance
      */
     protected abstract AbstractSerializer<EntityWrapper> getEntitySerializer();
+
+    /**
+     * Get the column family to perform operations with
+     * @return
+     */
+    protected abstract MultiTennantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> getColumnFamily();
+    /**
+     *
+     private static final MultiTennantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> CF_ENTITY_DATA =
+             new MultiTennantColumnFamily<>( "Entity_Version_Data", ROW_KEY_SER, UUIDSerializer.get() );
+
+     */
 }

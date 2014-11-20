@@ -25,6 +25,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Map;
 
+import org.aspectj.lang.annotation.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -45,6 +46,7 @@ public class LargeEntityIT extends AbstractCoreIT {
 
     @Rule
     public Application app = new CoreApplication( setup );
+
 
 
     /**

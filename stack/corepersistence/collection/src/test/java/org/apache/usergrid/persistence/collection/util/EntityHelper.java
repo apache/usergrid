@@ -81,7 +81,7 @@ public class EntityHelper {
      * @param expected
      * @param returned
      */
-    public static void verifySame(final Entity expected, final Entity returned){
+    public static void verifyDeepEquals( final Entity expected, final Entity returned ){
 
         //perform object equals
         assertEquals("Expected same entity equality", expected, returned);

@@ -731,6 +731,6 @@ public class EntityCollectionManagerIT {
         final Entity loaded = manager.load( entity.getId() ).toBlocking().last();
 
 
-        EntityHelper.verifySame( entity, loaded );
+        EntityHelper.verifyDeepEquals( entity, loaded );
     }
 }

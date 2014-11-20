@@ -50,7 +50,7 @@ public class FieldBufferParser {
     /**
      * Return the value as an integer
      */
-    public int getInteger() {
+    public int readInteger() {
         return INTEGER_SERIALIZER.fromByteBuffer( getNext() );
     }
 
@@ -58,7 +58,7 @@ public class FieldBufferParser {
     /**
      * Return the value as a byte array
      */
-    public byte[] getBytes() {
+    public byte[] readBytes() {
         return BYTES_ARRAY_SERIALIZER.fromByteBuffer( getNext() );
     }
 
@@ -66,7 +66,7 @@ public class FieldBufferParser {
     /**
      * return the next vlaue as a byte
      */
-    public byte getByte() {
+    public byte readByte() {
         return BYTE_SERIALIZER.fromByteBuffer( getNext() );
     }
 

@@ -20,12 +20,16 @@
 package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
+import java.util.Iterator;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 
+import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
+import org.apache.usergrid.persistence.collection.util.EntityHelper;
 import org.apache.usergrid.persistence.core.guice.ProxyImpl;
 import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerialization;
 import org.apache.usergrid.persistence.core.test.ITRunner;
@@ -33,10 +37,12 @@ import org.apache.usergrid.persistence.core.test.UseModules;
 
 import com.google.inject.Inject;
 
+import static org.junit.Assert.assertTrue;
+
 
 @RunWith( ITRunner.class )
 @UseModules( TestCollectionModule.class )
-public class MvccEntitySerializationStrategyProxyV2Test extends MvccEntitySerializationSTrategyV2FixTests {
+public class MvccEntitySerializationStrategyProxyV2Test extends MvccEntitySerializationStrategyImplTest {
 
     @Inject
     @ProxyImpl
@@ -65,6 +71,25 @@ public class MvccEntitySerializationStrategyProxyV2Test extends MvccEntitySerial
 
         //set our new version, so that is will run through the new code
         migrationInfoSerialization.setVersion( MvccEntitySerializationStrategyProxyImpl.MIGRATION_VERSION );
+    }
+
+
+    @Override
+    protected void assertLargeEntity( final MvccEntity expected, final Iterator<MvccEntity> returned ) {
+        assertTrue( returned.hasNext() );
+
+        final MvccEntity loadedEntity = returned.next();
+
+        assertLargeEntity( expected, loadedEntity );
+    }
+
+
+    @Override
+    protected void assertLargeEntity( final MvccEntity expected, final MvccEntity returned ) {
+
+        org.junit.Assert.assertEquals( "The loaded entity should match the stored entity", expected, returned );
+
+        EntityHelper.verifyDeepEquals( expected.getEntity().get(), returned.getEntity().get() );
     }
 
 

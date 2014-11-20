@@ -20,8 +20,11 @@
 package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
+import java.util.Iterator;
+
 import org.junit.runner.RunWith;
 
+import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.core.guice.PreviousImpl;
@@ -29,6 +32,10 @@ import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
 
 import com.google.inject.Inject;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 
 @RunWith( ITRunner.class )
@@ -38,6 +45,26 @@ public class MvccEntitySerializationStrategyV1ImplTest extends MvccEntitySeriali
     @Inject
     @PreviousImpl
     private MvccEntitySerializationStrategy serializationStrategy;
+
+
+    @Override
+    protected void assertLargeEntity( final MvccEntity expected, final Iterator<MvccEntity> returned ) {
+        //known bug in v1, it should return null.  Fixed in v2
+        assertTrue( "V1 should be broken, but still have a next", returned.hasNext() );
+
+        final MvccEntity entity = returned.next();
+
+
+        assertLargeEntity( expected, entity );
+    }
+
+
+    protected void assertLargeEntity( final MvccEntity expected, final MvccEntity returned ) {
+        assertEquals( "Marked as deleted since we can't parse", MvccEntity.Status.DELETED, returned.getStatus() );
+
+        assertFalse( "V1 returns empty b/c parse fails", returned.getEntity().isPresent() );
+    }
+
 
     @Override
     protected MvccEntitySerializationStrategy getMvccEntitySerializationStrategy() {

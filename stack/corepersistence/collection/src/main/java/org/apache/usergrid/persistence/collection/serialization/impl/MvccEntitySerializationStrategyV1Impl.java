@@ -21,11 +21,16 @@ package org.apache.usergrid.persistence.collection.serialization.impl;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.UUID;
 
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.exception.DataCorruptionException;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
+import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
+import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
+import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.smile.SmileFactory;
@@ -39,6 +44,7 @@ import com.netflix.astyanax.model.Composites;
 import com.netflix.astyanax.serializers.AbstractSerializer;
 import com.netflix.astyanax.serializers.ByteBufferSerializer;
 import com.netflix.astyanax.serializers.BytesArraySerializer;
+import com.netflix.astyanax.serializers.UUIDSerializer;
 
 
 /**
@@ -50,6 +56,18 @@ public class MvccEntitySerializationStrategyV1Impl extends MvccEntitySerializati
     private static final EntitySerializer ENTITY_JSON_SER = new EntitySerializer();
 
 
+    private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
+
+
+    private static final CollectionScopedRowKeySerializer<Id> ROW_KEY_SER =
+            new CollectionScopedRowKeySerializer<>( ID_SER );
+
+
+    private static final MultiTennantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> CF_ENTITY_DATA =
+                new MultiTennantColumnFamily<>( "Entity_Version_Data", ROW_KEY_SER, UUIDSerializer.get() );
+
+
+
     @Inject
     public MvccEntitySerializationStrategyV1Impl( final Keyspace keyspace, final SerializationFig serializationFig ) {
         super( keyspace, serializationFig );
@@ -59,6 +77,12 @@ public class MvccEntitySerializationStrategyV1Impl extends MvccEntitySerializati
     @Override
     protected AbstractSerializer<MvccEntitySerializationStrategyImpl.EntityWrapper> getEntitySerializer() {
         return ENTITY_JSON_SER;
+    }
+
+
+    @Override
+    protected MultiTennantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> getColumnFamily() {
+        return CF_ENTITY_DATA;
     }
 
 

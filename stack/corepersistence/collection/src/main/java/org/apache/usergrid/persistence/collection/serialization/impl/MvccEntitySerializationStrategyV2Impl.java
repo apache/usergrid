@@ -21,12 +21,20 @@ package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
+import java.util.UUID;
 
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.exception.DataCorruptionException;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
+import org.apache.usergrid.persistence.core.astyanax.FieldBuffer;
+import org.apache.usergrid.persistence.core.astyanax.FieldBufferBuilder;
+import org.apache.usergrid.persistence.core.astyanax.FieldBufferParser;
+import org.apache.usergrid.persistence.core.astyanax.FieldBufferSerializer;
+import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
+import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
+import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.smile.SmileFactory;
@@ -34,12 +42,8 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
-import com.netflix.astyanax.model.CompositeBuilder;
-import com.netflix.astyanax.model.CompositeParser;
-import com.netflix.astyanax.model.Composites;
 import com.netflix.astyanax.serializers.AbstractSerializer;
-import com.netflix.astyanax.serializers.ByteBufferSerializer;
-import com.netflix.astyanax.serializers.BytesArraySerializer;
+import com.netflix.astyanax.serializers.UUIDSerializer;
 
 
 /**
@@ -49,6 +53,20 @@ import com.netflix.astyanax.serializers.BytesArraySerializer;
 public class MvccEntitySerializationStrategyV2Impl extends MvccEntitySerializationStrategyImpl {
 
     private static final EntitySerializer ENTITY_JSON_SER = new EntitySerializer();
+
+
+    private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
+
+
+    private static final CollectionScopedRowKeySerializer<Id> ROW_KEY_SER =
+            new CollectionScopedRowKeySerializer<>( ID_SER );
+
+
+    private static final MultiTennantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> CF_ENTITY_DATA =
+                new MultiTennantColumnFamily<>( "Entity_Version_Data_V2", ROW_KEY_SER, UUIDSerializer.get() );
+
+    private static final FieldBufferSerializer FIELD_BUFFER_SERIALIZER = FieldBufferSerializer.get();
+
 
 
     @Inject
@@ -63,23 +81,29 @@ public class MvccEntitySerializationStrategyV2Impl extends MvccEntitySerializati
     }
 
 
+    @Override
+    protected MultiTennantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> getColumnFamily() {
+        return CF_ENTITY_DATA;
+    }
+
+
     public static class EntitySerializer extends AbstractSerializer<EntityWrapper> {
 
 
-        private static final ByteBufferSerializer BUFFER_SERIALIZER = ByteBufferSerializer.get();
-
-        private static final BytesArraySerializer BYTES_ARRAY_SERIALIZER = BytesArraySerializer.get();
+//        private static final ByteBufferSerializer BUFFER_SERIALIZER = ByteBufferSerializer.get();
+//
+//        private static final BytesArraySerializer BYTES_ARRAY_SERIALIZER = BytesArraySerializer.get();
 
 
         public static final SmileFactory f = new SmileFactory();
 
         public static ObjectMapper mapper;
 
-        private static byte[] STATE_COMPLETE = new byte[] { 0 };
-        private static byte[] STATE_DELETED = new byte[] { 1 };
-        private static byte[] STATE_PARTIAL = new byte[] { 2 };
+        private static byte STATE_COMPLETE =  0 ;
+        private static byte STATE_DELETED = 1 ;
+        private static byte STATE_PARTIAL = 2 ;
 
-        private static byte[] VERSION = new byte[] { 0 };
+        private static byte VERSION = 1;
 
 
         public EntitySerializer() {
@@ -101,26 +125,28 @@ public class MvccEntitySerializationStrategyV2Impl extends MvccEntitySerializati
                 return null;
             }
 
-            CompositeBuilder builder = Composites.newCompositeBuilder();
+            //we always have a max of 3 fields
+            FieldBufferBuilder builder = new FieldBufferBuilder( 3  );
 
-            builder.addBytes( VERSION );
+            builder.addByte( VERSION );
 
             //mark this version as empty
             if ( !wrapper.entity.isPresent() ) {
                 //we're empty
-                builder.addBytes( STATE_DELETED );
+                builder.addByte( STATE_DELETED );
 
-                return builder.build();
+
+                return FIELD_BUFFER_SERIALIZER.toByteBuffer( builder.build() );
             }
 
             //we have an entity
 
             if ( wrapper.status == MvccEntity.Status.COMPLETE ) {
-                builder.addBytes( STATE_COMPLETE );
+                builder.addByte( STATE_COMPLETE );
             }
 
             else {
-                builder.addBytes( STATE_PARTIAL );
+                builder.addByte( STATE_PARTIAL );
             }
 
             try {
@@ -131,7 +157,7 @@ public class MvccEntitySerializationStrategyV2Impl extends MvccEntitySerializati
                 throw new RuntimeException( "Unable to serialize entity", e );
             }
 
-            return builder.build();
+            return FIELD_BUFFER_SERIALIZER.toByteBuffer( builder.build() );
         }
 
 
@@ -141,41 +167,44 @@ public class MvccEntitySerializationStrategyV2Impl extends MvccEntitySerializati
             /**
              * We intentionally turn data corruption exceptions when we're unable to de-serialize
              * the data in cassandra.  If this occurs, we'll never be able to de-serialize it
-             * and it should be considered lost.  This is an error that is occuring due to a bug
+             * and it should be considered lost.  This is an error that is occurring due to a bug
              * in serializing the entity.  This is a lazy recognition + repair signal for deployment with
              * existing systems.
              */
-            CompositeParser parser;
+
+            final FieldBuffer fieldBuffer;
+
             try {
-                parser = Composites.newCompositeParser( byteBuffer );
+                fieldBuffer = FIELD_BUFFER_SERIALIZER.fromByteBuffer( byteBuffer );
             }
             catch ( Exception e ) {
                 throw new DataCorruptionException( "Unable to de-serialze entity", e );
             }
 
-            byte[] version = parser.read( BYTES_ARRAY_SERIALIZER );
+            FieldBufferParser  parser = new FieldBufferParser( fieldBuffer );
 
-            if ( !Arrays.equals( VERSION, version ) ) {
+
+
+            byte version = parser.readByte();
+
+            if (  VERSION !=  version ) {
                 throw new UnsupportedOperationException( "A version of type " + version + " is unsupported" );
             }
 
-            byte[] state = parser.read( BYTES_ARRAY_SERIALIZER );
+            byte state = parser.readByte();
 
             // it's been deleted, remove it
 
-            if ( Arrays.equals( STATE_DELETED, state ) ) {
+            if (  STATE_DELETED ==  state ) {
                 return new EntityWrapper( MvccEntity.Status.COMPLETE, Optional.<Entity>absent() );
             }
 
             Entity storedEntity;
 
-            ByteBuffer jsonBytes = parser.read( BUFFER_SERIALIZER );
-            byte[] array = jsonBytes.array();
-            int start = jsonBytes.arrayOffset();
-            int length = jsonBytes.remaining();
+            byte[] array = parser.readBytes();
 
             try {
-                storedEntity = mapper.readValue( array, start, length, Entity.class );
+                storedEntity = mapper.readValue( array, Entity.class );
             }
             catch ( Exception e ) {
                 throw new DataCorruptionException( "Unable to read entity data", e );
@@ -183,7 +212,7 @@ public class MvccEntitySerializationStrategyV2Impl extends MvccEntitySerializati
 
             final Optional<Entity> entity = Optional.of( storedEntity );
 
-            if ( Arrays.equals( STATE_COMPLETE, state ) ) {
+            if (  STATE_COMPLETE ==  state ) {
                 return new EntityWrapper( MvccEntity.Status.COMPLETE, entity );
             }
 

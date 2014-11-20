@@ -60,15 +60,15 @@ public class FieldBufferSerializerTest {
 
         FieldBufferParser parser = new FieldBufferParser( parsed );
 
-        final byte returnedByte = parser.getByte();
+        final byte returnedByte = parser.readByte();
 
         assertEquals( "Bytes should be equal", setByte, returnedByte );
 
-        final int returnedInt = parser.getInteger();
+        final int returnedInt = parser.readInteger();
 
         assertEquals( "Integer should be equal", setInteger, returnedInt );
 
-        final byte[] returnedByteArray = parser.getBytes();
+        final byte[] returnedByteArray = parser.readBytes();
 
         assertArrayEquals( "arrays should be equal", setByteArray, returnedByteArray );
     }
@@ -101,15 +101,15 @@ public class FieldBufferSerializerTest {
 
         FieldBufferParser parser = new FieldBufferParser( parsed );
 
-        final byte[] returnedArray = parser.getBytes();
+        final byte[] returnedArray = parser.readBytes();
 
         assertArrayEquals( setByteArray, returnedArray );
 
-        final byte returnedByte = parser.getByte();
+        final byte returnedByte = parser.readByte();
 
         assertEquals( "Bytes should be equal", setByte, returnedByte );
 
-        final int returnedInt = parser.getInteger();
+        final int returnedInt = parser.readInteger();
 
         assertEquals( "Integer should be equal", setInteger, returnedInt );
     }

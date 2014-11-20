@@ -20,25 +20,31 @@
 package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
+import java.util.Iterator;
+
 import org.junit.runner.RunWith;
 
+import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
+import org.apache.usergrid.persistence.collection.util.EntityHelper;
 import org.apache.usergrid.persistence.core.guice.CurrentImpl;
-import org.apache.usergrid.persistence.core.guice.PreviousImpl;
 import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
 
 import com.google.inject.Inject;
 
+import static org.junit.Assert.assertTrue;
+
 
 @RunWith( ITRunner.class )
 @UseModules( TestCollectionModule.class )
-public class MvccEntitySerializationStrategyV2ImplTest extends MvccEntitySerializationSTrategyV2FixTests {
+public class MvccEntitySerializationStrategyV2ImplTest extends MvccEntitySerializationStrategyImplTest {
 
     @Inject
     @CurrentImpl
     private MvccEntitySerializationStrategy serializationStrategy;
+
 
     @Override
     protected MvccEntitySerializationStrategy getMvccEntitySerializationStrategy() {
@@ -46,4 +52,21 @@ public class MvccEntitySerializationStrategyV2ImplTest extends MvccEntitySeriali
     }
 
 
+    @Override
+    protected void assertLargeEntity( final MvccEntity expected, final Iterator<MvccEntity> returned ) {
+        assertTrue( returned.hasNext() );
+
+        final MvccEntity loadedEntity = returned.next();
+
+        assertLargeEntity( expected, loadedEntity );
+    }
+
+
+    @Override
+    protected void assertLargeEntity( final MvccEntity expected, final MvccEntity returned ) {
+
+        org.junit.Assert.assertEquals( "The loaded entity should match the stored entity", expected, returned );
+
+        EntityHelper.verifyDeepEquals( expected.getEntity().get(), returned.getEntity().get() );
+    }
 }
