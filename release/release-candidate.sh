@@ -27,8 +27,8 @@ set -o errexit
 set -o nounset
 
 rc_tag_version=0
-usergrid_git_web_url='https://git-wip-us.apache.org/repos/asf?p=incubator-aurora.git'
-usergrid_svn_dist_url='https://dist.apache.org/repos/dist/dev/incubator/aurora'
+usergrid_git_web_url='https://git-wip-us.apache.org/repos/asf?p=incubator-usergrid.git'
+usergrid_svn_dist_url='https://dist.apache.org/repos/dist/dev/incubator/usergrid'
 
 function print_help_and_exit {
 cat <<EOF
@@ -205,7 +205,7 @@ shasum ${dist_name}.tar.gz > ${dist_name}.tar.gz.sha
 # Publish release candidate to svn and commit and push the new git branch
 if [[ $publish == 1 ]]; then
   echo "Publishing release candidate to ${usergrid_svn_dist_url}/${current_version_tag}"
-  svn mkdir ${usergrid_svn_dist_url}/${current_version_tag} -m "aurora-${current_version} release candidate ${rc_tag_version}"
+  svn mkdir ${usergrid_svn_dist_url}/${current_version_tag} -m "usergrid-${current_version} release candidate ${rc_tag_version}"
   svn co --depth=empty ${usergrid_svn_dist_url}/${current_version_tag} ${dist_dir}
   svn add ${dist_name}*
   svn ci -m "usergrid-${current_version} release candidate ${rc_tag_version}"
