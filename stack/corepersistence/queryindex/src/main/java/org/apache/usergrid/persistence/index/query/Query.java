@@ -151,8 +151,9 @@ public class Query {
 
         //we have a root operand.  Translate our AST into an ES search
         if ( getRootOperand() != null ) {
-            //In the case of geo only queries, this will return null into the query builder.  Once we start
-            //using tiles, we won't need this check any longer, since a geo query will return a tile query + post filter
+            // In the case of geo only queries, this will return null into the query builder.  
+            // Once we start using tiles, we won't need this check any longer, since a geo query 
+            // will return a tile query + post filter
             QueryVisitor v = new EsQueryVistor();
 
             try {
@@ -167,14 +168,12 @@ public class Query {
         }
 
 
-        /**
-         * Add our filter for context to our query for fast execution.  Fast because it utilizes bitsets
-         * internally. See this post for more detail.
-         * http://www.elasticsearch.org/blog/all-about-elasticsearch-filter-bitsets/
-         */
+         // Add our filter for context to our query for fast execution.  
+         // Fast because it utilizes bitsets internally. See this post for more detail.
+         // http://www.elasticsearch.org/blog/all-about-elasticsearch-filter-bitsets/
 
-
-        // TODO evaluate performance when it's an all query.  Do we need to put the context term first for performance?
+        // TODO evaluate performance when it's an all query.  
+        // Do we need to put the context term first for performance?
         if ( queryBuilder != null ) {
             queryBuilder = QueryBuilders.boolQuery().must( queryBuilder ).must( QueryBuilders
                     .termQuery( IndexingUtils.ENTITY_CONTEXT_FIELDNAME, context ) );
@@ -906,11 +905,12 @@ public class Query {
 
     public void setLimit( int limit ) {
 
-        //      TODO tnine.  After users have had time to change their query limits,
+        // TODO tnine.  After users have had time to change their query limits,
         // this needs to be uncommented and enforced.
-        //        if(limit > MAX_LIMIT){
-        //          throw new IllegalArgumentException(String.format("Query limit must be <= to %d", MAX_LIMIT));
-        //        }
+        //    if(limit > MAX_LIMIT){
+        //        throw new IllegalArgumentException(
+        //            String.format("Query limit must be <= to %d", MAX_LIMIT));
+        //    }
 
         if ( limit > MAX_LIMIT ) {
             limit = MAX_LIMIT;

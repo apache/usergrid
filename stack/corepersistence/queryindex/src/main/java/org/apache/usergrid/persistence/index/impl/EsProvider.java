@@ -25,10 +25,7 @@ import java.net.UnknownHostException;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
-import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
-import org.elasticsearch.node.Node;
-import org.elasticsearch.node.NodeBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,10 +47,8 @@ public class EsProvider {
 
     private final IndexFig indexFig;
     private static Client client;
-//    private static Node node;
 
     public static String LOCAL_ES_PORT_PROPNAME = "EMBEDDED_ES_PORT";
-
 
     @Inject
     public EsProvider( IndexFig fig ) {
@@ -86,27 +81,16 @@ public class EsProvider {
 
     private synchronized void createClient( IndexFig fig ) {
 
-
         if ( client != null) {
             return;
         }
 
-
-
         final String clusterName = fig.getClusterName();
         final int port = fig.getPort();
-
 
         ImmutableSettings.Builder settings = ImmutableSettings.settingsBuilder()
                  .put( "cluster.name", clusterName )
                  .put( "client.transport.sniff", true );
-
-
-
-//        String allHosts = "";
-
-
-
 
         String nodeName = fig.getNodeName();
 
@@ -123,49 +107,12 @@ public class EsProvider {
 
         settings.put( "node.name", nodeName);
 
-
-
         TransportClient transportClient = new TransportClient( settings.build() );
+
             // we will connect to ES on all configured hosts
-//            String SEP = "";
             for ( String host : fig.getHosts().split( "," ) ) {
-
                 transportClient.addTransportAddress( new InetSocketTransportAddress(host, port));
-
-//                allHosts = allHosts + SEP + host + ":" + fig.getPort();
-//                SEP = ",";
             }
-
-//        Settings settings = ImmutableSettings.settingsBuilder()
-//
-//                .put( "cluster.name", fig.getClusterName() )
-//
-//                        // this assumes that we're using zen for host discovery.  Putting an
-//                        // explicit set of bootstrap hosts ensures we connect to a valid cluster.
-//                .put( "discovery.zen.ping.unicast.hosts", allHosts )
-//                .put( "discovery.zen.ping.multicast.enabled", "false" ).put( "http.enabled", false )
-//                .put("transport.tcp.port", "9300-9400")
-//                .put( "client.transport.ping_timeout", 2000 ) // milliseconds
-//                .put( "client.transport.nodes_sampler_interval", 100 )
-////                .put( "network.tcp.blocking", true )
-//                .put( "node.client", true ).put( "node.name", nodeName+"Random test" )
-//
-//                .build();
-
-//        log.debug( "Creating ElasticSearch client with settings: " + settings.getAsMap() );
-//
-//        // use this client when connecting via socket only,
-//        // such as ssh tunnel or other firewall issues
-//        // newClient  = new TransportClient(settings).addTransportAddress(
-//        //                  new InetSocketTransportAddress("localhost", 9300) );
-//
-//        //use this client for quick connectivity
-//        node = NodeBuilder.nodeBuilder().settings( settings ).client( true ).node();
-//        client = node.client();
-
-
-
-//                .build();
        client =  transportClient;
     }
 

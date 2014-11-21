@@ -74,7 +74,6 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.BOOLEAN_PREFIX;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ENTITYID_ID_FIELDNAME;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.NUMBER_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.SPLITTER;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.STRING_PREFIX;
@@ -146,12 +145,13 @@ public class EsEntityIndexImpl implements EntityIndex {
             final int numberOfShards = config.getNumberOfShards();
             final int numberOfReplicas = config.getNumberOfReplicas();
 
-            Settings settings = ImmutableSettings.settingsBuilder().put( "index.number_of_shards", numberOfShards )
-                                                 .put( "index.number_of_replicas", numberOfReplicas ).build();
+            Settings settings = ImmutableSettings.settingsBuilder()
+                    .put( "index.number_of_shards", numberOfShards )
+                    .put( "index.number_of_replicas", numberOfReplicas ).build();
 
 
-            final CreateIndexResponse cir =
-                    admin.indices().prepareCreate( indexName ).setSettings( settings ).execute().actionGet();
+            final CreateIndexResponse cir = admin.indices().prepareCreate( indexName )
+                    .setSettings( settings ).execute().actionGet();
 
             logger.info( "Created new Index Name [{}] ACK=[{}]", indexName, cir.isAcknowledged() );
 
@@ -186,17 +186,19 @@ public class EsEntityIndexImpl implements EntityIndex {
             public boolean doOp() {
                 final String tempId = UUIDGenerator.newTimeUUID().toString();
 
-                esProvider.getClient().prepareIndex( indexName, VERIFY_TYPE, tempId ).setSource( DEFAULT_PAYLOAD )
-                          .get();
+                esProvider.getClient().prepareIndex( indexName, VERIFY_TYPE, tempId )
+                        .setSource( DEFAULT_PAYLOAD ).get();
 
-                logger.info( "Successfully created new document with docId {} in index {} and type {}", tempId,
-                        indexName, VERIFY_TYPE );
+                logger.info( "Successfully created new document with docId {} in index {} type {}", 
+                        tempId, indexName, VERIFY_TYPE );
 
                 // delete all types, this way if we miss one it will get cleaned up
-                esProvider.getClient().prepareDeleteByQuery( indexName ).setTypes( VERIFY_TYPE )
-                          .setQuery( MATCH_ALL_QUERY_BUILDER ).get();
+                esProvider.getClient().prepareDeleteByQuery( indexName )
+                        .setTypes( VERIFY_TYPE )
+                        .setQuery( MATCH_ALL_QUERY_BUILDER ).get();
 
-                logger.info( "Successfully deleted all documents in index {} and type {}", indexName, VERIFY_TYPE );
+                logger.info( "Successfully deleted all documents in index {} and type {}", 
+                        indexName, VERIFY_TYPE );
 
                 return true;
             }
@@ -207,36 +209,36 @@ public class EsEntityIndexImpl implements EntityIndex {
 
 
     /**
-     * Setup ElasticSearch type mappings as a template that applies to all new indexes. Applies to all indexes that
-     * start with our prefix.
+     * Setup ElasticSearch type mappings as a template that applies to all new indexes. 
+     * Applies to all indexes that* start with our prefix.
      */
     private void createMappings() throws IOException {
 
-        XContentBuilder xcb =
-                IndexingUtils.createDoubleStringIndexMapping( XContentFactory.jsonBuilder(), "_default_" );
+        XContentBuilder xcb = IndexingUtils.createDoubleStringIndexMapping( 
+                XContentFactory.jsonBuilder(), "_default_" );
 
-        PutIndexTemplateResponse pitr =
-                esProvider.getClient().admin().indices().preparePutTemplate( "usergrid_template" )
-                          .setTemplate( config.getIndexPrefix() + "*" ).addMapping( "_default_",
-                        xcb ) // set mapping as the default for all types
-                        .execute().actionGet();
+        PutIndexTemplateResponse pitr = esProvider.getClient().admin().indices()
+                .preparePutTemplate( "usergrid_template" )
+                // set mapping as the default for all types
+                .setTemplate( config.getIndexPrefix() + "*" ).addMapping( "_default_", xcb ) 
+                .execute().actionGet();
 
         if(!pitr.isAcknowledged()){
             throw new IndexException( "Unable to create default mappings" );
         }
-
-
     }
 
 
     @Override
     public EntityIndexBatch createBatch() {
-        return new EsEntityIndexBatchImpl( applicationScope, esProvider.getClient(), config, 1000, failureMonitor );
+        return new EsEntityIndexBatchImpl( 
+                applicationScope, esProvider.getClient(), config, 1000, failureMonitor );
     }
 
 
     @Override
-    public CandidateResults search( final IndexScope indexScope, final SearchTypes searchTypes, final Query query ) {
+    public CandidateResults search( final IndexScope indexScope, final SearchTypes searchTypes, 
+            final Query query ) {
 
         final String context = IndexingUtils.createContextName( indexScope );
         final String[] entityTypes = searchTypes.getTypeNames();
@@ -247,13 +249,11 @@ public class EsEntityIndexImpl implements EntityIndex {
         SearchResponse searchResponse;
 
         if ( query.getCursor() == null ) {
-            SearchRequestBuilder srb = esProvider.getClient().prepareSearch( indexName ).setTypes( entityTypes )
-                                                 .setScroll( cursorTimeout + "m" ).setQuery( qb );
-
-
+            SearchRequestBuilder srb = esProvider.getClient().prepareSearch( indexName )
+                    .setTypes( entityTypes )
+                    .setScroll( cursorTimeout + "m" ).setQuery( qb );
 
             final FilterBuilder fb = query.createFilterBuilder();
-
 
             //we have post filters, apply them
             if ( fb != null ) {
@@ -280,21 +280,21 @@ public class EsEntityIndexImpl implements EntityIndex {
                 // to ignore any fields that are not present.
 
                 final String stringFieldName = STRING_PREFIX + sp.getPropertyName();
-                final FieldSortBuilder stringSort =
-                        SortBuilders.fieldSort( stringFieldName ).order( order ).ignoreUnmapped( true );
+                final FieldSortBuilder stringSort = SortBuilders.fieldSort( stringFieldName )
+                        .order( order ).ignoreUnmapped( true );
                 srb.addSort( stringSort );
 
                 logger.debug( "   Sort: {} order by {}", stringFieldName, order.toString() );
 
                 final String numberFieldName = NUMBER_PREFIX + sp.getPropertyName();
-                final FieldSortBuilder numberSort =
-                        SortBuilders.fieldSort( numberFieldName ).order( order ).ignoreUnmapped( true );
+                final FieldSortBuilder numberSort = SortBuilders.fieldSort( numberFieldName )
+                        .order( order ).ignoreUnmapped( true );
                 srb.addSort( numberSort );
                 logger.debug( "   Sort: {} order by {}", numberFieldName, order.toString() );
 
                 final String booleanFieldName = BOOLEAN_PREFIX + sp.getPropertyName();
-                final FieldSortBuilder booleanSort =
-                        SortBuilders.fieldSort( booleanFieldName ).order( order ).ignoreUnmapped( true );
+                final FieldSortBuilder booleanSort = SortBuilders.fieldSort( booleanFieldName )
+                        .order( order ).ignoreUnmapped( true );
                 srb.addSort( booleanSort );
                 logger.debug( "   Sort: {} order by {}", booleanFieldName, order.toString() );
             }
@@ -302,9 +302,8 @@ public class EsEntityIndexImpl implements EntityIndex {
 
 
             if ( logger.isDebugEnabled() ) {
-                logger.debug( "Searching index {}\n  scope{} \n type {}\n   query {} ", new Object[] {
-                        this.indexName, context, entityTypes, srb
-                } );
+                logger.debug( "Searching index {}\n  scope{} \n type {}\n   query {} ", 
+                        new Object[] { this.indexName, context, entityTypes, srb } );
             }
 
 
@@ -330,8 +329,8 @@ public class EsEntityIndexImpl implements EntityIndex {
             }
             logger.debug( "Executing query with cursor: {} ", scrollId );
 
-            SearchScrollRequestBuilder ssrb =
-                    esProvider.getClient().prepareSearchScroll( scrollId ).setScroll( cursorTimeout + "m" );
+            SearchScrollRequestBuilder ssrb = esProvider.getClient()
+                    .prepareSearchScroll( scrollId ).setScroll( cursorTimeout + "m" );
 
             try {
                 searchResponse = ssrb.execute().actionGet();
@@ -392,7 +391,8 @@ public class EsEntityIndexImpl implements EntityIndex {
             @Override
             public boolean doOp() {
                 try {
-                    esProvider.getClient().admin().indices().prepareRefresh( indexName ).execute().actionGet();
+                    esProvider.getClient().admin().indices().prepareRefresh( indexName )
+                            .execute().actionGet();
                     logger.debug( "Refreshed index: " + indexName );
                     return true;
                 }
@@ -412,7 +412,8 @@ public class EsEntityIndexImpl implements EntityIndex {
     @Override
     public int getPendingTasks() {
 
-        final PendingClusterTasksResponse tasksResponse = esProvider.getClient().admin().cluster().pendingClusterTasks( new PendingClusterTasksRequest() ).actionGet();
+        final PendingClusterTasksResponse tasksResponse = esProvider.getClient().admin()
+                .cluster().pendingClusterTasks( new PendingClusterTasksRequest() ).actionGet();
 
         return tasksResponse.pendingTasks().size();
     }
@@ -426,13 +427,12 @@ public class EsEntityIndexImpl implements EntityIndex {
         final String context = IndexingUtils.createContextName( scope );
         final SearchTypes searchTypes = SearchTypes.fromTypes( id.getType() );
 
-        final QueryBuilder queryBuilder = QueryBuilders.termQuery( IndexingUtils.ENTITY_CONTEXT_FIELDNAME, context );
+        final QueryBuilder queryBuilder = QueryBuilders.termQuery( 
+                IndexingUtils.ENTITY_CONTEXT_FIELDNAME, context );
 
-
-        final SearchRequestBuilder srb =
-                esProvider.getClient().prepareSearch( indexName ).setTypes( searchTypes.getTypeNames() )
-                          .setScroll( cursorTimeout + "m" ).setQuery( queryBuilder );
-
+        final SearchRequestBuilder srb = esProvider.getClient().prepareSearch( indexName )
+                .setTypes( searchTypes.getTypeNames() ).setScroll( cursorTimeout + "m" )
+                .setQuery( queryBuilder );
 
         final SearchResponse searchResponse;
         try {
@@ -499,8 +499,8 @@ public class EsEntityIndexImpl implements EntityIndex {
     public Health getClusterHealth() {
 
         try {
-            ClusterHealthResponse chr =
-                    esProvider.getClient().admin().cluster().health( new ClusterHealthRequest() ).get();
+            ClusterHealthResponse chr = esProvider.getClient().admin()
+                    .cluster().health( new ClusterHealthRequest() ).get();
             return Health.valueOf( chr.getStatus().name() );
         }
         catch ( Exception ex ) {
@@ -520,8 +520,7 @@ public class EsEntityIndexImpl implements EntityIndex {
 
         try {
             ClusterHealthResponse chr = esProvider.getClient().admin().cluster()
-                                                  .health( new ClusterHealthRequest( new String[] { indexName } ) )
-                                                  .get();
+                    .health( new ClusterHealthRequest( new String[] { indexName } ) ).get();
             return Health.valueOf( chr.getStatus().name() );
         }
         catch ( Exception ex ) {
