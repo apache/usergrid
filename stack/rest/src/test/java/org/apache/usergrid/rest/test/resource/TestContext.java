@@ -213,6 +213,26 @@ public class TestContext {
         return createNewOrgAndUser().loginUser().createAppForOrg();
     }
 
+    public void refreshIndex() {
+
+        logger.debug("Refreshing index for app {}/{}", testOrganization.getOrgName(), appName );
+
+        try {
+
+            root().resource().path( "/refreshindex" )
+                  .queryParam( "org_name", testOrganization.getOrgName() )
+                  .queryParam( "app_name", appName )
+                  .accept( MediaType.APPLICATION_JSON )
+                  .post();
+
+        } catch ( Exception e) {
+            logger.debug("Error refreshing index", e);
+            return;
+        }
+
+        logger.debug("Refreshed index for app {}/{}", testOrganization.getOrgName(), appName );
+    }
+
     private void refreshIndex(String orgName, String appName) {
 
         logger.debug("Refreshing index for app {}/{}", orgName, appName );

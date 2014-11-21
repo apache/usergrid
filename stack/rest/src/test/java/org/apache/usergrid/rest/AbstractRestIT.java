@@ -411,7 +411,7 @@ public abstract class AbstractRestIT extends JerseyTest {
     }
 
 
-    public void refreshIndex( UUID appId ) {
+    protected void refreshIndex( UUID appId ) {
 
         LOG.debug("Refreshing index for appId {}", appId );
 
