@@ -96,6 +96,7 @@ public class EntityDataMigrationIT extends AbstractCoreIT {
          * Reset to our version -1 and start the migration
          */
         dataMigrationManager.resetToVersion( entityDataMigration.getVersion() - 1 );
+        dataMigrationManager.invalidate();
 
 
         final EntityManager newAppEm = app.getEntityManager();
