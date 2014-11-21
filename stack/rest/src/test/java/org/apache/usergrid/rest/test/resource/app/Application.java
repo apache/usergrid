@@ -57,6 +57,14 @@ public class Application extends ValueResource {
         return new UsersCollection( this );
     }
 
+    public GroupsCollection groups() {
+        return new GroupsCollection( this );
+    }
+
+    public RolesCollection roles() {
+        return new RolesCollection( this );
+    }
+
 
     public QueuesCollection queues() {
         return new QueuesCollection( this );
@@ -67,8 +75,12 @@ public class Application extends ValueResource {
         return new DevicesCollection( this );
     }
 
-
-    public CustomCollection collection( String name ) {
+//TODO: work out differences between CustomCollections and replace tests with a general collection method.
+    public CustomCollection customCollection( String name ) {
         return new CustomCollection( name, this );
+    }
+
+    public Collection collection( String name ) {
+        return new Collection( name,this );
     }
 }

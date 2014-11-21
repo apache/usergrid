@@ -55,7 +55,7 @@ public class ConnectionResourceTest extends AbstractRestIT {
     public void connectionsQueryTest() throws IOException {
 
 
-        CustomCollection activities = context.collection( "peeps" );
+        CustomCollection activities = context.customCollection( "peeps" );
 
         Map stuff = hashMap( "type", "chicken" );
 
@@ -113,7 +113,7 @@ public class ConnectionResourceTest extends AbstractRestIT {
     @Test
     public void connectionsLoopbackTest() throws IOException {
 
-        CustomCollection things = context.collection( "things" );
+        CustomCollection things = context.customCollection( "things" );
 
         UUID thing1Id = getEntityId( things.create( hashMap( "name", "thing1" ) ), 0 );
 
@@ -143,7 +143,7 @@ public class ConnectionResourceTest extends AbstractRestIT {
 
         //now that we know the URl is correct, follow it
 
-        response = context.collection( url ).get();
+        response = context.customCollection( url ).get();
 
         UUID returnedUUID = getEntityId( response, 0 );
 
@@ -161,7 +161,7 @@ public class ConnectionResourceTest extends AbstractRestIT {
 
         //now we should get thing1 from the loopback url
 
-        response = context.collection( url ).get();
+        response = context.customCollection( url ).get();
 
         UUID returned = getEntityId( response, 0 );
 
@@ -172,7 +172,7 @@ public class ConnectionResourceTest extends AbstractRestIT {
     @Test
     public void connectionsUUIDTest() throws IOException {
 
-        CustomCollection things = context.collection( "things" );
+        CustomCollection things = context.customCollection( "things" );
 
         UUID thing1Id = getEntityId( things.create( hashMap( "name", "thing1" ) ), 0 );
 
@@ -202,7 +202,7 @@ public class ConnectionResourceTest extends AbstractRestIT {
 
         //now that we know the URl is correct, follow it
 
-        response = context.collection( url ).get();
+        response = context.customCollection( url ).get();
 
         UUID returnedUUID = getEntityId( response, 0 );
 
@@ -222,7 +222,7 @@ public class ConnectionResourceTest extends AbstractRestIT {
     @Test //USERGRID-3011
     public void connectionsDeleteSecondEntityInConnectionTest() throws IOException {
 
-        CustomCollection things = context.collection( "things" );
+        CustomCollection things = context.customCollection( "things" );
 
         UUID thing1Id = getEntityId( things.create( hashMap( "name", "thing1" ) ), 0 );
 
@@ -246,7 +246,7 @@ public class ConnectionResourceTest extends AbstractRestIT {
     @Test //USERGRID-3011
     public void connectionsDeleteFirstEntityInConnectionTest() throws IOException {
 
-        CustomCollection things = context.collection( "things" );
+        CustomCollection things = context.customCollection( "things" );
 
         UUID thing1Id = getEntityId( things.create( hashMap( "name", "thing1" ) ), 0 );
 

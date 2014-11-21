@@ -28,40 +28,29 @@ import org.apache.usergrid.rest.test.resource.NamedResource;
 import org.apache.usergrid.utils.MapUtils;
 
 
-/** @author tnine */
-public class UsersCollection extends Collection {
+/** @author rockerston */
+public class GroupsCollection extends CollectionResource {
 
 
-    public UsersCollection( NamedResource parent ) {
-        super( "users", parent );
+    public GroupsCollection( NamedResource parent ) {
+        super( "groups", parent );
     }
 
 
-    public User user( String username ) {
-        return new User( username, this );
+    public Group group( String username ) {
+        return new Group( username, this );
     }
 
 
-    public User user( UUID id ) {
-        return new User( id, this );
+    public Group group( UUID id ) {
+        return new Group( id, this );
     }
 
 
-    /** Create the user */
-    public JsonNode post( String username, String email, String password ) throws IOException {
+    /** Create the group */
+    public JsonNode create( String path, String title ) throws IOException {
         Map<String, String> data =
-                MapUtils.hashMap( "username", username ).map( "email", email ).map( "password", password );
-
-        JsonNode response = this.postInternal( data );
-
-        return getEntity( response, 0 );
-    }
-
-    /** Create the user */
-    public JsonNode post( String username, String email, String password, Map entityData ) throws IOException {
-        Map<String, String> data =
-                MapUtils.hashMap( "username", username ).map( "email", email ).map( "password", password );
-        data.putAll(entityData);
+                MapUtils.hashMap( "path", path ).map( "title", title );
 
         JsonNode response = this.postInternal( data );
 
@@ -69,16 +58,7 @@ public class UsersCollection extends Collection {
     }
 
 
-    /** Create the user */
-    //TODO: delete create method once rest calls are implemented
-    public JsonNode create( String username, String email, String password ) throws IOException {
-        Map<String, String> data =
-                MapUtils.hashMap( "username", username ).map( "email", email ).map( "password", password );
 
-        JsonNode response = this.postInternal( data );
-
-        return getEntity( response, 0 );
-    }
 
     public Me me() {
         return new Me( this );

@@ -44,7 +44,7 @@ public class PutTest extends AbstractRestIT {
     @Test //USERGRID-545
     public void putMassUpdateTest() throws IOException {
 
-        CustomCollection activities = context.collection( "activities" );
+        CustomCollection activities = context.customCollection( "activities" );
 
         Map actor = hashMap( "displayName", "Erin" );
         Map newActor = hashMap( "displayName", "Bob" );

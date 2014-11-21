@@ -50,7 +50,7 @@ public class OrderByTest extends AbstractRestIT {
     // USERGRID-1400
     public void orderByShouldNotAffectResults() throws IOException {
 
-        CustomCollection activities = context.collection( "activities" );
+        CustomCollection activities = context.customCollection( "activities" );
 
         long created = 0;
         Map actor = hashMap( "displayName", "Erin" );
@@ -82,7 +82,7 @@ public class OrderByTest extends AbstractRestIT {
     // USERGRID-1520
     public void orderByComesBeforeLimitResult() throws IOException {
 
-        CustomCollection activities = context.collection( "activities" );
+        CustomCollection activities = context.customCollection( "activities" );
 
         Map actor = hashMap( "displayName", "Erin" );
         Map props = new HashMap();
@@ -122,7 +122,7 @@ public class OrderByTest extends AbstractRestIT {
     // USERGRID-1521
     public void orderByReturnCorrectResults() throws IOException {
 
-        CustomCollection activities = context.collection( "activities" );
+        CustomCollection activities = context.customCollection( "activities" );
 
         int size = 200;
 

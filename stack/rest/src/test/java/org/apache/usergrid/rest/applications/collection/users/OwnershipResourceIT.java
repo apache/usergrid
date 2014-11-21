@@ -196,7 +196,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
 
         // create a 4peaks restaurant
         JsonNode data = context.application()
-                .collection( "restaurants" ).create( MapUtils.hashMap( "name", "4peaks" ) );
+                .customCollection( "restaurants" ).create( MapUtils.hashMap( "name", "4peaks" ) );
 
         refreshIndex(context.getOrgName(), context.getAppName());
 
@@ -219,7 +219,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
         user2.login( context ).makeActive( context );
         refreshIndex(context.getOrgName(), context.getAppName());
 
-        data = context.application().collection( "restaurants" )
+        data = context.application().customCollection( "restaurants" )
                       .create( MapUtils.hashMap( "name", "arrogantbutcher" ) );
         refreshIndex(context.getOrgName(), context.getAppName());
 
@@ -288,7 +288,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
 
         // test for user 1
 
-        CustomCollection restaurants = context.withUser( user1 ).application().collection( "restaurants" );
+        CustomCollection restaurants = context.withUser( user1 ).application().customCollection( "restaurants" );
         data = restaurants.entity( "4peaks" ).get();
 
         assertNotNull( data );
@@ -300,7 +300,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
         assertEquals( "arrogantbutcher", getEntity( data, 0 ).get( "name" ).asText() );
 
         // test for user 2
-        restaurants = context.withUser( user1 ).application().collection( "restaurants" );
+        restaurants = context.withUser( user1 ).application().customCollection( "restaurants" );
         data = restaurants.entity( "4peaks" ).get();
 
         assertNotNull( data );
@@ -317,7 +317,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
     public void contextualConnectionOwnershipGuestAccess() throws IOException {
 
         //set up full GET,PUT,POST,DELETE access for guests
-        context.application().collection( "roles" ).entity( "guest" ).collection( "permissions" )
+        context.application().customCollection( "roles" ).entity( "guest" ).collection( "permissions" )
                .create( MapUtils.hashMap( "permission", "get,put,post,delete:/**" ) );
 
 
@@ -325,19 +325,19 @@ public class OwnershipResourceIT extends AbstractRestIT {
         context.clearUser();
 
 
-        JsonNode city = context.application().collection( "cities" ).create( MapUtils.hashMap( "name", "tempe" ) );
+        JsonNode city = context.application().customCollection( "cities" ).create( MapUtils.hashMap( "name", "tempe" ) );
 
         refreshIndex(context.getOrgName(), context.getAppName());
 
         String cityId = getEntity( city, 0 ).get( "uuid" ).asText();
 
         // create a 4peaks restaurant
-        JsonNode data = context.application().collection( "cities" ).entity( "tempe" ).connection( "likes" )
+        JsonNode data = context.application().customCollection( "cities" ).entity( "tempe" ).connection( "likes" )
                                .collection( "restaurants" ).create( MapUtils.hashMap( "name", "4peaks" ) );
 
         String peaksId = getEntity( data, 0 ).get( "uuid" ).asText();
 
-        data = context.application().collection( "cities" ).entity( "tempe" ).connection( "likes" )
+        data = context.application().customCollection( "cities" ).entity( "tempe" ).connection( "likes" )
                       .collection( "restaurants" ).create( MapUtils.hashMap( "name", "arrogantbutcher" ) );
 
         String arrogantButcherId = getEntity( data, 0 ).get( "uuid" ).asText();
@@ -345,7 +345,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
         // now query on user 1.
 
         Connection likeRestaurants =
-                context.application().collection( "cities" ).entity( "tempe" ).connection( "likes" );
+                context.application().customCollection( "cities" ).entity( "tempe" ).connection( "likes" );
 
         refreshIndex(context.getOrgName(), context.getAppName());
 

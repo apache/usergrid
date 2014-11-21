@@ -30,14 +30,11 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 
 public class IndexingUtils {
 
-
     public static final String STRING_PREFIX = "su_";
     public static final String ANALYZED_STRING_PREFIX = "sa_";
     public static final String GEO_PREFIX = "go_";
     public static final String NUMBER_PREFIX = "nu_";
     public static final String BOOLEAN_PREFIX = "bu_";
-
-
 
     public static final String SPLITTER = "\\__";
 
@@ -156,7 +153,7 @@ public class IndexingUtils {
 
                     .startArray( "dynamic_templates" )
 
-                           //we need most specific mappings first since it's a stop on match algorithm
+                        // we need most specific mappings first since it's a stop on match algorithm
 
                         .startObject()
                         .startObject( "context_template" )
@@ -168,51 +165,55 @@ public class IndexingUtils {
                                  .endObject()
                              .endObject()
 
-
                         .startObject()
                         .startObject( "context_template" )
                             .field( "match", IndexingUtils.ENTITY_CONTEXT_FIELDNAME )
                             .field( "match_mapping_type", "string" )
-                                .startObject( "mapping" ).field( "type", "string" )
+                                .startObject( "mapping" )
+                                    .field( "type", "string" )
                                     .field( "index", "not_analyzed" ).endObject()
                                 .endObject()
                          .endObject()
 
                         // any string with field name that starts with sa_ gets analyzed
                         .startObject()
-                            .startObject( "template_1" ).field( "match", ANALYZED_STRING_PREFIX + "*" )
-                            .field( "match_mapping_type", "string" ).startObject( "mapping" ).field( "type", "string" )
-                            .field( "index", "analyzed" ).endObject().endObject()
-                        .endObject()
-
-                                // all other strings are not analyzed
-                        .startObject()
-                            .startObject( "template_2" )
-                                    //todo, should be string prefix, remove 2 field mapping
-                                .field( "match", "*" ).field( "match_mapping_type", "string" ).startObject( "mapping" )
+                            .startObject( "template_1" )
+                                .field( "match", ANALYZED_STRING_PREFIX + "*" )
+                                .field( "match_mapping_type", "string" ).startObject( "mapping" )
                                 .field( "type", "string" )
-                                    .field( "index", "not_analyzed" )
-                                .endObject()
+                                .field( "index", "analyzed" )
                             .endObject()
                         .endObject()
+                    .endObject()
 
-                        // fields names starting with go_ get geo-indexed
-                        .startObject()
-                            .startObject( "template_3" )
-                                .field( "match", GEO_PREFIX + "location" )
+                    // all other strings are not analyzed
+                    .startObject()
+                        .startObject( "template_2" )
+                            //todo, should be string prefix, remove 2 field mapping
+                            .field( "match", "*" )
+                            .field( "match_mapping_type", "string" )
+                            .startObject( "mapping" )
+                                .field( "type", "string" )
+                                    .field( "index", "not_analyzed" )
+                            .endObject()
+                        .endObject()
+                    .endObject()
+
+                    // fields names starting with go_ get geo-indexed
+                    .startObject()
+                        .startObject( "template_3" )
+                            .field( "match", GEO_PREFIX + "location" )
                                 .startObject( "mapping" )
                                     .field( "type", "geo_point" )
                                 .endObject()
-                            .endObject()
                         .endObject()
+                    .endObject()
 
+                .endArray()
 
+            .endObject()
 
-                    .endArray()
-
-                .endObject()
-
-            .endObject();
+        .endObject();
 
         return builder;
     }
