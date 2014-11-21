@@ -84,34 +84,6 @@ class Oauth2Plugin implements EventSubscriberInterface
     }
 
     /**
-     * Request error event handler.
-     *
-     * Handles unauthorized errors by acquiring a new access token and
-     * retrying the request.
-     *
-     * @param Event $event Event received
-     */
-    public function onRequestError(Event $event)
-    {
-        if ($event['response']->getStatusCode() == 401) {
-            if ($event['request']->getHeader('X-Guzzle-Retry')) {
-                // We already retried once, give up.
-                return;
-            }
-
-            // Acquire a new access token, and retry the request.
-            $newAccessToken = $this->acquireAccessToken();
-            if ($newAccessToken) {
-                $newRequest = clone $event['request'];
-                $newRequest->setHeader('Authorization', 'Bearer ' . $newAccessToken['access_token']);
-                $newRequest->setHeader('X-Guzzle-Retry', '1');
-                $event['response'] = $newRequest->send();
-                $event->stopPropagation();
-            }
-        }
-    }
-
-    /**
      * Get the access token.
      *
      * Handles token expiration for tokens with an "expires" timestamp.
@@ -141,26 +113,6 @@ class Oauth2Plugin implements EventSubscriberInterface
     public function setAccessToken(array $accessToken)
     {
         $this->accessToken = $accessToken;
-    }
-
-    /**
-     * Get the refresh token.
-     *
-     * @return string
-     */
-    public function getRefreshToken()
-    {
-        return $this->refreshToken;
-    }
-
-    /**
-     * Set the refresh token.
-     *
-     * @param string $refreshToken The refresh token
-     */
-    public function setRefreshToken($refreshToken)
-    {
-        $this->refreshToken = $refreshToken;
     }
 
     /**
@@ -200,5 +152,61 @@ class Oauth2Plugin implements EventSubscriberInterface
         }
 
         return $this->accessToken;
+    }
+
+    /**
+     * Request error event handler.
+     *
+     * Handles unauthorized errors by acquiring a new access token and
+     * retrying the request.
+     *
+     * @param Event $event Event received
+     */
+    public function onRequestError(Event $event)
+    {
+        if ($event['response']->getStatusCode() == 401) {
+            if ($event['request']->getHeader('X-Guzzle-Retry')) {
+                // We already retried once, give up.
+                return;
+            }
+
+            // Acquire a new access token, and retry the request.
+            $newAccessToken = $this->acquireAccessToken();
+            if ($newAccessToken) {
+                $newRequest = clone $event['request'];
+                $newRequest->setHeader('Authorization', 'Bearer ' . $newAccessToken['access_token']);
+                $newRequest->setHeader('X-Guzzle-Retry', '1');
+                $event['response'] = $newRequest->send();
+                $event->stopPropagation();
+            }
+        }
+    }
+
+    /**
+     * Get the refresh token.
+     *
+     * @return string
+     */
+    public function getRefreshToken()
+    {
+        return $this->refreshToken;
+    }
+
+    /**
+     * Set the refresh token.
+     *
+     * @param string $refreshToken The refresh token
+     */
+    public function setRefreshToken($refreshToken)
+    {
+        $this->refreshToken = $refreshToken;
+    }
+
+    /**
+     * @return GrantTypeInterface
+     */
+    public function getGrantType()
+    {
+        return $this->grantType;
     }
 }

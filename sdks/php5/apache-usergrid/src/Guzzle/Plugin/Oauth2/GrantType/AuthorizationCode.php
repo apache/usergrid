@@ -18,7 +18,6 @@ namespace Apache\Usergrid\Guzzle\Plugin\Oauth2\GrantType;
 
 use Guzzle\Common\Collection;
 use Guzzle\Http\ClientInterface;
-use Guzzle\Http\Exception\RequestException;
 
 /**
  * Authorization code grant type.
@@ -47,7 +46,8 @@ class AuthorizationCode implements GrantTypeInterface
             'scope' => '',
             'redirect_uri' => '',
         ), array(
-            'client_id', 'code',
+            'client_id',
+            'code',
         ));
     }
 

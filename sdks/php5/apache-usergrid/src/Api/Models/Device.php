@@ -33,7 +33,18 @@ class Device extends BaseCollection implements ResponseClassInterface
 {
     use GuzzleCommandTrait;
 
+    public function userAttribute()
+    {
+        return $this->getApiClient()->application()->GetRelationship([
+            'collection' => 'devices',
+            'entity_id' => $this->entities->fetch('uuid')->first(),
+            'relationship' => 'users'
+        ])->toArray();
+    }
 
+    public function notifierAttribute()
+    {
 
+    }
 
 } 

@@ -34,4 +34,44 @@ class User extends BaseCollection implements ResponseClassInterface
 
     use GuzzleCommandTrait;
 
-} 
+    public function deviceAttribute()
+    {
+        return $this->getApiClient()->application()->GetRelationship([
+            'collection' => 'users',
+            'entity_id' => $this->entities->fetch('uuid')->first(),
+            'relationship' => 'devices'
+        ])->toArray();
+    }
+
+    public function notificationAttribute()
+    {
+
+    }
+
+    public function groupsAttribute()
+    {
+        return $this->getApiClient()->application()->GetRelationship([
+            'collection' => 'users',
+            'entity_id' => $this->entities->fetch('uuid')->first(),
+            'relationship' => 'groups'
+        ])->toArray();
+    }
+
+    public function rolesAttribute()
+    {
+        return $this->getApiClient()->application()->GetRelationship([
+            'collection' => 'users',
+            'entity_id' => $this->entities->fetch('uuid')->first(),
+            'relationship' => 'roles'
+        ])->toArray();
+    }
+
+    public function connectionsAttribute()
+    {
+        return $this->getApiClient()->application()->GetRelationship([
+            'collection' => 'users',
+            'entity_id' => $this->entities->fetch('uuid')->first(),
+            'relationship' => 'connections'
+        ])->toArray();
+    }
+}

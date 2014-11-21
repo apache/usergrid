@@ -21,7 +21,7 @@ return [
         'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/{collection}',
         'notes' => 'Query an app collection.',
         'summary' => 'Query an app collection',
-        'responseClass' => 'Apache\Usergrid\Api\Models\Collection',
+        'responseClass' => 'Apache\Usergrid\Api\Models\Role',
         'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
@@ -97,7 +97,7 @@ return [
         'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/{collection}',
         'notes' => 'Query Roles.',
         'summary' => 'Query the roles collection',
-        'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
+        'responseClass' => 'Apache\Usergrid\Api\Models\Role',
         'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
@@ -168,11 +168,12 @@ return [
             'location' => 'query'
         ]
     ],
-    'findById' => ['httpMethod' => 'GET',
+    'findById' => [
+        'httpMethod' => 'GET',
         'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/{collection}/{uuid}',
         'notes' => 'Find Role by uuid.',
         'summary' => 'Find role by uuid',
-        'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
+        'responseClass' => 'Apache\Usergrid\Api\Models\Role',
         'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
@@ -254,7 +255,7 @@ return [
         'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/{collection}',
         'notes' => 'Create new Role.  See Usergrid documentation for JSON format of body.',
         'summary' => 'Create new Role entity',
-        'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
+        'responseClass' => 'Apache\Usergrid\Api\Models\Role',
         'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
@@ -294,7 +295,7 @@ return [
         'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/{collection}/{entity_name_or_uuid}',
         'notes' => 'Delete a Role entity.',
         'summary' => 'Delete a Role entity by name or uuid',
-        'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
+        'responseClass' => 'Apache\Usergrid\Api\Models\Role',
         'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
@@ -336,7 +337,7 @@ return [
         'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/{collection}/{entity_name_or_uuid}',
         'notes' => 'Update a Role entity.',
         'summary' => 'Update a Roles entity by name or uuid and using JSON data',
-        'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
+        'responseClass' => 'Apache\Usergrid\Api\Models\Role',
         'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [

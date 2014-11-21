@@ -36,6 +36,7 @@ class UsergridTest extends PHPUnit_Framework_TestCase
     protected $usergrid;
 
     protected $config;
+
     /**
      * Setup resources and dependencies
      *
@@ -43,7 +44,7 @@ class UsergridTest extends PHPUnit_Framework_TestCase
      */
     public function setup()
     {
-        $this->usergrid  = $GLOBALS['usergrid'];
+        $this->usergrid = $GLOBALS['usergrid'];
     }
 
     /**
@@ -56,7 +57,7 @@ class UsergridTest extends PHPUnit_Framework_TestCase
 
         try {
             $this->usergrid->application()->EntityGet(['collection' => 'roles']);
-        } catch(UnauthorizedException $e) {
+        } catch (UnauthorizedException $e) {
             $error = $e;
         }
 
@@ -142,12 +143,11 @@ class UsergridTest extends PHPUnit_Framework_TestCase
         $expected = [
             'Usergrid-Version' => '1.0.1',
             'Authorization' => 'Bearer ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890',
-            'some-header'    => 'foo-bar',
+            'some-header' => 'foo-bar',
         ];
 
         $this->assertEquals($headers, $expected);
     }
-
 
 
 }

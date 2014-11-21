@@ -964,9 +964,6 @@ return [
             'location' => 'json'
         ]
     ],
-
-
-
     //Application Collection Relationships
     'GetRelationship' => [
         'httpMethod' => 'GET',

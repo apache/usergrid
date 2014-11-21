@@ -169,7 +169,8 @@ return [
             'location' => 'query'
         ]
     ],
-    'findById' => ['httpMethod' => 'GET',
+    'findById' => [
+        'httpMethod' => 'GET',
         'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/{collection}/{uuid}',
         'notes' => 'Find Device by uuid.',
         'summary' => 'Find device by uuid',
@@ -377,5 +378,88 @@ return [
             "description" => "Entity data",
             'location' => 'json'
         ]
-    ]
+    ],
+    'notifiers' => [
+        'httpMethod' => 'GET',
+        'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/{collection}/{device_uuid}/notifier',
+        'notes' => 'Get All device notifiers.',
+        'summary' => 'Get all Device notifiers',
+        'responseClass' => 'Apache\Usergrid\Api\Models\Notifier',
+        'responseType' => 'class',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'app_name_or_uuid' => [
+                'description' => 'app name or uuid',
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+            ],
+            'org_name_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Organization name or uuid'
+            ],
+            'collection' => [
+                'description' => 'collection name (entity type)',
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'default' => 'devices'
+            ],
+            'device_uuid' => [
+                'description' => 'device uuid (entity type)',
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+            ],
+            'access_token' => [
+                'description' => 'The OAuth2 access token',
+                'location' => 'query',
+                'type' => 'string',
+                'required' => false,
+            ],
+            'ql' => [
+                'description' => 'a query in the query language',
+                'location' => 'query',
+                'type' => 'string',
+                'required' => false,
+            ],
+            'reversed' => [
+                'description' => 'return results in reverse order',
+                'location' => 'query',
+                'type' => 'boolean',
+                'required' => false,
+            ],
+            'start' => [
+                'description' => 'the first entity UUID to return',
+                'location' => 'query',
+                'type' => 'string',
+                'required' => false,
+            ],
+            'cursor' => [
+                'description' => 'an encoded representation of the query position for paging',
+                'location' => 'query',
+                'type' => 'string',
+                'required' => false,
+            ],
+            'limit' => [
+                'description' => 'an encoded representation of the query position for paging',
+                'location' => 'query',
+                'type' => 'integer',
+                'required' => false
+
+            ],
+            'filter' => [
+                'description' => 'a condition to filter on',
+                'location' => 'query',
+                'type' => 'integer',
+                'required' => false,
+            ]
+        ],
+        'additionalParameters' => [
+            "description" => "Other parameters",
+            'location' => 'query'
+        ]
+    ],
 ];

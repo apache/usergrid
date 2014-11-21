@@ -16,8 +16,8 @@
 
 namespace Apache\Usergrid\Guzzle\Plugin\Oauth2\GrantType;
 
-use Symfony\Component\Security\Core\SecurityContextInterface;
 use HWI\Bundle\OAuthBundle\Security\Http\ResourceOwnerMap;
+use Symfony\Component\Security\Core\SecurityContextInterface;
 
 /**
  * HWIOAuthBundle Aware Refresh token grant type.

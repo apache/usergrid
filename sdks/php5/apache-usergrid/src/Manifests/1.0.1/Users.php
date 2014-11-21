@@ -168,7 +168,8 @@ return [
             'location' => 'query'
         ]
     ],
-    'findById' => ['httpMethod' => 'GET',
+    'findById' => [
+        'httpMethod' => 'GET',
         'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/{collection}/{uuid}',
         'notes' => 'Find User by uuid.',
         'summary' => 'Find user by uuid',

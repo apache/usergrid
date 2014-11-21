@@ -21,7 +21,7 @@ return [
         'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/notifiers',
         'notes' => 'Create new Apple Notifier.  See Usergrid documentation for the format of body.',
         'summary' => 'Create new Notifier entity',
-        'responseClass' => 'Apache\Usergrid\Api\Models\Collection',
+        'responseClass' => 'Apache\Usergrid\Api\Models\Notifier',
         'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
@@ -81,7 +81,7 @@ return [
         'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/notifiers',
         'notes' => 'Create new Notifier.  See Usergrid documentation for the format of body.',
         'summary' => 'Create new Notifier entity',
-        'responseClass' => 'Apache\Usergrid\Api\Models\Collection',
+        'responseClass' => 'Apache\Usergrid\Api\Models\Notifier',
         'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
@@ -126,6 +126,41 @@ return [
         'additionalParameters' => [
             "description" => "Entity data",
             'location' => 'json'
+        ]
+    ],
+    'all' => [
+        'httpMethod' => 'GET',
+        'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/notifiers',
+        'notes' => 'Get all  Notifier.  See Usergrid documentation for the format of body.',
+        'summary' => 'Get all  Notifier entity',
+        'responseClass' => 'Apache\Usergrid\Api\Models\Notifier',
+        'responseType' => 'class',
+        'errorResponses' => $errors,
+        'parameters' => [
+            'app_name_or_uuid' => [
+                'description' => 'app name or uuid',
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+            ],
+            'name' => [
+                'description' => 'notifier name (entity type)',
+                'location' => 'json',
+                'type' => 'string',
+                'required' => false,
+            ],
+            'access_token' => [
+                'description' => 'The OAuth2 access token',
+                'location' => 'query',
+                'type' => 'string',
+                'required' => false,
+            ],
+            'org_name_or_uuid' => [
+                'location' => 'uri',
+                'type' => 'string',
+                'required' => true,
+                'description' => 'Organization name or uuid'
+            ]
         ]
     ]
 ];
