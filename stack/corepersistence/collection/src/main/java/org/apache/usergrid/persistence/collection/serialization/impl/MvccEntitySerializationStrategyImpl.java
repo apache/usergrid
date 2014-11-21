@@ -42,9 +42,9 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImp
 import org.apache.usergrid.persistence.collection.serialization.EntityRepair;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
+import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.core.astyanax.ColumnNameIterator;
 import org.apache.usergrid.persistence.core.astyanax.ColumnParser;
-import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
@@ -61,9 +61,15 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.model.Column;
 import com.netflix.astyanax.model.ColumnList;
 import com.netflix.astyanax.model.Row;
+import com.netflix.astyanax.model.Rows;
 import com.netflix.astyanax.query.RowQuery;
 import com.netflix.astyanax.serializers.AbstractSerializer;
-import com.netflix.astyanax.serializers.UUIDSerializer;
+
+import rx.Observable;
+import rx.Scheduler;
+import rx.functions.Func1;
+import rx.functions.Func2;
+import rx.schedulers.Schedulers;
 
 
 /**
@@ -76,14 +82,17 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
 
     protected final Keyspace keyspace;
     protected final SerializationFig serializationFig;
+    protected final CassandraFig cassandraFig;
     protected final EntityRepair repair;
     private final MultiTennantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID>  columnFamily;
 
 
     @Inject
-    public MvccEntitySerializationStrategyImpl( final Keyspace keyspace, final SerializationFig serializationFig ) {
+    public MvccEntitySerializationStrategyImpl( final Keyspace keyspace, final SerializationFig serializationFig,
+                                                final CassandraFig cassandraFig ) {
         this.keyspace = keyspace;
         this.serializationFig = serializationFig;
+        this.cassandraFig = cassandraFig;
         this.repair = new EntityRepairImpl( this, serializationFig );
         this.columnFamily = getColumnFamily();
     }
@@ -100,17 +109,8 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
         return doWrite( collectionScope, entityId, new RowOp() {
             @Override
             public void doOp( final ColumnListMutation<UUID> colMutation ) {
-//                try {
                     colMutation.putColumn( colName, getEntitySerializer()
                             .toByteBuffer( new EntityWrapper( entity.getStatus(), entity.getEntity() ) ) );
-//                }
-//                catch ( Exception e ) {
-//                    // throw better exception if we can
-//                    if ( entity != null || entity.getEntity().get() != null ) {
-//                        throw new CollectionRuntimeException( entity, collectionScope, e );
-//                    }
-//                    throw e;
-//                }
             }
         } );
     }
@@ -152,46 +152,110 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
             rowKeys.add( rowKey );
         }
 
+        /**
+         * Our settings may mean we exceed our maximum thrift buffer size. If we do, we have to make multiple requests, not just one.
+         * Perform the calculations and the appropriate request patterns
+         *
+         */
 
-        final Iterator<Row<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID>> latestEntityColumns;
+        final int maxEntityResultSizeInBytes = serializationFig.getMaxEntitySize() * entityIds.size();
+
+        //if we're less than 1, set the number of requests to 1
+        final int numberRequests = Math.max(1, maxEntityResultSizeInBytes / cassandraFig.getThriftBufferSize());
+
+        final int entitiesPerRequest = entityIds.size() / numberRequests;
 
 
-        try {
-            latestEntityColumns = keyspace.prepareQuery( columnFamily ).getKeySlice( rowKeys )
-                                          .withColumnRange( maxVersion, null, false, 1 ).execute().getResult()
-                                          .iterator();
+        final Scheduler scheduler;
+
+        //if it's a single request, run it on the same thread
+        if(numberRequests == 1){
+            scheduler = Schedulers.immediate();
         }
-        catch ( ConnectionException e ) {
-            throw new CollectionRuntimeException( null, collectionScope, "An error occurred connecting to cassandra",
-                    e );
+        //if it's more than 1 request, run them on the I/O scheduler
+        else{
+            scheduler = Schedulers.io();
         }
 
 
-        final EntitySetImpl entitySetResults = new EntitySetImpl( entityIds.size() );
+       final EntitySetImpl entitySetResults =  Observable.from( rowKeys )
+               //buffer our entities per request, then for that buffer, execute the query in parallel (if neccessary)
+                                                         .buffer(entitiesPerRequest )
+                                                         .parallel( new Func1<Observable<List<ScopedRowKey
+                <CollectionPrefixedKey<Id>>>>, Observable<Rows<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID>>>() {
 
-        while ( latestEntityColumns.hasNext() ) {
-            final Row<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> row = latestEntityColumns.next();
 
-            final ColumnList<UUID> columns = row.getColumns();
+            @Override
+            public Observable<Rows<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID>> call(
+                    final Observable<List<ScopedRowKey<CollectionPrefixedKey<Id>>>> listObservable ) {
 
-            if ( columns.size() == 0 ) {
-                continue;
+
+                 //here, we execute our query then emit the items either in parallel, or on the current thread if we have more than 1 request
+                return listObservable.map( new Func1<List<ScopedRowKey<CollectionPrefixedKey<Id>>>,
+                        Rows<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID>>() {
+
+
+                    @Override
+                    public Rows<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> call(
+                            final List<ScopedRowKey<CollectionPrefixedKey<Id>>> scopedRowKeys ) {
+
+                            try {
+                                return keyspace.prepareQuery( columnFamily ).getKeySlice( rowKeys )
+                                                              .withColumnRange( maxVersion, null, false,
+                                                                      1 ).execute().getResult();
+                            }
+                            catch ( ConnectionException e ) {
+                                throw new CollectionRuntimeException( null, collectionScope, "An error occurred connecting to cassandra",
+                                        e );
+                            }
+                    }
+                } );
+
+
+
             }
+        }, scheduler )
 
-            final Id entityId = row.getKey().getKey().getSubKey();
+               //reduce all the output into a single Entity set
+               .reduce( new EntitySetImpl( entityIds.size() ),
+                new Func2<EntitySetImpl, Rows<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID>, EntitySetImpl>() {
+                    @Override
+                    public EntitySetImpl call( final EntitySetImpl entitySet,
+                                               final Rows<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> rows ) {
 
-            final Column<UUID> column = columns.getColumnByIndex( 0 );
+                        final Iterator<Row<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID>> latestEntityColumns = rows.iterator();
 
-            final MvccEntity parsedEntity =
-                    new MvccColumnParser( entityId, getEntitySerializer() ).parseColumn( column );
+                        while ( latestEntityColumns.hasNext() ) {
+                                   final Row<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> row = latestEntityColumns.next();
 
-            //we *might* need to repair, it's not clear so check before loading into result sets
-            final MvccEntity maybeRepaired = repair.maybeRepair( collectionScope, parsedEntity );
+                                   final ColumnList<UUID> columns = row.getColumns();
 
-            entitySetResults.addEntity( maybeRepaired );
-        }
+                                   if ( columns.size() == 0 ) {
+                                       continue;
+                                   }
+
+                                   final Id entityId = row.getKey().getKey().getSubKey();
+
+                                   final Column<UUID> column = columns.getColumnByIndex( 0 );
+
+                                   final MvccEntity parsedEntity =
+                                           new MvccColumnParser( entityId, getEntitySerializer() ).parseColumn( column );
+
+                                   //we *might* need to repair, it's not clear so check before loading into result sets
+                                   final MvccEntity maybeRepaired = repair.maybeRepair( collectionScope, parsedEntity );
+
+                                entitySet.addEntity( maybeRepaired );
+                               }
+
+
+
+                        return entitySet;
+                    }
+                } ).toBlocking().last();
 
         return entitySetResults;
+
+
     }
 
 

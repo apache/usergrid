@@ -27,6 +27,7 @@ import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.exception.DataCorruptionException;
 import org.apache.usergrid.persistence.collection.exception.EntityTooLargeException;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
+import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.core.astyanax.FieldBuffer;
 import org.apache.usergrid.persistence.core.astyanax.FieldBufferBuilder;
 import org.apache.usergrid.persistence.core.astyanax.FieldBufferParser;
@@ -72,8 +73,8 @@ public class MvccEntitySerializationStrategyV2Impl extends MvccEntitySerializati
 
 
     @Inject
-    public MvccEntitySerializationStrategyV2Impl( final Keyspace keyspace, final SerializationFig serializationFig ) {
-        super( keyspace, serializationFig );
+    public MvccEntitySerializationStrategyV2Impl( final Keyspace keyspace, final SerializationFig serializationFig, final CassandraFig cassandraFig ) {
+        super( keyspace, serializationFig, cassandraFig );
         entitySerializer = new EntitySerializer( serializationFig );
     }
 
