@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.usergrid.persistence.index.*;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.cluster.tasks.PendingClusterTasksRequest;
@@ -65,11 +66,6 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
-import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.EntityIndexBatch;
-import org.apache.usergrid.persistence.index.IndexFig;
-import org.apache.usergrid.persistence.index.IndexScope;
-import org.apache.usergrid.persistence.index.SearchTypes;
 import org.apache.usergrid.persistence.index.exceptions.IndexException;
 import org.apache.usergrid.persistence.index.query.CandidateResult;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
@@ -98,6 +94,7 @@ public class EsEntityIndexImpl implements EntityIndex {
     private static final AtomicBoolean mappingsCreated = new AtomicBoolean( false );
 
     private final String aliasName;
+    private final IndexIdentifier indexIdentifier;
 
     /**
      * We purposefully make this per instance. Some indexes may work, while others may fail
@@ -136,7 +133,8 @@ public class EsEntityIndexImpl implements EntityIndex {
         this.esProvider = provider;
         this.config = config;
         this.cursorTimeout = config.getQueryCursorTimeout();
-        this.aliasName = IndexingUtils.createAliasName(config,appScope);
+        this.indexIdentifier = IndexingUtils.createIndexIdentifier(config,appScope);
+        this.aliasName = indexIdentifier.getAlias();
         this.failureMonitor = new FailureMonitorImpl( config, provider );
     }
 
@@ -177,8 +175,7 @@ public class EsEntityIndexImpl implements EntityIndex {
     }
 
     private void createIndexAndAlias(AdminClient admin, Settings settings) {
-        String indexName = IndexingUtils.createIndexBaseName(config.getIndexPrefix(), applicationScope);
-        String indexVersionName =  IndexingUtils.createIndexName(indexName, 0);
+        String indexVersionName =  indexIdentifier.getIndex(0);
         final CreateIndexResponse cir = admin.indices().prepareCreate( indexVersionName ).setSettings( settings ).execute().actionGet();
         //check if alias exists and get the alias
         admin.indices().prepareAliases().addAlias(indexVersionName,aliasName).execute().actionGet();
@@ -231,9 +228,9 @@ public class EsEntityIndexImpl implements EntityIndex {
                 XContentFactory.jsonBuilder(), "_default_" );
 
         PutIndexTemplateResponse pitr = esProvider.getClient().admin().indices()
-                .preparePutTemplate( "usergrid_template" )
+                .preparePutTemplate("usergrid_template")
                 // set mapping as the default for all types
-                .setTemplate( config.getIndexPrefix() + "*" ).addMapping( "_default_", xcb ) 
+                .setTemplate(config.getIndexPrefix() + "*").addMapping( "_default_", xcb )
                 .execute().actionGet();
 
         if(!pitr.isAcknowledged()){
@@ -346,7 +343,7 @@ public class EsEntityIndexImpl implements EntityIndex {
             logger.debug( "Executing query with cursor: {} ", scrollId );
 
             SearchScrollRequestBuilder ssrb = esProvider.getClient()
-                    .prepareSearchScroll( scrollId ).setScroll( cursorTimeout + "m" );
+                    .prepareSearchScroll(scrollId).setScroll( cursorTimeout + "m" );
 
             try {
                 searchResponse = ssrb.execute().actionGet();

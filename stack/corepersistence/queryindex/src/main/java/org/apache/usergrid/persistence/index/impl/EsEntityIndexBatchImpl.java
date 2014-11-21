@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.index.IndexIdentifier;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -67,7 +68,6 @@ import static org.apache.usergrid.persistence.index.impl.IndexingUtils.GEO_PREFI
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.NUMBER_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.STRING_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createIndexDocId;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createIndexName;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createContextName;
 
 
@@ -82,6 +82,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
     private final boolean refresh;
 
     private final String aliasName;
+    private final IndexIdentifier indexIdentifier;
 
     private BulkRequestBuilder bulkRequest;
 
@@ -98,7 +99,8 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         this.applicationScope = applicationScope;
         this.client = client;
         this.failureMonitor = failureMonitor;
-        this.aliasName = IndexingUtils.createAliasName( config, applicationScope );
+        this.indexIdentifier = IndexingUtils.createIndexIdentifier(config, applicationScope);
+        this.aliasName = indexIdentifier.getAlias();
         this.refresh = config.isForcedRefresh();
         this.autoFlushSize = autoFlushSize;
         initBatch();
