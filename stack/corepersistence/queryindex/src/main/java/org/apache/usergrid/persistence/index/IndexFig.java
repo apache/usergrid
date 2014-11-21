@@ -37,6 +37,8 @@ public interface IndexFig extends GuicyFig {
 
     public static final String ELASTICSEARCH_INDEX_PREFIX = "elasticsearch.index_prefix";
 
+    public static final String ELASTICSEARCH_ALIAS_POSTFIX = "elasticsearch_index_postfix";
+
     public static final String ELASTICSEARCH_STARTUP = "elasticsearch.startup";
 
     public static final String ELASTICSEARCH_NUMBER_OF_SHARDS = "elasticsearch.number_shards";
@@ -70,6 +72,10 @@ public interface IndexFig extends GuicyFig {
     @Default( "usergrid" ) // no underbars allowed
     @Key( ELASTICSEARCH_INDEX_PREFIX )
     String getIndexPrefix();
+
+    @Default( "alias" ) // no underbars allowed
+    @Key( ELASTICSEARCH_ALIAS_POSTFIX )
+    String getAliasPostfix();
     
     @Default( "1" ) // TODO: does this timeout get extended on each query?
     @Key( QUERY_CURSOR_TIMEOUT_MINUTES )
