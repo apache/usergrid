@@ -28,12 +28,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
-import org.apache.usergrid.persistence.collection.util.EntityHelper;
-import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
+import org.apache.usergrid.persistence.collection.util.EntityHelper;
+import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
+import org.apache.usergrid.persistence.core.guicyfig.SetConfigTestBypass;
 import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.core.util.Health;
@@ -713,8 +714,13 @@ public class EntityCollectionManagerIT {
     public void largeEntityWriteRead() {
         final int setSize = 65535 * 2;
 
+        final int currentMaxSize = serializationFig.getMaxEntitySize();
 
-        final Entity entity =  EntityHelper.generateEntity( setSize );
+        //override our default
+        SetConfigTestBypass.setValueByPass( serializationFig, "getMaxEntitySize", 65535 * 10 + "" );
+
+
+        final Entity entity = EntityHelper.generateEntity( setSize );
 
         //now we have one massive, entity, save it and retrieve it.
         CollectionScope context =
@@ -732,5 +738,9 @@ public class EntityCollectionManagerIT {
 
 
         EntityHelper.verifyDeepEquals( entity, loaded );
+
+
+        //override our default
+        SetConfigTestBypass.setValueByPass( serializationFig, "getMaxEntitySize", currentMaxSize + "" );
     }
 }

@@ -39,7 +39,7 @@ import static org.junit.Assert.assertTrue;
 
 @RunWith( ITRunner.class )
 @UseModules( TestCollectionModule.class )
-public class MvccEntitySerializationStrategyV2ImplTest extends MvccEntitySerializationStrategyImplTest {
+public class MvccEntitySerializationStrategyV2ImplTest extends MvccEntitySerializationStrategyV2Test {
 
     @Inject
     @CurrentImpl
@@ -52,21 +52,4 @@ public class MvccEntitySerializationStrategyV2ImplTest extends MvccEntitySeriali
     }
 
 
-    @Override
-    protected void assertLargeEntity( final MvccEntity expected, final Iterator<MvccEntity> returned ) {
-        assertTrue( returned.hasNext() );
-
-        final MvccEntity loadedEntity = returned.next();
-
-        assertLargeEntity( expected, loadedEntity );
-    }
-
-
-    @Override
-    protected void assertLargeEntity( final MvccEntity expected, final MvccEntity returned ) {
-
-        org.junit.Assert.assertEquals( "The loaded entity should match the stored entity", expected, returned );
-
-        EntityHelper.verifyDeepEquals( expected.getEntity().get(), returned.getEntity().get() );
-    }
 }

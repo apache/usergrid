@@ -25,6 +25,7 @@ import java.util.UUID;
 
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.exception.DataCorruptionException;
+import org.apache.usergrid.persistence.collection.exception.EntityTooLargeException;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.core.astyanax.FieldBuffer;
 import org.apache.usergrid.persistence.core.astyanax.FieldBufferBuilder;
@@ -36,6 +37,7 @@ import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 import com.google.common.base.Optional;
@@ -52,8 +54,6 @@ import com.netflix.astyanax.serializers.UUIDSerializer;
 @Singleton
 public class MvccEntitySerializationStrategyV2Impl extends MvccEntitySerializationStrategyImpl {
 
-    private static final EntitySerializer ENTITY_JSON_SER = new EntitySerializer();
-
 
     private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
 
@@ -63,21 +63,24 @@ public class MvccEntitySerializationStrategyV2Impl extends MvccEntitySerializati
 
 
     private static final MultiTennantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> CF_ENTITY_DATA =
-                new MultiTennantColumnFamily<>( "Entity_Version_Data_V2", ROW_KEY_SER, UUIDSerializer.get() );
+            new MultiTennantColumnFamily<>( "Entity_Version_Data_V2", ROW_KEY_SER, UUIDSerializer.get() );
 
     private static final FieldBufferSerializer FIELD_BUFFER_SERIALIZER = FieldBufferSerializer.get();
 
+
+    private final EntitySerializer entitySerializer;
 
 
     @Inject
     public MvccEntitySerializationStrategyV2Impl( final Keyspace keyspace, final SerializationFig serializationFig ) {
         super( keyspace, serializationFig );
+        entitySerializer = new EntitySerializer( serializationFig );
     }
 
 
     @Override
     protected AbstractSerializer<EntityWrapper> getEntitySerializer() {
-        return ENTITY_JSON_SER;
+        return entitySerializer;
     }
 
 
@@ -87,35 +90,33 @@ public class MvccEntitySerializationStrategyV2Impl extends MvccEntitySerializati
     }
 
 
-    public static class EntitySerializer extends AbstractSerializer<EntityWrapper> {
+    /**
+     * We should only ever create this once, since this impl is a singleton
+     */
+    public final class EntitySerializer extends AbstractSerializer<EntityWrapper> {
 
 
-//        private static final ByteBufferSerializer BUFFER_SERIALIZER = ByteBufferSerializer.get();
-//
-//        private static final BytesArraySerializer BYTES_ARRAY_SERIALIZER = BytesArraySerializer.get();
+        private final SmileFactory SMILE_FACTORY = new SmileFactory();
+
+        private final ObjectMapper MAPPER = new ObjectMapper( SMILE_FACTORY );
 
 
-        public static final SmileFactory f = new SmileFactory();
-
-        public static ObjectMapper mapper;
-
-        private static byte STATE_COMPLETE =  0 ;
-        private static byte STATE_DELETED = 1 ;
-        private static byte STATE_PARTIAL = 2 ;
-
-        private static byte VERSION = 1;
+        private SerializationFig serializationFig;
 
 
-        public EntitySerializer() {
-            try {
-                mapper = new ObjectMapper( f );
-                //                mapper.enable(SerializationFeature.INDENT_OUTPUT); don't indent output,
-                // causes slowness
-                mapper.enableDefaultTypingAsProperty( ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT, "@class" );
-            }
-            catch ( Exception e ) {
-                throw new RuntimeException( "Error setting up mapper", e );
-            }
+        private byte STATE_COMPLETE = 0;
+        private byte STATE_DELETED = 1;
+        private byte STATE_PARTIAL = 2;
+
+        private byte VERSION = 1;
+
+
+        public EntitySerializer( final SerializationFig serializationFig ) {
+            this.serializationFig = serializationFig;
+
+            //                mapper.enable(SerializationFeature.INDENT_OUTPUT); don't indent output,
+            // causes slowness
+            MAPPER.enableDefaultTypingAsProperty( ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT, "@class" );
         }
 
 
@@ -126,7 +127,7 @@ public class MvccEntitySerializationStrategyV2Impl extends MvccEntitySerializati
             }
 
             //we always have a max of 3 fields
-            FieldBufferBuilder builder = new FieldBufferBuilder( 3  );
+            FieldBufferBuilder builder = new FieldBufferBuilder( 3 );
 
             builder.addByte( VERSION );
 
@@ -149,13 +150,27 @@ public class MvccEntitySerializationStrategyV2Impl extends MvccEntitySerializati
                 builder.addByte( STATE_PARTIAL );
             }
 
+
+            final Entity entity = wrapper.entity.get();
+            final byte[] entityBytes;
+
             try {
-                final byte[] entityBytes = mapper.writeValueAsBytes( wrapper.entity.get() );
-                builder.addBytes( entityBytes );
+                entityBytes = MAPPER.writeValueAsBytes( entity );
             }
-            catch ( Exception e ) {
+            catch ( JsonProcessingException e ) {
                 throw new RuntimeException( "Unable to serialize entity", e );
             }
+
+
+            final int maxEntrySize = serializationFig.getMaxEntitySize();
+
+            if ( entityBytes.length > maxEntrySize ) {
+                throw new EntityTooLargeException( entity, maxEntrySize, entityBytes.length,
+                        "Your entity cannot exceed " + maxEntrySize + " bytes. The entity you tried to save was "
+                                + entityBytes.length + " bytes" );
+            }
+
+            builder.addBytes( entityBytes );
 
             return FIELD_BUFFER_SERIALIZER.toByteBuffer( builder.build() );
         }
@@ -181,13 +196,12 @@ public class MvccEntitySerializationStrategyV2Impl extends MvccEntitySerializati
                 throw new DataCorruptionException( "Unable to de-serialze entity", e );
             }
 
-            FieldBufferParser  parser = new FieldBufferParser( fieldBuffer );
-
+            FieldBufferParser parser = new FieldBufferParser( fieldBuffer );
 
 
             byte version = parser.readByte();
 
-            if (  VERSION !=  version ) {
+            if ( VERSION != version ) {
                 throw new UnsupportedOperationException( "A version of type " + version + " is unsupported" );
             }
 
@@ -195,7 +209,7 @@ public class MvccEntitySerializationStrategyV2Impl extends MvccEntitySerializati
 
             // it's been deleted, remove it
 
-            if (  STATE_DELETED ==  state ) {
+            if ( STATE_DELETED == state ) {
                 return new EntityWrapper( MvccEntity.Status.COMPLETE, Optional.<Entity>absent() );
             }
 
@@ -204,7 +218,7 @@ public class MvccEntitySerializationStrategyV2Impl extends MvccEntitySerializati
             byte[] array = parser.readBytes();
 
             try {
-                storedEntity = mapper.readValue( array, Entity.class );
+                storedEntity = MAPPER.readValue( array, Entity.class );
             }
             catch ( Exception e ) {
                 throw new DataCorruptionException( "Unable to read entity data", e );
@@ -212,7 +226,7 @@ public class MvccEntitySerializationStrategyV2Impl extends MvccEntitySerializati
 
             final Optional<Entity> entity = Optional.of( storedEntity );
 
-            if (  STATE_COMPLETE ==  state ) {
+            if ( STATE_COMPLETE == state ) {
                 return new EntityWrapper( MvccEntity.Status.COMPLETE, entity );
             }
 

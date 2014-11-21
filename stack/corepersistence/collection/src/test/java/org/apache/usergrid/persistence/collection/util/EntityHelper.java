@@ -40,34 +40,33 @@ import static org.junit.Assert.assertNotNull;
 public class EntityHelper {
 
     /**
-     * Generates an entity with all string fields to have at least the minSize
-     * number of characters in the field names + field values
-     * @param minSize
-     * @return
+     * Generates an entity with all string fields to have at least the minSize number of characters in the field names +
+     * field values
      */
-    public static Entity generateEntity(final int minSize){
+    public static Entity generateEntity( final int minSize ) {
         int currentLength = 0;
 
-                final Entity entity = new Entity( new SimpleId( "test" ) );
+        final Entity entity = new Entity( new SimpleId( "test" ) );
 
-                //generate a really large string value
-                StringBuilder builder = new StringBuilder();
-
-                for ( int i = 0; i < 100; i++ ) {
-                    builder.append( UUIDGenerator.newTimeUUID().toString() );
-                }
-
-                final String value = builder.toString();
+        //generate a really large string value
 
 
-                //loop until our size is beyond the set size
-                for ( int i = 0; currentLength < minSize; i++ ) {
-                    final String key = "newStringField" + i;
+        //loop until our size is beyond the set size
+        for ( int i = 0; currentLength < minSize; i++ ) {
+            final String key = "newStringField" + i;
 
-                    entity.setField( new StringField( key, value ) );
+            currentLength += key.length();
 
-                    currentLength += key.length() + value.length();
-                }
+            StringBuilder builder = new StringBuilder();
+
+            for ( int j = 0; j < 1000 && currentLength < minSize; j++ ) {
+                builder.append( "a" );
+                currentLength ++;
+            }
+
+
+            entity.setField( new StringField( key, builder.toString() ) );
+        }
 
         return entity;
     }

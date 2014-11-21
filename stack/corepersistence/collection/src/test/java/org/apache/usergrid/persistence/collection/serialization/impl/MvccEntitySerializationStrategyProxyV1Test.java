@@ -76,23 +76,6 @@ public class MvccEntitySerializationStrategyProxyV1Test extends MvccEntitySerial
 
 
 
-    @Override
-    protected void assertLargeEntity( final MvccEntity expected, final Iterator<MvccEntity> returned ) {
-        //known bug in v1, it should return null.  Fixed in v2
-        assertTrue( "V1 should be broken, but still have a next", returned.hasNext() );
-
-        final MvccEntity entity = returned.next();
-
-
-        assertLargeEntity( expected, entity );
-    }
-
-
-    protected void assertLargeEntity( final MvccEntity expected, final MvccEntity returned ) {
-        assertEquals( "Marked as deleted since we can't parse", MvccEntity.Status.DELETED, returned.getStatus() );
-
-        assertFalse( "V1 returns empty b/c parse fails", returned.getEntity().isPresent() );
-    }
 
     @After
     public void reSetMigrationVersion() {

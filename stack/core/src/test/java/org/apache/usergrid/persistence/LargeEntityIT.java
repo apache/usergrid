@@ -25,7 +25,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Map;
 
-import org.aspectj.lang.annotation.Before;
+import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -35,6 +35,9 @@ import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.Application;
 import org.apache.usergrid.CoreApplication;
 import org.apache.usergrid.cassandra.Concurrent;
+import org.apache.usergrid.corepersistence.CpSetup;
+import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
+import org.apache.usergrid.persistence.core.guicyfig.SetConfigTestBypass;
 import org.apache.usergrid.utils.JsonUtils;
 
 import static org.junit.Assert.assertEquals;
@@ -48,6 +51,28 @@ public class LargeEntityIT extends AbstractCoreIT {
     public Application app = new CoreApplication( setup );
 
 
+    /**
+     * Set our max size before and after so we can override it in our runtime tests
+     */
+    private int setMaxEntitySize;
+
+    private SerializationFig serializationFig;
+
+
+    @org.junit.Before
+    public void setUp() {
+
+        serializationFig = CpSetup.getInjector().getInstance( SerializationFig.class );
+
+        setMaxEntitySize = serializationFig.getMaxEntitySize();
+    }
+
+
+    @After
+    public void tearDown() {
+        SetConfigTestBypass.setValueByPass( serializationFig, "getMaxEntitySize", setMaxEntitySize + "" );
+    }
+
 
     /**
      * Tests creating a large entity, then loading it, modifying it, saving it, then loading it again
@@ -56,6 +81,9 @@ public class LargeEntityIT extends AbstractCoreIT {
     public void testLargeEntityCrud() throws Exception {
 
         LOG.debug( "testLargeEntityCrud" );
+
+        SetConfigTestBypass.setValueByPass( serializationFig, "getMaxEntitySize", 641814 + "" );
+
 
         final URL resource = this.getClass().getClassLoader().getResource( TEST_DATA_FILE );
 

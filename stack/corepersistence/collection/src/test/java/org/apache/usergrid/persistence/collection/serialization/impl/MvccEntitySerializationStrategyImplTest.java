@@ -75,7 +75,7 @@ import static org.mockito.Mockito.mock;
 public abstract class MvccEntitySerializationStrategyImplTest {
 
 
-    private MvccEntitySerializationStrategy serializationStrategy;
+    protected MvccEntitySerializationStrategy serializationStrategy;
 
 
     @Inject
@@ -582,56 +582,6 @@ public abstract class MvccEntitySerializationStrategyImplTest {
 
 
 
-    /**
-     * Tests an entity with more than  65535 bytes worth of data is successfully stored and retrieved
-     */
-    @Test
-    public void largeEntityWriteRead() throws ConnectionException {
-        final int setSize = 65535 * 2;
-
-        final Entity entity = EntityHelper.generateEntity( setSize );
-
-        //now we have one massive, entity, save it and retrieve it.
-        CollectionScope context =
-                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "parent" ), "tests" );
-
-
-        final Id id = entity.getId();
-        ValidationUtils.verifyIdentity( id );
-        final UUID version = UUIDGenerator.newTimeUUID();
-        final MvccEntity.Status status = MvccEntity.Status.COMPLETE;
-
-        final MvccEntity mvccEntity = new MvccEntityImpl( id, version, status, entity );
-
-
-        getMvccEntitySerializationStrategy().write( context, mvccEntity ).execute();
-
-        //now load it
-        final Iterator<MvccEntity> loaded =
-                getMvccEntitySerializationStrategy().loadDescendingHistory( context, id, version, 100 );
-
-
-        assertLargeEntity( mvccEntity, loaded );
-
-        MvccEntity returned = serializationStrategy.load( context, Collections.singleton( id ) , version ).getEntity( id );
-
-        assertLargeEntity( mvccEntity, returned );
-    }
-
-
-    /**
-     * Assertion for the loaded values of a large entity.  Note the returned may be nullable
-     * @param expected
-     * @param returned
-     */
-    protected abstract void assertLargeEntity(final MvccEntity expected, final Iterator<MvccEntity> returned);
-
-    /**
-     * Tests large entity that is directly returned
-     * @param expected
-     * @param returned
-     */
-    protected abstract void assertLargeEntity(final MvccEntity expected, final MvccEntity returned);
 
     @Test(expected = NullPointerException.class)
     public void writeParamsContext() throws ConnectionException {

@@ -77,7 +77,6 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
     protected final Keyspace keyspace;
     protected final SerializationFig serializationFig;
     protected final EntityRepair repair;
-    private final AbstractSerializer<EntityWrapper> entityJsonSerializer;
     private final MultiTennantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID>  columnFamily;
 
 
@@ -86,7 +85,6 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
         this.keyspace = keyspace;
         this.serializationFig = serializationFig;
         this.repair = new EntityRepairImpl( this, serializationFig );
-        this.entityJsonSerializer = getEntitySerializer();
         this.columnFamily = getColumnFamily();
     }
 
@@ -102,17 +100,17 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
         return doWrite( collectionScope, entityId, new RowOp() {
             @Override
             public void doOp( final ColumnListMutation<UUID> colMutation ) {
-                try {
-                    colMutation.putColumn( colName, entityJsonSerializer
+//                try {
+                    colMutation.putColumn( colName, getEntitySerializer()
                             .toByteBuffer( new EntityWrapper( entity.getStatus(), entity.getEntity() ) ) );
-                }
-                catch ( Exception e ) {
-                    // throw better exception if we can
-                    if ( entity != null || entity.getEntity().get() != null ) {
-                        throw new CollectionRuntimeException( entity, collectionScope, e );
-                    }
-                    throw e;
-                }
+//                }
+//                catch ( Exception e ) {
+//                    // throw better exception if we can
+//                    if ( entity != null || entity.getEntity().get() != null ) {
+//                        throw new CollectionRuntimeException( entity, collectionScope, e );
+//                    }
+//                    throw e;
+//                }
             }
         } );
     }
@@ -129,9 +127,9 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
         Preconditions.checkNotNull( maxVersion, "version is required" );
 
 
-        //didn't put the max in the error message, I don't want to take the string construction hit every time
-        Preconditions.checkArgument( entityIds.size() <= serializationFig.getMaxLoadSize(),
-                "requested size cannot be over configured maximum" );
+        if( entityIds.size() > serializationFig.getMaxLoadSize()){
+            throw new IllegalArgumentException(  "requested load size cannot be over configured maximum of " + serializationFig.getMaxLoadSize() );
+        }
 
 
         final Id applicationId = collectionScope.getApplication();
@@ -185,7 +183,7 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
             final Column<UUID> column = columns.getColumnByIndex( 0 );
 
             final MvccEntity parsedEntity =
-                    new MvccColumnParser( entityId, entityJsonSerializer ).parseColumn( column );
+                    new MvccColumnParser( entityId, getEntitySerializer() ).parseColumn( column );
 
             //we *might* need to repair, it's not clear so check before loading into result sets
             final MvccEntity maybeRepaired = repair.maybeRepair( collectionScope, parsedEntity );
@@ -223,7 +221,7 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
                 keyspace.prepareQuery( columnFamily ).getKey( rowKey )
                         .withColumnRange( version, null, false, fetchSize );
 
-        return new ColumnNameIterator( query, new MvccColumnParser( entityId, entityJsonSerializer ), false );
+        return new ColumnNameIterator( query, new MvccColumnParser( entityId, getEntitySerializer() ), false );
     }
 
 
@@ -253,7 +251,7 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
                 keyspace.prepareQuery( columnFamily ).getKey( rowKey )
                         .withColumnRange( null, version, true, fetchSize );
 
-        return new ColumnNameIterator( query, new MvccColumnParser( entityId, entityJsonSerializer ), false );
+        return new ColumnNameIterator( query, new MvccColumnParser( entityId, getEntitySerializer() ), false );
     }
 
 
@@ -268,7 +266,7 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
         return doWrite( collectionScope, entityId, new RowOp() {
             @Override
             public void doOp( final ColumnListMutation<UUID> colMutation ) {
-                colMutation.putColumn( version, entityJsonSerializer
+                colMutation.putColumn( version, getEntitySerializer()
                         .toByteBuffer( new EntityWrapper( MvccEntity.Status.COMPLETE, Optional.<Entity>absent() ) ) );
             }
         } );
@@ -410,10 +408,5 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
      * @return
      */
     protected abstract MultiTennantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> getColumnFamily();
-    /**
-     *
-     private static final MultiTennantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> CF_ENTITY_DATA =
-             new MultiTennantColumnFamily<>( "Entity_Version_Data", ROW_KEY_SER, UUIDSerializer.get() );
 
-     */
 }

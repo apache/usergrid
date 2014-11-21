@@ -39,6 +39,9 @@ public interface CassandraFig extends GuicyFig {
 
     public static final String SHARD_VALUES = "cassandra.shardvalues";
 
+    public static final String THRIFT_TRANSPORT_SIZE = "cassandra.thrift.transport.frame";
+
+
     @Key( "cassandra.hosts" )
     String getHosts();
 
@@ -93,6 +96,15 @@ public interface CassandraFig extends GuicyFig {
     @Default("20")
     @Key(SHARD_VALUES)
     String getShardValues();
+
+    /**
+     * Get the thrift transport size.  Should be set to what is on the cassandra servers.  As we move to CQL, this will become obsolete
+     * @return
+     */
+    @Key( THRIFT_TRANSPORT_SIZE)
+    @Default( "15728640" )
+    int getThriftBufferSize();
+
 
 
 }
