@@ -34,6 +34,7 @@ import org.junit.Test;
 
 import org.apache.usergrid.persistence.geo.model.Point;
 import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.AbstractRestIT;
 import org.apache.usergrid.rest.TestContextSetup;
 import org.apache.usergrid.rest.test.resource.CustomCollection;
@@ -145,16 +146,15 @@ public class GeoPagingTest extends AbstractRestIT {
 
     /**
      * Creates a store then queries to check ability to find different store from up to 40 mil meters away
-     * @throws IOException
      */
     @Test
     public void testFarAwayLocationFromCenter() throws IOException {
 
         JsonNode node = null;
-        String collectionName = "testFarAwayLocation";
+        String collectionName = "testFarAwayLocation" + UUIDUtils.newTimeUUID();
         Point center = new Point( 37.776753, -122.407846 );
 
-        String queryClose = locationQuery( 10000 ,center );
+        String queryClose = locationQuery( 10000, center );
         String queryFar = locationQuery( 40000000, center );
 
         //TODO: move test setup out of the test.
@@ -165,13 +165,43 @@ public class GeoPagingTest extends AbstractRestIT {
 
         /* run queries */
 
-        node = queryCollection( collectionName,queryClose );
+        node = queryCollection( collectionName, queryClose );
 
-        assertEquals("Results from nearby, should return nothing" ,0, node.get( "entities" ).size() );
+        assertEquals( "Results from nearby, should return nothing", 0, node.get( "entities" ).size() );
 
-        node = queryCollection( collectionName,queryFar );
+        node = queryCollection( collectionName, queryFar );
 
-        assertEquals("Results from center point to ridiculously far", 2, node.get( "entities" ).size() );
+        assertEquals( "Results from center point to ridiculously far", 2, node.get( "entities" ).size() );
+    }
+
+
+    /**
+     * Creates a store right on top of the center store and checks to see if we can find that store, then find both
+     * stores.
+     */
+    @Test
+    public void testFarAwayLocationWithOneResultCloser() throws IOException {
+        JsonNode node = null;
+        String collectionName = "testFarAwayLocation" + UUIDUtils.newTimeUUID();
+        Point center = new Point( -33.746369, 150.952183 );
+
+        String queryClose = locationQuery( 10000, center );
+        String queryFar = locationQuery( 40000000, center );
+
+        /*Create */
+        createGeoUser( "usergrid", collectionName, -33.746369, 150.952183 );
+
+        createGeoUser( "usergrid2", collectionName, -33.889058, 151.124024 );
+
+        /* run queries */
+
+        node = queryCollection( collectionName, queryClose );
+
+        assertEquals( "Results from nearby, should return 1 store", 1, node.get( "entities" ).size() );
+
+        node = queryCollection( collectionName, queryFar );
+
+        assertEquals( "Results from center point to ridiculously far", 2, node.get( "entities" ).size() );
     }
 
 
@@ -251,7 +281,8 @@ public class GeoPagingTest extends AbstractRestIT {
         }
     }
 
-    private JsonNode queryCollection(String collectionName,String query) throws IOException {
+
+    private JsonNode queryCollection( String collectionName, String query ) throws IOException {
         JsonNode node = null;
         try {
             node = context.collection( collectionName ).withQuery( query ).get();
@@ -265,12 +296,13 @@ public class GeoPagingTest extends AbstractRestIT {
         return node;
     }
 
-    private void createGeoUser(String username,String collectionName,Double lat, Double lon ) throws IOException {
+
+    private void createGeoUser( String username, String collectionName, Double lat, Double lon ) throws IOException {
 
         JsonNode node = null;
 
 
-        Map<String,Object> user = entityMapLocationCreator( lat, lon);
+        Map<String, Object> user = entityMapLocationCreator( lat, lon );
         user.put( "name", username );
 
         try {
@@ -287,7 +319,8 @@ public class GeoPagingTest extends AbstractRestIT {
         context.refreshIndex();
     }
 
-    private Map<String, Object> entityMapLocationCreator(Double lat, Double lon){
+
+    private Map<String, Object> entityMapLocationCreator( Double lat, Double lon ) {
         Map<String, Double> latLon = hashMap( "latitude", lat );
         latLon.put( "longitude", lon );
         Map<String, Object> entityData = new HashMap<String, Object>();
@@ -296,9 +329,10 @@ public class GeoPagingTest extends AbstractRestIT {
         return entityData;
     }
 
-    private String locationQuery(int  metersAway, Point startingPoint){
-        return  "select * where location within " + String.valueOf( metersAway ) + " of "
-                + startingPoint.getLat() + "," + startingPoint.getLon();
+
+    private String locationQuery( int metersAway, Point startingPoint ) {
+        return "select * where location within " + String.valueOf( metersAway ) + " of " + startingPoint.getLat() + ","
+                + startingPoint.getLon();
     }
 
 
