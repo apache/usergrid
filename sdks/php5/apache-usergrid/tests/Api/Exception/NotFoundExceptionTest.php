@@ -16,9 +16,9 @@
 
 namespace Apache\Usergrid\Tests\Api\Exception;
 
-use PHPUnit_Framework_TestCase;
-use Guzzle\Http\Message\Response;
 use Apache\Usergrid\Api\Exception\NotFoundException;
+use Guzzle\Http\Message\Response;
+use PHPUnit_Framework_TestCase;
 
 /**
  * Class UnauthorizedExceptionTest

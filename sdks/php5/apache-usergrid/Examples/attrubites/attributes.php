@@ -17,7 +17,6 @@ include('vendor/autoload.php');
 
 include('data.php');
 
-use Apache\Usergrid\Api\Filters\Date;
 use Apache\Usergrid\Native\Facades\Usergrid;
 use Apache\Usergrid\Native\UsergridBootstrapper;
 
@@ -64,67 +63,60 @@ $bootstrapper = new UsergridBootstrapper($config);
 Usergrid::instance($bootstrapper);
 
 
-foreach ($books_data as $book) {
-    Usergrid::application()->EntityJsonPost($book);
-}
-
-
-$books = Usergrid::application()->EntityGet(['collection' => 'books', 'limit' => 25]);
-
-
-// get result count just call the Illuminate\Support\Collection  count method
-var_dump($books->entities->count());
-
-
-// As responses are model object you can treat them like a assoc arrays
-var_dump($books->entities[0]['uuid']);
-
-// if you like a more object orientated way then use the Collection Class methods
-
-// get all uuid
-var_dump($books->entities->fetch('uuid'));
-
-//get first uuid
-var_dump($books->entities->fetch('uuid')->first());
-
-// get first item in collection -- this is the first item in my response php collection not the Usergrid Collection (table).
-var_dump($books->entities->first());
-
-// get last item in collection -- this is the last item in my response php collection not the Usergrid Collection (table).
-var_dump($books->entities->last());
-
-// convert created date to string
-var_dump(Date::convert($books->entities->fetch('created')->first()));
-
-// Illuminate\Support\Collection class support all advanced collection methods
-
-// pop last item off collection
-$book = $books->entities->pop();
-
-// Converting methods
-$json_ = $books->entities->toJson();
-
-//Convert the object into something JSON serializable.
-$books->entities->jsonSerialize();
-
-// Get an iterator for the items in collection
-$iterator = $books->entities->getIterator();
-
-//Get a CachingIterator instance
-$caching_iterator = $books->entities->getCachingIterator();
-
-/// Here are some more Methods that you can call on your responses .. To get the most out of this SDK please look at the Illuminate\Support\Collection class
-/// which is the supper class of Apache/Usergrid/Api/Models/BaseCollection class
 /**
- * $books->unique();
- * $books->transform();
- * $books->take();
- * $books->splice();
- * $books->sum($callback );
- * $books->values();
- * $books->sortByDesc($callback);
- * $books->sortBy();
- * $books->shuffle();
- * $books->chunk();
+ * Attributes are a new feature that make getting related models easy as accessing a property on a model object
+ * The way relationships work before this feature it required you to call the getRelationship method on the application
+ * service which is still available, so for example you would first get the user then once you had the user you create a
+ * array that contained the uuid of the user the related collection name and the relationship name then call the api passing in the
+ * array but for the default relationships we already have the data that we need to make the api call so that is what
+ * I've done.
+ * <pre>
+ * <?php
+ *  $user = Usergrid::users()->findById(['uuid' => '1234abcd']) ;
+ *  $device = $user->device;
+ * ?>
+ * </pre>
+ *  That's all you need to do to get a device for the user this only works when you have one user in your user collection
+ *  if you call this with more then one user in your user collection it will return the device for the first user in the
+ *  collection.
+ *
  */
 
+$user = Usergrid::users()->findById(['uuid' => '1234abcd']);
+
+echo "device" . PHP_EOL;
+var_dump($user->device);
+var_dump('=================================================================');
+
+echo "roles" . PHP_EOL;
+var_dump($user->roles);
+var_dump('=================================================================');
+
+echo "groups" . PHP_EOL;
+var_dump($user->groups);
+var_dump('=================================================================');
+
+echo "connections" . PHP_EOL;
+var_dump($user->connections);
+var_dump('=================================================================');
+
+
+var_dump('=================================================================');
+echo "GROUPS" . PHP_EOL;
+var_dump('=================================================================');
+
+
+$group = Usergrid::groups()->findById(['uuid' => '121212']);
+
+
+echo "roles" . PHP_EOL;
+var_dump($group->roles);
+var_dump('=================================================================');
+
+echo "groups" . PHP_EOL;
+var_dump($group->users);
+var_dump('=================================================================');
+
+echo "connections" . PHP_EOL;
+var_dump($group->connections);
+var_dump('=================================================================');

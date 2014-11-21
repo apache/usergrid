@@ -17,8 +17,8 @@
 namespace Apache\Usergrid\Tests\Api\Filters;
 
 
-use PHPUnit_Framework_TestCase;
 use Apache\Usergrid\Api\Filters\Boolean;
+use PHPUnit_Framework_TestCase;
 
 /**
  * Class BooleanTest

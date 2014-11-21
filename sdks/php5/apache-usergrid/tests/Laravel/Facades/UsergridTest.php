@@ -15,8 +15,8 @@
  */
 namespace Apache\Usergrid\Tests\Laravel\Facades;
 
-use ReflectionClass;
 use PHPUnit_Framework_TestCase;
+use ReflectionClass;
 
 /**
  * Class UsergridTest

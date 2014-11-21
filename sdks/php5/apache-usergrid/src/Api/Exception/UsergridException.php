@@ -68,14 +68,11 @@ class UsergridException extends Exception implements ErrorResponseExceptionInter
 
         $message = array_get($errors, 'error.message', null);
 
-        $class = '\\Apache\\Usergrid\\Api\\Exception\\'.studly_case($type).'Exception';
+        $class = '\\Apache\\Usergrid\\Api\\Exception\\' . studly_case($type) . 'Exception';
 
-        if (class_exists($class))
-        {
+        if (class_exists($class)) {
             $exception = new $class($message, $response->getStatusCode());
-        }
-        else
-        {
+        } else {
             $exception = new static($message, $response->getStatusCode());
         }
 
@@ -101,7 +98,7 @@ class UsergridException extends Exception implements ErrorResponseExceptionInter
     /**
      * Sets the Guzzle request.
      *
-     * @param  \Guzzle\Http\Message\Request  $request
+     * @param  \Guzzle\Http\Message\Request $request
      * @return void
      */
     public function setRequest(Request $request)
@@ -122,7 +119,7 @@ class UsergridException extends Exception implements ErrorResponseExceptionInter
     /**
      * Sets the Guzzle response.
      *
-     * @param  \Guzzle\Http\Message\Response  $response
+     * @param  \Guzzle\Http\Message\Response $response
      * @return void
      */
     public function setResponse(Response $response)
@@ -143,7 +140,7 @@ class UsergridException extends Exception implements ErrorResponseExceptionInter
     /**
      * Sets the error type returned by Usergrid.
      *
-     * @param  string  $errorType
+     * @param  string $errorType
      * @return void
      */
     public function setErrorType($errorType)

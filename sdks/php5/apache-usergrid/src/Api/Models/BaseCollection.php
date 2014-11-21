@@ -17,7 +17,7 @@
 namespace Apache\Usergrid\Api\Models;
 
 
-use  Apache\Usergrid\Api\Usergrid;
+use Apache\Usergrid\Api\Usergrid;
 use Illuminate\Support\Collection;
 
 /**
@@ -48,6 +48,51 @@ class BaseCollection extends Collection
     protected $apiClient;
 
     /**
+     * Returns the given key value from the collection.
+     *
+     * @param  mixed $key
+     * @return mixed
+     */
+    public function __get($key)
+    {
+        if (in_array($key, $this->collections) || array_key_exists($key, $this->collections)) {
+            if ($mappedKey = array_get($this->collections, $key, [])) {
+                $key = strstr($mappedKey, '.', true);
+
+                $query = ltrim(strstr($mappedKey, '.'), '.');
+
+                $data = array_get($this->get($key), $query, []);
+            } else {
+                $data = $this->get($key, []);
+            }
+            // create a new class of self so subclasses get new collection from entities of the correct model
+            // eg: before when asking  the User Model for its entities returned a collection of the BaseCollection class not the user class..
+            $class = self::instance($data);
+            //set the api client on collection so api attribute properties can make api calls to get related models
+            $class->setApiClient($this->getApiClient());
+            // return class.
+            return $class;
+
+        }
+        // check to see if the property you asked for is a attribute method
+        if (method_exists($this, $method = "{$key}Attribute")) {
+            return $this->{$method}($this->get($key));
+        }
+
+        //else return key
+        return $this->get($key, null);
+    }
+
+    /**
+     * @param $data
+     * @return static
+     */
+    private static function instance($data)
+    {
+        return new static($data);
+    }
+
+    /**
      * Returns the Usergrid API client instance.
      *
      * @return  /Apache\Usergrid\Api\Usergrid  /Apache\Usergrid\Api\Usergrid
@@ -67,34 +112,5 @@ class BaseCollection extends Collection
     public function setApiClient(Usergrid $client)
     {
         $this->apiClient = $client;
-    }
-
-    /**
-     * Returns the given key value from the collection.
-     *
-     * @param  mixed $key
-     * @return mixed
-     */
-    public function __get($key)
-    {
-        if (in_array($key, $this->collections) || array_key_exists($key, $this->collections)) {
-            if ($mappedKey = array_get($this->collections, $key, [])) {
-                $key = strstr($mappedKey, '.', true);
-
-                $query = ltrim(strstr($mappedKey, '.'), '.');
-
-                $data = array_get($this->get($key), $query, []);
-            } else {
-                $data = $this->get($key, []);
-            }
-
-            return new Collection($data);
-        }
-
-        if (method_exists($this, $method = "{$key}Attribute")) {
-            return $this->{$method}($this->get($key));
-        }
-
-        return $this->get($key, null);
     }
 } 

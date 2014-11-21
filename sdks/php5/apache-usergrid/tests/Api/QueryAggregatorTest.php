@@ -17,9 +17,7 @@
 namespace Apache\Usergrid\Tests\Api;
 
 
-use Guzzle\Http\QueryString;
 use PHPUnit_Framework_TestCase;
-use Apache\Usergrid\Api\QueryAggregator;
 
 /**
  * Class QueryAggregatorTest

@@ -14,14 +14,13 @@
  * permissions and limitations under the License.
  */
 
-namespace Apache\Usergrid\Tests\Api\Filters;
+namespace Apache\Usergrid\Tests\Api;
 
 
-use Apache\Usergrid\Api\Filters\Date;
 use PHPUnit_Framework_TestCase;
 
 /**
- * Class DateTest
+ * Class AttributeTest
  *
  * @package    Apache/Usergrid
  * @version    1.0.0
@@ -30,12 +29,31 @@ use PHPUnit_Framework_TestCase;
  * @copyright  (c) 2008-2014, Baas Platform Pty. Ltd
  * @link       http://baas-platform.com
  */
-class DateTest extends PHPUnit_Framework_TestCase
+class AttributeTest extends PHPUnit_Framework_TestCase
 {
-    /** @test */
-    public function it_can_convert_dates()
-    {
+    /** @var  Usergrid Api Client */
+    protected $usergrid;
 
-        $this->assertEquals('Tue, Oct 14, 2014 3:55 AM', Date::convert(1413258923819));
+
+    /**
+     * Setup resources and dependencies
+     *
+     * @return void
+     */
+    public function setup()
+    {
+        $this->usergrid = $GLOBALS['usergrid'];
     }
-} 
+
+    /**
+     * @test
+     * @group internet
+     */
+    public function it_should_have_attribute()
+    {
+        $this->assertTrue(method_exists('Apache\Usergrid\Api\Models\User', 'deviceAttribute'),
+            'Class does not have method Attribute Method'
+        );
+    }
+}
+ 

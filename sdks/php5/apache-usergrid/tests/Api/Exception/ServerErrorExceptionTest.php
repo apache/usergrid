@@ -16,9 +16,9 @@
 
 namespace Apache\Usergrid\Tests\Api\Exception;
 
-use PHPUnit_Framework_TestCase;
-use Guzzle\Http\Message\Response;
 use Apache\Usergrid\Api\Exception\ServerErrorException;
+use Guzzle\Http\Message\Response;
+use PHPUnit_Framework_TestCase;
 
 /**
  * Class ServerErrorException
