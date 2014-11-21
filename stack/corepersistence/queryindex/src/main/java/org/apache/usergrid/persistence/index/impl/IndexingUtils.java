@@ -98,15 +98,25 @@ public class IndexingUtils {
      * @param applicationScope
      * @return
      */
-    public static String createIndexName(
-            String prefix, ApplicationScope applicationScope) {
+    public static String createIndexBaseName(String prefix, ApplicationScope applicationScope) {
         StringBuilder sb = new StringBuilder();
         sb.append( prefix ).append( SEPARATOR );
         idString( sb, applicationScope.getApplication() );
         return sb.toString();
     }
 
+    public static String createIndexName(String indexName, int i) {
+        if(i>0) {
+            return indexName + "_v" + (i + 1);
+        }else{
+            return indexName;
+        }
+    }
 
+    public static String createAliasName( IndexFig config,ApplicationScope applicationScope) {
+        String indexName =IndexingUtils.createIndexBaseName(config.getIndexPrefix(), applicationScope);
+        return indexName + config.getAliasPostfix();
+    }
 
     /**
      * Create the index doc from the given entity
@@ -155,54 +165,54 @@ public class IndexingUtils {
 
                 .startObject( type )
 
-                    .startArray( "dynamic_templates" )
+                    .startArray("dynamic_templates")
 
                            //we need most specific mappings first since it's a stop on match algorithm
 
                         .startObject()
-                        .startObject( "context_template" )
-                            .field( "match", IndexingUtils.ENTITYID_ID_FIELDNAME )
-                                 .field( "match_mapping_type", "string" )
-                                        .startObject( "mapping" ).field( "type", "string" )
-                                             .field( "index", "not_analyzed" )
+                        .startObject("context_template")
+                            .field("match", IndexingUtils.ENTITYID_ID_FIELDNAME)
+                                 .field("match_mapping_type", "string")
+                                        .startObject("mapping").field( "type", "string" )
+                                             .field("index", "not_analyzed")
                                         .endObject()
                                  .endObject()
                              .endObject()
 
 
                         .startObject()
-                        .startObject( "context_template" )
-                            .field( "match", IndexingUtils.ENTITY_CONTEXT_FIELDNAME )
-                            .field( "match_mapping_type", "string" )
-                                .startObject( "mapping" ).field( "type", "string" )
-                                    .field( "index", "not_analyzed" ).endObject()
+                        .startObject("context_template")
+                            .field("match", IndexingUtils.ENTITY_CONTEXT_FIELDNAME)
+                            .field("match_mapping_type", "string")
+                                .startObject("mapping").field( "type", "string" )
+                                    .field("index", "not_analyzed").endObject()
                                 .endObject()
                          .endObject()
 
                         // any string with field name that starts with sa_ gets analyzed
                         .startObject()
-                            .startObject( "template_1" ).field( "match", ANALYZED_STRING_PREFIX + "*" )
-                            .field( "match_mapping_type", "string" ).startObject( "mapping" ).field( "type", "string" )
-                            .field( "index", "analyzed" ).endObject().endObject()
+                            .startObject("template_1").field( "match", ANALYZED_STRING_PREFIX + "*" )
+                            .field("match_mapping_type", "string").startObject( "mapping" ).field( "type", "string" )
+                            .field("index", "analyzed").endObject().endObject()
                         .endObject()
 
                                 // all other strings are not analyzed
                         .startObject()
-                            .startObject( "template_2" )
+                            .startObject("template_2")
                                     //todo, should be string prefix, remove 2 field mapping
-                                .field( "match", "*" ).field( "match_mapping_type", "string" ).startObject( "mapping" )
-                                .field( "type", "string" )
-                                    .field( "index", "not_analyzed" )
+                                .field("match", "*").field( "match_mapping_type", "string" ).startObject( "mapping" )
+                                .field("type", "string")
+                                    .field("index", "not_analyzed")
                                 .endObject()
                             .endObject()
                         .endObject()
 
                         // fields names starting with go_ get geo-indexed
                         .startObject()
-                            .startObject( "template_3" )
-                                .field( "match", GEO_PREFIX + "location" )
-                                .startObject( "mapping" )
-                                    .field( "type", "geo_point" )
+                            .startObject("template_3")
+                                .field("match", GEO_PREFIX + "location")
+                                .startObject("mapping")
+                                    .field("type", "geo_point")
                                 .endObject()
                             .endObject()
                         .endObject()
@@ -218,11 +228,6 @@ public class IndexingUtils {
         return builder;
     }
 
-    public static String createAliasName(String indexName, IndexFig fig) {
-        return indexName + fig.getAliasPostfix();
-    }
 
-    public static String getIndexName(String indexName, int i) {
-        return indexName+"_v"+(i+1);
-    }
+
 }

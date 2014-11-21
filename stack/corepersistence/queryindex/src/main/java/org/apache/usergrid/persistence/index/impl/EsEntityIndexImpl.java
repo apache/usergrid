@@ -137,7 +137,7 @@ public class EsEntityIndexImpl implements EntityIndex {
         this.esProvider = provider;
         this.config = config;
         this.cursorTimeout = config.getQueryCursorTimeout();
-        this.aliasName = IndexingUtils.createAliasName(IndexingUtils.createIndexName(config.getIndexPrefix(), appScope),config);
+        this.aliasName = IndexingUtils.createAliasName(config,appScope);
         this.failureMonitor = new FailureMonitorImpl( config, provider );
     }
 
@@ -178,7 +178,7 @@ public class EsEntityIndexImpl implements EntityIndex {
 
     private void createIndexAndAlias(AdminClient admin, Settings settings) {
         String indexName = IndexingUtils.createIndexName(config.getIndexPrefix(), applicationScope);
-        String indexVersionName =  IndexingUtils.getIndexName(indexName, 0);
+        String indexVersionName =  IndexingUtils.createIndexName(indexName, 0);
         final CreateIndexResponse cir = admin.indices().prepareCreate( indexVersionName ).setSettings( settings ).execute().actionGet();
         //check if alias exists and get the alias
         admin.indices().prepareAliases().addAlias(indexVersionName,aliasName).execute().actionGet();

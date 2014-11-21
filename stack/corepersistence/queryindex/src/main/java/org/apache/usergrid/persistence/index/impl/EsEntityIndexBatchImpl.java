@@ -98,7 +98,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         this.applicationScope = applicationScope;
         this.client = client;
         this.failureMonitor = failureMonitor;
-        this.aliasName = IndexingUtils.createAliasName(createIndexName( config.getIndexPrefix(), applicationScope ),config);
+        this.aliasName = IndexingUtils.createAliasName( config, applicationScope );
         this.refresh = config.isForcedRefresh();
         this.autoFlushSize = autoFlushSize;
         initBatch();
