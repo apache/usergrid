@@ -35,19 +35,32 @@ public class IndexIdentifier{
         this.applicationScope = applicationScope;
     }
 
+    /**
+     * Get the alias name
+     * @return
+     */
     public String getAlias() {
         return getIndexBase() + config.getAliasPostfix();
     }
 
-    public String getIndex(int i) {
-        if (i > 0) {
-            return getIndexBase() + "_v" + (i + 1);
+    /**
+     * Get index name, send in additional parameter to add incremental indexes
+     * @param version
+     * @return
+     */
+    public String getIndex(int version) {
+        if (version > 0) {
+            return getIndexBase() + "_v" + (version + 1);
         } else {
             return getIndexBase();
         }
     }
 
-    String getIndexBase() {
+    /**
+     * returns the base name for index which will be used to add an alias and index
+     * @return
+     */
+    private String getIndexBase() {
         StringBuilder sb = new StringBuilder();
         sb.append(config.getIndexPrefix()).append(IndexingUtils.SEPARATOR);
         IndexingUtils.idString(sb, applicationScope.getApplication());

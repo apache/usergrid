@@ -174,6 +174,11 @@ public class EsEntityIndexImpl implements EntityIndex {
         }
     }
 
+    /**
+     * Create the index and alias
+     * @param admin
+     * @param settings
+     */
     private void createIndexAndAlias(AdminClient admin, Settings settings) {
         String indexVersionName =  indexIdentifier.getIndex(0);
         final CreateIndexResponse cir = admin.indices().prepareCreate( indexVersionName ).setSettings( settings ).execute().actionGet();
