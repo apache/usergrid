@@ -147,16 +147,7 @@ public class EsEntityIndexImpl implements EntityIndex {
                 createMappings();
             }
 
-            final AdminClient admin = esProvider.getClient().admin();
-
-            final int numberOfShards = config.getNumberOfShards();
-            final int numberOfReplicas = config.getNumberOfReplicas();
-
-            Settings settings = ImmutableSettings.settingsBuilder().put( "index.number_of_shards", numberOfShards)
-                                                 .put( "index.number_of_replicas", numberOfReplicas ).build();
-
-            createIndexAndAlias(admin, settings);
-
+            createIndexAndAlias();
 
             // create the document, this ensures the index is ready
 
@@ -176,15 +167,26 @@ public class EsEntityIndexImpl implements EntityIndex {
 
     /**
      * Create the index and alias
-     * @param admin
-     * @param settings
      */
-    private void createIndexAndAlias(AdminClient admin, Settings settings) {
+    private void createIndexAndAlias() {
+        final int numberOfShards = config.getNumberOfShards();
+        final int numberOfReplicas = config.getNumberOfReplicas();
+        final AdminClient admin = esProvider.getClient().admin();
+
+        Settings settings = ImmutableSettings.settingsBuilder().put( "index.number_of_shards", numberOfShards)
+                .put( "index.number_of_replicas", numberOfReplicas ).build();
+
         String indexVersionName =  indexIdentifier.getIndex(0);
-        final CreateIndexResponse cir = admin.indices().prepareCreate( indexVersionName ).setSettings( settings ).execute().actionGet();
+        if(!admin.indices().exists(new IndicesExistsRequest(indexVersionName)).actionGet().isExists()) {
+            final CreateIndexResponse cir = admin.indices().prepareCreate(indexVersionName).setSettings(settings).execute().actionGet();
+            logger.info( "Created new Index Name [{}] ACK=[{}]", indexVersionName, cir.isAcknowledged() );
+        }
         //check if alias exists and get the alias
-        admin.indices().prepareAliases().addAlias(indexVersionName,aliasName).execute().actionGet();
-        logger.info( "Created new Index Name [{}] ACK=[{}]", indexVersionName, cir.isAcknowledged() );
+        if(!admin.indices().aliasesExist(new GetAliasesRequest(aliasName)).actionGet().exists()) {
+            final Boolean isAck = admin.indices().prepareAliases().addAlias(indexVersionName, aliasName).execute().actionGet().isAcknowledged();
+            logger.info( "Created new Alias Name [{}] ACK=[{}]", aliasName, isAck);
+
+        }
     }
 
 
