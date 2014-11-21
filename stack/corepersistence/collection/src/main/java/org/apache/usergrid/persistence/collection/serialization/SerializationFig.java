@@ -61,9 +61,10 @@ public interface SerializationFig extends GuicyFig {
 
     /**
      * The maximum amount of entities we can load in a single request
+     * TODO, change this and move it into a common setting that both query and collection share
      */
     @Key( "collection.max.load.size" )
-    @Default( "100" )
+    @Default( "1000" )
     int getMaxLoadSize();
 
 
