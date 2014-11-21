@@ -583,7 +583,7 @@ public class CpEntityManager implements EntityManager {
 
     private Observable deleteAsync( EntityRef entityRef ) throws Exception {
 
-        CollectionScope collectionScope =getCollectionScopeNameFromEntityType(applicationScope.getApplication(),  entityRef.getType()  );
+        CollectionScope collectionScope = getCollectionScopeNameFromEntityType(applicationScope.getApplication(), entityRef.getType()  );
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
 

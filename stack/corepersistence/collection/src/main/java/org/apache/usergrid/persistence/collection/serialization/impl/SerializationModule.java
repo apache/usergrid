@@ -59,5 +59,9 @@ public class SerializationModule extends AbstractModule {
         uriBinder.addBinding().to( Key.get( MvccEntitySerializationStrategy.class, CurrentImpl.class ) );
         uriBinder.addBinding().to( Key.get( MvccLogEntrySerializationStrategy.class ) );
         uriBinder.addBinding().to( Key.get( UniqueValueSerializationStrategy.class ) );
+
+
+        //bind our settings as an eager singleton so it's checked on startup
+        bind(SettingsValidation.class).asEagerSingleton();
     }
 }

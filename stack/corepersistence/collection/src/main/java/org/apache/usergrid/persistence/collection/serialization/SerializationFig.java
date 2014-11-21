@@ -13,6 +13,8 @@ import org.safehaus.guicyfig.Key;
 @FigSingleton
 public interface SerializationFig extends GuicyFig {
 
+    String COLLECTION_MAX_ENTITY_SIZE = "collection.max.entity.size";
+
     /**
      * Time to live timeout in seconds.
      *
@@ -58,7 +60,7 @@ public interface SerializationFig extends GuicyFig {
     int getTaskPoolQueueSize();
 
     /**
-     * The maximum amount of entities we can load at any one time
+     * The maximum amount of entities we can load in a single request
      */
     @Key( "collection.max.load.size" )
     @Default( "100" )
@@ -71,7 +73,7 @@ public interface SerializationFig extends GuicyFig {
      *
      * (15mb thrift buffer * .9) / 100 (default max load size)
      */
-    @Key( "collection.max.entity.size" )
+    @Key( COLLECTION_MAX_ENTITY_SIZE )
     @Default( "141557" )
     int getMaxEntitySize();
 

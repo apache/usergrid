@@ -79,9 +79,7 @@ public class CpNamingUtils {
      * @return The collectionScope
      */
     public static CollectionScope getCollectionScopeNameFromEntityType(final Id applicationId, final String type){
-       return
-                       new CollectionScopeImpl( applicationId, applicationId,
-                               getCollectionScopeNameFromEntityType( type ) );
+       return  new CollectionScopeImpl( applicationId, applicationId, getCollectionScopeNameFromEntityType( type ) );
     }
 
     /**
