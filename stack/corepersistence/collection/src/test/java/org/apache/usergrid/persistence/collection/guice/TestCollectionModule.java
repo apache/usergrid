@@ -21,14 +21,28 @@ package org.apache.usergrid.persistence.collection.guice;
 
 
 import org.apache.usergrid.persistence.core.guice.CommonModule;
+import org.apache.usergrid.persistence.core.guice.MaxMigrationModule;
+import org.apache.usergrid.persistence.core.guice.MaxMigrationVersion;
 import org.apache.usergrid.persistence.core.guice.TestModule;
+import org.apache.usergrid.persistence.core.migration.data.DataMigration;
+
+import com.google.inject.multibindings.Multibinder;
 
 
 public class TestCollectionModule extends TestModule {
 
     @Override
     protected void configure() {
+        /**
+         * Runtime modules
+         */
         install( new CommonModule() );
         install( new CollectionModule() );
+
+        /**
+         * Test modules
+         */
+        install(new MaxMigrationModule());
+
     }
 }

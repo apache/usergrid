@@ -48,7 +48,7 @@ public class BadGrammarQueryTest extends AbstractRestIT {
     @Test
     public void catchBadQueryGrammar() throws IOException {
 
-        CustomCollection things = context.collection( "things" );
+        CustomCollection things = context.customCollection( "things" );
 
         Map actor = hashMap( "displayName", "Erin" );
         Map props = new HashMap();

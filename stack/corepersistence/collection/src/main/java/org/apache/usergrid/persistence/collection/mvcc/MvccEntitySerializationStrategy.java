@@ -26,6 +26,7 @@ import java.util.UUID;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntitySet;
 import org.apache.usergrid.persistence.collection.MvccEntity;
+import org.apache.usergrid.persistence.core.migration.schema.Migration;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.netflix.astyanax.MutationBatch;
@@ -34,7 +35,7 @@ import com.netflix.astyanax.MutationBatch;
 /**
  * The interface that allows us to serialize an entity to disk
  */
-public interface MvccEntitySerializationStrategy {
+public interface MvccEntitySerializationStrategy extends Migration {
 
     /**
      * Serialize the entity to the data store with the given collection context
@@ -60,25 +61,27 @@ public interface MvccEntitySerializationStrategy {
      *
      * @param context The context to persist the entity into
      * @param entityId The entity id to load
-     * @param version The max version to seek from.  I.E a stored version >= this argument
-     * @param fetchSize The maximum size to return.  If you receive this size, there may be more versions to load.
+     * @param version The max version to seek from.  I.E a stored version <= this argument
+     * @param fetchSize The fetch size to return for each trip to cassandra.
      *
-     * @return A list of entities up to max size ordered from max(UUID)=> min(UUID).  The return value should be null
+     * @return An iterator of entities ordered from max(UUID)=> min(UUID).  The return value should be null
      *         safe and return an empty list when there are no matches
      */
-    public Iterator<MvccEntity> load( CollectionScope context, Id entityId, UUID version, int fetchSize );
+    public Iterator<MvccEntity> loadDescendingHistory( CollectionScope context, Id entityId, UUID version,
+                                                       int fetchSize );
 
     /**
-     * Load a historical list of entities, from highest to lowest of the entity with versions <= version up to maxSize elements
+     * Load a historical list of entities, from lowest to highest entity with versions < version up to maxSize elements
      *
      * @param context The context to persist the entity into
      * @param entityId The entity id to load
-     * @param version The max version to seek from.  I.E a stored version < this argument
-     * @param fetchSize The maximum size to return.  If you receive this size, there may be more versions to load.
-     * @return A list of entities up to max size ordered from max(UUID)=> min(UUID).  The return value should be null
+     * @param version The max version to seek to.  I.E a stored version < this argument
+     * @param fetchSize The fetch size to return for each trip to cassandra.
+     * @return An iterator of entities ordered from min(UUID)=> max(UUID).  The return value should be null
      *         safe and return an empty list when there are no matches
      */
-    public Iterator<MvccEntity> loadHistory( CollectionScope context, Id entityId, UUID version, int fetchSize );
+    public Iterator<MvccEntity> loadAscendingHistory( CollectionScope context, Id entityId, UUID version,
+                                                      int fetchSize );
 
     /**
      * Mark this  this version as deleted from the persistence store, but keep the version to mark that is has been cleared This

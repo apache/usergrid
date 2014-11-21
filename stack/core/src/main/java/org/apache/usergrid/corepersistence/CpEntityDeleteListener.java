@@ -30,6 +30,7 @@ import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityDeleteEvent;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.core.entity.EntityVersion;
+import org.apache.usergrid.persistence.core.guice.ProxyImpl;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 
 import com.google.inject.Inject;
@@ -54,7 +55,7 @@ public class CpEntityDeleteListener {
     private final SerializationFig serializationFig;
 
     @Inject
-    public CpEntityDeleteListener(final MvccEntitySerializationStrategy entityMetadataSerialization,
+    public CpEntityDeleteListener(@ProxyImpl final MvccEntitySerializationStrategy entityMetadataSerialization,
                                     final Keyspace keyspace,
                                     final SerializationFig serializationFig){
         this.entityMetadataSerialization = entityMetadataSerialization;
@@ -68,10 +69,8 @@ public class CpEntityDeleteListener {
         return Observable.create( new ObservableIterator<MvccEntity>( "deleteEntities" ) {
             @Override
             protected Iterator<MvccEntity> getIterator() {
-                Iterator<MvccEntity> iterator = entityMetadataSerialization.loadHistory( 
-                        entityEvent.getCollectionScope(), 
-                        entity.getId(), 
-                        entity.getVersion(), 
+                Iterator<MvccEntity> iterator = entityMetadataSerialization.loadAscendingHistory(
+                        entityEvent.getCollectionScope(), entity.getId(), entity.getVersion(),
                         serializationFig.getHistorySize() );
                 return iterator;
             }

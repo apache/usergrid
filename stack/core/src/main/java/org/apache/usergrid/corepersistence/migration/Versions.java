@@ -22,6 +22,7 @@
 package org.apache.usergrid.corepersistence.migration;
 
 
+import org.apache.usergrid.persistence.collection.serialization.impl.MvccEntitySerializationStrategyProxyImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeMetadataSerializationProxyImpl;
 
 
@@ -39,4 +40,6 @@ public class Versions {
      * Version 2.  Edge meta changes
      */
     public static final int VERSION_2 = EdgeMetadataSerializationProxyImpl.MIGRATION_VERSION;
+
+    public static final int VERSION_3 = MvccEntitySerializationStrategyProxyImpl.MIGRATION_VERSION;
 }

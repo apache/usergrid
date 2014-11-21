@@ -39,6 +39,7 @@ import org.apache.usergrid.persistence.collection.serialization.SerializationFig
 import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.impl.UniqueValueImpl;
+import org.apache.usergrid.persistence.core.guice.ProxyImpl;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -72,7 +73,7 @@ public class MarkCommit implements Action1<CollectionIoEvent<MvccEntity>> {
 
     @Inject
     public MarkCommit( final MvccLogEntrySerializationStrategy logStrat,
-                       final MvccEntitySerializationStrategy entityStrat,
+                       @ProxyImpl final MvccEntitySerializationStrategy entityStrat,
                        final UniqueValueSerializationStrategy uniqueValueStrat, final SerializationFig serializationFig,
                        final Keyspace keyspace ) {
 
@@ -128,7 +129,7 @@ public class MarkCommit implements Action1<CollectionIoEvent<MvccEntity>> {
                     @Override
                     protected Iterator<MvccEntity> getIterator() {
                         Iterator<MvccEntity> entities =
-                                entityStrat.load( collectionScope, entityId, entity.getVersion(), 100 );
+                                entityStrat.loadDescendingHistory( collectionScope, entityId, entity.getVersion(), 100 );
 
                         return entities;
                     }

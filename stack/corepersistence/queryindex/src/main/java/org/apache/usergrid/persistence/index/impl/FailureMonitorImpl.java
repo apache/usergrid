@@ -75,8 +75,8 @@ public class FailureMonitorImpl implements FailureMonitor {
 
         if ( fails > maxCount ) {
             LOG.error( "Unable to connect to elasticsearch.  Reason is {}", message, throwable );
-            LOG.warn( "We have failed to connect to Elastic Search {} times.  Max allowed is {}.  Resetting connection",
-                    fails, maxCount );
+            LOG.warn( "We have failed to connect to Elastic Search {} times.  "
+                    + "Max allowed is {}.  Resetting connection", fails, maxCount );
 
             esProvider.releaseClient();
         }

@@ -20,8 +20,13 @@ package org.apache.usergrid.rest.test.resource;
 import java.util.UUID;
 
 import org.apache.usergrid.rest.test.resource.app.Application;
+import org.apache.usergrid.rest.test.resource.app.Collection;
 import org.apache.usergrid.rest.test.resource.app.User;
 import org.apache.usergrid.rest.test.resource.app.UsersCollection;
+import org.apache.usergrid.rest.test.resource.app.Group;
+import org.apache.usergrid.rest.test.resource.app.GroupsCollection;
+import org.apache.usergrid.rest.test.resource.app.Role;
+import org.apache.usergrid.rest.test.resource.app.RolesCollection;
 import org.apache.usergrid.rest.test.resource.mgmt.Management;
 import org.apache.usergrid.rest.test.security.TestUser;
 
@@ -72,12 +77,18 @@ public class TestContext {
         return withUser( null );
     }
 
+    public TestContext withOrg(){
+        return this;
+    }
 
     public TestContext withOrg( String orgName ) {
         testOrganization = new TestOrganization( orgName );
         return this;
     }
 
+    public TestContext withApp ( ) {
+        return this;
+    }
 
     public TestContext withApp( String appName ) {
         this.appName = appName;
@@ -100,7 +111,7 @@ public class TestContext {
         OrgUserUUIDWrapper ouuw = management().orgs().create( getOrgName(),activeUser );
         testOrganization.setUuid( ouuw.getOrgUUID() );
         activeUser.setUUID( ouuw.getUserUUID() );
-        refreshIndex( getOrgName(), appName );
+        refreshIndex(getOrgName(), appName);
         return this;
     }
 
@@ -132,10 +143,31 @@ public class TestContext {
         return application().users();
     }
 
-
     /** Get the app user resource */
     public User user( String username ) {
-        return application().users().user( username );
+        return application().users().user(username);
+    }
+
+
+    /** Get the users resource for the application */
+    public GroupsCollection groups() {
+        return application().groups();
+    }
+
+    /** Get the app group resource */
+    public Group group( String path ) {
+        return application().groups().group( path );
+    }
+
+
+    /** Get the groups resource for the application */
+    public RolesCollection roles() {
+        return application().roles();
+    }
+
+    /** Get the app role resource */
+    public Role role( String name ) {
+        return application().roles().role( name );
     }
 
 
@@ -156,9 +188,13 @@ public class TestContext {
         return new Application( getOrgName(), appName, root() );
     }
 
+//TODO: remove custom collections!
+    public CustomCollection customCollection( String str ) {
+        return application().customCollection( str );
+    }
 
-    public CustomCollection collection( String str ) {
-        return application().collection( str );
+    public Collection collection (String name) {
+        return application().collection( name );
     }
 
 
@@ -175,6 +211,26 @@ public class TestContext {
     /** Calls createNewOrgAndUser, logs in the user, then creates the app. All in 1 call. */
     public TestContext initAll() throws IOException {
         return createNewOrgAndUser().loginUser().createAppForOrg();
+    }
+
+    public void refreshIndex() {
+
+        logger.debug("Refreshing index for app {}/{}", testOrganization.getOrgName(), appName );
+
+        try {
+
+            root().resource().path( "/refreshindex" )
+                  .queryParam( "org_name", testOrganization.getOrgName() )
+                  .queryParam( "app_name", appName )
+                  .accept( MediaType.APPLICATION_JSON )
+                  .post();
+
+        } catch ( Exception e) {
+            logger.debug("Error refreshing index", e);
+            return;
+        }
+
+        logger.debug("Refreshed index for app {}/{}", testOrganization.getOrgName(), appName );
     }
 
     private void refreshIndex(String orgName, String appName) {

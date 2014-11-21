@@ -131,6 +131,7 @@ import static me.prettyprint.hector.api.factory.HFactory.createCounterSliceQuery
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import static org.apache.commons.lang.StringUtils.capitalize;
 import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getCollectionScopeNameFromEntityType;
 import static org.apache.usergrid.persistence.Schema.COLLECTION_ROLES;
 import static org.apache.usergrid.persistence.Schema.COLLECTION_USERS;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_PERMISSIONS;
@@ -372,13 +373,9 @@ public class CpEntityManager implements EntityManager {
         }
 
         Id id = new SimpleId( entityRef.getUuid(), entityRef.getType() );
-        String collectionName = CpNamingUtils.getCollectionScopeNameFromEntityType( entityRef.getType() );
 
-        CollectionScope collectionScope =
-                new CollectionScopeImpl( getApplicationScope().getApplication(), getApplicationScope().getApplication(),
-                        collectionName );
+        CollectionScope collectionScope = getCollectionScopeNameFromEntityType(applicationScope.getApplication(),  entityRef.getType());
 
-        EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
 
         //        if ( !UUIDUtils.isTimeBased( id.getUuid() ) ) {
         //            throw new IllegalArgumentException(
@@ -457,13 +454,10 @@ public class CpEntityManager implements EntityManager {
         String type = Schema.getDefaultSchema().getEntityType( entityClass );
 
         Id id = new SimpleId( entityId, type );
-        String collectionName = CpNamingUtils.getCollectionScopeNameFromEntityType( type );
 
-        CollectionScope collectionScope =
-                new CollectionScopeImpl( getApplicationScope().getApplication(), getApplicationScope().getApplication(),
-                        collectionName );
 
-        EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
+        CollectionScope collectionScope = getCollectionScopeNameFromEntityType(applicationScope.getApplication(),  type);
+
 
         //        if ( !UUIDUtils.isTimeBased( id.getUuid() ) ) {
         //            throw new IllegalArgumentException(
@@ -522,9 +516,8 @@ public class CpEntityManager implements EntityManager {
     public void update( Entity entity ) throws Exception {
 
         // first, update entity index in its own collection scope
-        CollectionScope collectionScope =
-                new CollectionScopeImpl( getApplicationScope().getApplication(), getApplicationScope().getApplication(),
-                        CpNamingUtils.getCollectionScopeNameFromEntityType( entity.getType() ) );
+
+        CollectionScope collectionScope = getCollectionScopeNameFromEntityType(applicationScope.getApplication(),  entity.getType());
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
 
         Id entityId = new SimpleId( entity.getUuid(), entity.getType() );
@@ -590,9 +583,7 @@ public class CpEntityManager implements EntityManager {
 
     private Observable deleteAsync( EntityRef entityRef ) throws Exception {
 
-        CollectionScope collectionScope =
-                new CollectionScopeImpl( getApplicationScope().getApplication(), getApplicationScope().getApplication(),
-                        CpNamingUtils.getCollectionScopeNameFromEntityType( entityRef.getType() ) );
+        CollectionScope collectionScope = getCollectionScopeNameFromEntityType(applicationScope.getApplication(), entityRef.getType()  );
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
 
@@ -639,7 +630,7 @@ public class CpEntityManager implements EntityManager {
 
             // deindex from default index scope
             IndexScope defaultIndexScope = new IndexScopeImpl( getApplicationScope().getApplication(),
-                    CpNamingUtils.getCollectionScopeNameFromEntityType( entityRef.getType() ) );
+                    getCollectionScopeNameFromEntityType( entityRef.getType() ) );
 
             batch.deindex( defaultIndexScope, entity );
 
@@ -1010,15 +1001,10 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public void deleteProperty( EntityRef entityRef, String propertyName ) throws Exception {
-
-        String collectionName = CpNamingUtils.getCollectionScopeNameFromEntityType( entityRef.getType() );
-
-        CollectionScope collectionScope =
-                new CollectionScopeImpl( getApplicationScope().getApplication(), getApplicationScope().getApplication(),
-                        collectionName );
+        CollectionScope collectionScope =  getCollectionScopeNameFromEntityType(getApplicationScope().getApplication(), entityRef.getType());
 
         IndexScope defaultIndexScope = new IndexScopeImpl( getApplicationScope().getApplication(),
-                CpNamingUtils.getCollectionScopeNameFromEntityType( entityRef.getType() ) );
+                getCollectionScopeNameFromEntityType( entityRef.getType() ) );
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
         EntityIndex ei = managerCache.getEntityIndex( getApplicationScope() );
@@ -2187,10 +2173,7 @@ public class CpEntityManager implements EntityManager {
     private Id getIdForUniqueEntityField( final String collectionName, final String propertyName,
                                           final Object propertyValue ) {
 
-        CollectionScope collectionScope =
-                new CollectionScopeImpl( applicationScope.getApplication(), applicationScope.getApplication(),
-                        CpNamingUtils.getCollectionScopeNameFromEntityType( collectionName ) );
-
+        CollectionScope collectionScope = getCollectionScopeNameFromEntityType(applicationScope.getApplication(), collectionName);
 
         final EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
 
@@ -2514,9 +2497,8 @@ public class CpEntityManager implements EntityManager {
         org.apache.usergrid.persistence.model.entity.Entity cpEntity = entityToCpEntity( entity, importId );
 
         // prepare to write and index Core Persistence Entity into default scope
-        CollectionScope collectionScope =
-                new CollectionScopeImpl( applicationScope.getApplication(), applicationScope.getApplication(),
-                        CpNamingUtils.getCollectionScopeNameFromEntityType( eType ) );
+        CollectionScope collectionScope = getCollectionScopeNameFromEntityType(applicationScope.getApplication(), eType);
+
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
 
         if ( logger.isDebugEnabled() ) {

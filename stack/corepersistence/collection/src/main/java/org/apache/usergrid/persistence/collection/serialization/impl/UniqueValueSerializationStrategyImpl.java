@@ -57,7 +57,7 @@ import com.netflix.astyanax.util.RangeBuilder;
 /**
  * Reads and writes to UniqueValues column family.
  */
-public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializationStrategy, Migration {
+public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializationStrategy {
 
     private static final Logger log = LoggerFactory.getLogger( UniqueValueSerializationStrategyImpl.class );
 

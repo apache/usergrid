@@ -19,28 +19,30 @@
 
 package org.apache.usergrid.persistence.queue;
 
-import org.apache.usergrid.persistence.queue.guice.TestQueueModule;
-import org.apache.usergrid.persistence.queue.impl.QueueScopeFactoryImpl;
-import org.apache.usergrid.persistence.queue.impl.QueueScopeImpl;
-import org.apache.usergrid.persistence.core.test.UseModules;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.apache.usergrid.persistence.core.test.ITRunner;
+import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.queue.guice.TestQueueModule;
+import org.apache.usergrid.persistence.queue.impl.QueueScopeFactoryImpl;
+import org.apache.usergrid.persistence.queue.impl.QueueScopeImpl;
 
 import com.google.inject.Inject;
-import org.safehaus.guicyfig.Bypass;
-import org.safehaus.guicyfig.OptionState;
-import org.safehaus.guicyfig.Overrides;
 
-import java.beans.PropertyChangeListener;
-import java.io.IOException;
-import java.util.*;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 @RunWith( ITRunner.class )
 @UseModules( { TestQueueModule.class } )

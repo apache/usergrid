@@ -17,13 +17,21 @@
 package org.apache.usergrid.rest.applications.collection.groups;
 
 
+import java.util.Map;
 import java.util.UUID;
 
+import javax.rmi.CORBA.Util;
 import javax.ws.rs.core.MediaType;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
+
+import com.google.gson.JsonObject;
+import com.sun.jersey.api.client.UniformInterfaceException;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+import org.apache.usergrid.utils.JsonUtils;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,54 +39,229 @@ import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.java.client.Client.Query;
 import org.apache.usergrid.java.client.response.ApiResponse;
 import org.apache.usergrid.rest.AbstractRestIT;
+import org.apache.usergrid.rest.TestContextSetup;
+import org.apache.usergrid.rest.test.resource.app.GroupsCollection;
 import org.apache.usergrid.utils.UUIDUtils;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
-
-/** @author tnine */
+/** @author rockerston */
 @Concurrent()
 public class GroupResourceIT extends AbstractRestIT {
     private static Logger log = LoggerFactory.getLogger( GroupResourceIT.class );
 
-    private static final String GROUP = "testGroup";
+    /*
+    private static final String GROUP = "testGroup" + UUIDUtils.newTimeUUID();
+    private static final String USER = "edanuff" + UUIDUtils.newTimeUUID();
+*/
 
-    private static final String USER = "edanuff";
+    @Rule
+    public TestContextSetup context = new TestContextSetup( this );
 
-    private static boolean groupCreated = false;
+    public GroupResourceIT() throws Exception { }
 
+    /***
+     *
+     * Verify that we can create a group with a standard string in the name and path
+     */
+    @Test()
+    public void createGroupValidation() throws IOException {
 
-    public GroupResourceIT() throws Exception {
+        GroupsCollection groups = context.groups();
 
+        //create a group with a normal name
+        String groupName = "testgroup";
+        String groupPath = "testgroup";
+        JsonNode testGroup = groups.create(groupName, groupPath);
+        //verify the group was created
+        assertNull(testGroup.get("errors"));
+        assertEquals(testGroup.get("path").asText(), groupPath);
     }
 
+    /***
+     *
+     * Verify that we can create a group with a slash in the name and path
+     */
+    @Test()
+    public void createGroupSlashInNameAndPathValidation() throws IOException {
 
-    @Before
-    public void setupGroup() {
-        if ( groupCreated ) {
-            return;
-        }
+        GroupsCollection groups = context.groups();
 
+        //create a group with a slash in the name
+        String groupNameSlash = "test/group";
+        String groupPathSlash = "test/group";
+        JsonNode testGroup = groups.create( groupNameSlash, groupPathSlash );
+        //verify the group was created
+        assertNull( testGroup.get( "errors" ) );
+        assertEquals( testGroup.get("path").asText(),groupPathSlash );
+    }
+
+    /***
+     *
+     * Verify that we can create a group with a space in the name
+     */
+    @Test()
+    public void createGroupSpaceInNameValidation() throws IOException {
+
+        GroupsCollection groups = context.groups();
+
+        //create a group with a space in the name
+        String groupName = "test group";
+        String groupPath = "testgroup";
         try {
-            client.createGroup( GROUP );
-            groupCreated = true;
+            JsonNode testGroup = groups.create(groupName, groupPath);
+        } catch (UniformInterfaceException e) {
+            //verify the correct error was returned
+            JsonNode node = mapper.readTree( e.getResponse().getEntity( String.class ));
+            assertEquals( "illegal_argument", node.get( "error" ).textValue() );
         }
-        catch ( Exception e ) {
-            log.error( "Error creating group " + GROUP, e );
+    }
+
+    /***
+     *
+     * Verify that we cannot create a group with a space in the path
+     */
+    @Test()
+    public void createGroupSpaceInPathValidation() throws IOException {
+
+        GroupsCollection groups = context.groups();
+
+        //create a group with a space in the path
+        String groupName = "testgroup";
+        String groupPath = "test group";
+        try {
+            JsonNode testGroup = groups.create(groupName, groupPath);
+        } catch (UniformInterfaceException e) {
+            //verify the correct error was returned
+            JsonNode node = mapper.readTree( e.getResponse().getEntity( String.class ));
+            assertEquals( "illegal_argument", node.get( "error" ).textValue() );
         }
+    }
+
+    /***
+     *
+     * Verify that we cannot create a group with a space in the path
+     */
+    @Test
+    public void postGroupActivity() {
+
+/*
+        //1. create a group
+        GroupsCollection groups = context.groups();
+
+        //create a group with a normal name
+        String groupName = "groupTitle";
+        String groupPath = "groupPath";
+        JsonNode testGroup = groups.create(groupName, groupPath);
+        //verify the group was created
+        assertNull(testGroup.get("errors"));
+        assertEquals(testGroup.get("path").asText(), groupPath);
+
+        //2.
+   /*
+        UUID id = UUIDUtils.newTimeUUID();
+
+        String groupPath = "groupPath" + id;
+        String groupTitle = "groupTitle " + id;
+        String groupName = "groupName" + id;
+
+        ApiResponse response = client.createGroup( groupPath, groupTitle, groupName );
+
+        assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
+
         refreshIndex("test-organization", "test-app");
 
+        UUID newId = response.getEntities().get( 0 ).getUuid();
+
+        Query results = client.queryGroups( String.format( "name='%s'", groupName ) );
+
+        response = results.getResponse();
+
+        UUID entityId = response.getEntities().get( 0 ).getUuid();
+
+        assertEquals( newId, entityId );
+
+        results = client.queryGroups( String.format( "title='%s'", groupTitle ) );
+
+        response = results.getResponse();
+
+        entityId = response.getEntities().get( 0 ).getUuid();
+
+        assertEquals( newId, entityId );
+
+        results = client.queryGroups( String.format( "title contains '%s'", id ) );
+
+        response = results.getResponse();
+
+        entityId = response.getEntities().get( 0 ).getUuid();
+
+        assertEquals( newId, entityId );
+
+        results = client.queryGroups( String.format( "path='%s'", groupPath ) );
+
+        response = results.getResponse();
+
+        entityId = response.getEntities().get( 0 ).getUuid();
+
+        assertEquals( newId, entityId );
+        */
     }
+}
+
+/*
+    @Test(expected = IllegalArgumentException.class)
+    public void failGroupNameValidation() throws IOException{
 
 
-    @Test
-    public void failGroupNameValidation() {
 
-        ApiResponse response = client.createGroup( "groupName/withslash" );
-        assertNull( response.getError() );
+        //context.application().groups().group("mygroup").connection("likes").collection("users").entity("bob").post();
+
+
+        /*
+        Map user1 =
+                hashMap( "username", "user1" ).map( "email", "testuser1@usergrid.com" ).map( "fullname", "Bob Smith" );
+
+        users.create( user1 );
+
+        GroupsCollection groups = context.groups();
+
+        /*
+        // set up context
+        String orgName = context.getOrgName();
+        String appName = context.getAppName();
+        String path = "/"+orgName+"/"+appName+"/groups/";
+
+        //-----------------------------------------------
+        // 1. test for group path with slash
+        //-----------------------------------------------
+        String groupPath = "grouppath/slash" + UUIDUtils.newTimeUUID();
+
+        String json = "{\"path\":\""+ groupPath +"\"}";
+        JsonNode node = mapper.readTree( resource().path( path )
+                .queryParam( "access_token", context.getActiveUser().getToken() ).accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, json ));
+
+        //verify
+        assertNull( node.get( "errors" ) );
+        assertEquals( node.get( "entities" ).get(0).get("path").asText(), groupPath);
+
+        //-----------------------------------------------
+        //2. test for group path with space
+        //-----------------------------------------------
+        groupPath = "grouppath space" + UUIDUtils.newTimeUUID();
+        try {
+            json = "{\"path\":\"" + groupPath + "\"}";
+            node = mapper.readTree(resource().path(path)
+                    .queryParam("access_token", context.getActiveUser().getToken()).accept(MediaType.APPLICATION_JSON)
+                    .type(MediaType.APPLICATION_JSON_TYPE).post(String.class, json));
+        } catch (Exception e) {
+
+            //verify
+            //assertNull( node.get( "errors" ) );
+            String doug = node.get("error").asText();
+            assertEquals( node.get("error").asText(), "illegal_argument");
+        }
+
 
         refreshIndex("test-organization", "test-app");
 
@@ -92,9 +275,10 @@ public class GroupResourceIT extends AbstractRestIT {
             }
             assertTrue( failed );
         }
+
     }
 
-
+/*
     @Test
     public void postGroupActivity() {
 
@@ -164,9 +348,12 @@ public class GroupResourceIT extends AbstractRestIT {
         UUID createdId = response.getEntities().get( 0 ).getUuid();
 
         // add Permission
+        String orgName = context.getOrgName();
+        String appName = context.getAppName();
+        String path = "/"+orgName+"/"+appName+"/groups/";
 
         String json = "{\"permission\":\"delete:/test\"}";
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/groups/" + createdId + "/permissions" )
+        JsonNode node = mapper.readTree( resource().path( path + createdId + "/permissions" )
                 .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, json ));
 
@@ -292,4 +479,5 @@ public class GroupResourceIT extends AbstractRestIT {
         assertNull( node.get( "errors" ) );
         assertFalse( node.get( "entities" ).findValuesAsText( "name" ).contains( roleName ) );
     }
-}
+    */
+
