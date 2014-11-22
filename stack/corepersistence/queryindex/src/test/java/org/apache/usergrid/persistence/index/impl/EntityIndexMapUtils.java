@@ -99,8 +99,10 @@ class EntityIndexMapUtils {
 
             } else if ( value instanceof Map ) {
 
-				Field field = null;
+              // CpEntityMapUtils.processMapValue(value);
 
+				Field field = null;
+//TODO remove this and use the code in CpEntityMapUtils.java
 				// is the map really a location element?
 				Map<String, Object> m = (Map<String, Object>)value;
 				if ( m.size() == 2) {
