@@ -145,9 +145,14 @@ public class CoreApplication implements Application, TestRule {
     }
 
 
-    protected void before( Description description ) throws Exception {
-        orgName = description.getClassName()+ UUIDGenerator.newTimeUUID();
-        appName = description.getMethodName();
+    /**
+     * Create an application with the given app name and org name
+     * @param orgName
+     * @param appName
+     */
+    public void createApplication(final String orgName, final String appName) throws Exception {
+        this.orgName = orgName;
+        this.appName = appName;
         id = setup.createApplication( orgName, appName );
         assertNotNull( id );
 
@@ -156,7 +161,13 @@ public class CoreApplication implements Application, TestRule {
 
         LOG.info( "Created new application {} in organization {}", appName, orgName );
 
+    }
 
+    protected void before( Description description ) throws Exception {
+        final String orgName = description.getClassName()+ UUIDGenerator.newTimeUUID();
+        final String appName = description.getMethodName();
+
+        createApplication( orgName, appName  );
     }
 
 
