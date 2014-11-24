@@ -65,6 +65,13 @@ public class GuiceModule extends AbstractModule {
         install(new MapModule());
         install(new QueueModule());
 
+        bind(ManagerCache.class).to( CpManagerCache.class );
+
+        Multibinder<DataMigration> dataMigrationMultibinder = Multibinder.newSetBinder( binder(), DataMigration.class );
+        dataMigrationMultibinder.addBinding().to( EntityTypeMappingMigration.class );
+        dataMigrationMultibinder.addBinding().to( GraphShardVersionMigration.class );
+        //dataMigrationMultibinder.addBinding().to( EntityDataMigration.class );
+
         Multibinder<EntityDeleted> entityBinder = 
             Multibinder.newSetBinder(binder(), EntityDeleted.class);
         entityBinder.addBinding().to(EntityDeletedHandler.class);
@@ -77,10 +84,7 @@ public class GuiceModule extends AbstractModule {
             Multibinder.newSetBinder( binder(), EntityVersionCreated.class );
         versionCreatedMultibinder.addBinding().to(EntityVersionCreatedHandler.class);
 
-        Multibinder<DataMigration> dataMigrationMultibinder = 
-            Multibinder.newSetBinder( binder(), DataMigration.class );
-        dataMigrationMultibinder.addBinding().to( EntityTypeMappingMigration.class );
-        dataMigrationMultibinder.addBinding().to( GraphShardVersionMigration.class );
+
     }
 
 }
