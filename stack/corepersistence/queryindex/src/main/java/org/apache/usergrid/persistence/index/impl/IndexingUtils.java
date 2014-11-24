@@ -47,10 +47,7 @@ public class IndexingUtils {
 
     public static final String ENTITY_CONTEXT_FIELDNAME = "ug_context";
 
-    public static final String ENTITY_ID_FIELDNAME = "ug_entityId";
-
-    public static final String ENTITY_VERSION_FIELDNAME = "ug_entityVersion";
-
+    public static final String ENTITYID_ID_FIELDNAME = "ug_entityId";
 
 
     /**
