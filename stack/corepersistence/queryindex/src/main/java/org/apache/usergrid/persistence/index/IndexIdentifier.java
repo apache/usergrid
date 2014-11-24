@@ -39,8 +39,8 @@ public class IndexIdentifier{
      * Get the alias name
      * @return
      */
-    public String getAlias() {
-        return getIndexBase() + "_" + config.getAliasPostfix();
+    public IndexAlias getAlias() {
+        return new IndexAlias(config,getIndexBase());
     }
 
     /**
@@ -67,5 +67,22 @@ public class IndexIdentifier{
         return sb.toString();
     }
 
+    public class IndexAlias{
+        private final String readAlias;
+        private final String writeAlias;
+
+        public IndexAlias(IndexFig indexFig,String indexBase) {
+            this.writeAlias = indexBase + "_write_" + indexFig.getAliasPostfix();
+            this.readAlias = indexBase + "_read_" + indexFig.getAliasPostfix();
+        }
+
+        public String getReadAlias() {
+            return readAlias;
+        }
+
+        public String getWriteAlias() {
+            return writeAlias;
+        }
+    }
 
 }

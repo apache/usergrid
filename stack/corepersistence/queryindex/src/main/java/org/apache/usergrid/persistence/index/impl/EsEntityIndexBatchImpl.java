@@ -81,7 +81,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
     private final boolean refresh;
 
-    private final String aliasName;
+    private final IndexIdentifier.IndexAlias alias;
     private final IndexIdentifier indexIdentifier;
 
     private BulkRequestBuilder bulkRequest;
@@ -100,7 +100,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         this.client = client;
         this.failureMonitor = failureMonitor;
         this.indexIdentifier = IndexingUtils.createIndexIdentifier(config, applicationScope);
-        this.aliasName = indexIdentifier.getAlias();
+        this.alias = indexIdentifier.getAlias();
         this.refresh = config.isForcedRefresh();
         this.autoFlushSize = autoFlushSize;
         initBatch();
@@ -144,7 +144,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
         log.debug( "Indexing entity documentId {} data {} ", indexId, entityAsMap );
 
-        bulkRequest.add( client.prepareIndex( aliasName, entityType, indexId ).setSource( entityAsMap ) );
+        bulkRequest.add( client.prepareIndex(alias.getWriteAlias(), entityType, indexId ).setSource( entityAsMap ) );
 
         maybeFlush();
 
@@ -182,7 +182,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
         log.debug( "De-indexing type {} with documentId '{}'" , entityType, indexId);
 
-        bulkRequest.add( client.prepareDelete( aliasName, entityType, indexId ).setRefresh( refresh ) );
+        bulkRequest.add( client.prepareDelete(alias.getReadAlias(), entityType, indexId ).setRefresh( refresh ) );
 
         log.debug( "Deindexed Entity with index id " + indexId );
 
