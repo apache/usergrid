@@ -14,48 +14,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.rest.test.resource;
+package org.apache.usergrid.rest.test.resource.app;
 
 
 import java.util.UUID;
 
-import org.apache.usergrid.rest.test.resource.app.UsersCollection;
-import org.apache.usergrid.rest.test.resource.app.GroupsCollection;
-import org.apache.usergrid.rest.test.resource.app.RolesCollection;
+import org.apache.usergrid.rest.test.resource.EntityResource;
+import org.apache.usergrid.rest.test.resource.NamedResource;
 import org.apache.usergrid.rest.test.resource.app.queue.DevicesCollection;
 
 
-/** @author tnine */
-public class Connection extends ValueResource {
+/**
+ * A resource for testing queues
+ *
+ * @author rockerston
+ */
+public class Group
+        extends EntityResource {
 
-
-    public Connection( String name, NamedResource parent ) {
-        super( name, parent );
+    /**
+     * @param entityId
+     * @param parent
+     */
+    public Group( UUID entityId, NamedResource parent ) {
+        super( entityId, parent );
     }
 
 
-    public EntityResource entity( String deviceName ) {
-        return new EntityResource( deviceName, this );
-    }
-
-
-    public EntityResource entity( UUID entityId ) {
-        return new EntityResource( entityId, this );
+    /**
+     * @param entityName
+     * @param parent
+     */
+    public Group( String entityName, NamedResource parent ) {
+        super( entityName, parent );
     }
 
 
     public DevicesCollection devices() {
         return new DevicesCollection( this );
-    }
-
-    public UsersCollection users() { return new UsersCollection(this);}
-
-    public GroupsCollection groups() { return new GroupsCollection(this);}
-
-    public RolesCollection roles() { return new RolesCollection(this);}
-
-
-    public CustomCollection collection( String name ) {
-        return new CustomCollection( name, this );
     }
 }

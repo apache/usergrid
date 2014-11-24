@@ -49,7 +49,7 @@ public class PagingEntitiesTest extends AbstractRestIT {
     @Test //USERGRID-266
     public void pageThroughConnectedEntities() throws IOException {
 
-        CustomCollection activities = context.collection( "activities" );
+        CustomCollection activities = context.customCollection( "activities" );
 
         long created = 0;
         int maxSize = 100;
@@ -96,7 +96,7 @@ public class PagingEntitiesTest extends AbstractRestIT {
     @Test //USERGRID-1253
     public void pagingQueryReturnCorrectResults() throws Exception {
 
-        CustomCollection activities = context.collection( "activities" );
+        CustomCollection activities = context.customCollection( "activities" );
 
         long created = 0;
         int maxSize = 23;

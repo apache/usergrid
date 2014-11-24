@@ -61,7 +61,7 @@ public class MatrixQueryTests extends AbstractRestIT {
 
         //now create 4 restaurants
 
-        CustomCollection restaurants = context.collection( "restaurants" );
+        CustomCollection restaurants = context.customCollection( "restaurants" );
 
 
         Map restaurant1 = hashMap( "name", "Old Major" );

@@ -43,7 +43,7 @@ public class DuplicateNameIT extends AbstractRestIT {
     @Test
     public void duplicateNamePrevention() {
 
-        CustomCollection things = context.application().collection( "things" );
+        CustomCollection things = context.application().customCollection( "things" );
 
         Map<String, String> entity = MapUtils.hashMap( "name", "enzo" );
 

@@ -29,8 +29,8 @@ import org.apache.usergrid.persistence.model.entity.Entity;
 
 
 /**
- * Loads results from candidate results.  This needs to be refactored to the calling module, and should not exist in the
- * query index
+ * Loads results from candidate results.  This needs to be refactored to the calling module, 
+ * and should not exist in the query index
  */
 public class EntityResults implements Iterable<Entity>, Iterator<Entity> {
 
