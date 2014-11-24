@@ -51,7 +51,6 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.elasticsearch.indices.IndexMissingException;
-import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.sort.FieldSortBuilder;
@@ -72,7 +71,6 @@ import org.apache.usergrid.persistence.index.exceptions.IndexException;
 import org.apache.usergrid.persistence.index.query.CandidateResult;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
 import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -82,6 +80,7 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.BOOLEAN_PREFIX;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ENTITYID_ID_FIELDNAME;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.NUMBER_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.SPLITTER;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.STRING_PREFIX;
@@ -462,8 +461,7 @@ public class EsEntityIndexImpl implements EntityIndex {
     public void deleteAllVersionsOfEntity( Id entityId ) {
 
         final TermQueryBuilder tqb =
-                QueryBuilders.termQuery( ENTITY_ID_FIELDNAME, entityId.getUuid().toString().toLowerCase() );
-
+                QueryBuilders.termQuery( ENTITYID_ID_FIELDNAME, entityId.getUuid().toString().toLowerCase() );
 
         final DeleteByQueryResponse response =
                 esProvider.getClient().prepareDeleteByQuery( indexName ).setQuery( tqb ).execute().actionGet();
@@ -481,9 +479,8 @@ public class EsEntityIndexImpl implements EntityIndex {
     public void deletePreviousVersions( final Id id, final UUID version ) {
 
         final FilteredQueryBuilder fqb = QueryBuilders.filteredQuery(
-                QueryBuilders.termQuery( ENTITY_ID_FIELDNAME, id.getUuid().toString().toLowerCase() ),
-
-                FilterBuilders.rangeFilter( ENTITY_VERSION_FIELDNAME ).lt( version.timestamp() ) );
+            QueryBuilders.termQuery( IndexingUtils.ENTITYID_ID_FIELDNAME, id.getUuid().toString().toLowerCase() ),
+            FilterBuilders.rangeFilter( IndexingUtils.ENTITY_VERSION_FIELDNAME ).lt( version.timestamp() ) );
 
         final DeleteByQueryResponse response =
                 esProvider.getClient().prepareDeleteByQuery( indexName ).setQuery( fqb ).execute().actionGet();
@@ -507,9 +504,9 @@ public class EsEntityIndexImpl implements EntityIndex {
 
             for ( ShardOperationFailedException failedException : failures ) {
                 throw new IndexException( String.format(
-                        "Unable to delete by query %s.  Failed with code %d and reason %s on shard %s in index %s",
-                        query.toString(), failedException.status(), failedException.reason(), failedException.shardId(),
-                        failedException.index() ) );
+                    "Unable to delete by query %s.  Failed with code %d and reason %s on shard %s in index %s",
+                    query.toString(), failedException.status(), failedException.reason(), failedException.shardId(),
+                    failedException.index() ) );
             }
 
         }
