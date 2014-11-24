@@ -17,18 +17,17 @@
  */
 package org.apache.usergrid.corepersistence.events;
 
+import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.corepersistence.CpEntityManagerFactory;
-import org.apache.usergrid.corepersistence.CpSetup;
 import org.apache.usergrid.corepersistence.HybridEntityManagerFactory;
+import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.event.EntityVersionCreated;
 import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.apache.usergrid.persistence.model.entity.Entity;
-
 
 
 /**
@@ -37,12 +36,16 @@ import org.apache.usergrid.persistence.model.entity.Entity;
  * any indexes that exist for previous versions of the the Entity. 
  */
 public class EntityVersionCreatedHandler implements EntityVersionCreated {
-
     private static final Logger logger = LoggerFactory.getLogger(EntityVersionCreatedHandler.class );
+
+    @Inject
+    EntityManagerFactory emf;
+
 
     public EntityVersionCreatedHandler() {
         logger.debug("EntityVersionCreated");
     }
+
 
     @Override
     public void versionCreated( final CollectionScope scope, final Entity entity ) {
@@ -51,17 +54,14 @@ public class EntityVersionCreatedHandler implements EntityVersionCreated {
                 new Object[] { entity.getId().getType(), entity.getId().getUuid(), entity.getVersion(),
                         scope.getName(), scope.getOwner(), scope.getApplication()});
 
-        HybridEntityManagerFactory hemf = (HybridEntityManagerFactory)CpSetup.getEntityManagerFactory();
+        HybridEntityManagerFactory hemf = (HybridEntityManagerFactory)emf;
         CpEntityManagerFactory cpemf = (CpEntityManagerFactory)hemf.getImplementation();
 
         final EntityIndex ei = cpemf.getManagerCache().getEntityIndex(scope);
 
-        EntityIndexBatch batch = ei.createBatch();
-
         //TODO why aren't we using a collection fig here? This seems kludgy
         if ( System.getProperty( "allow.stale.entities", "false" ).equals( "false" )) {
-            batch.deindexPreviousVersions( entity );
-            batch.execute();
+            ei.deletePreviousVersions( entity.getId(), entity.getVersion() );
         }
     }
 }

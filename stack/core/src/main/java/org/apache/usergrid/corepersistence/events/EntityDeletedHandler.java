@@ -17,15 +17,15 @@
  */
 package org.apache.usergrid.corepersistence.events;
 
+import com.google.inject.Inject;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.event.EntityDeleted;
-import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import java.util.UUID;
 import org.apache.usergrid.corepersistence.CpEntityManagerFactory;
-import org.apache.usergrid.corepersistence.CpSetup;
 import org.apache.usergrid.corepersistence.HybridEntityManagerFactory;
+import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +37,8 @@ import org.slf4j.LoggerFactory;
 public class EntityDeletedHandler implements EntityDeleted {
     private static final Logger logger = LoggerFactory.getLogger(EntityDeletedHandler.class );
 
+    @Inject
+    EntityManagerFactory emf;
 
     public EntityDeletedHandler() {
         logger.debug("Created");        
@@ -50,7 +52,7 @@ public class EntityDeletedHandler implements EntityDeleted {
             new Object[] { entityId.getType(), entityId.getUuid(), version,
                 scope.getName(), scope.getOwner(), scope.getApplication()});
 
-        HybridEntityManagerFactory hemf = (HybridEntityManagerFactory)CpSetup.getEntityManagerFactory();
+        HybridEntityManagerFactory hemf = (HybridEntityManagerFactory)emf;
         CpEntityManagerFactory cpemf = (CpEntityManagerFactory)hemf.getImplementation();
 
         final EntityIndex ei = cpemf.getManagerCache().getEntityIndex(scope);

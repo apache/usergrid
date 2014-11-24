@@ -19,15 +19,19 @@
 package org.apache.usergrid.corepersistence;
 
 import com.google.inject.AbstractModule;
+import org.apache.usergrid.persistence.EntityManagerFactory;
 
 
 public class TestGuiceModule extends AbstractModule {
 
-    @Override
-    protected void configure() {
+    private static EntityManagerFactory emf;
 
-        install( new GuiceModule() );
+    public TestGuiceModule( EntityManagerFactory emf ) {
+        this.emf = emf;
     }
 
-
+    @Override
+    protected void configure() {
+        install( new GuiceModule( emf ) );
+    }
 }

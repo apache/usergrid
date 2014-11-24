@@ -24,7 +24,6 @@ import java.util.UUID;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
-import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 

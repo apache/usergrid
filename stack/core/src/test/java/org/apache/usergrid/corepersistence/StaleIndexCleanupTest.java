@@ -35,7 +35,6 @@ import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Results;
-import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
@@ -52,10 +51,14 @@ import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 
 import com.fasterxml.uuid.UUIDComparator;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
+import org.junit.After;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import org.junit.Before;
 
 
 //need to create system properties in test that can get applied
@@ -65,6 +68,9 @@ import static org.junit.Assert.assertTrue;
 public class StaleIndexCleanupTest extends AbstractCoreIT {
     private static final Logger logger = LoggerFactory.getLogger( StaleIndexCleanupTest.class );
 
+    // take it easy on Cassandra
+    private static final long writeDelayMs = 50;
+    private static final long readDelayMs = 50;
 
     Lock sequential = new ReentrantLock();
 
@@ -108,14 +114,16 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         assertEquals( "widget", cpUpdated.getField( "stuff" ).getValue() );
         UUID newVersion = cpUpdated.getVersion();
 
-        assertTrue( "New version is greater than old", UUIDComparator.staticCompare( newVersion, oldVersion ) > 0 );
+        assertTrue( "New version is greater than old", 
+                UUIDComparator.staticCompare( newVersion, oldVersion ) > 0 );
 
         assertEquals( 2, queryCollectionCp( "things", "thing", "select *" ).size() );
     }
 
 
     /**
-     * Test that the CpRelationManager cleans up and stale indexes that it finds when it is building search results.
+     * Test that the CpRelationManager cleans up and stale indexes that it finds when 
+     * it is building search results.
      */
     @Test
     public void testStaleIndexCleanup() throws Exception {
@@ -185,8 +193,8 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         // should return numEntities becuase it filters out the stale entities
         final int limit = 8;
 
-        //we order by updateCount asc, this forces old versions to appear first, otherwise, we don't clean them up in
-        // our versions
+        // we order by updateCount asc, this forces old versions to appear first, otherwise, 
+        // we don't clean them up in our versions
         Query q = Query.fromQL( "select * order by updateCount asc" );
         q.setLimit( limit );
         int thingCount = 0;
@@ -258,7 +266,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         }
         em.refreshIndex();
 
-        CandidateResults crs = queryCollectionCp( "things", "select *");
+        CandidateResults crs = queryCollectionCp( "things", "thing", "select *");
         Assert.assertEquals( "Expect no stale candidates yet", numEntities, crs.size() );
 
         // update each one a bunch of times
@@ -287,7 +295,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         em.refreshIndex();
 
         // query Core Persistence directly for total number of result candidates
-        crs = queryCollectionCp("things", "select *");
+        crs = queryCollectionCp("things", "thing", "select *");
         Assert.assertEquals( "Expect stale candidates", numEntities * (numUpdates + 1), crs.size());
 
         // delete all entities
@@ -300,7 +308,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         count = 0;
         do {
             Thread.sleep(100);
-            crs = queryCollectionCp("things", "select *");
+            crs = queryCollectionCp("things", "thing", "select *");
         } while ( crs.size() > 0 && count++ < 14 );
 
         Assert.assertEquals( "Expect no candidates", 0, crs.size() );
@@ -332,7 +340,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         }
         em.refreshIndex();
 
-        CandidateResults crs = queryCollectionCp( "things", "select *");
+        CandidateResults crs = queryCollectionCp( "things", "things", "select *");
         Assert.assertEquals( "Expect no stale candidates yet", numEntities, crs.size() );
 
         // update each one a bunch of times
@@ -361,7 +369,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         em.refreshIndex();
 
         // query Core Persistence directly for total number of result candidates
-        crs = queryCollectionCp("things", "select *");
+        crs = queryCollectionCp("things", "thing", "select *");
         Assert.assertEquals( "Expect candidates without earlier stale entities", numEntities, crs.size() );
     }
 
@@ -374,29 +382,34 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
         EntityManager em = app.getEntityManager();
 
-        CollectionScope cs = new CollectionScopeImpl( new SimpleId( em.getApplicationId(), TYPE_APPLICATION ),
-                new SimpleId( em.getApplicationId(), TYPE_APPLICATION ),
-                CpNamingUtils.getCollectionScopeNameFromEntityType( eref.getType() ) );
+        CollectionScope cs = new CollectionScopeImpl( 
+            new SimpleId( em.getApplicationId(), TYPE_APPLICATION ),
+            new SimpleId( em.getApplicationId(), TYPE_APPLICATION ),
+            CpNamingUtils.getCollectionScopeNameFromEntityType( eref.getType() ) );
 
-        EntityCollectionManagerFactory ecmf = CpSetup.getInjector().getInstance( EntityCollectionManagerFactory.class );
+        EntityCollectionManagerFactory ecmf = 
+                CpSetup.getInjector().getInstance( EntityCollectionManagerFactory.class );
 
         EntityCollectionManager ecm = ecmf.createCollectionManager( cs );
 
-        return ecm.load( new SimpleId( eref.getUuid(), eref.getType() ) ).toBlocking().lastOrDefault( null );
+        return ecm.load( new SimpleId( eref.getUuid(), eref.getType() ) )
+                .toBlocking().lastOrDefault( null );
     }
 
 
     /**
-     * Go around EntityManager and execute query directly against Core Persistence. Results may include stale index
-     * entries.
+     * Go around EntityManager and execute query directly against Core Persistence. 
+     * Results may include stale index entries.
      */
-    private CandidateResults queryCollectionCp( final String collName, final String type, final String query ) {
+    private CandidateResults queryCollectionCp( 
+            final String collName, final String type, final String query ) {
 
         EntityManager em = app.getEntityManager();
 
         EntityIndexFactory eif = CpSetup.getInjector().getInstance( EntityIndexFactory.class );
 
-        ApplicationScope as = new ApplicationScopeImpl( new SimpleId( em.getApplicationId(), TYPE_APPLICATION ) );
+        ApplicationScope as = new ApplicationScopeImpl( 
+            new SimpleId( em.getApplicationId(), TYPE_APPLICATION ) );
         EntityIndex ei = eif.createEntityIndex( as );
 
         IndexScope is = new IndexScopeImpl( new SimpleId( em.getApplicationId(), TYPE_APPLICATION ),

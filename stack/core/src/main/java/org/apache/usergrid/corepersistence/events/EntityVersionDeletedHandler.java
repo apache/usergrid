@@ -36,6 +36,7 @@ import java.util.List;
 
 import com.google.inject.Inject;
 import org.apache.usergrid.corepersistence.HybridEntityManagerFactory;
+import org.apache.usergrid.persistence.EntityManagerFactory;
 
 
 /**
@@ -47,8 +48,10 @@ public class EntityVersionDeletedHandler implements EntityVersionDeleted {
 
     private final SerializationFig serializationFig;
 
+    private EntityManagerFactory emf;
+
     @Inject
-    public EntityVersionDeletedHandler(SerializationFig fig) {
+    public EntityVersionDeletedHandler(SerializationFig fig, EntityManagerFactory emf) {
         this.serializationFig = fig;
     }
 
@@ -56,7 +59,7 @@ public class EntityVersionDeletedHandler implements EntityVersionDeleted {
     public void versionDeleted(
             final CollectionScope scope, final Id entityId, final List<MvccEntity> entityVersions) {
 
-        HybridEntityManagerFactory hemf = (HybridEntityManagerFactory)CpSetup.getEntityManagerFactory();
+        HybridEntityManagerFactory hemf = (HybridEntityManagerFactory)emf;
         CpEntityManagerFactory cpemf = (CpEntityManagerFactory)hemf.getImplementation();
 
         final EntityIndex ei = cpemf.getManagerCache().getEntityIndex(scope);
