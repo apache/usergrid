@@ -37,7 +37,7 @@ public interface IndexFig extends GuicyFig {
 
     public static final String ELASTICSEARCH_INDEX_PREFIX = "elasticsearch.index_prefix";
 
-    public static final String ELASTICSEARCH_ALIAS_POSTFIX = "elasticsearch_index_postfix";
+    public static final String ELASTICSEARCH_ALIAS_POSTFIX = "elasticsearch.alias_postfix";
 
     public static final String ELASTICSEARCH_STARTUP = "elasticsearch.startup";
 

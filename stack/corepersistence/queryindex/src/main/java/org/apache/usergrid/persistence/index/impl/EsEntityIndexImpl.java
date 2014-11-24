@@ -180,12 +180,15 @@ public class EsEntityIndexImpl implements EntityIndex {
         if(!admin.indices().exists(new IndicesExistsRequest(indexVersionName)).actionGet().isExists()) {
             final CreateIndexResponse cir = admin.indices().prepareCreate(indexVersionName).setSettings(settings).execute().actionGet();
             logger.info( "Created new Index Name [{}] ACK=[{}]", indexVersionName, cir.isAcknowledged() );
+        }else{
+            logger.info( " Index Name [{}] already exists", indexVersionName);
         }
         //check if alias exists and get the alias
         if(!admin.indices().aliasesExist(new GetAliasesRequest(aliasName)).actionGet().exists()) {
             final Boolean isAck = admin.indices().prepareAliases().addAlias(indexVersionName, aliasName).execute().actionGet().isAcknowledged();
             logger.info( "Created new Alias Name [{}] ACK=[{}]", aliasName, isAck);
-
+        }else{
+            logger.info( " Alias Name [{}] already exists", aliasName);
         }
     }
 

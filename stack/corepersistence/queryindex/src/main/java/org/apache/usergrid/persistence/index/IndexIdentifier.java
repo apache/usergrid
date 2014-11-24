@@ -40,7 +40,7 @@ public class IndexIdentifier{
      * @return
      */
     public String getAlias() {
-        return getIndexBase() + config.getAliasPostfix();
+        return getIndexBase() + "_" + config.getAliasPostfix();
     }
 
     /**

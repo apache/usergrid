@@ -136,6 +136,18 @@ public class EntityIndexTest extends BaseIT {
         testQueries( indexScope, searchTypes,  entityIndex );
     }
 
+    @Test
+    public void testMultipleIndexInitializations(){
+        Id appId = new SimpleId( "application" );
+
+        ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
+
+        EntityIndex entityIndex = eif.createEntityIndex( applicationScope );
+        for(int i=0;i<10;i++) {
+            entityIndex.initializeIndex();
+        }
+
+    }
 
     @Test
     public void testDeindex() {
