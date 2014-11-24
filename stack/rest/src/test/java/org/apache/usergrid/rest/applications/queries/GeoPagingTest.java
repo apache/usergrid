@@ -151,25 +151,25 @@ public class GeoPagingTest extends AbstractRestIT {
     public void testFarAwayLocationFromCenter() throws IOException {
 
         JsonNode node = null;
-        String collectionName = "testFarAwayLocation" + UUIDUtils.newTimeUUID();
+        String collectionType = "testFarAwayLocation" + UUIDUtils.newTimeUUID();
         Point center = new Point( 37.776753, -122.407846 );
 
         String queryClose = locationQuery( 10000, center );
-        String queryFar = locationQuery( 40000000, center );
+        String queryFar = locationQuery(40000000, center);
 
         //TODO: move test setup out of the test.
         /*Create */
-        createGeoUser( "usergrid", collectionName, -33.746369, 150.952183 );
+        createGeoUser( "usergrid", collectionType, -33.746369, 150.952183 );
 
-        createGeoUser( "usergrid2", collectionName, -33.889058, 151.124024 );
+        createGeoUser( "usergrid2", collectionType, -33.889058, 151.124024 );
 
         /* run queries */
 
-        node = queryCollection( collectionName, queryClose );
+        node = queryCollection( collectionType, queryClose );
 
         assertEquals( "Results from nearby, should return nothing", 0, node.get( "entities" ).size() );
 
-        node = queryCollection( collectionName, queryFar );
+        node = queryCollection( collectionType, queryFar );
 
         assertEquals( "Results from center point to ridiculously far", 2, node.get( "entities" ).size() );
     }
@@ -182,26 +182,26 @@ public class GeoPagingTest extends AbstractRestIT {
     @Test
     public void testFarAwayLocationWithOneResultCloser() throws IOException {
         JsonNode node = null;
-        String collectionName = "testFarAwayLocation" + UUIDUtils.newTimeUUID();
+        String collectionType = "testFarAwayLocation" + UUIDUtils.newTimeUUID();
         Point center = new Point( -33.746369, 150.952183 );
 
         String queryClose = locationQuery( 10000, center );
         String queryFar = locationQuery( 40000000, center );
 
         /*Create */
-        createGeoUser( "usergrid", collectionName, -33.746369, 150.952183 );
+        createGeoUser( "usergrid", collectionType, -33.746369, 150.952183 );
 
-        createGeoUser( "usergrid2", collectionName, -33.889058, 151.124024 );
+        createGeoUser("usergrid2", collectionType, -33.889058, 151.124024);
 
         /* run queries */
 
-        node = queryCollection( collectionName, queryClose );
+        node = queryCollection( collectionType, queryClose );
 
-        assertEquals( "Results from nearby, should return 1 store", 1, node.get( "entities" ).size() );
+        assertEquals("Results from nearby, should return 1 store", 1, node.get("entities").size());
 
-        node = queryCollection( collectionName, queryFar );
+        node = queryCollection( collectionType, queryFar );
 
-        assertEquals( "Results from center point to ridiculously far", 2, node.get( "entities" ).size() );
+        assertEquals("Results from center point to ridiculously far", 2, node.get("entities").size());
     }
 
 
@@ -261,7 +261,7 @@ public class GeoPagingTest extends AbstractRestIT {
             }
             catch ( UniformInterfaceException e ) {
                 JsonNode nodeError = mapper.readTree( e.getResponse().getEntity( String.class ) );
-                fail( node.get( "error" ).textValue() );
+                fail( nodeError.get( "error" ).textValue() );
             }
 
 /*
@@ -282,14 +282,14 @@ public class GeoPagingTest extends AbstractRestIT {
     }
 
 
-    private JsonNode queryCollection( String collectionName, String query ) throws IOException {
+    private JsonNode queryCollection( String collectionType, String query ) throws IOException {
         JsonNode node = null;
         try {
-            node = context.collection( collectionName ).withQuery( query ).get();
+            node = context.collection( collectionType ).withQuery( query ).get();
         }
         catch ( UniformInterfaceException e ) {
             JsonNode nodeError = mapper.readTree( e.getResponse().getEntity( String.class ) );
-            fail( node.get( "error" ).textValue() );
+            fail( nodeError.get( "error" ).textValue() );
         }
 
         assertNotNull( node );
@@ -297,7 +297,7 @@ public class GeoPagingTest extends AbstractRestIT {
     }
 
 
-    private void createGeoUser( String username, String collectionName, Double lat, Double lon ) throws IOException {
+    private void createGeoUser( String username, String collectionType, Double lat, Double lon ) throws IOException {
 
         JsonNode node = null;
 
@@ -306,11 +306,11 @@ public class GeoPagingTest extends AbstractRestIT {
         user.put( "name", username );
 
         try {
-            node = context.collection( collectionName ).post( user );
+            node = context.collection( collectionType ).post( user );
         }
         catch ( UniformInterfaceException e ) {
             JsonNode nodeError = mapper.readTree( e.getResponse().getEntity( String.class ) );
-            fail( node.get( "error" ).textValue() );
+            fail( nodeError.get( "error" ).textValue() );
         }
 
         assertNotNull( node );
@@ -328,6 +328,7 @@ public class GeoPagingTest extends AbstractRestIT {
 
         return entityData;
     }
+
 
 
     private String locationQuery( int metersAway, Point startingPoint ) {

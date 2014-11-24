@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import org.apache.usergrid.AbstractCoreIT;
@@ -73,6 +74,13 @@ public class EntityDataMigrationIT extends AbstractCoreIT {
     private EntityManagerFactory emf;
 
 
+
+    /**
+     * Rule to do the resets we need
+     */
+    @Rule
+    public MigrationTestRule migrationTestRule = new MigrationTestRule( app, CpSetup.getInjector() ,EntityDataMigration.class  );
+
     @Before
     public void setup() {
         emf = setup.getEmf();
@@ -90,12 +98,7 @@ public class EntityDataMigrationIT extends AbstractCoreIT {
     public void testDataMigration() throws Throwable {
 
         assertEquals( "version 3 expected", 3, entityDataMigration.getVersion() );
-
-
-        /**
-         * Reset to our version -1 and start the migration
-         */
-        dataMigrationManager.resetToVersion( entityDataMigration.getVersion() - 1 );
+        assertEquals( "Previous version expected", 2, dataMigrationManager.getCurrentVersion());
 
 
         final EntityManager newAppEm = app.getEntityManager();

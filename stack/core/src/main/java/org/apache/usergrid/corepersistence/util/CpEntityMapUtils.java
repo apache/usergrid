@@ -137,37 +137,45 @@ public class CpEntityMapUtils {
     private static void processMapValue(
             Object value, String fieldName, Entity entity, String entityType) {
 
-        Field field = null;
-
         // is the map really a location element?
-        Map<String, Object> m = (Map<String, Object>)value;
-        if ( m.size() == 2) {
-            Double lat = null;
-            Double lon = null;
-            try {
-                if ( m.get("latitude") != null && m.get("longitude") != null ) {
-                    lat = Double.parseDouble( m.get("latitude").toString() );
-                    lon = Double.parseDouble( m.get("longitude").toString() );
-                    
-                } else if ( m.get("lat") != null && m.get("lon") != null ) {
-                    lat = Double.parseDouble( m.get("lat").toString() );
-                    lon = Double.parseDouble( m.get("lon").toString() );
+        if ("location" .equals(fieldName.toString().toLowerCase()) ) {
+            // get the object to inspect
+            Map<String, Object> m = (Map<String, Object>) value;
+            // should have two elements
+            if (m.size() == 2) {
+                Double lat = null;
+                Double lon = null;
+                // check the properties to make sure they are set and are doubles
+                if (m.get("latitude") != null && m.get("longitude") != null) {
+                    try {
+                        lat = Double.parseDouble(m.get("latitude").toString());
+                        lon = Double.parseDouble(m.get("longitude").toString());
+                    } catch (NumberFormatException ignored) {
+                        throw new IllegalArgumentException("Latitude and longitude must be doubles (e.g. 32.1234).");
+                    }
+                } else if (m.get("lat") != null && m.get("lon") != null) {
+                    try {
+                        lat = Double.parseDouble(m.get("lat").toString());
+                        lon = Double.parseDouble(m.get("lon").toString());
+                    } catch (NumberFormatException ignored) {
+                        throw new IllegalArgumentException("Latitude and longitude must be doubles (e.g. 32.1234).");
+                    }
+                } else {
+                    throw new IllegalArgumentException("Location properties require two fields - latitude and longitude, or lat and lon");
                 }
-            } catch ( NumberFormatException ignored ) {}
-            
-            if ( lat != null && lon != null ) {
-                field = new LocationField( fieldName, new Location( lat, lon ));
+
+                if (lat != null && lon != null) {
+                    entity.setField( new LocationField(fieldName, new Location(lat, lon)));
+                } else {
+                    throw new IllegalArgumentException("Unable to parse location field properties - make sure they conform - lat and lon, and should be doubles.");
+                }
+            } else {
+                throw new IllegalArgumentException("Location properties require two fields - latitude and longitude, or lat and lon.");
             }
-        }
-        
-        if ( field == null ) {
-            
-            // not a location element, process it as map
-            entity.setField( new EntityObjectField( fieldName,
-                    fromMap( (Map<String, Object>)value, entityType, false ))); // recursion
-            
         } else {
-            entity.setField( field );
+            // not a location element, process it as map
+            entity.setField(new EntityObjectField(fieldName,
+                    fromMap((Map<String, Object>) value, entityType, false))); // recursion
         }
     }
 

@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import org.apache.usergrid.AbstractCoreIT;
@@ -35,8 +36,10 @@ import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
 import org.apache.usergrid.persistence.map.impl.MapSerializationImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.google.inject.Injector;
 import com.netflix.astyanax.Keyspace;
@@ -58,6 +61,15 @@ public class EntityTypeMappingMigrationIT extends AbstractCoreIT {
     private Keyspace keyspace;
     private EntityManagerFactory emf;
     private ManagerCache managerCache;
+    private DataMigrationManager dataMigrationManager;
+
+
+    /**
+     * Rule to do the resets we need
+     */
+    @Rule
+    public MigrationTestRule migrationTestRule = new MigrationTestRule( app, CpSetup.getInjector() ,EntityTypeMappingMigration.class  );
+
 
 
     @Before
@@ -67,6 +79,7 @@ public class EntityTypeMappingMigrationIT extends AbstractCoreIT {
         entityTypeMappingMigration = injector.getInstance( EntityTypeMappingMigration.class );
         keyspace = injector.getInstance( Keyspace.class );
         managerCache = injector.getInstance( ManagerCache.class );
+        dataMigrationManager = injector.getInstance( DataMigrationManager.class );
     }
 
 
@@ -74,6 +87,7 @@ public class EntityTypeMappingMigrationIT extends AbstractCoreIT {
     public void testIdMapping() throws Throwable {
 
         assertEquals( "version 1 expected", 1, entityTypeMappingMigration.getVersion() );
+        assertEquals( "Previous version expected", 0, dataMigrationManager.getCurrentVersion());
 
         final EntityManager newAppEm = app.getEntityManager();
 
@@ -96,6 +110,9 @@ public class EntityTypeMappingMigrationIT extends AbstractCoreIT {
          */
         keyspace.truncateColumnFamily( MapSerializationImpl.MAP_ENTRIES );
         keyspace.truncateColumnFamily( MapSerializationImpl.MAP_KEYS );
+
+        app.createApplication( GraphShardVersionMigrationIT.class.getSimpleName()+ UUIDGenerator.newTimeUUID(), "migrationTest" );
+
 
 
         final TestProgressObserver progressObserver = new TestProgressObserver();

@@ -24,9 +24,11 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import org.apache.usergrid.AbstractCoreIT;
+import org.apache.usergrid.CoreApplication;
 import org.apache.usergrid.corepersistence.CpSetup;
 import org.apache.usergrid.corepersistence.EntityWriteHelper;
 import org.apache.usergrid.corepersistence.ManagerCache;
@@ -35,9 +37,11 @@ import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationManagerImpl;
 import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerialization;
+import org.apache.usergrid.persistence.core.migration.schema.MigrationException;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -59,6 +63,14 @@ public class GraphShardVersionMigrationIT extends AbstractCoreIT {
     private MigrationInfoSerialization migrationInfoSerialization;
 
 
+    /**
+     * Rule to do the resets we need
+     */
+    @Rule
+    public MigrationTestRule migrationTestRule = new MigrationTestRule( app, CpSetup.getInjector() ,GraphShardVersionMigration.class  );
+
+
+
     @Before
     public void setup() {
         injector = CpSetup.getInjector();
@@ -66,6 +78,7 @@ public class GraphShardVersionMigrationIT extends AbstractCoreIT {
         managerCache = injector.getInstance( ManagerCache.class );
         dataMigrationManager = injector.getInstance( DataMigrationManager.class );
         migrationInfoSerialization = injector.getInstance( MigrationInfoSerialization.class );
+
     }
 
 
@@ -73,11 +86,8 @@ public class GraphShardVersionMigrationIT extends AbstractCoreIT {
     public void testIdMapping() throws Throwable {
 
         assertEquals( "version 2 expected", 2, graphShardVersionMigration.getVersion() );
+        assertEquals( "Previous version expected", 1, dataMigrationManager.getCurrentVersion());
 
-        /**
-         * Reset to our version -1 and start the migration
-         */
-        dataMigrationManager.resetToVersion( graphShardVersionMigration.getVersion() - 1 );
 
 
         final EntityManager newAppEm = app.getEntityManager();
