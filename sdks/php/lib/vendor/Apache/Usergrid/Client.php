@@ -46,13 +46,13 @@ class Client {
   private $url = 'http://api.usergrid.com';
 
   /**
-   * Organization name. Find your in the Admin Portal 
+   * Organization name. Find your in the Admin Portal
    * @var string
    */
   private $org_name;
 
   /**
-   * App name. Find your in the Admin Portal 
+   * App name. Find your in the Admin Portal
    * @var string
    */
   private $app_name;
@@ -777,6 +777,35 @@ class Client {
     return $notification;
   }
 
+    /**
+     * Gets URL of Usergrid endpoint
+     *
+     * @return string
+     */
+    public function getUrl()
+    {
+        return $this->url;
+    }
+
+    /**
+     * Sets Usergrid endpoint URL
+     *
+     * @param string $url
+     * @return bool
+     * @throws UGException
+     */
+    public function setUrl($url)
+    {
+        if (filter_var($url, FILTER_VALIDATE_URL) !== false) {
+            $this->url = $url;
+            return true;
+        }
+        else {
+            if ($this->use_exceptions) {
+                throw new UGException('Invalid URL');
+            }
+        }
+    }
 
 }
 
