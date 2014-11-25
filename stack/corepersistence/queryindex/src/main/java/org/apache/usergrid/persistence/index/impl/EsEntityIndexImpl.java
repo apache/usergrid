@@ -29,6 +29,7 @@ import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.cluster.tasks.PendingClusterTasksRequest;
 import org.elasticsearch.action.admin.cluster.tasks.PendingClusterTasksResponse;
+import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
 import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateResponse;
@@ -36,6 +37,8 @@ import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequestBuilder;
 import org.elasticsearch.client.AdminClient;
+import org.elasticsearch.cluster.metadata.AliasMetaData;
+import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentBuilder;
@@ -115,11 +118,8 @@ public class EsEntityIndexImpl implements EntityIndex {
 
 
     @Inject
-    public EsEntityIndexImpl( @Assisted final ApplicationScope appScope, final IndexFig config,
-                              final EsProvider provider ) {
-
+    public EsEntityIndexImpl( @Assisted final ApplicationScope appScope, final IndexFig config, final EsProvider provider ) {
         ValidationUtils.validateApplicationScope( appScope );
-
         this.applicationScope = appScope;
         this.esProvider = provider;
         this.config = config;
@@ -129,58 +129,67 @@ public class EsEntityIndexImpl implements EntityIndex {
         this.failureMonitor = new FailureMonitorImpl( config, provider );
     }
 
-
     @Override
     public void initializeIndex() {
+        final int numberOfShards = config.getNumberOfShards();
+        final int numberOfReplicas = config.getNumberOfReplicas();
+        createIndexAddToAlias(null,numberOfShards,numberOfReplicas);
+    }
 
+    @Override
+    public void createIndexAddToAlias(final String indexSuffix, final int numberOfShards, final int numberOfReplicas) {
         try {
-            if ( !mappingsCreated.getAndSet( true ) ) {
+
+            if (!mappingsCreated.getAndSet(true)) {
                 createMappings();
             }
 
-            createIndexAndAlias();
+            //get index name with suffix attached
+            String indexName = indexIdentifier.getIndex(indexSuffix);
 
-            // create the document, this ensures the index is ready
+            //Create index
+            try {
+                final AdminClient admin = esProvider.getClient().admin();
+                Settings settings = ImmutableSettings.settingsBuilder().put("index.number_of_shards", numberOfShards)
+                        .put("index.number_of_replicas", numberOfReplicas).build();
+                final CreateIndexResponse cir = admin.indices().prepareCreate(indexName).setSettings(settings).execute().actionGet();
+                logger.info("Created new Index Name [{}] ACK=[{}]", indexName, cir.isAcknowledged());
+            } catch (IndexAlreadyExistsException e) {
+                logger.info("Index Name [{}] already exists", indexName);
+            }
 
-            // Immediately create a document and remove it to ensure the entire cluster is ready 
-            // to receive documents. Occasionally we see errors.  
-            // See this post: http://s.apache.org/index-missing-exception
+            addAlias(indexSuffix);
 
             testNewIndex();
-        }
-        catch ( IndexAlreadyExistsException expected ) {
+        } catch (IndexAlreadyExistsException expected) {
             // this is expected to happen if index already exists, it's a no-op and swallow
-        }
-        catch ( IOException e ) {
-            throw new RuntimeException( "Unable to initialize index", e );
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to initialize index", e);
         }
     }
 
-    /**
-     * Create the index and alias
-     */
-    private void createIndexAndAlias() {
-        final int numberOfShards = config.getNumberOfShards();
-        final int numberOfReplicas = config.getNumberOfReplicas();
-        final AdminClient admin = esProvider.getClient().admin();
 
-        Settings settings = ImmutableSettings.settingsBuilder().put( "index.number_of_shards", numberOfShards)
-                .put( "index.number_of_replicas", numberOfReplicas ).build();
-
-        //TODO:swallow exception, look into setting up routing rules
-        String indexVersionName =  indexIdentifier.getIndex(0);
+    @Override
+    public void addAlias(final String indexSuffix) {
         try {
-            final CreateIndexResponse cir = admin.indices().prepareCreate(indexVersionName).setSettings(settings).execute().actionGet();
-            logger.info("Created new Index Name [{}] ACK=[{}]", indexVersionName, cir.isAcknowledged());
-        }catch(IndexAlreadyExistsException e){
-            logger.info("Index Name [{}] already exists",indexVersionName);
-        }
-        try {   //check if alias exists and get the alias
-            Boolean isAck = admin.indices().prepareAliases().addAlias(indexVersionName, alias.getReadAlias()).execute().actionGet().isAcknowledged();
-            logger.info("Created new read Alias Name [{}] ACK=[{}]", alias, isAck);
+            Boolean isAck;
+            String indexName = indexIdentifier.getIndex(indexSuffix);
+            final AdminClient adminClient = esProvider.getClient().admin();
+            //remove write alias, can only have one
+            ImmutableOpenMap<String,List<AliasMetaData>> aliasMap = adminClient.indices().getAliases(new GetAliasesRequest(alias.getWriteAlias())).actionGet().getAliases();
+            String[] indexNames = aliasMap.keys().toArray(String.class);
+            for(String currentIndex : indexNames){
+                isAck = adminClient.indices().prepareAliases().removeAlias(currentIndex,alias.getWriteAlias()).execute().actionGet().isAcknowledged();
+                logger.info("Removed Index Name [{}] from Alias=[{}] ACK=[{}]",currentIndex, alias, isAck);
 
-            isAck = admin.indices().prepareAliases().addAlias(indexVersionName, alias.getWriteAlias()).execute().actionGet().isAcknowledged();
+            }
+            //add read alias
+            isAck = adminClient.indices().prepareAliases().addAlias(indexName, alias.getReadAlias()).execute().actionGet().isAcknowledged();
+            logger.info("Created new read Alias Name [{}] ACK=[{}]", alias, isAck);
+            //add write alias
+            isAck = adminClient.indices().prepareAliases().addAlias(indexName, alias.getWriteAlias()).execute().actionGet().isAcknowledged();
             logger.info("Created new write Alias Name [{}] ACK=[{}]", alias, isAck);
+
         } catch (Exception e) {
             logger.warn("Failed to create alias ", e);
         }
@@ -193,6 +202,10 @@ public class EsEntityIndexImpl implements EntityIndex {
      */
     private void testNewIndex() {
 
+        // create the document, this ensures the index is ready
+        // Immediately create a document and remove it to ensure the entire cluster is ready
+        // to receive documents. Occasionally we see errors.
+        // See this post: http://s.apache.org/index-missing-exception
 
         logger.info( "Refreshing Created new Index Name [{}]", alias);
 
@@ -430,7 +443,7 @@ public class EsEntityIndexImpl implements EntityIndex {
     public int getPendingTasks() {
 
         final PendingClusterTasksResponse tasksResponse = esProvider.getClient().admin()
-                .cluster().pendingClusterTasks( new PendingClusterTasksRequest() ).actionGet();
+                .cluster().pendingClusterTasks(new PendingClusterTasksRequest()).actionGet();
 
         return tasksResponse.pendingTasks().size();
     }
@@ -475,7 +488,7 @@ public class EsEntityIndexImpl implements EntityIndex {
      */
     public void deleteIndex() {
         AdminClient adminClient = esProvider.getClient().admin();
-        DeleteIndexResponse response = adminClient.indices().prepareDelete( indexIdentifier.getIndex(0) ).get();
+        DeleteIndexResponse response = adminClient.indices().prepareDelete( indexIdentifier.getIndex(null) ).get();
         if ( response.isAcknowledged() ) {
             logger.info( "Deleted index: " + alias);
         }
@@ -519,7 +532,7 @@ public class EsEntityIndexImpl implements EntityIndex {
 
         try {
             ClusterHealthResponse chr = esProvider.getClient().admin()
-                    .cluster().health( new ClusterHealthRequest() ).get();
+                    .cluster().health(new ClusterHealthRequest()).get();
             return Health.valueOf( chr.getStatus().name() );
         }
         catch ( Exception ex ) {
@@ -539,7 +552,7 @@ public class EsEntityIndexImpl implements EntityIndex {
 
         try {
             ClusterHealthResponse chr = esProvider.getClient().admin().cluster()
-                                                  .health(new ClusterHealthRequest(new String[]{indexIdentifier.getIndex(0)}))
+                                                  .health(new ClusterHealthRequest(new String[]{indexIdentifier.getIndex(null)}))
                                                   .get();
             return Health.valueOf( chr.getStatus().name() );
         }

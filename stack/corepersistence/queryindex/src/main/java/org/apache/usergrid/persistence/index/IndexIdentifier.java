@@ -45,12 +45,12 @@ public class IndexIdentifier{
 
     /**
      * Get index name, send in additional parameter to add incremental indexes
-     * @param version
+     * @param suffix
      * @return
      */
-    public String getIndex(int version) {
-        if (version > 0) {
-            return getIndexBase() + "_v" + (version + 1);
+    public String getIndex(String suffix) {
+        if (suffix != null) {
+            return getIndexBase() + "_" + (suffix + 1);
         } else {
             return getIndexBase();
         }
