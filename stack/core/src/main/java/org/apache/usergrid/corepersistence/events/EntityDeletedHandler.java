@@ -24,7 +24,6 @@ import org.apache.usergrid.persistence.model.entity.Id;
 
 import java.util.UUID;
 import org.apache.usergrid.corepersistence.CpEntityManagerFactory;
-import org.apache.usergrid.corepersistence.HybridEntityManagerFactory;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.slf4j.Logger;
@@ -52,8 +51,7 @@ public class EntityDeletedHandler implements EntityDeleted {
             new Object[] { entityId.getType(), entityId.getUuid(), version,
                 scope.getName(), scope.getOwner(), scope.getApplication()});
 
-        HybridEntityManagerFactory hemf = (HybridEntityManagerFactory)emf;
-        CpEntityManagerFactory cpemf = (CpEntityManagerFactory)hemf.getImplementation();
+        CpEntityManagerFactory cpemf = (CpEntityManagerFactory)emf;
 
         final EntityIndex ei = cpemf.getManagerCache().getEntityIndex(scope);
 

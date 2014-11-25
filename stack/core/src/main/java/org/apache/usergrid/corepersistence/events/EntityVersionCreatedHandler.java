@@ -22,7 +22,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.corepersistence.CpEntityManagerFactory;
-import org.apache.usergrid.corepersistence.HybridEntityManagerFactory;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.event.EntityVersionCreated;
@@ -54,13 +53,14 @@ public class EntityVersionCreatedHandler implements EntityVersionCreated {
                 new Object[] { entity.getId().getType(), entity.getId().getUuid(), entity.getVersion(),
                         scope.getName(), scope.getOwner(), scope.getApplication()});
 
-        HybridEntityManagerFactory hemf = (HybridEntityManagerFactory)emf;
-        CpEntityManagerFactory cpemf = (CpEntityManagerFactory)hemf.getImplementation();
+        CpEntityManagerFactory cpemf = (CpEntityManagerFactory)emf;
 
         final EntityIndex ei = cpemf.getManagerCache().getEntityIndex(scope);
 
-        //TODO why aren't we using a collection fig here? This seems kludgy
+        // This check is for testing purposes and for a test that to be able to dynamically turn 
+        // off and on delete previous versions so that it can test clean-up on read.
         if ( System.getProperty( "allow.stale.entities", "false" ).equals( "false" )) {
+
             ei.deletePreviousVersions( entity.getId(), entity.getVersion() );
         }
     }

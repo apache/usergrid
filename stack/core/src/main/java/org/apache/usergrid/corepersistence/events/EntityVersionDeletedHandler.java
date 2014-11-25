@@ -18,7 +18,6 @@
 package org.apache.usergrid.corepersistence.events;
 
 import org.apache.usergrid.corepersistence.CpEntityManagerFactory;
-import org.apache.usergrid.corepersistence.CpSetup;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
@@ -35,7 +34,6 @@ import rx.schedulers.Schedulers;
 import java.util.List;
 
 import com.google.inject.Inject;
-import org.apache.usergrid.corepersistence.HybridEntityManagerFactory;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 
 
@@ -59,8 +57,7 @@ public class EntityVersionDeletedHandler implements EntityVersionDeleted {
     public void versionDeleted(
             final CollectionScope scope, final Id entityId, final List<MvccEntity> entityVersions) {
 
-        HybridEntityManagerFactory hemf = (HybridEntityManagerFactory)emf;
-        CpEntityManagerFactory cpemf = (CpEntityManagerFactory)hemf.getImplementation();
+        CpEntityManagerFactory cpemf = (CpEntityManagerFactory)emf;
 
         final EntityIndex ei = cpemf.getManagerCache().getEntityIndex(scope);
         
