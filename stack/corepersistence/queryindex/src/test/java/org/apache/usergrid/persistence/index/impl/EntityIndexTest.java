@@ -131,8 +131,12 @@ public class EntityIndexTest extends BaseIT {
 
         insertJsonBlob(entityIndex, entityType, indexScope, "/sample-large.json",100,100);
 
-        testQueries( indexScope, searchTypes,  entityIndex );
+        entityIndex.refresh();
 
+        //Hilda Youn
+        testQuery(indexScope, searchTypes, entityIndex, "name = 'Hilda Young'", 1 );
+
+        testQuery(indexScope, searchTypes, entityIndex, "name = 'Lowe Kelley'", 1 );
     }
 
     private void insertJsonBlob(EntityIndex entityIndex, String entityType, IndexScope indexScope, String filePath,final int max,final int startIndex) throws IOException {
