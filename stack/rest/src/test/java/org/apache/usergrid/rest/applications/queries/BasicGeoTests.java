@@ -50,7 +50,7 @@ import static org.junit.Assert.fail;
  *
  * @author rockerston
  */
-public class StandardGeoTests extends AbstractRestIT {
+public class BasicGeoTests extends AbstractRestIT {
 
     @Rule
     public TestContextSetup context = new TestContextSetup( this );
