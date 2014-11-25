@@ -46,6 +46,7 @@ import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import java.util.Set;
+import org.apache.usergrid.persistence.core.guice.ProxyImpl;
 
 import rx.Observable;
 import rx.functions.Action1;
@@ -79,7 +80,7 @@ public class EntityVersionCleanupTask implements Task<Void> {
     public EntityVersionCleanupTask( 
         final SerializationFig serializationFig,
         final MvccLogEntrySerializationStrategy logEntrySerializationStrategy,
-        final MvccEntitySerializationStrategy   entitySerializationStrategy,
+        @ProxyImpl final MvccEntitySerializationStrategy   entitySerializationStrategy,
         final UniqueValueSerializationStrategy  uniqueValueSerializationStrategy,
         final Keyspace                          keyspace,
         final Set<EntityVersionDeleted>         listeners, // MUST be a set or Guice will not inject
@@ -129,11 +130,12 @@ public class EntityVersionCleanupTask implements Task<Void> {
             Observable.create(new ObservableIterator<MvccEntity>("deleteColumns") {
                 @Override
                 protected Iterator<MvccEntity> getIterator() {
-                    Iterator<MvccEntity> entities =  entitySerializationStrategy
-                            .load(scope, entityId, version, serializationFig.getBufferSize());
+                    Iterator<MvccEntity> entities =  entitySerializationStrategy.loadDescendingHistory(
+                        scope, entityId, version, 1000); // TODO: what fetchsize should we use here?
                     return entities;
                 }
-            })       //buffer them for efficiency
+            })
+            //buffer them for efficiency
             .skip(1)
             .buffer(serializationFig.getBufferSize()).doOnNext(
             new Action1<List<MvccEntity>>() {
@@ -157,7 +159,8 @@ public class EntityVersionCleanupTask implements Task<Void> {
                                 continue;
                             }
                             final UniqueValue unique = new UniqueValueImpl( field, entityId, entityVersion);
-                            final MutationBatch deleteMutation = uniqueValueSerializationStrategy.delete(scope,unique);
+                            final MutationBatch deleteMutation = 
+                                    uniqueValueSerializationStrategy.delete(scope,unique);
                             batch.mergeShallow(deleteMutation);
                         }
 

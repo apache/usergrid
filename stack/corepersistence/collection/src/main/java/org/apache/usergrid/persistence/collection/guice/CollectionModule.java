@@ -18,7 +18,6 @@
 package org.apache.usergrid.persistence.collection.guice;
 
 
-import java.util.Collections;
 
 import org.safehaus.guicyfig.GuicyFigModule;
 
@@ -51,7 +50,6 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.multibindings.Multibinder;
-import java.util.List;
 import org.apache.usergrid.persistence.collection.event.EntityVersionCreated;
 
 

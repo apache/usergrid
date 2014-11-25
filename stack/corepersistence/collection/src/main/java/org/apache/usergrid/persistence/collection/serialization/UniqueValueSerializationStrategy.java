@@ -23,13 +23,14 @@ import java.util.Collection;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.core.migration.schema.Migration;
 import org.apache.usergrid.persistence.model.field.Field;
 
 
 /**
  * Reads and writes to UniqueValues column family.
  */
-public interface UniqueValueSerializationStrategy {
+public interface UniqueValueSerializationStrategy extends Migration {
 
     /**
      * Write the specified UniqueValue to Cassandra with optional timeToLive in milliseconds.

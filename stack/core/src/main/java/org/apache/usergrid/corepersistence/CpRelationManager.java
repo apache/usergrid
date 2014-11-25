@@ -120,6 +120,7 @@ import rx.functions.Func1;
 import static java.util.Arrays.asList;
 
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
+import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getCollectionScopeNameFromEntityType;
 import static org.apache.usergrid.persistence.Schema.COLLECTION_ROLES;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTED_ENTITIES;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTED_TYPES;
@@ -219,10 +220,7 @@ public class CpRelationManager implements RelationManager {
         this.indexBucketLocator = indexBucketLocator; // TODO: this also
 
         // load the Core Persistence version of the head entity as well
-        this.headEntityScope = new CollectionScopeImpl(
-            this.applicationScope.getApplication(),
-            this.applicationScope.getApplication(),
-            CpNamingUtils.getCollectionScopeNameFromEntityType( headEntity.getType() ) );
+        this.headEntityScope = getCollectionScopeNameFromEntityType(applicationScope.getApplication(), headEntity.getType());
 
         if ( logger.isDebugEnabled() ) {
             logger.debug( "Loading head entity {}:{} from scope\n   app {}\n   owner {}\n   name {}",
@@ -606,10 +604,7 @@ public class CpRelationManager implements RelationManager {
     public Entity addToCollection( String collName, EntityRef itemRef, boolean connectBack ) 
             throws Exception {
 
-        CollectionScope memberScope = new CollectionScopeImpl( 
-            applicationScope.getApplication(),
-            applicationScope.getApplication(),
-            CpNamingUtils.getCollectionScopeNameFromEntityType( itemRef.getType() ) );
+        CollectionScope memberScope = getCollectionScopeNameFromEntityType(applicationScope.getApplication(), itemRef.getType());
 
         Id entityId = new SimpleId( itemRef.getUuid(), itemRef.getType() ); 
         org.apache.usergrid.persistence.model.entity.Entity memberEntity = 
@@ -642,10 +637,7 @@ public class CpRelationManager implements RelationManager {
         }
 
         // load the new member entity to be added to the collection from its default scope
-        CollectionScope memberScope = new CollectionScopeImpl(
-                applicationScope.getApplication(),
-                applicationScope.getApplication(),
-                CpNamingUtils.getCollectionScopeNameFromEntityType( itemRef.getType() ) );
+        CollectionScope memberScope = getCollectionScopeNameFromEntityType(applicationScope.getApplication(), itemRef.getType());
 
         //TODO, this double load should disappear once events are in
         Id entityId = new SimpleId( itemRef.getUuid(), itemRef.getType() );
@@ -797,11 +789,7 @@ public class CpRelationManager implements RelationManager {
         }
 
         // load the entity to be removed to the collection
-        CollectionScope memberScope = new CollectionScopeImpl(
-                this.applicationScope.getApplication(),
-                this.applicationScope.getApplication(),
-                CpNamingUtils.getCollectionScopeNameFromEntityType( itemRef.getType() ) );
-        EntityCollectionManager memberMgr = managerCache.getEntityCollectionManager( memberScope );
+        CollectionScope memberScope = getCollectionScopeNameFromEntityType(applicationScope.getApplication(), itemRef.getType());
 
         if ( logger.isDebugEnabled() ) {
             logger.debug( "Loading entity to remove from collection "
@@ -1017,10 +1005,7 @@ public class CpRelationManager implements RelationManager {
 
         ConnectionRefImpl connection = new ConnectionRefImpl( headEntity, connectionType, connectedEntityRef );
 
-        CollectionScope targetScope = new CollectionScopeImpl(
-            applicationScope.getApplication(),
-            applicationScope.getApplication(),
-            CpNamingUtils.getCollectionScopeNameFromEntityType( connectedEntityRef.getType() ) );
+        CollectionScope targetScope = getCollectionScopeNameFromEntityType(applicationScope.getApplication(), connectedEntityRef.getType());
 
         if ( logger.isDebugEnabled() ) {
             logger.debug("createConnection(): "
@@ -1249,12 +1234,8 @@ public class CpRelationManager implements RelationManager {
 
         String connectionType = connectionRef.getConnectedEntity().getConnectionType();
 
-        CollectionScope targetScope = new CollectionScopeImpl(
-                applicationScope.getApplication(),
-                applicationScope.getApplication(),
-                CpNamingUtils.getCollectionScopeNameFromEntityType( connectedEntityRef.getType()) );
-
-        EntityCollectionManager targetEcm = managerCache.getEntityCollectionManager( targetScope );
+        CollectionScope targetScope = getCollectionScopeNameFromEntityType( applicationScope.getApplication(),
+                connectedEntityRef.getType() );
 
         if ( logger.isDebugEnabled() ) {
             logger.debug( "Deleting connection '{}' from source {}:{} \n   to target {}:{}",

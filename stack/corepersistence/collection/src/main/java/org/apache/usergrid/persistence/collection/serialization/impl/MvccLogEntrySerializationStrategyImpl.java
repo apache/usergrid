@@ -71,7 +71,7 @@ import com.netflix.astyanax.serializers.UUIDSerializer;
  * @author tnine
  */
 @Singleton
-public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerializationStrategy, Migration {
+public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerializationStrategy {
 
     private static final Logger LOG = LoggerFactory.getLogger( MvccLogEntrySerializationStrategyImpl.class );
 

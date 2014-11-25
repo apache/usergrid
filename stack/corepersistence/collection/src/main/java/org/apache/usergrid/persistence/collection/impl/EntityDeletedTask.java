@@ -37,6 +37,7 @@ import rx.schedulers.Schedulers;
 
 import java.util.Set;
 import java.util.UUID;
+import org.apache.usergrid.persistence.core.guice.ProxyImpl;
 
 
 /**
@@ -45,10 +46,10 @@ import java.util.UUID;
 public class EntityDeletedTask implements Task<Void> {
     private static final Logger LOG =  LoggerFactory.getLogger(EntityDeletedTask.class);
 
-    private EntityVersionCleanupFactory entityVersionCleanupFactory;
-    private MvccLogEntrySerializationStrategy logEntrySerializationStrategy;
-    private MvccEntitySerializationStrategy entitySerializationStrategy;
-    private Set<EntityDeleted> listeners;
+    private final EntityVersionCleanupFactory entityVersionCleanupFactory;
+    private final MvccLogEntrySerializationStrategy logEntrySerializationStrategy;
+    private final MvccEntitySerializationStrategy entitySerializationStrategy;
+    private final Set<EntityDeleted> listeners;
     private final CollectionScope collectionScope;
     private final Id entityId;
     private final UUID version;
@@ -58,7 +59,7 @@ public class EntityDeletedTask implements Task<Void> {
     public EntityDeletedTask( 
         EntityVersionCleanupFactory             entityVersionCleanupFactory,
         final MvccLogEntrySerializationStrategy logEntrySerializationStrategy,
-        final MvccEntitySerializationStrategy   entitySerializationStrategy,
+        @ProxyImpl final MvccEntitySerializationStrategy entitySerializationStrategy,
         final Set<EntityDeleted>                listeners, // MUST be a set or Guice will not inject
         @Assisted final CollectionScope         collectionScope, 
         @Assisted final Id                      entityId, 

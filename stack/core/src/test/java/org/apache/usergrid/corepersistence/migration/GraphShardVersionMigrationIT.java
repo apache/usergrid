@@ -32,12 +32,9 @@ import org.apache.usergrid.corepersistence.EntityWriteHelper;
 import org.apache.usergrid.corepersistence.ManagerCache;
 import org.apache.usergrid.corepersistence.rx.AllEntitiesInSystemObservable;
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationManagerImpl;
 import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerialization;
-import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerializationImpl;
-import org.apache.usergrid.persistence.core.migration.schema.MigrationManager;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -45,7 +42,6 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.inject.Injector;
-import com.netflix.astyanax.Keyspace;
 
 import rx.functions.Action1;
 
@@ -58,7 +54,6 @@ public class GraphShardVersionMigrationIT extends AbstractCoreIT {
 
     private Injector injector;
     private GraphShardVersionMigration graphShardVersionMigration;
-    private Keyspace keyspace;
     private ManagerCache managerCache;
     private DataMigrationManager dataMigrationManager;
     private MigrationInfoSerialization migrationInfoSerialization;
@@ -68,7 +63,6 @@ public class GraphShardVersionMigrationIT extends AbstractCoreIT {
     public void setup() {
         injector = CpSetup.getInjector();
         graphShardVersionMigration = injector.getInstance( GraphShardVersionMigration.class );
-        keyspace = injector.getInstance( Keyspace.class );
         managerCache = injector.getInstance( ManagerCache.class );
         dataMigrationManager = injector.getInstance( DataMigrationManager.class );
         migrationInfoSerialization = injector.getInstance( MigrationInfoSerialization.class );
@@ -78,14 +72,13 @@ public class GraphShardVersionMigrationIT extends AbstractCoreIT {
     @Test
     public void testIdMapping() throws Throwable {
 
-        assertEquals("version 2 expected", 2, graphShardVersionMigration.getVersion());
+        assertEquals( "version 2 expected", 2, graphShardVersionMigration.getVersion() );
 
         /**
          * Reset to our version -1 and start the migration
          */
-        dataMigrationManager.resetToVersion( graphShardVersionMigration.getVersion()-1 );
-
-
+        dataMigrationManager.resetToVersion( graphShardVersionMigration.getVersion() - 1 );
+        dataMigrationManager.invalidate();
 
 
 
@@ -114,40 +107,41 @@ public class GraphShardVersionMigrationIT extends AbstractCoreIT {
 
         //read everything in previous version format and put it into our types.
 
-        AllEntitiesInSystemObservable.getAllEntitiesInSystem( managerCache )
-                                     .doOnNext( new Action1<AllEntitiesInSystemObservable.EntityData>() {
+        AllEntitiesInSystemObservable.getAllEntitiesInSystem( managerCache, 1000 )
+                                     .doOnNext( new Action1<AllEntitiesInSystemObservable.ApplicationEntityGroup>() {
                                          @Override
-                                         public void call( final AllEntitiesInSystemObservable.EntityData entity ) {
+                                         public void call(
+                                                 final AllEntitiesInSystemObservable.ApplicationEntityGroup entity ) {
 
                                              final GraphManager gm =
                                                      managerCache.getGraphManager( entity.applicationScope );
 
-                                             /**
-                                              * Get our edge types from the source
-                                              */
-                                             gm.getEdgeTypesFromSource(
-                                                     new SimpleSearchEdgeType( entity.entityId, null, null ) )
-                                               .doOnNext( new Action1<String>() {
-                                                   @Override
-                                                   public void call( final String s ) {
-                                                       sourceTypes.put( entity.entityId, s );
-                                                   }
-                                               } ).toBlocking().lastOrDefault( null );
+                                             for ( final Id id : entity.entityIds ) {
+                                                 /**
+                                                  * Get our edge types from the source
+                                                  */
+                                                 gm.getEdgeTypesFromSource( new SimpleSearchEdgeType( id, null, null ) )
+                                                   .doOnNext( new Action1<String>() {
+                                                       @Override
+                                                       public void call( final String s ) {
+                                                           sourceTypes.put( id, s );
+                                                       }
+                                                   } ).toBlocking().lastOrDefault( null );
 
 
-                                             /**
-                                              * Get the edge types to the target
-                                              */
-                                             gm.getEdgeTypesToTarget(
-                                                     new SimpleSearchEdgeType( entity.entityId, null, null ) )
-                                               .doOnNext( new Action1<String>() {
-                                                   @Override
-                                                   public void call( final String s ) {
-                                                       targetTypes.put( entity.entityId, s );
-                                                   }
-                                               } ).toBlocking().lastOrDefault( null );
+                                                 /**
+                                                  * Get the edge types to the target
+                                                  */
+                                                 gm.getEdgeTypesToTarget( new SimpleSearchEdgeType( id, null, null ) )
+                                                   .doOnNext( new Action1<String>() {
+                                                       @Override
+                                                       public void call( final String s ) {
+                                                           targetTypes.put( id, s );
+                                                       }
+                                                   } ).toBlocking().lastOrDefault( null );
 
-                                             allEntities.remove( entity.entityId );
+                                                 allEntities.remove( id );
+                                             }
                                          }
                                      } ).toBlocking().lastOrDefault( null );
 
@@ -155,7 +149,7 @@ public class GraphShardVersionMigrationIT extends AbstractCoreIT {
         //perform the migration
         graphShardVersionMigration.migrate( progressObserver );
 
-        assertEquals("Newly saved entities encounterd", 0, allEntities.size());
+        assertEquals( "Newly saved entities encounterd", 0, allEntities.size() );
         assertFalse( "Progress observer should not have failed", progressObserver.getFailed() );
         assertTrue( "Progress observer should have update messages", progressObserver.getUpdates().size() > 0 );
 
@@ -165,46 +159,57 @@ public class GraphShardVersionMigrationIT extends AbstractCoreIT {
         migrationInfoSerialization.setVersion( graphShardVersionMigration.getVersion() );
         dataMigrationManager.invalidate();
 
-        assertEquals("New version saved, and we should get new implementation", graphShardVersionMigration.getVersion(), dataMigrationManager.getCurrentVersion());
+        assertEquals( "New version saved, and we should get new implementation",
+                graphShardVersionMigration.getVersion(), dataMigrationManager.getCurrentVersion() );
 
 
         //now visit all nodes in the system and remove their types from the multi maps, it should be empty at the end
-        AllEntitiesInSystemObservable.getAllEntitiesInSystem( managerCache )
-                                     .doOnNext( new Action1<AllEntitiesInSystemObservable.EntityData>() {
-                                         @Override
-                                         public void call( final AllEntitiesInSystemObservable.EntityData entity ) {
+        AllEntitiesInSystemObservable.getAllEntitiesInSystem( managerCache, 1000 )
+                                     .doOnNext( new Action1<AllEntitiesInSystemObservable.ApplicationEntityGroup>() {
+                                                    @Override
+                                                    public void call(
+                                                            final AllEntitiesInSystemObservable
+                                                                    .ApplicationEntityGroup entity ) {
 
-                                             final GraphManager gm =
-                                                     managerCache.getGraphManager( entity.applicationScope );
+                                                        final GraphManager gm =
+                                                                managerCache.getGraphManager( entity.applicationScope );
 
-                                             /**
-                                              * Get our edge types from the source
-                                              */
-                                             gm.getEdgeTypesFromSource(
-                                                     new SimpleSearchEdgeType( entity.entityId, null, null ) )
-                                               .doOnNext( new Action1<String>() {
-                                                   @Override
-                                                   public void call( final String s ) {
-                                                       sourceTypes.remove( entity.entityId, s );
-                                                   }
-                                               } ).toBlocking().lastOrDefault( null );
+                                                        for ( final Id id : entity.entityIds ) {
+                                                            /**
+                                                             * Get our edge types from the source
+                                                             */
+                                                            gm.getEdgeTypesFromSource(
+                                                                    new SimpleSearchEdgeType( id, null, null ) )
+                                                              .doOnNext( new Action1<String>() {
+                                                                  @Override
+                                                                  public void call( final String s ) {
+                                                                      sourceTypes.remove( id, s );
+                                                                  }
+                                                              } ).toBlocking().lastOrDefault( null );
 
 
-                                             /**
-                                              * Get the edge types to the target
-                                              */
-                                             gm.getEdgeTypesToTarget(
-                                                     new SimpleSearchEdgeType( entity.entityId, null, null ) )
-                                               .doOnNext( new Action1<String>() {
-                                                   @Override
-                                                   public void call( final String s ) {
-                                                       targetTypes.remove( entity.entityId, s );
-                                                   }
-                                               } ).toBlocking().lastOrDefault( null );
-                                         }
-                                     } ).toBlocking().lastOrDefault( null );
+                                                            /**
+                                                             * Get the edge types to the target
+                                                             */
+                                                            gm.getEdgeTypesToTarget(
+                                                                    new SimpleSearchEdgeType( id, null, null ) )
+                                                              .doOnNext( new Action1<String>() {
+                                                                  @Override
+                                                                  public void call( final String s ) {
+                                                                      targetTypes.remove( id, s );
+                                                                  }
+                                                              } ).toBlocking().lastOrDefault( null );
+                                                        }
+                                                    }
+                                                }
+
+
+                                              ).toBlocking().lastOrDefault( null );
+
 
         assertEquals( "All source types migrated", 0, sourceTypes.size() );
+
+
         assertEquals( "All target types migrated", 0, targetTypes.size() );
     }
 }

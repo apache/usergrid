@@ -23,18 +23,21 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.core.test.UseModules;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
-import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
+import org.apache.usergrid.persistence.collection.util.EntityHelper;
+import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
+import org.apache.usergrid.persistence.core.guicyfig.SetConfigTestBypass;
 import org.apache.usergrid.persistence.core.test.ITRunner;
+import org.apache.usergrid.persistence.core.test.UseModules;
+import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
@@ -45,7 +48,6 @@ import org.apache.usergrid.persistence.model.field.StringField;
 
 import com.fasterxml.uuid.UUIDComparator;
 import com.google.inject.Inject;
-import org.apache.usergrid.persistence.core.util.Health;
 
 import rx.Observable;
 
@@ -58,8 +60,8 @@ import static org.junit.Assert.fail;
 
 
 /** @author tnine */
-@RunWith(ITRunner.class)
-@UseModules(TestCollectionModule.class)
+@RunWith( ITRunner.class )
+@UseModules( TestCollectionModule.class )
 public class EntityCollectionManagerIT {
     @Inject
     private EntityCollectionManagerFactory factory;
@@ -533,7 +535,7 @@ public class EntityCollectionManagerIT {
     }
 
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test( expected = IllegalArgumentException.class )
     public void readTooLarge() {
 
         final CollectionScope context =
@@ -630,8 +632,7 @@ public class EntityCollectionManagerIT {
         final UUID v2Version = v2Created.getVersion();
 
 
-        assertTrue( "Newer version in v2",
-                UUIDComparator.staticCompare( v2Version, v1Version) > 0 );
+        assertTrue( "Newer version in v2", UUIDComparator.staticCompare( v2Version, v1Version ) > 0 );
 
 
         final VersionSet resultsV2 = manager.getLatestVersion( Arrays.asList( v1Created.getId() ) ).toBlocking().last();
@@ -678,12 +679,9 @@ public class EntityCollectionManagerIT {
         final UUID v2Version = v2Created.getVersion();
 
 
-
-
         assertEquals( "Same entityId", v1Created.getId(), v2Created.getId() );
 
-        assertTrue( "Newer version in v2",
-                UUIDComparator.staticCompare( v2Version, v1Version ) > 0 );
+        assertTrue( "Newer version in v2", UUIDComparator.staticCompare( v2Version, v1Version ) > 0 );
 
 
         final VersionSet resultsV2 = manager.getLatestVersion( Arrays.asList( v1Created.getId() ) ).toBlocking().last();
@@ -700,11 +698,49 @@ public class EntityCollectionManagerIT {
     @Test
     public void healthTest() {
 
-        CollectionScope context = new CollectionScopeImpl( 
-            new SimpleId( "organization" ), new SimpleId( "test" ), "test" );
+        CollectionScope context =
+                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" );
 
         final EntityCollectionManager manager = factory.createCollectionManager( context );
 
         assertEquals( Health.GREEN, manager.getHealth() );
+    }
+
+
+    /**
+     * Tests an entity with more than  65535 bytes worth of data
+     */
+    @Test
+    public void largeEntityWriteRead() {
+        final int setSize = 65535 * 2;
+
+        final int currentMaxSize = serializationFig.getMaxEntitySize();
+
+        //override our default
+        SetConfigTestBypass.setValueByPass( serializationFig, "getMaxEntitySize", 65535 * 10 + "" );
+
+
+        final Entity entity = EntityHelper.generateEntity( setSize );
+
+        //now we have one massive, entity, save it and retrieve it.
+        CollectionScope context =
+                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" );
+
+        final EntityCollectionManager manager = factory.createCollectionManager( context );
+
+        final Entity saved = manager.write( entity ).toBlocking().last();
+
+
+        assertEquals( entity, saved );
+
+        //now load it
+        final Entity loaded = manager.load( entity.getId() ).toBlocking().last();
+
+
+        EntityHelper.verifyDeepEquals( entity, loaded );
+
+
+        //override our default
+        SetConfigTestBypass.setValueByPass( serializationFig, "getMaxEntitySize", currentMaxSize + "" );
     }
 }

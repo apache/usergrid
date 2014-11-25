@@ -32,9 +32,6 @@ public class LocationField extends AbstractField<Location> {
         super( name, value );
     }
 
-    public LocationField() {
-
-    }
 
 
     @Override

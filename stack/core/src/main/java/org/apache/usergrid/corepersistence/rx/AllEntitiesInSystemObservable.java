@@ -20,6 +20,8 @@
 package org.apache.usergrid.corepersistence.rx;
 
 
+import java.util.List;
+
 import org.apache.usergrid.corepersistence.ManagerCache;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
@@ -40,14 +42,17 @@ public class AllEntitiesInSystemObservable {
 
     /**
      * Return an observable that emits all entities in the system.
+     * @param managerCache the managerCache to use
+     * @param bufferSize The amount of entityIds to buffer into each ApplicationEntityGroup.  Note that if we exceed the buffer size
+     * you may be more than 1 ApplicationEntityGroup with the same application and different ids
      */
-    public static Observable<EntityData> getAllEntitiesInSystem( final ManagerCache managerCache) {
+    public static Observable<ApplicationEntityGroup> getAllEntitiesInSystem( final ManagerCache managerCache, final int bufferSize) {
         //traverse all nodes in the graph, load all source edges from them, then re-save the meta data
         return ApplicationObservable.getAllApplicationIds( managerCache )
 
-                                    .flatMap( new Func1<Id, Observable<EntityData>>() {
+                                    .flatMap( new Func1<Id, Observable<ApplicationEntityGroup>>() {
                                         @Override
-                                        public Observable<EntityData> call( final Id applicationId ) {
+                                        public Observable<ApplicationEntityGroup> call( final Id applicationId ) {
 
                                             //set up our application scope and graph manager
                                             final ApplicationScope applicationScope = new ApplicationScopeImpl(
@@ -68,11 +73,11 @@ public class AllEntitiesInSystemObservable {
 
                                             //merge both the specified application node and the entity node
                                             // so they all get used
-                                            return Observable.merge( applicationNode, entityNodes )
-                                                             .map( new Func1<Id, EntityData>() {
+                                            return Observable.merge( applicationNode, entityNodes ).buffer(bufferSize)
+                                                             .map( new Func1<List<Id>, ApplicationEntityGroup>() {
                                                                  @Override
-                                                                 public EntityData call( final Id id ) {
-                                                                     return new EntityData( applicationScope, id );
+                                                                 public ApplicationEntityGroup call( final List<Id> id ) {
+                                                                     return new ApplicationEntityGroup( applicationScope, id );
                                                                  }
                                                              } );
                                         }
@@ -83,14 +88,14 @@ public class AllEntitiesInSystemObservable {
     /**
      * Get the entity data.  Immutable bean for fast access
      */
-    public static final class EntityData {
+    public static final class ApplicationEntityGroup {
         public final ApplicationScope applicationScope;
-        public final Id entityId;
+        public final List<Id> entityIds;
 
 
-        public EntityData( final ApplicationScope applicationScope, final Id entityId ) {
+        public ApplicationEntityGroup( final ApplicationScope applicationScope, final List<Id> entityIds ) {
             this.applicationScope = applicationScope;
-            this.entityId = entityId;
+            this.entityIds = entityIds;
         }
     }
 }

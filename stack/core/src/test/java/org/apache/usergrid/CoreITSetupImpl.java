@@ -24,10 +24,13 @@ import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.cassandra.CassandraResource;
+import org.apache.usergrid.corepersistence.CpSetup;
 import org.apache.usergrid.mq.QueueManagerFactory;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.IndexBucketLocator;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
+import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
+import org.apache.usergrid.persistence.core.migration.schema.MigrationException;
 import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.utils.JsonUtils;
 
@@ -90,7 +93,17 @@ public class CoreITSetupImpl implements CoreITSetup {
             emf = cassandraResource.getBean( EntityManagerFactory.class );
             qmf = cassandraResource.getBean( QueueManagerFactory.class );
             indexBucketLocator = cassandraResource.getBean( IndexBucketLocator.class );
+
+            //run the migration
+            try {
+                CpSetup.getInjector().getInstance( DataMigrationManager.class ).migrate();
+            }
+            catch ( MigrationException e ) {
+                throw new RuntimeException( "Unable to run migration", e );
+            }
+
             enabled = true;
+
         }
     }
 

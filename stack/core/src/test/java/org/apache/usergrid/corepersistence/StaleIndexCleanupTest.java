@@ -54,6 +54,7 @@ import com.fasterxml.uuid.UUIDComparator;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getCollectionScopeNameFromEntityType;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 import org.junit.After;
 import static org.junit.Assert.assertEquals;
@@ -382,10 +383,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
         EntityManager em = app.getEntityManager();
 
-        CollectionScope cs = new CollectionScopeImpl( 
-            new SimpleId( em.getApplicationId(), TYPE_APPLICATION ),
-            new SimpleId( em.getApplicationId(), TYPE_APPLICATION ),
-            CpNamingUtils.getCollectionScopeNameFromEntityType( eref.getType() ) );
+        CollectionScope cs = getCollectionScopeNameFromEntityType(  new SimpleId( em.getApplicationId(), TYPE_APPLICATION ), eref.getType() );
 
         EntityCollectionManagerFactory ecmf = 
                 CpSetup.getInjector().getInstance( EntityCollectionManagerFactory.class );

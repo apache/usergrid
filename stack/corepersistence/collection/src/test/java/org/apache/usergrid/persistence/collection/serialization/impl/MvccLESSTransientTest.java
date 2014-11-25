@@ -24,6 +24,7 @@ import java.lang.annotation.Annotation;
 import java.util.Collections;
 import java.util.UUID;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -34,13 +35,14 @@ import org.safehaus.guicyfig.Option;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.MvccLogEntry;
-import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
+import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
+import org.apache.usergrid.persistence.core.guicyfig.SetConfigTestBypass;
 import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -80,58 +82,15 @@ public class MvccLESSTransientTest {
     public void setTimeout() {
         originalTimeout = serializationFig.getTimeout();
         //set the bypass options
-        serializationFig.setBypass( new TestByPass() );
+        SetConfigTestBypass.setValueByPass( serializationFig,"getTimeout", "1"  );
+    }
+
+    @After
+    public void resetTimeout(){
+        SetConfigTestBypass.setValueByPass( serializationFig,"getTimeout", originalTimeout + ""  );
     }
 
 
-    /**
-     * Test bypass that sets all environments to use the timeout of 1 second
-     */
-    public class TestByPass implements Bypass {
-
-
-        @Override
-        public Option[] options() {
-            return new Option[] { new TestOption() };
-        }
-
-
-        @Override
-        public Env[] environments() {
-            return new Env[] { Env.ALL, Env.UNIT };
-        }
-
-
-        @Override
-        public Class<? extends Annotation> annotationType() {
-            return Bypass.class;
-        }
-    }
-
-
-    /**
-     * TestOption
-     */
-    public class TestOption implements Option {
-
-
-        @Override
-        public Class<? extends Annotation> annotationType() {
-            return Bypass.class;
-        }
-
-
-        @Override
-        public String method() {
-            return "getTimeout";
-        }
-
-
-        @Override
-        public String override() {
-            return "1";
-        }
-    }
 
 
     @Test

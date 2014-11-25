@@ -29,13 +29,10 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.corepersistence.ManagerCache;
 import org.apache.usergrid.corepersistence.rx.AllEntitiesInSystemObservable;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
-import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.core.migration.data.DataMigration;
-import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.map.MapManager;
-import org.apache.usergrid.persistence.map.MapManagerFactory;
 import org.apache.usergrid.persistence.map.MapScope;
-import org.apache.usergrid.persistence.map.impl.MapScopeImpl;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.inject.Inject;
 
@@ -46,9 +43,6 @@ import rx.functions.Action1;
  * Migration to ensure that our entity id is written into our map data
  */
 public class EntityTypeMappingMigration implements DataMigration {
-
-
-    private static final Logger logger = LoggerFactory.getLogger( EntityTypeMappingMigration.class );
 
     private final ManagerCache managerCache;
 
@@ -65,25 +59,27 @@ public class EntityTypeMappingMigration implements DataMigration {
 
         final AtomicLong atomicLong = new AtomicLong();
 
-        AllEntitiesInSystemObservable.getAllEntitiesInSystem(managerCache )
-                                     .doOnNext( new Action1<AllEntitiesInSystemObservable.EntityData>() {
+        AllEntitiesInSystemObservable.getAllEntitiesInSystem(managerCache, 1000 )
+                                     .doOnNext( new Action1<AllEntitiesInSystemObservable.ApplicationEntityGroup>() {
 
 
                                          @Override
-                                         public void call( final AllEntitiesInSystemObservable.EntityData entityData ) {
+                                         public void call( final AllEntitiesInSystemObservable.ApplicationEntityGroup applicationEntityGroup ) {
 
-                                             final MapScope ms = CpNamingUtils.getEntityTypeMapScope( entityData.applicationScope.getApplication() );
+                                             final MapScope ms = CpNamingUtils.getEntityTypeMapScope( applicationEntityGroup.applicationScope.getApplication() );
 
 
                                              final MapManager mapManager = managerCache.getMapManager( ms );
 
-                                             final UUID entityUuid = entityData.entityId.getUuid();
-                                             final String entityType = entityData.entityId.getType();
+                                             for(Id entityId: applicationEntityGroup.entityIds) {
+                                                 final UUID entityUuid = entityId.getUuid();
+                                                 final String entityType = entityId.getType();
 
-                                             mapManager.putString( entityUuid.toString(), entityType );
+                                                 mapManager.putString( entityUuid.toString(), entityType );
 
-                                             if ( atomicLong.incrementAndGet() % 100 == 0 ) {
-                                                 updateStatus( atomicLong, observer );
+                                                 if ( atomicLong.incrementAndGet() % 100 == 0 ) {
+                                                     updateStatus( atomicLong, observer );
+                                                 }
                                              }
                                          }
                                      } ).toBlocking().lastOrDefault( null );

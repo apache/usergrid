@@ -154,7 +154,8 @@ public class EntityVersionCleanupTaskTest {
         mel.add( new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(), 
                 MvccEntity.Status.DELETED, Optional.fromNullable((Entity)null)) );
 
-        when( ess.load( same( appScope ), same( entityId ), any(UUID.class), any(Integer.class) ) )
+        when( ess.loadDescendingHistory(
+                same( appScope ), same( entityId ), any(UUID.class), any(Integer.class) ) )
                 .thenReturn(mel.iterator() );
 
         try {
@@ -254,7 +255,7 @@ public class EntityVersionCleanupTaskTest {
         mel.add( new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(), 
                 MvccEntity.Status.DELETED, Optional.fromNullable((Entity)null)) );
 
-        when( ess.load( same( appScope ), same( entityId ), any(UUID.class), any(Integer.class) ) )
+        when( ess.loadDescendingHistory( same( appScope ), same( entityId ), any(UUID.class), any(Integer.class) ) )
                 .thenReturn(mel.iterator() );
 
         //start the task
@@ -366,7 +367,7 @@ public class EntityVersionCleanupTaskTest {
         mel.add( new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(), 
                 MvccEntity.Status.DELETED, Optional.fromNullable((Entity)null)) );
 
-        when( ess.load( same( appScope ), same( entityId ), any(UUID.class), any(Integer.class) ) )
+        when( ess.loadDescendingHistory( same( appScope ), same( entityId ), any(UUID.class), any(Integer.class) ) )
                 .thenReturn(mel.iterator() );
 
 
@@ -479,7 +480,7 @@ public class EntityVersionCleanupTaskTest {
         mel.add( new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(), 
                 MvccEntity.Status.DELETED, Optional.of(entity)) );
 
-        when( ess.load( same( appScope ), same( entityId ), any(UUID.class), any(Integer.class) ) )
+        when( ess.loadDescendingHistory( same( appScope ), same( entityId ), any(UUID.class), any(Integer.class) ) )
                 .thenReturn(mel.iterator() );
 
         try {
@@ -737,7 +738,7 @@ public class EntityVersionCleanupTaskTest {
         mel.add( new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(),
                 MvccEntity.Status.DELETED, Optional.fromNullable((Entity)null)) );
 
-        when( ess.load( same( appScope ), same( entityId ), any(UUID.class), any(Integer.class) ) )
+        when( ess.loadDescendingHistory( same( appScope ), same( entityId ), any(UUID.class), any(Integer.class) ) )
                 .thenReturn(mel.iterator() );
 
 

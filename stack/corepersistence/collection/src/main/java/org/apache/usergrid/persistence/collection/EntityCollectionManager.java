@@ -43,7 +43,7 @@ public interface EntityCollectionManager {
     /**
      * MarkCommit the entity and remove it's indexes with the given entity id
      */
-    public Observable<Void> delete( Id entityId );
+    public Observable<Id> delete( Id entityId );
 
     /**
      * Load the entity with the given entity Id

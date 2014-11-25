@@ -19,8 +19,6 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.delete;
 
 
-import java.util.Iterator;
-import java.util.List;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -36,13 +34,9 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
-import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
-import org.apache.usergrid.persistence.collection.serialization.impl.UniqueValueImpl;
-import org.apache.usergrid.persistence.core.rx.ObservableIterator;
-import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.core.guice.ProxyImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
-import org.apache.usergrid.persistence.model.field.Field;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -51,7 +45,6 @@ import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
-import rx.Observable;
 import rx.functions.Action1;
 
 
@@ -72,7 +65,7 @@ public class MarkCommit implements Action1<CollectionIoEvent<MvccEntity>> {
 
     @Inject
     public MarkCommit( final MvccLogEntrySerializationStrategy logStrat,
-                       final MvccEntitySerializationStrategy entityStrat,
+                       @ProxyImpl final MvccEntitySerializationStrategy entityStrat,
                        final UniqueValueSerializationStrategy uniqueValueStrat, final SerializationFig serializationFig,
                        final Keyspace keyspace ) {
 
@@ -119,8 +112,9 @@ public class MarkCommit implements Action1<CollectionIoEvent<MvccEntity>> {
         catch ( ConnectionException e ) {
             throw new RuntimeException( "Unable to mark entry as deleted" );
         }
-//<<<<<<< HEAD
-//=======
+    }
+}
+
 //
 //
 //        //TODO Refactor this logic into a a class that can be invoked from anywhere
@@ -185,6 +179,3 @@ public class MarkCommit implements Action1<CollectionIoEvent<MvccEntity>> {
 //        final int removedCount = deleteFieldsObservable.count().toBlocking().last();
 //
 //        LOG.debug("Removed unique values for {} entities of entity {}", removedCount, entityId );
-//>>>>>>> befcdcab6f7f1c83dbcb2a24eddb055c9297d59f
-    }
-}
