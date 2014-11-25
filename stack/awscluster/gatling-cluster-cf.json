@@ -216,20 +216,22 @@
                     "apt-get install zip unzip wget -y\n",
                     "wget https://bootstrap.pypa.io/ez_setup.py -O - | python\n",
                     "easy_install  https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz\n",
-                    "/usr/local/bin/cfn-init -v ",
+                    "## These don't seem to work correctly and cause script to bail.  Temporarily removing \n",
+                    "#/usr/local/bin/cfn-init -v ",
                     "         --stack ", { "Ref" : "AWS::StackName" },
                     "         --resource LaunchConfig ",
                     "         --region ", { "Ref" : "AWS::Region" }, "\n",
 
-                    "/usr/local/bin/cfn-signal -e $? ",
+                    "#/usr/local/bin/cfn-signal -e $? ",
                     "         --stack ", { "Ref" : "AWS::StackName" },
                     "         --resource GatlingServerGroup ",
                     "         --region ", { "Ref" : "AWS::Region" }, "\n",
 
-                    "add-apt-repository ppa:webupd8team/java\n",
+                    "add-apt-repository ppa:webupd8team/java --yes\n",
+                    "apt-add-repository ppa:awstools-dev/awstools --yes\n",
                     "apt-get update\n",
                     "echo oracle-java7-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections\n",
-                    "apt-get install oracle-java7-installer oracle-java7-set-default expect expect-dev git -y --force-yes\n",
+                    "apt-get install oracle-java7-installer oracle-java7-set-default expect expect-dev git ec2-api-tools -y --force-yes\n",
                     "update-java-alternatives -s java-7-oracle\n",
 
                     "mkdir -p /usr/local/apache-maven\n",
@@ -238,7 +240,8 @@
                     "tar -xzvf apache-maven-3.1.1-bin.tar.gz\n",
                     "cd ~ubuntu\n",
                     "git clone https://github.com/apache/incubator-usergrid.git usergrid\n",
-                    "chown -R ubuntu:ubuntu usergrid\n"
+                    "chown -R ubuntu:ubuntu usergrid\n",
+                    "ec2-create-tags $(curl -k http://169.254.169.254/latest/meta-data/instance-id)  --aws-access-key ",{ "Ref":"GatlingKey" }, " --aws-secret-key ", { "Fn::GetAtt":[ "GatlingKey", "SecretAccessKey" ] } ," --tag Name=", { "Ref":"AWS::StackName"  }, "-Gatling\n"
                 ]]}}
             }
         },
