@@ -151,69 +151,99 @@ public class IndexingUtils {
 
                 .startObject( type )
 
+                    // don't store source object in ES 
+                    .field("_source") 
+                        .startObject()
+                            .field("_source").startObject().field("enabled", false).endObject()
+                        .endObject()
+
                     .startArray( "dynamic_templates" )
 
                         // we need most specific mappings first since it's a stop on match algorithm
 
-                        .startObject()
-                        .startObject( "context_template" )
-                            .field( "match", IndexingUtils.ENTITYID_ID_FIELDNAME )
-                                 .field( "match_mapping_type", "string" )
-                                        .startObject( "mapping" ).field( "type", "string" )
-                                             .field( "index", "not_analyzed" )
-                                        .endObject()
-                                 .endObject()
-                             .endObject()
-
-                        .startObject()
-                        .startObject( "context_template" )
-                            .field( "match", IndexingUtils.ENTITY_CONTEXT_FIELDNAME )
-                            .field( "match_mapping_type", "string" )
+                        .startObject() // array item
+                            .startObject( "context_template" )
+                                .field( "match", IndexingUtils.ENTITYID_ID_FIELDNAME )
+                                .field( "match_mapping_type", "string" )
                                 .startObject( "mapping" )
                                     .field( "type", "string" )
-                                    .field( "index", "not_analyzed" ).endObject()
+                                    .field( "index", "not_analyzed" )
                                 .endObject()
-                         .endObject()
+                                // dont't store field in ES
+                                .field("store", false)
+                            .endObject()
+                        .endObject()
+
+                        .startObject() // array item
+
+                            .startObject( "context_template" )
+                                .field( "match", IndexingUtils.ENTITY_CONTEXT_FIELDNAME )
+                                .field( "match_mapping_type", "string" )
+                                .startObject( "mapping" )
+                                    .field( "type", "string" )
+                                    .field( "index", "not_analyzed" )
+                                .endObject()
+                                // dont't store field in ES
+                                .field("store", false)
+                            .endObject()
+
+                        .endObject()
 
                         // any string with field name that starts with sa_ gets analyzed
-                        .startObject()
+
+                        .startObject() // array item
+
                             .startObject( "template_1" )
                                 .field( "match", ANALYZED_STRING_PREFIX + "*" )
-                                .field( "match_mapping_type", "string" ).startObject( "mapping" )
-                                .field( "type", "string" )
-                                .field( "index", "analyzed" )
-                            .endObject()
-                        .endObject()
-                    .endObject()
-
-                    // all other strings are not analyzed
-                    .startObject()
-                        .startObject( "template_2" )
-                            //todo, should be string prefix, remove 2 field mapping
-                            .field( "match", "*" )
-                            .field( "match_mapping_type", "string" )
-                            .startObject( "mapping" )
-                                .field( "type", "string" )
-                                    .field( "index", "not_analyzed" )
-                            .endObject()
-                        .endObject()
-                    .endObject()
-
-                    // fields names starting with go_ get geo-indexed
-                    .startObject()
-                        .startObject( "template_3" )
-                            .field( "match", GEO_PREFIX + "location" )
-                                .startObject( "mapping" )
-                                    .field( "type", "geo_point" )
+                                .field( "match_mapping_type", "string" )
+                                .startObject( "mapping")
+                                    .field( "type", "string" )
+                                    .field( "index", "analyzed" )
                                 .endObject()
+                                // dont't store field in ES
+                                .field("store", false)
+                            .endObject()
+
                         .endObject()
-                    .endObject()
 
-                .endArray()
+                        // all other strings are not analyzed
 
-            .endObject()
+                        .startObject() // array item
 
-        .endObject();
+                            .startObject( "template_2" )
+                                // TODO, should be string prefix, remove 2 field mapping
+                                .field( "match", "*" )
+                                .field( "match_mapping_type", "string" )
+                                .startObject( "mapping" )
+                                    .field( "type", "string" )
+                                    .field( "index", "not_analyzed" )
+                                .endObject()
+                                // dont't store field in ES
+                                .field("store", false)
+                            .endObject()
+
+                        .endObject()
+
+                        // fields names starting with go_ get geo-indexed
+
+                        .startObject() // array item
+
+                            .startObject( "template_3" )
+                                .field( "match", GEO_PREFIX + "location" )
+                                    .startObject( "mapping" )
+                                        .field( "type", "geo_point" )
+                                    .endObject()
+                                // dont't store field in ES
+                                .field("store", false)
+                            .endObject()
+
+                        .endObject()
+
+                    .endArray()
+
+                .endObject()
+
+            .endObject();
 
         return builder;
     }
