@@ -22,14 +22,8 @@
 import com.amazonaws.auth.BasicAWSCredentials
 import com.amazonaws.regions.Region
 import com.amazonaws.regions.Regions
-import com.amazonaws.services.ec2.model.DescribeInstancesRequest
-import com.amazonaws.services.ec2.model.DescribeInstancesResult
-import com.amazonaws.services.ec2.model.DescribeTagsRequest
 import com.amazonaws.services.ec2.AmazonEC2Client
-import com.amazonaws.services.ec2.model.CreateTagsRequest
-import com.amazonaws.services.ec2.model.Filter
-import com.amazonaws.services.ec2.model.Instance
-import com.amazonaws.services.ec2.model.Tag
+import com.amazonaws.services.ec2.model.*
 
 class NodeRegistry {
 
@@ -86,26 +80,58 @@ class NodeRegistry {
      */
     def searchNode(def nodeType) {
 
-        def stackNameFilter = new Filter(TAG_PREFIX+STACK_NAME).withValues(stackName);
-        def nodeTypeFilter = new Filter(TAG_PREFIX+NODE_TYPE).withValues(nodeType);
-
-        def describeRequest = new DescribeInstancesRequest().withFilters(stackNameFilter, nodeTypeFilter);
+        def stackNameFilter = new Filter(TAG_PREFIX+STACK_NAME).withValues(stackName)
+        def nodeTypeFilter = new Filter(TAG_PREFIX+NODE_TYPE).withValues(nodeType)
 
 
-        def nodes = ec2Client.describeInstances(describeRequest)
 
-        //sort by created date
-        def servers = [];
+         //sort by created date
+        def servers = new TreeSet<ServerEntry>();
 
-        for(reservation in nodes.getReservations()){
 
-            //TODO, add these to a list then sort them by date, then name
-            for(instance in reservation.getInstances()){
+        def token = null
 
-                servers.add(new ServerEntry(instance.launchTime, instance.publicDnsName))
+
+
+        while(true){
+
+            def describeRequest = new DescribeInstancesRequest().withFilters(stackNameFilter, nodeTypeFilter)
+
+            if(token != null){
+                describeRequest.withNextToken(token);
             }
 
+
+            def nodes = ec2Client.describeInstances(describeRequest)
+
+            for (reservation in nodes.getReservations()) {
+
+                //TODO, add these to a list then sort them by date, then name
+                for (instance in reservation.getInstances()) {
+
+                    //ignore instances that aren't running
+                    if (instance.state.getName() == InstanceStateName.Running.toString()) {
+                        servers.add(new ServerEntry(instance.launchTime, instance.publicDnsName));
+                    }
+
+
+                }
+
+            }
+
+            //nothing to do, exit the loop
+            if(nodes.nextToken != null){
+                token = nodes.nextToken;
+            }
+            else{
+                break;
+            }
+
+
+
+
         }
+
 
 
 
@@ -114,8 +140,6 @@ class NodeRegistry {
 
     def createResults(def servers){
 
-
-        Collections.sort(servers);
         def results = [];
 
         for(server in servers){
@@ -163,6 +187,25 @@ class NodeRegistry {
             return publicIp.compareTo(o.publicIp);
 
 
+        }
+
+        boolean equals(final o) {
+            if (this.is(o)) return true
+            if (getClass() != o.class) return false
+
+            final ServerEntry that = (ServerEntry) o
+
+            if (launchDate != that.launchDate) return false
+            if (publicIp != that.publicIp) return false
+
+            return true
+        }
+
+        int hashCode() {
+            int result
+            result = launchDate.hashCode()
+            result = 31 * result + publicIp.hashCode()
+            return result
         }
     }
 

@@ -216,10 +216,10 @@
                             },
                             "/etc/profile.d/maven.sh" : {
                                 "content" : { "Fn::Join" : ["", [
-                                    "export M2_HOME=/usr/local/apache-maven/apache-maven-3.1.1\n",
-                                    "export M2=$M2_HOME/bin\n",
+                                    "export M3_HOME=/usr/local/apache-maven/apache-maven-3.1.1\n",
+                                    "export M3=$M3_HOME/bin\n",
                                     "export MAVEN_OPTS=\"-Xms256m -Xmx512m\"\n",
-                                    "export PATH=$M2:$PATH\n"
+                                    "export PATH=$M3:$PATH\n"
                                 ]]}
                             },
 
@@ -265,10 +265,8 @@
                     "git clone -b ",{ "Ref":"Branch" } , " https://github.com/apache/incubator-usergrid.git usergrid\n",
                     "chown -R ubuntu:ubuntu usergrid\n",
 
-
-                    "/usr/local/bin/cfn-signal --success true --stack ", { "Ref" : "AWS::StackName" }, " --resource GatlingServerGroup --region ", { "Ref" : "AWS::Region" }, "\n",
-
-                    "ec2-create-tags $(curl -k http://169.254.169.254/latest/meta-data/instance-id)  --aws-access-key ",{ "Ref":"GatlingKey" }, " --aws-secret-key ", { "Fn::GetAtt":[ "GatlingKey", "SecretAccessKey" ] } ," --tag Name=", { "Ref":"AWS::StackName"  }, "-Gatling\n"
+                    "ec2-create-tags $(curl -k http://169.254.169.254/latest/meta-data/instance-id)  --aws-access-key ",{ "Ref":"GatlingKey" }, " --aws-secret-key ", { "Fn::GetAtt":[ "GatlingKey", "SecretAccessKey" ] } ," --tag Name=", { "Ref":"AWS::StackName"  }, "-Gatling\n",
+                    "/usr/local/bin/cfn-signal --success true --stack ", { "Ref" : "AWS::StackName" }, " --resource GatlingServerGroup --region ", { "Ref" : "AWS::Region" }, "\n"
                 ]]}}
             }
         },
