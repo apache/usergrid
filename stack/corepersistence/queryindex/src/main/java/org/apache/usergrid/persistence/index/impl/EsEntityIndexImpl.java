@@ -21,6 +21,7 @@ package org.apache.usergrid.persistence.index.impl;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -133,11 +134,19 @@ public class EsEntityIndexImpl implements EntityIndex {
     public void initializeIndex() {
         final int numberOfShards = config.getNumberOfShards();
         final int numberOfReplicas = config.getNumberOfReplicas();
-        createIndexAddToAlias(null,numberOfShards,numberOfReplicas);
+        addIndex(null, numberOfShards, numberOfReplicas);
     }
 
     @Override
-    public void createIndexAddToAlias(final String indexSuffix, final int numberOfShards, final int numberOfReplicas) {
+    public void addIndex(final String indexSuffix, final Map<String,Object> config) {
+        if(!config.containsKey("replicas") || !config.containsKey("shards")){
+            throw new IllegalArgumentException("config must contains 'replicas' and 'shards'");
+        }
+       addIndex(indexSuffix, (int) config.get("shards"),(int)config.get("replicas"));
+    }
+
+    private void addIndex(final String indexSuffix,final int numberOfShards, final int numberOfReplicas) {
+
         try {
 
             if (!mappingsCreated.getAndSet(true)) {

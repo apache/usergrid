@@ -472,6 +472,11 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
     }
 
     @Override
+    public void addIndex(UUID appId, String suffix, Map<String, Object> config) {
+        throw new UnsupportedOperationException("Not supported in v1");
+    }
+
+    @Override
     public Health getEntityStoreHealth() {
         throw new UnsupportedOperationException("Not supported yet."); 
     }

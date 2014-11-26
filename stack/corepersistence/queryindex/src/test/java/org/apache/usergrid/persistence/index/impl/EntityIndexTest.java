@@ -127,7 +127,11 @@ public class EntityIndexTest extends BaseIT {
 
         testQueries( indexScope, searchTypes,  entityIndex );
 
-        entityIndex.createIndexAddToAlias("v2",1,0);
+        HashMap<String,Object> config = new HashMap<>();
+        config.put("replicas",0);
+        config.put("shards",1);
+
+        entityIndex.addIndex("v2", config);
 
         insertJsonBlob(entityIndex, entityType, indexScope, "/sample-large.json",100,100);
 

@@ -20,6 +20,7 @@ package org.apache.usergrid.persistence;
 import java.util.Map;
 import java.util.UUID;
 import org.apache.usergrid.persistence.core.util.Health;
+import org.apache.usergrid.persistence.index.EntityIndex;
 import org.springframework.context.ApplicationContext;
 
 
@@ -159,6 +160,14 @@ public interface EntityManagerFactory {
     public void flushEntityManagerCaches();
 
     public void rebuildCollectionIndex(UUID appId, String collection, ProgressObserver object);
+
+    /**
+     * Add a new index to the application for scale
+     * @param appId application id
+     * @param suffix unique indentifier for additional index
+     * @param config {"replicas":num,"shards":num}
+     */
+    public void addIndex(final UUID appId,final String suffix, Map<String,Object> config);
 
     public Health getEntityStoreHealth();
 

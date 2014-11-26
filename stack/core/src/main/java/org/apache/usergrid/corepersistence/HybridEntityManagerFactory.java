@@ -198,6 +198,11 @@ public class HybridEntityManagerFactory implements EntityManagerFactory, Applica
     }
 
     @Override
+    public void addIndex(UUID appId, String suffix, Map<String, Object> config) {
+        factory.addIndex(appId,suffix,config);
+    }
+
+    @Override
     public Health getEntityStoreHealth() {
         return factory.getEntityStoreHealth();
     }
