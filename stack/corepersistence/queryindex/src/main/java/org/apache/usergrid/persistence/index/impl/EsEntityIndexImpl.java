@@ -26,6 +26,7 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.usergrid.persistence.index.*;
+import org.apache.usergrid.persistence.index.utils.StringUtils;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.cluster.tasks.PendingClusterTasksRequest;
@@ -142,7 +143,8 @@ public class EsEntityIndexImpl implements EntityIndex {
         if(!config.containsKey("replicas") || !config.containsKey("shards")){
             throw new IllegalArgumentException("config must contains 'replicas' and 'shards'");
         }
-       addIndex(indexSuffix, (int) config.get("shards"),(int)config.get("replicas"));
+       String normalizedSuffix =  StringUtils.isNotEmpty(indexSuffix) ? indexSuffix : null;
+       addIndex(normalizedSuffix, (int) config.get("shards"),(int)config.get("replicas"));
     }
 
     private void addIndex(final String indexSuffix,final int numberOfShards, final int numberOfReplicas) {

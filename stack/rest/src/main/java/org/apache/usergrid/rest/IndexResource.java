@@ -178,18 +178,25 @@ public class IndexResource extends AbstractContextResource {
         return new JSONWithPadding( response, callback );
     }
 
+    @RequireSystemAccess
+    @POST
+    @Path( RootResource.APPLICATION_ID_PATH )
     public JSONWithPadding addIndex(@Context UriInfo ui,
                                     @PathParam( "applicationId" ) final String applicationIdStr,
-                                    @PathParam( "indexSuffix" ) final String indexSuffix,
-                                    @PathParam("shards") final int shards,
-                                    @PathParam("replicas") final int replicas,
                                     Map<String, Object> config,
-                                    @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback) {
-        final UUID appId = UUIDUtils.tryExtractUUID(applicationIdStr);
-        emf.addIndex(appId, indexSuffix, config);
+                                    @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback)  throws Exception{
         ApiResponse response = createApiResponse();
-        response.setAction("Add index to alias");
+        final UUID appId = UUIDUtils.tryExtractUUID(applicationIdStr);
+
+        if(config.containsKey("indexSuffix")) {
+            emf.addIndex(appId, config.get("indexSuffix").toString(), config);
+            response.setAction("Add index to alias");
+        }
+        else{
+            throw new IllegalArgumentException("Please add an indexSuffix to your post");
+        }
         return new JSONWithPadding(response, callback);
+
     }
 
     private void rebuildCollection( final UUID applicationId, final String collectionName, final long delay ) {
