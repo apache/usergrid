@@ -131,6 +131,8 @@ public class Application extends TypedEntity implements Serializable {
         uuid = id;
     }
 
+    public Application ( String id) { uuid = UUID.fromString( id );}
+
 
     @Override
     @JsonSerialize(include = Inclusion.NON_NULL)
