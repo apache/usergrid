@@ -11,13 +11,13 @@
         "KeyName": {
             "Description": "Name of an existing EC2 KeyPair to enable SSH access to the instance",
             "Type": "AWS::EC2::KeyPair::KeyName",
-            "Default": "jenkins-east",
+            "Default": "ug-cloudformation",
             "ConstraintDescription": "must be the name of an existing EC2 KeyPair."
         },
         "InstanceType": {
             "Description": "WebServer EC2 instance type",
             "Type": "String",
-            "Default": "m1.xlarge",
+            "Default": "c3.xlarge",
             "AllowedValues": [
                 "t1.micro",
                 "t2.micro",
@@ -65,11 +65,6 @@
             "AllowedPattern": "([a-zA-Z0-9_\\-\\.]+)@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.)|(([a-zA-Z0-9\\-]+\\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\\]?)",
             "ConstraintDescription": "must be a valid email address.",
             "Default": "rbridges@apigee.com"
-        },
-        "ReleaseBucket": {
-            "Description": "S3 Bucket where Usergrid assembly is to be found.",
-            "Type": "String",
-            "Default": "usergrid-jenkins-builds"
         },
         "SSHLocation": {
             "Description": "The IP address range that can be used to SSH to the EC2 instances",
@@ -253,15 +248,11 @@
                     "wget https://bootstrap.pypa.io/ez_setup.py -O - | python\n",
                     "easy_install  https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz\n",
                     "## These don't seem to work correctly and cause script to bail.  Temporarily removing \n",
-                    "#/usr/local/bin/cfn-init -v ",
+                    "/usr/local/bin/cfn-init -v ",
                     "         --stack ", { "Ref" : "AWS::StackName" },
                     "         --resource LaunchConfig ",
                     "         --region ", { "Ref" : "AWS::Region" }, "\n",
 
-                    "#/usr/local/bin/cfn-signal -e $? ",
-                    "         --stack ", { "Ref" : "AWS::StackName" },
-                    "         --resource GatlingServerGroup ",
-                    "         --region ", { "Ref" : "AWS::Region" }, "\n",
 
                     "add-apt-repository ppa:webupd8team/java --yes\n",
                     "apt-add-repository ppa:awstools-dev/awstools --yes\n",
@@ -273,6 +264,10 @@
                     "cd ~ubuntu\n",
                     "git clone -b ",{ "Ref":"Branch" } , " https://github.com/apache/incubator-usergrid.git usergrid\n",
                     "chown -R ubuntu:ubuntu usergrid\n",
+
+
+                    "/usr/local/bin/cfn-signal --success true --stack ", { "Ref" : "AWS::StackName" }, " --resource GatlingServerGroup --region ", { "Ref" : "AWS::Region" }, "\n",
+
                     "ec2-create-tags $(curl -k http://169.254.169.254/latest/meta-data/instance-id)  --aws-access-key ",{ "Ref":"GatlingKey" }, " --aws-secret-key ", { "Fn::GetAtt":[ "GatlingKey", "SecretAccessKey" ] } ," --tag Name=", { "Ref":"AWS::StackName"  }, "-Gatling\n"
                 ]]}}
             }
