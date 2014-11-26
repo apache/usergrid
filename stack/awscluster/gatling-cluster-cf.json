@@ -1,53 +1,89 @@
 {
     "AWSTemplateFormatVersion" : "2010-09-09",
     "Description" : "Gatling cluster",
-
-    "Parameters" : {
+    "Parameters": {
         "InstanceCount": {
-            "Description" : "The number of gatling instances to create",
+            "Description": "The number of gatling instances to create",
             "Type": "Number",
             "Default": "1",
             "MinValue": "1"
         },
-
         "KeyName": {
-            "Description" : "Name of an existing EC2 KeyPair to enable SSH access to the instance",
+            "Description": "Name of an existing EC2 KeyPair to enable SSH access to the instance",
             "Type": "AWS::EC2::KeyPair::KeyName",
-            "Default" : "jenkins-east",
-            "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
+            "Default": "jenkins-east",
+            "ConstraintDescription": "must be the name of an existing EC2 KeyPair."
         },
-
-        "InstanceType" : {
-            "Description" : "WebServer EC2 instance type",
-            "Type" : "String",
-            "Default" : "m1.xlarge",
-            "AllowedValues" : [ "t1.micro", "t2.micro", "t2.small", "t2.medium", "m1.small", "m1.medium", "m1.large", "m1.xlarge", "m2.xlarge", "m2.2xlarge", "m2.4xlarge", "m3.medium", "m3.large", "m3.xlarge", "m3.2xlarge", "c1.medium", "c1.xlarge", "c3.large", "c3.xlarge", "c3.2xlarge", "c3.4xlarge", "c3.8xlarge", "g2.2xlarge", "r3.large", "r3.xlarge", "r3.2xlarge", "r3.4xlarge", "r3.8xlarge", "i2.xlarge", "i2.2xlarge", "i2.4xlarge", "i2.8xlarge", "hi1.4xlarge", "hs1.8xlarge", "cr1.8xlarge", "cc2.8xlarge", "cg1.4xlarge"]
-            ,
-            "ConstraintDescription" : "must be a valid EC2 instance type."
+        "InstanceType": {
+            "Description": "WebServer EC2 instance type",
+            "Type": "String",
+            "Default": "m1.xlarge",
+            "AllowedValues": [
+                "t1.micro",
+                "t2.micro",
+                "t2.small",
+                "t2.medium",
+                "m1.small",
+                "m1.medium",
+                "m1.large",
+                "m1.xlarge",
+                "m2.xlarge",
+                "m2.2xlarge",
+                "m2.4xlarge",
+                "m3.medium",
+                "m3.large",
+                "m3.xlarge",
+                "m3.2xlarge",
+                "c1.medium",
+                "c1.xlarge",
+                "c3.large",
+                "c3.xlarge",
+                "c3.2xlarge",
+                "c3.4xlarge",
+                "c3.8xlarge",
+                "g2.2xlarge",
+                "r3.large",
+                "r3.xlarge",
+                "r3.2xlarge",
+                "r3.4xlarge",
+                "r3.8xlarge",
+                "i2.xlarge",
+                "i2.2xlarge",
+                "i2.4xlarge",
+                "i2.8xlarge",
+                "hi1.4xlarge",
+                "hs1.8xlarge",
+                "cr1.8xlarge",
+                "cc2.8xlarge",
+                "cg1.4xlarge"
+            ],
+            "ConstraintDescription": "must be a valid EC2 instance type."
         },
-
         "OperatorEMail": {
             "Description": "EMail address to notify if there are any scaling operations",
             "Type": "String",
             "AllowedPattern": "([a-zA-Z0-9_\\-\\.]+)@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.)|(([a-zA-Z0-9\\-]+\\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\\]?)",
             "ConstraintDescription": "must be a valid email address.",
-            "Default":"rbridges@apigee.com"
+            "Default": "rbridges@apigee.com"
         },
-
         "ReleaseBucket": {
             "Description": "S3 Bucket where Usergrid assembly is to be found.",
             "Type": "String",
             "Default": "usergrid-jenkins-builds"
         },
-
-        "SSHLocation" : {
-            "Description" : "The IP address range that can be used to SSH to the EC2 instances",
+        "SSHLocation": {
+            "Description": "The IP address range that can be used to SSH to the EC2 instances",
             "Type": "String",
             "MinLength": "9",
             "MaxLength": "18",
             "Default": "0.0.0.0/0",
             "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
             "ConstraintDescription": "must be a valid IP CIDR range of the form x.x.x.x/x."
+        },
+        "Branch": {
+            "Description": "The branch of usergrid to check out",
+            "Type": "String",
+            "Default": "two-dot-o"
         }
     },
 
@@ -231,15 +267,11 @@
                     "apt-add-repository ppa:awstools-dev/awstools --yes\n",
                     "apt-get update\n",
                     "echo oracle-java7-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections\n",
-                    "apt-get install oracle-java7-installer oracle-java7-set-default expect expect-dev git ec2-api-tools -y --force-yes\n",
+                    "apt-get install oracle-java7-installer oracle-java7-set-default expect expect-dev git ec2-api-tools maven -y --force-yes\n",
                     "update-java-alternatives -s java-7-oracle\n",
 
-                    "mkdir -p /usr/local/apache-maven\n",
-                    "cd /usr/local/apache-maven\n",
-                    "wget http://apache.mirrors.timporter.net/maven/maven-3/3.1.1/binaries/apache-maven-3.1.1-bin.tar.gz\n",
-                    "tar -xzvf apache-maven-3.1.1-bin.tar.gz\n",
                     "cd ~ubuntu\n",
-                    "git clone https://github.com/apache/incubator-usergrid.git usergrid\n",
+                    "git clone -b ",{ "Ref":"Branch" } , " https://github.com/apache/incubator-usergrid.git usergrid\n",
                     "chown -R ubuntu:ubuntu usergrid\n",
                     "ec2-create-tags $(curl -k http://169.254.169.254/latest/meta-data/instance-id)  --aws-access-key ",{ "Ref":"GatlingKey" }, " --aws-secret-key ", { "Fn::GetAtt":[ "GatlingKey", "SecretAccessKey" ] } ," --tag Name=", { "Ref":"AWS::StackName"  }, "-Gatling\n"
                 ]]}}

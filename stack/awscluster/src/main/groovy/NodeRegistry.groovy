@@ -20,34 +20,64 @@
  * A utility class that search simple db for the node type provided and returns a list of hostnames as a string array
  */
 import com.amazonaws.auth.BasicAWSCredentials
-import com.amazonaws.services.simpledb.AmazonSimpleDBClient
-import com.amazonaws.services.simpledb.model.*
+import com.amazonaws.regions.Region
+import com.amazonaws.regions.Regions
+import com.amazonaws.services.ec2.model.DescribeInstancesRequest
+import com.amazonaws.services.ec2.model.DescribeInstancesResult
+import com.amazonaws.services.ec2.model.DescribeTagsRequest
+import com.amazonaws.services.ec2.AmazonEC2Client
+import com.amazonaws.services.ec2.model.CreateTagsRequest
+import com.amazonaws.services.ec2.model.Filter
+import com.amazonaws.services.ec2.model.Instance
+import com.amazonaws.services.ec2.model.Tag
 
 class NodeRegistry {
+
+
+    public static final String TAG_PREFIX = "tag:"
+    //taken from aws
+    public static final String STACK_NAME = "usergrid:stack-name";
+    public static final String NODE_TYPE = "usergrid:node_type";
 
     private String accessKey = (String) System.getenv().get("AWS_ACCESS_KEY")
     private String secretKey = (String) System.getenv().get("AWS_SECRET_KEY")
     private String stackName = (String) System.getenv().get("STACK_NAME")
-    private hostName = (String) System.getenv().get("PUBLIC_HOSTNAME")
+    private String instanceId = (String) System.getenv().get("EC2_INSTANCE_ID");
+    private String region = (String) System.getenv().get("EC2_REGION");
     private String domain = stackName
 
-    private def creds;
-    private def sdbClient;
+    private BasicAWSCredentials creds;
+    private AmazonEC2Client ec2Client;
 
 
     NodeRegistry() {
-        while ( true ) {
-            try {
-                // creates domain or no-op if it already exists
-                creds = new BasicAWSCredentials(accessKey, secretKey)
-                sdbClient = new AmazonSimpleDBClient(creds)
-                sdbClient.createDomain(new CreateDomainRequest(domain))
 
-            } catch ( Exception e ) {
-                continue
-            }
-            break
+        if (region == null) {
+            throw new IllegalArgumentException("EC2_REGION must be defined")
         }
+
+        if (instanceId == null) {
+            throw new IllegalArgumentException("EC2_INSTANCE_ID must be defined")
+        }
+
+        if (stackName == null) {
+            throw new IllegalArgumentException("STACK_NAME must be defined")
+        }
+
+        if (accessKey == null) {
+            throw new IllegalArgumentException("AWS_ACCESS_KEY must be defined")
+        }
+
+        if (secretKey == null) {
+            throw new IllegalArgumentException("AWS_SECRET_KEY must be defined")
+        }
+
+        creds = new BasicAWSCredentials(accessKey, secretKey)
+        ec2Client = new AmazonEC2Client(creds)
+        def regionEnum = Regions.fromName(region);
+        ec2Client.setRegion(Region.getRegion(regionEnum))
+
+
     }
 
     /**
@@ -55,64 +85,85 @@ class NodeRegistry {
      * @param defNodeType
      */
     def searchNode(def nodeType) {
-        //order by create time, if we have a conflict, then order by item name
-        def selectResult = sdbClient.select(new SelectRequest((String) \
-            "select * from `${domain}` where itemName() is not null AND createtime is not null AND nodetype = '${nodeType}'  order by createtime"))
-        def result = []
 
-        for (item in selectResult.getItems()) {
-            def hostname = item.getName()
-            result.add(hostname)
+        def stackNameFilter = new Filter(TAG_PREFIX+STACK_NAME).withValues(stackName);
+        def nodeTypeFilter = new Filter(TAG_PREFIX+NODE_TYPE).withValues(nodeType);
+
+        def describeRequest = new DescribeInstancesRequest().withFilters(stackNameFilter, nodeTypeFilter);
+
+
+        def nodes = ec2Client.describeInstances(describeRequest)
+
+        //sort by created date
+        def servers = [];
+
+        for(reservation in nodes.getReservations()){
+
+            //TODO, add these to a list then sort them by date, then name
+            for(instance in reservation.getInstances()){
+
+                servers.add(new ServerEntry(instance.launchTime, instance.publicDnsName))
+            }
+
         }
 
-        return result
 
+
+        return createResults(servers);
     }
 
-    /**
-     * Get the entire database back in raw form
-     * @return
-     */
-    def selectAll() {
-        def selectResult = sdbClient.select(new SelectRequest((String) "select * from `${domain}`")).getItems()
+    def createResults(def servers){
 
-        return selectResult;
+
+        Collections.sort(servers);
+        def results = [];
+
+        for(server in servers){
+            results.add(server.publicIp)
+        }
+
+        return results;
     }
+
+
 
     /**
      * Add the node to the database if it doesn't exist
      */
     def addNode(def nodeType) {
-        def gar = new GetAttributesRequest(domain, hostName);
-        def response = sdbClient.getAttributes(gar);
-        if (response.getAttributes().size() == 1) {
-            println "Already registered"
-            def attrs = response.getAttributes()
-            for (att in attrs) {
-                println("${hostName} -> ${att.getName()} : ${att.getValue()}")
-            }
 
-            return false;
+        //add the node type
+        def tagRequest = new CreateTagsRequest().withTags(new Tag(NODE_TYPE, nodeType), new Tag(STACK_NAME, stackName)).withResources(instanceId)
 
-        } else {
-            println "Registering..."
-            def stackAtt = new ReplaceableAttribute("nodetype", nodeType, true)
-            def nowString = Calendar.getInstance(TimeZone.getTimeZone('UTC')).format("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
-            def createTime = new ReplaceableAttribute("createtime", nowString, true)
-            def attrs = new ArrayList()
-            attrs.add(stackAtt)
-            attrs.add(createTime)
-            def par = new PutAttributesRequest(domain, hostName, attrs)
-            sdbClient.putAttributes(par);
-            println "Registration done."
-            return true;
-        }
+
+
+        ec2Client.createTags(tagRequest)
 
 
     }
 
-    def deleteRegistry(){
-        sdbClient.deleteDomain(new DeleteDomainRequest(domain))
+
+    class ServerEntry implements Comparable<ServerEntry>{
+        private final Date launchDate;
+        private final String publicIp;
+
+        ServerEntry(final Date launchDate, final String publicIp) {
+            this.launchDate = launchDate
+            this.publicIp = publicIp
+        }
+
+        @Override
+        int compareTo(final ServerEntry o) {
+            if(launchDate.before(o.launchDate)){
+                -1;
+            }else if (launchDate.after(o.launchDate)){
+                return 1;
+            }
+
+            return publicIp.compareTo(o.publicIp);
+
+
+        }
     }
 
 }
