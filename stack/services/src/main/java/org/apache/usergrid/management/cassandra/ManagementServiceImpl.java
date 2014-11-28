@@ -1491,7 +1491,7 @@ public class ManagementServiceImpl implements ManagementService {
 
         AccountCreationProps.SuperUser superUser = properties.getSuperUser();
         if ( superUser.isEnabled() && superUser.getUsername().equals( user.getUsername() ) ) {
-            organizations = buildOrgBiMap( getOrganizations( null, 10 ) );
+            organizations = buildOrgBiMap( getOrganizations( null, 10000 ) );
         }
         else {
             organizations = getOrganizationsForAdminUser( user.getUuid() );
