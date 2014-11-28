@@ -179,27 +179,37 @@ public class UsersResource extends AbstractContextResource {
                 return handleViewable( "resetpw_email_form", this );
             }
 
-            ReCaptchaImpl reCaptcha = new ReCaptchaImpl();
-            reCaptcha.setPrivateKey( properties.getRecaptchaPrivate() );
+            //we don't require recaptcha - only use it if it is present in the props file
+            boolean reCaptchaPassed = false;
+            if ( useReCaptcha() ) {
 
-            ReCaptchaResponse reCaptchaResponse =
-                    reCaptcha.checkAnswer( httpServletRequest.getRemoteAddr(), challenge, uresponse );
+                ReCaptchaImpl reCaptcha = new ReCaptchaImpl();
+                reCaptcha.setPrivateKey(properties.getRecaptchaPrivate());
 
-            if ( !useReCaptcha() || reCaptchaResponse.isValid() ) {
-                user = management.findAdminUser( email );
-                if ( user != null ) {
-                    management.startAdminUserPasswordResetFlow( user );
-                    return handleViewable( "resetpw_email_success", this );
+                ReCaptchaResponse reCaptchaResponse =
+                        reCaptcha.checkAnswer(httpServletRequest.getRemoteAddr(), challenge, uresponse);
+
+                if (reCaptchaResponse.isValid()) {
+                    reCaptchaPassed = true;
                 }
-                else {
+            } else {
+                reCaptchaPassed = true;
+            }
+
+            if (reCaptchaPassed) {
+                user = management.findAdminUser(email);
+                if (user != null) {
+                    management.startAdminUserPasswordResetFlow(user);
+                    return handleViewable("resetpw_email_success", this);
+                } else {
                     errorMsg = "We don't recognize that email, try again...";
-                    return handleViewable( "resetpw_email_form", this );
+                    return handleViewable("resetpw_email_form", this);
                 }
-            }
-            else {
+            } else {
                 errorMsg = "Incorrect Captcha, try again...";
-                return handleViewable( "resetpw_email_form", this );
+                return handleViewable("resetpw_email_form", this);
             }
+            
         }
         catch ( RedirectionException e ) {
             throw e;
