@@ -340,8 +340,26 @@ public class ManagementServiceImpl implements ManagementService {
             }
         }
         else {
-            logger.warn(
+            System.out.println(
                     "Missing values for superuser account, check properties.  Skipping superuser account setup..." );
+        }
+    }
+
+
+    @Override
+    public void resetSuperUser(String username, String password, String email) throws Exception {
+        //final AccountCreationProps.SuperUser superUser = properties.getSuperUser();
+        //this.getAdminUser
+        UserInfo user = this.getAdminUserByUsername( username );
+        if ( user == null ) {
+            try {
+                createAdminUser( username, "Super User", email, password, true, false );
+            }catch(Exception e){
+
+            }
+        }
+        else {
+            this.setAdminUserPassword( user.getUuid(), password );
         }
     }
 
