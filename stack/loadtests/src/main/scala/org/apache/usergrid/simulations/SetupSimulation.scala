@@ -39,7 +39,7 @@ class SetupSimulation extends Simulation{
 
   setUp(
     UserScenarios.createUsersWithDevicesScenario
-      .inject(constantUsersPerSec(Settings.maxPossibleUsers) during (Settings.duration))
+      .inject(splitUsers(Settings.maxPossibleUsers) into( rampUsers(10) over (10 seconds)) separatedBy (10 seconds))
       .protocols(Settings.httpConf.acceptHeader("application/json"))
-  ).throttle(reachRps(Settings.throttle) in (Settings.rampTime seconds), holdFor(Settings.duration))
+  )
 }

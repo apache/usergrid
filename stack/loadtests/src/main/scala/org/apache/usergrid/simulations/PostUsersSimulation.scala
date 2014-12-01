@@ -43,7 +43,7 @@ class PostUsersSimulation extends Simulation {
 
   val scnToRun = scenario("POST geolocated users")
     .feed(feeder)
-    .exec(UserScenarios.postUser)
+    .exec(UserScenarios.postUserIfNotExists)
 
   setUp(scnToRun.inject(atOnceUsers(numUsers)).throttle(reachRps(throttle) in (rampTime.seconds)).protocols(httpConf))
 

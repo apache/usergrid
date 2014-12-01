@@ -35,10 +35,10 @@ import io.gatling.core.Predef._
      http("GET user")
        .get("/users/${username}")
        .headers(Headers.jsonAuthorized)
-       .check(status.saveAs("userStatus"), jsonPath("$..entities[0].uuid").exists, jsonPath("$..entities[0].uuid").saveAs("userId"))
+       .check(status.saveAs("userStatus"), jsonPath("$..entities[0]").exists, jsonPath("$..entities[0].uuid").exists, jsonPath("$..entities[0].uuid").saveAs("userId"))
    )
 
-  val postUser =
+  val postUserIfNotExists =
     exec(getUserByUsername)
       .doIf ("${userStatus}", "404") {
      exec(
@@ -78,7 +78,7 @@ import io.gatling.core.Predef._
    val createUsersWithDevicesScenario =  scenario("Create Users")
      .feed(Settings.getInfiniteUserFeeder())
      .exec(TokenScenarios.getManagementToken)
-     .exec(UserScenarios.postUser)
+     .exec(UserScenarios.postUserIfNotExists)
      .exec(TokenScenarios.getUserToken)
      .exec(UserScenarios.getUserByUsername)
      .repeat(2){
