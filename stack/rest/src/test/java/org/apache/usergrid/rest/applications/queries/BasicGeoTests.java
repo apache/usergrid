@@ -50,7 +50,7 @@ import static org.junit.Assert.fail;
  *
  * @author rockerston
  */
-public class basicGeoTests extends AbstractRestIT {
+public class BasicGeoTests extends AbstractRestIT {
 
     @Rule
     public TestContextSetup context = new TestContextSetup( this );
@@ -59,6 +59,8 @@ public class basicGeoTests extends AbstractRestIT {
 
     /**
      * Create a entity with a geo location point in it
+     * 1. Create entity
+     * 2. Verify that the entity was created
      */
     @Test
     public void createEntityWithGeoLocationPoint() throws IOException {
@@ -67,6 +69,7 @@ public class basicGeoTests extends AbstractRestIT {
         JsonNode node = null;
         Double lat = 37.776753;
         Double lon = -122.407846;
+        //1. Create entity
         Map<String, Double> latLon = hashMap("latitude", lat);
         latLon.put( "longitude", lon );
         Map<String, Object> entityData = new HashMap<String, Object>();
@@ -77,12 +80,93 @@ public class basicGeoTests extends AbstractRestIT {
         }
         catch ( UniformInterfaceException e ) {
             JsonNode nodeError = mapper.readTree( e.getResponse().getEntity( String.class ) );
-            fail( node.get( "error" ).textValue() );
+            fail( nodeError.get( "error" ).textValue() );
         }
 
+        //2. Verify that the entity was created
         assertNotNull( node );
-        assertEquals(lat.toString(), node.get("location").get("latitude").asText() );
+        assertEquals( lat.toString(), node.get("location").get("latitude").asText() );
         assertEquals( lon.toString(), node.get( "location" ).get("longitude").asText() );
+
+    }
+
+    /**
+     * Update an entity with a geo location point in it
+     * 1. create an entity with a geo point
+     * 2. read back that entity make sure it is accurate
+     * 3. update the geo point to a new value
+     * 4. read back the updated entity, make sure it is accurate
+     */
+    @Test
+    public void updateEntityWithGeoLocationPoint() throws IOException {
+
+        String collectionType = "stores";
+        String entityName = "cornerStore";
+        JsonNode entity = null;
+        Double lat = 37.776753;
+        Double lon = -122.407846;
+
+        //1. create an entity with a geo point
+        Map<String, Double> latLon = hashMap("latitude", lat);
+        latLon.put( "longitude", lon );
+        Map<String, Object> entityData = new HashMap<String, Object>();
+        entityData.put( "location", latLon );
+        entityData.put( "name", entityName );
+
+        try {
+            entity = context.collection( collectionType ).post( entityData );
+        }
+        catch ( UniformInterfaceException e ) {
+            JsonNode nodeError = mapper.readTree( e.getResponse().getEntity( String.class ) );
+            fail( nodeError.get( "error" ).textValue() );
+        }
+
+        assertNotNull(entity);
+        assertEquals( lat.toString(), entity.get("location").get("latitude").asText() );
+        assertEquals( lon.toString(), entity.get( "location" ).get("longitude").asText() );
+
+        context.refreshIndex();
+
+        //2. read back that entity make sure it is accurate
+        /*
+        try {
+            node = context.collection( collectionType ).get(entityName);
+        }
+        catch ( UniformInterfaceException e ) {
+            JsonNode nodeError = mapper.readTree( e.getResponse().getEntity( String.class ) );
+            fail( nodeError.get( "error" ).textValue() );
+        }
+
+        //3. update the geo point to a new value
+        Double newLat = 35.776753;
+        Double newLon = -119.407846;
+        latLon.put( "latitude", newLat );
+        latLon.put( "longitude", newLon );
+        entityData.put( "location", latLon );
+
+        //TODO PUT should take name property and append it to URL - e.g. PUT /cats/fluffy  not PUT /cats {"name":"fluffy"}
+        try {
+            //node = context.collection( collectionType ).put(entityData);
+            //entity.put(entityData);
+
+        }
+        catch ( UniformInterfaceException e ) {
+            JsonNode nodeError = mapper.readTree( e.getResponse().getEntity( String.class ) );
+            fail( nodeError.get( "error" ).textValue() );
+        }
+
+        assertNotNull(entity);
+        assertEquals( newLat.toString(), entity.get("location").get("latitude").asText() );
+        assertEquals( newLon.toString(), entity.get( "location" ).get("longitude").asText() );
+  */
+
+        context.refreshIndex();
+
+        //4. read back the updated entity, make sure it is accurate
+
+
+
+
 
     }
 
