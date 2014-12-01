@@ -111,7 +111,7 @@ class NodeRegistry {
 
                 //TODO, add these to a list then sort them by date, then name
                 for (instance in reservation.getInstances()) {
-                    servers.add(new ServerEntry(instance.launchTime, instance.publicIpAddress));
+                    servers.add(new ServerEntry(instance.launchTime, instance.publicDnsName));
                 }
 
             }
