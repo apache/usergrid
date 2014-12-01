@@ -53,7 +53,7 @@ import static org.apache.usergrid.utils.InflectionUtils.pluralize;
         "entities", "list", "data", "next", "timestamp", "duration"
 } )
 @XmlRootElement
-public class RevisedApiResponse<T>  {
+public class RevisedApiResponse  {
 
     private ServiceRequest esp;
 
@@ -134,7 +134,7 @@ public class RevisedApiResponse<T>  {
     }
 
 
-    public T withError( String code ) {
+    public RevisedApiResponse withError( String code ) {
         return withError( code, null, null );
     }
 
@@ -144,7 +144,7 @@ public class RevisedApiResponse<T>  {
     }
 
 
-    public T withError( Throwable e ) {
+    public RevisedApiResponse withError( Throwable e ) {
         return withError( null, null, e );
     }
 
@@ -154,7 +154,7 @@ public class RevisedApiResponse<T>  {
     }
 
 
-    public T withError( String description, Throwable e ) {
+    public RevisedApiResponse withError( String description, Throwable e ) {
         return withError( null, description, e );
     }
 
@@ -175,7 +175,7 @@ public class RevisedApiResponse<T>  {
     }
 
 
-    public T withError( String code, String description, Throwable e ) {
+    public RevisedApiResponse withError( String code, String description, Throwable e ) {
         setError( code, description, e );
         return this;
     }
@@ -257,7 +257,7 @@ public class RevisedApiResponse<T>  {
     }
 
 
-    public T withServiceRequest( ServiceRequest p ) {
+    public RevisedApiResponse withServiceRequest( ServiceRequest p ) {
         setServiceRequest( p );
         return this;
     }
@@ -274,7 +274,7 @@ public class RevisedApiResponse<T>  {
     }
 
 
-    public T withSuccess() {
+    public RevisedApiResponse withSuccess() {
         status = "ok";
         return this;
     }
@@ -291,7 +291,7 @@ public class RevisedApiResponse<T>  {
     }
 
 
-    public T withTimestamp( long timestamp ) {
+    public RevisedApiResponse withTimestamp( long timestamp ) {
         this.timestamp = timestamp;
         return this;
     }
@@ -314,7 +314,7 @@ public class RevisedApiResponse<T>  {
     }
 
 
-    public T withAction( String action ) {
+    public RevisedApiResponse withAction( String action ) {
         this.action = action;
         return this;
     }
@@ -373,7 +373,7 @@ public class RevisedApiResponse<T>  {
     }
 
 
-    public T withEntities( List<Entity> entities ) {
+    public RevisedApiResponse withEntities( List<Entity> entities ) {
         setEntities( entities );
         return this;
     }
@@ -393,13 +393,13 @@ public class RevisedApiResponse<T>  {
     }
 
 
-    public T withResults( ServiceResults results ) {
+    public RevisedApiResponse withResults( ServiceResults results ) {
         setResults( results );
         return this;
     }
 
 
-    public T withResultsCount( ServiceResults results ) {
+    public RevisedApiResponse withResultsCount( ServiceResults results ) {
         setResults( results );
         if ( results != null ) {
             count = results.size();
@@ -441,7 +441,7 @@ public class RevisedApiResponse<T>  {
     }
 
 
-    public T withEntity( Entity entity ) {
+    public RevisedApiResponse withEntity( Entity entity ) {
         entities = new ArrayList<Entity>();
         entities.add( entity );
         return this;
@@ -464,13 +464,13 @@ public class RevisedApiResponse<T>  {
     }
 
 
-    public T withList( List<Object> list ) {
+    public RevisedApiResponse withList( List<Object> list ) {
         setList( list );
         return this;
     }
 
 
-    public T withListCount( List<Object> list ) {
+    public RevisedApiResponse withListCount( List<Object> list ) {
         setList( list );
         if ( !list.isEmpty() ) {
             this.count = list.size();
@@ -495,7 +495,7 @@ public class RevisedApiResponse<T>  {
     }
 
 
-    public T withData( Object data ) {
+    public RevisedApiResponse withData( Object data ) {
         setData( data );
         return this;
     }
@@ -523,7 +523,7 @@ public class RevisedApiResponse<T>  {
     }
 
 
-    public T withApplications( Map<String, UUID> applications ) {
+    public RevisedApiResponse withApplications( Map<String, UUID> applications ) {
         this.applications = applications;
         return this;
     }
@@ -540,7 +540,7 @@ public class RevisedApiResponse<T>  {
     }
 
 
-    public T withCredentials( ClientCredentialsInfo credentials ) {
+    public RevisedApiResponse withCredentials( ClientCredentialsInfo credentials ) {
         this.credentials = credentials;
         return this;
     }
