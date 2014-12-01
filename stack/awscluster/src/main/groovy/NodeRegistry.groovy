@@ -32,6 +32,9 @@ class NodeRegistry {
     //taken from aws
     public static final String STACK_NAME = "usergrid:stack-name";
     public static final String NODE_TYPE = "usergrid:node_type";
+    public static final String SEARCH_INSTANCE_STATE = "instance-state-name";
+    public static final String SEARCH_STACK_NAME = TAG_PREFIX + STACK_NAME
+    public static final String SEARCH_NODE_TYPE = TAG_PREFIX + NODE_TYPE
 
     private String accessKey = (String) System.getenv().get("AWS_ACCESS_KEY")
     private String secretKey = (String) System.getenv().get("AWS_SECRET_KEY")
@@ -80,12 +83,12 @@ class NodeRegistry {
      */
     def searchNode(def nodeType) {
 
-        def stackNameFilter = new Filter(TAG_PREFIX+STACK_NAME).withValues(stackName)
-        def nodeTypeFilter = new Filter(TAG_PREFIX+NODE_TYPE).withValues(nodeType)
 
+        def stackNameFilter = new Filter(SEARCH_STACK_NAME).withValues(stackName)
+        def nodeTypeFilter = new Filter(SEARCH_NODE_TYPE).withValues(nodeType)
+        def instanceState = new Filter(SEARCH_INSTANCE_STATE).withValues(InstanceStateName.Running.toString());
 
-
-         //sort by created date
+        //sort by created date
         def servers = new TreeSet<ServerEntry>();
 
 
@@ -93,11 +96,11 @@ class NodeRegistry {
 
 
 
-        while(true){
+        while (true) {
 
-            def describeRequest = new DescribeInstancesRequest().withFilters(stackNameFilter, nodeTypeFilter)
+            def describeRequest = new DescribeInstancesRequest().withFilters(stackNameFilter, nodeTypeFilter, instanceState)
 
-            if(token != null){
+            if (token != null) {
                 describeRequest.withNextToken(token);
             }
 
@@ -108,27 +111,17 @@ class NodeRegistry {
 
                 //TODO, add these to a list then sort them by date, then name
                 for (instance in reservation.getInstances()) {
-
-                    //ignore instances that aren't running
-                    if (instance.state.getName() == InstanceStateName.Running.toString()) {
-                        servers.add(new ServerEntry(instance.launchTime, instance.publicDnsName));
-                    }
-
-
+                    servers.add(new ServerEntry(instance.launchTime, instance.publicIpAddress));
                 }
 
             }
 
             //nothing to do, exit the loop
-            if(nodes.nextToken != null){
-                token = nodes.nextToken;
-            }
-            else{
+            if (nodes.nextToken == null) {
                 break;
             }
 
-
-
+            token = nodes.nextToken;
 
         }
 
@@ -138,18 +131,16 @@ class NodeRegistry {
         return createResults(servers);
     }
 
-    def createResults(def servers){
+    def createResults(def servers) {
 
         def results = [];
 
-        for(server in servers){
+        for (server in servers) {
             results.add(server.publicIp)
         }
 
         return results;
     }
-
-
 
     /**
      * Add the node to the database if it doesn't exist
@@ -167,7 +158,7 @@ class NodeRegistry {
     }
 
 
-    class ServerEntry implements Comparable<ServerEntry>{
+    class ServerEntry implements Comparable<ServerEntry> {
         private final Date launchDate;
         private final String publicIp;
 
@@ -178,9 +169,9 @@ class NodeRegistry {
 
         @Override
         int compareTo(final ServerEntry o) {
-            if(launchDate.before(o.launchDate)){
+            if (launchDate.before(o.launchDate)) {
                 -1;
-            }else if (launchDate.after(o.launchDate)){
+            } else if (launchDate.after(o.launchDate)) {
                 return 1;
             }
 
