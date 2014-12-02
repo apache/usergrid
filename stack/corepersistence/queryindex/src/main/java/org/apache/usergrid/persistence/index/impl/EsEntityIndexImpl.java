@@ -140,11 +140,12 @@ public class EsEntityIndexImpl implements EntityIndex {
 
     @Override
     public void addIndex(final String indexSuffix, final Map<String,Object> config) {
-        if(!config.containsKey("replicas") || !config.containsKey("shards")){
-            throw new IllegalArgumentException("config must contains 'replicas' and 'shards'");
+        if(!config.containsKey("replicas") || !config.containsKey("shards") ||
+                !(config.get("replicas") instanceof Integer) || !(config.get("shards") instanceof Integer)){
+            throw new IllegalArgumentException("config must contains 'replicas' of type int and 'shards' of type int");
         }
        String normalizedSuffix =  StringUtils.isNotEmpty(indexSuffix) ? indexSuffix : null;
-       addIndex(normalizedSuffix, (int) config.get("shards"),(int)config.get("replicas"));
+       addIndex(normalizedSuffix,(int) config.get("shards"),(int)config.get("replicas"));
     }
 
     private void addIndex(final String indexSuffix,final int numberOfShards, final int numberOfReplicas) {
