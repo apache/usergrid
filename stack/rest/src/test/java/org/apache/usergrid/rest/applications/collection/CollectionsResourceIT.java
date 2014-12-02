@@ -42,6 +42,7 @@ import com.sun.jersey.api.client.UniformInterfaceException;
 import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
@@ -81,32 +82,24 @@ public class CollectionsResourceIT extends AbstractRestIT {
     @Test
     public void postToEmptyCollection() throws IOException {
         Map<String, String> payload = new HashMap<String, String>();
-        //for whatever reason this does a getEntity before returning the post, i think this is a bug needs to be fixed.
-        //after api response stuff is handled. We should only be getting the raw response.
 
-        JsonNode node = context.collection( "cities" ).post( payload );
-        assertNull( getEntity( node, 0 ) );
-        //why doens't this work?
-        //assertNull( node.get( "count" ) );
+        ApiResponseCollection node = context.collection( "cities" ).postResponse( payload );
+
+        assertFalse( node.hasNext() );
+
     }
 
     @Test
     public void postToEmptyCollectionApiResponse() throws IOException {
         Map<String, String> payload = new HashMap<String, String>();
-//this get response always returns a jsonnode of the entity, seems wrong. Should return response.
-      //  JsonNode node = context.collection( "cities" ).post( payload );
-//         JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/cities" ).queryParam( "access_token", context.getActiveUser().get  )
-//                                                   .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-//                                                   .post( String.class, payload ));
-       // assertNull( node );
 
-        JsonNode node = context.collection( "cities" ).post( payload );
+        ApiResponseCollection node = context.collection( "cities" ).postResponse( payload );
 
-        assertNull(node);
+        assertFalse( node.hasNext() );
 
         ApiResponseCollection<Collection> collection = context.collection( "cities" ).getCollectionResponse();
 
-        assertNotNull( collection );
+        assertEquals( ( Object ) 0, collection.getResponse().getCount() );
     }
 
 

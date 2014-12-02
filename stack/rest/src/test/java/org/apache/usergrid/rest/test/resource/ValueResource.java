@@ -100,7 +100,13 @@ public abstract class ValueResource extends NamedResource {
     //TODO: fix error reporting
     protected JsonNode postInternal( Map<String, ?> entity ) throws IOException {
 
-        return mapper.readTree( jsonMedia( withParams( withToken( resource() ) ) ).post( String.class, entity ));
+        return mapper.readTree( jsonMedia( withParams( withToken( resource() ) ) ).post( String.class, entity ) );
+    }
+
+    //TODO: eventually we need to merge this and make it the offical postInternal. this was not done to keep tests compiling.
+    protected RevisedApiResponse postInternalResponse( Map<String, ?> entity ) throws IOException {
+
+        return jsonMedia( withParams( withToken( resource() ) ) ).post( RevisedApiResponse.class, entity );
     }
 
 

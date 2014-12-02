@@ -47,7 +47,7 @@ import org.apache.commons.lang.StringUtils;
 
 import static org.apache.usergrid.utils.InflectionUtils.pluralize;
 
-
+//TODO: Move this into the testing framework
 @JsonPropertyOrder( {
         "action", "application", "params", "path", "query", "uri", "status", "error", "applications", "entity",
         "entities", "list", "data", "next", "timestamp", "duration"

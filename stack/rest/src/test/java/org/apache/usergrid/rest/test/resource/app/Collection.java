@@ -70,7 +70,8 @@ public class Collection extends SetResource {
     }
 
     /**
-     * POST an entity with only a Map
+     * POST an entity with only a Map. Talk to rod about this. I think the ApiResponse should only handle responses back
+     * that were called but maybe
      * @param entityData
      * @return JsonNode
      * @throws IOException
@@ -80,6 +81,15 @@ public class Collection extends SetResource {
         JsonNode response = this.postInternal( entityData );
 //I think this is wrong
         return getEntity( response, 0 );
+    }
+
+    public ApiResponseCollection<Collection> postResponse(Map entityData) throws IOException{
+
+        CollectionResource collectionResource = new CollectionResource( this.getName(),this.getParent() );
+        RevisedApiResponse response = this.postInternalResponse( entityData );
+        ApiResponseCollection<Collection> collectionRevisedApiResponse = new ApiResponseCollection<>(collectionResource,response );
+
+        return collectionRevisedApiResponse;
     }
 
 

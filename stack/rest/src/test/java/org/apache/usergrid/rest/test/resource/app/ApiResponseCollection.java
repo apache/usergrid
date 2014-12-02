@@ -10,8 +10,8 @@ import org.apache.usergrid.rest.test.resource.CollectionResource;
 
 
 /**
- * A stateful iterable collection respose.  This is a "collection" of entities from our response that are easier
- * to work with
+ * A stateful iterable collection response.  This is a "collection" of entities from our response that are easier
+ * to work with. The Generic means that we can type cast the iterator
  */
 public class ApiResponseCollection<T> implements Iterable<T>, Iterator<T> {
 
@@ -26,6 +26,10 @@ public class ApiResponseCollection<T> implements Iterable<T>, Iterator<T> {
         this.response = response;
         this.sourceEndpoint = sourceCollection;
         this.entities = response.getEntities().iterator();
+    }
+
+    public RevisedApiResponse<T> getResponse(){
+        return response;
     }
 
     @Override
