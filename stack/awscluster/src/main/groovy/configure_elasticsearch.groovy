@@ -61,22 +61,25 @@ es.logger.level: INFO
 
 #Set our threadpool size.  Our bulk pool and search pools are quite large.  We may want to turn these down if we
 #overload the system
-
-threadpool:
-    index:
-        type: fixed
-        size: 160
-        queue_size: 0
-    bulk:
-        type: fixed
-        size: 5000
+#
+# Temporarily removing.  We don't know better :)
+# http://www.elasticsearch.org/guide/en/elasticsearch/guide/current/_don_8217_t_touch_these_settings.html#_threadpools
+#
+#threadpool:
+#    index:
+#        type: fixed
+#        size: 160
+#        queue_size: 0
+#    bulk:
+#        type: fixed
+#        size: 5000
 #        size: 16
-        queue_size: 100
-    search:
-        size: 10000
+#        queue_size: 100
+#    search:
+#        size: 10000
 #        size: 48
-        type: fixed
-        queue_size: 100
+#        type: fixed
+#        queue_size: 100
 
 action.auto_create_index: false
 
