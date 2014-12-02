@@ -472,7 +472,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
     }
 
     @Override
-    public void addIndex(UUID appId, String suffix, Map<String, Object> config) {
+    public void addIndex(UUID appId, String suffix,final int shards,final int replicas) {
         throw new UnsupportedOperationException("Not supported in v1");
     }
 

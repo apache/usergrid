@@ -188,13 +188,18 @@ public class IndexResource extends AbstractContextResource {
         ApiResponse response = createApiResponse();
         final UUID appId = UUIDUtils.tryExtractUUID(applicationIdStr);
 
-        if(config.containsKey("indexSuffix")) {
-            emf.addIndex(appId, config.get("indexSuffix").toString(), config);
-            response.setAction("Add index to alias");
+        if(!config.containsKey("replicas") || !config.containsKey("shards") ||
+                !(config.get("replicas") instanceof Integer) || !(config.get("shards") instanceof Integer)){
+            throw new IllegalArgumentException("body must contains 'replicas' of type int and 'shards' of type int");
         }
-        else{
+
+        if(!config.containsKey("indexSuffix")) {
             throw new IllegalArgumentException("Please add an indexSuffix to your post");
         }
+
+        emf.addIndex(appId, config.get("indexSuffix").toString(), (int) config.get("shards"),(int) config.get("replicas"));
+        response.setAction("Add index to alias");
+
         return new JSONWithPadding(response, callback);
 
     }

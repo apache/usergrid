@@ -198,8 +198,8 @@ public class HybridEntityManagerFactory implements EntityManagerFactory, Applica
     }
 
     @Override
-    public void addIndex(UUID appId, String suffix, Map<String, Object> config) {
-        factory.addIndex(appId,suffix,config);
+    public void addIndex(UUID appId, String suffix,final int shards,final int replicas) {
+        factory.addIndex(appId,suffix,shards,replicas);
     }
 
     @Override

@@ -165,9 +165,10 @@ public interface EntityManagerFactory {
      * Add a new index to the application for scale
      * @param appId application id
      * @param suffix unique indentifier for additional index
-     * @param config {"replicas":num,"shards":num}
+     * @param shards number of shards
+     * @param replicas number of replicas
      */
-    public void addIndex(final UUID appId,final String suffix, Map<String,Object> config);
+    public void addIndex(final UUID appId,final String suffix,final int shards,final int replicas);
 
     public Health getEntityStoreHealth();
 

@@ -41,9 +41,10 @@ public interface EntityIndex {
     /**
      * Create an index and add to alias, will create alias and remove any old index from write alias if alias already exists
      * @param indexSuffix index name
-     * @param config {"replicas":num,"shards":num}
+     * @param shards
+     * @param replicas
      */
-    public void addIndex(final String indexSuffix, final Map<String,Object> config);
+    public void addIndex(final String indexSuffix, final int shards, final int replicas);
 
     /**
      * Create the index batch.

@@ -139,17 +139,8 @@ public class EsEntityIndexImpl implements EntityIndex {
     }
 
     @Override
-    public void addIndex(final String indexSuffix, final Map<String,Object> config) {
-        if(!config.containsKey("replicas") || !config.containsKey("shards") ||
-                !(config.get("replicas") instanceof Integer) || !(config.get("shards") instanceof Integer)){
-            throw new IllegalArgumentException("config must contains 'replicas' of type int and 'shards' of type int");
-        }
-       String normalizedSuffix =  StringUtils.isNotEmpty(indexSuffix) ? indexSuffix : null;
-       addIndex(normalizedSuffix,(int) config.get("shards"),(int)config.get("replicas"));
-    }
-
-    private void addIndex(final String indexSuffix,final int numberOfShards, final int numberOfReplicas) {
-
+    public void addIndex(final String indexSuffix,final int numberOfShards, final int numberOfReplicas) {
+        String normalizedSuffix =  StringUtils.isNotEmpty(indexSuffix) ? indexSuffix : null;
         try {
 
             if (!mappingsCreated.getAndSet(true)) {
@@ -157,7 +148,7 @@ public class EsEntityIndexImpl implements EntityIndex {
             }
 
             //get index name with suffix attached
-            String indexName = indexIdentifier.getIndex(indexSuffix);
+            String indexName = indexIdentifier.getIndex(normalizedSuffix);
 
             //Create index
             try {
@@ -170,7 +161,7 @@ public class EsEntityIndexImpl implements EntityIndex {
                 logger.info("Index Name [{}] already exists", indexName);
             }
 
-            addAlias(indexSuffix);
+            addAlias(normalizedSuffix);
 
             testNewIndex();
         } catch (IndexAlreadyExistsException expected) {

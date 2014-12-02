@@ -50,7 +50,7 @@ public class IndexIdentifier{
      */
     public String getIndex(String suffix) {
         if (suffix != null) {
-            return getIndexBase() + "_" + (suffix + 1);
+            return getIndexBase() + "_" + suffix;
         } else {
             return getIndexBase();
         }
