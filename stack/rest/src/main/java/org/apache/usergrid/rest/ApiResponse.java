@@ -115,7 +115,7 @@ public class ApiResponse {
         return error;
     }
 
-
+    @JsonProperty("error")
     public void setError( String code ) {
         error = code;
     }
@@ -227,7 +227,7 @@ public class ApiResponse {
             uri = null;
         }
         this.path = path;
-        uri = createPath( path );
+        //uri = createPath( path );
     }
 
 
@@ -330,15 +330,19 @@ public class ApiResponse {
 
 
     /** Set the application and organization information */
-    public void setApplication( Application app ) {
-        this.organization = app.getOrganizationName();
-        this.applicationName = app.getApplicationName();
+    public void setApplication( Application app) {
         this.application = app.getUuid();
-
-        if ( esp != null ) {
-            uri = createPath( esp.toString() );
-        }
     }
+
+    //    public void setApplication( Application app ) {
+//        this.organization = app.getOrganizationName();
+//        this.applicationName = app.getApplicationName();
+//        this.application = app.getUuid();
+//
+//        if ( esp != null ) {
+//            uri = createPath( esp.toString() );
+//        }
+//    }
 
 
     @JsonSerialize( include = Inclusion.NON_NULL )

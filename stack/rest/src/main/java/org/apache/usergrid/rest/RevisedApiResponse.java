@@ -53,7 +53,7 @@ import static org.apache.usergrid.utils.InflectionUtils.pluralize;
         "entities", "list", "data", "next", "timestamp", "duration"
 } )
 @XmlRootElement
-public class RevisedApiResponse  {
+public class RevisedApiResponse<T>  {
 
     private ServiceRequest esp;
 
@@ -70,7 +70,7 @@ public class RevisedApiResponse  {
     private String organization;
     private String applicationName;
     private UUID application;
-    private List<Entity> entities;
+    private List<T> entities;
     private UUID next;
     private String cursor;
     private Integer count;
@@ -358,22 +358,22 @@ public class RevisedApiResponse  {
 
     @JsonSerialize( include = Inclusion.NON_NULL )
     @XmlAnyElement
-    public List<Entity> getEntities() {
+    public List<T> getEntities() {
         return entities;
     }
 
 
-    public void setEntities( List<Entity> entities ) {
+    public void setEntities( List<T> entities ) {
         if ( entities != null ) {
             this.entities = entities;
         }
         else {
-            this.entities = new ArrayList<Entity>();
+            this.entities = new ArrayList<T>();
         }
     }
 
 
-    public RevisedApiResponse withEntities( List<Entity> entities ) {
+    public RevisedApiResponse withEntities( List<T> entities ) {
         setEntities( entities );
         return this;
     }
@@ -382,13 +382,13 @@ public class RevisedApiResponse  {
     public void setResults( ServiceResults results ) {
         if ( results != null ) {
             setPath( results.getPath() );
-            entities = results.getEntities();
+            //entities = results.getEntities();
             next = results.getNextResult();
             cursor = results.getCursor();
             counters = results.getCounters();
         }
         else {
-            entities = new ArrayList<Entity>();
+            entities = new ArrayList<T>();
         }
     }
 
@@ -441,8 +441,8 @@ public class RevisedApiResponse  {
     }
 
 
-    public RevisedApiResponse withEntity( Entity entity ) {
-        entities = new ArrayList<Entity>();
+    public RevisedApiResponse withEntity( T entity ) {
+        entities = new ArrayList<T>();
         entities.add( entity );
         return this;
     }
@@ -587,18 +587,18 @@ public class RevisedApiResponse  {
     }
 
 
-    public void prepareEntities() {
-        if ( uri != null ) {
-            String url_base = serverEnvironmentProperties.getApiBase();
-            if ( entities != null ) {
-                for ( Entity entity : entities ) {
-                    String entity_uri = getEntityPath( url_base, entity );
-                    entity.setMetadata( "uri", entity_uri );
-                    entity.setMetadata( "path", path + "/" + entity.getUuid() );
-                }
-            }
-        }
-    }
+//    public void prepareEntities() {
+//        if ( uri != null ) {
+//            String url_base = serverEnvironmentProperties.getApiBase();
+//            if ( entities != null ) {
+//                for ( Entity entity : entities ) {
+//                    String entity_uri = getEntityPath( url_base, entity );
+//                    entity.setMetadata( "uri", entity_uri );
+//                    entity.setMetadata( "path", path + "/" + entity.getUuid() );
+//                }
+//            }
+//        }
+//    }
 
 
     @JsonAnyGetter

@@ -19,6 +19,9 @@ package org.apache.usergrid.rest.test.resource.app;
 
 import java.io.IOException;
 import java.util.Map;
+
+import org.apache.usergrid.rest.ApiResponse;
+import org.apache.usergrid.rest.RevisedApiResponse;
 import org.apache.usergrid.rest.test.resource.NamedResource;
 import org.apache.usergrid.rest.test.resource.SetResource;
 import org.apache.usergrid.utils.MapUtils;
@@ -29,6 +32,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 //TODO: G make sure this no longer returns JsonNodes and instead returns EntityObjects.
 //TODO: Add in full rest suite of GET,PUT,DELETE methods. Delete will be mostly universal.
 public class Collection extends SetResource {
+
 
     public Collection( String collectionName, NamedResource parent ) {
         super( collectionName, parent );
@@ -75,6 +79,10 @@ public class Collection extends SetResource {
         JsonNode response = this.postInternal( entityData );
 
         return getEntity( response, 0 );
+    }
+
+    public RevisedApiResponse getResponse()  {
+        return this.getResponse();
     }
 
 }

@@ -31,6 +31,9 @@ import static org.junit.Assert.assertEquals;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.usergrid.rest.ApiResponse;
+import org.apache.usergrid.rest.RevisedApiResponse;
+
 
 /** @author tnine */
 public abstract class ValueResource extends NamedResource {
@@ -127,6 +130,16 @@ public abstract class ValueResource extends NamedResource {
             return getInternal();
         } catch (IOException ex) {
             throw new RuntimeException("Cannot parse JSON data", ex);
+
+        }
+    }
+
+    public RevisedApiResponse getResponse() {
+        try {
+            return getInternalResponse();
+        }
+        catch ( IOException e ) {
+            throw new RuntimeException("Cannot parse JSON data", e);
         }
     }
 
@@ -216,6 +229,29 @@ public abstract class ValueResource extends NamedResource {
         String json = jsonMedia( resource ).get( String.class );
         //logger.debug(json);
         return mapper.readTree( json );
+    }
+
+    protected RevisedApiResponse getInternalResponse() throws IOException {
+        WebResource resource = withParams( withToken( resource() ) );
+
+
+        if ( query != null ) {
+            resource = resource.queryParam( "ql", query );
+        }
+
+        if ( cursor != null ) {
+            resource = resource.queryParam( "cursor", cursor );
+        }
+
+        if ( start != null ) {
+            resource = resource.queryParam( "start", start.toString() );
+        }
+
+        if ( limit != null ) {
+            resource = resource.queryParam( "limit", limit.toString() );
+        }
+
+        return  jsonMedia( resource ).get( RevisedApiResponse.class );
     }
 
 

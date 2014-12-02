@@ -57,6 +57,12 @@ public class GroupsCollection extends CollectionResource {
         return getEntity( response, 0 );
     }
 
+    //example of what a call could look like
+//    public ApiResponseCollection<Group> get() throws IOException {
+//        //create new ApiResponseCollection from ApiResponse then return to user for further processing.
+//       return  this.getResponse();
+//    }
+
 
 
 
