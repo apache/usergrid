@@ -14,37 +14,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- package org.apache.usergrid.simulations
+package org.apache.usergrid.simulations
 
 import io.gatling.core.Predef._
- import org.apache.usergrid.datagenerators.FeederGenerator
- import org.apache.usergrid.scenarios.UserScenarios
- import org.apache.usergrid.settings.Settings
+import org.apache.usergrid.helpers.Setup
+import org.apache.usergrid.scenarios.UserScenarios
+import org.apache.usergrid.settings.Settings
 
- import scala.concurrent.duration._
+import scala.concurrent.duration._
 
 class PostUsersSimulation extends Simulation {
 
-  // Target settings
-  val httpConf = Settings.httpConf
+  println("Begin setup")
+  Setup.setupOrg()
+  Setup.setupApplication()
+  println("End Setup")
 
-  // Simulation settings
-  val numUsers:Int = Settings.numUsers
-  val rampTime:Int = Settings.rampTime
-  val throttle:Int = Settings.throttle
 
-  // Geolocation settings
-  val centerLatitude:Double = Settings.centerLatitude
-  val centerLongitude:Double = Settings.centerLongitude
-  val userLocationRadius:Double = Settings.userLocationRadius
-  val geosearchRadius:Int = Settings.geosearchRadius
+  setUp(
+    UserScenarios.postUsersInfinitely
+      .inject(constantUsersPerSec(Settings.maxPossibleUsers) during (Settings.duration)) // wait for 15 seconds so create org can finish, need to figure out coordination
 
-  val feeder = FeederGenerator.generateUserWithGeolocationFeeder(numUsers, userLocationRadius, centerLatitude, centerLongitude).queue
 
-  val scnToRun = scenario("POST geolocated users")
-    .feed(feeder)
-    .exec(UserScenarios.postUserIfNotExists)
-
-  setUp(scnToRun.inject(atOnceUsers(numUsers)).throttle(reachRps(throttle) in (rampTime.seconds)).protocols(httpConf))
+  )  .throttle(reachRps(Settings.maxPossibleUsers) in (Settings.rampTime.seconds)).protocols(Settings.httpConf.acceptHeader("application/json"))
 
 }

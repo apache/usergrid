@@ -38,20 +38,33 @@ import io.gatling.core.Predef._
        .check(status.saveAs("userStatus"), jsonPath("$..entities[0]").exists, jsonPath("$..entities[0].uuid").exists, jsonPath("$..entities[0].uuid").saveAs("userId"))
    )
 
-  val postUserIfNotExists =
-    exec(getUserByUsername)
-      .doIf ("${userStatus}", "404") {
+
+   /**
+    * Post a user
+    */
+   val postUser =
+
      exec(
-       http("POST geolocated Users")
-         .post("/users")
-         .body(new StringBody("""{"location":{"latitude":"${latitude}","longitude":"${longitude}"},"username":"${username}",
-      "displayName":"${displayName}","age":"${age}","seen":"${seen}","weight":"${weight}",
-      "height":"${height}","aboutMe":"${aboutMe}","profileId":"${profileId}","headline":"${headline}",
-      "showAge":"${showAge}","relationshipStatus":"${relationshipStatus}","ethnicity":"${ethnicity}","password":"password"}"""))
-         .check(status.saveAs("userStatus"))
-         .check(status.is(200),jsonPath("$..entities[0].uuid").saveAs("userId"))
-     )
-    }
+            http("POST geolocated Users")
+              .post("/users")
+              .body(new StringBody("""{"location":{"latitude":"${latitude}","longitude":"${longitude}"},"username":"${username}",
+           "displayName":"${displayName}","age":"${age}","seen":"${seen}","weight":"${weight}",
+           "height":"${height}","aboutMe":"${aboutMe}","profileId":"${profileId}","headline":"${headline}",
+           "showAge":"${showAge}","relationshipStatus":"${relationshipStatus}","ethnicity":"${ethnicity}","password":"password"}"""))
+              .check(status.saveAs("userStatus"))
+              .check(status.is(200),jsonPath("$..entities[0].uuid").saveAs("userId"))
+          )
+
+
+   /**
+     * Try to get a user, if it returns a 404, create the user
+     */
+   val postUserIfNotExists =
+     exec(getUserByUsername)
+       .doIf ("${userStatus}", "404") {
+      exec(postUser)
+     }
+
 
    val putUser =
      exec(getUserByUsername)
@@ -75,6 +88,10 @@ import io.gatling.core.Predef._
        .check(status.is(200), jsonPath("$..entities[0].uuid").saveAs("userId"))
    )
 
+   /**
+    * Logs in as the admin user.  Checks if a user exists, if not, creates the user
+    * Logs in as the user, then creates 2 devices if they do not exist
+    */
    val createUsersWithDevicesScenario =  scenario("Create Users")
      .feed(Settings.getInfiniteUserFeeder())
      .exec(TokenScenarios.getManagementToken)
@@ -85,4 +102,11 @@ import io.gatling.core.Predef._
        feed(FeederGenerator.generateEntityNameFeeder("device", Settings.numDevices))
          .exec( DeviceScenarios.maybeCreateDevices)
      }
+
+   /**
+    * Posts a new user every time
+    */
+   val postUsersInfinitely =  scenario("Post Users")
+        .feed(Settings.getInfiniteUserFeeder())
+        .exec(UserScenarios.postUser)
  }
