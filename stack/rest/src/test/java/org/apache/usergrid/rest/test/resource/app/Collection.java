@@ -22,6 +22,7 @@ import java.util.Map;
 
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RevisedApiResponse;
+import org.apache.usergrid.rest.test.resource.CollectionResource;
 import org.apache.usergrid.rest.test.resource.NamedResource;
 import org.apache.usergrid.rest.test.resource.SetResource;
 import org.apache.usergrid.utils.MapUtils;
@@ -77,12 +78,20 @@ public class Collection extends SetResource {
     public JsonNode post(Map entityData) throws IOException{
 
         JsonNode response = this.postInternal( entityData );
-
+//I think this is wrong
         return getEntity( response, 0 );
     }
 
-    public RevisedApiResponse getResponse()  {
-        return this.getResponse();
+
+    /**
+     * Creates a ApiResponseCollection which takes in an api response returns it as a collection of the type handed in
+     * @return
+     * @throws IOException
+     */
+    public ApiResponseCollection<Collection> getCollectionResponse() throws IOException  {
+        CollectionResource collectionResource = new CollectionResource( this.getName(),this.getParent() );
+        ApiResponseCollection<Collection> collectionRevisedApiResponse = new ApiResponseCollection<>(collectionResource,this.getResponse() );
+        return collectionRevisedApiResponse;
     }
 
 }

@@ -74,9 +74,15 @@ public class CollectionsResourceIT extends AbstractRestIT {
     }
 
 
+    /**
+     * Posts an empty payload to an empty collection and expects nothing back
+     * @throws IOException
+     */
     @Test
     public void postToEmptyCollection() throws IOException {
         Map<String, String> payload = new HashMap<String, String>();
+        //for whatever reason this does a getEntity before returning the post, i think this is a bug needs to be fixed.
+        //after api response stuff is handled. We should only be getting the raw response.
 
         JsonNode node = context.collection( "cities" ).post( payload );
         assertNull( getEntity( node, 0 ) );
@@ -94,12 +100,13 @@ public class CollectionsResourceIT extends AbstractRestIT {
 //                                                   .post( String.class, payload ));
        // assertNull( node );
 
-        RevisedApiResponse<Collection> collection = context.collection( "cities" ).getResponse();
-//        ApiResponse apiResponse = resource().path( "/test-organization/test-app/cities" ).queryParam( "access_token", access_token )
-//                                            .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-//                                            .get( ApiResponse.class );
+        JsonNode node = context.collection( "cities" ).post( payload );
 
-       // assertNotNull( apiResponse );
+        assertNull(node);
+
+        ApiResponseCollection<Collection> collection = context.collection( "cities" ).getCollectionResponse();
+
+        assertNotNull( collection );
     }
 
 
