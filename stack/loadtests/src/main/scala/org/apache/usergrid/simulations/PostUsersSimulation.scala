@@ -21,8 +21,13 @@ import org.apache.usergrid.helpers.Setup
 import org.apache.usergrid.scenarios.UserScenarios
 import org.apache.usergrid.settings.Settings
 
-import scala.concurrent.duration._
-
+/**
+ * Posts application users continually to an application.  Expects the following parameters
+ *
+ * -DmaxPossibleUsers : The maximum number of users to be making requests as fast as possible.  Think of this as conccurrent users in the system
+ * -DrampTime: The amount of time (in seconds) to allow for maxPossibleUsers to be reached.  This will add new users linearlly
+ * -Dduration: The amount of time (in seconds) to continue to perform requests up with the maxPossibleUsers
+ */
 class PostUsersSimulation extends Simulation {
 
   println("Begin setup")
@@ -33,9 +38,14 @@ class PostUsersSimulation extends Simulation {
 
   setUp(
     UserScenarios.postUsersInfinitely
-      .inject(constantUsersPerSec(Settings.maxPossibleUsers) during (Settings.duration)) // wait for 15 seconds so create org can finish, need to figure out coordination
+      .inject(
+        /**
+         * injection steps take from this forum post
+         * https://groups.google.com/forum/#!topic/gatling/JfYHaWCbA-w
+         */
+        rampUsersPerSec(1) to (Settings.maxPossibleUsers) during Settings.rampTime,
+        constantUsersPerSec(Settings.maxPossibleUsers) during Settings.duration
 
-
-  )  .throttle(reachRps(Settings.maxPossibleUsers) in (Settings.rampTime.seconds)).protocols(Settings.httpConf.acceptHeader("application/json"))
+      )).protocols(Settings.httpConf.acceptHeader("application/json"))
 
 }
