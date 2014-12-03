@@ -446,7 +446,7 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
             catch ( DataCorruptionException e ) {
                 log.error(
                         "DATA CORRUPTION DETECTED when de-serializing entity with Id {} and version {}.  This means the"
-                                + " write was truncated.", id, version );
+                                + " write was truncated.", id, version, e );
                 //return an empty entity, we can never load this one, and we don't want it to bring the system
                 //to a grinding halt
                 return new MvccEntityImpl( id, version, MvccEntity.Status.DELETED, Optional.<Entity>absent() );
