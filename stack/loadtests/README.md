@@ -26,3 +26,22 @@ Gatling will run through mvn
 	Also see http://gatling.io/docs/2.0.2/general/simulation_setup.html
 	
 	Additional docs can be found here http://gatling.io/docs/2.0.2/
+
+##Running a Push Notification Simulation
+
+1. Set up all users in the system with 2 devices each.
+
+	>mvn compile gatling:execute -Dgatling.simulationClass=org.apache.usergrid.simulations.SetupSimulation -DadminUser=usergrid -DadminPassword=test -Dorg=usergrid  -Dapp=load -Dthrottle=100 -Dbaseurl=http://loadtest.usergrid.com -DmaxPossibleUsers=1000
+
+
+	Note the following.
+
+
+	**throttle:**  The max number of users + devices per second to create
+
+	**maxPossibleUsers:**  The maximum number of users the simulation will create before exiting
+
+
+1. No
+
+

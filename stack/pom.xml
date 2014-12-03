@@ -1518,6 +1518,7 @@
             <optimize>true</optimize>
             <showDeprecation>true</showDeprecation>
             <debug>true</debug>
+            <!-- uncomment when building for more detailed profiling information <debuglevel>lines,vars,source</debuglevel> -->
             <encoding>UTF-8</encoding>
             <showWarnings>true</showWarnings>
           </configuration>
