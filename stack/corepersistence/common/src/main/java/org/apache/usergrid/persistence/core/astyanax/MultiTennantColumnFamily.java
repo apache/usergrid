@@ -19,7 +19,6 @@
 package org.apache.usergrid.persistence.core.astyanax;
 
 
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 
 import com.netflix.astyanax.Serializer;
 import com.netflix.astyanax.model.ColumnFamily;
