@@ -182,7 +182,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
         log.debug( "De-indexing type {} with documentId '{}'" , entityType, indexId);
 
-        bulkRequest.add( client.prepareDelete(alias.getReadAlias(), entityType, indexId ).setRefresh( refresh ) );
+        bulkRequest.add( client.prepareDelete(alias.getWriteAlias(), entityType, indexId ).setRefresh( refresh ) );
 
         log.debug( "Deindexed Entity with index id " + indexId );
 
