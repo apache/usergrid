@@ -47,9 +47,10 @@
             "ConstraintDescription": "must be valid instance type."
         },
         "KeyPair": {
-            "Description": "EC2 key pair to be use for SSH access",
-            "Type": "String",
-            "Default": "ug-cloudformation"
+          "Description": "Name of an existing EC2 KeyPair to enable SSH access to the instance",
+          "Type": "AWS::EC2::KeyPair::KeyName",
+          "Default": "ug-cloudformation",
+          "ConstraintDescription": "must be the name of an existing EC2 KeyPair."
         },
         "CassClusterName": {
             "Description": "Name to be used for Cassandra cluster.",
