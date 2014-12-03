@@ -56,6 +56,15 @@ import io.gatling.core.Predef._
           )
 
 
+
+   val getUsersWithCursor = exec(
+     http("GET user")
+       .get("/users?cursor=${cursor}")
+       .headers(Headers.jsonAuthorized)
+       .check(status.saveAs("userStatus"),  jsonPath("$..entities").saveAs("users"))
+   )
+
+
    /**
      * Try to get a user, if it returns a 404, create the user
      */
@@ -109,4 +118,6 @@ import io.gatling.core.Predef._
    val postUsersInfinitely =  scenario("Post Users")
         .feed(Settings.getInfiniteUserFeeder())
         .exec(UserScenarios.postUser)
+
+   val getUsersIndefinitely = scenario("Get Users").exec()
  }
