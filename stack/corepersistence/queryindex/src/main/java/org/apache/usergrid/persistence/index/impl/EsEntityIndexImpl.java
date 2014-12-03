@@ -215,7 +215,7 @@ public class EsEntityIndexImpl implements EntityIndex {
     private void createMappings() throws IOException {
 
         XContentBuilder xcb = IndexingUtils.createDoubleStringIndexMapping( 
-                XContentFactory.jsonBuilder(), "_default_" );
+                XContentFactory.jsonBuilder(), "_default_", config );
 
         PutIndexTemplateResponse pitr = esProvider.getClient().admin().indices()
                 .preparePutTemplate( "usergrid_template" )

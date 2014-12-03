@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -143,7 +144,7 @@ public class IndexingUtils {
      * @throws java.io.IOException On JSON generation error.
      */
     public static XContentBuilder createDoubleStringIndexMapping(
-            XContentBuilder builder, String type ) throws IOException {
+            XContentBuilder builder, String type, IndexFig config ) throws IOException {
 
         builder = builder
 
@@ -154,7 +155,10 @@ public class IndexingUtils {
                     // don't store source object in ES 
                     .field("_source") 
                         .startObject()
-                            .field("_source").startObject().field("enabled", false).endObject()
+                            .field("_source")
+                                .startObject()
+                                    .field("enabled", config.getStoreStource())
+                                .endObject()
                         .endObject()
 
                     .startArray( "dynamic_templates" )
@@ -162,6 +166,7 @@ public class IndexingUtils {
                         // we need most specific mappings first since it's a stop on match algorithm
 
                         .startObject() // array item
+
                             .startObject( "context_template" )
                                 .field( "match", IndexingUtils.ENTITYID_ID_FIELDNAME )
                                 .field( "match_mapping_type", "string" )
@@ -169,8 +174,7 @@ public class IndexingUtils {
                                     .field( "type", "string" )
                                     .field( "index", "not_analyzed" )
                                 .endObject()
-                                // dont't store field in ES
-                                .field("store", false)
+                                .field("store", config.getStoreFields() )
                             .endObject()
                         .endObject()
 
@@ -183,8 +187,7 @@ public class IndexingUtils {
                                     .field( "type", "string" )
                                     .field( "index", "not_analyzed" )
                                 .endObject()
-                                // dont't store field in ES
-                                .field("store", false)
+                                .field("store", config.getStoreFields())
                             .endObject()
 
                         .endObject()
@@ -200,8 +203,21 @@ public class IndexingUtils {
                                     .field( "type", "string" )
                                     .field( "index", "analyzed" )
                                 .endObject()
-                                // dont't store field in ES
-                                .field("store", false)
+                                .field("store", config.getStoreFields())
+                            .endObject()
+
+                        .endObject()
+
+                        // fields names starting with go_ get geo-indexed
+
+                        .startObject() // array item
+
+                            .startObject( "template_3" )
+                                .field( "match", GEO_PREFIX + "location" )
+                                    .startObject( "mapping" )
+                                        .field( "type", "geo_point" )
+                                    .endObject()
+                                .field("store", config.getStoreFields())
                             .endObject()
 
                         .endObject()
@@ -218,23 +234,7 @@ public class IndexingUtils {
                                     .field( "type", "string" )
                                     .field( "index", "not_analyzed" )
                                 .endObject()
-                                // dont't store field in ES
-                                .field("store", false)
-                            .endObject()
-
-                        .endObject()
-
-                        // fields names starting with go_ get geo-indexed
-
-                        .startObject() // array item
-
-                            .startObject( "template_3" )
-                                .field( "match", GEO_PREFIX + "location" )
-                                    .startObject( "mapping" )
-                                        .field( "type", "geo_point" )
-                                    .endObject()
-                                // dont't store field in ES
-                                .field("store", false)
+                                .field("store", config.getStoreFields())
                             .endObject()
 
                         .endObject()
