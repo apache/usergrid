@@ -25,8 +25,8 @@ object Engine extends App {
 	props.resultsDirectory(IDEPathHelper.resultsDirectory.toString)
 	props.requestBodiesDirectory(IDEPathHelper.requestBodiesDirectory.toString)
 	props.binariesDirectory(IDEPathHelper.mavenBinariesDirectory.toString)
-  val simName = if(System.getProperty("simulationClass")!=null) System.getProperty("simulationClass") else "AppSimulation";
-  props.simulationClass("org.apache.usergrid.simulations."+simName)
+  val simName = if(System.getProperty("gatling.simulationClass")!=null) System.getProperty("gatling.simulationClass") else "org.apache.usergrid.simulations.AppSimulation";
+  props.simulationClass(simName)
 
 	Gatling.fromMap(props.build)
 }
