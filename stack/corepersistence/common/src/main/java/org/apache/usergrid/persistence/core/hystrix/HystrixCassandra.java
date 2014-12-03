@@ -21,11 +21,8 @@ package org.apache.usergrid.persistence.core.hystrix;
 
 
 import com.netflix.astyanax.Execution;
-import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.OperationResult;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
-import com.netflix.astyanax.model.ColumnList;
-import com.netflix.astyanax.query.RowQuery;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixThreadPoolProperties;
