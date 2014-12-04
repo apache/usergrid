@@ -17,7 +17,11 @@
  */
 package org.apache.usergrid.corepersistence.events;
 
+import com.google.inject.Inject;
+import java.util.List;
+import java.util.UUID;
 import org.apache.usergrid.corepersistence.CpEntityManagerFactory;
+import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
@@ -30,11 +34,6 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
-
-import java.util.List;
-
-import com.google.inject.Inject;
-import org.apache.usergrid.persistence.EntityManagerFactory;
 
 
 /**
@@ -81,4 +80,5 @@ public class EntityVersionDeletedHandler implements EntityVersionDeleted {
                 }
             }).toBlocking().last();
     }
+
 }

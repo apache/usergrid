@@ -43,7 +43,7 @@ class PostUsersSimulation extends Simulation {
          * injection steps take from this forum post
          * https://groups.google.com/forum/#!topic/gatling/JfYHaWCbA-w
          */
-        rampUsersPerSec(1) to (Settings.maxPossibleUsers) during Settings.rampTime,
+        rampUsers(Settings.maxPossibleUsers) over Settings.rampTime,
         constantUsersPerSec(Settings.maxPossibleUsers) during Settings.duration
 
       )).protocols(Settings.httpConf.acceptHeader("application/json"))

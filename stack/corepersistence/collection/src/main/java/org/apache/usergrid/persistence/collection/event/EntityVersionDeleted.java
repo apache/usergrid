@@ -32,7 +32,6 @@ import org.apache.usergrid.persistence.model.entity.Id;
  */
 public interface EntityVersionDeleted {
 
-
     /**
      * The version specified was removed.
      *

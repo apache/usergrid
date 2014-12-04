@@ -109,7 +109,6 @@ class NodeRegistry {
 
             for (reservation in nodes.getReservations()) {
 
-                //TODO, add these to a list then sort them by date, then name
                 for (instance in reservation.getInstances()) {
                     servers.add(new ServerEntry(instance.launchTime, instance.publicDnsName));
                 }
@@ -169,15 +168,14 @@ class NodeRegistry {
 
         @Override
         int compareTo(final ServerEntry o) {
-            if (launchDate.before(o.launchDate)) {
-                -1;
-            } else if (launchDate.after(o.launchDate)) {
-                return 1;
+
+            int compare = launchDate.compareTo(o.launchDate)
+
+            if(compare == 0){
+                compare =  publicIp.compareTo(o.publicIp);
             }
 
-            return publicIp.compareTo(o.publicIp);
-
-
+            return compare
         }
 
         boolean equals(final o) {
