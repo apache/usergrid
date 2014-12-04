@@ -57,14 +57,6 @@ import io.gatling.core.Predef._
 
 
 
-   val getUsersWithCursor = exec(
-     http("GET user")
-       .get("/users?cursor=${cursor}")
-       .headers(Headers.jsonAuthorized)
-       .check(status.saveAs("userStatus"),  jsonPath("$..entities").saveAs("users"))
-   )
-
-
    /**
      * Try to get a user, if it returns a 404, create the user
      */
@@ -89,6 +81,27 @@ import io.gatling.core.Predef._
 
        )
       }
+
+   /**
+    * Get a collection of users without a cursor.  Sets the cursor and entities array as "users"
+    */
+   val getUsersWithoutCursor = exec(
+     http("GET user")
+       .get("/users")
+       .headers(Headers.jsonAuthorized)
+       .check(status.is(200),  jsonPath("$..entities").saveAs("users"), jsonPath("$..cursor").saveAs("cursor"))
+   )
+
+   /**
+    * Get the next page of users with the cursor, expects the value "cursor" to be present in teh session
+    */
+   val getUsersWithCursor = exec(
+        http("GET user")
+          .get("/users?cursor=${cursor}")
+          .headers(Headers.jsonAuthorized)
+          .check(status.is(200),  jsonPath("$..entities").saveAs("users"), jsonPath("$..cursor").saveAs("cursor"))
+      )
+
 
    val deleteUserByUsername = exec(
      http("DELETE user")
@@ -119,5 +132,16 @@ import io.gatling.core.Predef._
         .feed(Settings.getInfiniteUserFeeder())
         .exec(UserScenarios.postUser)
 
-   val getUsersIndefinitely = scenario("Get Users").exec()
+   /**
+    * Get the users a page at a time until exhausted
+    */
+   val getUsersToEnd = scenario("Get Users").exec(
+   //get the management token
+     TokenScenarios.getManagementToken,
+   //get users without a cursor
+     getUsersWithoutCursor
+   //as long as we have a cursor, keep getting results
+   ).asLongAs(session => session("cursor").as[String] != "") {
+     exec(getUsersWithCursor)
+   }
  }

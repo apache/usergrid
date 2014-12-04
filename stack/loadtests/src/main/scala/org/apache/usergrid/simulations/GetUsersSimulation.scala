@@ -37,7 +37,7 @@ class GetUsersSimulation extends Simulation {
 
 
   setUp(
-    UserScenarios.postUsersInfinitely
+    UserScenarios.getUsersToEnd
       .inject(
         /**
          * injection steps take from this forum post
