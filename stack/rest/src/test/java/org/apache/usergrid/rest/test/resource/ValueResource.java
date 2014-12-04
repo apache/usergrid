@@ -22,23 +22,15 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
 
-import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.core.type.TypeReference;
 
 
-import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.WebResource;
 import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.rest.ApiResponse;
-import org.apache.usergrid.rest.RevisedApiResponse;
-
 
 
 /** @author tnine */
@@ -110,10 +102,10 @@ public abstract class ValueResource extends NamedResource {
     }
 
     //TODO: eventually we need to merge this and make it the offical postInternal. this was not done to keep tests compiling.
-    protected <T> RevisedApiResponse<T> postInternalResponse( Map<String, ?> entity ) throws IOException {
+    protected RevisedApiResponse postInternalResponse( Map<String, ?> entity ) throws IOException {
 
         return mapper.readValue( jsonMedia( withParams( withToken( resource() ) ) ).post( String.class, entity ),
-                new TypeReference<RevisedApiResponse<T>>() {} );
+                RevisedApiResponse.class );
         //jsonMedia( withParams( withToken( resource() ) ) ).post( RevisedApiResponse.class, entity );
     }
 

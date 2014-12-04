@@ -58,12 +58,12 @@ public class GroupsCollection extends CollectionResource {
     }
 
     //example of what a call could look like
-    public ApiResponseCollection<Group> getResource() throws IOException {
-        //create new ApiResponseCollection from ApiResponse then return to user for further processing.
-        CollectionResource collectionResource = new CollectionResource( this.getName(),this.getParent() );
-        ApiResponseCollection<Group> collectionRevisedApiResponse = new ApiResponseCollection<>(collectionResource,this.getResponse() );
-        return collectionRevisedApiResponse;
-    }
+//    public ApiResponseCollection<Group> getResource() throws IOException {
+//        //create new ApiResponseCollection from ApiResponse then return to user for further processing.
+//        CollectionResource collectionResource = new CollectionResource( this.getName(),this.getParent() );
+//        ApiResponseCollection<Group> collectionRevisedApiResponse = new ApiResponseCollection(collectionResource,this.getResponse() );
+//        return collectionRevisedApiResponse;
+//    }
 
 
 

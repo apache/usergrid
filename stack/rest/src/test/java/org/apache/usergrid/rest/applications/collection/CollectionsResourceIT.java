@@ -31,11 +31,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.rest.AbstractRestIT;
-import org.apache.usergrid.rest.ApiResponse;
-import org.apache.usergrid.rest.RevisedApiResponse;
 import org.apache.usergrid.rest.TestContextSetup;
 import org.apache.usergrid.rest.test.resource.app.ApiResponseCollection;
-import org.apache.usergrid.rest.test.resource.app.Collection;
 import org.apache.usergrid.rest.test.resource.app.User;
 import org.apache.usergrid.utils.UUIDUtils;
 import org.apache.usergrid.rest.test.resource.app.model.Entity;
@@ -97,13 +94,13 @@ public class CollectionsResourceIT extends AbstractRestIT {
         Map<String, String> payload = hashMap( "name", "Austin" ).map( "state", "TX" );
 
 
-        ApiResponseCollection<Entity> node = context.collection( "cities" ).postResponse( payload );
+        ApiResponseCollection node = context.collection( "cities" ).postResponse( payload );
 //TODO: code = node.getHTTPResponseCode();
 //        assertFalse( node.hasNext() );
 
         Entity entity = node.getResponse().getEntities().get( 0 );
 
-        ApiResponseCollection<Entity> collection = context.collection( "cities" ).getCollectionResponse();
+        ApiResponseCollection collection = context.collection( "cities" ).getCollectionResponse();
 
         assertEquals( ( Object ) 0, collection.getResponse().getCount() );
     }
@@ -169,7 +166,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
 //                .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
 //                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
 //this need to be decoupled so that it only requires client side models ( in this case we need an entity class.
-        ApiResponseCollection<User> arc = context.<User>collection( collectionName ).postResponse( payload );
+        ApiResponseCollection arc = context.collection( collectionName ).postResponse( payload );
 
 //TODO:broken, plz fix
 //        org.apache.usergrid.persistence.Entity entity = arc.next().toTypedEntity();

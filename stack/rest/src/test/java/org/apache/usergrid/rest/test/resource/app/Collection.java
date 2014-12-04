@@ -20,9 +20,7 @@ package org.apache.usergrid.rest.test.resource.app;
 import java.io.IOException;
 import java.util.Map;
 
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.rest.ApiResponse;
-import org.apache.usergrid.rest.RevisedApiResponse;
+import org.apache.usergrid.rest.test.resource.RevisedApiResponse;
 import org.apache.usergrid.rest.test.resource.CollectionResource;
 import org.apache.usergrid.rest.test.resource.NamedResource;
 import org.apache.usergrid.rest.test.resource.SetResource;
@@ -84,11 +82,11 @@ public class Collection extends SetResource {
         return getEntity( response, 0 );
     }
 
-    public <T> ApiResponseCollection<T> postResponse(Map entityData) throws IOException{
+    public  ApiResponseCollection postResponse(Map entityData) throws IOException{
 
         CollectionResource collectionResource = new CollectionResource( this.getName(),this.getParent() );
-        RevisedApiResponse<T> response = this.<T>postInternalResponse( entityData );
-        ApiResponseCollection<T> collectionRevisedApiResponse = new ApiResponseCollection<T>(collectionResource,response );
+        RevisedApiResponse response = this.postInternalResponse( entityData );
+        ApiResponseCollection collectionRevisedApiResponse = new ApiResponseCollection(collectionResource,response );
 
         return collectionRevisedApiResponse;
     }
@@ -99,9 +97,9 @@ public class Collection extends SetResource {
      * @return
      * @throws IOException
      */
-    public <T> ApiResponseCollection<T> getCollectionResponse() throws IOException  {
+    public <T> ApiResponseCollection getCollectionResponse() throws IOException  {
         CollectionResource collectionResource = new CollectionResource( this.getName(),this.getParent() );
-        ApiResponseCollection<T> collectionRevisedApiResponse = new ApiResponseCollection<T>(collectionResource,this.getResponse() );
+        ApiResponseCollection collectionRevisedApiResponse = new ApiResponseCollection(collectionResource,this.getResponse() );
         return collectionRevisedApiResponse;
     }
 

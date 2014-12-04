@@ -1,12 +1,4 @@
-<<<<<<< Updated upstream
-package org.apache.usergrid.rest.test.resource.app.model;
 
-
-/**
- * Created by ApigeeCorporation on 12/2/14.
- */
-public class Entity {}
-=======
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -22,8 +14,8 @@ public class Entity {}
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
-package org.apache.usergrid.rest.test.resource.app.model;
+ */package org.apache.usergrid.rest.test.resource.app.model;
+
 
 
 
@@ -366,4 +358,4 @@ public class Entity implements Serializable {
 //        return true;
 //    }
 }
->>>>>>> Stashed changes
+

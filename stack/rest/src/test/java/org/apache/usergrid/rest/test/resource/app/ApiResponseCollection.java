@@ -2,11 +2,10 @@ package org.apache.usergrid.rest.test.resource.app;
 
 
 import java.util.Iterator;
-import java.util.List;
 
-import org.apache.usergrid.rest.ApiResponse;
-import org.apache.usergrid.rest.RevisedApiResponse;
+import org.apache.usergrid.rest.test.resource.RevisedApiResponse;
 import org.apache.usergrid.rest.test.resource.CollectionResource;
+import org.apache.usergrid.rest.test.resource.app.model.Entity;
 
 
 /**
@@ -29,13 +28,13 @@ import org.apache.usergrid.rest.test.resource.CollectionResource;
  * 2. GET /users/fred/groups
  *
  */
-public class ApiResponseCollection<T> implements Iterable<T>, Iterator<T> {
+public class ApiResponseCollection implements Iterable, Iterator {
 
     private final CollectionResource sourceEndpoint;
-    private RevisedApiResponse<T> response;
+    private RevisedApiResponse response;
 
 
-    public Iterator<T> entities;
+    public Iterator entities;
 
 
     public ApiResponseCollection(final CollectionResource sourceCollection, final RevisedApiResponse response){
@@ -44,12 +43,12 @@ public class ApiResponseCollection<T> implements Iterable<T>, Iterator<T> {
         this.entities = response.getEntities().iterator();
     }
 
-    public RevisedApiResponse<T> getResponse(){
+    public RevisedApiResponse getResponse(){
         return response;
     }
 
     @Override
-    public Iterator<T> iterator() {
+    public Iterator iterator() {
         return this;
     }
 
@@ -65,8 +64,8 @@ public class ApiResponseCollection<T> implements Iterable<T>, Iterator<T> {
 
 
     @Override
-    public T next() {
-        return entities.next();
+    public Entity next() {
+        return (Entity)entities.next();
     }
 
 

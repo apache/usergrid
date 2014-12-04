@@ -45,6 +45,7 @@ import org.apache.commons.lang.ClassUtils;
 import org.apache.commons.lang.StringUtils;
 
 import static org.apache.usergrid.utils.InflectionUtils.pluralize;
+import org.apache.usergrid.rest.test.resource.app.model.Entity;
 
 
 //TODO: Move this into the testing framework
@@ -70,7 +71,7 @@ public class RevisedApiResponse  {
     private String organization;
     private String applicationName;
     private UUID application;
-    private List<org.apache.usergrid.persistence.Entity> entities;
+    private List<Entity> entities;
     private UUID next;
     private String cursor;
     private Integer count;
@@ -358,22 +359,22 @@ public class RevisedApiResponse  {
 
     @JsonSerialize( include = Inclusion.NON_NULL )
     @XmlAnyElement
-    public List<T> getEntities() {
+    public List<Entity> getEntities() {
         return entities;
     }
 
 
-    public void setEntities( List<T> entities ) {
+    public void setEntities( List<Entity> entities ) {
         if ( entities != null ) {
             this.entities = entities;
         }
         else {
-            this.entities = new ArrayList<T>();
+            this.entities = new ArrayList<Entity>();
         }
     }
 
 
-    public RevisedApiResponse withEntities( List<T> entities ) {
+    public RevisedApiResponse withEntities( List<Entity> entities ) {
         setEntities( entities );
         return this;
     }
@@ -388,7 +389,7 @@ public class RevisedApiResponse  {
             counters = results.getCounters();
         }
         else {
-            entities = new ArrayList<T>();
+            entities = new ArrayList<Entity>();
         }
     }
 
@@ -441,8 +442,8 @@ public class RevisedApiResponse  {
     }
 
 
-    public RevisedApiResponse withEntity( T entity ) {
-        entities = new ArrayList<T>();
+    public RevisedApiResponse withEntity( Entity entity ) {
+        entities = new ArrayList<Entity>();
         entities.add( entity );
         return this;
     }

@@ -43,11 +43,9 @@ import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.rest.AbstractRestIT;
-import org.apache.usergrid.rest.RevisedApiResponse;
+import org.apache.usergrid.rest.test.resource.RevisedApiResponse;
 import org.apache.usergrid.rest.TestContextSetup;
 import org.apache.usergrid.rest.applications.utils.UserRepo;
-import org.apache.usergrid.rest.test.security.TestAppUser;
-import org.apache.usergrid.rest.test.security.TestUser;
 import org.apache.usergrid.utils.UUIDUtils;
 
 import com.sun.jersey.api.client.ClientResponse.Status;
