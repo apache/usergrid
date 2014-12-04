@@ -86,20 +86,29 @@ object UserScenarios {
        exec(postUser)
      }
 
-
-   val putUser =
-     exec(getUserByUsername)
-       .doIf("${userStatus}", "200") {
-       exec(
-         http("POST geolocated Users")
-           .put("/users")
-           .body(new StringBody( """{"location":{"latitude":"${latitude}","longitude":"${longitude}"},"username":"${username}",
+   val putUser = exec(
+     http("PUT geolocated Users")
+       .put("/users/${username}")
+       .body(new StringBody( """{"location":{"latitude":"${latitude}","longitude":"${longitude}"},"username":"${username}",
         "displayName":"${displayName}","age":"${age}","seen":"${seen}","weight":"${weight}",
         "height":"${height}","aboutMe":"${aboutMe}","profileId":"${profileId}","headline":"${headline}",
         "showAge":"${showAge}","relationshipStatus":"${relationshipStatus}","ethnicity":"${ethnicity}","password":"password"}"""))
-           .check(status.is(200), jsonPath("$..entities[0].uuid").saveAs(SessionVarUserId))
+       .check(status.is(200), jsonPath("$..entities[0].uuid").saveAs(SessionVarUserId))
 
        )
+      
+
+   val deleteUser = exec(
+     http("PUT geolocated Users")
+       .delete("/users/${username}")
+       .check(status.is(200))
+
+   )
+
+   val deleteUserIfExists =
+     exec(getUserByUsername)
+       .doIf("${userStatus}", "200") {
+       deleteUser
      }
 
    /**
@@ -158,9 +167,24 @@ object UserScenarios {
    /**
     * Posts a new user every time
     */
-   val postUsersInfinitely = scenario("Post Users")
+   val postUsersInfinitely =  scenario("Post Users")
+        .feed(Settings.getInfiniteUserFeeder())
+        .exec(postUser)
+
+
+   /**
+    * Puts a new user every time
+    */
+   val putUsersInfinitely =  scenario("Put Users")
      .feed(Settings.getInfiniteUserFeeder())
-     .exec(UserScenarios.postUser)
+     .exec(putUser)
+
+   /**
+    * Deletes user every time
+    */
+   val deleteUsersInfinitely =  scenario("Delete Users")
+     .feed(Settings.getInfiniteUserFeeder())
+     .exec(deleteUser)
 
    /**
     * Get the users a page at a time until exhausted
