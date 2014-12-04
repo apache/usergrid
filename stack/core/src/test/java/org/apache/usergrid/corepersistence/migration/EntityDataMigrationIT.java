@@ -61,9 +61,7 @@ import static org.junit.Assert.assertTrue;
 
 public class EntityDataMigrationIT extends AbstractCoreIT {
 
-
     private Injector injector;
-
 
     private EntityDataMigration entityDataMigration;
     private ManagerCache managerCache;
@@ -74,12 +72,13 @@ public class EntityDataMigrationIT extends AbstractCoreIT {
     private EntityManagerFactory emf;
 
 
-
     /**
      * Rule to do the resets we need
      */
     @Rule
-    public MigrationTestRule migrationTestRule = new MigrationTestRule( app, CpSetup.getInjector() ,EntityDataMigration.class  );
+    public MigrationTestRule migrationTestRule = 
+            new MigrationTestRule( app, CpSetup.getInjector() ,EntityDataMigration.class  );
+
 
     @Before
     public void setup() {
@@ -129,36 +128,36 @@ public class EntityDataMigrationIT extends AbstractCoreIT {
         //using a test system, and it's not a huge amount of data, otherwise we'll overflow.
 
         AllEntitiesInSystemObservable.getAllEntitiesInSystem( managerCache, 1000 )
-                                     .doOnNext( new Action1<AllEntitiesInSystemObservable.ApplicationEntityGroup>() {
-                                         @Override
-                                         public void call(
-                                                 final AllEntitiesInSystemObservable.ApplicationEntityGroup entity ) {
+            .doOnNext( new Action1<AllEntitiesInSystemObservable.ApplicationEntityGroup>() {
+                @Override
+                public void call(
+                        final AllEntitiesInSystemObservable.ApplicationEntityGroup entity ) {
 
-                                             //add all versions from history to our comparison
-                                             for ( final Id id : entity.entityIds ) {
+                    //add all versions from history to our comparison
+                    for ( final Id id : entity.entityIds ) {
 
-                                                 CollectionScope scope = CpNamingUtils
-                                                         .getCollectionScopeNameFromEntityType(
-                                                                 entity.applicationScope.getApplication(),
-                                                                 id.getType() );
+                        CollectionScope scope = CpNamingUtils
+                                .getCollectionScopeNameFromEntityType(
+                                        entity.applicationScope.getApplication(),
+                                        id.getType() );
 
-                                                 final Iterator<MvccEntity> versions = v1Strategy
-                                                         .loadDescendingHistory( scope, id, UUIDGenerator.newTimeUUID(),
-                                                                 100 );
+                        final Iterator<MvccEntity> versions = v1Strategy
+                                .loadDescendingHistory( scope, id, UUIDGenerator.newTimeUUID(),
+                                        100 );
 
-                                                 while ( versions.hasNext() ) {
+                        while ( versions.hasNext() ) {
 
-                                                     final MvccEntity mvccEntity = versions.next();
+                            final MvccEntity mvccEntity = versions.next();
 
-                                                     savedEntities.add( mvccEntity );
+                            savedEntities.add( mvccEntity );
 
-                                                     createdEntityIds.remove( mvccEntity.getId() );
+                            createdEntityIds.remove( mvccEntity.getId() );
 
-                                                     entityIds.add( id );
-                                                 }
-                                             }
-                                         }
-                                     } ).toBlocking().lastOrDefault( null );
+                            entityIds.add( id );
+                        }
+                    }
+                }
+            } ).toBlocking().lastOrDefault( null );
 
         assertEquals( "Newly saved entities encountered", 0, createdEntityIds.size() );
         assertTrue( "Saved new entities", savedEntities.size() > 0 );
@@ -175,76 +174,78 @@ public class EntityDataMigrationIT extends AbstractCoreIT {
         migrationInfoSerialization.setVersion( entityDataMigration.getVersion() );
         dataMigrationManager.invalidate();
 
-        assertEquals( "New version saved, and we should get new implementation", entityDataMigration.getVersion(),
-                dataMigrationManager.getCurrentVersion() );
+        assertEquals( "New version saved, and we should get new implementation", 
+                entityDataMigration.getVersion(), dataMigrationManager.getCurrentVersion() );
 
 
         //now visit all entities in the system again, load them from v2, and ensure they're the same
         AllEntitiesInSystemObservable.getAllEntitiesInSystem( managerCache, 1000 )
-                                     .doOnNext( new Action1<AllEntitiesInSystemObservable.ApplicationEntityGroup>() {
-                                                    @Override
-                                                    public void call(
-                                                            final AllEntitiesInSystemObservable
-                                                                    .ApplicationEntityGroup entity ) {
-                                                        //add all versions from history to our comparison
-                                                        for ( final Id id : entity.entityIds ) {
+            .doOnNext( new Action1<AllEntitiesInSystemObservable.ApplicationEntityGroup>() {
+                @Override
+                public void call(
+                        final AllEntitiesInSystemObservable.ApplicationEntityGroup entity ) {
 
-                                                            CollectionScope scope = CpNamingUtils
-                                                                    .getCollectionScopeNameFromEntityType(
-                                                                            entity.applicationScope.getApplication(),
-                                                                            id.getType() );
+                    //add all versions from history to our comparison
+                    for ( final Id id : entity.entityIds ) {
 
-                                                            final Iterator<MvccEntity> versions = v2Strategy
-                                                                    .loadDescendingHistory( scope, id,
-                                                                            UUIDGenerator.newTimeUUID(), 100 );
+                        CollectionScope scope = CpNamingUtils
+                                .getCollectionScopeNameFromEntityType(
+                                        entity.applicationScope.getApplication(),
+                                        id.getType() );
 
-                                                            while ( versions.hasNext() ) {
+                        final Iterator<MvccEntity> versions = v2Strategy
+                                .loadDescendingHistory( scope, id,
+                                        UUIDGenerator.newTimeUUID(), 100 );
 
-                                                                final MvccEntity mvccEntity = versions.next();
+                        while ( versions.hasNext() ) {
 
-                                                                savedEntities.remove( mvccEntity );
-                                                            }
-                                                        }
-                                                    }
-                                                }
+                            final MvccEntity mvccEntity = versions.next();
+
+                            savedEntities.remove( mvccEntity );
+                        }
+                    }
+                }
+            }
 
 
-                                              ).toBlocking().lastOrDefault( null );
+            ).toBlocking().lastOrDefault( null );
 
 
         assertEquals( "All entities migrated", 0, savedEntities.size() );
 
 
-        //now visit all entities in the system again, and load them from the EM, ensure we see everything we did in the v1 traversal
+        // now visit all entities in the system again, and load them from the EM, 
+        // ensure we see everything we did in the v1 traversal
         AllEntitiesInSystemObservable.getAllEntitiesInSystem( managerCache, 1000 )
-                                     .doOnNext( new Action1<AllEntitiesInSystemObservable.ApplicationEntityGroup>() {
-                                                    @Override
-                                                    public void call(
-                                                            final AllEntitiesInSystemObservable
-                                                                    .ApplicationEntityGroup entity ) {
+            .doOnNext( new Action1<AllEntitiesInSystemObservable.ApplicationEntityGroup>() {
+                @Override
+                public void call(
+                        final AllEntitiesInSystemObservable
+                                .ApplicationEntityGroup entity ) {
 
-                                                        final EntityManager em = emf.getEntityManager( entity.applicationScope.getApplication().getUuid() );
+                    final EntityManager em = emf.getEntityManager( 
+                            entity.applicationScope.getApplication().getUuid() );
 
-                                                        //add all versions from history to our comparison
-                                                        for ( final Id id : entity.entityIds ) {
-
-
-                                                            try {
-                                                                final Entity emEntity = em.get( SimpleEntityRef.fromId( id ) );
-
-                                                                if(emEntity != null){
-                                                                    entityIds.remove( id );
-                                                                }
-                                                            }
-                                                            catch ( Exception e ) {
-                                                                throw new RuntimeException("Error loading entity", e);
-                                                            }
-                                                        }
-                                                    }
-                                                }
+                    //add all versions from history to our comparison
+                    for ( final Id id : entity.entityIds ) {
 
 
-                                              ).toBlocking().lastOrDefault( null );
+                        try {
+                            final Entity emEntity = em.get( SimpleEntityRef.fromId( id ) );
+
+                            if(emEntity != null){
+                                entityIds.remove( id );
+                            }
+                        }
+                        catch ( Exception e ) {
+                            throw new RuntimeException("Error loading entity", e);
+                        }
+                    }
+                }
+            }
+
+
+            ).toBlocking().lastOrDefault( null );
 
 
         assertEquals("All entities could be loaded by the entity manager", 0, entityIds.size());

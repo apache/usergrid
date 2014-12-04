@@ -13,13 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.usergrid.corepersistence;
-
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
-
+import org.apache.usergrid.corepersistence.migration.ApplyQueryIndexMappingsMigration;
 import org.apache.usergrid.corepersistence.migration.EntityDataMigration;
 import org.apache.usergrid.corepersistence.migration.EntityTypeMappingMigration;
 import org.apache.usergrid.corepersistence.migration.GraphShardVersionMigration;
@@ -54,12 +52,13 @@ public class GuiceModule  extends AbstractModule {
         bind(CpEntityIndexDeleteListener.class).asEagerSingleton();
         bind(ManagerCache.class).to( CpManagerCache.class );
 
-        Multibinder<DataMigration> dataMigrationMultibinder = Multibinder.newSetBinder( binder(), DataMigration.class );
+        Multibinder<DataMigration> dataMigrationMultibinder = 
+                Multibinder.newSetBinder( binder(), DataMigration.class );
+
         dataMigrationMultibinder.addBinding().to( EntityTypeMappingMigration.class );
         dataMigrationMultibinder.addBinding().to( GraphShardVersionMigration.class );
         dataMigrationMultibinder.addBinding().to( EntityDataMigration.class );
-
-
+        dataMigrationMultibinder.addBinding().to( ApplyQueryIndexMappingsMigration.class );
     }
 
 }

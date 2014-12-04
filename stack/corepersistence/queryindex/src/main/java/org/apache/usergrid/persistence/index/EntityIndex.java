@@ -37,6 +37,11 @@ public interface EntityIndex {
     public void initializeIndex();
 
     /**
+     * Update mappings for this index.
+     */
+    public void updateMappings();
+
+    /**
      * Create the index batch.
      */
     public EntityIndexBatch createBatch();

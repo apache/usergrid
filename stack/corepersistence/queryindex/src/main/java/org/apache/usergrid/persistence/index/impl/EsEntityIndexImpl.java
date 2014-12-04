@@ -73,7 +73,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.BOOLEAN_PREFIX;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.BOOLEAN_PREFIX; 
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.NUMBER_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.SPLITTER;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.STRING_PREFIX;
@@ -87,6 +87,8 @@ public class EsEntityIndexImpl implements EntityIndex {
     private static final Logger logger = LoggerFactory.getLogger( EsEntityIndexImpl.class );
 
     private static final AtomicBoolean mappingsCreated = new AtomicBoolean( false );
+
+    public static final int MIGRATION_VERSION = 4;
 
     /**
      * We purposefully make this per instance. Some indexes may work, while others may fail
@@ -172,12 +174,26 @@ public class EsEntityIndexImpl implements EntityIndex {
     }
 
 
+    @Override
+    public void updateMappings() {
+        try {
+            // index may not exist yet, that's fine
+            initializeIndex();
+
+            // create mappings does a PUT, that works for updating mappings
+            createMappings();
+
+        } catch (IOException e) {
+            throw new RuntimeException( "Unable to update mappings", e );
+        }
+    }
+
+
     /**
      * Tests writing a document to a new index to ensure it's working correctly. See this post:
      * http://s.apache.org/index-missing-exception
      */
     private void testNewIndex() {
-
 
         logger.info( "Refreshing Created new Index Name [{}]", indexName );
 
