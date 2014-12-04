@@ -103,7 +103,7 @@ object UserScenarios {
      http("DELETE geolocated Users")
        .delete("/users/${username}")
        .headers(Headers.jsonAuthorized)
-       .check(status.is(200))
+       .check(status.in(Seq(200,404)))
    )
 
    val deleteUserIfExists =
