@@ -106,7 +106,6 @@ public abstract class ValueResource extends NamedResource {
 
         return mapper.readValue( jsonMedia( withParams( withToken( resource() ) ) ).post( String.class, entity ),
                 RevisedApiResponse.class );
-        //jsonMedia( withParams( withToken( resource() ) ) ).post( RevisedApiResponse.class, entity );
     }
 
 
@@ -140,9 +139,9 @@ public abstract class ValueResource extends NamedResource {
         }
     }
 
-    public RevisedApiResponse getResponse() {
+    public RevisedApiResponse getInternalResponse() {
         try {
-            return getInternalResponse();
+            return getInternalApiResponse();
         }
         catch ( IOException e ) {
             throw new RuntimeException("Cannot parse JSON data", e);
@@ -236,8 +235,8 @@ public abstract class ValueResource extends NamedResource {
         //logger.debug(json);
         return mapper.readTree( json );
     }
-
-    protected RevisedApiResponse getInternalResponse() throws IOException {
+//TODO: find better name / design paradigm for the methods that call upon this class
+    protected RevisedApiResponse getInternalApiResponse() throws IOException {
         WebResource resource = withParams( withToken( resource() ) );
 
 

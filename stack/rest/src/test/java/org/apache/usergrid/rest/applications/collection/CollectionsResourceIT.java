@@ -100,7 +100,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         Entity entity = node.getResponse().getEntities().get( 0 );
 
-        ApiResponseCollection collection = context.collection( "cities" ).getCollectionResponse();
+        ApiResponseCollection collection = context.collection( "cities" ).getResponse();
 
         assertEquals( ( Object ) 0, collection.getResponse().getCount() );
     }

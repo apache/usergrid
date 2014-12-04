@@ -78,7 +78,6 @@ public class Collection extends SetResource {
     public JsonNode post(Map entityData) throws IOException{
 
         JsonNode response = this.postInternal( entityData );
-//I think this is wrong
         return getEntity( response, 0 );
     }
 
@@ -97,9 +96,9 @@ public class Collection extends SetResource {
      * @return
      * @throws IOException
      */
-    public <T> ApiResponseCollection getCollectionResponse() throws IOException  {
+    public ApiResponseCollection getResponse() throws IOException  {
         CollectionResource collectionResource = new CollectionResource( this.getName(),this.getParent() );
-        ApiResponseCollection collectionRevisedApiResponse = new ApiResponseCollection(collectionResource,this.getResponse() );
+        ApiResponseCollection collectionRevisedApiResponse = new ApiResponseCollection(collectionResource,this.getInternalResponse() );
         return collectionRevisedApiResponse;
     }
 
