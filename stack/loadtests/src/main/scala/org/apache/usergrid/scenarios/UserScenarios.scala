@@ -35,7 +35,9 @@ import io.gatling.core.Predef._
      http("GET user")
        .get("/users/${username}")
        .headers(Headers.jsonAuthorized)
-       .check(status.saveAs("userStatus"), jsonPath("$..entities[0]").exists, jsonPath("$..entities[0].uuid").exists, jsonPath("$..entities[0].uuid").saveAs("userId"))
+       .check(status.saveAs("userStatus"), jsonPath("$..entities[0]").exists,
+         jsonPath("$..entities[0].uuid").exists, jsonPath("$..entities[0].uuid").saveAs("userId"),
+         jsonPath("$..entities[0].username").exists, jsonPath("$..entities[0].uuid").saveAs("username"))
    )
 
 
@@ -66,21 +68,35 @@ import io.gatling.core.Predef._
       exec(postUser)
      }
 
-
-   val putUser =
-     exec(getUserByUsername)
-     .doIf("${userStatus}", "200") {
-       exec(
-         http("POST geolocated Users")
-           .put("/users")
-           .body(new StringBody( """{"location":{"latitude":"${latitude}","longitude":"${longitude}"},"username":"${username}",
+   val putUser = exec(
+     http("PUT geolocated Users")
+       .put("/users/${username}")
+       .body(new StringBody( """{"location":{"latitude":"${latitude}","longitude":"${longitude}"},"username":"${username}",
         "displayName":"${displayName}","age":"${age}","seen":"${seen}","weight":"${weight}",
         "height":"${height}","aboutMe":"${aboutMe}","profileId":"${profileId}","headline":"${headline}",
         "showAge":"${showAge}","relationshipStatus":"${relationshipStatus}","ethnicity":"${ethnicity}","password":"password"}"""))
-           .check(status.is(200), jsonPath("$..entities[0].uuid").saveAs("userId"))
+       .check(status.is(200), jsonPath("$..entities[0].uuid").saveAs("userId"))
 
-       )
+   )
+
+   val putUserIfExists =
+     exec(getUserByUsername)
+     .doIf("${userStatus}", "200") {
+       putUser
       }
+
+   val deleteUser = exec(
+     http("PUT geolocated Users")
+       .delete("/users/${username}")
+       .check(status.is(200))
+
+   )
+
+   val deleteUserIfExists =
+     exec(getUserByUsername)
+       .doIf("${userStatus}", "200") {
+       deleteUser
+     }
 
    /**
     * Get a collection of users without a cursor.  Sets the cursor and entities array as "users"
