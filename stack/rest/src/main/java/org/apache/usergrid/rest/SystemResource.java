@@ -17,7 +17,6 @@
 package org.apache.usergrid.rest;
 
 
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -42,12 +41,8 @@ import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.EntityManagerFactory.ProgressObserver;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
-import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
 
-import com.clearspring.analytics.util.Preconditions;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.sun.jersey.api.json.JSONWithPadding;
 
 
@@ -117,7 +112,7 @@ public class SystemResource extends AbstractContextResource {
     }
 
     @Path( "migrate" )
-    public MigrateResource doSomething(){
+    public MigrateResource doMigration(){
         return getSubResource( MigrateResource.class );
     }
 
