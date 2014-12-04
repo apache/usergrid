@@ -14,12 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.rest;
+package org.apache.usergrid.rest.test.resource;
 
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -35,8 +34,8 @@ import javax.xml.bind.annotation.XmlAnyElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.apache.usergrid.persistence.AggregateCounterSet;
-import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.entities.Application;
+import org.apache.usergrid.rest.ServerEnvironmentProperties;
 import org.apache.usergrid.security.oauth.ClientCredentialsInfo;
 import org.apache.usergrid.services.ServiceRequest;
 import org.apache.usergrid.services.ServiceResults;
@@ -47,20 +46,21 @@ import org.apache.commons.lang.StringUtils;
 
 import static org.apache.usergrid.utils.InflectionUtils.pluralize;
 
+
 //TODO: Move this into the testing framework
 @JsonPropertyOrder( {
         "action", "application", "params", "path", "query", "uri", "status", "error", "applications", "entity",
         "entities", "list", "data", "next", "timestamp", "duration"
 } )
 @XmlRootElement
-public class RevisedApiResponse<T>  {
+public class RevisedApiResponse  {
 
     private ServiceRequest esp;
-
+//TODO: investigate that errors are all properly set/ http responsecode, error description, The error Code thrown form the stack.
     private String error;
     private String errorDescription;
     private String errorUri;
-    private String exception;
+    private String exception; //illegal_argument
     private String callback;
 
     private String path;
@@ -70,7 +70,7 @@ public class RevisedApiResponse<T>  {
     private String organization;
     private String applicationName;
     private UUID application;
-    private List<T> entities;
+    private List<org.apache.usergrid.persistence.Entity> entities;
     private UUID next;
     private String cursor;
     private Integer count;
@@ -575,7 +575,7 @@ public class RevisedApiResponse<T>  {
     }
 
 
-    public String getEntityPath( String url_base, Entity entity ) {
+    public String getEntityPath( String url_base, org.apache.usergrid.persistence.Entity entity ) {
         String entity_uri = null;
         if ( !Application.ENTITY_TYPE.equals( entity.getType() ) ) {
             entity_uri = createPath( pluralize( entity.getType() ), entity.getUuid().toString() );
@@ -586,7 +586,7 @@ public class RevisedApiResponse<T>  {
         return entity_uri;
     }
 
-
+//TODO: figure out what this does.
 //    public void prepareEntities() {
 //        if ( uri != null ) {
 //            String url_base = serverEnvironmentProperties.getApiBase();
