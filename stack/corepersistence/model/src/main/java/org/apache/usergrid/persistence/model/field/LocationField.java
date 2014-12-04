@@ -32,11 +32,6 @@ public class LocationField extends AbstractField<Location> {
         super( name, value );
     }
 
-  /**
-   * DO NOT DELETE! Jackson needs the default constructor for deserialization!
-   */
-  public LocationField() {
-  }
 
     /**
      * Required for Jackson, DO NOT DELETE
@@ -47,7 +42,7 @@ public class LocationField extends AbstractField<Location> {
     }
 
 
-  @Override
+    @Override
     public FieldTypeName getTypeName() {
             return FieldTypeName.LOCATION;
         }
