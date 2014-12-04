@@ -76,25 +76,71 @@ public class EntityIndexTest extends BaseIT {
 
     @Test
     public void testIndex() throws IOException {
-
-        final int MAX_ENTITIES = 100;
-
         Id appId = new SimpleId( "application" );
 
         ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
 
-        IndexScope indexScope = new IndexScopeImpl( appId, "things" );
+        EntityIndex entityIndex = eif.createEntityIndex( applicationScope );
+        entityIndex.initializeIndex();
 
         final String entityType = "thing";
-
-
+        IndexScope indexScope = new IndexScopeImpl( appId, "things" );
         final SearchTypes searchTypes = SearchTypes.fromTypes( entityType );
 
+        insertJsonBlob(entityIndex, entityType, indexScope, "/sample-large.json",100,0);
+
+        entityIndex.refresh();
+
+        testQueries( indexScope, searchTypes,  entityIndex );
+    }
+
+    @Test
+    public void testMultipleIndexInitializations(){
+        Id appId = new SimpleId( "application" );
+
+        ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
+
+        EntityIndex entityIndex = eif.createEntityIndex( applicationScope );
+        entityIndex.initializeIndex();
+        for(int i=0;i<10;i++) {
+            entityIndex.initializeIndex();
+        }
+
+    }
+
+    @Test
+    public void testAddMultipleIndexes() throws IOException {
+        Id appId = new SimpleId( "application" );
+
+        ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
 
         EntityIndex entityIndex = eif.createEntityIndex( applicationScope );
         entityIndex.initializeIndex();
 
-        InputStream is = this.getClass().getResourceAsStream( "/sample-large.json" );
+        final String entityType = "thing";
+        IndexScope indexScope = new IndexScopeImpl( appId, "things" );
+        final SearchTypes searchTypes = SearchTypes.fromTypes( entityType );
+
+        insertJsonBlob(entityIndex, entityType, indexScope, "/sample-large.json",100,0);
+
+        entityIndex.refresh();
+
+        testQueries( indexScope, searchTypes,  entityIndex );
+
+        entityIndex.addIndex("v2", 1,0);
+
+        insertJsonBlob(entityIndex, entityType, indexScope, "/sample-large.json",100,100);
+
+        entityIndex.refresh();
+
+        //Hilda Youn
+        testQuery(indexScope, searchTypes, entityIndex, "name = 'Hilda Young'", 1 );
+
+        testQuery(indexScope, searchTypes, entityIndex, "name = 'Lowe Kelley'", 1 );
+    }
+
+    private void insertJsonBlob(EntityIndex entityIndex, String entityType, IndexScope indexScope, String filePath,final int max,final int startIndex) throws IOException {
+        InputStream is = this.getClass().getResourceAsStream( filePath );
         ObjectMapper mapper = new ObjectMapper();
         List<Object> sampleJson = mapper.readValue( is, new TypeReference<List<Object>>() {} );
 
@@ -104,13 +150,19 @@ public class EntityIndexTest extends BaseIT {
 
         final EntityIndexBatch batch = entityIndex.createBatch();
 
+        if(startIndex > 0){
+            for(int i =0; i<startIndex;i++){
+                sampleJson.remove(0);
+            }
+        }
+
         for ( Object o : sampleJson ) {
 
             Map<String, Object> item = ( Map<String, Object> ) o;
 
             Entity entity = new Entity( entityType );
-            entity = EntityIndexMapUtils.fromMap( entity, item );
-            EntityUtils.setVersion( entity, UUIDGenerator.newTimeUUID() );
+            entity = EntityIndexMapUtils.fromMap(entity, item);
+            EntityUtils.setVersion(entity, UUIDGenerator.newTimeUUID());
 
             batch.index( indexScope, entity );
 
@@ -120,7 +172,7 @@ public class EntityIndexTest extends BaseIT {
 
 
 
-            if ( count++ > MAX_ENTITIES ) {
+            if ( count++ > max ) {
                 break;
             }
         }
@@ -129,11 +181,6 @@ public class EntityIndexTest extends BaseIT {
         timer.stop();
         log.info( "Total time to index {} entries {}ms, average {}ms/entry",
                 new Object[] { count, timer.getTime(), timer.getTime() / count } );
-
-        entityIndex.refresh();
-
-
-        testQueries( indexScope, searchTypes,  entityIndex );
     }
 
 

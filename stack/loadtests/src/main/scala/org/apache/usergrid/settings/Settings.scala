@@ -58,7 +58,7 @@ object Settings {
   val pushNotifier = if (System.getProperty("pushNotifier") != null)  System.getProperty("pushNotifier") else "loadNotifier"
   val pushProvider =  if (System.getProperty("pushProvider") != null)  System.getProperty("pushProvider")  else "noop"
 
-  println(s"Will inject $maxPossibleUsers users per sec")
+  println(s"Will inject up to $maxPossibleUsers users per sec")
 
    def getUserFeeder():Array[Map[String, String]]= {
     val userFeeder = FeederGenerator.generateUserWithGeolocationFeeder(numUsers, userLocationRadius, centerLatitude, centerLongitude)

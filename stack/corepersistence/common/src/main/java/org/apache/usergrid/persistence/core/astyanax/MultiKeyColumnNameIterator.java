@@ -35,10 +35,8 @@ import org.apache.usergrid.persistence.core.rx.OrderedMerge;
 
 import com.amazonaws.services.redshift.model.UnsupportedOptionException;
 
-import rx.Notification;
 import rx.Observable;
 import rx.Subscriber;
-import rx.functions.Action1;
 import rx.schedulers.Schedulers;
 
 

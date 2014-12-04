@@ -50,7 +50,7 @@ object DeviceScenarios {
     .body(StringBody("""{"deviceModel":"Fake Device",
     "deviceOSVerion":"Negative Version",
     """" + notifier + """.notifier.id":"${entityName}"}"""))
-    .check(status.is(200), jsonPath("$..entities[0].uuid").exists , jsonPath("$..entities[0].uuid").saveAs("deviceId")))
+    .check(status.is(200),  jsonPath("$..entities[0]").exists , jsonPath("$..entities[0].uuid").exists , jsonPath("$..entities[0].uuid").saveAs("deviceId")))
 
 
   val postDeviceWithNotifier400ok = exec(http("Create device with notifier")

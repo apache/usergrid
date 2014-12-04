@@ -25,7 +25,6 @@ import java.util.NoSuchElementException;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.model.Column;
 import com.netflix.astyanax.query.RowQuery;
-import com.netflix.hystrix.HystrixCommandGroupKey;
 
 
 /**

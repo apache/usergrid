@@ -276,7 +276,7 @@ public abstract class AbstractRestIT extends JerseyTest {
 
     /** Get the super user's access token */
     protected String superAdminToken() {
-        return mgmtToken( "superuser", "superpassword" );
+        return mgmtToken( "superuser", "test" );
     }
 
 
