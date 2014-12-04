@@ -146,7 +146,22 @@ import io.gatling.core.Predef._
     */
    val postUsersInfinitely =  scenario("Post Users")
         .feed(Settings.getInfiniteUserFeeder())
-        .exec(UserScenarios.postUser)
+        .exec(postUser)
+
+
+   /**
+    * Puts a new user every time
+    */
+   val putUsersInfinitely =  scenario("Post Users")
+     .feed(Settings.getInfiniteUserFeeder())
+     .exec(putUser)
+
+   /**
+    * Deletes user every time
+    */
+   val deleteUsersInfinitely =  scenario("Post Users")
+     .feed(Settings.getInfiniteUserFeeder())
+     .exec(deleteUser)
 
    /**
     * Get the users a page at a time until exhausted
