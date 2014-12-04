@@ -24,7 +24,6 @@ import org.apache.usergrid.datagenerators.FeederGenerator
 import org.apache.usergrid.settings.{Headers, Settings, Utils}
 import org.apache.usergrid.helpers.Extractors._
 
-import scala.util.parsing.json.JSONArray
 
 object UserScenarios {
 
@@ -86,9 +85,11 @@ object UserScenarios {
        exec(postUser)
      }
 
+  
    val putUser = exec(
      http("PUT geolocated Users")
        .put("/users/${username}")
+       .headers(Headers.jsonAuthorized)
        .body(new StringBody( """{"location":{"latitude":"${latitude}","longitude":"${longitude}"},"username":"${username}",
         "displayName":"${displayName}","age":"${age}","seen":"${seen}","weight":"${weight}",
         "height":"${height}","aboutMe":"${aboutMe}","profileId":"${profileId}","headline":"${headline}",
@@ -99,10 +100,10 @@ object UserScenarios {
       
 
    val deleteUser = exec(
-     http("PUT geolocated Users")
+     http("DELETE geolocated Users")
        .delete("/users/${username}")
+       .headers(Headers.jsonAuthorized)
        .check(status.is(200))
-
    )
 
    val deleteUserIfExists =
@@ -175,27 +176,34 @@ object UserScenarios {
    /**
     * Puts a new user every time
     */
-   val putUsersInfinitely =  scenario("Put Users")
+   val putUsersInfinitely =  scenario("Put Users").exec(injectStaticTokenToSession)
      .feed(Settings.getInfiniteUserFeeder())
      .exec(putUser)
 
    /**
     * Deletes user every time
     */
-   val deleteUsersInfinitely =  scenario("Delete Users")
+   val deleteUsersInfinitely =  scenario("Delete Users").exec(injectStaticTokenToSession)
      .feed(Settings.getInfiniteUserFeeder())
      .exec(deleteUser)
 
    /**
     * Get the users a page at a time until exhausted
     */
-   val getUsersToEnd = scenario("Get Users")
-     //get the management token
-     .exec(TokenScenarios.getManagementToken)
+   val getUserPagesToEnd = scenario("Get User Pages").exec(injectStaticTokenToSession)
      //get users without a cursor
      .exec(getUsersWithoutCursor)
      //as long as we have a cursor, keep getting results
      .asLongAs(stringParamExists(SessionVarCursor)) {
         exec(getUsersWithCursor)
-      }
+      }.exec(sessionFunction => {
+     sessionFunction
+   })
+
+  val getUsersByUsername = scenario("Get User By Username").exec(injectStaticTokenToSession)
+    .feed(Settings.getInfiniteUserFeeder())
+         //get users without a cursor
+         .exec(getUserByUsername)
+
+
  }

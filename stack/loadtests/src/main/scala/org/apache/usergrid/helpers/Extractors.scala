@@ -66,6 +66,17 @@ object Extractors {
   }
 
 
+      val ManagementToken: String = Setup.getManagementToken()
+
+
+  /**
+   * Get the management token for the admin username and password in settings, then inject it into the session
+   * under the variable "authToken"
+   * @return
+   */
+  def injectStaticTokenToSession() : Expression[Session] = {
+      session => session.set("authToken", ManagementToken)
+  }
 
 
 

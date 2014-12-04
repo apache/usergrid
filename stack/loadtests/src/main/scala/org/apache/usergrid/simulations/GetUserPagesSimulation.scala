@@ -28,7 +28,7 @@ import org.apache.usergrid.settings.Settings
  * -DrampTime: The amount of time (in seconds) to allow for maxPossibleUsers to be reached.  This will add new users linearlly
  * -Dduration: The amount of time (in seconds) to continue to perform requests up with the maxPossibleUsers
  */
-class GetUsersSimulation extends Simulation {
+class GetUserPagesSimulation extends Simulation {
 
   println("Begin setup")
   Setup.setupOrg()
@@ -37,7 +37,7 @@ class GetUsersSimulation extends Simulation {
 
 
   setUp(
-    UserScenarios.getUsersByUsername
+    UserScenarios.getUserPagesToEnd
       .inject(
         /**
          * injection steps take from this forum post
