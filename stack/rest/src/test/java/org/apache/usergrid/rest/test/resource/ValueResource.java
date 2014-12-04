@@ -31,6 +31,9 @@ import java.io.IOException;
 import static org.junit.Assert.assertEquals;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
+
+import org.apache.usergrid.rest.test.resource.app.ResponseEntityIterator;
 
 
 /** @author tnine */
@@ -102,6 +105,7 @@ public abstract class ValueResource extends NamedResource {
     }
 
     //TODO: eventually we need to merge this and make it the offical postInternal. this was not done to keep tests compiling.
+    //TODO: need to change this to a ResponseEntityIterator so that it can be used in conjunction with With Clauses
     protected Response postInternalResponse( Map<String, ?> entity ) throws IOException {
 
         return mapper.readValue( jsonMedia( withParams( withToken( resource() ) ) ).post( String.class, entity ),
@@ -143,8 +147,10 @@ public abstract class ValueResource extends NamedResource {
     public Response getInternalResponse() {
         try {
 //TODO: I believe this code needs to be added here so that we can use the with Keywords and still get the appropriate  apiResponsecollection Back
+            //TODO: the problem with changing the code here is we use this class in the ResponseEntityIterator to get the Response. We can't change it here or there will be a circular dependency in classes
+            //TODO: which means we would have to make yet another method to detail how we would get the response. This is probably not the ideal way to go about using the response.
 //            CollectionResource collectionResource = new CollectionResource( this.getName(),this.getParent() );
-//            ApiResponseCollection collectionRevisedApiResponse = new ApiResponseCollection(collectionResource,this.getInternalResponse() );
+//            ResponseEntityIterator collectionRevisedApiResponse = new ResponseEntityIterator(collectionResource,this.getInternalResponse() );
 //            return collectionRevisedApiResponse;
             return getInternalApiResponse();
         }
