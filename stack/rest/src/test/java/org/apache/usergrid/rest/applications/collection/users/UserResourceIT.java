@@ -75,78 +75,20 @@ public class UserResourceIT extends AbstractRestIT {
     public TestContextSetup context = new TestContextSetup( this );
 
     @Test
-    public void usernameQueryApiResource() throws IOException {
-
-        String username = "usernameQuery";
-        String password = "password";
-        String email = username + "@usergrid.com";
-        String token = context.getActiveUser().getToken();
-
-        //        TestUser testUser = new TestAppUser( username, password, email );
-        //
-        //        context.withUser( testUser );
-        //
-        //        refreshIndex( context.getOrgName(), context.getAppName() );
-        //
-        String ql = "username = '"+context.getActiveUser().getUser()+"'";
-
-
-        JsonNode node1 = mapper.readTree( resource().path( "/"+context.getOrgName()+"/"+context.getAppName()+"/users" ).queryParam( "ql", ql )
-                                                   .queryParam( "access_token", context.getActiveUser().getToken() ).accept(
-                        MediaType.APPLICATION_JSON )
-                                                   .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
-        //JsonNode node = context.collection( "users" ).query( ql,null,null ).;
-        Response node = null;
-
-        try {
-            node = resource().path( "/"+context.getOrgName()+"/"+context.getAppName()+"/users" ).queryParam( "ql", ql )
-                                                .queryParam( "access_token",
-                                                        context.getActiveUser().getToken() ).accept(
-                            MediaType.APPLICATION_JSON )
-                                                .type( MediaType.APPLICATION_JSON_TYPE ).get( Response.class );
-        }catch(Exception e){
-            e.printStackTrace();
-            fail();
-        }
-
-        assertNotNull( node );
-
-//        assertEquals( UserRepo.INSTANCE.getByUserName( "unq_user1" ), getIdFromSearchResults( node, 0 ) );
-//        assertEquals( UserRepo.INSTANCE.getByUserName( "unq_user2" ), getIdFromSearchResults( node, 1 ) );
-//        assertEquals( UserRepo.INSTANCE.getByUserName( "unq_user3" ), getIdFromSearchResults( node, 2 ) );
-    }
-
-
-    @Test
     public void usernameQuery() throws IOException {
 
-        String username = "usernameQuery";
-        String password = "password";
-        String email = username + "@usergrid.com";
-        String token = context.getActiveUser().getToken();
+        UserRepo.INSTANCE.load( resource(), access_token );
+        refreshIndex("test-organization", "test-app");
 
-//        TestUser testUser = new TestAppUser( username, password, email );
-//
-//        context.withUser( testUser );
-//
-//        refreshIndex( context.getOrgName(), context.getAppName() );
-//
-        String ql = "username = '"+context.getActiveUser().getUser()+"'";
+        String ql = "username = 'unq_user*'";
 
-        //JsonNode node = context.collection( "users" ).query( ql,null,null ).;
+        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/users" ).queryParam( "ql", ql )
+                                                   .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
+                                                   .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
 
-
-        JsonNode node = mapper.readTree( resource().path( "/"+context.getOrgName()+"/"+context.getAppName()+"/users" ).queryParam( "ql", ql )
-                                  .queryParam( "access_token", context.getActiveUser().getToken() ).accept(
-                        MediaType.APPLICATION_JSON )
-                                  .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
-
-        assertNotNull( node );
-
-
-        //        assertEquals( UserRepo.INSTANCE.getByUserName( "unq_user1" ), getIdFromSearchResults( node, 0 ) );
-//        assertEquals( UserRepo.INSTANCE.getByUserName( "unq_user2" ), getIdFromSearchResults( node, 1 ) );
-//        assertEquals( UserRepo.INSTANCE.getByUserName( "unq_user3" ), getIdFromSearchResults( node, 2 ) );
+        assertEquals( UserRepo.INSTANCE.getByUserName( "unq_user1" ), getIdFromSearchResults( node, 0 ) );
+        assertEquals( UserRepo.INSTANCE.getByUserName( "unq_user2" ), getIdFromSearchResults( node, 1 ) );
+        assertEquals( UserRepo.INSTANCE.getByUserName( "unq_user3" ), getIdFromSearchResults( node, 2 ) );
     }
 
 
