@@ -330,7 +330,7 @@ public class ApiResponse {
 
 
     /** Set the application and organization information */
-    public void setApplication( Application app) {
+    public void setApplication( Application app ) {
         this.organization = app.getOrganizationName();
         this.applicationName = app.getApplicationName();
         this.application = app.getUuid();
