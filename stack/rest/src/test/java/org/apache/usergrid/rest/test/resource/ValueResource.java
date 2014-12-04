@@ -102,10 +102,10 @@ public abstract class ValueResource extends NamedResource {
     }
 
     //TODO: eventually we need to merge this and make it the offical postInternal. this was not done to keep tests compiling.
-    protected RevisedApiResponse postInternalResponse( Map<String, ?> entity ) throws IOException {
+    protected Response postInternalResponse( Map<String, ?> entity ) throws IOException {
 
         return mapper.readValue( jsonMedia( withParams( withToken( resource() ) ) ).post( String.class, entity ),
-                RevisedApiResponse.class );
+                Response.class );
     }
 
 
@@ -138,9 +138,14 @@ public abstract class ValueResource extends NamedResource {
 
         }
     }
+    //TODO: I think this class needs to return a ApiResponseCollection
 
-    public RevisedApiResponse getInternalResponse() {
+    public Response getInternalResponse() {
         try {
+//TODO: I believe this code needs to be added here so that we can use the with Keywords and still get the appropriate  apiResponsecollection Back
+//            CollectionResource collectionResource = new CollectionResource( this.getName(),this.getParent() );
+//            ApiResponseCollection collectionRevisedApiResponse = new ApiResponseCollection(collectionResource,this.getInternalResponse() );
+//            return collectionRevisedApiResponse;
             return getInternalApiResponse();
         }
         catch ( IOException e ) {
@@ -236,7 +241,7 @@ public abstract class ValueResource extends NamedResource {
         return mapper.readTree( json );
     }
 //TODO: find better name / design paradigm for the methods that call upon this class
-    protected RevisedApiResponse getInternalApiResponse() throws IOException {
+    protected Response getInternalApiResponse() throws IOException {
         WebResource resource = withParams( withToken( resource() ) );
 
 
@@ -256,7 +261,7 @@ public abstract class ValueResource extends NamedResource {
             resource = resource.queryParam( "limit", limit.toString() );
         }
 
-        return  jsonMedia( resource ).get( RevisedApiResponse.class );
+        return  jsonMedia( resource ).get( Response.class );
     }
 
 

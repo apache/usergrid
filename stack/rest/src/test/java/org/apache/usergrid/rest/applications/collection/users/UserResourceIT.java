@@ -43,7 +43,7 @@ import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.rest.AbstractRestIT;
-import org.apache.usergrid.rest.test.resource.RevisedApiResponse;
+import org.apache.usergrid.rest.test.resource.Response;
 import org.apache.usergrid.rest.TestContextSetup;
 import org.apache.usergrid.rest.applications.utils.UserRepo;
 import org.apache.usergrid.utils.UUIDUtils;
@@ -96,14 +96,14 @@ public class UserResourceIT extends AbstractRestIT {
                         MediaType.APPLICATION_JSON )
                                                    .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
         //JsonNode node = context.collection( "users" ).query( ql,null,null ).;
-        RevisedApiResponse node = null;
+        Response node = null;
 
         try {
             node = resource().path( "/"+context.getOrgName()+"/"+context.getAppName()+"/users" ).queryParam( "ql", ql )
                                                 .queryParam( "access_token",
                                                         context.getActiveUser().getToken() ).accept(
                             MediaType.APPLICATION_JSON )
-                                                .type( MediaType.APPLICATION_JSON_TYPE ).get( RevisedApiResponse.class );
+                                                .type( MediaType.APPLICATION_JSON_TYPE ).get( Response.class );
         }catch(Exception e){
             e.printStackTrace();
             fail();

@@ -20,7 +20,7 @@ package org.apache.usergrid.rest.test.resource.app;
 import java.io.IOException;
 import java.util.Map;
 
-import org.apache.usergrid.rest.test.resource.RevisedApiResponse;
+import org.apache.usergrid.rest.test.resource.Response;
 import org.apache.usergrid.rest.test.resource.CollectionResource;
 import org.apache.usergrid.rest.test.resource.NamedResource;
 import org.apache.usergrid.rest.test.resource.SetResource;
@@ -81,11 +81,11 @@ public class Collection extends SetResource {
         return getEntity( response, 0 );
     }
 
-    public  ApiResponseCollection postResponse(Map entityData) throws IOException{
+    public ResponseEntityIterator postResponse(Map entityData) throws IOException{
 
         CollectionResource collectionResource = new CollectionResource( this.getName(),this.getParent() );
-        RevisedApiResponse response = this.postInternalResponse( entityData );
-        ApiResponseCollection collectionRevisedApiResponse = new ApiResponseCollection(collectionResource,response );
+        Response response = this.postInternalResponse( entityData );
+        ResponseEntityIterator collectionRevisedApiResponse = new ResponseEntityIterator(collectionResource,response );
 
         return collectionRevisedApiResponse;
     }
@@ -96,9 +96,10 @@ public class Collection extends SetResource {
      * @return
      * @throws IOException
      */
-    public ApiResponseCollection getResponse() throws IOException  {
+    public ResponseEntityIterator getResponse() throws IOException  {
         CollectionResource collectionResource = new CollectionResource( this.getName(),this.getParent() );
-        ApiResponseCollection collectionRevisedApiResponse = new ApiResponseCollection(collectionResource,this.getInternalResponse() );
+        ResponseEntityIterator
+                collectionRevisedApiResponse = new ResponseEntityIterator(collectionResource,this.getInternalResponse() );
         return collectionRevisedApiResponse;
     }
 

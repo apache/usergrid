@@ -47,14 +47,14 @@ import org.apache.commons.lang.StringUtils;
 import static org.apache.usergrid.utils.InflectionUtils.pluralize;
 import org.apache.usergrid.rest.test.resource.app.model.Entity;
 
-
+//TODO: code = node.getHTTPResponseCode(); We need a way to see the httpResponseCode
 //TODO: Move this into the testing framework
 @JsonPropertyOrder( {
         "action", "application", "params", "path", "query", "uri", "status", "error", "applications", "entity",
         "entities", "list", "data", "next", "timestamp", "duration"
 } )
 @XmlRootElement
-public class RevisedApiResponse  {
+public class Response {
 
     private ServiceRequest esp;
 //TODO: investigate that errors are all properly set/ http responsecode, error description, The error Code thrown form the stack.
@@ -90,12 +90,12 @@ public class RevisedApiResponse  {
     protected ServerEnvironmentProperties serverEnvironmentProperties;
 
 
-    public RevisedApiResponse() {
+    public Response() {
         timestamp = System.currentTimeMillis();
     }
 
 
-    public RevisedApiResponse( ServerEnvironmentProperties properties ) {
+    public Response( ServerEnvironmentProperties properties ) {
         this.serverEnvironmentProperties = properties;
         timestamp = System.currentTimeMillis();
     }
@@ -135,7 +135,7 @@ public class RevisedApiResponse  {
     }
 
 
-    public RevisedApiResponse withError( String code ) {
+    public Response withError( String code ) {
         return withError( code, null, null );
     }
 
@@ -145,7 +145,7 @@ public class RevisedApiResponse  {
     }
 
 
-    public RevisedApiResponse withError( Throwable e ) {
+    public Response withError( Throwable e ) {
         return withError( null, null, e );
     }
 
@@ -155,7 +155,7 @@ public class RevisedApiResponse  {
     }
 
 
-    public RevisedApiResponse withError( String description, Throwable e ) {
+    public Response withError( String description, Throwable e ) {
         return withError( null, description, e );
     }
 
@@ -176,7 +176,7 @@ public class RevisedApiResponse  {
     }
 
 
-    public RevisedApiResponse withError( String code, String description, Throwable e ) {
+    public Response withError( String code, String description, Throwable e ) {
         setError( code, description, e );
         return this;
     }
@@ -258,7 +258,7 @@ public class RevisedApiResponse  {
     }
 
 
-    public RevisedApiResponse withServiceRequest( ServiceRequest p ) {
+    public Response withServiceRequest( ServiceRequest p ) {
         setServiceRequest( p );
         return this;
     }
@@ -275,7 +275,7 @@ public class RevisedApiResponse  {
     }
 
 
-    public RevisedApiResponse withSuccess() {
+    public Response withSuccess() {
         status = "ok";
         return this;
     }
@@ -292,7 +292,7 @@ public class RevisedApiResponse  {
     }
 
 
-    public RevisedApiResponse withTimestamp( long timestamp ) {
+    public Response withTimestamp( long timestamp ) {
         this.timestamp = timestamp;
         return this;
     }
@@ -315,7 +315,7 @@ public class RevisedApiResponse  {
     }
 
 
-    public RevisedApiResponse withAction( String action ) {
+    public Response withAction( String action ) {
         this.action = action;
         return this;
     }
@@ -374,7 +374,7 @@ public class RevisedApiResponse  {
     }
 
 
-    public RevisedApiResponse withEntities( List<Entity> entities ) {
+    public Response withEntities( List<Entity> entities ) {
         setEntities( entities );
         return this;
     }
@@ -394,13 +394,13 @@ public class RevisedApiResponse  {
     }
 
 
-    public RevisedApiResponse withResults( ServiceResults results ) {
+    public Response withResults( ServiceResults results ) {
         setResults( results );
         return this;
     }
 
 
-    public RevisedApiResponse withResultsCount( ServiceResults results ) {
+    public Response withResultsCount( ServiceResults results ) {
         setResults( results );
         if ( results != null ) {
             count = results.size();
@@ -442,7 +442,7 @@ public class RevisedApiResponse  {
     }
 
 
-    public RevisedApiResponse withEntity( Entity entity ) {
+    public Response withEntity( Entity entity ) {
         entities = new ArrayList<Entity>();
         entities.add( entity );
         return this;
@@ -465,13 +465,13 @@ public class RevisedApiResponse  {
     }
 
 
-    public RevisedApiResponse withList( List<Object> list ) {
+    public Response withList( List<Object> list ) {
         setList( list );
         return this;
     }
 
 
-    public RevisedApiResponse withListCount( List<Object> list ) {
+    public Response withListCount( List<Object> list ) {
         setList( list );
         if ( !list.isEmpty() ) {
             this.count = list.size();
@@ -496,7 +496,7 @@ public class RevisedApiResponse  {
     }
 
 
-    public RevisedApiResponse withData( Object data ) {
+    public Response withData( Object data ) {
         setData( data );
         return this;
     }
@@ -524,7 +524,7 @@ public class RevisedApiResponse  {
     }
 
 
-    public RevisedApiResponse withApplications( Map<String, UUID> applications ) {
+    public Response withApplications( Map<String, UUID> applications ) {
         this.applications = applications;
         return this;
     }
@@ -541,7 +541,7 @@ public class RevisedApiResponse  {
     }
 
 
-    public RevisedApiResponse withCredentials( ClientCredentialsInfo credentials ) {
+    public Response withCredentials( ClientCredentialsInfo credentials ) {
         this.credentials = credentials;
         return this;
     }

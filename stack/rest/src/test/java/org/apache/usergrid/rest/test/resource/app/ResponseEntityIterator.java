@@ -19,15 +19,14 @@ package org.apache.usergrid.rest.test.resource.app;
 
 import java.util.Iterator;
 
-import org.apache.usergrid.rest.test.resource.RevisedApiResponse;
+import org.apache.usergrid.rest.test.resource.Response;
 import org.apache.usergrid.rest.test.resource.CollectionResource;
 import org.apache.usergrid.rest.test.resource.app.model.Entity;
 
 
 /**
  * A stateful iterable collection response.  This is a "collection" of entities from our response that are easier
- * to work with. The Generic means that we can type cast the iterator
- *
+ * to work with. The Generic means that we can type cast the iterator.
  * Keep generics? Maybe just use entities for now
  * 1.) Primary key
  * 2.) Default data-> default data is different from type to type. (Groups would need path and title, Activities require actors...etc)
@@ -44,22 +43,22 @@ import org.apache.usergrid.rest.test.resource.app.model.Entity;
  * 2. GET /users/fred/groups
  *
  */
-public class ApiResponseCollection implements Iterable, Iterator {
+public class ResponseEntityIterator implements Iterable, Iterator {
 
     private final CollectionResource sourceEndpoint;
-    private RevisedApiResponse response;
+    private Response response;
 
 
     public Iterator entities;
 
 
-    public ApiResponseCollection(final CollectionResource sourceCollection, final RevisedApiResponse response){
+    public ResponseEntityIterator( final CollectionResource sourceCollection, final Response response ){
         this.response = response;
         this.sourceEndpoint = sourceCollection;
         this.entities = response.getEntities().iterator();
     }
 
-    public RevisedApiResponse getResponse(){
+    public Response getResponse(){
         return response;
     }
 

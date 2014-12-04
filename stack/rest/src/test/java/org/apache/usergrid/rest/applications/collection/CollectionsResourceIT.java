@@ -32,8 +32,8 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.rest.AbstractRestIT;
 import org.apache.usergrid.rest.TestContextSetup;
-import org.apache.usergrid.rest.test.resource.app.ApiResponseCollection;
-import org.apache.usergrid.rest.test.resource.app.User;
+import org.apache.usergrid.rest.test.resource.Response;
+import org.apache.usergrid.rest.test.resource.app.ResponseEntityIterator;
 import org.apache.usergrid.utils.UUIDUtils;
 import org.apache.usergrid.rest.test.resource.app.model.Entity;
 
@@ -45,6 +45,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
+import static org.junit.Assert.fail;
 
 
 /**
@@ -82,7 +83,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
     public void postToEmptyCollection() throws IOException {
         Map<String, String> payload = new HashMap<String, String>();
 
-        ApiResponseCollection node = context.collection( "cities" ).postResponse( payload );
+        ResponseEntityIterator node = context.collection( "cities" ).postResponse( payload );
 
         assertFalse( node.hasNext() );
 
@@ -90,20 +91,16 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
     @Test
     public void postToEmptyCollectionApiResponse() throws IOException {
-        //Map<String, String> payload = new HashMap<String, String>();
-        Map<String, String> payload = hashMap( "name", "Austin" ).map( "state", "TX" );
+        Map<String, String> payload = new HashMap<String, String>();
 
+        ResponseEntityIterator node = context.collection( "cities" ).postResponse( payload );
+        assertFalse( node.hasNext() );
 
-        ApiResponseCollection node = context.collection( "cities" ).postResponse( payload );
-//TODO: code = node.getHTTPResponseCode();
-//        assertFalse( node.hasNext() );
-
-        Entity entity = node.getResponse().getEntities().get( 0 );
-
-        ApiResponseCollection collection = context.collection( "cities" ).getResponse();
+        ResponseEntityIterator collection = context.collection( "cities" ).getResponse();
 
         assertEquals( ( Object ) 0, collection.getResponse().getCount() );
     }
+
 
 
     /**
@@ -155,50 +152,48 @@ public class CollectionsResourceIT extends AbstractRestIT {
     }
 
 
+    /**
+     * Checks that we can post a string with spaces and get it back in the response.
+     * @throws IOException
+     */
     @Test
     public void stringWithSpaces() throws IOException {
 
 
         String collectionName = "calendarlists";
         Map<String, String> payload = hashMap( "summaryOverview", "My Summary" ).map( "caltype", "personal" );
+        Entity entity = null;
 
-//        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/calendarlists" )
-//                .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-//                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
-//this need to be decoupled so that it only requires client side models ( in this case we need an entity class.
-        ApiResponseCollection arc = context.collection( collectionName ).postResponse( payload );
+        ResponseEntityIterator arc = context.collection( collectionName ).postResponse( payload );
+        //pattern to check if entity that was posted , was returned in the response
+        if(arc.hasNext()){
+            entity = arc.next();
+        }
+        else
+            fail( "No entities found from post" );
 
-//TODO:broken, plz fix
-//        org.apache.usergrid.persistence.Entity entity = arc.next().toTypedEntity();
-        UUID id = null;//arc.next().getUuid();// entity.getUuid();
+        UUID id = entity.getUuid();
 
         //post a second entity
-
-
         payload = hashMap( "summaryOverview", "Your Summary" ).map( "caltype", "personal" );
 
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/calendarlists" ).queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                .post( String.class, payload ));
+        context.collection( "calendarlists" ).postResponse( payload );
 
-
-        refreshIndex("test-organization", "test-app");
+        context.refreshIndex();
 
         //query for the first entity
 
         String query = "summaryOverview = 'My Summary'";
 
-
-        JsonNode queryResponse = mapper.readTree( resource().path( "/test-organization/test-app/calendarlists" )
-                .queryParam( "access_token", access_token ).queryParam( "ql", query )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
+        //TODO: fix it so that queries and the other 'with' keywords can reutrn instances of iterable entities.Not just response.
+        Response queryResponse = context.collection( "calendarlists" ).withQuery( query ).getInternalResponse();
 
 
-        UUID returnedId = getEntityId( queryResponse, 0 );
+        UUID returnedId = queryResponse.getEntities().get( 0 ).getUuid();
 
         assertEquals( id, returnedId );
 
-        assertEquals( 1, queryResponse.get( "entities" ).size() );
+        assertEquals( 1, queryResponse.getEntities().size() );
     }
 
 
