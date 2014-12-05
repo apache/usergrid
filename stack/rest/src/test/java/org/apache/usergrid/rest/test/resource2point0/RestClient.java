@@ -16,33 +16,49 @@
  */
 package org.apache.usergrid.rest.test.resource2point0;
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.UriBuilder;
 
-import org.apache.usergrid.rest.test.resource2point0.endpoints.Collection;
-import org.apache.usergrid.rest.test.resource2point0.endpoints.ManagementResource;
+import org.glassfish.jersey.client.JerseyClientBuilder;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.JerseyWebTarget;
+
+import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.ManagementResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.OrganizationResource;
-import org.apache.usergrid.rest.test.resource2point0.endpoints.RootResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.UrlResource;
-import org.apache.usergrid.rest.test.resource2point0.model.EntityResponse;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 
 /**
  * Extends the JerseyTest framework because this is the client that we are going to be using to interact with tomcat
  */
-public class Client implements UrlResource {
+public class RestClient implements UrlResource {
 
+    ClientConfig clientConfig = new ClientConfig();
+
+
+    Client client = ClientBuilder.newClient( clientConfig );
+
+    private WebTarget webTarget;// = client.target("http://example.com/rest");
 
     private final String serverUrl;
     private final ClientContext context;
+    //ClientConfig config = new ClientConfig();
+
+
 //This should work independantly of test frameowkr. Need to be able to pull the WebResource Url and not have to integrate the webresource into the Endpoints/Client.
     //This uses jeresy to create the client. Initialize the client with the webresource, and then the CLIENT calls the root resource.
     //
     //after initialization of the client htne use it to build our path using our resources.
     //Just keep checking in early and checkin often.
 
-    public Client( final String serverUrl ) {
+    public RestClient( final String serverUrl ) {
         this.serverUrl = serverUrl;
         this.context = new ClientContext();
+        webTarget = client.target( serverUrl );
+        //webTarget = webTarget.path( serverUrl );
     }
 
 
@@ -64,6 +80,7 @@ public class Client implements UrlResource {
      * Get hte organization resource
      */
     public OrganizationResource org( final String orgName ) {
+        //OrganizationResource
         return new OrganizationResource( orgName, context,  this );
     }
 

@@ -17,6 +17,7 @@
 package org.apache.usergrid.rest.test.resource2point0.endpoints;
 
 
+import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.ManagementResource;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 
@@ -26,7 +27,6 @@ import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
  * Contains the two top level functions that can be called from the "root" ( actual root is the serverUrl )
  * 1.) Is the management resource i.e /management/org/blah/...
  * 2.) Is the organization resource i.e /<orgname>/<appname>...
- *
  * This is where top level elements are contained and managemend
  */
 public class RootResource implements UrlResource {

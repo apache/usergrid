@@ -14,9 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.rest.test.resource2point0.endpoints;
+package org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt;
 
 
+import org.apache.usergrid.rest.test.resource2point0.endpoints.NamedResource;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.TokenResource;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.UrlResource;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 

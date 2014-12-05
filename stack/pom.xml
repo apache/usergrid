@@ -726,6 +726,12 @@
         <version>${jersey2-version}</version>
       </dependency>
 
+      <dependency>
+        <groupId>org.glassfish.jersey.core</groupId>
+        <artifactId>jersey-client</artifactId>
+        <version>2.13</version>
+      </dependency>
+
       <!-- Ending glassfish jersey dependencies -->
 
       <dependency>
