@@ -63,7 +63,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
     private static final MetricRegistry registry = new MetricRegistry();
     private Slf4jReporter reporter;
 
-    private static final long RUNTIME_MS = TimeUnit.SECONDS.toMillis( 5 );
+    private static final long RUNTIME_MS = TimeUnit.SECONDS.toMillis( 3 );
 
     private static final long WRITE_DELAY_MS = 10;
 
@@ -207,8 +207,8 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
         };
 
         try {
-//            setup.getEmf().refreshIndex();
-            setup.getEmf().rebuildAllIndexes( po );
+
+            setup.getEmf().rebuildApplicationIndexes( em.getApplicationId(), po );
 
             reporter.report();
             registry.remove( meterName );

@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
+import org.apache.commons.lang3.RandomStringUtils;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -59,7 +60,8 @@ public class EntityManagerIT extends AbstractCoreIT {
     public void testEntityManager() throws Exception {
         LOG.info( "EntityManagerIT.testEntityManagerTest" );
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testEntityManagerTest" );
+        UUID applicationId = setup.createApplication( 
+            "testOrganization", "testEntityManagerTest" + RandomStringUtils.randomAlphabetic(20) );
         assertNotNull( applicationId );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
@@ -119,7 +121,8 @@ public class EntityManagerIT extends AbstractCoreIT {
     public void testCreateAndGet() throws Exception {
         LOG.info( "EntityDaoTest.testCreateAndGet" );
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testCreateAndGet" );
+        UUID applicationId = setup.createApplication( 
+                "testOrganization", "testCreateAndGet" + RandomStringUtils.randomAlphabetic(20)  );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
@@ -189,7 +192,8 @@ public class EntityManagerIT extends AbstractCoreIT {
     public void testDictionaries() throws Exception {
         LOG.info( "EntityDaoTest.testDictionaries" );
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testDictionaries" );
+        UUID applicationId = setup.createApplication( 
+                "testOrganization", "testDictionaries" + RandomStringUtils.randomAlphabetic(20)  );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
@@ -232,7 +236,8 @@ public class EntityManagerIT extends AbstractCoreIT {
     public void testProperties() throws Exception {
         LOG.info( "EntityDaoTest.testProperties" );
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testProperties" );
+        UUID applicationId = setup.createApplication( 
+                "testOrganization", "testProperties" + RandomStringUtils.randomAlphabetic(20)  );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
@@ -270,7 +275,8 @@ public class EntityManagerIT extends AbstractCoreIT {
     public void testCreateAndDelete() throws Exception {
         LOG.info( "EntityDaoTest.testCreateAndDelete" );
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testCreateAndDelete" );
+        UUID applicationId = setup.createApplication( 
+                "testOrganization", "testCreateAndDelete" + RandomStringUtils.randomAlphabetic(20)  );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
@@ -292,8 +298,8 @@ public class EntityManagerIT extends AbstractCoreIT {
 
         // now search by username, no results should be returned
 
-        Results r =
-                em.searchCollection( em.getApplicationRef(), "thing", new Query().addEqualityFilter( "name", name ) );
+        Results r = em.searchCollection( em.getApplicationRef(), "thing", 
+                new Query().addEqualityFilter( "name", name ) );
 
         assertEquals( 0, r.size() );
     }
@@ -303,7 +309,8 @@ public class EntityManagerIT extends AbstractCoreIT {
     public void testCreateAndDeleteUser() throws Exception {
         LOG.info( "EntityDaoTest.testCreateAndDeleteUser" );
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testCreateAndDeleteUser" );
+        UUID applicationId = setup.createApplication( 
+                "testOrganization", "testCreateAndDeleteUser" + RandomStringUtils.randomAlphabetic(20)  );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
@@ -344,7 +351,8 @@ public class EntityManagerIT extends AbstractCoreIT {
 
         em.refreshIndex();
 
-        r = em.searchCollection( em.getApplicationRef(), "users", new Query().addEqualityFilter( "username", name ) );
+        r = em.searchCollection( em.getApplicationRef(), "users", 
+                new Query().addEqualityFilter( "username", name ) );
 
         assertEquals( 1, r.size() );
 
@@ -357,7 +365,8 @@ public class EntityManagerIT extends AbstractCoreIT {
     public void testJson() throws Exception {
         LOG.info( "EntityDaoTest.testProperties" );
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testJson" );
+        UUID applicationId = setup.createApplication( 
+                "testOrganization", "testJson" + RandomStringUtils.randomAlphabetic(20)  );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
@@ -398,7 +407,8 @@ public class EntityManagerIT extends AbstractCoreIT {
         organizationEntity.setProperty( "name", "testCounterOrg" );
         organizationEntity = em.create( organizationEntity );
 
-        UUID applicationId = setup.getEmf().createApplication( "testCounterOrg", "testEntityCounters" );
+        UUID applicationId = setup.getEmf().createApplication( 
+                "testCounterOrg", "testEntityCounters" + RandomStringUtils.randomAlphabetic(20)  );
 
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
         properties.put( "name", "testEntityCounters" );
@@ -434,7 +444,8 @@ public class EntityManagerIT extends AbstractCoreIT {
     public void testCreateAndList() throws Exception {
         LOG.info( "EntityDaoTest.testCreateAndDelete" );
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testCreateAndList" );
+        UUID applicationId = setup.createApplication( 
+                "testOrganization", "testCreateAndList" + RandomStringUtils.randomAlphabetic(20) );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
@@ -476,7 +487,8 @@ public class EntityManagerIT extends AbstractCoreIT {
     @Test
     public void testCorrectType() throws Exception {
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testCorrectType" );
+        UUID applicationId = setup.createApplication( 
+                "testOrganization", "testCorrectType" + RandomStringUtils.randomAlphabetic(20)  );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
@@ -502,7 +514,8 @@ public class EntityManagerIT extends AbstractCoreIT {
     public void testImmutableForcedPropChange() throws Exception {
         LOG.info( "EntityDaoTest.testProperties" );
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testNamePropChanges" );
+        UUID applicationId = setup.createApplication( 
+                "testOrganization", "testNamePropChanges" + RandomStringUtils.randomAlphabetic(20)  );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
@@ -525,7 +538,8 @@ public class EntityManagerIT extends AbstractCoreIT {
     @Test
     public void ownershipScopeCorrect() throws Exception {
 
-        UUID applicationId = setup.createApplication( "testOrganization", "ownershipScopeCorrect" );
+        UUID applicationId = setup.createApplication( 
+                "testOrganization", "ownershipScopeCorrect" + RandomStringUtils.randomAlphabetic(20)  );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
@@ -583,7 +597,8 @@ public class EntityManagerIT extends AbstractCoreIT {
     public void testDeprecatedGet() throws Exception {
         LOG.info( "EntityManagerIT.testDeprecatedGet" );
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testDeprecatedGet" );
+        UUID applicationId = setup.createApplication( 
+                "testOrganization", "testDeprecatedGet" + RandomStringUtils.randomAlphabetic(20)  );
         assertNotNull( applicationId );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );

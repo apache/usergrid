@@ -22,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import org.apache.commons.lang3.RandomStringUtils;
 
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -49,7 +50,7 @@ public class PermissionsIT extends AbstractCoreIT {
 
     @Test
     public void testPermissionTimeout() throws Exception {
-        UUID applicationId = setup.createApplication( "permissionsTest", "testPermissionTimeout" );
+        UUID applicationId = setup.createApplication( "permissionsTest", "testPermissionTimeout" + RandomStringUtils.randomAlphabetic(20)  );
 
         assertNotNull( applicationId );
 
@@ -99,7 +100,7 @@ public class PermissionsIT extends AbstractCoreIT {
     public void testPermissions() throws Exception {
         logger.info( "PermissionsIT.testPermissions" );
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testPermissions" );
+        UUID applicationId = setup.createApplication( "testOrganization", "testPermissions" + RandomStringUtils.randomAlphabetic(20)  );
         assertNotNull( applicationId );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
