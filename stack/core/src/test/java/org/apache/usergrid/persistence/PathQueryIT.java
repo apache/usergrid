@@ -38,7 +38,8 @@ public class PathQueryIT extends AbstractCoreIT {
 
     @Test
     public void testUserDevicePathQuery() throws Exception {
-        UUID applicationId = setup.createApplication( "testOrganization", "testUserDevicePathQuery" + RandomStringUtils.randomAlphabetic(20)  );
+        UUID applicationId = setup.createApplication( 
+                "testOrganization", "testUserDevicePathQuery" + RandomStringUtils.randomAlphabetic(20)  );
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
         List<Entity> users = new ArrayList<Entity>();
@@ -93,7 +94,8 @@ public class PathQueryIT extends AbstractCoreIT {
         deviceQuery.addFilter( "index >= 2" );
         int expectedDeviceQuerySize = 3;
 
-        PathQuery<EntityRef> usersPQ = new PathQuery<EntityRef>( new SimpleEntityRef( em.getApplicationRef()), userQuery );
+        PathQuery<EntityRef> usersPQ = new PathQuery<EntityRef>( 
+                new SimpleEntityRef( em.getApplicationRef()), userQuery );
         PathQuery<Entity> devicesPQ = usersPQ.chain( deviceQuery );
         HashSet set = new HashSet( expectedUserQuerySize * expectedDeviceQuerySize );
         Iterator<Entity> i = devicesPQ.iterator( em );
@@ -107,7 +109,8 @@ public class PathQueryIT extends AbstractCoreIT {
     @Test
     public void testGroupUserDevicePathQuery() throws Exception {
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testGroupUserDevicePathQuery" + RandomStringUtils.randomAlphabetic(20)  );
+        UUID applicationId = setup.createApplication( 
+                "testOrganization", "testGroupUserDevicePathQuery" + RandomStringUtils.randomAlphabetic(20)  );
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
         List<Entity> groups = new ArrayList<Entity>();
