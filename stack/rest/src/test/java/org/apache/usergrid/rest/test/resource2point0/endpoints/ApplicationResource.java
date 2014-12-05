@@ -21,7 +21,9 @@ import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 
 /**
- * Created by ApigeeCorporation on 12/4/14.
+ * Holds the information required for building and chaining application objects to collections.
+ * Should also contain the GET,PUT,POST,DELETE methods of functioning in here.
+ * This class also holds how we're currently interaction with collections.
  */
 public class ApplicationResource extends NamedResource {
 
@@ -30,7 +32,13 @@ public class ApplicationResource extends NamedResource {
         super( name, context, parent );
     }
 
+
+    /**
+     * Currently hardcoded to users, this is because we expect to create and chain different cases of collections.
+     * The pattern should look like: orgs.apps.users , orgs.apps.groups and so on...
+     * @return
+     */
     public Collection users(){
-        return new Collection("users", this);
+        return new Collection("users", context , this);
     }
 }

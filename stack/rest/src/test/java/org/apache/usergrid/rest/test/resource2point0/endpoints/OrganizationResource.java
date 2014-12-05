@@ -21,7 +21,8 @@ import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 
 /**
- * Created by ApigeeCorporation on 12/4/14.
+ * Holds the information required for building and chaining organization objects to applications.
+ * Should also contain the GET,PUT,POST,DELETE methods of functioning in here.
  */
 public class OrganizationResource extends NamedResource {
 
@@ -31,6 +32,6 @@ public class OrganizationResource extends NamedResource {
     }
 
     public ApplicationResource getApp(final String app){
-        return new ApplicationResource( app, this );
+        return new ApplicationResource( app, context ,this );
     }
 }

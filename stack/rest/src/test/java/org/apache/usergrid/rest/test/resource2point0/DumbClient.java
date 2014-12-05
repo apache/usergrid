@@ -24,7 +24,7 @@ import org.apache.usergrid.rest.test.resource2point0.model.EntityResponse;
 
 
 /**
- * Created by ApigeeCorporation on 12/4/14.
+ * Test Class used to model if the client is working or doing what it is supposed to be doing. 
  */
 public class DumbClient {
 
@@ -39,8 +39,6 @@ public class DumbClient {
     }
 
     public void stateful(){
-
-
 
         EntityResponse itr  =  client.org( "test" ).getApp( "test" ).users().getEntityResponse();
 

@@ -28,7 +28,8 @@ import com.google.common.base.Optional;
 
 
 /**
- * Created by ApigeeCorporation on 12/4/14.
+ * Holds POST,PUT,GET,DELETE methods for Collections. Models the rest endpoints for the different ways
+ * to get an entity out of UG.
  */
 public class Collection extends NamedResource {
 

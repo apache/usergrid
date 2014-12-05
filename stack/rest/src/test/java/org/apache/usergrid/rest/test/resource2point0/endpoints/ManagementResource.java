@@ -21,7 +21,7 @@ import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 
 /**
- * Created by ApigeeCorporation on 12/4/14.
+ * Contains the REST methods to interacting with the ManagementEndpoints
  */
 public class ManagementResource extends NamedResource {
     public ManagementResource( final ClientContext context, final UrlResource parent ) {

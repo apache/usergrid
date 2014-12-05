@@ -21,7 +21,7 @@ import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 
 /**
- * Created by ApigeeCorporation on 12/4/14.
+ * Called by the ManagementResource. This contains anything token related that comes back to the ManagementResource.
  */
 public class TokenResource extends NamedResource {
     public TokenResource( final ClientContext context, final UrlResource parent ) {

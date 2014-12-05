@@ -32,8 +32,8 @@ package org.apache.usergrid.rest.test.resource2point0.model;
 
 
 /**
- * A stateful iterable collection response.  This is a "collection" of entities from our response that are easier
- * to work with. The Generic means that we can type cast the iterator.
+ * A stateful iterable collection response. Used to dole out entities in iterable form
+ * Ignore the below for now.
  * Keep generics? Maybe just use entities for now
  * 1.) Primary key
  * 2.) Default data-> default data is different from type to type. (Groups would need path and title, Activities require actors...etc)

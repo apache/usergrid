@@ -27,7 +27,7 @@ import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 
 /**
- * Created by ApigeeCorporation on 12/4/14.
+ * Extends the JerseyTest framework because this is the client that we are going to be using to interact with tomcat
  */
 public class Client implements UrlResource {
 
@@ -67,10 +67,11 @@ public class Client implements UrlResource {
         return new OrganizationResource( orgName, context,  this );
     }
 
-
+//todo:fix this method for the client.
     public void loginAdminUser( final String username, final String password ) {
-        final String token = management().token().post(username, password);
+        //Post isn't implemented yet, but using the method below we should be able to get a superuser password as well.
+        //final String token = management().token().post(username, password);
 
-        context.setToken( token );
+        //context.setToken( token );
     }
 }

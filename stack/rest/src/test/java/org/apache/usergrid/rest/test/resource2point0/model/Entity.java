@@ -49,10 +49,10 @@ import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
 
 
 /**
- * Entities are the base object type in the service.
+ * Contains a model that can be deconstructed from the api response. This is a base level value that contains the bare
+ * minumum of what other classes use. Such as . users or groups.
  */
 
-//@JsonPropertyOrder({ PROPERTY_UUID, PROPERTY_TYPE, PROPERTY_URI, PROPERTY_NAME })
 @XmlRootElement
 public class Entity implements Serializable {
 

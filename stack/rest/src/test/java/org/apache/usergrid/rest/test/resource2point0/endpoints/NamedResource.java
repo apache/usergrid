@@ -21,16 +21,21 @@ import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 
 /**
- * Created by ApigeeCorporation on 12/4/14.
+ * Base class that is extended by named endpoints.
+ * The NamedResource stores the parent of the class, the context in which the class operates and then Name of this resource
  */
 public class NamedResource implements UrlResource {
 
     protected final String name;
     protected final ClientContext context;
+    /* Stores the path of the parent that called it.
+    i.e If we had a ApplicationResource ( an instance of a namedResource ) this would contain the OrganizationResource.
+     */
     protected final UrlResource parent;
 
 
-    public NamedResource( final String name, final ClientContext context, final UrlResource parent ) {this.name = name;
+    public NamedResource( final String name, final ClientContext context, final UrlResource parent ) {
+        this.name = name;
         this.context = context;
         this.parent = parent;
     }

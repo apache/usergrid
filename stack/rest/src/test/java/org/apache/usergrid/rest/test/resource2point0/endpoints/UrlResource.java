@@ -21,7 +21,7 @@ import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 
 /**
- * Created by ApigeeCorporation on 12/4/14.
+ * Interface that returns the path that is currently being pointed to.
  */
 public interface UrlResource {
 

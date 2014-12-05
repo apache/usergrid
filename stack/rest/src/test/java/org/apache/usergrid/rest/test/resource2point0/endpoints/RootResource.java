@@ -21,7 +21,13 @@ import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 
 /**
- * Root resource for stuff
+ * Contains the root element for classes. Contains the client context that holds a token for the management calls,
+ * and also contains the serverUrl so we know what endpoint we need to hit.
+ * Contains the two top level functions that can be called from the "root" ( actual root is the serverUrl )
+ * 1.) Is the management resource i.e /management/org/blah/...
+ * 2.) Is the organization resource i.e /<orgname>/<appname>...
+ *
+ * This is where top level elements are contained and managemend
  */
 public class RootResource implements UrlResource {
 
@@ -30,11 +36,20 @@ public class RootResource implements UrlResource {
     private final ClientContext context;
 
 
+    /**
+     *
+     * @param serverUrl The serverurl that has stood up the UG instance i.e localhost:8080
+     * @param context Contains the token that will be used for the following resources.
+     */
     public RootResource( final String serverUrl, final ClientContext context ) {this.serverUrl = serverUrl;
         this.context = context;
     }
 
 
+    /**
+     * Returns the serverUrl that the root resource is pointing to.
+     * @return serverUrl
+     */
     @Override
     public String getPath() {
         return serverUrl;
@@ -51,9 +66,9 @@ public class RootResource implements UrlResource {
 
 
     /**
-     * Get hte organization resource
+     * Get the organization resource
      * @param orgName
-     * @return
+     * @return OrganizationResource Returns an instance of the OrganizationResource to continue builder pattern
      */
     public OrganizationResource  org(final String orgName){
         return new OrganizationResource( orgName,context,  this );
