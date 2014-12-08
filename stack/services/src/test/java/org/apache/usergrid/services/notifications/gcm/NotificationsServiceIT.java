@@ -163,7 +163,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         // perform push //
         notification = scheduleNotificationAndWait(notification);
-        checkReceipts(notification, 1);
+        checkReceipts(notification, 2);
     }
 
     @Test
