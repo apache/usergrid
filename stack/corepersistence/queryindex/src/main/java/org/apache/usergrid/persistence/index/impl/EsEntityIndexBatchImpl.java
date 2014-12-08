@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.usergrid.persistence.index.*;
 import org.elasticsearch.action.bulk.BulkItemResponse;
@@ -58,6 +59,7 @@ import org.apache.usergrid.persistence.model.field.value.EntityObject;
 import com.google.common.base.Joiner;
 import rx.Observable;
 import rx.functions.Action1;
+import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ANALYZED_STRING_PREFIX;
@@ -184,16 +186,29 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
 
         log.debug( "De-indexing type {} with documentId '{}'" , entityType, indexId);
-        final String[] indexes = entityIndex.getIndexes(EntityIndex.AliasType.Read);
+        String[] indexes = entityIndex.getIndexes(EntityIndex.AliasType.Read);
+        if(indexes == null ||indexes.length == 0){
+            indexes = new String[]{indexIdentifier.getIndex(null)};
+        }
+        final AtomicInteger errorCount = new AtomicInteger();
         //get all indexes then flush everyone
-        Observable.from(indexes).subscribeOn(Schedulers.io()).forEach(new Action1<String>() {
-            @Override
-            public void call(String index) {
-                bulkRequest.add(client.prepareDelete(index, entityType, indexId).setRefresh(refresh));
+        Observable.from(indexes).subscribeOn(Schedulers.io())
+               .map(new Func1<String, Object>() {
+                   @Override
+                   public Object call(String index) {
+                       try {
+                           bulkRequest.add(client.prepareDelete(index, entityType, indexId).setRefresh(refresh));
+                       }catch (Exception e){
+                           log.error("failed to deindex",e);
+                           errorCount.incrementAndGet();
+                       }
+                       return index;
+                   }
+               }).toBlocking().last();
 
-            }
-        });
-
+        if(errorCount.get()>0){
+            log.error("Failed to flush some indexes");
+        }
         log.debug( "Deindexed Entity with index id " + indexId );
 
         maybeFlush();

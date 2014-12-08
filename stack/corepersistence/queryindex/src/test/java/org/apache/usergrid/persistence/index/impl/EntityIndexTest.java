@@ -166,7 +166,7 @@ public class EntityIndexTest extends BaseIT {
 
         EntityIndexBatch entityIndexBatch = entityIndex.createBatch();
         entityIndexBatch.deindex(indexScope, crs.get(0));
-        entityIndexBatch.deindex(indexScope,crs.get(1));
+        entityIndexBatch.deindex(indexScope, crs.get(1));
         entityIndexBatch.executeAndRefresh();
         entityIndex.refresh();
 
@@ -248,8 +248,9 @@ public class EntityIndexTest extends BaseIT {
                 Query.fromQL( "name contains 'Ferrari*'" ) );
         assertEquals( 1, candidateResults.size() );
 
-        entityIndex.createBatch().deindex( indexScope, entity ).execute();
-
+        EntityIndexBatch batch = entityIndex.createBatch();
+        batch.deindex(indexScope, entity).execute();
+        batch.executeAndRefresh();
         entityIndex.refresh();
 
         candidateResults = entityIndex.search( indexScope, SearchTypes.fromTypes(entity.getId().getType()), Query.fromQL( "name contains 'Ferrari*'" ) );
