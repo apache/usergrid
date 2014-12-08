@@ -47,6 +47,13 @@ public interface EntityIndex {
     public void addIndex(final String indexSuffix, final int shards, final int replicas);
 
     /**
+     * Get the indexes for an alias
+     * @param aliasName name of alias
+     * @return list of index names
+     */
+    public String[] getIndexes(final String aliasName);
+
+    /**
      * Create the index batch.
      */
     public EntityIndexBatch createBatch();

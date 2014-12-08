@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.index.IndexIdentifier;
+import org.apache.usergrid.persistence.index.*;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -36,9 +36,6 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
-import org.apache.usergrid.persistence.index.EntityIndexBatch;
-import org.apache.usergrid.persistence.index.IndexFig;
-import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.query.CandidateResult;
 import org.apache.usergrid.persistence.index.utils.IndexValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -59,6 +56,9 @@ import org.apache.usergrid.persistence.model.field.UUIDField;
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
 
 import com.google.common.base.Joiner;
+import rx.Observable;
+import rx.functions.Action1;
+import rx.schedulers.Schedulers;
 
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ANALYZED_STRING_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.BOOLEAN_PREFIX;
@@ -92,13 +92,16 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
     private final FailureMonitor failureMonitor;
 
+    private final EntityIndex entityIndex;
+
 
     public EsEntityIndexBatchImpl( final ApplicationScope applicationScope, final Client client, 
-            final IndexFig config, final int autoFlushSize, final FailureMonitor failureMonitor ) {
+            final IndexFig config, final int autoFlushSize, final FailureMonitor failureMonitor, final EntityIndex entityIndex ) {
 
         this.applicationScope = applicationScope;
         this.client = client;
         this.failureMonitor = failureMonitor;
+        this.entityIndex = entityIndex;
         this.indexIdentifier = IndexingUtils.createIndexIdentifier(config, applicationScope);
         this.alias = indexIdentifier.getAlias();
         this.refresh = config.isForcedRefresh();
@@ -162,7 +165,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         final String context = createContextName( indexScope );
         final String entityType = id.getType();
 
-        String indexId = createIndexDocId( id, version, context );
+        final String indexId = createIndexDocId( id, version, context );
 
 
         if ( log.isDebugEnabled() ) {
@@ -181,8 +184,15 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
 
         log.debug( "De-indexing type {} with documentId '{}'" , entityType, indexId);
+        final String[] indexes = entityIndex.getIndexes(alias.getReadAlias());
+        //get all indexes then flush everyone
+        Observable.from(indexes).subscribeOn(Schedulers.io()).forEach(new Action1<String>() {
+            @Override
+            public void call(String index) {
+                bulkRequest.add(client.prepareDelete(index, entityType, indexId).setRefresh(refresh));
 
-        bulkRequest.add( client.prepareDelete(alias.getWriteAlias(), entityType, indexId ).setRefresh( refresh ) );
+            }
+        });
 
         log.debug( "Deindexed Entity with index id " + indexId );
 

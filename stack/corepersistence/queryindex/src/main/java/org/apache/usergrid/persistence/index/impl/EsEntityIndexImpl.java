@@ -178,9 +178,9 @@ public class EsEntityIndexImpl implements EntityIndex {
             Boolean isAck;
             String indexName = indexIdentifier.getIndex(indexSuffix);
             final AdminClient adminClient = esProvider.getClient().admin();
-            //remove write alias, can only have one
-            ImmutableOpenMap<String,List<AliasMetaData>> aliasMap = adminClient.indices().getAliases(new GetAliasesRequest(alias.getWriteAlias())).actionGet().getAliases();
-            String[] indexNames = aliasMap.keys().toArray(String.class);
+            final String aliasName = alias.getWriteAlias();
+            String[] indexNames = getIndexes( aliasName);
+
             for(String currentIndex : indexNames){
                 isAck = adminClient.indices().prepareAliases().removeAlias(currentIndex,alias.getWriteAlias()).execute().actionGet().isAcknowledged();
                 logger.info("Removed Index Name [{}] from Alias=[{}] ACK=[{}]",currentIndex, alias, isAck);
@@ -196,6 +196,14 @@ public class EsEntityIndexImpl implements EntityIndex {
         } catch (Exception e) {
             logger.warn("Failed to create alias ", e);
         }
+    }
+
+    @Override
+    public String[] getIndexes(String aliasName) {
+        final AdminClient adminClient = esProvider.getClient().admin();
+        //remove write alias, can only have one
+        ImmutableOpenMap<String,List<AliasMetaData>> aliasMap = adminClient.indices().getAliases(new GetAliasesRequest(aliasName)).actionGet().getAliases();
+        return aliasMap.keys().toArray(String.class);
     }
 
 
@@ -262,7 +270,7 @@ public class EsEntityIndexImpl implements EntityIndex {
     @Override
     public EntityIndexBatch createBatch() {
         return new EsEntityIndexBatchImpl( 
-                applicationScope, esProvider.getClient(), config, 1000, failureMonitor );
+                applicationScope, esProvider.getClient(), config, 1000, failureMonitor, this );
     }
 
 
@@ -424,7 +432,7 @@ public class EsEntityIndexImpl implements EntityIndex {
             @Override
             public boolean doOp() {
                 try {
-                    esProvider.getClient().admin().indices().prepareRefresh( alias.getWriteAlias() ).execute().actionGet();
+                    esProvider.getClient().admin().indices().prepareRefresh( alias.getReadAlias() ).execute().actionGet();
                     logger.debug( "Refreshed index: " + alias);
 
                     return true;
