@@ -1,4 +1,5 @@
 /*
+
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -193,11 +194,22 @@ public class CounterIT extends AbstractCoreIT {
         query.setStartTime( ts );
         query.setFinishTime( System.currentTimeMillis() );
         query.setResolution( CounterResolution.SIX_HOUR );
+
         Results or = em.getAggregateCounters( query );
-        long originalCount =  or.getCounters().get( 0 ).getValues().get( 0 ).getValue();
+        final long originalCount;
+        if ( or.getCounters().get( 0 ).getValues().isEmpty() ) {
+            originalCount = 0;
+        } else {
+            originalCount = or.getCounters().get( 0 ).getValues().get( 0 ).getValue();
+        }
 
         Map<String, Long> counts = em.getApplicationCounters();
-        long originalAdminLoginsCount = counts.get( "admin.logins" ).longValue();
+        final long originalAdminLoginsCount;
+        if ( counts.get( "admin.logins" ) == null ) {
+            originalAdminLoginsCount = 0;
+        } else {
+            originalAdminLoginsCount = counts.get( "admin.logins" );
+        }
 
         String randomSuffix = RandomStringUtils.randomAlphabetic(20); 
         String orgName = "testCounter" + randomSuffix;
