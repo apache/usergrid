@@ -49,6 +49,7 @@ import rx.functions.Action1;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import org.junit.Ignore;
 
 
 public class EntityTypeMappingMigrationIT extends AbstractCoreIT {
@@ -85,6 +86,7 @@ public class EntityTypeMappingMigrationIT extends AbstractCoreIT {
 
 
     @Test
+    @Ignore("Ignored awaiting fix for USERGRID-268")
     public void testIdMapping() throws Throwable {
 
         assertEquals( "version 1 expected", 1, entityTypeMappingMigration.getVersion() );

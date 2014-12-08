@@ -57,6 +57,7 @@ import rx.functions.Action1;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import org.junit.Ignore;
 
 
 public class EntityDataMigrationIT extends AbstractCoreIT {
@@ -96,6 +97,7 @@ public class EntityDataMigrationIT extends AbstractCoreIT {
 
 
     @Test
+    @Ignore("Awaiting fix for USERGRID-268")
     public void testDataMigration() throws Throwable {
 
         assertEquals( "version 3 expected", 3, entityDataMigration.getVersion() );
