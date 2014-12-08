@@ -29,6 +29,7 @@ import org.apache.usergrid.persistence.entities.JobData;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import org.junit.Ignore;
 
 
 /**
@@ -36,6 +37,7 @@ import static org.junit.Assert.assertTrue;
  * Tests saturation at each point of the runtime as well
  */
 @Concurrent
+@Ignore("Ignored awaiting fix for USERGRID-267")
 public class SchedulerRuntimeIntervalIT extends AbstractSchedulerRuntimeIT {
 	
 	private static final Logger logger = 
