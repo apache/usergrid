@@ -178,8 +178,7 @@ public class EsEntityIndexImpl implements EntityIndex {
             Boolean isAck;
             String indexName = indexIdentifier.getIndex(indexSuffix);
             final AdminClient adminClient = esProvider.getClient().admin();
-            final String aliasName = alias.getWriteAlias();
-            String[] indexNames = getIndexes( aliasName);
+            String[] indexNames = getIndexes(alias.getWriteAlias());
 
             for(String currentIndex : indexNames){
                 isAck = adminClient.indices().prepareAliases().removeAlias(currentIndex,alias.getWriteAlias()).execute().actionGet().isAcknowledged();
@@ -199,13 +198,17 @@ public class EsEntityIndexImpl implements EntityIndex {
     }
 
     @Override
-    public String[] getIndexes(String aliasName) {
+    public String[] getIndexes(final AliasType aliasType) {
+        final String aliasName = aliasType == AliasType.Read ? alias.getReadAlias() : alias.getWriteAlias();
+        return getIndexes(aliasName);
+    }
+
+    private String[] getIndexes(final String aliasName){
         final AdminClient adminClient = esProvider.getClient().admin();
         //remove write alias, can only have one
         ImmutableOpenMap<String,List<AliasMetaData>> aliasMap = adminClient.indices().getAliases(new GetAliasesRequest(aliasName)).actionGet().getAliases();
         return aliasMap.keys().toArray(String.class);
     }
-
 
     /**
      * Tests writing a document to a new index to ensure it's working correctly. See this post:

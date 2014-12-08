@@ -184,7 +184,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
 
         log.debug( "De-indexing type {} with documentId '{}'" , entityType, indexId);
-        final String[] indexes = entityIndex.getIndexes(alias.getReadAlias());
+        final String[] indexes = entityIndex.getIndexes(EntityIndex.AliasType.Read);
         //get all indexes then flush everyone
         Observable.from(indexes).subscribeOn(Schedulers.io()).forEach(new Action1<String>() {
             @Override

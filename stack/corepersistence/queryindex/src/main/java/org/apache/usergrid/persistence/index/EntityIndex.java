@@ -51,7 +51,7 @@ public interface EntityIndex {
      * @param aliasName name of alias
      * @return list of index names
      */
-    public String[] getIndexes(final String aliasName);
+    public String[] getIndexes(final AliasType aliasType);
 
     /**
      * Create the index batch.
@@ -94,6 +94,13 @@ public interface EntityIndex {
      * Check health of this specific index.
      */
     public Health getIndexHealth();
+
+    /**
+     * type of alias
+     */
+    public enum AliasType {
+        Read, Write
+    }
 
 }
 
