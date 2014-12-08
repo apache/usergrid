@@ -187,6 +187,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
         log.debug( "De-indexing type {} with documentId '{}'" , entityType, indexId);
         String[] indexes = entityIndex.getIndexes(EntityIndex.AliasType.Read);
+        //get the default index if no alias exists yet
         if(indexes == null ||indexes.length == 0){
             indexes = new String[]{indexIdentifier.getIndex(null)};
         }
