@@ -18,7 +18,7 @@ package org.apache.usergrid.services.notifications.gcm;
 
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.entities.*;
-import org.apache.usergrid.services.TestQueueManager;
+import org.apache.usergrid.persistence.queue.DefaultQueueManager;
 import org.apache.usergrid.services.notifications.*;
 import org.junit.*;
 import org.slf4j.Logger;
@@ -93,7 +93,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         device2 = app.getEntityManager().get(e.getUuid(), Device.class);
         ns = getNotificationService();
 
-        TestQueueManager qm = new TestQueueManager();
+        DefaultQueueManager qm = new DefaultQueueManager();
         ns.TEST_QUEUE_MANAGER = qm;
 
         listener = new QueueListener(ns.getServiceManagerFactory(), ns.getEntityManagerFactory(),ns.getMetricsFactory(), new Properties());

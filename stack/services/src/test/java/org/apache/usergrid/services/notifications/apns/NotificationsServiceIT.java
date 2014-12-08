@@ -21,7 +21,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.entities.*;
 import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.services.TestQueueManager;
+import org.apache.usergrid.persistence.queue.DefaultQueueManager;
 import org.apache.usergrid.services.notifications.*;
 import org.junit.*;
 import org.slf4j.Logger;
@@ -121,7 +121,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         ns = getNotificationService();
 
-        TestQueueManager qm = new TestQueueManager();
+        DefaultQueueManager qm = new DefaultQueueManager();
         ns.TEST_QUEUE_MANAGER = qm;
 
         app.getEntityManager().refreshIndex();
