@@ -1,4 +1,5 @@
 /*
+
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -21,6 +22,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
+import org.apache.commons.lang3.RandomStringUtils;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -71,7 +73,8 @@ public class CounterIT extends AbstractCoreIT {
 
         LOG.info( "CounterIT.testIncrementAndDecrement" );
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testCountersIandD" );
+        UUID applicationId = setup.createApplication( 
+            "testOrganization", "testCountersIandD" + RandomStringUtils.randomAlphabetic(20)  );
         assertNotNull( applicationId );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
@@ -102,7 +105,8 @@ public class CounterIT extends AbstractCoreIT {
     public void testCounters() throws Exception {
         LOG.info( "CounterIT.testCounters" );
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testCounters" );
+        UUID applicationId = setup.createApplication( 
+                "testOrganization", "testCounters" + RandomStringUtils.randomAlphabetic(20)  );
         assertNotNull( applicationId );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
@@ -141,7 +145,8 @@ public class CounterIT extends AbstractCoreIT {
                 System.currentTimeMillis(), true );
         LOG.info( JsonUtils.mapToJsonString( r.getCounters() ) );
 
-        r = em.getAggregateCounters( user1, null, null, "visits", CounterResolution.ALL, ts, System.currentTimeMillis(),
+        r = em.getAggregateCounters( user1, null, null, "visits", CounterResolution.ALL, ts, 
+                System.currentTimeMillis(),
                 false );
         LOG.info( JsonUtils.mapToJsonString( r.getCounters() ) );
 
@@ -180,25 +185,52 @@ public class CounterIT extends AbstractCoreIT {
 
     @Test
     public void testCommunityCounters() throws Exception {
+
         EntityManager em = setup.getEmf().getEntityManager( setup.getEmf().getManagementAppId() );
 
+        // get counts at start of test
+        Query query = new Query();
+        query.addCounterFilter( "admin.logins:*:*:*" );
+        query.setStartTime( ts );
+        query.setFinishTime( System.currentTimeMillis() );
+        query.setResolution( CounterResolution.SIX_HOUR );
+
+        Results or = em.getAggregateCounters( query );
+        final long originalCount;
+        if ( or.getCounters().get( 0 ).getValues().isEmpty() ) {
+            originalCount = 0;
+        } else {
+            originalCount = or.getCounters().get( 0 ).getValues().get( 0 ).getValue();
+        }
+
+        Map<String, Long> counts = em.getApplicationCounters();
+        final long originalAdminLoginsCount;
+        if ( counts.get( "admin.logins" ) == null ) {
+            originalAdminLoginsCount = 0;
+        } else {
+            originalAdminLoginsCount = counts.get( "admin.logins" );
+        }
+
+        String randomSuffix = RandomStringUtils.randomAlphabetic(20); 
+        String orgName = "testCounter" + randomSuffix;
+        String appName = "testEntityCounters" + randomSuffix;
+
         Group organizationEntity = new Group();
-        organizationEntity.setPath( "tst-counter" );
-        organizationEntity.setProperty( "name", "testCounter" );
+        organizationEntity.setPath( "tst-counter" + randomSuffix );
+        organizationEntity.setProperty( "name", orgName );
         organizationEntity = em.create( organizationEntity );
 
-
-        UUID applicationId = setup.getEmf().createApplication( "testCounter", "testEntityCounters" );
+        UUID applicationId = setup.getEmf().createApplication( orgName, appName  ); 
 
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
-        properties.put( "name", "testCounter/testEntityCounters" );
+        properties.put( "name", orgName + "/" + appName );
         Entity applicationEntity = em.create( applicationId, "application_info", properties );
+
 //Creating connections like below doesn't work.
 //        em.createConnection( new SimpleEntityRef( "group", organizationEntity.getUuid() ), "owns",
 //                new SimpleEntityRef( "application_info", applicationId ) );
 
-        em.createConnection( organizationEntity.toTypedEntity(),"owns",applicationEntity );
-
+        em.createConnection( organizationEntity.toTypedEntity(), "owns", applicationEntity );
 
         Event event = new Event();
         event.setTimestamp( System.currentTimeMillis() );
@@ -207,34 +239,31 @@ public class CounterIT extends AbstractCoreIT {
 
         // TODO look at row syntax of event counters being sent
         em.create( event );
-    /*
-    event = new Event();
-    event.setTimestamp(System.currentTimeMillis());
-    event.addCounter("admin.logins", 1);
-    em.create(event);
-   */
-        Map<String, Long> counts = em.getApplicationCounters();
+
+        // event = new Event();
+        // event.setTimestamp(System.currentTimeMillis());
+        // event.addCounter("admin.logins", 1);
+        // em.create(event);
+
+        counts = em.getApplicationCounters();
         LOG.info( JsonUtils.mapToJsonString( counts ) );
         assertNotNull( counts.get( "admin.logins" ) );
-        assertEquals( 1, counts.get( "admin.logins" ).longValue() );
+        assertEquals( 1, counts.get( "admin.logins" ).longValue() - originalAdminLoginsCount );
+
         // Q's:
         // how to "count" a login to a specific application?
         // when org is provided, why is it returning 8? Is it 4 with one 'event'?
 
-        Results r = em.getAggregateCounters( null, null, null, "admin.logins", CounterResolution.ALL, ts,
-                System.currentTimeMillis(), false );
+        Results r = em.getAggregateCounters( null, null, null, "admin.logins", 
+                CounterResolution.ALL, ts, System.currentTimeMillis(), false );
+
         LOG.info( JsonUtils.mapToJsonString( r.getCounters() ) );
-        assertEquals( 1, r.getCounters().get( 0 ).getValues().get( 0 ).getValue() );
-        //counts = em.getEntityCounters(organizationEntity.getUuid());
-        //LOG.info(JsonUtils.mapToJsonString(counts));
-        Query query = new Query();
-        query.addCounterFilter( "admin.logins:*:*:*" );
-        query.setStartTime( ts );
-        query.setFinishTime( System.currentTimeMillis() );
-        query.setResolution( CounterResolution.SIX_HOUR );
-        //query.setPad(true);
+        assertEquals( 1, 
+            r.getCounters().get( 0 ).getValues().get( 0 ).getValue()  - originalAdminLoginsCount );
+
         r = em.getAggregateCounters( query );
         LOG.info( JsonUtils.mapToJsonString( r.getCounters() ) );
-        assertEquals( 1, r.getCounters().get( 0 ).getValues().get( 0 ).getValue() );
+        assertEquals( 1, 
+            r.getCounters().get( 0 ).getValues().get( 0 ).getValue() - originalCount );
     }
 }

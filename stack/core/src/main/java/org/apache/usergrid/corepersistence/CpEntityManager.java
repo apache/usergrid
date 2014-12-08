@@ -214,22 +214,24 @@ public class CpEntityManager implements EntityManager {
         // set to false for now
         this.skipAggregateCounters = false;
 
-        int entityCacheSize = Integer.parseInt( 
-                cass.getProperties().getProperty( "usergrid.entity_cache_size", "100" ) );
+        int entityCacheSize = Integer.parseInt( cass.getProperties()
+                .getProperty( "usergrid.entity_cache_size", "100" ) );
 
-        int entityCacheTimeout = Integer.parseInt( 
-                cass.getProperties().getProperty( "usergrid.entity_cache_timeout_ms", "500" ) );
+        int entityCacheTimeout = Integer.parseInt( cass.getProperties()
+                .getProperty( "usergrid.entity_cache_timeout_ms", "500" ) );
 
-        this.entityCache = CacheBuilder.newBuilder().maximumSize( entityCacheSize )
+        this.entityCache = CacheBuilder.newBuilder()
+            .maximumSize(entityCacheSize)
             .expireAfterWrite(entityCacheTimeout, TimeUnit.MILLISECONDS)
-            .build(new CacheLoader<EntityScope, org.apache.usergrid.persistence.model.entity.Entity>() {
-                public org.apache.usergrid.persistence.model.entity.Entity load(
-                    EntityScope es) {
+            .build( new CacheLoader<EntityScope, org.apache.usergrid.persistence.model.entity.Entity>() {
+
+                public org.apache.usergrid.persistence.model.entity.Entity load( EntityScope es) {
                         return managerCache.getEntityCollectionManager(es.scope)
-                        .load(es.entityId).toBlocking()
-                        .lastOrDefault(null);
+                            .load(es.entityId).toBlocking()
+                            .lastOrDefault(null);
                     }
-            });
+                }
+            );
     }
 
 
@@ -1386,8 +1388,8 @@ public class CpEntityManager implements EntityManager {
 
 
     @Override
-    public Entity createItemInCollection( EntityRef entityRef, String collectionName, String itemType,
-                                          Map<String, Object> props ) throws Exception {
+    public Entity createItemInCollection( EntityRef entityRef, String collectionName, 
+            String itemType, Map<String, Object> props ) throws Exception {
 
         return getRelationManager( entityRef ).createItemInCollection( collectionName, itemType, props );
     }
@@ -1432,8 +1434,8 @@ public class CpEntityManager implements EntityManager {
 
 
     @Override
-    public ConnectionRef createConnection( EntityRef connectingEntity, String pairedConnectionType,
-                                           EntityRef pairedEntity, String connectionType, EntityRef connectedEntityRef )
+    public ConnectionRef createConnection( EntityRef connectingEntity, String pairedConnectionType, 
+            EntityRef pairedEntity, String connectionType, EntityRef connectedEntityRef )
             throws Exception {
 
         return getRelationManager( connectingEntity )
@@ -1459,8 +1461,8 @@ public class CpEntityManager implements EntityManager {
 
 
     @Override
-    public ConnectionRef connectionRef( EntityRef connectingEntity, String pairedConnectionType, EntityRef pairedEntity,
-                                        String connectionType, EntityRef connectedEntityRef ) throws Exception {
+    public ConnectionRef connectionRef( EntityRef connectingEntity, String pairedConnectionType, 
+            EntityRef pairedEntity, String connectionType, EntityRef connectedEntityRef ) throws Exception {
 
         return getRelationManager( connectingEntity )
                 .connectionRef( pairedConnectionType, pairedEntity, connectionType, connectedEntityRef );
@@ -1491,8 +1493,8 @@ public class CpEntityManager implements EntityManager {
 
 
     @Override
-    public Results getConnectedEntities( EntityRef entityRef, String connectionType, String connectedEntityType,
-                                         Level resultsLevel ) throws Exception {
+    public Results getConnectedEntities( EntityRef entityRef, String connectionType, 
+            String connectedEntityType, Level resultsLevel ) throws Exception {
 
         return getRelationManager( entityRef )
                 .getConnectedEntities( connectionType, connectedEntityType, resultsLevel );
@@ -1500,8 +1502,8 @@ public class CpEntityManager implements EntityManager {
 
 
     @Override
-    public Results getConnectingEntities( EntityRef entityRef, String connectionType, String connectedEntityType,
-                                          Level resultsLevel ) throws Exception {
+    public Results getConnectingEntities( EntityRef entityRef, String connectionType, 
+            String connectedEntityType, Level resultsLevel ) throws Exception {
 
         return getRelationManager( entityRef )
                 .getConnectingEntities( connectionType, connectedEntityType, resultsLevel );
@@ -1509,8 +1511,8 @@ public class CpEntityManager implements EntityManager {
 
 
     @Override
-    public Results getConnectingEntities( EntityRef entityRef, String connectionType, String entityType, Level level,
-                                          int count ) throws Exception {
+    public Results getConnectingEntities( EntityRef entityRef, String connectionType,
+            String entityType, Level level, int count ) throws Exception {
 
         return getRelationManager( entityRef ).getConnectingEntities( connectionType, entityType, level, count );
     }
@@ -1604,8 +1606,8 @@ public class CpEntityManager implements EntityManager {
     }
 
 
-    private Entity batchCreateRole( String roleName, String roleTitle, long inactivity, String propertyName,
-                                    UUID ownerId, Map<String, Object> additionalProperties ) throws Exception {
+    private Entity batchCreateRole( String roleName, String roleTitle, long inactivity, 
+            String propertyName, UUID ownerId, Map<String, Object> additionalProperties ) throws Exception {
 
         UUID timestampUuid = UUIDUtils.newTimeUUID();
         long timestamp = UUIDUtils.getUUIDLong( timestampUuid );
@@ -1627,9 +1629,11 @@ public class CpEntityManager implements EntityManager {
 
         Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
         CassandraPersistenceUtils.addInsertToMutator( batch, ENTITY_DICTIONARIES,
-                CassandraPersistenceUtils.key( ownerId, Schema.DICTIONARY_ROLENAMES ), roleName, roleTitle, timestamp );
+                CassandraPersistenceUtils.key( ownerId, 
+                        Schema.DICTIONARY_ROLENAMES ), roleName, roleTitle, timestamp );
         CassandraPersistenceUtils.addInsertToMutator( batch, ENTITY_DICTIONARIES,
-                CassandraPersistenceUtils.key( ownerId, Schema.DICTIONARY_ROLETIMES ), roleName, inactivity,
+                CassandraPersistenceUtils.key( ownerId, 
+                        Schema.DICTIONARY_ROLETIMES ), roleName, inactivity,
                 timestamp );
         CassandraPersistenceUtils.addInsertToMutator( batch, ENTITY_DICTIONARIES,
                 CassandraPersistenceUtils.key( ownerId, DICTIONARY_SETS ), Schema.DICTIONARY_ROLENAMES, null,
@@ -1647,9 +1651,8 @@ public class CpEntityManager implements EntityManager {
         permission = permission.toLowerCase();
         long timestamp = cass.createTimestamp();
         Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
-        CassandraPersistenceUtils
-                .addInsertToMutator( batch, ApplicationCF.ENTITY_DICTIONARIES, getRolePermissionsKey( roleName ),
-                        permission, ByteBuffer.allocate( 0 ), timestamp );
+        CassandraPersistenceUtils.addInsertToMutator( batch, ApplicationCF.ENTITY_DICTIONARIES, 
+            getRolePermissionsKey( roleName ), permission, ByteBuffer.allocate( 0 ), timestamp );
         CassandraPersistenceUtils.batchExecute( batch, CassandraService.RETRY_COUNT );
     }
 
@@ -1662,16 +1665,16 @@ public class CpEntityManager implements EntityManager {
         Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
         for ( String permission : permissions ) {
             permission = permission.toLowerCase();
-            CassandraPersistenceUtils
-                    .addInsertToMutator( batch, ApplicationCF.ENTITY_DICTIONARIES, getRolePermissionsKey( roleName ),
-                            permission, ByteBuffer.allocate( 0 ), timestamp );
+            CassandraPersistenceUtils.addInsertToMutator( batch, ApplicationCF.ENTITY_DICTIONARIES, 
+                getRolePermissionsKey( roleName ), permission, ByteBuffer.allocate( 0 ), timestamp);
         }
         CassandraPersistenceUtils.batchExecute( batch, CassandraService.RETRY_COUNT );
     }
 
 
     private Object getRolePermissionsKey( String roleName ) {
-        return CassandraPersistenceUtils.key( SimpleRoleRef.getIdForRoleName( roleName ), DICTIONARY_PERMISSIONS );
+        return CassandraPersistenceUtils.key( 
+                SimpleRoleRef.getIdForRoleName( roleName ), DICTIONARY_PERMISSIONS );
     }
 
 
@@ -1692,10 +1695,9 @@ public class CpEntityManager implements EntityManager {
         roleName = roleName.toLowerCase();
         permission = permission.toLowerCase();
         long timestamp = cass.createTimestamp();
-        Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
-        CassandraPersistenceUtils
-                .addDeleteToMutator( batch, ApplicationCF.ENTITY_DICTIONARIES, getRolePermissionsKey( roleName ),
-                        permission, timestamp );
+        Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be);
+        CassandraPersistenceUtils.addDeleteToMutator( batch, ApplicationCF.ENTITY_DICTIONARIES, 
+                getRolePermissionsKey( roleName ), permission, timestamp );
         CassandraPersistenceUtils.batchExecute( batch, CassandraService.RETRY_COUNT );
     }
 
@@ -1703,8 +1705,8 @@ public class CpEntityManager implements EntityManager {
     @Override
     public Set<String> getRolePermissions( String roleName ) throws Exception {
         roleName = roleName.toLowerCase();
-        return cass.getAllColumnNames( cass.getApplicationKeyspace( applicationId ), ApplicationCF.ENTITY_DICTIONARIES,
-                getRolePermissionsKey( roleName ) );
+        return cass.getAllColumnNames( cass.getApplicationKeyspace( applicationId ), 
+                ApplicationCF.ENTITY_DICTIONARIES, getRolePermissionsKey( roleName ) );
     }
 
 
@@ -1759,7 +1761,7 @@ public class CpEntityManager implements EntityManager {
         long timestamp = cass.createTimestamp();
         Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
         CassandraPersistenceUtils.addInsertToMutator( batch, ApplicationCF.ENTITY_DICTIONARIES,
-                getRolePermissionsKey( groupId, roleName ), permission, ByteBuffer.allocate( 0 ), timestamp );
+            getRolePermissionsKey( groupId, roleName ), permission, ByteBuffer.allocate( 0 ), timestamp );
         CassandraPersistenceUtils.batchExecute( batch, CassandraService.RETRY_COUNT );
     }
 
@@ -1779,8 +1781,8 @@ public class CpEntityManager implements EntityManager {
     @Override
     public Set<String> getGroupRolePermissions( UUID groupId, String roleName ) throws Exception {
         roleName = roleName.toLowerCase();
-        return cass.getAllColumnNames( cass.getApplicationKeyspace( applicationId ), ApplicationCF.ENTITY_DICTIONARIES,
-                getRolePermissionsKey( groupId, roleName ) );
+        return cass.getAllColumnNames( cass.getApplicationKeyspace( applicationId ), 
+                ApplicationCF.ENTITY_DICTIONARIES, getRolePermissionsKey( groupId, roleName ) );
     }
 
 
@@ -1822,8 +1824,8 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public Set<String> getUserPermissions( UUID userId ) throws Exception {
-        return cast(
-                getDictionaryAsSet( new SimpleEntityRef( User.ENTITY_TYPE, userId ), Schema.DICTIONARY_PERMISSIONS ) );
+        return cast(getDictionaryAsSet( 
+                new SimpleEntityRef( User.ENTITY_TYPE, userId ), Schema.DICTIONARY_PERMISSIONS ) );
     }
 
 
@@ -1903,23 +1905,23 @@ public class CpEntityManager implements EntityManager {
 
 
     @Override
-    public void incrementAggregateCounters( UUID userId, UUID groupId, String category, String counterName,
-                                            long value ) {
+    public void incrementAggregateCounters( UUID userId, UUID groupId, String category, 
+            String counterName, long value ) {
 
         long cassandraTimestamp = cass.createTimestamp();
         incrementAggregateCounters( userId, groupId, category, counterName, value, cassandraTimestamp );
     }
 
 
-    private void incrementAggregateCounters( UUID userId, UUID groupId, String category, String counterName, long value,
-                                             long cassandraTimestamp ) {
+    private void incrementAggregateCounters( UUID userId, UUID groupId, String category, 
+            String counterName, long value, long cassandraTimestamp ) {
+
         // TODO short circuit
         if ( !skipAggregateCounters ) {
             Mutator<ByteBuffer> m = createMutator( cass.getApplicationKeyspace( applicationId ), be );
 
-            counterUtils
-                    .batchIncrementAggregateCounters( m, applicationId, userId, groupId, null, category, counterName,
-                            value, cassandraTimestamp / 1000, cassandraTimestamp );
+            counterUtils.batchIncrementAggregateCounters( m, applicationId, userId, groupId, null, 
+                    category, counterName, value, cassandraTimestamp / 1000, cassandraTimestamp );
 
             CassandraPersistenceUtils.batchExecute( m, CassandraService.RETRY_COUNT );
         }
@@ -1927,16 +1929,16 @@ public class CpEntityManager implements EntityManager {
 
 
     @Override
-    public Results getAggregateCounters( UUID userId, UUID groupId, String category, String counterName,
-                                         CounterResolution resolution, long start, long finish, boolean pad ) {
-        return this
-                .getAggregateCounters( userId, groupId, null, category, counterName, resolution, start, finish, pad );
+    public Results getAggregateCounters( UUID userId, UUID groupId, String category, 
+            String counterName, CounterResolution resolution, long start, long finish, boolean pad ) {
+        return this.getAggregateCounters( 
+                userId, groupId, null, category, counterName, resolution, start, finish, pad );
     }
 
 
     @Override
-    public Results getAggregateCounters( UUID userId, UUID groupId, UUID queueId, String category, String counterName,
-                                         CounterResolution resolution, long start, long finish, boolean pad ) {
+    public Results getAggregateCounters( UUID userId, UUID groupId, UUID queueId, String category, 
+        String counterName, CounterResolution resolution, long start, long finish, boolean pad ) {
 
         start = resolution.round( start );
         finish = resolution.round( finish );
@@ -2042,8 +2044,8 @@ public class CpEntityManager implements EntityManager {
                 }
             }
             CounterUtils.AggregateCounterSelection selection = selections.get( r.getKey() );
-            countSets.add( new AggregateCounterSet( selection.getName(), selection.getUserId(), selection.getGroupId(),
-                    selection.getCategory(), counters ) );
+            countSets.add( new AggregateCounterSet( selection.getName(), selection.getUserId(), 
+                    selection.getGroupId(), selection.getCategory(), counters ) );
         }
 
         Collections.sort( countSets, new Comparator<AggregateCounterSet>() {
@@ -2071,8 +2073,8 @@ public class CpEntityManager implements EntityManager {
             return new SimpleEntityRef( "user", identifier.getUUID() );
         }
         if ( identifier.isName() ) {
-            return this.getAlias( new SimpleEntityRef( Application.ENTITY_TYPE, applicationId ), "user",
-                    identifier.getName() );
+            return this.getAlias( new SimpleEntityRef( 
+                    Application.ENTITY_TYPE, applicationId ), "user", identifier.getName() );
         }
         if ( identifier.isEmail() ) {
 
@@ -2162,8 +2164,8 @@ public class CpEntityManager implements EntityManager {
         if ( !skipAggregateCounters ) {
             long timestamp = cass.createTimestamp();
             Mutator<ByteBuffer> m = createMutator( cass.getApplicationKeyspace( applicationId ), be );
-            counterUtils.batchIncrementAggregateCounters( m, applicationId, userId, groupId, null, category, counters,
-                    timestamp );
+            counterUtils.batchIncrementAggregateCounters( 
+                    m, applicationId, userId, groupId, null, category, counters, timestamp );
 
             CassandraPersistenceUtils.batchExecute( m, CassandraService.RETRY_COUNT );
         }
@@ -2185,13 +2187,14 @@ public class CpEntityManager implements EntityManager {
     private Id getIdForUniqueEntityField( final String collectionName, final String propertyName,
                                           final Object propertyValue ) {
 
-        CollectionScope collectionScope = getCollectionScopeNameFromEntityType(applicationScope.getApplication(), collectionName);
+        CollectionScope collectionScope = getCollectionScopeNameFromEntityType(
+                applicationScope.getApplication(), collectionName);
 
         final EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
 
         //convert to a string, that's what we store
-        final Id results = ecm.getIdField( new StringField( propertyName, propertyValue.toString() ) ).toBlocking()
-                              .lastOrDefault( null );
+        final Id results = ecm.getIdField( new StringField( 
+                propertyName, propertyValue.toString() ) ).toBlocking() .lastOrDefault( null );
 
         return results;
     }
@@ -2382,8 +2385,8 @@ public class CpEntityManager implements EntityManager {
 
 
     @Override
-    public <A extends Entity> A batchCreate( Mutator<ByteBuffer> ignored, String entityType, Class<A> entityClass,
-                                             Map<String, Object> properties, UUID importId, UUID timestampUuid )
+    public <A extends Entity> A batchCreate( Mutator<ByteBuffer> ignored, String entityType, 
+            Class<A> entityClass, Map<String, Object> properties, UUID importId, UUID timestampUuid )
             throws Exception {
 
         String eType = Schema.normalizeEntityType( entityType );
@@ -2514,10 +2517,15 @@ public class CpEntityManager implements EntityManager {
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
 
         if ( logger.isDebugEnabled() ) {
-            logger.debug( "Writing entity {}:{} into scope\n   app {}\n   owner {}\n   name {} data {}", new Object[] {
-                            entity.getType(), entity.getUuid(), collectionScope.getApplication(),
-                            collectionScope.getOwner(), collectionScope.getName(), CpEntityMapUtils.toMap( cpEntity )
-                    } );
+            logger.debug( "Writing entity {}:{} into scope\n   app {}\n   owner {}\n   name {} data {}", 
+                new Object[] {
+                    entity.getType(), 
+                    entity.getUuid(), 
+                    collectionScope.getApplication(),
+                    collectionScope.getOwner(), 
+                    collectionScope.getName(), 
+                    CpEntityMapUtils.toMap( cpEntity )
+                } );
             //
             //            if ( entity.getType().equals("group")) {
             //                logger.debug("Writing Group");
@@ -2587,18 +2595,20 @@ public class CpEntityManager implements EntityManager {
 
     private void incrementEntityCollection( String collection_name, long cassandraTimestamp ) {
         try {
-            incrementAggregateCounters( null, null, null, APPLICATION_COLLECTION + collection_name, ONE_COUNT,
-                    cassandraTimestamp );
+            incrementAggregateCounters( null, null, null, 
+                    APPLICATION_COLLECTION + collection_name, ONE_COUNT, cassandraTimestamp );
         }
         catch ( Exception e ) {
             logger.error( "Unable to increment counter application.collection: {}.",
                     new Object[] { collection_name, e } );
         }
         try {
-            incrementAggregateCounters( null, null, null, APPLICATION_ENTITIES, ONE_COUNT, cassandraTimestamp );
+            incrementAggregateCounters( null, null, null, 
+                    APPLICATION_ENTITIES, ONE_COUNT, cassandraTimestamp );
         }
         catch ( Exception e ) {
-            logger.error( "Unable to increment counter application.entities for collection: " + "{} with timestamp: {}",
+            logger.error( "Unable to increment counter application.entities for collection: " 
+                    + "{} with timestamp: {}",
                     new Object[] { collection_name, cassandraTimestamp, e } );
         }
     }
@@ -2624,26 +2634,26 @@ public class CpEntityManager implements EntityManager {
 
 
     @Override
-    public Mutator<ByteBuffer> batchSetProperty( Mutator<ByteBuffer> batch, EntityRef entity, String propertyName,
-                                                 Object propertyValue, UUID timestampUuid ) throws Exception {
+    public Mutator<ByteBuffer> batchSetProperty( Mutator<ByteBuffer> batch, EntityRef entity, 
+            String propertyName, Object propertyValue, UUID timestampUuid ) throws Exception {
 
         throw new UnsupportedOperationException( "Not supported yet." );
     }
 
 
     @Override
-    public Mutator<ByteBuffer> batchSetProperty( Mutator<ByteBuffer> batch, EntityRef entity, String propertyName,
-                                                 Object propertyValue, boolean force, boolean noRead,
-                                                 UUID timestampUuid ) throws Exception {
+    public Mutator<ByteBuffer> batchSetProperty( Mutator<ByteBuffer> batch, EntityRef entity, 
+            String propertyName, Object propertyValue, boolean force, boolean noRead, 
+            UUID timestampUuid ) throws Exception {
 
         throw new UnsupportedOperationException( "Not supported yet." );
     }
 
 
     @Override
-    public Mutator<ByteBuffer> batchUpdateDictionary( Mutator<ByteBuffer> batch, EntityRef entity,
-                                                      String dictionaryName, Object elementValue, Object elementCoValue,
-                                                      boolean removeFromDictionary, UUID timestampUuid )
+    public Mutator<ByteBuffer> batchUpdateDictionary( Mutator<ByteBuffer> batch, EntityRef entity, 
+            String dictionaryName, Object elementValue, Object elementCoValue,
+            boolean removeFromDictionary, UUID timestampUuid )
             throws Exception {
 
         long timestamp = UUIDUtils.getUUIDLong( timestampUuid );
@@ -2653,31 +2663,34 @@ public class CpEntityManager implements EntityManager {
             elementCoValue = ByteBuffer.allocate( 0 );
         }
 
-        boolean entityHasDictionary = Schema.getDefaultSchema().hasDictionary( entity.getType(), dictionaryName );
+        boolean entityHasDictionary = Schema.getDefaultSchema()
+                .hasDictionary( entity.getType(), dictionaryName );
 
         // Don't index dynamic dictionaries not defined by the schema
         if ( entityHasDictionary ) {
-            getRelationManager( entity )
-                    .batchUpdateSetIndexes( batch, dictionaryName, elementValue, removeFromDictionary, timestampUuid );
+            getRelationManager( entity ).batchUpdateSetIndexes(
+                    batch, dictionaryName, elementValue, removeFromDictionary, timestampUuid );
         }
 
-        ApplicationCF dictionary_cf = entityHasDictionary ? ENTITY_DICTIONARIES : ENTITY_COMPOSITE_DICTIONARIES;
+        ApplicationCF dictionary_cf = entityHasDictionary 
+                ? ENTITY_DICTIONARIES : ENTITY_COMPOSITE_DICTIONARIES;
 
         if ( elementValue != null ) {
             if ( !removeFromDictionary ) {
                 // Set the new value
 
-                elementCoValue =
-                        CassandraPersistenceUtils.toStorableBinaryValue( elementCoValue, !entityHasDictionary );
+                elementCoValue = CassandraPersistenceUtils.toStorableBinaryValue( 
+                        elementCoValue, !entityHasDictionary );
 
                 CassandraPersistenceUtils.addInsertToMutator( batch, dictionary_cf,
                         CassandraPersistenceUtils.key( entity.getUuid(), dictionaryName ),
-                        entityHasDictionary ? elementValue : asList( elementValue ), elementCoValue, timestamp );
+                        entityHasDictionary ? elementValue : asList( elementValue ), 
+                        elementCoValue, timestamp );
 
                 if ( !entityHasDictionary ) {
                     CassandraPersistenceUtils.addInsertToMutator( batch, ENTITY_DICTIONARIES,
-                            CassandraPersistenceUtils.key( entity.getUuid(), DICTIONARY_SETS ), dictionaryName, null,
-                            timestamp );
+                            CassandraPersistenceUtils.key( entity.getUuid(), DICTIONARY_SETS ), 
+                            dictionaryName, null, timestamp );
                 }
             }
             else {
@@ -2692,20 +2705,19 @@ public class CpEntityManager implements EntityManager {
 
 
     @Override
-    public Mutator<ByteBuffer> batchUpdateDictionary( Mutator<ByteBuffer> batch, EntityRef entity,
-                                                      String dictionaryName, Object elementValue,
-                                                      boolean removeFromDictionary, UUID timestampUuid )
+    public Mutator<ByteBuffer> batchUpdateDictionary( Mutator<ByteBuffer> batch, EntityRef entity, 
+            String dictionaryName, Object elementValue, boolean removeFromDictionary, 
+            UUID timestampUuid )
             throws Exception {
 
-        return batchUpdateDictionary( batch, entity, dictionaryName, elementValue, null, removeFromDictionary,
-                timestampUuid );
+        return batchUpdateDictionary( batch, entity, dictionaryName, elementValue, null, 
+                removeFromDictionary, timestampUuid );
     }
 
 
     @Override
-    public Mutator<ByteBuffer> batchUpdateProperties( Mutator<ByteBuffer> batch, EntityRef entity,
-                                                      Map<String, Object> properties, UUID timestampUuid )
-            throws Exception {
+    public Mutator<ByteBuffer> batchUpdateProperties( Mutator<ByteBuffer> batch, EntityRef entity, 
+            Map<String, Object> properties, UUID timestampUuid ) throws Exception {
 
         throw new UnsupportedOperationException( "Not supported yet." );
     }

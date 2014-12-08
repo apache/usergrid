@@ -128,8 +128,8 @@ public class EsEntityIndexImpl implements EntityIndex {
 
 
     @Inject
-    public EsEntityIndexImpl( 
-        @Assisted final ApplicationScope appScope, final IndexFig config, final EsProvider provider ) {
+    public EsEntityIndexImpl( @Assisted final ApplicationScope appScope, final IndexFig config, 
+            final EsProvider provider ) {
 
         ValidationUtils.validateApplicationScope( appScope );
         this.applicationScope = appScope;
@@ -163,9 +163,14 @@ public class EsEntityIndexImpl implements EntityIndex {
             //Create index
             try {
                 final AdminClient admin = esProvider.getClient().admin();
-                Settings settings = ImmutableSettings.settingsBuilder().put("index.number_of_shards", numberOfShards)
-                        .put("index.number_of_replicas", numberOfReplicas).build();
-                final CreateIndexResponse cir = admin.indices().prepareCreate(indexName).setSettings(settings).execute().actionGet();
+                Settings settings = ImmutableSettings.settingsBuilder()
+                        .put("index.number_of_shards", numberOfShards)
+                        .put("index.number_of_replicas", numberOfReplicas)
+                        .build();
+                final CreateIndexResponse cir = admin.indices().prepareCreate(indexName)
+                        .setSettings(settings)
+                        .execute()
+                        .actionGet();
                 logger.info("Created new Index Name [{}] ACK=[{}]", indexName, cir.isAcknowledged());
             } catch (IndexAlreadyExistsException e) {
                 logger.info("Index Name [{}] already exists", indexName);
@@ -191,15 +196,14 @@ public class EsEntityIndexImpl implements EntityIndex {
 
             //remove write alias, can only have one
             ImmutableOpenMap<String,List<AliasMetaData>> aliasMap = adminClient.indices()
-                .getAliases(new GetAliasesRequest(alias.getWriteAlias())).actionGet().getAliases();
-
+                    .getAliases(new GetAliasesRequest(alias.getWriteAlias())).actionGet().getAliases();
             String[] indexNames = aliasMap.keys().toArray(String.class);
-            for(String currentIndex : indexNames){
-                isAck = adminClient.indices().prepareAliases().removeAlias(
-                    currentIndex,alias.getWriteAlias()).execute().actionGet().isAcknowledged();
-                logger.info("Removed Index Name [{}] from Alias=[{}] ACK=[{}]",
-                        currentIndex, alias, isAck);
 
+            for(String currentIndex : indexNames){
+                isAck = adminClient.indices().prepareAliases().removeAlias(currentIndex,
+                        alias.getWriteAlias()).execute().actionGet().isAcknowledged();
+
+                logger.info("Removed Index Name [{}] from Alias=[{}] ACK=[{}]",currentIndex, alias, isAck);
             }
 
             //add read alias
@@ -237,17 +241,17 @@ public class EsEntityIndexImpl implements EntityIndex {
                 final String tempId = UUIDGenerator.newTimeUUID().toString();
 
                 esProvider.getClient().prepareIndex( alias.getWriteAlias(), VERIFY_TYPE, tempId )
-                    .setSource( DEFAULT_PAYLOAD ).get();
+                        .setSource( DEFAULT_PAYLOAD ).get();
 
-                logger.info( "Created new document with docId {} in index {} and type {}", 
-                    tempId, alias, VERIFY_TYPE );
+                logger.info( "Successfully created new document with docId {} "
+                        + "in index {} and type {}", tempId, alias, VERIFY_TYPE );
 
                 // delete all types, this way if we miss one it will get cleaned up
                 esProvider.getClient().prepareDeleteByQuery( alias.getWriteAlias() )
-                    .setTypes(VERIFY_TYPE)
-                    .setQuery( MATCH_ALL_QUERY_BUILDER ).get();
+                        .setTypes(VERIFY_TYPE) 
+                        .setQuery( MATCH_ALL_QUERY_BUILDER ).get();
 
-                logger.info( "Deleted all documents in index {} and type {}", 
+                logger.info( "Successfully deleted all documents in index {} and type {}", 
                         alias, VERIFY_TYPE );
 
 
@@ -300,9 +304,10 @@ public class EsEntityIndexImpl implements EntityIndex {
         SearchResponse searchResponse;
 
         if ( query.getCursor() == null ) {
-
             SearchRequestBuilder srb = esProvider.getClient().prepareSearch( alias.getReadAlias() )
-                    .setTypes(entityTypes).setScroll(cursorTimeout + "m").setQuery(qb);
+                    .setTypes(entityTypes)
+                    .setScroll(cursorTimeout + "m")
+                    .setQuery(qb);
 
             final FilterBuilder fb = query.createFilterBuilder();
 
@@ -352,8 +357,8 @@ public class EsEntityIndexImpl implements EntityIndex {
 
 
             if ( logger.isDebugEnabled() ) {
-                logger.debug( "Searching index {}\n  scope{} \n type {}\n   query {} ", new Object[] {
-                        this.alias, context, entityTypes, srb
+                logger.debug( "Searching index {}\n  scope{} \n type {}\n   query {} ", 
+                        new Object[] { this.alias, context, entityTypes, srb
                 } );
 
             }
@@ -482,6 +487,13 @@ public class EsEntityIndexImpl implements EntityIndex {
 
         final QueryBuilder queryBuilder = 
                 QueryBuilders.termQuery( IndexingUtils.ENTITY_CONTEXT_FIELDNAME, context );
+
+
+        final SearchRequestBuilder srb = esProvider.getClient().prepareSearch( alias.getReadAlias() )
+                .setTypes(searchTypes.getTypeNames())
+                .setScroll(cursorTimeout + "m")
+                .setQuery(queryBuilder);
+
 
         final SearchRequestBuilder srb = esProvider.getClient().prepareSearch( alias.getReadAlias() )
                 .setTypes(searchTypes.getTypeNames())
@@ -635,8 +647,8 @@ public class EsEntityIndexImpl implements EntityIndex {
     public Health getIndexHealth() {
 
         try {
-            ClusterHealthResponse chr = esProvider.getClient().admin().cluster()
-                .health(new ClusterHealthRequest(new String[]{indexIdentifier.getIndex(null)})).get();
+            ClusterHealthResponse chr = esProvider.getClient().admin().cluster().health(
+                    new ClusterHealthRequest(new String[]{indexIdentifier.getIndex(null)})).get();
             return Health.valueOf( chr.getStatus().name() );
         }
         catch ( Exception ex ) {

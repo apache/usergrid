@@ -85,4 +85,8 @@ public class IndexIdentifier{
         }
     }
 
+    public String toString() {
+        return "application: " + applicationScope.getApplication().getUuid();
+    }
+
 }

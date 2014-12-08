@@ -65,7 +65,9 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
     @Inject
     public DataMigrationManagerImpl( final MigrationInfoSerialization migrationInfoSerialization,
                                      final Set<DataMigration> migrations ) {
-        Preconditions.checkNotNull( migrationInfoSerialization, "migrationInfoSerialization must not be null" );
+
+        Preconditions.checkNotNull( migrationInfoSerialization, 
+                "migrationInfoSerialization must not be null" );
         Preconditions.checkNotNull( migrations, "migrations must not be null" );
 
         this.migrationInfoSerialization = migrationInfoSerialization;
@@ -87,9 +89,9 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
                 final Class<? extends DataMigration> currentClass = migration.getClass();
 
 
-                throw new DataMigrationException(
-                        String.format( "Data migrations must be unique.  Both classes %s and %s have version %d",
-                                existingClass, currentClass, version ) );
+                throw new DataMigrationException( String.format( 
+                        "Data migrations must be unique.  Both classes %s and %s have version %d", 
+                        existingClass, currentClass, version ) );
             }
 
             migrationTreeMap.put( version, migration );
@@ -112,7 +114,8 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
                 migrationTreeMap.lastKey() );
 
         //we have our migrations to run, execute them
-        final NavigableMap<Integer, DataMigration> migrationsToRun = migrationTreeMap.tailMap( currentVersion, false );
+        final NavigableMap<Integer, DataMigration> migrationsToRun = 
+                migrationTreeMap.tailMap( currentVersion, false );
 
         CassandraProgressObserver observer = new CassandraProgressObserver();
 
@@ -185,7 +188,8 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
     public void resetToVersion( final int version ) {
         final int highestAllowed = migrationTreeMap.lastKey();
 
-        Preconditions.checkArgument( version <= highestAllowed, "You cannot set a version higher than the max of " + highestAllowed);
+        Preconditions.checkArgument( version <= highestAllowed, 
+                "You cannot set a version higher than the max of " + highestAllowed);
         Preconditions.checkArgument( version >= 0, "You must specify a version of 0 or greater" );
 
         migrationInfoSerialization.setVersion( version );
@@ -221,7 +225,8 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
         @Override
         public void failed( final int migrationVersion, final String reason ) {
 
-            final String storedMessage = String.format( "Failed to migrate, reason is appended.  Error '%s'", reason );
+            final String storedMessage = String.format( 
+                    "Failed to migrate, reason is appended.  Error '%s'", reason );
 
 
             update( migrationVersion, storedMessage );
@@ -240,13 +245,14 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
             throwable.printStackTrace( new PrintWriter( stackTrace ) );
 
 
-            final String storedMessage = String.format( "Failed to migrate, reason is appended.  Error '%s' %s", reason,
-                    stackTrace.toString() );
+            final String storedMessage = String.format( 
+                "Failed to migrate, reason is appended.  Error '%s' %s", reason, stackTrace.toString() );
 
             update( migrationVersion, storedMessage );
 
 
-            LOG.error( "Unable to migrate version {} due to reason {}.", migrationVersion, reason, throwable );
+            LOG.error( "Unable to migrate version {} due to reason {}.", 
+                    migrationVersion, reason, throwable );
 
             failed = true;
 
@@ -256,7 +262,8 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
 
         @Override
         public void update( final int migrationVersion, final String message ) {
-            final String formattedOutput = String.format( "Migration version %d.  %s", migrationVersion, message );
+            final String formattedOutput = String.format( 
+                    "Migration version %d.  %s", migrationVersion, message );
 
             //Print this to the info log
             LOG.info( formattedOutput );

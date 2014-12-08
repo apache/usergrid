@@ -29,77 +29,62 @@ import org.apache.usergrid.persistence.entities.JobData;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import org.junit.Ignore;
 
 
 /**
- * Class to test job that the run loop executes in the time expected when there's no jobs to run.  Tests
- * saturation at each point of the runtime as well
+ * Class to test job that the run loop executes in the time expected when there's no jobs to run.  
+ * Tests saturation at each point of the runtime as well
  */
 @Concurrent
+@Ignore("Ignored awaiting fix for USERGRID-267")
 public class SchedulerRuntimeIntervalIT extends AbstractSchedulerRuntimeIT {
 	
-	private static final Logger logger = LoggerFactory.getLogger(SchedulerRuntimeIntervalIT.class.getName());
+	private static final Logger logger = 
+            LoggerFactory.getLogger(SchedulerRuntimeIntervalIT.class.getName());
 
     private static final long EXPECTED_RUNTIME = 60000;
-
-
 //    private static final long EXPECTED_RUNTIME = 3000000;
 
 
     /**
-     * This is a combination of ( count+1 ) * interval*2.  If this test takes longer than this to run, we have a bug in how
-     * often the run loop is executing
-     * @throws InterruptedException
+     * This is a combination of ( count+1 ) * interval*2.  If this test takes longer than this 
+     * to run, we have a bug in how often the run loop is executing
      */
     @Test(timeout = EXPECTED_RUNTIME)
     public void runLoopTest() throws InterruptedException {
 
-        /**
-         * the number of iterations we should run
-         *
-         */
+        // the number of iterations we should run
         final int pollCount = 5;
         final int expectedInterval = 5000;
 
-
-
-
-        JobSchedulerService schedulerService = cassandraResource.getBean( JobSchedulerService.class );
+        JobSchedulerService schedulerService = cassandraResource.getBean(JobSchedulerService.class);
 
         final long interval = schedulerService.getInterval();
-
         final int numberOfWorkers = schedulerService.getWorkerSize();
-
         final int expectedExecutions = numberOfWorkers * pollCount;
 
-
-        assertEquals("Interval must be set to "+ expectedInterval + " for test to work properly", expectedInterval, interval);
-
+        assertEquals("Interval must be set to "+ expectedInterval 
+                + " for test to work properly", expectedInterval, interval);
 
         CountdownLatchJob counterJob = cassandraResource.getBean( CountdownLatchJob.class );
             // set the counter job latch size
         counterJob.setLatch( expectedExecutions );
 
-
         getJobListener().setExpected(expectedExecutions );
-
 
         long fireTime = System.currentTimeMillis();
 
-        /**
-         * We want to space the jobs out so there will most likely be an empty poll phase.  For each run where we do
-         * get jobs, we want to saturate the worker pool to ensure the semaphore is release properly
-         */
+         // We want to space the jobs out so there will most likely be an empty poll phase.  
+         // For each run where we do get jobs, we want to saturate the worker pool to ensure the 
+        // semaphore is release properly
         for ( int i = 0; i < pollCount; i++ ) {
 
             for(int j = 0; j < numberOfWorkers; j ++){
                 scheduler.createJob( "countdownLatch", fireTime, new JobData() );
             }
-
-
             fireTime += expectedInterval*2;
         }
-
 
         boolean waited = counterJob.waitForCount(EXPECTED_RUNTIME, TimeUnit.MILLISECONDS);
 
@@ -109,7 +94,7 @@ public class SchedulerRuntimeIntervalIT extends AbstractSchedulerRuntimeIT {
         	logger.warn("Jobs not yet finished after waited {}, block again" , waitTime);
         }
 
-        //If we get to here without timing out, the test ran correctly.  The assertion is implicit in the timeout
-        
+        // If we get to here without timing out, the test ran correctly.  
+        // The assertion is implicit in the timeout
     }
 }

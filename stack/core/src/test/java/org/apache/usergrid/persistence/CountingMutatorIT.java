@@ -20,6 +20,7 @@ package org.apache.usergrid.persistence;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
+import org.apache.commons.lang3.RandomStringUtils;
 
 import org.junit.After;
 import org.junit.Before;
@@ -65,7 +66,8 @@ public class CountingMutatorIT extends AbstractCoreIT {
         //temporarily set our max size to 10 for testing
         CountingMutator.MAX_SIZE = 10;
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testFlushingMutatorOnConnections" );
+        UUID applicationId = setup.createApplication( 
+            "testOrganization", "testFlushingMutator-" + RandomStringUtils.randomAlphabetic(20) );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
