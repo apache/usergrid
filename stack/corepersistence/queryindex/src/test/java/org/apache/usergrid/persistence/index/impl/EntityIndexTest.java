@@ -88,7 +88,7 @@ public class EntityIndexTest extends BaseIT {
         IndexScope indexScope = new IndexScopeImpl( appId, "things" );
         final SearchTypes searchTypes = SearchTypes.fromTypes( entityType );
 
-        insertJsonBlob(entityIndex, entityType, indexScope, "/sample-large.json",100,0);
+        insertJsonBlob(entityIndex, entityType, indexScope, "/sample-large.json",101,0);
 
         entityIndex.refresh();
 
@@ -122,7 +122,7 @@ public class EntityIndexTest extends BaseIT {
         IndexScope indexScope = new IndexScopeImpl( appId, "things" );
         final SearchTypes searchTypes = SearchTypes.fromTypes( entityType );
 
-        insertJsonBlob(entityIndex, entityType, indexScope, "/sample-large.json",100,0);
+        insertJsonBlob(entityIndex, entityType, indexScope, "/sample-large.json",101,0);
 
         entityIndex.refresh();
 
@@ -130,7 +130,7 @@ public class EntityIndexTest extends BaseIT {
 
         entityIndex.addIndex("v2", 1,0);
 
-        insertJsonBlob(entityIndex, entityType, indexScope, "/sample-large.json",100,100);
+        insertJsonBlob(entityIndex, entityType, indexScope, "/sample-large.json",101,100);
 
         entityIndex.refresh();
 
