@@ -191,8 +191,8 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         entity = results.getEntitiesMap().get(notification.getUuid());
         assertNotNull(entity);
 
-        checkReceipts(notification, 1);
-        checkStatistics(notification, 1, 0);
+        checkReceipts(notification, 2);
+        checkStatistics(notification, 2, 0);
     }
 
     @Test
@@ -579,7 +579,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         app.getEntityManager().refreshIndex();
 
-        checkReceipts(notification, 1);
+        checkReceipts(notification, 2);
     }
 
     @Ignore("todo: how can I mock this?")
