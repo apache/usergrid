@@ -23,6 +23,7 @@ import java.util.UUID;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.IndexFig;
+import org.apache.usergrid.persistence.index.IndexIdentifier;
 import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -90,18 +91,16 @@ public class IndexingUtils {
 
 
     /**
-     * Create the index name based on our prefix+appUUID+AppType
-     * @param prefix
+     * Create the facilities to retrieve an index name and alias name
+     * @param fig
      * @param applicationScope
      * @return
      */
-    public static String createIndexName(
-            String prefix, ApplicationScope applicationScope) {
-        StringBuilder sb = new StringBuilder();
-        sb.append( prefix ).append( SEPARATOR );
-        idString( sb, applicationScope.getApplication() );
-        return sb.toString();
+    public static IndexIdentifier createIndexIdentifier(IndexFig fig, ApplicationScope applicationScope) {
+        return new IndexIdentifier(fig,applicationScope);
     }
+
+
 
 
 
@@ -247,5 +246,7 @@ public class IndexingUtils {
 
         return builder;
     }
+
+
 
 }

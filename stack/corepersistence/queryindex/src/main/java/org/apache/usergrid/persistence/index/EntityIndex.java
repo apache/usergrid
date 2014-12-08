@@ -25,6 +25,7 @@ import org.apache.usergrid.persistence.index.query.CandidateResults;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 
+
 /**
  * Provides indexing of Entities within a scope.
  */
@@ -37,6 +38,14 @@ public interface EntityIndex {
     public void initializeIndex();
 
     /**
+     * Create an index and add to alias, will create alias and remove any old index from write alias if alias already exists
+     * @param indexSuffix index name
+     * @param shards
+     * @param replicas
+     */
+    public void addIndex(final String indexSuffix, final int shards, final int replicas);
+
+    /**
      * Update mappings for this index.
      */
     public void updateMappings();
@@ -45,6 +54,12 @@ public interface EntityIndex {
      * Create the index batch.
      */
     public EntityIndexBatch createBatch();
+
+    /**
+     * Add alias to index, will remove old index from write alias
+     * @param indexSuffix must be different than current index
+     */
+    public void addAlias(final String indexSuffix);
 
     /**
      * Execute query in Usergrid syntax.
