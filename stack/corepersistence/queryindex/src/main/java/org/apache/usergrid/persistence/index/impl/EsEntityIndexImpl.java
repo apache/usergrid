@@ -254,7 +254,6 @@ public class EsEntityIndexImpl implements EntityIndex {
                 logger.info( "Successfully deleted all documents in index {} and type {}", 
                         alias, VERIFY_TYPE );
 
-
                 return true;
             }
         };
@@ -360,9 +359,7 @@ public class EsEntityIndexImpl implements EntityIndex {
                 logger.debug( "Searching index {}\n  scope{} \n type {}\n   query {} ", 
                         new Object[] { this.alias, context, entityTypes, srb
                 } );
-
             }
-
 
             try {
                 searchResponse = srb.execute().actionGet();
@@ -488,16 +485,10 @@ public class EsEntityIndexImpl implements EntityIndex {
         final QueryBuilder queryBuilder = 
                 QueryBuilders.termQuery( IndexingUtils.ENTITY_CONTEXT_FIELDNAME, context );
 
-
         final SearchRequestBuilder srb = esProvider.getClient().prepareSearch( alias.getReadAlias() )
                 .setTypes(searchTypes.getTypeNames())
                 .setScroll(cursorTimeout + "m")
                 .setQuery(queryBuilder);
-
-
-        final SearchRequestBuilder srb = esProvider.getClient().prepareSearch( alias.getReadAlias() )
-                .setTypes(searchTypes.getTypeNames())
-                .setScroll(cursorTimeout + "m").setQuery(queryBuilder);
 
         final SearchResponse searchResponse;
         try {
