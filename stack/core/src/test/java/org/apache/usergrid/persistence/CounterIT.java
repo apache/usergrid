@@ -187,6 +187,15 @@ public class CounterIT extends AbstractCoreIT {
 
         EntityManager em = setup.getEmf().getEntityManager( setup.getEmf().getManagementAppId() );
 
+        // get counts at start of test
+        Query query = new Query();
+        query.addCounterFilter( "admin.logins:*:*:*" );
+        query.setStartTime( ts );
+        query.setFinishTime( System.currentTimeMillis() );
+        query.setResolution( CounterResolution.SIX_HOUR );
+        Results or = em.getAggregateCounters( query );
+        long originalCount =  or.getCounters().get( 0 ).getValues().get( 0 ).getValue();
+
         Map<String, Long> counts = em.getApplicationCounters();
         long originalAdminLoginsCount = counts.get( "admin.logins" ).longValue();
 
@@ -240,17 +249,9 @@ public class CounterIT extends AbstractCoreIT {
         assertEquals( 1, 
             r.getCounters().get( 0 ).getValues().get( 0 ).getValue()  - originalAdminLoginsCount );
 
-        // counts = em.getEntityCounters(organizationEntity.getUuid());
-        // LOG.info(JsonUtils.mapToJsonString(counts));
-        Query query = new Query();
-        query.addCounterFilter( "admin.logins:*:*:*" );
-        query.setStartTime( ts );
-        query.setFinishTime( System.currentTimeMillis() );
-        query.setResolution( CounterResolution.SIX_HOUR );
-        //query.setPad(true);
-
         r = em.getAggregateCounters( query );
         LOG.info( JsonUtils.mapToJsonString( r.getCounters() ) );
-        assertEquals( 1, r.getCounters().get( 0 ).getValues().get( 0 ).getValue() );
+        assertEquals( 1, 
+            r.getCounters().get( 0 ).getValues().get( 0 ).getValue() - originalCount );
     }
 }
