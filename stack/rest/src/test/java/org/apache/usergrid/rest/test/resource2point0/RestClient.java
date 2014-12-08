@@ -24,7 +24,10 @@ import javax.ws.rs.core.UriBuilder;
 import org.glassfish.jersey.client.JerseyClientBuilder;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.JerseyWebTarget;
+import org.junit.ClassRule;
 
+import org.apache.usergrid.rest.ITSetup;
+import org.apache.usergrid.rest.RestITSuite;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.ManagementResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.OrganizationResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.UrlResource;
@@ -38,6 +41,8 @@ public class RestClient implements UrlResource {
 
     ClientConfig clientConfig = new ClientConfig();
 
+//    @ClassRule
+//    public static ITSetup setup = new ITSetup( RestITSuite.cassandraResource );
 
     Client client = ClientBuilder.newClient( clientConfig );
 
@@ -62,9 +67,14 @@ public class RestClient implements UrlResource {
     }
 
 
+    /**
+     * TODO: should this method return the base path or the total path we have built?
+     * @return
+     */
     @Override
     public String getPath() {
-        return serverUrl;
+        return webTarget.getUri().toString();
+        //return serverUrl;
     }
 
 
@@ -80,7 +90,8 @@ public class RestClient implements UrlResource {
      * Get hte organization resource
      */
     public OrganizationResource org( final String orgName ) {
-        //OrganizationResource
+        OrganizationResource organizationResource = new OrganizationResource( orgName, context,  this );
+        webTarget = webTarget.path( organizationResource.getPath());
         return new OrganizationResource( orgName, context,  this );
     }
 
