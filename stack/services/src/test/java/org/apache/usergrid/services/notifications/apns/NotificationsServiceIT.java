@@ -68,11 +68,9 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
     }
 
-    @Override
     @Before
     public void before() throws Exception {
 
-        super.before();
         // create apns notifier //
         app.clear();
         app.put("name", notifierName);
