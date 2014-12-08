@@ -203,6 +203,11 @@ public class EsEntityIndexImpl implements EntityIndex {
         return getIndexes(aliasName);
     }
 
+    /**
+     * get indexes for alias
+     * @param aliasName
+     * @return
+     */
     private String[] getIndexes(final String aliasName){
         final AdminClient adminClient = esProvider.getClient().admin();
         //remove write alias, can only have one
