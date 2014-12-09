@@ -191,7 +191,6 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         if(indexes == null ||indexes.length == 0){
             indexes = new String[]{indexIdentifier.getIndex(null)};
         }
-        final AtomicInteger errorCount = new AtomicInteger();
         //get all indexes then flush everyone
         Observable.from(indexes).subscribeOn(Schedulers.io())
                .map(new Func1<String, Object>() {
@@ -201,15 +200,12 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
                            bulkRequest.add(client.prepareDelete(index, entityType, indexId).setRefresh(refresh));
                        }catch (Exception e){
                            log.error("failed to deindex",e);
-                           errorCount.incrementAndGet();
+                           throw e;
                        }
                        return index;
                    }
                }).toBlocking().last();
 
-        if(errorCount.get()>0){
-            log.error("Failed to flush some indexes");
-        }
         log.debug( "Deindexed Entity with index id " + indexId );
 
         maybeFlush();

@@ -464,7 +464,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
                             esProvider.getClient().admin().indices().prepareRefresh( index ).execute().actionGet();
                             return index;
                         }
-                    });
+                    }).toBlocking().last();
 
                     logger.debug( "Refreshed index: " + alias);
 
