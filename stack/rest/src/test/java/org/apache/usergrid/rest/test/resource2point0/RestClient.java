@@ -16,14 +16,7 @@
  */
 package org.apache.usergrid.rest.test.resource2point0;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.UriBuilder;
-
-import org.glassfish.jersey.client.JerseyClientBuilder;
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.client.JerseyWebTarget;
+import java.net.URI;
 import org.junit.ClassRule;
 
 import org.apache.usergrid.rest.ITSetup;
@@ -39,14 +32,14 @@ import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
  */
 public class RestClient implements UrlResource {
 
-    ClientConfig clientConfig = new ClientConfig();
+    //ClientConfig clientConfig = new ClientConfig();
 
 //    @ClassRule
 //    public static ITSetup setup = new ITSetup( RestITSuite.cassandraResource );
 
-    Client client = ClientBuilder.newClient( clientConfig );
+    //Client client = ClientBuilder.newClient( clientConfig );
 
-    private WebTarget webTarget;// = client.target("http://example.com/rest");
+   // private WebTarget webTarget;// = client.target("http://example.com/rest");
 
     private final String serverUrl;
     private final ClientContext context;
@@ -62,7 +55,8 @@ public class RestClient implements UrlResource {
     public RestClient( final String serverUrl ) {
         this.serverUrl = serverUrl;
         this.context = new ClientContext();
-        webTarget = client.target( serverUrl );
+        //maybe the problem here is with the jaxrs version not having the correct dependencies or methods.
+       // webTarget = client.target( serverUrl );
         //webTarget = webTarget.path( serverUrl );
     }
 
@@ -73,8 +67,8 @@ public class RestClient implements UrlResource {
      */
     @Override
     public String getPath() {
-        return webTarget.getUri().toString();
-        //return serverUrl;
+        //return webTarget.getUri().toString();
+        return serverUrl;
     }
 
 
@@ -91,7 +85,7 @@ public class RestClient implements UrlResource {
      */
     public OrganizationResource org( final String orgName ) {
         OrganizationResource organizationResource = new OrganizationResource( orgName, context,  this );
-        webTarget = webTarget.path( organizationResource.getPath());
+        //webTarget = webTarget.path( organizationResource.getPath()); This worked really well, shame it couldn't be used.
         return new OrganizationResource( orgName, context,  this );
     }
 

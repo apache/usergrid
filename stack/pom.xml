@@ -105,7 +105,6 @@
     <jackson-2-version>2.3.3</jackson-2-version>
     <jclouds.version>1.6.2-incubating</jclouds.version>
     <jersey-version>1.18.1</jersey-version>
-    <jersey2-version>2.13</jersey2-version>
     <junit-version>4.11</junit-version>
     <log4j-version>1.2.16</log4j-version>
     <metrics-version>2.1.2</metrics-version>
@@ -712,27 +711,6 @@
         <artifactId>jersey-test-framework-core</artifactId>
         <version>${jersey-version}</version>
       </dependency>
-      <!-- Starting glassfish jersey dependencies -->
-
-      <dependency>
-        <groupId>org.glassfish.jersey.test-framework.providers</groupId>
-        <artifactId>jersey-test-framework-provider-external</artifactId>
-        <version>${jersey2-version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.glassfish.jersey.test-framework</groupId>
-        <artifactId>jersey-test-framework-core</artifactId>
-        <version>${jersey2-version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.glassfish.jersey.core</groupId>
-        <artifactId>jersey-client</artifactId>
-        <version>2.13</version>
-      </dependency>
-
-      <!-- Ending glassfish jersey dependencies -->
 
       <dependency>
         <groupId>com.sun.mail</groupId>

@@ -19,14 +19,6 @@ package org.apache.usergrid.rest.test.resource2point0;
 
 import java.net.URI;
 
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.DeploymentContext;
-import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.TestProperties;
-import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
-import org.glassfish.jersey.test.spi.TestContainer;
-import org.glassfish.jersey.test.spi.TestContainerFactory;
 import org.junit.ClassRule;
 
 import org.apache.usergrid.rest.ITSetup;
@@ -39,48 +31,11 @@ import javax.ws.rs.core.Application;
 //import com.sun.jersey.test.framework.WebAppDescriptor;
 
 
-public class AbstractRestIT extends JerseyTest {
-
-    private static ClientConfig clientConfig = new ClientConfig();
-
-
-//    protected static final Application descriptor;
+public class AbstractRestIT {
 
     @ClassRule
     public static ITSetup setup = new ITSetup( RestITSuite.cassandraResource );
 
-//    public AbstractRestIT() {
-//        super(descriptor);
-//    }
-
-//    static {
-//
-//        //clientConfig.property(  ); //.getFeatures().put( JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE );
-//        descriptor = new DeploymentContext.Builder("").
-////       descriptor = new WebAppDescriptor.Builder( "org.apache.usergrid.rest" )
-////                .clientConfig( clientConfig ).build();
-////        dumpClasspath( AbstractRestIT.class.getClassLoader() );
-//    }
-
-    @Override
-    protected TestContainerFactory getTestContainerFactory(){
-        return new ExternalTestContainerFactory();
-    }
-
-    @Override
-    protected URI getBaseUri() {
-        return setup.getBaseURI();
-    }
-
-    @Override
-    protected Application configure(){
-        enable(TestProperties.LOG_TRAFFIC);
-        enable( TestProperties.DUMP_ENTITY);
-
-        ResourceConfig rc = new ResourceConfig(  );
-
-        return rc;
-    }
 
 
 }
