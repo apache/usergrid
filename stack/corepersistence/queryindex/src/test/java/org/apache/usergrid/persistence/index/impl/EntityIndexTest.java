@@ -25,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.persistence.index.query.CandidateResult;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -38,11 +39,6 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.core.util.Health;
-import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.EntityIndexBatch;
-import org.apache.usergrid.persistence.index.EntityIndexFactory;
-import org.apache.usergrid.persistence.index.IndexScope;
-import org.apache.usergrid.persistence.index.SearchTypes;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
 import org.apache.usergrid.persistence.index.query.Query;
@@ -115,7 +111,7 @@ public class EntityIndexTest extends BaseIT {
 
         ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
 
-        EntityIndex entityIndex = eif.createEntityIndex( applicationScope );
+        AliasedEntityIndex entityIndex =(AliasedEntityIndex) eif.createEntityIndex( applicationScope );
         entityIndex.initializeIndex();
 
         final String entityType = "thing";
@@ -146,7 +142,8 @@ public class EntityIndexTest extends BaseIT {
 
         ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
 
-        EntityIndex entityIndex = eif.createEntityIndex(applicationScope);
+        AliasedEntityIndex entityIndex =(AliasedEntityIndex) eif.createEntityIndex( applicationScope );
+
         entityIndex.initializeIndex();
 
         final String entityType = "thing";
@@ -157,9 +154,9 @@ public class EntityIndexTest extends BaseIT {
 
         entityIndex.refresh();
 
-        entityIndex.addIndex("v2", 1,0);
+        entityIndex.addIndex("v2", 1, 0);
 
-        insertJsonBlob(entityIndex, entityType, indexScope, "/sample-large.json",1,0);
+        insertJsonBlob(entityIndex, entityType, indexScope, "/sample-large.json", 1, 0);
 
         entityIndex.refresh();
         CandidateResults crs = testQuery(indexScope, searchTypes, entityIndex, "name = 'Bowers Oneil'", 2);

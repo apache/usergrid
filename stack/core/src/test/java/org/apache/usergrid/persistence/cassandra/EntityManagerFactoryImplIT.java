@@ -22,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.apache.commons.lang3.RandomStringUtils;
 
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -88,8 +89,10 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
     @Before
     public void initTracing() {
-        traceTagManager = CoreITSuite.cassandraResource.getBean( "traceTagManager", TraceTagManager.class );
-        traceTagReporter = CoreITSuite.cassandraResource.getBean( "traceTagReporter", TraceTagReporter.class );
+        traceTagManager = CoreITSuite.cassandraResource.getBean( 
+                "traceTagManager", TraceTagManager.class );
+        traceTagReporter = CoreITSuite.cassandraResource.getBean( 
+                "traceTagReporter", TraceTagReporter.class );
     }
 
 
@@ -105,7 +108,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
         traceTagManager.attach( traceTag );
         logger.info( "EntityDaoTest.testCreateAndGet" );
 
-        UUID applicationId = createApplication( "EntityManagerFactoryImplIT", "testCreateAndGet" );
+        UUID applicationId = createApplication( "EntityManagerFactoryImplIT", "testCreateAndGet" + RandomStringUtils.randomAlphabetic(20)  );
         logger.info( "Application id " + applicationId );
 
         EntityManager em = emf.getEntityManager( applicationId );

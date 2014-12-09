@@ -94,11 +94,11 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
     private final FailureMonitor failureMonitor;
 
-    private final EntityIndex entityIndex;
+    private final AliasedEntityIndex entityIndex;
 
 
     public EsEntityIndexBatchImpl( final ApplicationScope applicationScope, final Client client, 
-            final IndexFig config, final int autoFlushSize, final FailureMonitor failureMonitor, final EntityIndex entityIndex ) {
+            final IndexFig config, final int autoFlushSize, final FailureMonitor failureMonitor, final AliasedEntityIndex entityIndex ) {
 
         this.applicationScope = applicationScope;
         this.client = client;
@@ -186,7 +186,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
 
         log.debug( "De-indexing type {} with documentId '{}'" , entityType, indexId);
-        String[] indexes = entityIndex.getIndexes(EntityIndex.AliasType.Read);
+        String[] indexes = entityIndex.getIndexes(AliasedEntityIndex.AliasType.Read);
         //get the default index if no alias exists yet
         if(indexes == null ||indexes.length == 0){
             indexes = new String[]{indexIdentifier.getIndex(null)};

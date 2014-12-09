@@ -50,7 +50,8 @@ public abstract class AbstractIteratingQueryIT {
 
     @ClassRule
     public static CoreITSetup setup = new CoreITSetupImpl( 
-            ConcurrentCoreIteratorITSuite.cassandraResource, ConcurrentCoreIteratorITSuite.elasticSearchResource );
+            ConcurrentCoreIteratorITSuite.cassandraResource, 
+            ConcurrentCoreIteratorITSuite.elasticSearchResource );
 
     @Rule
     public CoreApplication app = new CoreApplication( setup );
