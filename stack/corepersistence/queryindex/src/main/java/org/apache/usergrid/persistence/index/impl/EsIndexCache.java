@@ -24,9 +24,13 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListenableFutureTask;
+import com.google.common.util.concurrent.ListeningScheduledExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.usergrid.persistence.index.AliasedEntityIndex;
+import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.index.IndexIdentifier;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.client.AdminClient;
@@ -36,7 +40,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -46,21 +52,30 @@ import java.util.concurrent.TimeUnit;
 public class EsIndexCache {
 
     private static final Logger logger = LoggerFactory.getLogger(EsEntityIndexImpl.class);
+    private final ListeningScheduledExecutorService refreshExecutors;
 
     private LoadingCache<String, String[]> aliasIndexCache;
 
     @Inject
-    public EsIndexCache(final EsProvider provider) {
+    public EsIndexCache(final EsProvider provider, final IndexFig indexFig) {
+        this.refreshExecutors = MoreExecutors
+                .listeningDecorator(Executors.newScheduledThreadPool(indexFig.getIndexCacheMaxWorkers()));
         aliasIndexCache = CacheBuilder.newBuilder().maximumSize(1000)
                 .refreshAfterWrite(5,TimeUnit.MINUTES)
                 .build(new CacheLoader<String, String[]>() {
                     @Override
-                    public ListenableFuture<String[]> reload(String key, String[] oldValue) throws Exception {
-                        return super.reload(key, oldValue);
+                    public ListenableFuture<String[]> reload(final String key, String[] oldValue) throws Exception {
+                        ListenableFutureTask<String[]> task = ListenableFutureTask.create( new Callable<String[]>() {
+                            public String[] call() {
+                                return load( key );
+                            }
+                        } );
+                        refreshExecutors.execute(task);
+                        return task;
                     }
 
                     @Override
-                    public String[] load(String aliasName) {
+                    public String[] load(final String aliasName) {
                         final AdminClient adminClient = provider.getClient().admin();
                         //remove write alias, can only have one
                         ImmutableOpenMap<String, List<AliasMetaData>> aliasMap = adminClient.indices().getAliases(new GetAliasesRequest(aliasName)).actionGet().getAliases();

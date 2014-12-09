@@ -110,4 +110,7 @@ public interface IndexFig extends GuicyFig {
     @Default( "20" )
     @Key( ELASTICSEARCH_FAIL_REFRESH )
     int getFailRefreshCount();
+
+    @Default("2")
+    int getIndexCacheMaxWorkers();
 }
