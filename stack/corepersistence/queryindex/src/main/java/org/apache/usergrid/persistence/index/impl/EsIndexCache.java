@@ -40,7 +40,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Classy class class.
+ * Cache for Es index operations
  */
 @Singleton
 public class EsIndexCache {
@@ -66,11 +66,15 @@ public class EsIndexCache {
                         ImmutableOpenMap<String, List<AliasMetaData>> aliasMap = adminClient.indices().getAliases(new GetAliasesRequest(aliasName)).actionGet().getAliases();
                         return aliasMap.keys().toArray(String.class);
                     }
-                })
-
-        ;
+                }) ;
     }
 
+    /**
+     * Get indexes for an alias
+     * @param alias
+     * @param aliasType
+     * @return
+     */
     public String[] getIndexes(IndexIdentifier.IndexAlias alias, AliasedEntityIndex.AliasType aliasType) {
         String[] indexes;
         try {
@@ -82,6 +86,10 @@ public class EsIndexCache {
         return indexes;
     }
 
+    /**
+     * clean up cache
+     * @param alias
+     */
     public void invalidate(IndexIdentifier.IndexAlias alias){
         aliasIndexCache.invalidate(alias.getWriteAlias());
         aliasIndexCache.invalidate(alias.getReadAlias());
