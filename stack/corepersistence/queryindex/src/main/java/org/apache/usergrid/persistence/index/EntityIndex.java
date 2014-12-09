@@ -38,6 +38,13 @@ public interface EntityIndex {
      */
     public void initializeIndex();
 
+    /**
+     * Create an index and add to alias, will create alias and remove any old index from write alias if alias already exists
+     * @param indexSuffix index name
+     * @param shards
+     * @param replicas
+     */
+    public void addIndex(final String indexSuffix, final int shards, final int replicas);
 
     /**
      * Create the index batch.
