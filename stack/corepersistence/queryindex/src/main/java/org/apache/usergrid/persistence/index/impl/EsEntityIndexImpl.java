@@ -30,7 +30,6 @@ import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.cluster.tasks.PendingClusterTasksRequest;
 import org.elasticsearch.action.admin.cluster.tasks.PendingClusterTasksResponse;
-import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
 import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateResponse;
@@ -38,8 +37,6 @@ import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequestBuilder;
 import org.elasticsearch.client.AdminClient;
-import org.elasticsearch.cluster.metadata.AliasMetaData;
-import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentBuilder;
@@ -120,11 +117,11 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
     private static final MatchAllQueryBuilder MATCH_ALL_QUERY_BUILDER = QueryBuilders.matchAllQuery();
 
+    private EsIndexCache aliasCache;
+
 
     @Inject
-    public EsEntityIndexImpl( @Assisted final ApplicationScope appScope, final IndexFig config, 
-            final EsProvider provider ) {
-
+    public EsEntityIndexImpl( @Assisted final ApplicationScope appScope, final IndexFig config, final EsProvider provider, final EsIndexCache indexCache) {
         ValidationUtils.validateApplicationScope( appScope );
         this.applicationScope = appScope;
         this.esProvider = provider;
@@ -133,6 +130,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
         this.indexIdentifier = IndexingUtils.createIndexIdentifier(config, appScope);
         this.alias = indexIdentifier.getAlias();
         this.failureMonitor = new FailureMonitorImpl( config, provider );
+        this.aliasCache = indexCache;
     }
 
     @Override
@@ -188,7 +186,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
             String indexName = indexIdentifier.getIndex(indexSuffix);
             final AdminClient adminClient = esProvider.getClient().admin();
 
-            String[] indexNames = getIndexes(alias.getWriteAlias());
+            String[] indexNames = getIndexes(AliasType.Write);
 
             for(String currentIndex : indexNames){
                 isAck = adminClient.indices().prepareAliases().removeAlias(currentIndex,
@@ -206,7 +204,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
             isAck = adminClient.indices().prepareAliases().addAlias(
                     indexName, alias.getWriteAlias()).execute().actionGet().isAcknowledged();
             logger.info("Created new write Alias Name [{}] ACK=[{}]", alias, isAck);
-
+            aliasCache.invalidate(alias);
         } catch (Exception e) {
             logger.warn("Failed to create alias ", e);
         }
@@ -214,21 +212,9 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
     @Override
     public String[] getIndexes(final AliasType aliasType) {
-        final String aliasName = aliasType == AliasType.Read ? alias.getReadAlias() : alias.getWriteAlias();
-        return getIndexes(aliasName);
+        return aliasCache.getIndexes(alias,aliasType);
     }
 
-    /**
-     * get indexes for alias
-     * @param aliasName
-     * @return
-     */
-    private String[] getIndexes(final String aliasName){
-        final AdminClient adminClient = esProvider.getClient().admin();
-        //remove write alias, can only have one
-        ImmutableOpenMap<String,List<AliasMetaData>> aliasMap = adminClient.indices().getAliases(new GetAliasesRequest(aliasName)).actionGet().getAliases();
-        return aliasMap.keys().toArray(String.class);
-    }
 
     /**
      * Tests writing a document to a new index to ensure it's working correctly. See this post:
@@ -457,7 +443,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
             @Override
             public boolean doOp() {
                 try {
-                    String[] indexes = getIndexes(AliasType.Read);
+                    String[]  indexes = getIndexes(AliasType.Read);
                     Observable.from(indexes).subscribeOn(Schedulers.io()).map(new Func1<String, String>() {
                         @Override
                         public String call(String index) {
