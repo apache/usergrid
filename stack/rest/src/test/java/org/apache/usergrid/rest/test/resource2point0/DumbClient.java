@@ -17,6 +17,7 @@
 package org.apache.usergrid.rest.test.resource2point0;
 
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 
 import org.apache.catalina.startup.Tomcat;
@@ -42,20 +43,23 @@ import static org.junit.Assert.assertNotNull;
 public class DumbClient extends AbstractRestIT {
 
     //TODO: maybe this should just take in the raw uri.
-    private final RestClient client = new RestClient( "");
+    //TODO:fix this so it can work a lot like the context.
+    @Rule
+    public final RestClient client = new RestClient( getBaseURI().toString() );
 
 
     @Test
     public void stuff(){
+
         //EntityResponse itr  =  client.org( "test" ).getApp( "test" ).users().getEntityResponse();
         OrganizationResource organizationResource = client.org( "borg" );
         assertNotNull( organizationResource );
-        //assertEquals( getBaseUri().toString()+"borg",client.getPath());
+        assertEquals( getBaseURI().toString()+"borg",client.getPath());
 
 
         ApplicationResource applicationResource = client.org( "morg" ).getApp( "app" );
         assertNotNull( applicationResource );
-        //assertEquals( getBaseUri().toString()+"borg/morg",client.getPath());
+        assertEquals( getBaseURI().toString()+"borg/morg",client.getPath());
 
         //        for(Entity entity: itr){
 //

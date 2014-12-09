@@ -16,35 +16,42 @@
  */
 package org.apache.usergrid.rest.test.resource2point0;
 
+import java.io.IOException;
 import java.net.URI;
 import org.junit.ClassRule;
+import org.junit.rules.TestRule;
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
 
+import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.ITSetup;
 import org.apache.usergrid.rest.RestITSuite;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.ManagementResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.OrganizationResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.UrlResource;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
+import org.apache.usergrid.rest.test.security.TestAdminUser;
+
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.config.ClientConfig;
+import com.sun.jersey.api.client.config.DefaultClientConfig;
+import com.sun.jersey.test.framework.JerseyTest;
 
 
 /**
  * Extends the JerseyTest framework because this is the client that we are going to be using to interact with tomcat
  */
-public class RestClient implements UrlResource {
-
-    //ClientConfig clientConfig = new ClientConfig();
+public class RestClient implements UrlResource,TestRule {
 
 //    @ClassRule
 //    public static ITSetup setup = new ITSetup( RestITSuite.cassandraResource );
 
-    //Client client = ClientBuilder.newClient( clientConfig );
-
-   // private WebTarget webTarget;// = client.target("http://example.com/rest");
-
     private final String serverUrl;
     private final ClientContext context;
-    //ClientConfig config = new ClientConfig();
-
+    WebResource resource;
+    ClientConfig config = new DefaultClientConfig(  );//new ClientConfig();
+    Client client = Client.create( config );
 
 //This should work independantly of test frameowkr. Need to be able to pull the WebResource Url and not have to integrate the webresource into the Endpoints/Client.
     //This uses jeresy to create the client. Initialize the client with the webresource, and then the CLIENT calls the root resource.
@@ -55,6 +62,9 @@ public class RestClient implements UrlResource {
     public RestClient( final String serverUrl ) {
         this.serverUrl = serverUrl;
         this.context = new ClientContext();
+        resource = client.resource( serverUrl );
+        resource.path( serverUrl );
+
         //maybe the problem here is with the jaxrs version not having the correct dependencies or methods.
        // webTarget = client.target( serverUrl );
         //webTarget = webTarget.path( serverUrl );
@@ -67,8 +77,8 @@ public class RestClient implements UrlResource {
      */
     @Override
     public String getPath() {
-        //return webTarget.getUri().toString();
-        return serverUrl;
+        return resource.getURI().toString(); //webResource.getUri().toString();
+        //return serverUrl;
     }
 
 
@@ -85,6 +95,7 @@ public class RestClient implements UrlResource {
      */
     public OrganizationResource org( final String orgName ) {
         OrganizationResource organizationResource = new OrganizationResource( orgName, context,  this );
+        resource = resource.path( organizationResource.getPath() );
         //webTarget = webTarget.path( organizationResource.getPath()); This worked really well, shame it couldn't be used.
         return new OrganizationResource( orgName, context,  this );
     }
@@ -95,5 +106,44 @@ public class RestClient implements UrlResource {
         //final String token = management().token().post(username, password);
 
         //context.setToken( token );
+    }
+
+    //TODO: maybe take out the below methods to be a seperate class? Follow solid principles? Single responsiblitiy. This is currently
+    //taking on the responsibility of both the
+
+    @Override
+    public Statement apply( Statement base, Description description ) {
+        return statement( base, description );
+    }
+
+    private Statement statement( final Statement base, final Description description ) {
+        return new Statement() {
+            @Override
+            public void evaluate() throws Throwable {
+                before( description );
+                try {
+                    base.evaluate();
+                }
+                finally {
+                    cleanup();
+                }
+            }
+        };
+    }
+    protected void cleanup() {
+        // might want to do something here later
+    }
+
+    //TODO: look over this logic
+    protected void before( Description description ) throws IOException {
+//        String testClass = description.getTestClass().getName();
+//        String methodName = description.getMethodName();
+//        String name = testClass + "." + methodName;
+//
+//        TestAdminUser testAdmin = new TestAdminUser( name+ UUIDUtils.newTimeUUID(),
+//                name + "@usergrid.com"+UUIDUtils.newTimeUUID(),
+//                name + "@usergrid.com"+UUIDUtils.newTimeUUID() );
+//        withOrg( name+ UUIDUtils.newTimeUUID() ).withApp( methodName + UUIDUtils.newTimeUUID() ).withUser(
+//                testAdmin ).initAll();
     }
 }

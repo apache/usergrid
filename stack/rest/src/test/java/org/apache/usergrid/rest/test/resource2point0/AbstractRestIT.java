@@ -18,23 +18,78 @@ package org.apache.usergrid.rest.test.resource2point0;
 
 
 import java.net.URI;
+import java.net.URLClassLoader;
+import java.util.Arrays;
 
 import org.junit.ClassRule;
 
+import org.apache.usergrid.java.client.Client;
 import org.apache.usergrid.rest.ITSetup;
 import org.apache.usergrid.rest.RestITSuite;
 
 import javax.ws.rs.core.Application;
+
+import com.sun.jersey.api.client.config.ClientConfig;
+import com.sun.jersey.api.client.config.DefaultClientConfig;
+import com.sun.jersey.api.json.JSONConfiguration;
+import com.sun.jersey.test.framework.AppDescriptor;
+import com.sun.jersey.test.framework.JerseyTest;
+import com.sun.jersey.test.framework.WebAppDescriptor;
+import com.sun.jersey.test.framework.spi.container.TestContainerFactory;
 
 
 //import com.sun.jersey.api.json.JSONConfiguration;
 //import com.sun.jersey.test.framework.WebAppDescriptor;
 
 
-public class AbstractRestIT {
+public class AbstractRestIT extends JerseyTest {
+
+    private static ClientConfig clientConfig = new DefaultClientConfig();
+
+    protected static Client client;
 
     @ClassRule
     public static ITSetup setup = new ITSetup( RestITSuite.cassandraResource );
+
+    protected static final AppDescriptor descriptor;
+
+    public AbstractRestIT() {
+        super( descriptor );
+    }
+
+
+    static {
+        clientConfig.getFeatures().put( JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE );
+        descriptor = new WebAppDescriptor.Builder( "org.apache.usergrid.rest" )
+                .clientConfig( clientConfig ).build();
+        dumpClasspath( AbstractRestIT.class.getClassLoader() );
+    }
+
+    public static void dumpClasspath( ClassLoader loader ) {
+        System.out.println( "Classloader " + loader + ":" );
+
+        if ( loader instanceof URLClassLoader ) {
+            URLClassLoader ucl = ( URLClassLoader ) loader;
+            System.out.println( "\t" + Arrays.toString( ucl.getURLs() ) );
+        }
+        else {
+            System.out.println( "\t(cannot display components as not a URLClassLoader)" );
+        }
+
+        if ( loader.getParent() != null ) {
+            dumpClasspath( loader.getParent() );
+        }
+    }
+
+    @Override
+    protected URI getBaseURI() {
+        return setup.getBaseURI();
+    }
+
+    @Override
+    protected TestContainerFactory getTestContainerFactory() {
+        return new com.sun.jersey.test.framework.spi.container.external.ExternalTestContainerFactory();
+    }
 
 
 
