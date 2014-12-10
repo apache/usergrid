@@ -20,6 +20,8 @@ package org.apache.usergrid.rest.test.resource2point0.endpoints;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.ManagementResource;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
+import com.sun.jersey.api.client.WebResource;
+
 
 /**
  * Contains the root element for classes. Contains the client context that holds a token for the management calls,
@@ -55,6 +57,11 @@ public class RootResource implements UrlResource {
         return serverUrl;
     }
 
+    @Override
+    public WebResource getResource() {
+        //TODO: fix this to return the proper resource in the scope we expect it, might not be needed here.
+        return null;
+    }
 
     /**
      * Get the management resource

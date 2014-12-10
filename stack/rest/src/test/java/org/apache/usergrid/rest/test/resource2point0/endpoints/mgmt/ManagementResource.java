@@ -33,8 +33,7 @@ public class ManagementResource extends NamedResource {
         return new TokenResource( context, this );
     }
 
-    public OrganizationResource orgs(String name) {
-        return new OrganizationResource( name ,context,this );
+    public OrgResource orgs() {
+        return new OrgResource( context, this );
     }
-
 }

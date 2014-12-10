@@ -14,9 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.rest.test.resource2point0.endpoints;
+package org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt;
 
 
+import org.apache.usergrid.rest.test.resource2point0.endpoints.NamedResource;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.UrlResource;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 
@@ -25,7 +27,7 @@ import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
  */
 public class TokenResource extends NamedResource {
     public TokenResource( final ClientContext context, final UrlResource parent ) {
-        super( "management", context, parent );
+        super( "token", context, parent );
     }
 
 

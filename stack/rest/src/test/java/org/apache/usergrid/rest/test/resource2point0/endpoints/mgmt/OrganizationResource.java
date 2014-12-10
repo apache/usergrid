@@ -26,7 +26,7 @@ public class OrganizationResource extends NamedResource {
 //TODO: need to find a way to integrate having the orgs/<org_name> into the same endpoint.
     //maybe I could append the orgs to the end of the parent
     public OrganizationResource( final String name, final ClientContext context, final UrlResource parent ) {
-        super( name, context, parent. );
+        super( name, context, parent );
     }
 
     //TODO: change this so that it reflects the management endpoint
@@ -34,11 +34,10 @@ public class OrganizationResource extends NamedResource {
 //        return new ApplicationResource( app, context ,this );
 //    }
 
-    public void post(Map<String,String> organization){
-
-        getResource().type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
-                     .post( ApiResponse.class, organization );
-    }
-
+//    public ApiResponse post(Map<String,String> organization){
+//
+//        return getResource().type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
+//                     .post( ApiResponse.class, organization );
+//    }
 
 }

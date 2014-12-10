@@ -32,6 +32,7 @@ import org.apache.usergrid.rest.test.resource2point0.endpoints.ApplicationResour
 import org.apache.usergrid.rest.test.resource2point0.endpoints.Collection;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.OrganizationResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.RootResource;
+import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.apache.usergrid.rest.test.resource2point0.model.EntityResponse;
 import org.apache.usergrid.utils.MapUtils;
@@ -49,7 +50,7 @@ public class DumbClient extends AbstractRestIT {
 
     //TODO: maybe this should just take in the raw uri.
     //TODO:fix this so it can work a lot like the context.
-    @Rule
+    //@Rule
     public final RestClient client = new RestClient( getBaseURI().toString() );
 
 
@@ -57,25 +58,11 @@ public class DumbClient extends AbstractRestIT {
     public void stuff(){
 
         String name = "stuff"+ UUIDUtils.newTimeUUID();
-        c
-
+        ApiResponse response = client.management().orgs().post( mapOrganization(name,name,name+"@apigee.com",name,name  ) );
+        assertNotNull( response );
         //EntityResponse itr  =  client.org( "test" ).getApp( "test" ).users().getEntityResponse();
-//        OrganizationResource organizationResource = client.org( "borg" );
-//        assertNotNull( organizationResource );
-//        assertEquals( getBaseURI().toString()+"borg",client.getPath());
-//
-//
-//        ApplicationResource applicationResource = client.org( "morg" ).getApp( "app" );
-//        assertNotNull( applicationResource );
-//        assertEquals( getBaseURI().toString()+"borg/morg",client.getPath());
-
-
-        //can't post an org to an organization endpoint you derp. I think it has to be to management.
-        //client.post(mapOrganization(name,name,name+"@apigee.com",name,name  ));
 
         //        for(Entity entity: itr){
-//
-//        }
     }
 
     public Map<String,String> mapOrganization(String orgName, String username, String email, String name, String password){

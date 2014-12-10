@@ -29,6 +29,7 @@ public interface UrlResource {
 
     /**
      * Get the url path to this resource
+     * example: http://localhost:8080/management/orgs/<org_name>
      * @return
      */
     public String getPath();
