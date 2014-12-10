@@ -38,6 +38,9 @@ import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.utils.MapUtils;
 
+import static org.apache.usergrid.TestHelper.newUUIDString;
+import static org.apache.usergrid.TestHelper.uniqueOrg;
+import static org.apache.usergrid.TestHelper.uniqueUsername;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -66,9 +69,9 @@ public class FacebookProviderIT {
     public static void setup() throws Exception {
         providerFactory = cassandraResource.getBean( SignInProviderFactory.class );
         UserInfo adminUser = setup.getMgmtSvc()
-                                  .createAdminUser( "fbuser", "Facebook User", "user@facebook.com", "test", false,
+                                  .createAdminUser( uniqueUsername(), "Facebook User", "user"+newUUIDString()+"@facebook.com", "test", false,
                                           false );
-        OrganizationInfo organization = setup.getMgmtSvc().createOrganization( "fb-organization", adminUser, true );
+        OrganizationInfo organization = setup.getMgmtSvc().createOrganization( uniqueOrg(), adminUser, true );
         applicationId = setup.getMgmtSvc().createApplication( organization.getUuid(), "fb-application" ).getId();
     }
 
