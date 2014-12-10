@@ -24,6 +24,7 @@ import org.apache.usergrid.persistence.model.entity.Id;
 
 import java.util.UUID;
 import org.apache.usergrid.corepersistence.CpEntityManagerFactory;
+import static org.apache.usergrid.corepersistence.GuiceModule.EVENTS_DISABLED;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.slf4j.Logger;
@@ -39,20 +40,27 @@ public class EntityDeletedHandler implements EntityDeleted {
     @Inject
     EntityManagerFactory emf;
 
-    public EntityDeletedHandler() {
-        logger.debug("Created");        
-    }
 
     @Override
     public void deleted(CollectionScope scope, Id entityId, UUID version) {
 
-        logger.debug("Entering deleted for entity {}:{} v {} "
+        // This check is for testing purposes and for a test that to be able to dynamically turn 
+        // off and on delete previous versions so that it can test clean-up on read.
+        if ( System.getProperty( EVENTS_DISABLED, "false" ).equals( "true" )) {
+            return;
+        }
+
+        logger.debug("Handling deleted event for entity {}:{} v {} "
                 + "scope\n   name: {}\n   owner: {}\n   app: {}",
-            new Object[] { entityId.getType(), entityId.getUuid(), version,
-                scope.getName(), scope.getOwner(), scope.getApplication()});
+            new Object[] { 
+                entityId.getType(), 
+                entityId.getUuid(), 
+                version,
+                scope.getName(), 
+                scope.getOwner(), 
+                scope.getApplication()});
 
         CpEntityManagerFactory cpemf = (CpEntityManagerFactory)emf;
-
         final EntityIndex ei = cpemf.getManagerCache().getEntityIndex(scope);
 
         ei.deleteAllVersionsOfEntity( entityId );

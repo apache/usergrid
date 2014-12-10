@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.corepersistence.CpEntityManagerFactory;
+import static org.apache.usergrid.corepersistence.GuiceModule.EVENTS_DISABLED;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.event.EntityVersionCreated;
@@ -41,27 +42,28 @@ public class EntityVersionCreatedHandler implements EntityVersionCreated {
     EntityManagerFactory emf;
 
 
-    public EntityVersionCreatedHandler() {
-        logger.debug("EntityVersionCreated");
-    }
-
-
     @Override
     public void versionCreated( final CollectionScope scope, final Entity entity ) {
-        logger.debug("Entering deleted for entity {}:{} v {} "
-                        + "scope\n   name: {}\n   owner: {}\n   app: {}",
-                new Object[] { entity.getId().getType(), entity.getId().getUuid(), entity.getVersion(),
-                        scope.getName(), scope.getOwner(), scope.getApplication()});
-
-        CpEntityManagerFactory cpemf = (CpEntityManagerFactory)emf;
-
-        final EntityIndex ei = cpemf.getManagerCache().getEntityIndex(scope);
 
         // This check is for testing purposes and for a test that to be able to dynamically turn 
         // off and on delete previous versions so that it can test clean-up on read.
-        if ( System.getProperty( "allow.stale.entities", "false" ).equals( "false" )) {
-
-            ei.deletePreviousVersions( entity.getId(), entity.getVersion() );
+        if ( System.getProperty( EVENTS_DISABLED, "false" ).equals( "true" )) {
+            return;
         }
+
+        logger.debug("Handling versionCreated for entity {}:{} v {} "
+            + "scope\n   name: {}\n   owner: {}\n   app: {}",
+            new Object[] { 
+                entity.getId().getType(), 
+                entity.getId().getUuid(), 
+                entity.getVersion(),
+                scope.getName(), 
+                scope.getOwner(), 
+                scope.getApplication()});
+
+        CpEntityManagerFactory cpemf = (CpEntityManagerFactory)emf;
+        final EntityIndex ei = cpemf.getManagerCache().getEntityIndex(scope);
+
+        ei.deletePreviousVersions( entity.getId(), entity.getVersion() );
     }
 }

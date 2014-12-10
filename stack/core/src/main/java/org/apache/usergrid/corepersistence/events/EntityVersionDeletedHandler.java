@@ -19,8 +19,8 @@ package org.apache.usergrid.corepersistence.events;
 
 import com.google.inject.Inject;
 import java.util.List;
-import java.util.UUID;
 import org.apache.usergrid.corepersistence.CpEntityManagerFactory;
+import static org.apache.usergrid.corepersistence.GuiceModule.EVENTS_DISABLED;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.MvccEntity;
@@ -32,6 +32,8 @@ import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.impl.IndexScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
@@ -42,19 +44,34 @@ import rx.schedulers.Schedulers;
  * If we do need it then it should be wired in via GuiceModule in the corepersistence package.
  */
 public class EntityVersionDeletedHandler implements EntityVersionDeleted {
-
-    private final SerializationFig serializationFig;
-
-    private EntityManagerFactory emf;
+    private static final Logger logger = LoggerFactory.getLogger(EntityVersionDeletedHandler.class );
 
     @Inject
-    public EntityVersionDeletedHandler(SerializationFig fig, EntityManagerFactory emf) {
-        this.serializationFig = fig;
-    }
+    private SerializationFig serializationFig;
+
+    @Inject
+    private EntityManagerFactory emf;
+
 
     @Override
     public void versionDeleted(
             final CollectionScope scope, final Id entityId, final List<MvccEntity> entityVersions) {
+
+        // This check is for testing purposes and for a test that to be able to dynamically turn 
+        // off and on delete previous versions so that it can test clean-up on read.
+        if ( System.getProperty( EVENTS_DISABLED, "false" ).equals( "true" )) {
+            return;
+        }
+
+        logger.debug("Handling versionDeleted count={} event for entity {}:{} v {} "
+                + "scope\n   name: {}\n   owner: {}\n   app: {}",
+            new Object[] { 
+                entityVersions.size(),
+                entityId.getType(), 
+                entityId.getUuid(), 
+                scope.getName(), 
+                scope.getOwner(), 
+                scope.getApplication()});
 
         CpEntityManagerFactory cpemf = (CpEntityManagerFactory)emf;
 
@@ -66,6 +83,7 @@ public class EntityVersionDeletedHandler implements EntityVersionDeleted {
                 new SimpleId(scope.getOwner().getUuid(), scope.getOwner().getType()),
                 scope.getName()
         );
+
         rx.Observable.from(entityVersions)
             .subscribeOn(Schedulers.io())
             .buffer(serializationFig.getBufferSize())

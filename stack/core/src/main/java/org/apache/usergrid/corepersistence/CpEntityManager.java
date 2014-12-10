@@ -607,50 +607,6 @@ public class CpEntityManager implements EntityManager {
 
         if ( entity != null ) {
 
-            // first, delete entity in every collection and connection scope in which it is indexed 
-
-//            RelationManager rm = getRelationManager( entityRef );
-//            Map<String, Map<UUID, Set<String>>> owners = rm.getOwners();
-//
-//            logger.debug( "Deleting indexes of all {} collections owning the entity", 
-//                    owners.keySet().size() );
-//
-//            final  EntityIndex ei = managerCache.getEntityIndex(getApplicationScope());
-//
-//            final EntityIndexBatch batch = ei.createBatch();
-//
-//            for ( String ownerType : owners.keySet() ) {
-//                Map<UUID, Set<String>> collectionsByUuid = owners.get( ownerType );
-//
-//                for ( UUID uuid : collectionsByUuid.keySet() ) {
-//                    Set<String> collectionNames = collectionsByUuid.get( uuid );
-//                    for ( String coll : collectionNames ) {
-//
-//                        IndexScope indexScope = new IndexScopeImpl(
-//                                new SimpleId( uuid, ownerType ), 
-//                                CpNamingUtils.getCollectionScopeNameFromCollectionName( coll ) );
-//
-//
-//                        batch.index( indexScope, entity );
-//                    }
-//                }
-//            }
-//
-//            // deindex from default index scope
-//            IndexScope defaultIndexScope = new IndexScopeImpl(
-//                    getApplicationScope().getApplication(),
-//                    CpNamingUtils.getCollectionScopeNameFromEntityType( entityRef.getType() ) );
-//
-//            batch.deindex(defaultIndexScope,  entity );
-//
-//            IndexScope allTypesIndexScope = new IndexScopeImpl(
-//                getApplicationScope().getApplication(), 
-//                    CpNamingUtils.ALL_TYPES);
-//
-//            batch.deindex( allTypesIndexScope,  entity );
-//
-//            batch.execute();
-
             decrementEntityCollection( Schema.defaultCollectionName( entityId.getType() ) );
 
             // and finally...
@@ -2010,10 +1966,10 @@ public class CpEntityManager implements EntityManager {
 
         for ( Query.CounterFilterPredicate filter : filters ) {
             CounterUtils.AggregateCounterSelection selection =
-                    new CounterUtils.AggregateCounterSelection( filter.getName(),
-                            getUuid( getUserByIdentifier( filter.getUser() ) ),
-                            getUuid( getGroupByIdentifier( filter.getGroup() ) ),
-                            org.apache.usergrid.mq.Queue.getQueueId( filter.getQueue() ), filter.getCategory() );
+                new CounterUtils.AggregateCounterSelection( filter.getName(),
+                    getUuid( getUserByIdentifier( filter.getUser() ) ),
+                    getUuid( getGroupByIdentifier( filter.getGroup() ) ),
+                    org.apache.usergrid.mq.Queue.getQueueId( filter.getQueue() ), filter.getCategory() );
             selections.put( selection.getRow( resolution ), selection );
         }
 

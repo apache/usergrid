@@ -48,6 +48,8 @@ public class GuiceModule extends AbstractModule {
 
     private EntityManagerFactory emf;
 
+    public static final String EVENTS_DISABLED = "corepersistence.events.disabled";
+
     GuiceModule( EntityManagerFactory emf ) {
         this.emf = emf;
     }
@@ -68,10 +70,11 @@ public class GuiceModule extends AbstractModule {
 
         bind(ManagerCache.class).to( CpManagerCache.class );
 
-        Multibinder<DataMigration> dataMigrationMultibinder = Multibinder.newSetBinder( binder(), DataMigration.class );
+        Multibinder<DataMigration> dataMigrationMultibinder = 
+                Multibinder.newSetBinder( binder(), DataMigration.class );
         dataMigrationMultibinder.addBinding().to( EntityTypeMappingMigration.class );
         dataMigrationMultibinder.addBinding().to( GraphShardVersionMigration.class );
-        //dataMigrationMultibinder.addBinding().to( EntityDataMigration.class );
+        dataMigrationMultibinder.addBinding().to( EntityDataMigration.class );
 
         Multibinder<EntityDeleted> entityBinder = 
             Multibinder.newSetBinder(binder(), EntityDeleted.class);

@@ -143,7 +143,8 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
         log.debug( "Indexing entity documentId {} data {} ", indexId, entityAsMap );
 
-        bulkRequest.add( client.prepareIndex(alias.getWriteAlias(), entityType, indexId ).setSource( entityAsMap ) );
+        bulkRequest.add( client.prepareIndex(
+                alias.getWriteAlias(), entityType, indexId ).setSource( entityAsMap ) );
 
         maybeFlush();
 
@@ -181,7 +182,8 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
         log.debug( "De-indexing type {} with documentId '{}'", entityType, indexId );
 
-        bulkRequest.add( client.prepareDelete(alias.getWriteAlias(), entityType, indexId ).setRefresh( refresh ) );
+        bulkRequest.add( client.prepareDelete(
+                alias.getWriteAlias(), entityType, indexId ).setRefresh( refresh ) );
 
         log.debug( "Deindexed Entity with index id " + indexId );
 

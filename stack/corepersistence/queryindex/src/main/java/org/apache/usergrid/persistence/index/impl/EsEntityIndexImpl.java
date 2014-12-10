@@ -233,7 +233,7 @@ public class EsEntityIndexImpl implements EntityIndex {
         // to receive documents. Occasionally we see errors.
         // See this post: http://s.apache.org/index-missing-exception
 
-        logger.info( "Refreshing Created new Index Name [{}]", alias);
+        logger.debug( "Testing new index name [{}]", alias);
 
         final RetryOperation retryOperation = new RetryOperation() {
             @Override
@@ -438,9 +438,6 @@ public class EsEntityIndexImpl implements EntityIndex {
 
     public void refresh() {
 
-
-        logger.info( "Refreshing Created new Index Name [{}]", alias);
-
         final RetryOperation retryOperation = new RetryOperation() {
             @Override
             public boolean doOp() {
@@ -452,7 +449,7 @@ public class EsEntityIndexImpl implements EntityIndex {
                     return true;
                 }
                 catch ( IndexMissingException e ) {
-                    logger.error( "Unable to refresh index after create. Waiting before sleeping.", e );
+                    logger.error( "Unable to refresh index. Waiting before sleeping.", e );
                     throw e;
                 }
             }
@@ -510,8 +507,9 @@ public class EsEntityIndexImpl implements EntityIndex {
     @Override
     public void deleteAllVersionsOfEntity( Id entityId ) {
 
-        final TermQueryBuilder tqb = QueryBuilders.termQuery( 
-                ENTITYID_ID_FIELDNAME, entityId.getUuid().toString().toLowerCase() );
+        String idString = IndexingUtils.idString( entityId ).toLowerCase(); 
+
+        final TermQueryBuilder tqb = QueryBuilders.termQuery( ENTITYID_ID_FIELDNAME, idString );
 
         final DeleteByQueryResponse response = esProvider.getClient()
             .prepareDeleteByQuery( alias.getWriteAlias() ).setQuery( tqb ).execute().actionGet();
@@ -526,11 +524,14 @@ public class EsEntityIndexImpl implements EntityIndex {
 
 
     @Override
-    public void deletePreviousVersions( final Id id, final UUID version ) {
+    public void deletePreviousVersions( final Id entityId, final UUID version ) {
+
+        String idString = IndexingUtils.idString( entityId ).toLowerCase(); 
 
         final FilteredQueryBuilder fqb = QueryBuilders.filteredQuery(
-            QueryBuilders.termQuery( ENTITYID_ID_FIELDNAME, id.getUuid().toString().toLowerCase()),
-            FilterBuilders.rangeFilter( ENTITY_VERSION_FIELDNAME ).lt( version.timestamp() ) );
+            QueryBuilders.termQuery( ENTITYID_ID_FIELDNAME, idString ),
+            FilterBuilders.rangeFilter( ENTITY_VERSION_FIELDNAME ).lt( version.timestamp() ) 
+        );
 
         final DeleteByQueryResponse response = esProvider.getClient()
             .prepareDeleteByQuery( alias.getWriteAlias() ).setQuery( fqb ).execute().actionGet();
@@ -538,14 +539,14 @@ public class EsEntityIndexImpl implements EntityIndex {
         //error message needs to be retooled so that it describes the entity more throughly
         logger.debug( "Deleted entity {}:{} with version {} from all "
                 + "index scopes with response status = {}",
-            new Object[] { id.getType(), id.getUuid(), version,  response.status().toString() } );
+            new Object[] { entityId.getType(), entityId.getUuid(), version,  response.status().toString() } );
 
         checkDeleteByQueryResponse( fqb, response );
     }
 
 
     /**
-     * Validate the response doens't contain errors, if it does, fail fast at the first error we encounter
+     * Validate the response doesn't contain errors, if it does, fail fast at the first error we encounter
      */
     private void checkDeleteByQueryResponse( 
             final QueryBuilder query, final DeleteByQueryResponse response ) {

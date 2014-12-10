@@ -38,7 +38,6 @@ import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
-import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.index.EntityIndex;
@@ -53,6 +52,7 @@ import org.apache.usergrid.persistence.model.entity.SimpleId;
 import com.fasterxml.uuid.UUIDComparator;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import static org.apache.usergrid.corepersistence.GuiceModule.EVENTS_DISABLED;
 
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getCollectionScopeNameFromEntityType;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
@@ -62,7 +62,6 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 
 
-//need to create system properties in test that can get applied
 /**
  * Test on read style clean-up of stale ElasticSearch indexes.
  */
@@ -84,7 +83,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
     @After
     public void after() {
-        System.clearProperty( "allow.stale.entities" );
+        System.clearProperty( EVENTS_DISABLED );
 
     }
 
@@ -93,6 +92,9 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
      */
     @Test
     public void testUpdateVersioning() throws Exception {
+
+        // turn off post processing stuff that cleans up stale entities 
+        System.setProperty( EVENTS_DISABLED, "true" );
 
         final EntityManager em = app.getEntityManager();
 
@@ -131,7 +133,8 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
         logger.info( "Started testStaleIndexCleanup()" );
 
-        // TODO: turn off post processing stuff that cleans up stale entities 
+        // turn off post processing stuff that cleans up stale entities 
+        System.setProperty( EVENTS_DISABLED, "true" );
 
         final EntityManager em = app.getEntityManager();
 
@@ -160,9 +163,6 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
         List<Entity> maxVersions = new ArrayList<>( numEntities );
 
-
-
-
         for ( Entity thing : things ) {
 
             Entity toUpdate = null;
@@ -173,7 +173,6 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
                 //update the update count, so we'll order from the first entity created to the last
                 toUpdate.setProperty( "updateCount", updateCount.getAndIncrement() );
                 em.update( toUpdate );
-
 
                 count++;
                 if ( count % 100 == 0 ) {
@@ -249,7 +248,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         logger.info("Started testStaleIndexCleanup()");
 
         // turn off post processing stuff that cleans up stale entities 
-        System.setProperty( "allow.stale.entities", "true" );
+        System.setProperty( EVENTS_DISABLED, "true" );
 
         final EntityManager em = app.getEntityManager();
 
@@ -299,18 +298,21 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         crs = queryCollectionCp("things", "thing", "select *");
         Assert.assertEquals( "Expect stale candidates", numEntities * (numUpdates + 1), crs.size());
 
+        // turn ON post processing stuff that cleans up stale entities 
+        System.setProperty( EVENTS_DISABLED, "false" );
+
         // delete all entities
         for ( Entity thing : things ) {
             em.delete( thing );
         }
-        em.refreshIndex();
 
         // wait for indexes to be cleared for the deleted entities
         count = 0;
         do {
             Thread.sleep(100);
             crs = queryCollectionCp("things", "thing", "select *");
-        } while ( crs.size() > 0 && count++ < 14 );
+            em.refreshIndex();
+        } while ( crs.size() > 0 && count++ < 15 );
 
         Assert.assertEquals( "Expect no candidates", 0, crs.size() );
     }
@@ -324,6 +326,9 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
     public void testCleanupOnUpdate() throws Exception {
 
         logger.info( "Started testCleanupOnUpdate()" );
+
+        // turn off post processing stuff that cleans up stale entities 
+        System.setProperty( EVENTS_DISABLED, "true" );
 
         final EntityManager em = app.getEntityManager();
 
@@ -341,8 +346,11 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         }
         em.refreshIndex();
 
-        CandidateResults crs = queryCollectionCp( "things", "things", "select *");
+        CandidateResults crs = queryCollectionCp( "things", "thing", "select *");
         Assert.assertEquals( "Expect no stale candidates yet", numEntities, crs.size() );
+
+        // turn off post processing stuff that cleans up stale entities 
+        System.setProperty( EVENTS_DISABLED, "false" );
 
         // update each one a bunch of times
         int count = 0;
@@ -369,6 +377,14 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         }
         em.refreshIndex();
 
+        // wait for indexes to be cleared for the deleted entities
+        count = 0;
+        do {
+            Thread.sleep(100);
+            crs = queryCollectionCp("things", "thing", "select *");
+            em.refreshIndex();
+        } while ( crs.size() > 0 && count++ < 15 );
+
         // query Core Persistence directly for total number of result candidates
         crs = queryCollectionCp("things", "thing", "select *");
         Assert.assertEquals( "Expect candidates without earlier stale entities", numEntities, crs.size() );
@@ -383,7 +399,8 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
         EntityManager em = app.getEntityManager();
 
-        CollectionScope cs = getCollectionScopeNameFromEntityType(  new SimpleId( em.getApplicationId(), TYPE_APPLICATION ), eref.getType() );
+        CollectionScope cs = getCollectionScopeNameFromEntityType(  
+                new SimpleId( em.getApplicationId(), TYPE_APPLICATION ), eref.getType() );
 
         EntityCollectionManagerFactory ecmf = 
                 CpSetup.getInjector().getInstance( EntityCollectionManagerFactory.class );
