@@ -35,7 +35,7 @@ import org.jclouds.logging.log4j.config.Log4JLoggingModule;
 import org.jclouds.netty.config.NettyPayloadModule;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -43,6 +43,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.usergrid.NewOrgAppAdminRule;
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
 import org.apache.usergrid.batch.JobExecution;
@@ -65,6 +66,7 @@ import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
 
+import static org.apache.usergrid.UUIDTestHelper.newUUIDString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -88,24 +90,33 @@ public class ExportServiceIT {
     @ClassRule
     public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
 
-    // app-level data generated only once
-    private static UserInfo adminUser;
-    private static OrganizationInfo organization;
-    private static UUID applicationId;
-
-    @Rule
-    public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @ClassRule
     public static final ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource, elasticSearchResource );
 
+    @Rule
+    public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
-    @BeforeClass
-    public static void setup() throws Exception {
+
+    @Rule
+    public NewOrgAppAdminRule orgAppAdminRule = new NewOrgAppAdminRule( setup );
+
+
+    // app-level data generated only once
+    private UserInfo adminUser;
+    private OrganizationInfo organization;
+    private UUID applicationId;
+
+
+
+    @Before
+    public void setup() throws Exception {
         LOG.info( "in setup" );
-        adminUser = setup.getMgmtSvc().createAdminUser( "grey", "George Reyes", "george@reyes.com", "test", false, false );
-        organization = setup.getMgmtSvc().createOrganization( "george-organization", adminUser, true );
-        applicationId = setup.getMgmtSvc().createApplication( organization.getUuid(), "george-application" ).getId();
+
+
+        adminUser = orgAppAdminRule.getAdminInfo();
+        organization = orgAppAdminRule.getOrganizationInfo();
+        applicationId = orgAppAdminRule.getApplicationInfo().getId();
 
         setup.getEmf().refreshIndex();
     }
@@ -288,8 +299,9 @@ public class ExportServiceIT {
         catch ( Exception e ) {
             //consumed because this checks to see if the file exists. If it doesn't then don't do anything and carry on.
         }
-        setup.getMgmtSvc()
-             .createOwnerAndOrganization( "noExport", "junkUserName", "junkRealName", "ugExport@usergrid.com",
+
+        //create another org to ensure we don't export it
+        orgAppAdminRule.createOwnerAndOrganization( "noExport"+newUUIDString(), "junkUserName"+newUUIDString(), "junkRealName"+newUUIDString(), newUUIDString()+"ugExport@usergrid.com",
                      "123456789" );
 
         S3Export s3Export = new MockS3ExportImpl("exportOneOrg.json");
@@ -334,8 +346,8 @@ public class ExportServiceIT {
     public void testExportOneAppOnCollectionEndpoint() throws Exception {
 
         File f = null;
-        String orgName = "george-organization";
-        String appName = "testAppCollectionTestNotExported";
+        String orgName = "george-organization"+newUUIDString();
+        String appName = "testAppCollectionTestNotExported"+newUUIDString();
 
         try {
             f = new File( "exportOneApp.json" );
@@ -607,8 +619,8 @@ public class ExportServiceIT {
         OrganizationInfo orgMade = null;
         ApplicationInfo appMade = null;
         for ( int i = 0; i < 10; i++ ) {
-            orgMade = setup.getMgmtSvc().createOrganization( "superboss" + i, adminUser, true );
-            appMade = setup.getMgmtSvc().createApplication( orgMade.getUuid(), "superapp" + i );
+            orgMade = setup.getMgmtSvc().createOrganization( "superboss"+ newUUIDString() + i, adminUser, true );
+            appMade = setup.getMgmtSvc().createApplication( orgMade.getUuid(), "superapp" +newUUIDString() + i );
 
             EntityManager customMaker = setup.getEmf().getEntityManager( appMade.getId() );
             customMaker.createApplicationCollection( "superappCol" + i );
