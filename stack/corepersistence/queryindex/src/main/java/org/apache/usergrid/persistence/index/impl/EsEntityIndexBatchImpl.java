@@ -192,7 +192,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
             indexes = new String[]{indexIdentifier.getIndex(null)};
         }
         //get all indexes then flush everyone
-        Observable.from(indexes).subscribeOn(Schedulers.io())
+        Observable.from(indexes)
                .map(new Func1<String, Object>() {
                    @Override
                    public Object call(String index) {

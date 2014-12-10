@@ -444,7 +444,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
             public boolean doOp() {
                 try {
                     String[]  indexes = getIndexes(AliasType.Read);
-                    Observable.from(indexes).subscribeOn(Schedulers.io()).map(new Func1<String, String>() {
+                    Observable.from(indexes).map(new Func1<String, String>() {
                         @Override
                         public String call(String index) {
                             esProvider.getClient().admin().indices().prepareRefresh( index ).execute().actionGet();
