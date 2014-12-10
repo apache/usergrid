@@ -30,7 +30,6 @@ import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.cluster.tasks.PendingClusterTasksRequest;
 import org.elasticsearch.action.admin.cluster.tasks.PendingClusterTasksResponse;
-import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
 import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateResponse;
@@ -38,8 +37,6 @@ import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequestBuilder;
 import org.elasticsearch.client.AdminClient;
-import org.elasticsearch.cluster.metadata.AliasMetaData;
-import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentBuilder;
@@ -72,6 +69,9 @@ import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+import rx.Observable;
+import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.BOOLEAN_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.NUMBER_PREFIX;
@@ -82,7 +82,7 @@ import static org.apache.usergrid.persistence.index.impl.IndexingUtils.STRING_PR
 /**
  * Implements index using ElasticSearch Java API.
  */
-public class EsEntityIndexImpl implements EntityIndex {
+public class EsEntityIndexImpl implements AliasedEntityIndex {
 
     private static final Logger logger = LoggerFactory.getLogger( EsEntityIndexImpl.class );
 
@@ -117,11 +117,11 @@ public class EsEntityIndexImpl implements EntityIndex {
 
     private static final MatchAllQueryBuilder MATCH_ALL_QUERY_BUILDER = QueryBuilders.matchAllQuery();
 
+    private EsIndexCache aliasCache;
+
 
     @Inject
-    public EsEntityIndexImpl( @Assisted final ApplicationScope appScope, final IndexFig config, 
-            final EsProvider provider ) {
-
+    public EsEntityIndexImpl( @Assisted final ApplicationScope appScope, final IndexFig config, final EsProvider provider, final EsIndexCache indexCache) {
         ValidationUtils.validateApplicationScope( appScope );
         this.applicationScope = appScope;
         this.esProvider = provider;
@@ -130,6 +130,7 @@ public class EsEntityIndexImpl implements EntityIndex {
         this.indexIdentifier = IndexingUtils.createIndexIdentifier(config, appScope);
         this.alias = indexIdentifier.getAlias();
         this.failureMonitor = new FailureMonitorImpl( config, provider );
+        this.aliasCache = indexCache;
     }
 
     @Override
@@ -185,10 +186,7 @@ public class EsEntityIndexImpl implements EntityIndex {
             String indexName = indexIdentifier.getIndex(indexSuffix);
             final AdminClient adminClient = esProvider.getClient().admin();
 
-            //remove write alias, can only have one
-            ImmutableOpenMap<String,List<AliasMetaData>> aliasMap = adminClient.indices()
-                    .getAliases(new GetAliasesRequest(alias.getWriteAlias())).actionGet().getAliases();
-            String[] indexNames = aliasMap.keys().toArray(String.class);
+            String[] indexNames = getIndexes(AliasType.Write);
 
             for(String currentIndex : indexNames){
                 isAck = adminClient.indices().prepareAliases().removeAlias(currentIndex,
@@ -206,10 +204,15 @@ public class EsEntityIndexImpl implements EntityIndex {
             isAck = adminClient.indices().prepareAliases().addAlias(
                     indexName, alias.getWriteAlias()).execute().actionGet().isAcknowledged();
             logger.info("Created new write Alias Name [{}] ACK=[{}]", alias, isAck);
-
+            aliasCache.invalidate(alias);
         } catch (Exception e) {
             logger.warn("Failed to create alias ", e);
         }
+    }
+
+    @Override
+    public String[] getIndexes(final AliasType aliasType) {
+        return aliasCache.getIndexes(alias,aliasType);
     }
 
 
@@ -232,7 +235,7 @@ public class EsEntityIndexImpl implements EntityIndex {
                 final String tempId = UUIDGenerator.newTimeUUID().toString();
 
                 esProvider.getClient().prepareIndex( alias.getWriteAlias(), VERIFY_TYPE, tempId )
-                        .setSource( DEFAULT_PAYLOAD ).get();
+                        .setSource(DEFAULT_PAYLOAD).get();
 
                 logger.info( "Successfully created new document with docId {} "
                         + "in index {} and type {}", tempId, alias, VERIFY_TYPE );
@@ -240,7 +243,7 @@ public class EsEntityIndexImpl implements EntityIndex {
                 // delete all types, this way if we miss one it will get cleaned up
                 esProvider.getClient().prepareDeleteByQuery( alias.getWriteAlias() )
                         .setTypes(VERIFY_TYPE) 
-                        .setQuery( MATCH_ALL_QUERY_BUILDER ).get();
+                        .setQuery(MATCH_ALL_QUERY_BUILDER).get();
 
                 logger.info( "Successfully deleted all documents in index {} and type {}", 
                         alias, VERIFY_TYPE );
@@ -278,7 +281,7 @@ public class EsEntityIndexImpl implements EntityIndex {
     @Override
     public EntityIndexBatch createBatch() {
         return new EsEntityIndexBatchImpl( 
-                applicationScope, esProvider.getClient(), config, 1000, failureMonitor );
+                applicationScope, esProvider.getClient(), config, 1000, failureMonitor, this );
     }
 
 
@@ -440,8 +443,15 @@ public class EsEntityIndexImpl implements EntityIndex {
             @Override
             public boolean doOp() {
                 try {
-                    esProvider.getClient().admin().indices().prepareRefresh( alias.getWriteAlias() )
-                            .execute().actionGet();
+                    String[]  indexes = getIndexes(AliasType.Read);
+                    Observable.from(indexes).map(new Func1<String, String>() {
+                        @Override
+                        public String call(String index) {
+                            esProvider.getClient().admin().indices().prepareRefresh( index ).execute().actionGet();
+                            return index;
+                        }
+                    }).toBlocking().last();
+
                     logger.debug( "Refreshed index: " + alias);
 
                     return true;
