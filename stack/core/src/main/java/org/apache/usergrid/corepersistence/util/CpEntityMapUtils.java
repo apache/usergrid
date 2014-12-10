@@ -139,38 +139,54 @@ public class CpEntityMapUtils {
 
         // is the map really a location element?
         if ("location" .equals(fieldName.toString().toLowerCase()) ) {
+
             // get the object to inspect
-            Map<String, Object> m = (Map<String, Object>) value;
-            // should have two elements
-            if (m.size() == 2) {
+            Map<String, Object> origMap = (Map<String, Object>) value;
+            Map<String, Object> m = new HashMap<String, Object>();
+
+            // Tests expect us to treat "Longitude" the same as "longitude"
+            for ( String key : origMap.keySet() ) {
+                m.put( key.toLowerCase(), origMap.get(key) );
+            }
+
+            // Expect at least two fields in a Location object
+            if (m.size() >= 2) {
+
                 Double lat = null;
                 Double lon = null;
+
                 // check the properties to make sure they are set and are doubles
                 if (m.get("latitude") != null && m.get("longitude") != null) {
                     try {
                         lat = Double.parseDouble(m.get("latitude").toString());
                         lon = Double.parseDouble(m.get("longitude").toString());
+
                     } catch (NumberFormatException ignored) {
-                        throw new IllegalArgumentException("Latitude and longitude must be doubles (e.g. 32.1234).");
+                        throw new IllegalArgumentException(
+                                "Latitude and longitude must be doubles (e.g. 32.1234).");
                     }
                 } else if (m.get("lat") != null && m.get("lon") != null) {
                     try {
                         lat = Double.parseDouble(m.get("lat").toString());
                         lon = Double.parseDouble(m.get("lon").toString());
                     } catch (NumberFormatException ignored) {
-                        throw new IllegalArgumentException("Latitude and longitude must be doubles (e.g. 32.1234).");
+                        throw new IllegalArgumentException(""
+                                + "Latitude and longitude must be doubles (e.g. 32.1234).");
                     }
                 } else {
-                    throw new IllegalArgumentException("Location properties require two fields - latitude and longitude, or lat and lon");
+                    throw new IllegalArgumentException("Location properties require two fields - "
+                            + "latitude and longitude, or lat and lon");
                 }
 
                 if (lat != null && lon != null) {
                     entity.setField( new LocationField(fieldName, new Location(lat, lon)));
                 } else {
-                    throw new IllegalArgumentException("Unable to parse location field properties - make sure they conform - lat and lon, and should be doubles.");
+                    throw new IllegalArgumentException( "Unable to parse location field properties "
+                            + "- make sure they conform - lat and lon, and should be doubles.");
                 }
             } else {
-                throw new IllegalArgumentException("Location properties require two fields - latitude and longitude, or lat and lon.");
+                throw new IllegalArgumentException("Location properties requires two fields - "
+                        + "latitude and longitude, or lat and lon.");
             }
         } else {
             // not a location element, process it as map
