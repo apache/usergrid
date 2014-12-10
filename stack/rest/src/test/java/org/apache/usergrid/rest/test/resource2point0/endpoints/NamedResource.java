@@ -19,6 +19,8 @@ package org.apache.usergrid.rest.test.resource2point0.endpoints;
 
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
+import com.sun.jersey.api.client.WebResource;
+
 
 /**
  * Base class that is extended by named endpoints.
@@ -44,5 +46,11 @@ public class NamedResource implements UrlResource {
     @Override
     public String getPath() {
         return name;
+    }
+
+
+    @Override
+    public WebResource getResource() {
+        return parent.getResource().path( getPath() );
     }
 }

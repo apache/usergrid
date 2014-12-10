@@ -16,6 +16,9 @@
  */
 package org.apache.usergrid.rest.test.resource2point0;
 
+import java.util.Map;
+import java.util.UUID;
+
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -23,6 +26,7 @@ import org.junit.Test;
 import org.apache.catalina.startup.Tomcat;
 
 import org.apache.usergrid.TomcatMain;
+import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.TomcatResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.ApplicationResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.Collection;
@@ -30,6 +34,7 @@ import org.apache.usergrid.rest.test.resource2point0.endpoints.OrganizationResou
 import org.apache.usergrid.rest.test.resource2point0.endpoints.RootResource;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.apache.usergrid.rest.test.resource2point0.model.EntityResponse;
+import org.apache.usergrid.utils.MapUtils;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -51,19 +56,33 @@ public class DumbClient extends AbstractRestIT {
     @Test
     public void stuff(){
 
+        String name = "stuff"+ UUIDUtils.newTimeUUID();
+        c
+
         //EntityResponse itr  =  client.org( "test" ).getApp( "test" ).users().getEntityResponse();
-        OrganizationResource organizationResource = client.org( "borg" );
-        assertNotNull( organizationResource );
-        assertEquals( getBaseURI().toString()+"borg",client.getPath());
+//        OrganizationResource organizationResource = client.org( "borg" );
+//        assertNotNull( organizationResource );
+//        assertEquals( getBaseURI().toString()+"borg",client.getPath());
+//
+//
+//        ApplicationResource applicationResource = client.org( "morg" ).getApp( "app" );
+//        assertNotNull( applicationResource );
+//        assertEquals( getBaseURI().toString()+"borg/morg",client.getPath());
 
 
-        ApplicationResource applicationResource = client.org( "morg" ).getApp( "app" );
-        assertNotNull( applicationResource );
-        assertEquals( getBaseURI().toString()+"borg/morg",client.getPath());
+        //can't post an org to an organization endpoint you derp. I think it has to be to management.
+        //client.post(mapOrganization(name,name,name+"@apigee.com",name,name  ));
 
         //        for(Entity entity: itr){
 //
 //        }
+    }
+
+    public Map<String,String> mapOrganization(String orgName, String username, String email, String name, String password){
+
+        return MapUtils.hashMap( "organization", orgName ).map( "username", username )
+                       .map( "email", email ).map( "name", name )
+                       .map( "password", password);
     }
 
     @Ignore

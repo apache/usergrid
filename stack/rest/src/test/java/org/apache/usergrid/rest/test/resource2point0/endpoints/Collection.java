@@ -44,7 +44,7 @@ public class Collection extends NamedResource {
      * @return
      */
     public ApiResponse get(final Optional<String> cursor){
-        return null;
+        return getResource().get( ApiResponse.class );
     }
 
 

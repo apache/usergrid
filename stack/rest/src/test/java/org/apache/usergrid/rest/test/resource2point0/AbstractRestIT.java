@@ -22,12 +22,11 @@ import java.net.URLClassLoader;
 import java.util.Arrays;
 
 import org.junit.ClassRule;
+import org.junit.Rule;
 
 import org.apache.usergrid.java.client.Client;
 import org.apache.usergrid.rest.ITSetup;
 import org.apache.usergrid.rest.RestITSuite;
-
-import javax.ws.rs.core.Application;
 
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
@@ -37,11 +36,6 @@ import com.sun.jersey.test.framework.JerseyTest;
 import com.sun.jersey.test.framework.WebAppDescriptor;
 import com.sun.jersey.test.framework.spi.container.TestContainerFactory;
 
-
-//import com.sun.jersey.api.json.JSONConfiguration;
-//import com.sun.jersey.test.framework.WebAppDescriptor;
-
-
 public class AbstractRestIT extends JerseyTest {
 
     private static ClientConfig clientConfig = new DefaultClientConfig();
@@ -50,6 +44,10 @@ public class AbstractRestIT extends JerseyTest {
 
     @ClassRule
     public static ITSetup setup = new ITSetup( RestITSuite.cassandraResource );
+//
+//    TODO: Allow the client to be setup seperately
+//    @Rule
+//    public ClientSetup clientSetup = new ClientSetup(my url);
 
     protected static final AppDescriptor descriptor;
 

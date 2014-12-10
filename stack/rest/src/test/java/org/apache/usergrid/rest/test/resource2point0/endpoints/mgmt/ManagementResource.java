@@ -17,9 +17,7 @@
 package org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt;
 
 
-import org.apache.usergrid.rest.test.resource2point0.endpoints.NamedResource;
-import org.apache.usergrid.rest.test.resource2point0.endpoints.TokenResource;
-import org.apache.usergrid.rest.test.resource2point0.endpoints.UrlResource;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.*;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 
@@ -33,6 +31,10 @@ public class ManagementResource extends NamedResource {
 
     public TokenResource token(){
         return new TokenResource( context, this );
+    }
+
+    public OrganizationResource orgs(String name) {
+        return new OrganizationResource( name ,context,this );
     }
 
 }

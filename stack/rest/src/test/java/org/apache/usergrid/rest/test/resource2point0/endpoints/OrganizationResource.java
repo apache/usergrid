@@ -17,7 +17,17 @@
 package org.apache.usergrid.rest.test.resource2point0.endpoints;
 
 
+import java.util.Map;
+
+import javax.ws.rs.core.MediaType;
+
+import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
+import org.apache.usergrid.utils.MapUtils;
+
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.UniformInterfaceException;
+import com.sun.jersey.api.client.WebResource;
 
 
 /**
@@ -34,4 +44,12 @@ public class OrganizationResource extends NamedResource {
     public ApplicationResource getApp(final String app){
         return new ApplicationResource( app, context ,this );
     }
+
+    public void post(Map<String,String> organization){
+
+        getResource().type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
+                                                   .post( ApiResponse.class, organization );
+    }
+
+
 }

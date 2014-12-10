@@ -19,6 +19,8 @@ package org.apache.usergrid.rest.test.resource2point0.endpoints;
 
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
+import com.sun.jersey.api.client.WebResource;
+
 
 /**
  * Interface that returns the path that is currently being pointed to.
@@ -30,6 +32,12 @@ public interface UrlResource {
      * @return
      */
     public String getPath();
+
+    /**
+     * Get the resource
+     * @return
+     */
+    public WebResource getResource();
 
 
 }
