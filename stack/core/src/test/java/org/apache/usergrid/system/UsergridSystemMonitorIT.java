@@ -20,12 +20,14 @@ package org.apache.usergrid.system;
 import java.util.Date;
 
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
-import org.apache.usergrid.CoreITSuite;
-import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.utils.MapUtils;
 
 import org.apache.commons.lang.StringUtils;
+
+import org.apache.usergrid.cassandra.CassandraResource;
+import org.apache.usergrid.cassandra.Concurrent;
+import org.apache.usergrid.utils.MapUtils;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -34,12 +36,16 @@ import static org.junit.Assert.assertTrue;
 /** @author zznate */
 @Concurrent
 public class UsergridSystemMonitorIT {
+
+    @ClassRule
+    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
+
     private UsergridSystemMonitor usergridSystemMonitor;
 
 
     @Before
     public void setupLocal() {
-        usergridSystemMonitor = CoreITSuite.cassandraResource.getBean( UsergridSystemMonitor.class );
+        usergridSystemMonitor = cassandraResource.getBean( UsergridSystemMonitor.class );
     }
 
 
