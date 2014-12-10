@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -54,7 +53,11 @@ import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
 
 import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
-import static org.apache.usergrid.UUIDTestHelper.newUUIDString;
+import static org.apache.usergrid.TestHelper.newUUIDString;
+import static org.apache.usergrid.TestHelper.uniqueApp;
+import static org.apache.usergrid.TestHelper.uniqueEmail;
+import static org.apache.usergrid.TestHelper.uniqueOrg;
+import static org.apache.usergrid.TestHelper.uniqueUsername;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_CREDENTIALS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -486,11 +489,11 @@ public class ManagementServiceIT {
     @Test
     public void authenticateAdmin() throws Exception {
 
-        String username = "tnine"+newUUIDString();
+        String username = uniqueUsername();
         String password = "test";
 
         UserInfo adminUser = setup.getMgmtSvc()
-                                  .createAdminUser( username, "Todd Nine", newUUIDString() + "@apigee.com", password,
+                                  .createAdminUser( username, "Todd Nine",uniqueEmail(), password,
                                           false, false );
 
         EntityManager em = setup.getEmf().getEntityManager( setup.getSmf().getManagementAppId() );
@@ -515,7 +518,7 @@ public class ManagementServiceIT {
      */
     @Test
     public void testAdminPasswordChangeShaType() throws Exception {
-        String username = "testAdminPasswordChangeShaType"+newUUIDString();
+        String username = uniqueUsername();
         String password = "test";
 
 
@@ -572,7 +575,7 @@ public class ManagementServiceIT {
      */
     @Test
     public void testAdminPasswordChangeMd5ShaType() throws Exception {
-        String username = "testAdminPasswordChangeMd5ShaType"+newUUIDString();
+        String username = uniqueUsername();
         String password = "test";
 
 
@@ -635,10 +638,10 @@ public class ManagementServiceIT {
     @Test
     public void authenticateUser() throws Exception {
 
-        String username = "tnine"+newUUIDString();
+        String username = uniqueUsername();
         String password = "test";
-        String orgName = "autneticateUser"+newUUIDString();
-        String appName = "authenticateUser"+newUUIDString();
+        String orgName = uniqueOrg();
+        String appName = uniqueApp();
 
         UUID appId = setup.getEmf().createApplication( orgName, appName );
 
@@ -738,10 +741,10 @@ public class ManagementServiceIT {
      */
     @Test
     public void testAppUserPasswordChangeMd5ShaType() throws Exception {
-        String username = "tnine"+newUUIDString();
+        String username = uniqueUsername();
         String password = "test";
-        String orgName = "testAppUserPasswordChangeMd5ShaType"+newUUIDString();
-        String appName = "testAppUserPasswordChangeMd5ShaType"+newUUIDString();
+        String orgName = uniqueOrg();
+        String appName = uniqueApp();
 
         UUID appId = setup.getEmf().createApplication( orgName, appName );
 

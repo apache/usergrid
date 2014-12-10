@@ -32,9 +32,8 @@ import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.OrganizationOwnerInfo;
 import org.apache.usergrid.management.UserInfo;
-import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
-import static org.apache.usergrid.UUIDTestHelper.newUUIDString;
+import static org.apache.usergrid.TestHelper.newUUIDString;
 
 
 /**

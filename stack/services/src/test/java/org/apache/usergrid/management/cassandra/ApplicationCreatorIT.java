@@ -22,8 +22,6 @@ import java.util.Set;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
@@ -34,7 +32,10 @@ import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationOwnerInfo;
 import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 
-import static org.apache.usergrid.UUIDTestHelper.newUUIDString;
+import static org.apache.usergrid.TestHelper.uniqueApp;
+import static org.apache.usergrid.TestHelper.uniqueEmail;
+import static org.apache.usergrid.TestHelper.uniqueOrg;
+import static org.apache.usergrid.TestHelper.uniqueUsername;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -59,13 +60,13 @@ public class ApplicationCreatorIT {
     @Test
     public void testCreateSampleApplication() throws Exception {
 
-        final String orgName = "appcreatortest" + newUUIDString();
-        final String appName = "nate-appcreatortest" + newUUIDString();
+        final String orgName = uniqueOrg();
+        final String appName = uniqueApp();
         final String expecteAppname = "sandbox";
         final String expectedName = orgName + "/" + expecteAppname;
 
-        OrganizationOwnerInfo orgOwner = setup.getMgmtSvc().createOwnerAndOrganization( orgName, appName, "Nate",
-                "nate+appcreatortest" + newUUIDString() + "@apigee.com", "password", true, false );
+        OrganizationOwnerInfo orgOwner = setup.getMgmtSvc().createOwnerAndOrganization( orgName, appName, uniqueUsername(),
+                uniqueEmail(), "password", true, false );
 
         ApplicationInfo appInfo = setup.getAppCreator().createSampleFor( orgOwner.getOrganization() );
         assertNotNull( appInfo );
@@ -80,13 +81,13 @@ public class ApplicationCreatorIT {
     @Test
     public void testCreateSampleApplicationAltName() throws Exception {
 
-        final String orgName = "appcreatortest" + newUUIDString();
-        final String appName = "nate-appcreatortest" + newUUIDString();
+        final String orgName = uniqueOrg();
+        final String appName = uniqueApp();
         final String sampleAppName =  "messagee" ;
         final String expectedName = orgName + "/" + sampleAppName;
 
-        OrganizationOwnerInfo orgOwner = setup.getMgmtSvc().createOwnerAndOrganization( orgName, appName, "Nate",
-                "nate+appcreatortestcustom" + newUUIDString() + "@apigee.com", "password", true, false );
+        OrganizationOwnerInfo orgOwner = setup.getMgmtSvc().createOwnerAndOrganization( orgName, appName, uniqueUsername(),
+                uniqueEmail(), "password", true, false );
 
         ApplicationCreatorImpl customCreator = new ApplicationCreatorImpl( setup.getEmf(), setup.getMgmtSvc() );
         customCreator.setSampleAppName(sampleAppName);

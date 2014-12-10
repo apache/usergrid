@@ -66,7 +66,9 @@ import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
 
-import static org.apache.usergrid.UUIDTestHelper.newUUIDString;
+import static org.apache.usergrid.TestHelper.newUUIDString;
+import static org.apache.usergrid.TestHelper.uniqueApp;
+import static org.apache.usergrid.TestHelper.uniqueOrg;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -345,9 +347,11 @@ public class ExportServiceIT {
     @Test
     public void testExportOneAppOnCollectionEndpoint() throws Exception {
 
+        final String orgName = uniqueOrg();
+        final String appName = uniqueApp();
+
+
         File f = null;
-        String orgName = "george-organization"+newUUIDString();
-        String appName = "testAppCollectionTestNotExported"+newUUIDString();
 
         try {
             f = new File( "exportOneApp.json" );
@@ -616,11 +620,14 @@ public class ExportServiceIT {
         HashMap<String, Object> payload = payloadBuilder();
 
         //creates 100s of organizations with some entities in each one to make sure we don't actually apply it
+        final String uniqueOrg = uniqueOrg();
+        final String uniqueApp = uniqueApp();
+
         OrganizationInfo orgMade = null;
         ApplicationInfo appMade = null;
         for ( int i = 0; i < 10; i++ ) {
-            orgMade = setup.getMgmtSvc().createOrganization( "superboss"+ newUUIDString() + i, adminUser, true );
-            appMade = setup.getMgmtSvc().createApplication( orgMade.getUuid(), "superapp" +newUUIDString() + i );
+            orgMade = setup.getMgmtSvc().createOrganization(uniqueOrg + i, adminUser, true );
+            appMade = setup.getMgmtSvc().createApplication( orgMade.getUuid(), uniqueApp + i );
 
             EntityManager customMaker = setup.getEmf().getEntityManager( appMade.getId() );
             customMaker.createApplicationCollection( "superappCol" + i );

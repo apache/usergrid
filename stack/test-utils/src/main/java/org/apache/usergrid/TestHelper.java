@@ -26,7 +26,44 @@ import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 /**
  * Simple class to manipulate UUIDs into strings for unique strings when testing
  */
-public class UUIDTestHelper {
+public class TestHelper {
+
+    /**
+     * Generate a unique name for an organization
+     * @return
+     */
+    public static String uniqueOrg(){
+        return "org" + newUUIDString();
+    }
+
+
+    /**
+     * Generate a unique name for an application
+     * @return
+     */
+    public static String uniqueApp(){
+        return "app" + newUUIDString();
+    }
+
+
+    /**
+     * Generate a unique username
+     * @return
+     */
+    public static String uniqueUsername(){
+        return "user" + newUUIDString();
+    }
+
+
+    /**
+     * Generate a unique email
+     * @return
+     */
+   public static String uniqueEmail(){
+       return "user" + newUUIDString() + "@apache.org";
+   }
+
+
 
     /**
      * Generate a new UUID, and remove all the '-' characters from the resulting string.
