@@ -34,6 +34,7 @@ import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationOwnerInfo;
 import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 
+import static org.apache.usergrid.UUIDTestHelper.newUUIDString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -42,8 +43,6 @@ import static org.junit.Assert.assertTrue;
 /** @author zznate */
 @Concurrent()
 public class ApplicationCreatorIT {
-    private static final Logger LOG = LoggerFactory.getLogger( ApplicationCreatorIT.class );
-
     @ClassRule
     public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
 
@@ -59,14 +58,18 @@ public class ApplicationCreatorIT {
 
     @Test
     public void testCreateSampleApplication() throws Exception {
-        OrganizationOwnerInfo orgOwner = setup.getMgmtSvc()
-                                              .createOwnerAndOrganization( "appcreatortest", "nate-appcreatortest",
-                                                      "Nate", "nate+appcreatortest@apigee.com", "password", true,
-                                                      false );
+
+        final String orgName = "appcreatortest" + newUUIDString();
+        final String appName = "nate-appcreatortest" + newUUIDString();
+        final String expecteAppname = "sandbox";
+        final String expectedName = orgName + "/" + expecteAppname;
+
+        OrganizationOwnerInfo orgOwner = setup.getMgmtSvc().createOwnerAndOrganization( orgName, appName, "Nate",
+                "nate+appcreatortest" + newUUIDString() + "@apigee.com", "password", true, false );
 
         ApplicationInfo appInfo = setup.getAppCreator().createSampleFor( orgOwner.getOrganization() );
         assertNotNull( appInfo );
-        assertEquals( "appcreatortest/sandbox", appInfo.getName() );
+        assertEquals( expectedName, appInfo.getName() );
 
         Set<String> rolePerms = setup.getEmf().getEntityManager( appInfo.getId() ).getRolePermissions( "guest" );
         assertNotNull( rolePerms );
@@ -76,13 +79,19 @@ public class ApplicationCreatorIT {
 
     @Test
     public void testCreateSampleApplicationAltName() throws Exception {
-        OrganizationOwnerInfo orgOwner = setup.getMgmtSvc().createOwnerAndOrganization( "appcreatortestcustom",
-                "nate-appcreatortestcustom", "Nate", "nate+appcreatortestcustom@apigee.com", "password", true, false );
+
+        final String orgName = "appcreatortest" + newUUIDString();
+        final String appName = "nate-appcreatortest" + newUUIDString();
+        final String sampleAppName =  "messagee" ;
+        final String expectedName = orgName + "/" + sampleAppName;
+
+        OrganizationOwnerInfo orgOwner = setup.getMgmtSvc().createOwnerAndOrganization( orgName, appName, "Nate",
+                "nate+appcreatortestcustom" + newUUIDString() + "@apigee.com", "password", true, false );
 
         ApplicationCreatorImpl customCreator = new ApplicationCreatorImpl( setup.getEmf(), setup.getMgmtSvc() );
-        customCreator.setSampleAppName( "messagee" );
+        customCreator.setSampleAppName(sampleAppName);
         ApplicationInfo appInfo = customCreator.createSampleFor( orgOwner.getOrganization() );
         assertNotNull( appInfo );
-        assertEquals( "appcreatortestcustom/messagee", appInfo.getName() );
+        assertEquals( expectedName, appInfo.getName() );
     }
 }
