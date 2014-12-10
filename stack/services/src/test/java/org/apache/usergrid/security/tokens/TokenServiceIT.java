@@ -26,9 +26,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
-import org.apache.usergrid.ServiceITSuite;
+import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.management.ApplicationInfo;
@@ -37,10 +38,10 @@ import org.apache.usergrid.management.OrganizationOwnerInfo;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.entities.Application;
+import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.security.AuthPrincipalInfo;
 import org.apache.usergrid.security.AuthPrincipalType;
-import org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl
-        ;
+import org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl;
 import org.apache.usergrid.security.tokens.exceptions.ExpiredTokenException;
 import org.apache.usergrid.security.tokens.exceptions.InvalidTokenException;
 import org.apache.usergrid.utils.UUIDUtils;
@@ -63,7 +64,13 @@ public class TokenServiceIT {
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @ClassRule
-    public static ServiceITSetup setup = new ServiceITSetupImpl( ServiceITSuite.cassandraResource, ServiceITSuite.elasticSearchResource );
+    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
+
+    @ClassRule
+    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
+
+    @ClassRule
+    public static ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource, elasticSearchResource );
 
 
     @BeforeClass

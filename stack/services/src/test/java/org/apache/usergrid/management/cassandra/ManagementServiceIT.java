@@ -32,7 +32,6 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
-import org.apache.usergrid.ServiceITSuite;
 import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
 import org.apache.usergrid.cassandra.Concurrent;
@@ -43,6 +42,7 @@ import org.apache.usergrid.persistence.CredentialsInfo;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.entities.User;
+import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.security.AuthPrincipalType;
 import org.apache.usergrid.security.crypto.command.Md5HashCommand;
 import org.apache.usergrid.security.crypto.command.Sha1HashCommand;
@@ -52,7 +52,6 @@ import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
 
 import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
-import static org.apache.usergrid.management.EmailFlowIT.setup;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_CREDENTIALS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -67,7 +66,11 @@ import static org.junit.Assert.assertTrue;
 public class ManagementServiceIT {
     private static final Logger LOG = LoggerFactory.getLogger( ManagementServiceIT.class );
 
-    private static CassandraResource cassandraResource = ServiceITSuite.cassandraResource;
+    @ClassRule
+    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
+
+    @ClassRule
+    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
 
     // app-level data generated only once
     private static UserInfo adminUser;
@@ -78,7 +81,7 @@ public class ManagementServiceIT {
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @ClassRule
-    public static final ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource, ServiceITSuite.elasticSearchResource );
+    public static final ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource, elasticSearchResource );
 
 
     @BeforeClass

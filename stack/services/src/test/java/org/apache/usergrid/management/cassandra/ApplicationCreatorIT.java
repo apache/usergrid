@@ -19,18 +19,20 @@ package org.apache.usergrid.management.cassandra;
 
 import java.util.Set;
 
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
-import org.apache.usergrid.ServiceITSuite;
 import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationOwnerInfo;
+import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -42,13 +44,17 @@ import static org.junit.Assert.assertTrue;
 public class ApplicationCreatorIT {
     private static final Logger LOG = LoggerFactory.getLogger( ApplicationCreatorIT.class );
 
-    private CassandraResource cassandraResource = ServiceITSuite.cassandraResource;
+    @ClassRule
+    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
+
+    @ClassRule
+    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
 
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @Rule
-    public ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource, ServiceITSuite.elasticSearchResource );
+    public ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource, elasticSearchResource );
 
 
     @Test

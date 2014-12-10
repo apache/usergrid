@@ -45,7 +45,6 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
-import org.apache.usergrid.ServiceITSuite;
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
@@ -61,6 +60,7 @@ import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.entities.JobData;
+import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
@@ -82,7 +82,11 @@ public class ExportServiceIT {
 
     private static final Logger LOG = LoggerFactory.getLogger( ExportServiceIT.class );
 
-    private static CassandraResource cassandraResource = ServiceITSuite.cassandraResource;
+    @ClassRule
+    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
+
+    @ClassRule
+    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
 
     // app-level data generated only once
     private static UserInfo adminUser;
@@ -93,7 +97,7 @@ public class ExportServiceIT {
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @ClassRule
-    public static final ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource, ServiceITSuite.elasticSearchResource );
+    public static final ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource, elasticSearchResource );
 
 
     @BeforeClass

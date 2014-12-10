@@ -48,14 +48,9 @@ import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.User;
+import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 
 import static org.apache.commons.lang.StringUtils.isNotBlank;
-import org.apache.usergrid.ServiceITSuite;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertTrue;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ADMIN_ACTIVATED;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ADMIN_CONFIRMATION;
@@ -95,13 +90,17 @@ public class EmailFlowIT {
     private static final String ORGANIZATION_NAME = "email-test-org-1";
     public static final String ORGANIZATION_NAME_2 = "email-test-org-2";
 
-    static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
+    @ClassRule
+    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts( );
+
+    @ClassRule
+    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
 
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @ClassRule
-    public static ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource, ServiceITSuite.elasticSearchResource );
+    public static ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource, elasticSearchResource );
 
     @Rule
     public TestName name = new TestName();

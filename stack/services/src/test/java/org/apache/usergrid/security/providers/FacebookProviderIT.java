@@ -25,15 +25,17 @@ import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
-import org.apache.usergrid.ServiceITSuite;
+import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.User;
+import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.utils.MapUtils;
 
 import static org.junit.Assert.assertEquals;
@@ -47,16 +49,22 @@ public class FacebookProviderIT {
     private static SignInProviderFactory providerFactory;
     private static UUID applicationId;
 
+    @ClassRule
+    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
+
+    @ClassRule
+    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
+
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @ClassRule
-    public static ServiceITSetup setup = new ServiceITSetupImpl( ServiceITSuite.cassandraResource, ServiceITSuite.elasticSearchResource );
+    public static ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource, elasticSearchResource );
 
 
     @BeforeClass
     public static void setup() throws Exception {
-        providerFactory = ServiceITSuite.cassandraResource.getBean( SignInProviderFactory.class );
+        providerFactory = cassandraResource.getBean( SignInProviderFactory.class );
         UserInfo adminUser = setup.getMgmtSvc()
                                   .createAdminUser( "fbuser", "Facebook User", "user@facebook.com", "test", false,
                                           false );
