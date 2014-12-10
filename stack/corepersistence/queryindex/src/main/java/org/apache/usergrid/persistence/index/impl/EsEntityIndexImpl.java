@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.persistence.index.utils.StringUtils;
+import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.cluster.tasks.PendingClusterTasksRequest;
@@ -181,33 +182,41 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
     @Override
     public void addAlias(final String indexSuffix) {
-        try {
-            Boolean isAck;
-            String indexName = indexIdentifier.getIndex(indexSuffix);
-            final AdminClient adminClient = esProvider.getClient().admin();
+        Boolean isAck;
+        String indexName = indexIdentifier.getIndex(indexSuffix);
+        final AdminClient adminClient = esProvider.getClient().admin();
 
-            String[] indexNames = getIndexes(AliasType.Write);
+        String[] indexNames = getIndexes(AliasType.Write);
 
-            for(String currentIndex : indexNames){
+        for (String currentIndex : indexNames) {
+            try {
+
                 isAck = adminClient.indices().prepareAliases().removeAlias(currentIndex,
                         alias.getWriteAlias()).execute().actionGet().isAcknowledged();
+                logger.info("Removed Index Name [{}] from Alias=[{}] ACK=[{}]", currentIndex, alias, isAck);
 
-                logger.info("Removed Index Name [{}] from Alias=[{}] ACK=[{}]",currentIndex, alias, isAck);
+            } catch (ElasticsearchException e) {
+                logger.warn("Failed to remove index from alias {}", alias.getWriteAlias(), e);
             }
-
+        }
+        try {
             //add read alias
             isAck = adminClient.indices().prepareAliases().addAlias(
                     indexName, alias.getReadAlias()).execute().actionGet().isAcknowledged();
             logger.info("Created new read Alias Name [{}] ACK=[{}]", alias, isAck);
-
+        } catch (ElasticsearchException e) {
+            logger.warn("Failed to add read alias {}", alias.getReadAlias(), e);
+        }
+        try {
             //add write alias
             isAck = adminClient.indices().prepareAliases().addAlias(
                     indexName, alias.getWriteAlias()).execute().actionGet().isAcknowledged();
             logger.info("Created new write Alias Name [{}] ACK=[{}]", alias, isAck);
-            aliasCache.invalidate(alias);
-        } catch (Exception e) {
-            logger.warn("Failed to create alias ", e);
+        } catch (ElasticsearchException e) {
+            logger.warn("Failed to add write alias {}", alias.getWriteAlias(), e);
         }
+        aliasCache.invalidate(alias);
+
     }
 
     @Override
