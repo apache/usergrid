@@ -23,18 +23,7 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
-import org.apache.catalina.startup.Tomcat;
-
-import org.apache.usergrid.TomcatMain;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
-import org.apache.usergrid.rest.TomcatResource;
-import org.apache.usergrid.rest.test.resource2point0.endpoints.ApplicationResource;
-import org.apache.usergrid.rest.test.resource2point0.endpoints.Collection;
-import org.apache.usergrid.rest.test.resource2point0.endpoints.OrganizationResource;
-import org.apache.usergrid.rest.test.resource2point0.endpoints.RootResource;
-import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
-import org.apache.usergrid.rest.test.resource2point0.model.Entity;
-import org.apache.usergrid.rest.test.resource2point0.model.EntityResponse;
 import org.apache.usergrid.utils.MapUtils;
 
 import static org.junit.Assert.assertEquals;
@@ -51,15 +40,20 @@ public class DumbClient extends AbstractRestIT {
     //TODO: maybe this should just take in the raw uri.
     //TODO:fix this so it can work a lot like the context.
     //@Rule
-    public final RestClient client = new RestClient( getBaseURI().toString() );
+    //public final RestClient client = new RestClient( getBaseURI().toString() );
+
+
 
 
     @Test
     public void stuff(){
 
         String name = "stuff"+ UUIDUtils.newTimeUUID();
-        ApiResponse response = client.management().orgs().post( mapOrganization(name,name,name+"@apigee.com",name,name  ) );
-        assertNotNull( response );
+
+        Organization org = clientSetup.getRestClient().management().orgs().post(  )
+        clientSetup.getRestClient().management().orgs().delete(org.getName);
+       // OrganizationResource response =  clientSetup.getRestClient().management().orgs().organization( "" );
+        //assertNotNull( response );
         //EntityResponse itr  =  client.org( "test" ).getApp( "test" ).users().getEntityResponse();
 
         //        for(Entity entity: itr){
@@ -75,10 +69,10 @@ public class DumbClient extends AbstractRestIT {
     @Ignore
     public void stateful(){
 
-        EntityResponse itr  =  client.org( "test" ).getApp( "test" ).users().getEntityResponse();
-
-        for(Entity entity: itr){
-
-        }
+//        EntityResponse itr  =  client.org( "test" ).getApp( "test" ).users().getEntityResponse();
+//
+//        for(Entity entity: itr){
+//
+//        }
     }
 }

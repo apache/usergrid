@@ -17,11 +17,19 @@
 package org.apache.usergrid.rest.test.resource2point0.state;
 
 
+import org.apache.usergrid.rest.test.resource2point0.model.Organization;
+import org.apache.usergrid.rest.test.resource2point0.model.User;
+
+
 /**
  * Context to hold client stateful information
+ * This includes token,orgName and uuid, appName and uuid, and user information
  */
 public class ClientContext {
     private String token;
+    private Organization organization;
+    private User user;
+
 
 
     public String getToken() {
@@ -31,5 +39,23 @@ public class ClientContext {
 
     public void setToken( final String token ) {
         this.token = token;
+    }
+
+    public Organization getOrganization() {
+        return organization;
+    }
+
+
+    public void setOrganization( final Organization organization ) {
+        this.organization = organization;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+
+    public void setUser( final User user ) {
+        this.user = user;
     }
 }

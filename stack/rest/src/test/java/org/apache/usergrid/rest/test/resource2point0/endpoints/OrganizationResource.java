@@ -45,11 +45,10 @@ public class OrganizationResource extends NamedResource {
         return new ApplicationResource( app, context ,this );
     }
 
-    public void post(Map<String,String> organization){
+    public void post(Map<String,String> organization) {
 
         getResource().type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
-                                                   .post( ApiResponse.class, organization );
+                     .post( ApiResponse.class, organization );
     }
-
 
 }

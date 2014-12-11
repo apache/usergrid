@@ -34,12 +34,11 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 public class RestClient implements UrlResource {
 
     private final String serverUrl;
-    private final ClientContext context;
+    private ClientContext context;
 
     public WebResource resource;
     ClientConfig config = new DefaultClientConfig();
     Client client = Client.create( config );
-
 
     /**
      *
@@ -66,6 +65,10 @@ public class RestClient implements UrlResource {
         return client.resource( serverUrl );
     }
 
+    public ClientContext getContext() {
+        return context;
+    }
+
 
     /**
      * Get the management resource
@@ -84,12 +87,15 @@ public class RestClient implements UrlResource {
 
 
     //todo:fix this method for the client.
-    public void loginAdminUser( final String username, final String password ) {
-        //Post isn't implemented yet, but using the method below we should be able to get a superuser password as well.
-        //final String token = management().token().post(username, password);
+//    public void loginAdminUser( final String username, final String password ) {
+//        //Post isn't implemented yet, but using the method below we should be able to get a superuser password as well.
+//        //final String token = management().token().post(username, password);
+//
+//        //context.setToken( token );
+//    }
 
-        //context.setToken( token );
-    }
+//
+//    public void createOrgandOwner
 
 
 }

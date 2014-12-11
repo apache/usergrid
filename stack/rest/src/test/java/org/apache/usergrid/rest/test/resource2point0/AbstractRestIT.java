@@ -36,6 +36,10 @@ import com.sun.jersey.test.framework.JerseyTest;
 import com.sun.jersey.test.framework.WebAppDescriptor;
 import com.sun.jersey.test.framework.spi.container.TestContainerFactory;
 
+
+/**
+ * How would we get the client from here
+ */
 public class AbstractRestIT extends JerseyTest {
 
     private static ClientConfig clientConfig = new DefaultClientConfig();
@@ -46,8 +50,8 @@ public class AbstractRestIT extends JerseyTest {
     public static ITSetup setup = new ITSetup( RestITSuite.cassandraResource );
 //
 //    TODO: Allow the client to be setup seperately
-//    @Rule
-//    public ClientSetup clientSetup = new ClientSetup(my url);
+    @Rule
+    public ClientSetup clientSetup = new ClientSetup(setup.getBaseURI().toString());
 
     protected static final AppDescriptor descriptor;
 
@@ -88,6 +92,7 @@ public class AbstractRestIT extends JerseyTest {
     protected TestContainerFactory getTestContainerFactory() {
         return new com.sun.jersey.test.framework.spi.container.external.ExternalTestContainerFactory();
     }
+
 
 
 
