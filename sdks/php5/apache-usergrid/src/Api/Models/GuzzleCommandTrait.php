@@ -47,4 +47,13 @@ trait GuzzleCommandTrait
         // Return the collection
         return $collection;
     }
+
+    /**
+     *  Returns true if there is a cursor or false if there is not
+     * @return bool
+     */
+    public function hasNextPage()
+    {
+        return $this->has('cursor');
+    }
 } 

@@ -27,6 +27,7 @@ namespace Apache\Usergrid\Api\Exception;
  * @copyright  (c) 2008-2014, Baas Platform Pty. Ltd
  * @link       http://baas-platform.com
  */
-class ServerErrorException extends UsergridException {
+class ServerErrorException extends UsergridException
+{
 
 } 

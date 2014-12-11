@@ -34,27 +34,5 @@ class Organization extends BaseCollection implements ResponseClassInterface
 
     use GuzzleCommandTrait;
 
-    /**
-     * @var
-     */
-    protected $name;
 
-    /**
-     *  Collection Applications
-     *
-     * @var \Apache\Usergrid\Api\Models\Application $properties
-     */
-    protected $applications;
-
-    /** Organization UUID
-     * @var UUID $uuid
-     */
-    protected $uuid;
-
-
-    /**
-     *
-     * @var Array $properties
-     */
-    protected $properties = array();
 } 

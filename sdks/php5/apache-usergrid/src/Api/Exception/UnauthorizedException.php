@@ -28,6 +28,7 @@ namespace Apache\Usergrid\Api\Exception;
  * @copyright  (c) 2008-2014, Baas Platform Pty. Ltd
  * @link       http://baas-platform.com
  */
-class UnauthorizedException extends UsergridException {
+class UnauthorizedException extends UsergridException
+{
 
 } 

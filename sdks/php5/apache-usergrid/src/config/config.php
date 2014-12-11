@@ -19,27 +19,17 @@ return [
     'usergrid' => [
 
         'url' => 'https://api.usergrid.com',
-
         'version' => '1.0.0',
-
         'orgName' => null,
-
         'appName' => null,
-
         'manifestPath' => null,
-
         //its better not to set the real values here if using laravel set them in a .env file or
         // if your not using Laravel set them as environment variable and include them here using $_ENV global.
         // so that way you can be sure not to commit privates ID to a public repo
         'clientId' => null,
-
         'clientSecret' => null,
-
         'username' => null,
-
         'password' => null,
-
-
         /**
          * The Auth Type setting is the Oauth 2 end point you want to get the OAuth 2
          * Token from.  You have two options here one is 'application' the other is 'organization'
@@ -48,7 +38,6 @@ return [
          *  application will get the token from http://example.com/managment/org_name/app_name using client_credentials or password grant type
          */
         'auth_type' => 'organization',
-
         /** The Grant Type to use
          *
          * This has to be set to one of the 2 grant types that Apache Usergrid
@@ -56,7 +45,6 @@ return [
          * 2 level organization or application
          */
         'grant_type' => 'client_credentials',
-
         /**
          * if you want to manage your own auth flow by calling the token api and setting the token your self just set this to false
          * */

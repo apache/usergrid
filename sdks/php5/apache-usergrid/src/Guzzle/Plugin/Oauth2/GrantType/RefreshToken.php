@@ -17,7 +17,6 @@ namespace Apache\Usergrid\Guzzle\Plugin\Oauth2\GrantType;
 
 use Guzzle\Common\Collection;
 use Guzzle\Http\ClientInterface;
-use Guzzle\Http\Exception\RequestException;
 
 /**
  * Refresh token grant type.

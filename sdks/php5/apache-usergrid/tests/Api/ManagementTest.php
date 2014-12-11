@@ -21,7 +21,7 @@ use Apache\Usergrid\Api\Exception\UsergridException;
 use PHPUnit_Framework_TestCase;
 
 /**
- * Class UsergridTest
+ * Class ManagementTest
  *
  * @package    Apache/Usergrid
  * @version    1.0.0

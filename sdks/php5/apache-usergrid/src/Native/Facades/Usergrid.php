@@ -32,18 +32,17 @@ use Apache\Usergrid\Native\UsergridBootstrapper;
 class Usergrid
 {
     /**
-     * The Usergrid API instance.
-     *
-     * @var \Apache\Usergrid\Api\Usergrid
-     */
-    protected $usergrid;
-
-    /**
      * The Native Bootstrap instance.
      *
      * @var \Apache\Usergrid\Native\UsergridBootstrapper
      */
     protected static $instance;
+    /**
+     * The Usergrid API instance.
+     *
+     * @var \Apache\Usergrid\Api\Usergrid
+     */
+    protected $usergrid;
 
     /**
      * Constructor.
@@ -58,31 +57,6 @@ class Usergrid
         }
 
         $this->usergrid = $bootstraper->createUsergrid();
-    }
-
-    /**
-     * Creates a new Native Bootstraper instance.
-     *
-     * @param  \Apache\Usergrid\Native\UsergridBootstrapper $bootstrapper
-     * @return void
-     */
-    public static function instance(UsergridBootstrapper $bootstrapper = null)
-    {
-        if (static::$instance === null) {
-            static::$instance = new static($bootstrapper);
-        }
-
-        return static::$instance;
-    }
-
-    /**
-     * Returns the Usergrid API instance.
-     *
-     * @return \Apache\Usergrid\Api\Usergrid
-     */
-    public function getUsergrid()
-    {
-        return $this->usergrid;
     }
 
     /**
@@ -115,5 +89,30 @@ class Usergrid
             default:
                 return call_user_func_array([$instance, $method], $args);
         }
+    }
+
+    /**
+     * Creates a new Native Bootstraper instance.
+     *
+     * @param  \Apache\Usergrid\Native\UsergridBootstrapper $bootstrapper
+     * @return static
+     */
+    public static function instance(UsergridBootstrapper $bootstrapper = null)
+    {
+        if (static::$instance === null) {
+            static::$instance = new static($bootstrapper);
+        }
+
+        return static::$instance;
+    }
+
+    /**
+     * Returns the Usergrid API instance.
+     *
+     * @return \Apache\Usergrid\Api\Usergrid
+     */
+    public function getUsergrid()
+    {
+        return $this->usergrid;
     }
 } 

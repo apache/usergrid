@@ -17,8 +17,8 @@ include('vendor/autoload.php');
 
 include('data.php');
 
-use Apache\Usergrid\Native\UsergridBootstrapper;
 use Apache\Usergrid\Native\Facades\Usergrid;
+use Apache\Usergrid\Native\UsergridBootstrapper;
 
 
 /** Source your config from file I'm using array here just for ease of use.

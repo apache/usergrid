@@ -938,7 +938,7 @@
                 {
                     "httpMethod": "POST",
                     "nickname": "mgt_org_apps_json_post",
-                    "summary": "Create new applicationfor organization",
+                    "summary": "Create new application for organization",
                     "notes": "Create new application for organization using JSON payload.",
                     "responseTypeInternal": "",
                     "responseClass": "response",
@@ -1707,7 +1707,7 @@
                 {
                     "httpMethod": "POST",
                     "nickname": "mgt_admin_user_orgs_json_post",
-                    "summary": "Create new organization for admn user",
+                    "summary": "Create new organization for admin user",
                     "notes": "Create new organization for admin user using JSON payload.",
                     "responseTypeInternal": "",
                     "responseClass": "response",
