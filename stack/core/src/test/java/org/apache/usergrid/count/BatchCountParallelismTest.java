@@ -38,6 +38,7 @@ import org.apache.usergrid.count.common.Count;
 
 
 /** @author zznate */
+@net.jcip.annotations.NotThreadSafe
 public class BatchCountParallelismTest {
 	
 	private static final Logger LOG = LoggerFactory.getLogger( BatchCountParallelismTest.class );
@@ -60,6 +61,9 @@ public class BatchCountParallelismTest {
 
     @Test
     public void verifyConcurrentAdd() throws Exception {
+
+        final long startCount = batcher.invocationCounter.count();
+
         List<Future<Boolean>> calls = new ArrayList<Future<Boolean>>();
         // create 10 tasks
         // submit should be invoked 10 times
@@ -96,7 +100,12 @@ public class BatchCountParallelismTest {
         	LOG.warn("jobs not yet finished, wait again");
         }
         // we should have 100 total invocations of AbstractBatcher#add
-        assertEquals( 101, batcher.invocationCounter.count() );
+
+        final long currentCount = batcher.invocationCounter.count();
+
+        final long delta = currentCount - startCount;
+
+        assertEquals( 101, delta );
         // we should have submitted 10 batches
 
         // jobs can finished executed, but the batcher may not have flush and so the batchSubmissionCount may not reach the total submitted yet"

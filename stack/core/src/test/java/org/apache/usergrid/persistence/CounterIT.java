@@ -23,7 +23,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +40,7 @@ import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.index.query.CounterResolution;
 import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.utils.ImmediateCounterRule;
 import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
 
@@ -50,6 +53,9 @@ public class CounterIT extends AbstractCoreIT {
 
     private static final Logger LOG = LoggerFactory.getLogger( CounterIT.class );
 
+    @Rule
+    public ImmediateCounterRule counterRule = new ImmediateCounterRule( cassandraResource );
+
     long ts = System.currentTimeMillis() - ( 24 * 60 * 60 * 1000 );
 
 
@@ -57,15 +63,6 @@ public class CounterIT extends AbstractCoreIT {
         super();
     }
 
-
-    @Before
-    public void getSubmitter() {
-        //set the batcher to block the submit so we wait for results when testing
-        SimpleBatcher batcher = cassandraResource.getBean( SimpleBatcher.class );
-
-        batcher.setBlockingSubmit( true );
-        batcher.setBatchSize( 1 );
-    }
 
 
     @Test
