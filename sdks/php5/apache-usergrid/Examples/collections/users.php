@@ -17,8 +17,8 @@ include('vendor/autoload.php');
 
 include('data.php');
 
-use Apache\Usergrid\Native\UsergridBootstrapper;
 use Apache\Usergrid\Native\Facades\Usergrid;
+use Apache\Usergrid\Native\UsergridBootstrapper;
 
 /** The PHP SDK returns all responses as Illuminate\Support\Collection subclasses so the word collection below is php collection class not usergrid collection */
 
@@ -68,12 +68,12 @@ $users_paged = Usergrid::users()->all();
 var_dump(get_class($users_paged->entities));
 
 //// get user 50 page size
-$users_paged_50= Usergrid::users()->all(['limit' => 50]);
+$users_paged_50 = Usergrid::users()->all(['limit' => 50]);
 var_dump($users_paged_50->entities);
 
 // get all users
-$all_users  = Usergrid::usersIterator();
-foreach($all_users as $user) {
+$all_users = Usergrid::usersIterator();
+foreach ($all_users as $user) {
 //    var_dump($user['uuid']); // as array
 }
 
@@ -94,6 +94,25 @@ echo $user_addr->entities->fetch('adr.city');
 // get users device URL -- nested fetch on php collection
 $users_nested = Usergrid::users()->all();
 var_dump($users_nested->entities->fetch('metadata.collections.devices')->first());
+
+// The response that is returned is a PHP collection that has a Zero indexed $item property.
+// but as its a collection class it has some methods that can help you find what you need and one
+// of my fav feature is changing the Zero indexed collection to be indexed by the entity uuid or name or any other property.
+$users_by = Usergrid::users()->all();
+
+$users_by_uuid = $users_by->entities->keyBy('uuid');
+var_dump($users_by_uuid->get('add uuid of user'));
+
+$users_by_name = $users_by->entities->keyBy('username');
+var_dump($users_by_name->get('jasonk'));
+
+$users_by_email = $users_by->entities->keyBy('email');
+var_dump($users_by_email->get('jasonk@apps4u.com.au'));
+
+// sort by key
+$sorted_by_email = $users_by->sortBy('username');
+var_dump($sorted_by_email);
+
 
 // add user to group
 //$user_to_group = Usergrid::groups()->addUser(['entity_name_or_uuid' => 'group_name_or_uuid', 'user_name_or_uuid' => 'user name or uuid']);

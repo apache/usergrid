@@ -16,8 +16,8 @@
 include('vendor/autoload.php');
 include('data.php');
 
-use Apache\Usergrid\Native\UsergridBootstrapper;
 use Apache\Usergrid\Native\Facades\Usergrid;
+use Apache\Usergrid\Native\UsergridBootstrapper;
 
 
 /** Source your config from file I'm using array here just for ease of use.
@@ -54,7 +54,8 @@ $config = [
          * if you want to manage your own auth flow by calling the token api and setting the token your self just set this to false
          * */
         'enable_oauth2_plugin' => true
-    ]];
+    ]
+];
 
 // You need to add a push cert to this folder and pass the path in the apple_notifier_data array
 
@@ -65,7 +66,7 @@ Usergrid::instance($bootstrapper);
 $apple_notifier_data = [
     'name' => 'apple_test',
     'environment' => 'development',
-    'p12Certificate' =>  @'pushtest_dev.p12'
+    'p12Certificate' => @'pushtest_dev.p12'
 ];
 $apple_notifier = Usergrid::notifiers()->createApple($apple_notifier_data);
 

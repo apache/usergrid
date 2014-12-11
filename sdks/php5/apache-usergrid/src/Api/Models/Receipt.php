@@ -14,14 +14,13 @@
  * permissions and limitations under the License.
  */
 
-namespace Apache\Usergrid\Tests\Api\Filters;
+namespace Apache\Usergrid\Api\Models;
 
 
-use Apache\Usergrid\Api\Filters\Date;
-use PHPUnit_Framework_TestCase;
+use Guzzle\Service\Command\ResponseClassInterface;
 
 /**
- * Class DateTest
+ * Class Application
  *
  * @package    Apache/Usergrid
  * @version    1.0.0
@@ -30,12 +29,8 @@ use PHPUnit_Framework_TestCase;
  * @copyright  (c) 2008-2014, Baas Platform Pty. Ltd
  * @link       http://baas-platform.com
  */
-class DateTest extends PHPUnit_Framework_TestCase
+class Receipt extends BaseCollection implements ResponseClassInterface
 {
-    /** @test */
-    public function it_can_convert_dates()
-    {
+    use GuzzleCommandTrait;
 
-        $this->assertEquals('Tue, Oct 14, 2014 3:55 AM', Date::convert(1413258923819));
-    }
 } 

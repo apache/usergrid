@@ -17,13 +17,12 @@
 namespace Apache\Usergrid\Native;
 
 
-
 use Apache\Usergrid\Api\Usergrid;
-use Guzzle\Http\Client;
 use Apache\Usergrid\Guzzle\Plugin\Oauth2\GrantType\ClientCredentials;
 use Apache\Usergrid\Guzzle\Plugin\Oauth2\GrantType\PasswordCredentials;
 use Apache\Usergrid\Guzzle\Plugin\Oauth2\GrantType\RefreshToken;
 use Apache\Usergrid\Guzzle\Plugin\Oauth2\Oauth2Plugin;
+use Guzzle\Http\Client;
 
 /**
  * Class UsergridBootstrapper
@@ -49,7 +48,8 @@ class UsergridBootstrapper
      *
      * @var \Apache\Usergrid\Guzzle\Plugin\Oauth2\Oauth2Plugin
      */
-    protected $oauth2Plugin =  null;
+    protected $oauth2Plugin = null;
+
     /**
      * Constructor.
      *
@@ -81,7 +81,7 @@ class UsergridBootstrapper
         $enable_oauth2_plugin = array_get($this->config, 'usergrid.enable_oauth2_plugin');
 
         //check if user wants to manage there own Oauth 2 auth flow
-        if($enable_oauth2_plugin) {
+        if ($enable_oauth2_plugin) {
 
             $this->createOauth2Plugin();
 
@@ -113,29 +113,28 @@ class UsergridBootstrapper
 
         $app_name = array_get($this->config, 'usergrid.appName');
 
-        if($auth_type == 'organization') {
+        if ($auth_type == 'organization') {
 
-            $url = $base_url.'/management/token';
+            $url = $base_url . '/management/token';
 
-        } elseif($auth_type == 'application')
-        {
-            $url = $base_url.'/'.$org_name.'/'.$app_name.'/token';
+        } elseif ($auth_type == 'application') {
+            $url = $base_url . '/' . $org_name . '/' . $app_name . '/token';
         }
 
         $oauth2Client = new Client($url);
 
 
-        if($grant_type  == 'client_credentials') {
+        if ($grant_type == 'client_credentials') {
             $config = [
                 'client_id' => $client_id,
                 'client_secret' => $client_secret,
 
             ];
             $grantType = new ClientCredentials($oauth2Client, $config);
-            $refreshTokenGrantType = new RefreshToken($oauth2Client,$config);
+            $refreshTokenGrantType = new RefreshToken($oauth2Client, $config);
             $this->oauth2Plugin = new Oauth2Plugin($grantType, $refreshTokenGrantType);
 
-        } elseif($grant_type == 'password') {
+        } elseif ($grant_type == 'password') {
             $config = [
                 'username' => $username,
                 'password' => $password,
@@ -144,7 +143,7 @@ class UsergridBootstrapper
             ];
             $grantType = new PasswordCredentials($oauth2Client, $config);
             $refreshTokenGrantType = new RefreshToken($oauth2Client, $config);
-            $this->oauth2Plugin =  new Oauth2Plugin($grantType,$refreshTokenGrantType);
+            $this->oauth2Plugin = new Oauth2Plugin($grantType, $refreshTokenGrantType);
         }
     }
 

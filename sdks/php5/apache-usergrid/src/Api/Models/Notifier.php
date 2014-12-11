@@ -13,11 +13,24 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-return [
 
-    'name' => 'Application',
-    'apiVersion' => '1.1',
-    'baseUrl' => 'http://baas-platform.com',
-    'description' => 'Client to Usergrid application service',
-    'operations' => []
-];
+namespace Apache\Usergrid\Api\Models;
+
+
+use Guzzle\Service\Command\ResponseClassInterface;
+
+/**
+ * Class Application
+ *
+ * @package    Apache/Usergrid
+ * @version    1.0.0
+ * @author     Jason Kristian <jasonkristian@gmail.com>
+ * @license    Apache License, Version  2.0
+ * @copyright  (c) 2008-2014, Baas Platform Pty. Ltd
+ * @link       http://baas-platform.com
+ */
+class Notifier extends BaseCollection implements ResponseClassInterface
+{
+    use GuzzleCommandTrait;
+
+} 

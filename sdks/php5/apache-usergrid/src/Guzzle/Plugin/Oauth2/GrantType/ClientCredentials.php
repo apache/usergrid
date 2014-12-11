@@ -18,7 +18,6 @@ namespace Apache\Usergrid\Guzzle\Plugin\Oauth2\GrantType;
 
 use Guzzle\Common\Collection;
 use Guzzle\Http\ClientInterface;
-use Guzzle\Http\Exception\RequestException;
 
 /**
  * Client credentials grant type.

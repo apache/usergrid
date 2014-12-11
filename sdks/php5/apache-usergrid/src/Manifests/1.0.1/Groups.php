@@ -21,7 +21,7 @@ return [
         'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/{collection}',
         'notes' => 'Query an app collection.',
         'summary' => 'Query an app collection',
-        'responseClass' => 'Apache\Usergrid\Api\Models\Collection',
+        'responseClass' => 'Apache\Usergrid\Api\Models\Group',
         'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
@@ -98,7 +98,7 @@ return [
         'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/{collection}',
         'notes' => 'Query Groups.',
         'summary' => 'Query the groups collection',
-        'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
+        'responseClass' => 'Apache\Usergrid\Api\Models\Group',
         'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
@@ -169,11 +169,12 @@ return [
             'location' => 'query'
         ]
     ],
-    'findById' => ['httpMethod' => 'GET',
+    'findById' => [
+        'httpMethod' => 'GET',
         'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/{collection}/{uuid}',
         'notes' => 'Find group by uuid.',
         'summary' => 'Find group by uuid',
-        'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
+        'responseClass' => 'Apache\Usergrid\Api\Models\Group',
         'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
@@ -255,7 +256,7 @@ return [
         'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/{collection}',
         'notes' => 'Create new Group.  See Usergrid documentation for JSON format of body.',
         'summary' => 'Create new Group entity',
-        'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
+        'responseClass' => 'Apache\Usergrid\Api\Models\Group',
         'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
@@ -295,7 +296,7 @@ return [
         'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/{collection}/{entity_name_or_uuid}',
         'notes' => 'Delete a Group entity.',
         'summary' => 'Delete a Group entity by name or uuid',
-        'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
+        'responseClass' => 'Apache\Usergrid\Api\Models\Group',
         'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
@@ -337,7 +338,7 @@ return [
         'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/{collection}/{entity_name_or_uuid}',
         'notes' => 'Update a Group entity.',
         'summary' => 'Update a Group entity by name or uuid and using JSON data',
-        'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
+        'responseClass' => 'Apache\Usergrid\Api\Models\Group',
         'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
@@ -383,7 +384,7 @@ return [
         'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/{collection}/{entity_name_or_uuid}/users/{user_name_or_uuid}',
         'notes' => 'Update a Group entity.',
         'summary' => 'Update a Group entity by name or uuid and using JSON data',
-        'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
+        'responseClass' => 'Apache\Usergrid\Api\Models\Group',
         'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [
@@ -435,7 +436,7 @@ return [
         'uri' => '/{org_name_or_uuid}/{app_name_or_uuid}/{collection}/{entity_name_or_uuid}/users/{user_name_or_uuid}',
         'notes' => 'Update a Group entity.',
         'summary' => 'Update a Group entity by name or uuid and using JSON data',
-        'responseClass' => 'Apache\Usergrid\Api\Models\Entity',
+        'responseClass' => 'Apache\Usergrid\Api\Models\Group',
         'responseType' => 'class',
         'errorResponses' => $errors,
         'parameters' => [

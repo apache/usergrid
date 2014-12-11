@@ -17,7 +17,6 @@ namespace Apache\Usergrid\Guzzle\Plugin\Oauth2\GrantType;
 
 use Guzzle\Common\Collection;
 use Guzzle\Http\ClientInterface;
-use Guzzle\Http\Exception\RequestException;
 
 /**
  * Resource owner password credentials grant type.
@@ -45,7 +44,9 @@ class PasswordCredentials implements GrantTypeInterface
             'client_secret' => '',
             'scope' => '',
         ), array(
-            'client_id', 'username', 'password'
+            'client_id',
+            'username',
+            'password'
         ));
     }
 

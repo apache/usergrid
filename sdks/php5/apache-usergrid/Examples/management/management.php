@@ -16,8 +16,8 @@
 include('vendor/autoload.php');
 
 
-use Apache\Usergrid\Native\UsergridBootstrapper;
 use Apache\Usergrid\Native\Facades\Usergrid;
+use Apache\Usergrid\Native\UsergridBootstrapper;
 
 /**
  * When working with the management api any calls that require a application to target will use the default app name set in the config but some times you may want to
@@ -74,7 +74,7 @@ $activity_feed = Usergrid::management()->OrgFeedGet();
 $organization_details = Usergrid::management()->OrgGet();
 
 //get organizations application
-$organization_applications  = Usergrid::management()->OrgAppsGet();
+$organization_applications = Usergrid::management()->OrgAppsGet();
 
 //create application
 $app = ['name' => 'app name -- required'];

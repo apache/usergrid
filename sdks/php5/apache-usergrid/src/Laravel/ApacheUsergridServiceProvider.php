@@ -38,6 +38,7 @@ class ApacheUsergridServiceProvider extends ServiceProvider
 {
 
     protected $oauth2Plugin = null;
+
     /**
      *
      */
@@ -58,7 +59,8 @@ class ApacheUsergridServiceProvider extends ServiceProvider
 
     }
 
-    protected function registerUsergrid() {
+    protected function registerUsergrid()
+    {
 
         $this->app['usergrid'] = $this->app->share(function ($app) {
 
@@ -67,18 +69,18 @@ class ApacheUsergridServiceProvider extends ServiceProvider
              * value .. This has been driving me crazy as I tried to read the config values from a rout and they would not show up
              * then I did . Also this would not find the config values if the boot function did not have the package method called with
              * all 3 args
-            $enable_oauth2_plugin = $this->app['config']->get('usergrid.enable_oauth2_plugin');
-
-            //check if user managed oauth auth flow
-            if($enable_oauth2_plugin){
-            // Create the Oauth2 Guzzle Plugin.
-            $this->createGuzzleOauth2Plugin();
-            }
+             * $enable_oauth2_plugin = $this->app['config']->get('usergrid.enable_oauth2_plugin');
+             *
+             * //check if user managed oauth auth flow
+             * if($enable_oauth2_plugin){
+             * // Create the Oauth2 Guzzle Plugin.
+             * $this->createGuzzleOauth2Plugin();
+             * }
              */
             $enable_oauth2_plugin = $app['config']->get('apache/usergrid::usergrid.enable_oauth2_plugin');
 
             //check if user managed oauth auth flow
-            if($enable_oauth2_plugin){
+            if ($enable_oauth2_plugin) {
                 // Create the Oauth2 Guzzle Plugin.
                 $this->createGuzzleOauth2Plugin();
             }
@@ -100,7 +102,8 @@ class ApacheUsergridServiceProvider extends ServiceProvider
     }
 
 
-    protected function createGuzzleOauth2Plugin(){
+    protected function createGuzzleOauth2Plugin()
+    {
 
         $base_url = $this->app['config']->get('apache/usergrid::usergrid.url');
 
@@ -119,28 +122,27 @@ class ApacheUsergridServiceProvider extends ServiceProvider
         $password = $this->app['config']->get('apache/usergrid::usergrid.password');
 
 
-        if($this->app['config']->get('apache/usergrid::usergrid.auth_type') == 'organization') {
+        if ($this->app['config']->get('apache/usergrid::usergrid.auth_type') == 'organization') {
 
-            $url = $base_url.'/management/token';
+            $url = $base_url . '/management/token';
 
-        } elseif($this->app['config']->get('apache/usergrid::usergrid.auth_type') == 'application')
-        {
-            $url = $base_url.'/'.$org_name.'/'.$app_name.'/token';
+        } elseif ($this->app['config']->get('apache/usergrid::usergrid.auth_type') == 'application') {
+            $url = $base_url . '/' . $org_name . '/' . $app_name . '/token';
         }
 
         $oauth2Client = new Client($url);
 
-        if($grant_type  == 'client_credentials') {
+        if ($grant_type == 'client_credentials') {
             $config = [
                 'client_id' => $client_id,
                 'client_secret' => $client_secret,
 
             ];
             $grantType = new ClientCredentials($oauth2Client, $config);
-            $refreshTokenGrantType = new RefreshToken($oauth2Client,$config);
+            $refreshTokenGrantType = new RefreshToken($oauth2Client, $config);
             $this->oauth2Plugin = new Oauth2Plugin($grantType, $refreshTokenGrantType);
 
-        } elseif($grant_type == 'password') {
+        } elseif ($grant_type == 'password') {
             $config = [
                 'username' => $username,
                 'password' => $password,
@@ -149,7 +151,7 @@ class ApacheUsergridServiceProvider extends ServiceProvider
             ];
             $grantType = new PasswordCredentials($oauth2Client, $config);
             $refreshTokenGrantType = new RefreshToken($oauth2Client, $config);
-            $this->oauth2Plugin =  new Oauth2Plugin($grantType,$refreshTokenGrantType);
+            $this->oauth2Plugin = new Oauth2Plugin($grantType, $refreshTokenGrantType);
         }
 
     }

@@ -17,8 +17,8 @@
 namespace Apache\Usergrid\Api;
 
 
-use Guzzle\Http\QueryString;
 use Guzzle\Http\QueryAggregator\QueryAggregatorInterface;
+use Guzzle\Http\QueryString;
 
 /**
  * Class QueryAggregator

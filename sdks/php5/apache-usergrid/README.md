@@ -66,7 +66,7 @@ or native use just create a config file
 
 ```
      $bootstrap = new UsergridBootstrapper($config);
-     Usergrid::instance($boostraper);
+     Usergrid::instance($bootstrap);
      $res = Usergrid::application()->EntityGet(['collection' => 'shops']);
 ```
 
@@ -151,6 +151,30 @@ The SDK will check each response to see if their is a cursor and if there is it 
     // this will have all devices. 
     }
 ```
+# NEW feature - Attributes
+### Attributes (relationships) 
+The Usergrid PHP SDK has api call on the application service to get a related models but it requires that you make two api calls one to get the entity then a 2nd to get the relationship eg:
+
+```
+$users = Usergrid::users()->all(['limit' => 1]);
+$user_uuid = $users-entities->fetch('uuid');
+$data = [ 'collection' => 'users', 'entity_id' => $user_uuid, 'relationship' => 'devices'];
+$device = Usergrid::application()->GetRelationship($data);
+```
+
+Now the data we require for you to make the relationship api call is already in the SDK we should not force you to make a 2nd api call and give us data we already have. so now you don't need to any more. Just access the default relationships as a property on your response Model.
+
+```
+    $users = Usergrid::users()->all();
+    $user = $users->entities->get(0);
+    $device = $user->device;
+```
+
+that's it, So the take away point is let the SDK do the work for you and if you create custom service descriptors and model classes for your custom collection then look at the User response
+model class at it's deviceAttribute method to see how you can either add it to your custom collections or add custom relationship attributes to the default collections. Remember the SDK is designed
+for you to be able to extend the Guzzle service descriptors (manifest files).
+
+
 ### HTTP headers and UserAgents
 
  When working with http clients & server system you may want to sett additional HTTP Headers. Ive have made this easy as well on the Usergrid class you 
