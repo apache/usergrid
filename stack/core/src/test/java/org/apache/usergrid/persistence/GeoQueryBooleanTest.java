@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
+import org.apache.commons.lang3.RandomStringUtils;
 
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -50,7 +51,8 @@ public class GeoQueryBooleanTest extends AbstractCoreIT {
 
         log.info( "GeoQueryBooleanTest.testGeoQueryWithOr" );
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testGeoQueryWithOr" );
+        UUID applicationId = setup.createApplication( 
+            "testOrganization", "testGeoQueryWithOr-" + RandomStringUtils.randomAlphabetic(20));
         assertNotNull( applicationId );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
@@ -116,7 +118,8 @@ public class GeoQueryBooleanTest extends AbstractCoreIT {
 
         log.info( "GeoQueryBooleanTest.testGeoQueryWithOr" );
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testGeoQueryWithNot" );
+        UUID applicationId = setup.createApplication( 
+            "testOrganization", "testGeoQueryWithNot-" + RandomStringUtils.randomAlphabetic(20) );
         assertNotNull( applicationId );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );

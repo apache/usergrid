@@ -21,7 +21,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.entities.*;
 import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.services.TestQueueManager;
+import org.apache.usergrid.persistence.queue.DefaultQueueManager;
 import org.apache.usergrid.services.notifications.*;
 import org.junit.*;
 import org.slf4j.Logger;
@@ -68,11 +68,9 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
     }
 
-    @Override
     @Before
     public void before() throws Exception {
 
-        super.before();
         // create apns notifier //
         app.clear();
         app.put("name", notifierName);
@@ -121,7 +119,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         ns = getNotificationService();
 
-        TestQueueManager qm = new TestQueueManager();
+        DefaultQueueManager qm = new DefaultQueueManager();
         ns.TEST_QUEUE_MANAGER = qm;
 
         app.getEntityManager().refreshIndex();
@@ -191,8 +189,8 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         entity = results.getEntitiesMap().get(notification.getUuid());
         assertNotNull(entity);
 
-        checkReceipts(notification, 1);
-        checkStatistics(notification, 1, 0);
+        checkReceipts(notification, 2);
+        checkStatistics(notification, 2, 0);
     }
 
     @Test
@@ -579,7 +577,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         app.getEntityManager().refreshIndex();
 
-        checkReceipts(notification, 1);
+        checkReceipts(notification, 2);
     }
 
     @Ignore("todo: how can I mock this?")
