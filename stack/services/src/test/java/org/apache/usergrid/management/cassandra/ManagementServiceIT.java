@@ -161,9 +161,10 @@ public class ManagementServiceIT {
         Map<String, Long> counts = em.getApplicationCounters();
         LOG.info( JsonUtils.mapToJsonString( counts ) );
         LOG.info( JsonUtils.mapToJsonString( em.getCounterNames() ) );
-        assertNotNull( counts.get( "admin_logins" ) );
 
-        final long startCount = counts.get( "admin_logins" );
+        final Long existingCounts = counts.get( "admin_logins" );
+
+        final long startCount = existingCounts == null ? 0 : existingCounts;
 
 
         setup.getMgmtSvc().countAdminUserAction( adminUser, "login" );
