@@ -22,15 +22,15 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
-import org.apache.commons.lang3.RandomStringUtils;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.commons.lang3.RandomStringUtils;
+
 import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.CoreITSuite;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.count.SimpleBatcher;
 import org.apache.usergrid.persistence.entities.Event;
@@ -61,7 +61,7 @@ public class CounterIT extends AbstractCoreIT {
     @Before
     public void getSubmitter() {
         //set the batcher to block the submit so we wait for results when testing
-        SimpleBatcher batcher = CoreITSuite.cassandraResource.getBean( SimpleBatcher.class );
+        SimpleBatcher batcher = cassandraResource.getBean( SimpleBatcher.class );
 
         batcher.setBlockingSubmit( true );
         batcher.setBatchSize( 1 );

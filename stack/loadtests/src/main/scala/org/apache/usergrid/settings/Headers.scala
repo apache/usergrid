@@ -16,7 +16,9 @@
  */
  package org.apache.usergrid.settings
 
-/**
+ import org.apache.usergrid.helpers.Setup
+
+ /**
  *
  */
 object Headers {
@@ -37,6 +39,8 @@ object Headers {
     "Content-Type" -> """application/json; charset=UTF-8""",
     "Authorization" -> "Bearer ${authToken}"
   )
+
+
 
 
 

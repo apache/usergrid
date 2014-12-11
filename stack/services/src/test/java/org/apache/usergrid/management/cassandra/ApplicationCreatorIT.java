@@ -19,19 +19,23 @@ package org.apache.usergrid.management.cassandra;
 
 import java.util.Set;
 
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
-import org.apache.usergrid.ServiceITSuite;
 import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationOwnerInfo;
+import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 
+import static org.apache.usergrid.TestHelper.uniqueApp;
+import static org.apache.usergrid.TestHelper.uniqueEmail;
+import static org.apache.usergrid.TestHelper.uniqueOrg;
+import static org.apache.usergrid.TestHelper.uniqueUsername;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -40,27 +44,33 @@ import static org.junit.Assert.assertTrue;
 /** @author zznate */
 @Concurrent()
 public class ApplicationCreatorIT {
-    private static final Logger LOG = LoggerFactory.getLogger( ApplicationCreatorIT.class );
+    @ClassRule
+    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
 
-    private CassandraResource cassandraResource = ServiceITSuite.cassandraResource;
+    @ClassRule
+    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
 
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @Rule
-    public ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource, ServiceITSuite.elasticSearchResource );
+    public ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource, elasticSearchResource );
 
 
     @Test
     public void testCreateSampleApplication() throws Exception {
-        OrganizationOwnerInfo orgOwner = setup.getMgmtSvc()
-                                              .createOwnerAndOrganization( "appcreatortest", "nate-appcreatortest",
-                                                      "Nate", "nate+appcreatortest@apigee.com", "password", true,
-                                                      false );
+
+        final String orgName = uniqueOrg();
+        final String appName = uniqueApp();
+        final String expecteAppname = "sandbox";
+        final String expectedName = orgName + "/" + expecteAppname;
+
+        OrganizationOwnerInfo orgOwner = setup.getMgmtSvc().createOwnerAndOrganization( orgName, appName, uniqueUsername(),
+                uniqueEmail(), "password", true, false );
 
         ApplicationInfo appInfo = setup.getAppCreator().createSampleFor( orgOwner.getOrganization() );
         assertNotNull( appInfo );
-        assertEquals( "appcreatortest/sandbox", appInfo.getName() );
+        assertEquals( expectedName, appInfo.getName() );
 
         Set<String> rolePerms = setup.getEmf().getEntityManager( appInfo.getId() ).getRolePermissions( "guest" );
         assertNotNull( rolePerms );
@@ -70,13 +80,19 @@ public class ApplicationCreatorIT {
 
     @Test
     public void testCreateSampleApplicationAltName() throws Exception {
-        OrganizationOwnerInfo orgOwner = setup.getMgmtSvc().createOwnerAndOrganization( "appcreatortestcustom",
-                "nate-appcreatortestcustom", "Nate", "nate+appcreatortestcustom@apigee.com", "password", true, false );
+
+        final String orgName = uniqueOrg();
+        final String appName = uniqueApp();
+        final String sampleAppName =  "messagee" ;
+        final String expectedName = orgName + "/" + sampleAppName;
+
+        OrganizationOwnerInfo orgOwner = setup.getMgmtSvc().createOwnerAndOrganization( orgName, appName, uniqueUsername(),
+                uniqueEmail(), "password", true, false );
 
         ApplicationCreatorImpl customCreator = new ApplicationCreatorImpl( setup.getEmf(), setup.getMgmtSvc() );
-        customCreator.setSampleAppName( "messagee" );
+        customCreator.setSampleAppName(sampleAppName);
         ApplicationInfo appInfo = customCreator.createSampleFor( orgOwner.getOrganization() );
         assertNotNull( appInfo );
-        assertEquals( "appcreatortestcustom/messagee", appInfo.getName() );
+        assertEquals( expectedName, appInfo.getName() );
     }
 }

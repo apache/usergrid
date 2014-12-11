@@ -39,27 +39,13 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 
-public class AbstractServiceNotificationIT extends AbstractServiceIT {
+public abstract class AbstractServiceNotificationIT extends AbstractServiceIT {
     private NotificationsService ns;
-
-    @Rule
-    public TestName name = new TestName();
-
-    @BeforeClass
-    public static void beforeClass() {
-    }
-
-    @Before
-    public void before() throws Exception {
-
-    }
 
     protected NotificationsService getNotificationService(){
         ns = (NotificationsService) app.getSm().getService("notifications");
         return ns;
     }
-
-
 
     protected Notification scheduleNotificationAndWait(Notification notification)
             throws Exception {
