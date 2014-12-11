@@ -26,6 +26,8 @@ import org.apache.usergrid.cassandra.Concurrent;
 
 import org.apache.usergrid.services.simple.SimpleService;
 
+import static org.apache.usergrid.TestHelper.uniqueApp;
+import static org.apache.usergrid.TestHelper.uniqueOrg;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -40,7 +42,7 @@ public class ServiceFactoryIT extends AbstractServiceIT {
     public void testPackagePrefixes() throws Exception {
         logger.info( "test package prefixes" );
 
-        UUID applicationId = setup.getEmf().createApplication( "org", "app" );
+        UUID applicationId = setup.getEmf().createApplication(uniqueOrg(), uniqueApp() );
         ServiceManager sm = setup.getSmf().getServiceManager( applicationId );
         Service service = sm.getService( "simple" );
         assertEquals( "/simple", service.getServiceType() );
