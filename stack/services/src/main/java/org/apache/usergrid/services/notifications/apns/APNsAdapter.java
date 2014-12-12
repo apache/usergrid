@@ -64,7 +64,7 @@ public class APNsAdapter implements ProviderAdapter {
 
     private EntityManager entityManager;
     private EntityPushManager pushManager;
-    private LinkedBlockingQueue<SimpleApnsPushNotification> queue;
+    private ArrayBlockingQueue<SimpleApnsPushNotification> queue;
 
     public APNsAdapter(EntityManager entityManager, Notifier notifier){
         this.entityManager = entityManager;
@@ -131,7 +131,7 @@ public class APNsAdapter implements ProviderAdapter {
         if (pushManager == null || !pushManager.isStarted() || pushManager.isShutDown()) {
             PushManagerConfiguration config = new PushManagerConfiguration();
             config.setConcurrentConnectionCount(Runtime.getRuntime().availableProcessors() * 2);
-            queue = new LinkedBlockingQueue<SimpleApnsPushNotification>();
+            queue = new ArrayBlockingQueue<>(10000);
 
             pushManager = new EntityPushManager(notifier, entityManager, queue, config);
             //only tested when a message is sent
