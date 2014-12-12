@@ -41,7 +41,7 @@ stack/corepersistence/queryindex/src/main/java/org/apache/usergrid/persistence/q
 /portal/js/templates.js
 /portal/index.html
 /portal/index-debug.html
-
+/portal/dist/*
 /portal/dist/usergrid-portal/
 /portal/dist/appsvc-ui/
 /portal/nbproject/project.properties
