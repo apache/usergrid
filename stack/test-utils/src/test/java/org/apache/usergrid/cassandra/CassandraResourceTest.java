@@ -17,8 +17,6 @@
 package org.apache.usergrid.cassandra;
 
 
-import java.io.File;
-
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,7 +73,6 @@ public class CassandraResourceTest {
         // test here to see if we can access cassandra's ports
         // TODO - add some test code here using Hector
 
-        cassandraResource.after();
         LOG.info( "Got the test bean: " );
     }
 
@@ -90,7 +87,7 @@ public class CassandraResourceTest {
      */
     @Test
     public void testDoubleTrouble() throws Throwable {
-        CassandraResource c1 = CassandraResource.newWithAvailablePorts();
+        CassandraResource c1 = CassandraResource.setPortsAndStartSpring();
         LOG.info( "Starting up first Cassandra instance: {}", c1 );
         c1.before();
 
@@ -99,7 +96,7 @@ public class CassandraResourceTest {
             Thread.sleep( WAIT );
         }
 
-        CassandraResource c2 = CassandraResource.newWithAvailablePorts();
+        CassandraResource c2 = CassandraResource.setPortsAndStartSpring();
         LOG.debug( "Starting up second Cassandra instance: {}", c2 );
         c2.before();
 
@@ -109,7 +106,6 @@ public class CassandraResourceTest {
         }
 
         LOG.debug( "Shutting Cassandra instances down." );
-        c1.after();
-        c2.after();
+
     }
 }

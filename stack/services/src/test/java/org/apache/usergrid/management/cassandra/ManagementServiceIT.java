@@ -74,7 +74,7 @@ public class ManagementServiceIT {
 
 
     @ClassRule
-    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
+    public static CassandraResource cassandraResource = CassandraResource.setPortsAndStartSpring();
 
 
     @ClassRule

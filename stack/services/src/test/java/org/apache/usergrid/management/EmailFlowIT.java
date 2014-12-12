@@ -51,7 +51,6 @@ import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 
 import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static org.apache.usergrid.TestHelper.newUUIDString;
 import static org.apache.usergrid.TestHelper.uniqueApp;
 import static org.apache.usergrid.TestHelper.uniqueEmail;
 import static org.apache.usergrid.TestHelper.uniqueOrg;
@@ -94,7 +93,7 @@ public class EmailFlowIT {
     private static final Logger LOG = LoggerFactory.getLogger( EmailFlowIT.class );
 
     @ClassRule
-    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts( );
+    public static CassandraResource cassandraResource = CassandraResource.setPortsAndStartSpring();
 
     @ClassRule
     public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();

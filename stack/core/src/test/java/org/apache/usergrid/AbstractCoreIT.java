@@ -32,7 +32,7 @@ public abstract class AbstractCoreIT {
     private static final Logger LOG = LoggerFactory.getLogger( AbstractCoreIT.class );
 
     @ClassRule
-    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
+    public static CassandraResource cassandraResource = CassandraResource.setPortsAndStartSpring();
 
     @ClassRule
     public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();

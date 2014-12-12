@@ -20,6 +20,7 @@
 package org.apache.usergrid.utils;
 
 
+import org.junit.rules.ExternalResource;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -31,7 +32,7 @@ import org.apache.usergrid.count.SimpleBatcher;
 /**
  * Rule  that sets the batch counters to flush immediately, then returns the state to it's expected state afterwards
  */
-public class ImmediateCounterRule implements TestRule {
+public class ImmediateCounterRule extends ExternalResource {
 
     private final SimpleBatcher batcher;
 
@@ -42,33 +43,17 @@ public class ImmediateCounterRule implements TestRule {
 
 
     @Override
-    public Statement apply( final Statement base, final Description description ) {
-        return new Statement() {
-                    @Override
-                    public void evaluate() throws Throwable {
-                        setFlush();
-
-                        try {
-                            base.evaluate();
-                        }
-                        finally {
-                           clearFlush();
-                        }
-                    }
-                };
+    protected void before() throws Throwable {
+        batcher.setBlockingSubmit( true );
+        batcher.setBatchSize( 1 );
+        super.before();
     }
 
 
-    public void setFlush() {
-
-
-        batcher.setBlockingSubmit( true );
-        batcher.setBatchSize( 1 );
-    }
-
-
-    public void clearFlush() {
-        batcher.setBlockingSubmit( true );
-        batcher.setBatchSize( 1 );
+    @Override
+    protected void after() {
+        batcher.setBlockingSubmit( false );
+        batcher.setBatchSize( 10000 );
+        super.after();
     }
 }

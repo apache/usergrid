@@ -37,5 +37,5 @@ import org.junit.runners.Suite;
 @Concurrent()
 public class CassandraResourceITSuite {
     @ClassRule
-    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
+    public static CassandraResource cassandraResource = CassandraResource.setPortsAndStartSpring();
 }

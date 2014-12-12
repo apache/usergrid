@@ -21,7 +21,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -35,8 +34,6 @@ import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.management.ApplicationInfo;
-import org.apache.usergrid.management.OrganizationInfo;
-import org.apache.usergrid.management.OrganizationOwnerInfo;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.entities.Application;
@@ -66,7 +63,7 @@ public class TokenServiceIT {
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @ClassRule
-    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
+    public static CassandraResource cassandraResource = CassandraResource.setPortsAndStartSpring();
 
     @ClassRule
     public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();

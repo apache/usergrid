@@ -30,17 +30,8 @@ import org.apache.commons.lang.ArrayUtils;
 
 
 /**
- * A JUnit {@link org.junit.rules.ExternalResource} designed to start up Cassandra once in a TestSuite or test Class as
- * a shared external resource across test cases and shut it down after the TestSuite has completed. <p/> This external
- * resource is completely isolated in terms of the files used and the ports selected if the {@link AvailablePortFinder}
- * is used with it. <p/> Note that for this resource to work properly, a project.properties file must be placed in the
- * src/test/resources directory with the following stanza in the project pom's build section: <p/> <testResources>
- * <testResource> <directory>src/test/resources</directory> <filtering>true</filtering> <includes>
- * <include>**\/*.properties</include> <include>**\/*.xml</include> </includes> </testResource> </testResources> <p/>
- * The following property expansion macro should be placed in this project.properties file: <p/>
- * target.directory=${pom.build.directory}
+ * A JUnit {@link org.junit.rules.ExternalResource} designed to set our system properties then start spring so it connects to cassandra correctly
  *
- * TODO this class does 2 things.  It loads spring and starts cassandra.  We should separate these concerns.
  */
 public class CassandraResource extends ExternalResource {
     public static final Logger LOG = LoggerFactory.getLogger( CassandraResource.class );
@@ -110,29 +101,6 @@ public class CassandraResource extends ExternalResource {
     }
 
 
-    /**
-     * Gets the storagePort for Cassandra.
-     *
-     * @return the storage_port (in yaml file) used by Cassandra
-     */
-    public int getStoragePort() {
-        return storagePort;
-    }
-
-
-    /**
-     * Gets the sslStoragePort for Cassandra.
-     *
-     * @return the sslStoragePort
-     */
-    public int getSslStoragePort() {
-        return sslStoragePort;
-    }
-
-
-    public int getNativeTransportPort() {
-        return nativeTransportPort;
-    }
 
 
     /**
@@ -212,64 +180,23 @@ public class CassandraResource extends ExternalResource {
                 return;
             }
 
-            startCassandraExternal();
+            startSpring();
         }
     }
 
 
-    private void startCassandraExternal() throws Throwable {
+    private void startSpring() throws Throwable {
         LOG.info( "-------------------------------------------------------------------" );
         LOG.info( "Initializing External Cassandra" );
         LOG.info( "-------------------------------------------------------------------" );
         LOG.info( "before() test, setting system properties for ports : "
                         + "[rpc, storage, sslStorage, native] = [{}, {}, {}, {}]",
                 new Object[] { rpcPort, storagePort, sslStoragePort, nativeTransportPort } );
-        Thread.sleep( 5000 );
         String[] locations = { "usergrid-test-context.xml" };
         applicationContext = new ClassPathXmlApplicationContext( locations );
         applicationContext.refresh();
-        loadSchemaManager();
         initialized = true;
         lock.notifyAll();
-    }
-
-
-    /** Stops Cassandra after a TestSuite or test Class executes. */
-    @Override
-    protected synchronized void after() {
-        super.after();
-        //We don't want to actually remove our schema.  Since our tests are multi threaded, the resource may still be
-        // in use
-        //
-        //        shutdown = new Thread() {
-        //            @Override
-        //            public void run() {
-        //                try {
-        //                    Thread.currentThread();
-        //                    Thread.sleep( 100L );
-        //                }
-        //                catch ( InterruptedException ignored ) {
-        //                }
-        //
-        //
-        //                if ( schemaManager != null ) {
-        //                    LOG.info( "Destroying schemaManager..." );
-        //                    try {
-        //                        schemaManager.destroy();
-        //                    }
-        //                    catch ( Exception e ) {
-        //                        LOG.error( "Ignoring failures while dropping keyspaces: {}", e.getMessage() );
-        //                    }
-        //
-        //                    LOG.info( "SchemaManager destroyed..." );
-        //                }
-        //
-        //                applicationContext.stop();
-        //                LOG.info( "ApplicationContext stopped..." );
-        //            }
-        //        };
-        //
-        //        shutdown.start();
     }
 
 
@@ -293,7 +220,7 @@ public class CassandraResource extends ExternalResource {
     }
 
 
-    public static CassandraResource newWithMavenAllocatedPorts() {
+    public static CassandraResource setAllocatedPorts() {
         synchronized ( lock ) {
 
             //don't keep re-initializing if it's already done
@@ -353,8 +280,8 @@ public class CassandraResource extends ExternalResource {
      *
      * @return a new CassandraResource with possibly non-default ports
      */
-    public static CassandraResource newWithAvailablePorts() {
-        return newWithMavenAllocatedPorts();
+    public static CassandraResource setPortsAndStartSpring() {
+        return setAllocatedPorts();
     }
 
 

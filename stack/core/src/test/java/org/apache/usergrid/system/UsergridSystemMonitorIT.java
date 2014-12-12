@@ -38,7 +38,7 @@ import static org.junit.Assert.assertTrue;
 public class UsergridSystemMonitorIT {
 
     @ClassRule
-    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
+    public static CassandraResource cassandraResource = CassandraResource.setPortsAndStartSpring();
 
     private UsergridSystemMonitor usergridSystemMonitor;
 

@@ -50,7 +50,7 @@ public class PingIdentityProviderIT {
     private static UUID applicationId;
 
     @ClassRule
-    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
+    public static CassandraResource cassandraResource = CassandraResource.setPortsAndStartSpring();
 
     @ClassRule
     public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();

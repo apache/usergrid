@@ -47,6 +47,8 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.inject.Injector;
 
+import net.jcip.annotations.NotThreadSafe;
+
 import rx.functions.Action1;
 
 import static org.junit.Assert.assertEquals;
@@ -54,6 +56,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 
+@NotThreadSafe
 public class GraphShardVersionMigrationIT extends AbstractCoreIT {
 
     private Injector injector;

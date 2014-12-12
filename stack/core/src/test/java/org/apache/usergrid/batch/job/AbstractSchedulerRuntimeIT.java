@@ -46,7 +46,7 @@ public class AbstractSchedulerRuntimeIT {
 
 
     @ClassRule
-    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
+    public static CassandraResource cassandraResource = CassandraResource.setPortsAndStartSpring();
 
 
     @ClassRule

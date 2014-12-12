@@ -59,7 +59,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import org.junit.Ignore;
 
+import net.jcip.annotations.NotThreadSafe;
 
+
+@NotThreadSafe
 public class EntityDataMigrationIT extends AbstractCoreIT {
 
 

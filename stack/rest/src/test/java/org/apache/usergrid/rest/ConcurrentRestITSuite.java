@@ -63,5 +63,5 @@ import org.apache.usergrid.rest.management.organizations.AdminEmailEncodingIT;
 public class ConcurrentRestITSuite {
 
     @ClassRule
-    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
+    public static CassandraResource cassandraResource = CassandraResource.setPortsAndStartSpring();
 }
