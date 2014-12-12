@@ -46,199 +46,7 @@
     </plugins>
   </reporting>
 
-  <profiles>
-    <profile>
-      <id>unit</id>
-      <activation>
-        <property>
-          <name>unit</name>
-          <value>true</value>
-        </property>
-      </activation>
 
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-              <systemPropertyVariables>
-                <storage-config>${basedir}/src/test/conf</storage-config>
-                <target.directory>${project.build.directory}</target.directory>
-              </systemPropertyVariables>
-			<parallel>${services.it.parallel}</parallel>
-            <forkCount>${services.it.forkCount}</forkCount>
-            <reuseForks>${services.it.reuseForks}</reuseForks>
-              <!-- TODO: make this into a small configuration but based on settings.xml -->
-              <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}</argLine>
-
-              <includes>
-                <include>**/ServiceTestSuite.java</include>
-                <include>**/*Test.java</include>
-              </includes>
-              <excludes>
-                <exclude>**/*IT.java</exclude>
-                <exclude>**/*ITSuite.java</exclude>
-                <!-- TODO - add these suites too -->
-                <!-- <exclude>**/*Test.java</exclude> -->
-                <exclude>**/ConcurrentService*Suite.java</exclude>
-              </excludes>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-
-    <profile>
-      <id>default</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-              <systemPropertyVariables>
-                <storage-config>${basedir}/src/test/conf</storage-config>
-                <target.directory>${project.build.directory}</target.directory>
-              </systemPropertyVariables>
-
-			<parallel>${services.it.parallel}</parallel>
-            <threadCount>${services.it.threadCount}</threadCount>
-            <forkCount>${services.it.forkCount}</forkCount>
-            <reuseForks>${services.it.reuseForks}</reuseForks>
-
-              <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 ${ug.argline}</argLine>
-              <argLine>
-                <!-- -javaagent:${settings.localRepository}/org/powermock/powermock-module-javaagent/1.5.1/powermock-module-javaagent-1.5.1.jar -->
-                -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar
-              </argLine>
-
-              <includes>
-                <include>**/ServiceITSuite.java</include>
-                <include>**/ServiceTestSuite.java</include>
-                <include>**/*IT.java</include>
-                <include>**/*Test.java</include>
-              </includes>
-              <excludes>
-                <exclude>**/*Concurrent*Suite.java</exclude>
-                <exclude>**/ExportServiceIT.java</exclude>
-                <exclude>**/ActivitiesServiceIT.java</exclude>
-                <exclude>**/ApplicationCreatorIT.java</exclude>
-                <exclude>**/ApplicationsServiceIT.java</exclude>
-                <exclude>**/CollectionServiceIT.java</exclude>
-                <exclude>**/ConnectionsServiceIT.java</exclude>
-                <exclude>**/ManagementServiceIT.java</exclude>
-                <exclude>**/EmailFlowIT.java</exclude>
-                <exclude>**/FacebookProviderIT.java</exclude>
-                <exclude>**/GroupServiceIT.java</exclude>
-                <exclude>**/OrganizationIT.java</exclude>
-                <exclude>**/PingIdentityProviderIT.java</exclude>
-                <exclude>**/RoleIT.java</exclude>
-                <exclude>**/RolesServiceIT.java</exclude>
-                <exclude>**/ServiceRequestIT.java</exclude>
-                <exclude>**/ServiceFactoryIT.java</exclude>
-                <exclude>**/ServiceInvocationIT.java</exclude>
-                <exclude>**/UsersServiceIT.class</exclude>
-              </excludes>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-
-    <profile>
-      <id>unit-concurrent</id>
-      <activation>
-        <property>
-          <name>unit-concurrent</name>
-          <value>true</value>
-        </property>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-              <accessKey>${aws.s3.key}</accessKey>
-              <secretKey>${aws.s3.secret}</secretKey>
-              <bucketName>${aws.s3.bucket}</bucketName>
-              <systemPropertyVariables>
-                <storage-config>${basedir}/src/test/conf</storage-config>
-                <target.directory>${project.build.directory}</target.directory>
-              </systemPropertyVariables>
-			<parallel>${services.it.parallel}</parallel>
-            <forkCount>${services.it.forkCount}</forkCount>
-            <reuseForks>${services.it.reuseForks}</reuseForks>
-              <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 ${ug.argline}</argLine>
-              <argLine>
-               <!--  -javaagent:${settings.localRepository}/org/powermock/powermock-module-javaagent/1.5.1/powermock-module-javaagent-1.5.1.jar-->
-			   -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar
-              </argLine>
-
-              <includes>
-                <include>**/ConcurrentServiceTestSuite.java</include>
-              </includes>
-              <excludes>
-                <exclude>**/*IT.java</exclude>
-                <exclude>**/*Test.java</exclude>
-                <exclude>**/ServiceITSuite.java</exclude>
-                <exclude>**/ServiceTestSuite.java</exclude>
-                <exclude>**/ConcurrentServiceITSuite.java</exclude>
-              </excludes>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-
-
-    <profile>
-      <id>integ-concurrent</id>
-      <activation>
-        <property>
-          <name>integ-concurrent</name>
-          <value>true</value>
-        </property>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-              <systemPropertyVariables>
-                <storage-config>${basedir}/src/test/conf</storage-config>
-                <target.directory>${project.build.directory}</target.directory>
-              </systemPropertyVariables>
-			<parallel>${services.it.parallel}</parallel>
-            <forkCount>${services.it.forkCount}</forkCount>
-            <reuseForks>${services.it.reuseForks}</reuseForks>
-              <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 ${ug.argline}</argLine>
-              <argLine>
-                <!-- -javaagent:${settings.localRepository}/org/powermock/powermock-module-javaagent/1.5.1/powermock-module-javaagent-1.5.1.jar -->
-				-javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar
-              </argLine>
-
-              <includes>
-                <include>**/ConcurrentServiceITSuite.java</include>
-                <include>**/TokenServiceIT.java</include>
-              </includes>
-              <excludes>
-                <exclude>**/*IT.java</exclude>
-                <exclude>**/*Test.java</exclude>
-                <exclude>**/ServiceITSuite.java</exclude>
-                <exclude>**/ServiceTestSuite.java</exclude>
-              </excludes>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
 
   <!-- PROFILES -->
 
@@ -270,38 +78,52 @@
         <directory>src/main/python</directory>
       </testResource>
     </testResources>
+
     <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <systemPropertyVariables>
-            <storage-config>${basedir}/src/test/conf</storage-config>
-            <target.directory>${project.build.directory}</target.directory>
-          </systemPropertyVariables>
+    <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <systemPropertyVariables>
+                <storage-config>${basedir}/src/test/conf</storage-config>
+                <target.directory>${project.build.directory}</target.directory>
+              </systemPropertyVariables>
+              <parallel>classes</parallel>
+              <forkCount>${services.it.forkCount}</forkCount>
+              <reuseForks>${services.it.reuseForks}</reuseForks>
+              <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}</argLine>
+              <includes>
+                <include>**/*IT.java</include>
+                <include>**/*Test.java</include>
+              </includes>
 
-			<parallel>${services.it.parallel}</parallel>
-            <forkCount>${services.it.forkCount}</forkCount>
-            <reuseForks>${services.it.reuseForks}</reuseForks>
+              <!-- exclude our serial tests -->
+              <excludes>
+                <exclude>**/*Scheduler*IT.java</exclude>
+                <exclude>**/*Notification*IT.java</exclude>
+              </excludes>
+            </configuration>
 
-          <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 ${ug.argline}</argLine>
-          <argLine>
-            <!-- -javaagent:${settings.localRepository}/org/powermock/powermock-module-javaagent/1.5.1/powermock-module-javaagent-1.5.1.jar-->
-			-javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar
-          </argLine>
+            <!-- Serial execution -->
+            <executions>
+                   <execution>
+                       <id>single-thread-test</id>
+                       <phase>test</phase>
+                       <goals>
+                           <goal>test</goal>
+                       </goals>
+                       <configuration>
+                           <includes>
+                               <include>**/*Scheduler*IT.java</include>
+                               <include>**/*Notification*IT.java</include>
+                           </includes>
+                           <threadCount>1</threadCount>
+                       </configuration>
+                   </execution>
+               </executions>
 
-          <includes>
-            <include>**/ServiceITSuite.java</include>
-            <include>**/ServiceTestSuite.java</include>
-            <include>**/TokenServiceIT.java</include>
-            <include>**/*Test.java</include>
-          </includes>
-          <excludes>
-            <!-- <exclude>**/*Test.java</exclude> -->
-            <exclude>**/*Concurrent*Suite.java</exclude>
-          </excludes>
-        </configuration>
-      </plugin>
+            <version>2.15</version>
+          </plugin>
     </plugins>
   </build>
 

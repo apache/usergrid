@@ -183,19 +183,10 @@
           <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}</argLine>
 
           <includes>
-            <include>**/*ConcurrentCoreITSuite.java</include>
-            <include>**/SchedulerTestSuite.java</include>
-            <include>**/SchedulerRuntime*IT.java</include>
+            <include>**/*IT.java</include>
+            <include>**/*Test.java</include>
           </includes>
-          <excludes>
-            <exclude>**/*IT.java</exclude>
-            <exclude>**/*Test.java</exclude>
-            <exclude>**/CoreITSuite.java</exclude>
-            <exclude>**/CoreTestSuite.java</exclude>
-            <exclude>**/ConcurrentSchedulerITSuite.java</exclude>
-            <exclude>**/ConcurrentSchedulerTestSuite.java</exclude>
-            <exclude>**/*Test.java</exclude>
-          </excludes>
+
         </configuration>
         <version>2.15</version>
       </plugin>

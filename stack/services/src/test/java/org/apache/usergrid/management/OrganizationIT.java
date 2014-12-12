@@ -25,15 +25,21 @@ import java.util.UUID;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+
+import org.apache.usergrid.NewOrgAppAdminRule;
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
-import org.apache.usergrid.ServiceITSuite;
+import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.management.cassandra.ManagementServiceImpl;
 import org.apache.usergrid.management.exceptions.RecentlyUsedPasswordException;
+import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.security.AuthPrincipalInfo;
 
+import static org.apache.usergrid.TestHelper.uniqueEmail;
+import static org.apache.usergrid.TestHelper.uniqueOrg;
+import static org.apache.usergrid.TestHelper.uniqueUsername;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -47,16 +53,26 @@ public class OrganizationIT {
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @ClassRule
-    public static ServiceITSetup setup = new ServiceITSetupImpl( ServiceITSuite.cassandraResource, ServiceITSuite.elasticSearchResource );
+    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
+
+    @ClassRule
+    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
+
+
+    @ClassRule
+    public static ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource, elasticSearchResource );
+
+    @Rule
+    public NewOrgAppAdminRule newOrgAppAdminRule = new NewOrgAppAdminRule( setup );
 
 
     @Test
     public void testCreateOrganization() throws Exception {
         UserInfo user =
-                setup.getMgmtSvc().createAdminUser( "edanuff2", "Ed Anuff", "ed@anuff.com2", "test", false, false );
+                setup.getMgmtSvc().createAdminUser( uniqueUsername(), "Ed Anuff", uniqueEmail(), "test", false, false );
         assertNotNull( user );
 
-        OrganizationInfo organization = setup.getMgmtSvc().createOrganization( "OrganizationIT", user, false );
+        OrganizationInfo organization = setup.getMgmtSvc().createOrganization( uniqueOrg(), user, false );
         assertNotNull( organization );
 
         setup.getEmf().getEntityManager( setup.getSmf().getManagementAppId() ).refreshIndex();
@@ -99,7 +115,7 @@ public class OrganizationIT {
         assertEquals( user.getUuid(), principal.getUuid() );
 
         UserInfo new_user = setup.getMgmtSvc()
-                                 .createAdminUser( "test-user-133", "Test User", "test-user-133@mockserver.com",
+                                 .createAdminUser(uniqueUsername(), "Test User", uniqueEmail(),
                                          "testpassword", true, true );
         assertNotNull( new_user );
 
@@ -112,11 +128,13 @@ public class OrganizationIT {
 
         String[] passwords = new String[] { "password1", "password2", "password3", "password4", "password5" };
 
+
+
         UserInfo user = setup.getMgmtSvc()
-                             .createAdminUser( "edanuff3", "Ed Anuff", "ed2@anuff.com2", passwords[0], true, false );
+                             .createAdminUser( uniqueUsername(), "Ed Anuff", uniqueEmail(), passwords[0], true, false );
         assertNotNull( user );
 
-        OrganizationInfo organization = setup.getMgmtSvc().createOrganization( "OrganizationTest2", user, true );
+        OrganizationInfo organization = setup.getMgmtSvc().createOrganization( uniqueOrg(), user, true );
         assertNotNull( organization );
 
         setup.getEmf().getEntityManager( setup.getSmf().getManagementAppId() );
@@ -142,7 +160,7 @@ public class OrganizationIT {
         setup.getEmf().getEntityManager( setup.getSmf().getManagementAppId() );
 
         try {
-            setup.getMgmtSvc().setAdminUserPassword( user.getUuid(), passwords[2] );
+            setup.getMgmtSvc().setAdminUserPassword( user.getUuid(), passwords[3] );
             fail( "password change should fail" );
         }
         catch ( RecentlyUsedPasswordException e ) {
@@ -198,7 +216,7 @@ public class OrganizationIT {
         }
 
         // test history size w/ user belonging to 2 orgs
-        OrganizationInfo organization2 = setup.getMgmtSvc().createOrganization( "OrganizationTest3", user, false );
+        OrganizationInfo organization2 = setup.getMgmtSvc().createOrganization(uniqueOrg(), user, false );
         assertNotNull( organization2 );
 
         setup.getEmf().getEntityManager( setup.getSmf().getManagementAppId() ).refreshIndex();

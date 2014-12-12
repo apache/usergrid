@@ -17,13 +17,16 @@
 package org.apache.usergrid.services;
 
 
+import org.junit.ClassRule;
 import org.junit.Rule;
+
 import org.apache.usergrid.ServiceApplication;
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
-import org.apache.usergrid.ServiceITSuite;
+import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
 import org.apache.usergrid.cassandra.Concurrent;
+import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 
 
 @Concurrent()
@@ -31,8 +34,14 @@ public abstract class AbstractServiceIT {
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
+    @ClassRule
+    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts( );
+
+    @ClassRule
+    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
+
     @Rule
-    public ServiceITSetup setup = new ServiceITSetupImpl( ServiceITSuite.cassandraResource, ServiceITSuite.elasticSearchResource );
+    public ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource, elasticSearchResource );
 
     @Rule
     public ServiceApplication app = new ServiceApplication( setup );
