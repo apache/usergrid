@@ -55,7 +55,7 @@ public class DuplicateNameIT extends AbstractRestIT {
 
         refreshIndex( context.getAppUuid() );
 
-        Injector injector = Guice.createInjector( new TestGuiceModule( null ) ); 
+        Injector injector = Guice.createInjector( new TestGuiceModule() ); 
         SerializationFig sfig = injector.getInstance( SerializationFig.class );
 
         // wait for any temporary unique value records to timeout
