@@ -41,7 +41,7 @@ public class SchedulerRuntime1IT extends AbstractSchedulerRuntimeIT {
     @Test
     public void basicScheduling() throws InterruptedException {
 
-        CountdownLatchJob counterJob = cassandraResource.getBean( CountdownLatchJob.class );
+        CountdownLatchJob counterJob = springResource.getBean( CountdownLatchJob.class );
 
         // set the counter job latch size
         counterJob.setLatch( getCount() );

@@ -47,7 +47,7 @@ public class SchedulerRuntime5IT extends AbstractSchedulerRuntimeIT {
 
         long customRetry = sleepTime * 2;
 
-        DelayHeartbeat job = cassandraResource.getBean( "delayHeartbeat", DelayHeartbeat.class );
+        DelayHeartbeat job = springResource.getBean( "delayHeartbeat", DelayHeartbeat.class );
 
         job.setTimeout( customRetry );
         job.setLatch( heartbeatCount + 1 );

@@ -23,7 +23,7 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.cassandra.CassandraResource;
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.corepersistence.CpSetup;
 import org.apache.usergrid.mq.QueueManagerFactory;
 import org.apache.usergrid.persistence.EntityManagerFactory;
@@ -42,13 +42,13 @@ public class CoreITSetupImpl implements CoreITSetup {
     protected QueueManagerFactory qmf;
     protected IndexBucketLocator indexBucketLocator;
     protected CassandraService cassandraService;
-    protected CassandraResource cassandraResource;
+    protected SpringResource springResource;
     protected ElasticSearchResource elasticSearchResource;
     protected boolean enabled = false;
 
 
-    public CoreITSetupImpl( CassandraResource cassandraResource, ElasticSearchResource elasticSearchResource ) {
-        this.cassandraResource = cassandraResource;
+    public CoreITSetupImpl( SpringResource springResource, ElasticSearchResource elasticSearchResource ) {
+        this.springResource = springResource;
         this.elasticSearchResource = elasticSearchResource;
     }
 
@@ -89,10 +89,10 @@ public class CoreITSetupImpl implements CoreITSetup {
 
     private void initialize() {
         if ( !enabled ) {
-            cassandraService = cassandraResource.getBean( CassandraService.class );
-            emf = cassandraResource.getBean( EntityManagerFactory.class );
-            qmf = cassandraResource.getBean( QueueManagerFactory.class );
-            indexBucketLocator = cassandraResource.getBean( IndexBucketLocator.class );
+            cassandraService = springResource.getBean( CassandraService.class );
+            emf = springResource.getBean( EntityManagerFactory.class );
+            qmf = springResource.getBean( QueueManagerFactory.class );
+            indexBucketLocator = springResource.getBean( IndexBucketLocator.class );
 
             //run the migration
             try {
@@ -157,7 +157,7 @@ public class CoreITSetupImpl implements CoreITSetup {
     @Override
     public UUID createApplication( String organizationName, String applicationName ) throws Exception {
         if ( emf == null ) {
-            emf = cassandraResource.getBean( EntityManagerFactory.class );
+            emf = springResource.getBean( EntityManagerFactory.class );
         }
 
         if ( USE_DEFAULT_APPLICATION ) {

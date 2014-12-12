@@ -51,7 +51,7 @@ public class SchedulerRuntime6IT extends AbstractSchedulerRuntimeIT {
         long customRetry = sleepTime + 1000;
         int numberOfRuns = 1;
 
-        OnlyOnceExceution job = cassandraResource.getBean( "onlyOnceExceution", OnlyOnceExceution.class );
+        OnlyOnceExceution job = springResource.getBean( "onlyOnceExceution", OnlyOnceExceution.class );
 
         job.setTimeout( customRetry );
         job.setLatch( numberOfRuns );

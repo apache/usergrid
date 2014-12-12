@@ -29,7 +29,7 @@ import org.junit.runners.Suite;
  */
 @RunWith(ConcurrentSuite.class)
 @Suite.SuiteClasses({
-        CassandraResourceTest.class,           // <== itself fires up instances
+        SpringResourceTest.class,           // <== itself fires up instances
         AnotherCassandraResourceIT.class,      // <== uses the existing suite instance
         YetAnotherCassandraResourceIT.class,   // <== uses the existing suite instance
         OkThisIsTheLastIT.class                // <== uses the existing suite instance
@@ -37,5 +37,5 @@ import org.junit.runners.Suite;
 @Concurrent()
 public class CassandraResourceITSuite {
     @ClassRule
-    public static CassandraResource cassandraResource = CassandraResource.setPortsAndStartSpring();
+    public static SpringResource springResource = SpringResource.setPortsAndStartSpring();
 }

@@ -23,8 +23,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -34,7 +32,6 @@ import org.apache.commons.lang3.RandomStringUtils;
 
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.count.SimpleBatcher;
 import org.apache.usergrid.persistence.entities.Event;
 import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.entities.User;
@@ -54,7 +51,7 @@ public class CounterIT extends AbstractCoreIT {
     private static final Logger LOG = LoggerFactory.getLogger( CounterIT.class );
 
     @Rule
-    public ImmediateCounterRule counterRule = new ImmediateCounterRule( cassandraResource );
+    public ImmediateCounterRule counterRule = new ImmediateCounterRule( springResource );
 
     long ts = System.currentTimeMillis() - ( 24 * 60 * 60 * 1000 );
 

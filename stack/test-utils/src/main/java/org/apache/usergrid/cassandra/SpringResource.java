@@ -33,8 +33,8 @@ import org.apache.commons.lang.ArrayUtils;
  * A JUnit {@link org.junit.rules.ExternalResource} designed to set our system properties then start spring so it connects to cassandra correctly
  *
  */
-public class CassandraResource extends ExternalResource {
-    public static final Logger LOG = LoggerFactory.getLogger( CassandraResource.class );
+public class SpringResource extends ExternalResource {
+    public static final Logger LOG = LoggerFactory.getLogger( SpringResource.class );
     public static final int DEFAULT_RPC_PORT = 9160;
     public static final int DEFAULT_STORAGE_PORT = 7000;
     public static final int DEFAULT_SSL_STORAGE_PORT = 7001;
@@ -59,7 +59,7 @@ public class CassandraResource extends ExternalResource {
     private ConfigurableApplicationContext applicationContext;
     private SchemaManager schemaManager;
 
-    private static CassandraResource instance;
+    private static SpringResource instance;
 
     private static Properties properties = null;
 
@@ -68,7 +68,7 @@ public class CassandraResource extends ExternalResource {
      * Creates a Cassandra starting ExternalResource for JUnit test cases which uses the specified SchemaManager for
      * Cassandra.
      */
-    CassandraResource( int rpcPort, int storagePort, int sslStoragePort, int nativeTransportPort ) {
+    SpringResource( int rpcPort, int storagePort, int sslStoragePort, int nativeTransportPort ) {
         LOG.info( "Creating CassandraResource using {} for the ClassLoader.",
                 Thread.currentThread().getContextClassLoader() );
 
@@ -220,7 +220,7 @@ public class CassandraResource extends ExternalResource {
     }
 
 
-    public static CassandraResource setAllocatedPorts() {
+    public static SpringResource setAllocatedPorts() {
         synchronized ( lock ) {
 
             //don't keep re-initializing if it's already done
@@ -236,13 +236,13 @@ public class CassandraResource extends ExternalResource {
                 LOG.error( "Unable to load project properties: {}", e.getLocalizedMessage() );
             }
             int rpcPort = Integer.parseInt(
-                    props.getProperty( "cassandra.rpcPort", Integer.toString( CassandraResource.DEFAULT_RPC_PORT ) ) );
+                    props.getProperty( "cassandra.rpcPort", Integer.toString( SpringResource.DEFAULT_RPC_PORT ) ) );
             int storagePort = Integer.parseInt( props.getProperty( "cassandra.storagePort",
-                    Integer.toString( CassandraResource.DEFAULT_STORAGE_PORT ) ) );
+                    Integer.toString( SpringResource.DEFAULT_STORAGE_PORT ) ) );
             int sslStoragePort = Integer.parseInt( props.getProperty( "cassandra.sslPort",
-                    Integer.toString( CassandraResource.DEFAULT_SSL_STORAGE_PORT ) ) );
+                    Integer.toString( SpringResource.DEFAULT_SSL_STORAGE_PORT ) ) );
             int nativeTransportPort = Integer.parseInt( props.getProperty( "cassandra.nativeTransportPort",
-                    Integer.toString( CassandraResource.DEFAULT_NATIVE_TRANSPORT_PORT ) ) );
+                    Integer.toString( SpringResource.DEFAULT_NATIVE_TRANSPORT_PORT ) ) );
             String host = props.getProperty( "cassandra.host", DEFAULT_HOST );
 
             System.setProperty( "cassandra.url", host + ":" + Integer.toString( rpcPort ) );
@@ -262,7 +262,7 @@ public class CassandraResource extends ExternalResource {
                     new Object[] { rpcPort, storagePort, sslStoragePort, nativeTransportPort } );
 
 
-            instance = new CassandraResource( rpcPort, storagePort, sslStoragePort, nativeTransportPort );
+            instance = new SpringResource( rpcPort, storagePort, sslStoragePort, nativeTransportPort );
 
             LOG.info( "Created a new instance of CassandraResource: {}", instance );
             LOG.info( "Cassandra using ports {} and {}", storagePort, sslStoragePort );
@@ -280,7 +280,7 @@ public class CassandraResource extends ExternalResource {
      *
      * @return a new CassandraResource with possibly non-default ports
      */
-    public static CassandraResource setPortsAndStartSpring() {
+    public static SpringResource setPortsAndStartSpring() {
         return setAllocatedPorts();
     }
 

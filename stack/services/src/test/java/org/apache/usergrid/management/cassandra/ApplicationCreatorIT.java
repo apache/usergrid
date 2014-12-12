@@ -25,7 +25,7 @@ import org.junit.Test;
 
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
-import org.apache.usergrid.cassandra.CassandraResource;
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.management.ApplicationInfo;
@@ -45,7 +45,7 @@ import static org.junit.Assert.assertTrue;
 @Concurrent()
 public class ApplicationCreatorIT {
     @ClassRule
-    public static CassandraResource cassandraResource = CassandraResource.setPortsAndStartSpring();
+    public static SpringResource springResource = SpringResource.setPortsAndStartSpring();
 
     @ClassRule
     public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
@@ -54,7 +54,7 @@ public class ApplicationCreatorIT {
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @Rule
-    public ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource, elasticSearchResource );
+    public ServiceITSetup setup = new ServiceITSetupImpl( springResource, elasticSearchResource );
 
 
     @Test

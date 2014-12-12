@@ -28,7 +28,7 @@ import org.apache.usergrid.batch.job.SchedulerRuntime5IT;
 import org.apache.usergrid.batch.job.SchedulerRuntime6IT;
 import org.apache.usergrid.batch.job.SchedulerRuntime7IT;
 import org.apache.usergrid.batch.job.SchedulerRuntime8IT;
-import org.apache.usergrid.cassandra.CassandraResource;
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.cassandra.ConcurrentSuite;
 
@@ -43,5 +43,5 @@ import org.apache.usergrid.cassandra.ConcurrentSuite;
 @Concurrent()
 public class ConcurrentSchedulerITSuite {
     @ClassRule
-    public static CassandraResource cassandraResource = CassandraResource.setPortsAndStartSpring();
+    public static SpringResource springResource = SpringResource.setPortsAndStartSpring();
 }

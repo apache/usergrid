@@ -24,7 +24,7 @@ import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.PropertiesFactoryBean;
-import org.apache.usergrid.cassandra.CassandraResource;
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.management.ApplicationCreator;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.management.export.ExportService;
@@ -48,8 +48,8 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
     private ExportService exportService;
 
 
-    public ServiceITSetupImpl( CassandraResource cassandraResource, ElasticSearchResource elasticSearchResource ) {
-        super( cassandraResource, elasticSearchResource );
+    public ServiceITSetupImpl( SpringResource springResource, ElasticSearchResource elasticSearchResource ) {
+        super( springResource, elasticSearchResource );
     }
 
 
@@ -61,13 +61,13 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
 
     protected void before( Description description ) throws Throwable {
         super.before( description );
-        managementService = cassandraResource.getBean( ManagementService.class );
-        applicationCreator = cassandraResource.getBean( ApplicationCreator.class );
-        tokenService = cassandraResource.getBean( TokenService.class );
-        providerFactory = cassandraResource.getBean( SignInProviderFactory.class );
-        properties = cassandraResource.getBean( PropertiesFactoryBean.class ).getObject();
-        smf = cassandraResource.getBean( ServiceManagerFactory.class );
-        exportService = cassandraResource.getBean( ExportService.class );
+        managementService = springResource.getBean( ManagementService.class );
+        applicationCreator = springResource.getBean( ApplicationCreator.class );
+        tokenService = springResource.getBean( TokenService.class );
+        providerFactory = springResource.getBean( SignInProviderFactory.class );
+        properties = springResource.getBean( PropertiesFactoryBean.class ).getObject();
+        smf = springResource.getBean( ServiceManagerFactory.class );
+        exportService = springResource.getBean( ExportService.class );
 
         LOG.info( "Test setup complete..." );
     }
@@ -93,7 +93,7 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
 
     @Override
     public CassandraService getCassSvc() {
-        return cassandraResource.getBean( CassandraService.class );
+        return springResource.getBean( CassandraService.class );
     }
 
 
@@ -108,7 +108,7 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
 
     public ServiceManagerFactory getSmf() {
         if ( smf == null ) {
-            smf = cassandraResource.getBean( ServiceManagerFactory.class );
+            smf = springResource.getBean( ServiceManagerFactory.class );
         }
 
         return smf;

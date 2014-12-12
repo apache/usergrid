@@ -23,7 +23,7 @@ import org.junit.Rule;
 import org.apache.usergrid.ServiceApplication;
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
-import org.apache.usergrid.cassandra.CassandraResource;
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
@@ -35,13 +35,13 @@ public abstract class AbstractServiceIT {
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @ClassRule
-    public static CassandraResource cassandraResource = CassandraResource.setPortsAndStartSpring();
+    public static SpringResource springResource = SpringResource.setPortsAndStartSpring();
 
     @ClassRule
     public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
 
     @Rule
-    public ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource, elasticSearchResource );
+    public ServiceITSetup setup = new ServiceITSetupImpl( springResource, elasticSearchResource );
 
     @Rule
     public ServiceApplication app = new ServiceApplication( setup );

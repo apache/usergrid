@@ -58,7 +58,7 @@ public class SchedulerRuntimeIntervalIT extends AbstractSchedulerRuntimeIT {
         final int pollCount = 5;
         final int expectedInterval = 5000;
 
-        JobSchedulerService schedulerService = cassandraResource.getBean(JobSchedulerService.class);
+        JobSchedulerService schedulerService = springResource.getBean(JobSchedulerService.class);
 
         final long interval = schedulerService.getInterval();
         final int numberOfWorkers = schedulerService.getWorkerSize();
@@ -67,7 +67,7 @@ public class SchedulerRuntimeIntervalIT extends AbstractSchedulerRuntimeIT {
         assertEquals("Interval must be set to "+ expectedInterval 
                 + " for test to work properly", expectedInterval, interval);
 
-        CountdownLatchJob counterJob = cassandraResource.getBean( CountdownLatchJob.class );
+        CountdownLatchJob counterJob = springResource.getBean( CountdownLatchJob.class );
             // set the counter job latch size
         counterJob.setLatch( expectedExecutions );
 

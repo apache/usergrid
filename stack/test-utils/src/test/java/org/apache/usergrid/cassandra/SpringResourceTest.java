@@ -26,8 +26,8 @@ import static junit.framework.Assert.assertTrue;
 
 /** This tests the CassandraResource. */
 @Concurrent()
-public class CassandraResourceTest {
-    public static final Logger LOG = LoggerFactory.getLogger( CassandraResourceTest.class );
+public class SpringResourceTest {
+    public static final Logger LOG = LoggerFactory.getLogger( SpringResourceTest.class );
     public static final long WAIT = 200L;
 
 
@@ -40,35 +40,35 @@ public class CassandraResourceTest {
         int nativeTransportPort;
 
         do {
-            rpcPort = AvailablePortFinder.getNextAvailable( CassandraResource.DEFAULT_RPC_PORT + 1 );
+            rpcPort = AvailablePortFinder.getNextAvailable( SpringResource.DEFAULT_RPC_PORT + 1 );
         }
-        while ( rpcPort == CassandraResource.DEFAULT_RPC_PORT );
+        while ( rpcPort == SpringResource.DEFAULT_RPC_PORT );
         LOG.info( "Setting rpc_port to {}", rpcPort );
 
         do {
-            storagePort = AvailablePortFinder.getNextAvailable( CassandraResource.DEFAULT_STORAGE_PORT + 1 );
+            storagePort = AvailablePortFinder.getNextAvailable( SpringResource.DEFAULT_STORAGE_PORT + 1 );
         }
-        while ( storagePort == CassandraResource.DEFAULT_STORAGE_PORT || storagePort == rpcPort );
+        while ( storagePort == SpringResource.DEFAULT_STORAGE_PORT || storagePort == rpcPort );
         LOG.info( "Setting storage_port to {}", storagePort );
 
         do {
-            sslStoragePort = AvailablePortFinder.getNextAvailable( CassandraResource.DEFAULT_SSL_STORAGE_PORT + 1 );
+            sslStoragePort = AvailablePortFinder.getNextAvailable( SpringResource.DEFAULT_SSL_STORAGE_PORT + 1 );
         }
-        while ( sslStoragePort == CassandraResource.DEFAULT_SSL_STORAGE_PORT || storagePort == sslStoragePort );
+        while ( sslStoragePort == SpringResource.DEFAULT_SSL_STORAGE_PORT || storagePort == sslStoragePort );
         LOG.info( "Setting ssl_storage_port to {}", sslStoragePort );
 
         do {
             nativeTransportPort =
-                    AvailablePortFinder.getNextAvailable( CassandraResource.DEFAULT_NATIVE_TRANSPORT_PORT + 1 );
+                    AvailablePortFinder.getNextAvailable( SpringResource.DEFAULT_NATIVE_TRANSPORT_PORT + 1 );
         }
-        while ( nativeTransportPort == CassandraResource.DEFAULT_NATIVE_TRANSPORT_PORT
+        while ( nativeTransportPort == SpringResource.DEFAULT_NATIVE_TRANSPORT_PORT
                 || sslStoragePort == nativeTransportPort );
         LOG.info( "Setting native_transport_port to {}", nativeTransportPort );
 
-        final CassandraResource cassandraResource =
-                new CassandraResource( rpcPort, storagePort, sslStoragePort, nativeTransportPort );
+        final SpringResource springResource =
+                new SpringResource( rpcPort, storagePort, sslStoragePort, nativeTransportPort );
 
-        cassandraResource.before();
+        springResource.before();
 
         // test here to see if we can access cassandra's ports
         // TODO - add some test code here using Hector
@@ -87,7 +87,7 @@ public class CassandraResourceTest {
      */
     @Test
     public void testDoubleTrouble() throws Throwable {
-        CassandraResource c1 = CassandraResource.setPortsAndStartSpring();
+        SpringResource c1 = SpringResource.setPortsAndStartSpring();
         LOG.info( "Starting up first Cassandra instance: {}", c1 );
         c1.before();
 
@@ -96,7 +96,7 @@ public class CassandraResourceTest {
             Thread.sleep( WAIT );
         }
 
-        CassandraResource c2 = CassandraResource.setPortsAndStartSpring();
+        SpringResource c2 = SpringResource.setPortsAndStartSpring();
         LOG.debug( "Starting up second Cassandra instance: {}", c2 );
         c2.before();
 

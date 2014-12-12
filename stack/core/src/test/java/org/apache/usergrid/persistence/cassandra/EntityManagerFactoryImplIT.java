@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.commons.lang3.RandomStringUtils;
 
 import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.cassandra.CassandraResource;
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
@@ -62,14 +62,14 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
 
     @ClassRule
-    public static CassandraResource cassandraResource = CassandraResource.setPortsAndStartSpring();
+    public static SpringResource springResource = SpringResource.setPortsAndStartSpring();
 
     @ClassRule
     public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
 
 
     public EntityManagerFactoryImplIT() {
-        emf = cassandraResource.getBean( EntityManagerFactory.class );
+        emf = springResource.getBean( EntityManagerFactory.class );
     }
 
 
@@ -100,9 +100,9 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
     @Before
     public void initTracing() {
-        traceTagManager = cassandraResource.getBean(
+        traceTagManager = springResource.getBean(
                 "traceTagManager", TraceTagManager.class );
-        traceTagReporter = cassandraResource.getBean(
+        traceTagReporter = springResource.getBean(
                 "traceTagReporter", TraceTagReporter.class );
     }
 

@@ -21,11 +21,8 @@ package org.apache.usergrid.utils;
 
 
 import org.junit.rules.ExternalResource;
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
 
-import org.apache.usergrid.cassandra.CassandraResource;
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.count.SimpleBatcher;
 
 
@@ -37,8 +34,8 @@ public class ImmediateCounterRule extends ExternalResource {
     private final SimpleBatcher batcher;
 
 
-    public ImmediateCounterRule( final CassandraResource cassandraResource ) {
-        batcher = cassandraResource.getBean( SimpleBatcher.class );
+    public ImmediateCounterRule( final SpringResource springResource ) {
+        batcher = springResource.getBean( SimpleBatcher.class );
     }
 
 

@@ -25,7 +25,7 @@ import javax.ws.rs.core.UriBuilder;
 import org.junit.rules.ExternalResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.cassandra.CassandraResource;
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.management.ApplicationCreator;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.persistence.EntityManagerFactory;
@@ -44,7 +44,7 @@ public class ITSetup extends ExternalResource {
 
     private static final Logger LOG = LoggerFactory.getLogger( ITSetup.class );
     private final ElasticSearchResource elasticSearchResource;
-    private final CassandraResource cassandraResource;
+    private final SpringResource springResource;
     private final TomcatResource tomcatResource;
 
     private ServiceManagerFactory smf;
@@ -60,7 +60,7 @@ public class ITSetup extends ExternalResource {
     private URI uri;
 
 
-    public ITSetup( CassandraResource cassandraResource) {
+    public ITSetup( SpringResource springResource ) {
         
         try {
             String[] locations = { "usergrid-properties-context.xml" };
@@ -73,7 +73,7 @@ public class ITSetup extends ExternalResource {
             throw new RuntimeException("Error getting properties", ex);
         }
 
-        this.cassandraResource = cassandraResource;
+        this.springResource = springResource;
 
         tomcatResource = TomcatResource.instance;
         tomcatResource.setWebAppsPath( "src/main/webapp" );
@@ -85,23 +85,23 @@ public class ITSetup extends ExternalResource {
     }
 
 
-    public ITSetup( CassandraResource cassandraResource, String webAppsPath ) {
-        this( cassandraResource );
+    public ITSetup( SpringResource springResource, String webAppsPath ) {
+        this( springResource );
         tomcatResource.setWebAppsPath(webAppsPath);
     }
 
 
     @Override
     protected void before() throws Throwable {
-        synchronized ( cassandraResource ) {
+        synchronized ( springResource ) {
             super.before();
 
 
-            emf =                cassandraResource.getBean( EntityManagerFactory.class );
-            smf =                cassandraResource.getBean( ServiceManagerFactory.class );
-            tokenService =       cassandraResource.getBean( TokenService.class );
-            providerFactory =    cassandraResource.getBean( SignInProviderFactory.class );
-            applicationCreator = cassandraResource.getBean( ApplicationCreator.class );
+            emf =                springResource.getBean( EntityManagerFactory.class );
+            smf =                springResource.getBean( ServiceManagerFactory.class );
+            tokenService =       springResource.getBean( TokenService.class );
+            providerFactory =    springResource.getBean( SignInProviderFactory.class );
+            applicationCreator = springResource.getBean( ApplicationCreator.class );
 //            managementService =  cassandraResource.getBean( ManagementService.class );
 
 //            if ( !setupCalled ) {
@@ -111,12 +111,12 @@ public class ITSetup extends ExternalResource {
 
             String esStartup = properties.getProperty("elasticsearch.startup");
             if ( "embedded".equals(esStartup)) {
-                tomcatResource.setCassandraPort( cassandraResource.getRpcPort() );
+                tomcatResource.setCassandraPort( springResource.getRpcPort() );
                 tomcatResource.setElasticSearchPort( 
                     Integer.parseInt( System.getProperty(LOCAL_ES_PORT_PROPNAME)) );
                 
             } else {
-                tomcatResource.setCassandraPort( cassandraResource.getRpcPort() );
+                tomcatResource.setCassandraPort( springResource.getRpcPort() );
                 tomcatResource.setElasticSearchPort(elasticSearchResource.getPort());
             }
 

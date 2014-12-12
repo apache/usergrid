@@ -16,11 +16,11 @@
 package org.apache.usergrid.cassandra;
 
 import org.apache.cassandra.service.CassandraDaemon;
-import static org.apache.usergrid.cassandra.CassandraResource.LOG;
-import static org.apache.usergrid.cassandra.CassandraResource.NATIVE_TRANSPORT_PORT_KEY;
-import static org.apache.usergrid.cassandra.CassandraResource.RPC_PORT_KEY;
-import static org.apache.usergrid.cassandra.CassandraResource.SSL_STORAGE_PORT_KEY;
-import static org.apache.usergrid.cassandra.CassandraResource.STORAGE_PORT_KEY;
+import static org.apache.usergrid.cassandra.SpringResource.LOG;
+import static org.apache.usergrid.cassandra.SpringResource.NATIVE_TRANSPORT_PORT_KEY;
+import static org.apache.usergrid.cassandra.SpringResource.RPC_PORT_KEY;
+import static org.apache.usergrid.cassandra.SpringResource.SSL_STORAGE_PORT_KEY;
+import static org.apache.usergrid.cassandra.SpringResource.STORAGE_PORT_KEY;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

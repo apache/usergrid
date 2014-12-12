@@ -19,7 +19,7 @@ package org.apache.usergrid.rest;
 import org.junit.ClassRule;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
-import org.apache.usergrid.cassandra.CassandraResource;
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.cassandra.ConcurrentSuite;
 import org.apache.usergrid.rest.applications.events.ApplicationRequestCounterIT;
@@ -63,5 +63,5 @@ import org.apache.usergrid.rest.management.organizations.AdminEmailEncodingIT;
 public class ConcurrentRestITSuite {
 
     @ClassRule
-    public static CassandraResource cassandraResource = CassandraResource.setPortsAndStartSpring();
+    public static SpringResource springResource = SpringResource.setPortsAndStartSpring();
 }

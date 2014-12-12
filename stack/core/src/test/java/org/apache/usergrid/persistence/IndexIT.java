@@ -448,7 +448,7 @@ public class IndexIT extends AbstractCoreIT {
 
             RelationManagerImpl impl = (RelationManagerImpl)rm;
 
-            CassandraService cass = cassandraResource.getBean( CassandraService.class );
+            CassandraService cass = springResource.getBean( CassandraService.class );
 
             ByteBufferSerializer buf = ByteBufferSerializer.get();
 

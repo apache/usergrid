@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.NewOrgAppAdminRule;
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
-import org.apache.usergrid.cassandra.CassandraResource;
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.management.ApplicationInfo;
@@ -63,13 +63,13 @@ public class TokenServiceIT {
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @ClassRule
-    public static CassandraResource cassandraResource = CassandraResource.setPortsAndStartSpring();
+    public static SpringResource springResource = SpringResource.setPortsAndStartSpring();
 
     @ClassRule
     public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
 
     @ClassRule
-    public static ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource, elasticSearchResource );
+    public static ServiceITSetup setup = new ServiceITSetupImpl( springResource, elasticSearchResource );
 
 
     @Rule

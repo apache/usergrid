@@ -46,7 +46,7 @@ public class SchedulerRuntime4IT extends AbstractSchedulerRuntimeIT {
 
         long customRetry = sleepTime * 2;
 
-        DelayExecution job = cassandraResource.getBean( "delayExecution", DelayExecution.class );
+        DelayExecution job = springResource.getBean( "delayExecution", DelayExecution.class );
 
         job.setTimeout( customRetry );
 

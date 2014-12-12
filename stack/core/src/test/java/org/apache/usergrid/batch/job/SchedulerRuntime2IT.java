@@ -19,7 +19,6 @@ package org.apache.usergrid.batch.job;
 
 
 import java.util.concurrent.TimeUnit;
-import static org.apache.usergrid.batch.job.AbstractSchedulerRuntimeIT.cassandraResource;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -41,7 +40,7 @@ public class SchedulerRuntime2IT extends AbstractSchedulerRuntimeIT {
     /** Test the scheduler ramps up correctly when there are more jobs to be read after a pause */
     @Test
     public void schedulingWithNoJobs() throws InterruptedException {
-        CountdownLatchJob counterJob = cassandraResource.getBean( CountdownLatchJob.class );
+        CountdownLatchJob counterJob = springResource.getBean( CountdownLatchJob.class );
         // set the counter job latch size
         counterJob.setLatch( getCount() );
 

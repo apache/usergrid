@@ -72,7 +72,7 @@ public abstract class AbstractRestIT extends JerseyTest {
     protected static final AppDescriptor descriptor;
 
     @ClassRule
-    public static ITSetup setup = new ITSetup( RestITSuite.cassandraResource );
+    public static ITSetup setup = new ITSetup( RestITSuite.springResource );
 
     //private static final URI baseURI = setup.getBaseURI();
 

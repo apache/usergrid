@@ -46,7 +46,7 @@ public class SchedulerRuntime8IT extends AbstractSchedulerRuntimeIT {
     @Test
     public void queryAndDeleteJobs() throws Exception {
 
-        CountdownLatchJob job = cassandraResource.getBean( "countdownLatch", CountdownLatchJob.class );
+        CountdownLatchJob job = springResource.getBean( "countdownLatch", CountdownLatchJob.class );
 
         job.setLatch( 1 );
 

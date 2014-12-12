@@ -25,7 +25,7 @@ import org.junit.Test;
 
 import org.apache.commons.lang.StringUtils;
 
-import org.apache.usergrid.cassandra.CassandraResource;
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.utils.MapUtils;
 
@@ -38,14 +38,14 @@ import static org.junit.Assert.assertTrue;
 public class UsergridSystemMonitorIT {
 
     @ClassRule
-    public static CassandraResource cassandraResource = CassandraResource.setPortsAndStartSpring();
+    public static SpringResource springResource = SpringResource.setPortsAndStartSpring();
 
     private UsergridSystemMonitor usergridSystemMonitor;
 
 
     @Before
     public void setupLocal() {
-        usergridSystemMonitor = cassandraResource.getBean( UsergridSystemMonitor.class );
+        usergridSystemMonitor = springResource.getBean( UsergridSystemMonitor.class );
     }
 
 

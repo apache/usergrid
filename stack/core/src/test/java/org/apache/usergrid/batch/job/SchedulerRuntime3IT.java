@@ -45,7 +45,7 @@ public class SchedulerRuntime3IT extends AbstractSchedulerRuntimeIT {
         int failCount = Integer.parseInt( props.getProperty( FAIL_PROP ) );
         long sleepTime = Long.parseLong( props.getProperty( RUNLOOP_PROP ) );
 
-        FailureJobExecution job = cassandraResource.getBean( 
+        FailureJobExecution job = springResource.getBean(
                 "failureJobExceuction", FailureJobExecution.class );
 
         int totalAttempts = failCount + 1;

@@ -41,7 +41,7 @@ public class MessagesIT extends AbstractCoreIT {
     private static final Logger LOG = LoggerFactory.getLogger( MessagesIT.class );
 
     @Rule
-    public ImmediateCounterRule counterRule = new ImmediateCounterRule( cassandraResource );
+    public ImmediateCounterRule counterRule = new ImmediateCounterRule( springResource );
 
     public MessagesIT() {
         super();

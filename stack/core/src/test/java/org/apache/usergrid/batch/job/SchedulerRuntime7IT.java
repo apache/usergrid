@@ -48,7 +48,7 @@ public class SchedulerRuntime7IT extends AbstractSchedulerRuntimeIT {
         int numberOfRuns = 2;
 
         OnlyOnceUnlockOnFailExceution job =
-                cassandraResource.getBean( "onlyOnceUnlockOnFailExceution", OnlyOnceUnlockOnFailExceution.class );
+                springResource.getBean( "onlyOnceUnlockOnFailExceution", OnlyOnceUnlockOnFailExceution.class );
 
         job.setTimeout( customRetry );
         job.setLatch( numberOfRuns );
