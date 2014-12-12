@@ -18,6 +18,7 @@
 package org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt;
 
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
@@ -53,9 +54,18 @@ public class OrgResource  extends NamedResource {
     //TODO: why take in a map? Just use base resource and call post from there,
     //TODO: Why ApiResponse when we could just type what we expect back.
     public Organization post(Organization organization){
+        ApiResponse response = getResource().type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
+                     .post( ApiResponse.class,organization );
 
-        return getResource().type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
-                            .post( Organization.class,organization );
+        LinkedHashMap linkedHashMap = ( LinkedHashMap ) response.getData();
+        //organization.putAll( response.getData());
+        //Organization organization1 //= ( Organization ) linkedHashMap.get( "organization" ); //.get( "organization" );
+
+        organization.putAll( ( Map<? extends String, ?> ) linkedHashMap.get("organization") );
+       // organization.pu
+       // organization.putAll( linkedHashMap.get( "organization" ) );
+
+        return organization;
     }
 
 

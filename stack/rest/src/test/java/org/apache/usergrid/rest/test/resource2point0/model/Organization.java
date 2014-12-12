@@ -20,6 +20,7 @@ package org.apache.usergrid.rest.test.resource2point0.model;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.UUID;
 
 import org.apache.usergrid.utils.MapUtils;
@@ -34,12 +35,12 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 public class Organization extends Entity {
 
 
-    private String organization;
-    private String username;
-    private String email;
-    private String name;
-    private String password;
-    private String passwordHistorySize;
+//    private String organization;
+//    private String username;
+//    private String email;
+//    private String name;
+//    private String password;
+//    private String passwordHistorySize;
 
 
     public Organization() {
@@ -48,82 +49,40 @@ public class Organization extends Entity {
 
     public Organization( String orgName, String username, String email, String ownerName, String password ){
 
-        this.dynamic_properties.put( "orgName",orgName );
+        this.put( "organization", orgName );
+        this.put( "username", username);
+        this.put( "email", email);
+        //TODO: create clearer distinction between ownerName and username in the backend.
+        this.put( "name", ownerName);
+        this.put( "password", password);
     }
 
     @JsonSerialize( include = JsonSerialize.Inclusion.NON_NULL )
     public String getOrganization( ) {
-        return ( String ) this.dynamic_properties.get( "orgName" );
-    }
-    public void setOrganization( final String orgName ) {
-        this.organization = orgName;
+        return ( String ) this.get( "organization" );
     }
 
     @JsonSerialize( include = JsonSerialize.Inclusion.NON_NULL )
     public String getUsername() {
-        return ( String ) this.dynamic_properties.get( "orgName" );
-    }
-
-
-    public void setUsername( final String username ) {
-        this.username = username;
+        return ( String ) this.get( "username" );
     }
 
     @JsonSerialize( include = JsonSerialize.Inclusion.NON_NULL )
     public String getEmail() {
-        return ( String ) this.dynamic_properties.get( "orgName" );
-    }
-
-
-    public void setEmail( final String email ) {
-        this.email = email;
+        return ( String ) this.get( "email" );
     }
 
     @JsonSerialize( include = JsonSerialize.Inclusion.NON_NULL )
     public String getName() {
-        return ( String ) this.dynamic_properties.get( "orgName" );
+        return ( String ) this.get( "name" );
     }
-
-    public void setName( final String name ) {
-        this.name = name;
-    }
-
 
     @JsonSerialize( include = JsonSerialize.Inclusion.NON_NULL )
     public String getPassword() {
-        return ( String ) this.dynamic_properties.get( "orgName" );
+        return ( String ) this.get( "password" );
     }
 
-
-
-
-//    public String getOrganizationName(){
-//        return (String) dynamic_properties.get( "orgName" );
-//    }
-
-
-    public void setPasswordHistorySize( final String passwordHistorySize ) {
-        this.passwordHistorySize = passwordHistorySize;
+    public Object getPasswordHistorySize() {
+        return  (Integer) this.get("passwordHistorySize");
     }
-
-    //private String orgName;
-    //Keep the raw api response in here, dole out
-   // private ApiResponse apiResponse;
-
-    //Organizations are always initialized by name, and the uuid will be set on creations
-//    public Organization( final String orgName) {
-//        this.orgName = orgName;
-//    }
-
-    //Add setter and getter methods for throwing in relevant objects.
-//
-//    public UUID getUuid() {
-//        return (UUID)this.get( "uuid" );
-//    }
-//
-//    public String getOrgName() {
-//        return (String) this.get( "name" );
-//        //return orgName;
-//    }
-
 }

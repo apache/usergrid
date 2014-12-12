@@ -46,6 +46,7 @@ public class ApiResponse<Entity> {
 
     private String path;
     private String uri;
+    private Object data;
     private String status;
     private long timestamp;
     private List<Entity> entities;
@@ -202,6 +203,13 @@ public class ApiResponse<Entity> {
         this.cursor = cursor;
     }
 
+    @JsonSerialize( include = Inclusion.NON_NULL )
+    public Object getData() {
+        return data;
+    }
 
+    public void setData ( Object data ) {
+        this.data = data;
+    }
 }
 

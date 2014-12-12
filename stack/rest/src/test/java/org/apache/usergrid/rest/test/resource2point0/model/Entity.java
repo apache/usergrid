@@ -35,6 +35,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.apache.usergrid.persistence.EntityFactory;
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.annotations.EntityProperty;
+import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.Collection;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
@@ -55,20 +56,10 @@ import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
  */
 
 @XmlRootElement
-public class Entity implements Serializable {
+public class Entity implements Serializable, Map<String,Object> {
 
-    protected UUID uuid;
-
-    protected Long created;
-
-    protected Long modified;
-
-    protected String type;
 
     protected Map<String, Object> dynamic_properties = new TreeMap<String, Object>( String.CASE_INSENSITIVE_ORDER );
-
-    protected Map<String, Set<Object>> dynamic_sets = new TreeMap<String, Set<Object>>( String.CASE_INSENSITIVE_ORDER );
-
 
     private Collection targetResource;
 
@@ -83,34 +74,31 @@ public class Entity implements Serializable {
     }
 
 
-    @EntityProperty( required = true, mutable = false, basic = true, indexed = false )
     @JsonSerialize( include = JsonSerialize.Inclusion.NON_NULL )
-    public UUID getUuid() {
-        return uuid;
+    public UUID getUuid(){
+        return  UUID.fromString( (String) get("uuid") ); //get( "uuid" );
     }
 
 
     public void setUuid( UUID uuid ) {
-        this.uuid = uuid;
+        put( "uuid", uuid );
     }
 
-
-    @EntityProperty( required = true, mutable = false, basic = true, indexed = false )
+    //TODO: see if this is needed
+    //    @JsonSerialize( include = JsonSerialize.Inclusion.NON_NULL )
     public String getType() {
-        return type;
-        //return Schema.getDefaultSchema().getEntityType( this.getClass() );
+        return (String) get( "type" );
     }
 
 
     public void setType( String type ) {
-        this.type = type;
+        put("type",type);
     }
 
 
-    @EntityProperty( indexed = true, required = true, mutable = false )
     @JsonSerialize( include = JsonSerialize.Inclusion.NON_NULL )
     public Long getCreated() {
-        return created;
+        return (Long) get( "created" );
     }
 
 
@@ -118,14 +106,14 @@ public class Entity implements Serializable {
         if ( created == null ) {
             created = System.currentTimeMillis();
         }
-        this.created = created;
+        put( "created", created );
     }
 
 
     @EntityProperty( indexed = true, required = true, mutable = true )
     @JsonSerialize( include = JsonSerialize.Inclusion.NON_NULL )
     public Long getModified() {
-        return modified;
+        return (Long) get( "modified" );
     }
 
 
@@ -133,7 +121,7 @@ public class Entity implements Serializable {
         if ( modified == null ) {
             modified = System.currentTimeMillis();
         }
-        this.modified = modified;
+        put( "modified", modified );
     }
 
 
@@ -146,7 +134,7 @@ public class Entity implements Serializable {
             return value.toString();
         }
 
-        return ( String ) value;
+        return (String) get( "name" );
     }
 
 
@@ -157,36 +145,35 @@ public class Entity implements Serializable {
 
 
     public final Object getProperty( String propertyName ) {
-        return dynamic_properties.get( propertyName );
+        return get( propertyName );
     }
 
-
-    public final void setProperty( String propertyName, Object propertyValue ) {
-        if ( propertyValue == null || propertyValue.equals( "" ) ) {
-            if ( dynamic_properties.containsKey( propertyName ) ) {
-                dynamic_properties.remove( propertyName );
-            }
-        }
-        else {
-            dynamic_properties.put( propertyName, propertyValue );
-        }
-    }
+//
+//    public final void setProperty( String propertyName, Object propertyValue ) {
+//        if ( propertyValue == null || propertyValue.equals( "" ) ) {
+//            if ( containsKey( propertyName ) ) {
+//                remove( propertyName );
+//            }
+//        }
+//        else {
+//            put( propertyName, propertyValue );
+//        }
+//    }
 
 
     public void setProperties( Map<String, Object> properties ) {
-        dynamic_properties = new TreeMap<String, Object>( String.CASE_INSENSITIVE_ORDER );
-        addProperties( properties );
+        putAll( properties );
     }
 
 
-    public void addProperties( Map<String, Object> properties ) {
-        if ( properties == null ) {
-            return;
-        }
-        for ( Map.Entry<String, Object> entry : properties.entrySet() ) {
-            setProperty( entry.getKey(), entry.getValue() );
-        }
-    }
+//    public void addProperties( Map<String, Object> properties ) {
+//        if ( properties == null ) {
+//            return;
+//        }
+//        for ( Map.Entry<String, Object> entry : properties.entrySet() ) {
+//            setProperty( entry.getKey(), entry.getValue() );
+//        }
+//    }
 
 
     @JsonSerialize( include = JsonSerialize.Inclusion.NON_NULL )
@@ -211,7 +198,7 @@ public class Entity implements Serializable {
 
 
     public <T> T getDataset( String property, String key ) {
-        Object md = dynamic_properties.get( property );
+        Object md = get( property );
         if ( md == null ) {
             return null;
         }
@@ -227,10 +214,10 @@ public class Entity implements Serializable {
         if ( key == null ) {
             return;
         }
-        Object md = dynamic_properties.get( property );
+        Object md = get( property );
         if ( !( md instanceof Map<?, ?> ) ) {
             md = new HashMap<String, T>();
-            dynamic_properties.put( property, md );
+            put( property, md );
         }
         @SuppressWarnings( "unchecked" ) Map<String, T> metadata = ( Map<String, T> ) md;
         metadata.put( key, value );
@@ -238,10 +225,10 @@ public class Entity implements Serializable {
 
 
     public <T> void mergeDataset( String property, Map<String, T> new_metadata ) {
-        Object md = dynamic_properties.get( property );
+        Object md = get( property );
         if ( !( md instanceof Map<?, ?> ) ) {
             md = new HashMap<String, T>();
-            dynamic_properties.put( property, md );
+            put( property, md );
         }
         @SuppressWarnings( "unchecked" ) Map<String, T> metadata = ( Map<String, T> ) md;
         metadata.putAll( new_metadata );
@@ -249,7 +236,7 @@ public class Entity implements Serializable {
 
 
     public void clearDataset( String property ) {
-        dynamic_properties.remove( property );
+        remove( property );
     }
 
 
@@ -283,12 +270,12 @@ public class Entity implements Serializable {
     @JsonAnySetter
     public void setDynamicProperty( String key, Object value ) {
         if ( value == null || value.equals( "" ) ) {
-            if ( dynamic_properties.containsKey( key ) ) {
-                dynamic_properties.remove( key );
+            if ( containsKey( key ) ) {
+                remove( key );
             }
         }
         else {
-            dynamic_properties.put( key, value );
+            put( key, value );
         }
     }
 
@@ -298,65 +285,75 @@ public class Entity implements Serializable {
         return dynamic_properties;
     }
 
-
-    public final int compareTo( org.apache.usergrid.persistence.Entity o ) {
-        if ( o == null ) {
-            return 1;
-        }
-        try {
-            long t1 = getUuid().timestamp();
-            long t2 = o.getUuid().timestamp();
-            return ( t1 < t2 ) ? -1 : ( t1 == t2 ) ? 0 : 1;
-        }
-        catch ( UnsupportedOperationException e ) {
-        }
-        return getUuid().compareTo( o.getUuid() );
+    @Override
+    public int size() {
+        return getDynamicProperties().size();
     }
 
 
-    public org.apache.usergrid.persistence.Entity toTypedEntity() {
-        org.apache.usergrid.persistence.Entity entity = EntityFactory.newEntity( getUuid(), getType() );
-        entity.setProperties( getProperties() );
-        return entity;
+    @Override
+    public boolean isEmpty() {
+        return getDynamicProperties().isEmpty();
     }
 
 
-    /* (non-Javadoc)
-     * @see java.lang.Object#hashCode()
-     */
-
-
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( uuid == null ) ? 0 : uuid.hashCode() );
-        return result;
+    @Override
+    public boolean containsKey( final Object key ) {
+        return getDynamicProperties().containsKey( key );
     }
 
 
-    /* (non-Javadoc)
-     * @see java.lang.Object#equals(java.lang.Object)
-     */
+    @Override
+    public boolean containsValue( final Object value ) {
+        return getDynamicProperties().containsValue( value );
+    }
 
-    //    public boolean equals( Object obj ) {
-    //        if ( this == obj ) {
-    //            return true;
-    //        }
-    //        if ( obj == null ) {
-    //            return false;
-    //        }
-    //        if ( getClass() != obj.getClass() ) {
-    //            return false;
-    //        }
-    //        AbstractEntity other = ( AbstractEntity ) obj;
-    //        if ( uuid == null ) {
-    //            if ( other.uuid != null ) {
-    //                return false;
-    //            }
-    //        }
-    //        else if ( !uuid.equals( other.uuid ) ) {
-    //            return false;
-    //        }
-    //        return true;
-    //    }
+
+    @Override
+    public Object get( final Object key ) {
+        //All values are strings , so doing the cast here saves doing the cast elsewhere
+        return getDynamicProperties().get( key );
+    }
+
+
+    @Override
+    public Object put( final String key, final Object value ) {
+        return getDynamicProperties().put( key,value );
+    }
+
+
+    @Override
+    public Object remove( final Object key ) {
+        return getDynamicProperties().remove( key );
+    }
+
+
+    @Override
+    public void putAll( final Map<? extends String, ?> m ) {
+        getDynamicProperties().putAll( m );
+    }
+
+
+    @Override
+    public void clear() {
+        getDynamicProperties().clear();
+    }
+
+
+    @Override
+    public Set<String> keySet() {
+        return getDynamicProperties().keySet();
+    }
+
+
+    @Override
+    public java.util.Collection<Object> values() {
+        return getDynamicProperties().values();
+    }
+
+
+    @Override
+    public Set<Entry<String, Object>> entrySet() {
+        return getDynamicProperties().entrySet();
+    }
 }
