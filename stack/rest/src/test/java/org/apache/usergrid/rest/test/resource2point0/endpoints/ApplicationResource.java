@@ -38,7 +38,7 @@ public class ApplicationResource extends NamedResource {
      * The pattern should look like: orgs.apps.users , orgs.apps.groups and so on...
      * @return
      */
-    public Collection users(){
-        return new Collection("users", context , this);
-    }
+//    public Collection users(){
+//        return new Collection("users", context , this);
+//    }
 }

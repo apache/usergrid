@@ -31,7 +31,7 @@ import com.google.common.base.Optional;
  * Holds POST,PUT,GET,DELETE methods for Collections. Models the rest endpoints for the different ways
  * to get an entity out of UG.
  */
-public class Collection extends NamedResource {
+public abstract class Collection extends NamedResource {
 
 
     public Collection( final String name, final ClientContext context,  final UrlResource parent ) {
@@ -44,7 +44,7 @@ public class Collection extends NamedResource {
      * @return
      */
     public ApiResponse get(final Optional<String> cursor){
-        return getResource().get( ApiResponse.class );
+      return getResource().get( ApiResponse.class );
     }
 
 

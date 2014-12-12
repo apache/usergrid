@@ -27,8 +27,8 @@ import org.apache.usergrid.rest.test.resource2point0.model.User;
  */
 public class ClientContext {
     private String token;
-    private Organization organization;
-    private User user;
+//    private Organization organization;
+//    private User user;
 
 
 
@@ -41,21 +41,21 @@ public class ClientContext {
         this.token = token;
     }
 
-    public Organization getOrganization() {
-        return organization;
-    }
-
-
-    public void setOrganization( final Organization organization ) {
-        this.organization = organization;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-
-    public void setUser( final User user ) {
-        this.user = user;
-    }
+//    public Organization getOrganization() {
+//        return organization;
+//    }
+//
+//
+//    public void setOrganization( final Organization organization ) {
+//        this.organization = organization;
+//    }
+//
+//    public User getUser() {
+//        return user;
+//    }
+//
+//
+//    public void setUser( final User user ) {
+//        this.user = user;
+//    }
 }

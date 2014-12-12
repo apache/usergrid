@@ -79,21 +79,13 @@ public class ClientSetup implements TestRule {
 
         String username = name + UUIDUtils.newTimeUUID();
 //TODO: also create a new application
+        Organization organization = new Organization( username,username,username+"@usergrid.com",username,username  );
 
-        //Default creates a new org and owner.
-        //restClient.getContext().setOrganization( new Organization(  ) );
-        ApiResponse response = restClient.management().orgs().post( mapOrganization(username,username,username+"@usergrid.com",username,username ) );
-        //TODO: inquire about what kind of context the getContext should hold, and if we need to set it everytime we do
-        //a change with the client.
-        //restClient.getContext().setOrganization( new Organization(  ) );
+        //ApiResponse response = restClient.management().orgs().post( mapOrganization(username,username,username+"@usergrid.com",username,username ) );
+        organization = restClient.management().orgs().post( organization );
+        System.out.println();
 
-    }
 
-    public Map<String,String> mapOrganization(String orgName, String username, String email, String name, String password){
-
-        return MapUtils.hashMap( "organization", orgName ).map( "username", username )
-                       .map( "email", email ).map( "name", name )
-                       .map( "password", password);
     }
 
     public RestClient getRestClient(){

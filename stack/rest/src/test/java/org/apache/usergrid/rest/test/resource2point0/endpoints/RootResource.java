@@ -43,7 +43,8 @@ public class RootResource implements UrlResource {
      * @param serverUrl The serverurl that has stood up the UG instance i.e localhost:8080
      * @param context Contains the token that will be used for the following resources.
      */
-    public RootResource( final String serverUrl, final ClientContext context ) {this.serverUrl = serverUrl;
+    public RootResource( final String serverUrl, final ClientContext context ) {
+        this.serverUrl = serverUrl;
         this.context = context;
     }
 

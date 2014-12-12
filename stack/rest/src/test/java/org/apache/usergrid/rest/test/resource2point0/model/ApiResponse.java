@@ -35,7 +35,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize.Inclusion;
 /**
  * Contains the needed types
  */
-public class ApiResponse {
+public class ApiResponse<Entity> {
 
     private String accessToken;
 

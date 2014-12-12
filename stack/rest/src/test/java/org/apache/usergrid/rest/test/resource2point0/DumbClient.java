@@ -24,6 +24,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
+import org.apache.usergrid.rest.test.resource2point0.model.User;
 import org.apache.usergrid.utils.MapUtils;
 
 import static org.junit.Assert.assertEquals;
@@ -49,9 +50,19 @@ public class DumbClient extends AbstractRestIT {
     public void stuff(){
 
         String name = "stuff"+ UUIDUtils.newTimeUUID();
+        User user = new User( "derp","derp", "derp"  );
+        //so user could have an instance of save, then the save does a deep copy of all properties and saves over the previous versions.
+        //Save is part of the entities.
 
-        Organization org = clientSetup.getRestClient().management().orgs().post(  )
-        clientSetup.getRestClient().management().orgs().delete(org.getName);
+
+//        clientSetup.getRestClient().org(  ).getApp( "" ).users().post( user );
+//        clientSetup.getRestClient().org(  ).getApp( "" ).users().get(user.getUuid());
+//        clientSetup.getRestClient().org(  ).getApp( "" ).users().put(user);
+
+
+
+        //Organization org = clientSetup.getRestClient().management().orgs().post(  )
+      //  clientSetup.getRestClient().management().orgs().delete(org.getName);
        // OrganizationResource response =  clientSetup.getRestClient().management().orgs().organization( "" );
         //assertNotNull( response );
         //EntityResponse itr  =  client.org( "test" ).getApp( "test" ).users().getEntityResponse();

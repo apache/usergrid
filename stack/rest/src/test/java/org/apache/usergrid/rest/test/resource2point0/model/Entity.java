@@ -35,6 +35,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.apache.usergrid.persistence.EntityFactory;
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.annotations.EntityProperty;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.Collection;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
@@ -67,6 +68,19 @@ public class Entity implements Serializable {
     protected Map<String, Object> dynamic_properties = new TreeMap<String, Object>( String.CASE_INSENSITIVE_ORDER );
 
     protected Map<String, Set<Object>> dynamic_sets = new TreeMap<String, Set<Object>>( String.CASE_INSENSITIVE_ORDER );
+
+
+    private Collection targetResource;
+
+
+
+    /**
+     * Performs deep copy on entity passed in and save over what we currently have
+     */
+    public void save(){
+        Entity response = targetResource.put(this);
+        this.dynamic_properties.putAll(response.getDynamicProperties());
+    }
 
 
     @EntityProperty( required = true, mutable = false, basic = true, indexed = false )
@@ -263,6 +277,8 @@ public class Entity implements Serializable {
         return "Entity(" + getProperties() + ")";
     }
 
+    public Collection getTargetResource(){return targetResource;}
+    public void setTargetResource(Collection targetResource){this.targetResource = targetResource;}
 
     @JsonAnySetter
     public void setDynamicProperty( String key, Object value ) {
