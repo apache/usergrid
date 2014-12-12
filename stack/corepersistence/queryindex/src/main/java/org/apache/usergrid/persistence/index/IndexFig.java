@@ -112,6 +112,8 @@ public interface IndexFig extends GuicyFig {
     @Key( ELASTICSEARCH_FAIL_REFRESH )
     int getFailRefreshCount();
 
+    @Default("2")
+    int getIndexCacheMaxWorkers();
     @Default( "false" )
     @Key( ELASTICSEARCH_STORE_SOURCE )
     boolean getStoreStource();

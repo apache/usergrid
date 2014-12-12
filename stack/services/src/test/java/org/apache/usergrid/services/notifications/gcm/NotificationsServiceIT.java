@@ -18,9 +18,10 @@ package org.apache.usergrid.services.notifications.gcm;
 
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.entities.*;
-import org.apache.usergrid.services.TestQueueManager;
+import org.apache.usergrid.persistence.queue.DefaultQueueManager;
 import org.apache.usergrid.services.notifications.*;
 import org.junit.*;
+import org.junit.rules.TestName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +34,7 @@ import static org.junit.Assert.*;
 import static org.apache.usergrid.services.notifications.ApplicationQueueManager.NOTIFIER_ID_POSTFIX;
 
 public class NotificationsServiceIT extends AbstractServiceNotificationIT {
+
 
     private static final Logger logger = LoggerFactory
             .getLogger(NotificationsServiceIT.class);
@@ -54,15 +56,18 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
     private NotificationsService ns;
     private QueueListener listener;
 
+
+
+
+
     @BeforeClass
     public static void setup(){
 
+
     }
-    @Override
     @Before
     public void before() throws Exception {
 
-        super.before();
 
         // create gcm notifier //
 
@@ -93,7 +98,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         device2 = app.getEntityManager().get(e.getUuid(), Device.class);
         ns = getNotificationService();
 
-        TestQueueManager qm = new TestQueueManager();
+        DefaultQueueManager qm = new DefaultQueueManager();
         ns.TEST_QUEUE_MANAGER = qm;
 
         listener = new QueueListener(ns.getServiceManagerFactory(), ns.getEntityManagerFactory(),ns.getMetricsFactory(), new Properties());
@@ -163,7 +168,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         // perform push //
         notification = scheduleNotificationAndWait(notification);
-        checkReceipts(notification, 1);
+        checkReceipts(notification, 2);
     }
 
     @Test

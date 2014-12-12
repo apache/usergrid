@@ -22,16 +22,19 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import org.apache.commons.lang3.RandomStringUtils;
 
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.apache.commons.lang3.RandomStringUtils;
+
 import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.CoreITSuite;
+import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
@@ -41,6 +44,7 @@ import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.cassandra.util.TraceTag;
 import org.apache.usergrid.persistence.cassandra.util.TraceTagManager;
 import org.apache.usergrid.persistence.cassandra.util.TraceTagReporter;
+import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -57,8 +61,15 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
     private static final Logger logger = LoggerFactory.getLogger( EntityManagerFactoryImplIT.class );
 
 
+    @ClassRule
+    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
+
+    @ClassRule
+    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
+
+
     public EntityManagerFactoryImplIT() {
-        emf = CoreITSuite.cassandraResource.getBean( EntityManagerFactory.class );
+        emf = cassandraResource.getBean( EntityManagerFactory.class );
     }
 
 
@@ -89,9 +100,9 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
     @Before
     public void initTracing() {
-        traceTagManager = CoreITSuite.cassandraResource.getBean( 
+        traceTagManager = cassandraResource.getBean(
                 "traceTagManager", TraceTagManager.class );
-        traceTagReporter = CoreITSuite.cassandraResource.getBean( 
+        traceTagReporter = cassandraResource.getBean(
                 "traceTagReporter", TraceTagReporter.class );
     }
 

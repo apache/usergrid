@@ -1179,7 +1179,6 @@ public class ManagementServiceImpl implements ManagementService {
 
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         User user = em.get( userId, User.class );
-        em.refreshIndex();
 
         CredentialsInfo newCredentials =
                 encryptionService.defaultEncryptedCredentials( newPassword, user.getUuid(), smf.getManagementAppId() );
@@ -1228,7 +1227,6 @@ public class ManagementServiceImpl implements ManagementService {
                 .plainTextCredentials( mongoPassword( ( String ) user.getProperty( "username" ), newPassword ),
                         user.getUuid(), smf.getManagementAppId() ) );
 
-        em.refreshIndex();
     }
 
 

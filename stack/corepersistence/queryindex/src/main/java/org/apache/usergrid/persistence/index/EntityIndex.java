@@ -55,11 +55,6 @@ public interface EntityIndex {
      */
     public EntityIndexBatch createBatch();
 
-    /**
-     * Add alias to index, will remove old index from write alias
-     * @param indexSuffix must be different than current index
-     */
-    public void addAlias(final String indexSuffix);
 
     /**
      * Execute query in Usergrid syntax.
