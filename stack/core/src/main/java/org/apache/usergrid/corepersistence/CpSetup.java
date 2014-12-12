@@ -80,7 +80,7 @@ public class CpSetup implements Setup {
 
     public static Injector getInjector() {
         if ( injector == null ) {
-            injector = Guice.createInjector( new GuiceModule( emf ) ); 
+            injector = Guice.createInjector( new GuiceModule() ); 
         }
         return injector;
     }

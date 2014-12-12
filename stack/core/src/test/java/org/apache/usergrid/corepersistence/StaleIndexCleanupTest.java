@@ -52,7 +52,7 @@ import org.apache.usergrid.persistence.model.entity.SimpleId;
 import com.fasterxml.uuid.UUIDComparator;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import static org.apache.usergrid.corepersistence.GuiceModule.EVENTS_DISABLED;
+import static org.apache.usergrid.corepersistence.GuiceModule.EVENTS_DISABLED_PROPERTY_NAME;
 
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getCollectionScopeNameFromEntityType;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
@@ -83,7 +83,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
     @After
     public void after() {
-        System.clearProperty( EVENTS_DISABLED );
+        System.clearProperty(EVENTS_DISABLED_PROPERTY_NAME);
 
     }
 
@@ -94,7 +94,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
     public void testUpdateVersioning() throws Exception {
 
         // turn off post processing stuff that cleans up stale entities 
-        System.setProperty( EVENTS_DISABLED, "true" );
+        System.setProperty(EVENTS_DISABLED_PROPERTY_NAME, "true" );
 
         final EntityManager em = app.getEntityManager();
 
@@ -134,7 +134,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         logger.info( "Started testStaleIndexCleanup()" );
 
         // turn off post processing stuff that cleans up stale entities 
-        System.setProperty( EVENTS_DISABLED, "true" );
+        System.setProperty(EVENTS_DISABLED_PROPERTY_NAME, "true" );
 
         final EntityManager em = app.getEntityManager();
 
@@ -248,7 +248,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         logger.info("Started testStaleIndexCleanup()");
 
         // turn off post processing stuff that cleans up stale entities 
-        System.setProperty( EVENTS_DISABLED, "true" );
+        System.setProperty(EVENTS_DISABLED_PROPERTY_NAME, "true" );
 
         final EntityManager em = app.getEntityManager();
 
@@ -299,7 +299,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         Assert.assertEquals( "Expect stale candidates", numEntities * (numUpdates + 1), crs.size());
 
         // turn ON post processing stuff that cleans up stale entities 
-        System.setProperty( EVENTS_DISABLED, "false" );
+        System.setProperty(EVENTS_DISABLED_PROPERTY_NAME, "false" );
 
         // delete all entities
         for ( Entity thing : things ) {
@@ -328,7 +328,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         logger.info( "Started testCleanupOnUpdate()" );
 
         // turn off post processing stuff that cleans up stale entities 
-        System.setProperty( EVENTS_DISABLED, "true" );
+        System.setProperty(EVENTS_DISABLED_PROPERTY_NAME, "true" );
 
         final EntityManager em = app.getEntityManager();
 
@@ -350,7 +350,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         Assert.assertEquals( "Expect no stale candidates yet", numEntities, crs.size() );
 
         // turn off post processing stuff that cleans up stale entities 
-        System.setProperty( EVENTS_DISABLED, "false" );
+        System.setProperty(EVENTS_DISABLED_PROPERTY_NAME, "false" );
 
         // update each one a bunch of times
         int count = 0;

@@ -24,7 +24,6 @@ import org.apache.usergrid.corepersistence.migration.GraphShardVersionMigration;
 import org.apache.usergrid.corepersistence.events.EntityDeletedHandler;
 import org.apache.usergrid.corepersistence.events.EntityVersionCreatedHandler;
 import org.apache.usergrid.corepersistence.events.EntityVersionDeletedHandler;
-import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.collection.event.EntityDeleted;
 import org.apache.usergrid.persistence.collection.event.EntityVersionCreated;
 import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
@@ -35,8 +34,6 @@ import org.apache.usergrid.persistence.graph.guice.GraphModule;
 import org.apache.usergrid.persistence.index.guice.IndexModule;
 import org.apache.usergrid.persistence.map.guice.MapModule;
 import org.apache.usergrid.persistence.queue.guice.QueueModule;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 /**
@@ -44,22 +41,11 @@ import org.slf4j.LoggerFactory;
  */
 public class GuiceModule extends AbstractModule {
 
-    private static final Logger logger = LoggerFactory.getLogger(GuiceModule.class);
+    public static final String EVENTS_DISABLED_PROPERTY_NAME = "corepersistence.events.disabled";
 
-    private EntityManagerFactory emf;
-
-    public static final String EVENTS_DISABLED = "corepersistence.events.disabled";
-
-    GuiceModule( EntityManagerFactory emf ) {
-        this.emf = emf;
-    }
 
     @Override
     protected void configure() {
-
-        if ( emf != null ) {
-            bind( EntityManagerFactory.class ).toInstance( emf );
-        }
 
         install(new CommonModule());
         install(new CollectionModule());
@@ -87,8 +73,6 @@ public class GuiceModule extends AbstractModule {
         Multibinder<EntityVersionCreated> versionCreatedMultibinder =
             Multibinder.newSetBinder( binder(), EntityVersionCreated.class );
         versionCreatedMultibinder.addBinding().to(EntityVersionCreatedHandler.class);
-
-
     }
 
 }
