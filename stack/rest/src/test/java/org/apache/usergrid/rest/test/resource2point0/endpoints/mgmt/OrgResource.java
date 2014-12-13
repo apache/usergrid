@@ -17,18 +17,14 @@
 
 package org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt;
 
-
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 import javax.ws.rs.core.MediaType;
 
 import org.apache.usergrid.rest.test.resource2point0.endpoints.NamedResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.UrlResource;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Organization;
+import org.apache.usergrid.rest.test.resource2point0.model.User;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
-import org.apache.usergrid.utils.MapUtils;
 
 
 /**
@@ -42,10 +38,6 @@ public class OrgResource  extends NamedResource {
         super( "orgs", context, parent );
     }
 
-    //TODO: change this so that it reflects the management endpoint
-    //    public ApplicationResource getApp(final String app){
-    //        return new ApplicationResource( app, context ,this );
-    //    }
 
     public OrganizationResource organization (final String orgname){
         return new OrganizationResource( orgname,context,parent );
@@ -53,21 +45,15 @@ public class OrgResource  extends NamedResource {
 
     //TODO: why take in a map? Just use base resource and call post from there,
     //TODO: Why ApiResponse when we could just type what we expect back.
+    //TODO: wouldn't a user be part of an organization in this sense? They get passed in together, they should be torn out together
     public Organization post(Organization organization){
         ApiResponse response = getResource().type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
                      .post( ApiResponse.class,organization );
 
-        LinkedHashMap linkedHashMap = ( LinkedHashMap ) response.getData();
-        //organization.putAll( response.getData());
-        //Organization organization1 //= ( Organization ) linkedHashMap.get( "organization" ); //.get( "organization" );
-
-        organization.putAll( ( Map<? extends String, ?> ) linkedHashMap.get("organization") );
-       // organization.pu
-       // organization.putAll( linkedHashMap.get( "organization" ) );
+        organization.setResponse(response);
+        User user = new User( response );
 
         return organization;
     }
-
-
 
 }

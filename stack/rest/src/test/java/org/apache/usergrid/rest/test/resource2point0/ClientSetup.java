@@ -79,7 +79,7 @@ public class ClientSetup implements TestRule {
 
         String username = name + UUIDUtils.newTimeUUID();
 //TODO: also create a new application
-        Organization organization = new Organization( username,username,username+"@usergrid.com",username,username  );
+        Organization organization = new Organization( username,username,username+"@usergrid.com",username,username,null  );
 
         //ApiResponse response = restClient.management().orgs().post( mapOrganization(username,username,username+"@usergrid.com",username,username ) );
         organization = restClient.management().orgs().post( organization );

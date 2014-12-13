@@ -50,15 +50,7 @@ public class DumbClient extends AbstractRestIT {
     public void stuff(){
 
         String name = "stuff"+ UUIDUtils.newTimeUUID();
-        User user = new User( "derp","derp", "derp"  );
-        //so user could have an instance of save, then the save does a deep copy of all properties and saves over the previous versions.
-        //Save is part of the entities.
-
-
-//        clientSetup.getRestClient().org(  ).getApp( "" ).users().post( user );
-//        clientSetup.getRestClient().org(  ).getApp( "" ).users().get(user.getUuid());
-//        clientSetup.getRestClient().org(  ).getApp( "" ).users().put(user);
-
+       // User user = new User( "derp","derp", "derp"  );
 
 
         //Organization org = clientSetup.getRestClient().management().orgs().post(  )
@@ -66,8 +58,7 @@ public class DumbClient extends AbstractRestIT {
        // OrganizationResource response =  clientSetup.getRestClient().management().orgs().organization( "" );
         //assertNotNull( response );
         //EntityResponse itr  =  client.org( "test" ).getApp( "test" ).users().getEntityResponse();
-
-        //        for(Entity entity: itr){
+        //for(Entity entity: itr){
     }
 
     public Map<String,String> mapOrganization(String orgName, String username, String email, String name, String password){
