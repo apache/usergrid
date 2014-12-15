@@ -31,6 +31,7 @@ import org.junit.runners.model.Statement;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Organization;
+import org.apache.usergrid.rest.test.resource2point0.state.OrgOwner;
 import org.apache.usergrid.rest.test.security.TestAdminUser;
 import org.apache.usergrid.utils.MapUtils;
 
@@ -81,8 +82,8 @@ public class ClientSetup implements TestRule {
 //TODO: also create a new application
         Organization organization = new Organization( username,username,username+"@usergrid.com",username,username,null  );
 
+        OrgOwner orgOwner = restClient.management().orgs().post( organization );
         //ApiResponse response = restClient.management().orgs().post( mapOrganization(username,username,username+"@usergrid.com",username,username ) );
-        organization = restClient.management().orgs().post( organization );
         System.out.println();
 
 

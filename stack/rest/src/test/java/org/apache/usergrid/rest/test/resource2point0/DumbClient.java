@@ -16,19 +16,11 @@
  */
 package org.apache.usergrid.rest.test.resource2point0;
 
-import java.util.Map;
-import java.util.UUID;
-
 import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
 
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
-import org.apache.usergrid.rest.test.resource2point0.model.User;
-import org.apache.usergrid.utils.MapUtils;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 
 /**
@@ -37,14 +29,6 @@ import static org.junit.Assert.assertNotNull;
  */
 
 public class DumbClient extends AbstractRestIT {
-
-    //TODO: maybe this should just take in the raw uri.
-    //TODO:fix this so it can work a lot like the context.
-    //@Rule
-    //public final RestClient client = new RestClient( getBaseURI().toString() );
-
-
-
 
     @Test
     public void stuff(){
@@ -61,12 +45,6 @@ public class DumbClient extends AbstractRestIT {
         //for(Entity entity: itr){
     }
 
-    public Map<String,String> mapOrganization(String orgName, String username, String email, String name, String password){
-
-        return MapUtils.hashMap( "organization", orgName ).map( "username", username )
-                       .map( "email", email ).map( "name", name )
-                       .map( "password", password);
-    }
 
     @Ignore
     public void stateful(){

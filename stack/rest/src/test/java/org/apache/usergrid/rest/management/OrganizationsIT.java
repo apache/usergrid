@@ -39,6 +39,7 @@ import org.apache.usergrid.rest.TestContextSetup;
 import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.model.Organization;
+import org.apache.usergrid.rest.test.resource2point0.state.OrgOwner;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.jersey.api.client.ClientResponse;
@@ -83,7 +84,9 @@ public class OrganizationsIT extends AbstractRestIT {
         //TODO:seperate entity properties from organization properties.
         //organization.addProperty( "" ).addProperty(  )
 
-        organization = clientSetup.getRestClient().management().orgs().post( organization );
+        OrgOwner orgOwner = clientSetup.getRestClient().management().orgs().post( organization );
+
+        assertNotNull( orgOwner );
 
 
 //        Map payload =
