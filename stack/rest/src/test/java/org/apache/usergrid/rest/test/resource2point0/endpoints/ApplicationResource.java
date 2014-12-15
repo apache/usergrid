@@ -40,7 +40,7 @@ public class ApplicationResource extends NamedResource {
 
 
     public Application post(Application application){
-        ApiResponse response = getResource().type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
+        ApiResponse response = getResourceWithToken().type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
                 .post( ApiResponse.class, application );
 
         return new Application(response);
@@ -48,8 +48,8 @@ public class ApplicationResource extends NamedResource {
     }
 
     public Application put(Application application){
-        ApiResponse response = getResource().type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
-                .put( ApiResponse.class, application );
+        ApiResponse response = getResourceWithToken().type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
+                .put(ApiResponse.class, application );
 
         return new Application(response);
 
@@ -57,7 +57,7 @@ public class ApplicationResource extends NamedResource {
 
 
     public Application get(){
-        ApiResponse response = getResource().type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
+        ApiResponse response = getResourceWithToken().type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
                 .get(ApiResponse.class);
 
         return new Application(response);
@@ -65,8 +65,8 @@ public class ApplicationResource extends NamedResource {
     }
 
     public void delete(Application application){
-        ApiResponse response = getResource().type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
-                .delete( ApiResponse.class );
+        ApiResponse response = getResourceWithToken().type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
+                .delete(ApiResponse.class );
     }
 
 
