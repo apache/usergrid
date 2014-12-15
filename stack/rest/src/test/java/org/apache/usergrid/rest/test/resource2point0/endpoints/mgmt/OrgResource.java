@@ -25,7 +25,6 @@ import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Organization;
 import org.apache.usergrid.rest.test.resource2point0.model.User;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
-import org.apache.usergrid.rest.test.resource2point0.state.OrgOwner;
 
 
 /**
@@ -44,9 +43,6 @@ public class OrgResource  extends NamedResource {
         return new OrganizationResource( orgname,context,parent );
     }
 
-    //TODO: why take in a map? Just use base resource and call post from there,
-    //TODO: Why ApiResponse when we could just type what we expect back.
-    //TODO: wouldn't a user be part of an organization in this sense? They get passed in together, they should be torn out together
     public Organization post(Organization organization){
         ApiResponse response = getResource().type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
                      .post( ApiResponse.class,organization );
@@ -65,8 +61,8 @@ public class OrgResource  extends NamedResource {
     }
 
     public Organization get(){
-        ApiResponse response = getResource().type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
-                .get(ApiResponse.class);
+        ApiResponse response = getResource().queryParam( "access_token", context.getToken() ).type( MediaType.APPLICATION_JSON_TYPE )
+                                            .accept( MediaType.APPLICATION_JSON ).get(ApiResponse.class);
 
        return new Organization(response);
     }

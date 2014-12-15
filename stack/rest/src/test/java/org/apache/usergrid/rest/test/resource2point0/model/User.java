@@ -31,6 +31,10 @@ import com.fasterxml.jackson.databind.JsonNode;
  */
 public class User extends Entity {
 
+    /**
+     * This could also be a user
+     * @param response
+     */
     public User (ApiResponse response){
         setResponse( response,"owner" );
     }

@@ -40,8 +40,6 @@ public class Organization extends Entity {
     public Organization() {
 
     }
-    //TODO: create constructor here so that it can regenerate itself from a ApiResponse/factory
-
 
     public Organization( String orgName, String username, String email, String ownerName, String password, Map<String,Object> properties ){
 

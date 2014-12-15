@@ -38,8 +38,9 @@ import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.TestContextSetup;
 import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Organization;
-import org.apache.usergrid.rest.test.resource2point0.state.OrgOwner;
+import org.apache.usergrid.rest.test.resource2point0.model.Token;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.jersey.api.client.ClientResponse;
@@ -65,10 +66,14 @@ public class OrganizationsIT extends AbstractRestIT {
     public TestContextSetup context = new TestContextSetup( this );
 
 
+    /**
+     * Tests that a Organization and Owner can be created and that they persist properties and default permissions.
+     * @throws Exception
+     */
+
     @Test
     public void createOrgAndOwner() throws Exception {
 
-//        context.management().tokenGet( context.getActiveUser().getUser(), context.getActiveUser().getPassword() );
         String username = "createOrgAndOwner" + UUIDUtils.newTimeUUID();
         String name = username;
         String password = "password";
@@ -87,6 +92,14 @@ public class OrganizationsIT extends AbstractRestIT {
         Organization orgOwner = clientSetup.getRestClient().management().orgs().post( organization );
 
         assertNotNull( orgOwner );
+
+       // orgOwner = clientSetup.getRestClient().management().orgs().get();
+
+        Token token = new Token( "password",username,password );
+        Token tokenBack = clientSetup.getRestClient().management().token().post(token);
+
+        assertNotNull( tokenBack );
+
 
 
 //        Map payload =
