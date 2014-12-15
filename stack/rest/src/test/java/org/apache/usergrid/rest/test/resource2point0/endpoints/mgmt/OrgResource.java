@@ -51,9 +51,7 @@ public class OrgResource  extends NamedResource {
         ApiResponse response = getResource().type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
                      .post( ApiResponse.class,organization );
 
-
-        organization.setResponse(response);
-
+        organization = new Organization(response);
 
         return new OrgOwner(organization,new User( response ));
     }

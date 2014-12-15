@@ -32,7 +32,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 public class User extends Entity {
 
     public User (ApiResponse response){
-        setResponse( response );
+        setResponse( response,"owner" );
     }
     //TODO: create another constructor to take in the nessesary things to post to a user.
 
@@ -84,13 +84,6 @@ public class User extends Entity {
         return UUID.fromString( (String) get("uuid") );
     }
 
-    //For the owner , should have different cases that looks at the different types it could be
-    public User setResponse( final ApiResponse response ) {
-        LinkedHashMap linkedHashMap = ( LinkedHashMap ) response.getData();
 
-        this.putAll( ( Map<? extends String, ?> ) linkedHashMap.get("owner") );
-
-        return this;
-    }
 
 }

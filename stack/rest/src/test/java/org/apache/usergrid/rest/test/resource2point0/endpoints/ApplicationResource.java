@@ -17,7 +17,11 @@
 package org.apache.usergrid.rest.test.resource2point0.endpoints;
 
 
+import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource2point0.model.Application;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
+
+import javax.ws.rs.core.MediaType;
 
 
 /**
@@ -38,7 +42,15 @@ public class ApplicationResource extends NamedResource {
      * The pattern should look like: orgs.apps.users , orgs.apps.groups and so on...
      * @return
      */
-//    public Collection users(){
-//        return new Collection("users", context , this);
-//    }
+    public Collection users(){
+           return new Collection("users", context , this);
+        }
+
+    public Application post(Application application){
+        ApiResponse response = getResource().type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
+                .post( ApiResponse.class, application );
+
+        return new Application(response);
+
+    }
 }

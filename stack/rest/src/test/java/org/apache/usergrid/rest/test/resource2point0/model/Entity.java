@@ -23,12 +23,7 @@ package org.apache.usergrid.rest.test.resource2point0.model;
 
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.UUID;
+import java.util.*;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -62,8 +57,6 @@ public class Entity implements Serializable, Map<String,Object> {
     protected Map<String, Object> dynamic_properties = new TreeMap<String, Object>( String.CASE_INSENSITIVE_ORDER );
 
     private Collection targetResource;
-
-
 
     /**
      * Performs deep copy on entity passed in and save over what we currently have
@@ -148,17 +141,6 @@ public class Entity implements Serializable, Map<String,Object> {
         return get( propertyName );
     }
 
-//
-//    public final void setProperty( String propertyName, Object propertyValue ) {
-//        if ( propertyValue == null || propertyValue.equals( "" ) ) {
-//            if ( containsKey( propertyName ) ) {
-//                remove( propertyName );
-//            }
-//        }
-//        else {
-//            put( propertyName, propertyValue );
-//        }
-//    }
 
 
     public Entity addProperty(String key, Object value){
@@ -169,16 +151,14 @@ public class Entity implements Serializable, Map<String,Object> {
         putAll( properties );
     }
 
+    //For the owner , should have different cases that looks at the different types it could be
+    protected Entity setResponse(final ApiResponse response, String key) {
+        LinkedHashMap linkedHashMap = (LinkedHashMap) response.getData();
 
-//    public void addProperties( Map<String, Object> properties ) {
-//        if ( properties == null ) {
-//            return;
-//        }
-//        for ( Map.Entry<String, Object> entry : properties.entrySet() ) {
-//            setProperty( entry.getKey(), entry.getValue() );
-//        }
-//    }
+        this.putAll((Map<? extends String, ?>) linkedHashMap.get(key));
 
+        return this;
+    }
 
     @JsonSerialize( include = JsonSerialize.Inclusion.NON_NULL )
     public Object getMetadata( String key ) {

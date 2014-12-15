@@ -54,6 +54,10 @@ public class Organization extends Entity {
             setProperties( properties );
     }
 
+    public Organization(ApiResponse response){
+        setResponse(response,"organization");
+    }
+
     @JsonSerialize( include = JsonSerialize.Inclusion.NON_NULL )
     public String getOrganization( ) {
         return ( String ) this.get( "organization" );
@@ -81,14 +85,5 @@ public class Organization extends Entity {
 
     public Object getPasswordHistorySize() {
         return  (Integer) this.get("passwordHistorySize");
-    }
-
-
-    public void setResponse( final ApiResponse response ) {
-        LinkedHashMap linkedHashMap = ( LinkedHashMap ) response.getData();
-        //organization.putAll( response.getData());
-        //Organization organization1 //= ( Organization ) linkedHashMap.get( "organization" ); //.get( "organization" );
-
-        this.putAll( ( Map<? extends String, ?> ) linkedHashMap.get("organization") );
     }
 }
