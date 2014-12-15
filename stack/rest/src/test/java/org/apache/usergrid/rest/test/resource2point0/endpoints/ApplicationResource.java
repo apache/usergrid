@@ -17,6 +17,7 @@
 package org.apache.usergrid.rest.test.resource2point0.endpoints;
 
 
+import org.apache.usergrid.rest.test.resource.app.Collection;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Application;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
@@ -70,13 +71,15 @@ public class ApplicationResource extends NamedResource {
     }
 
 
+    public CollectionResource collection(final String name){ return new CollectionResource(name,context,this);}
+
     /**
      * Currently hardcoded to users, this is because we expect to create and chain different cases of collections.
      * The pattern should look like: orgs.apps.users , orgs.apps.groups and so on...
      * @return
      */
-    public Collection users(){
-        return new Collection("users", context , this);
+    public CollectionResource users(){
+        return new CollectionResource("users", context , this);
     }
 
     /**
@@ -84,8 +87,8 @@ public class ApplicationResource extends NamedResource {
      * The pattern should look like: orgs.apps.users , orgs.apps.groups and so on...
      * @return
      */
-    public Collection roles(){
-        return new Collection("roles", context , this);
+    public CollectionResource roles(){
+        return new CollectionResource("roles", context , this);
     }
 
     /**
@@ -93,8 +96,8 @@ public class ApplicationResource extends NamedResource {
      * The pattern should look like: orgs.apps.users , orgs.apps.groups and so on...
      * @return
      */
-    public Collection permissions(){
-        return new Collection("permissions", context , this);
+    public CollectionResource permissions(){
+        return new CollectionResource("permissions", context , this);
     }
 
     /**
@@ -102,8 +105,8 @@ public class ApplicationResource extends NamedResource {
      * The pattern should look like: orgs.apps.users , orgs.apps.groups and so on...
      * @return
      */
-    public Collection notifications(){
-        return new Collection("notifications", context , this);
+    public CollectionResource notifications(){
+        return new CollectionResource("notifications", context , this);
     }
 
 }

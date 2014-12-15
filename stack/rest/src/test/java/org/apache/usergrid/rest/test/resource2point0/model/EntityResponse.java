@@ -26,9 +26,11 @@ package org.apache.usergrid.rest.test.resource2point0.model;
 
         import java.util.Iterator;
 
-        import org.apache.usergrid.rest.test.resource2point0.endpoints.Collection;
+        import org.apache.usergrid.rest.test.resource.app.Collection;
+        import org.apache.usergrid.rest.test.resource2point0.endpoints.CollectionResource;
 
         import com.google.common.base.Optional;
+        import org.apache.usergrid.rest.test.resource2point0.endpoints.NamedResource;
 
 
 /**
@@ -52,7 +54,7 @@ package org.apache.usergrid.rest.test.resource2point0.model;
  */
 public class EntityResponse implements Iterable<Entity>, Iterator<Entity> {
 
-    private final Collection sourceEndpoint;
+    private final CollectionResource sourceEndpoint;
 
     private String cursor;
 
@@ -63,7 +65,7 @@ public class EntityResponse implements Iterable<Entity>, Iterator<Entity> {
      * Use the factory method instead
      * @param sourceCollection
      */
-    private EntityResponse( final Collection sourceCollection ){
+    private EntityResponse( final CollectionResource sourceCollection ){
         this.sourceEndpoint = sourceCollection;
         loadPage();
     }
@@ -108,7 +110,7 @@ public class EntityResponse implements Iterable<Entity>, Iterator<Entity> {
     }
 
     private void loadPage(){
-        final ApiResponse response = sourceEndpoint.get( Optional.of(cursor));
+        final ApiResponse response = sourceEndpoint.get( new QueryParameters().setCursor( cursor));
 
         cursor = response.getCursor();
     }
@@ -125,7 +127,7 @@ public class EntityResponse implements Iterable<Entity>, Iterator<Entity> {
      * @param collection
      * @return The iterator
      */
-    public static EntityResponse fromCollection(final Collection collection){
+    public static EntityResponse fromCollection(final CollectionResource collection){
         return new EntityResponse(collection);
     }
 }

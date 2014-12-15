@@ -27,22 +27,15 @@ import java.util.*;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.apache.usergrid.persistence.EntityFactory;
-import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.annotations.EntityProperty;
-import org.apache.usergrid.persistence.index.utils.UUIDUtils;
-import org.apache.usergrid.rest.test.resource2point0.endpoints.Collection;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.CollectionResource;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_TYPE;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_URI;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
 
 
 /**
@@ -56,14 +49,15 @@ public class Entity implements Serializable, Map<String,Object> {
 
     protected Map<String, Object> dynamic_properties = new TreeMap<String, Object>( String.CASE_INSENSITIVE_ORDER );
 
-    private Collection targetResource;
+    private CollectionResource targetResource;
 
     /**
      * Performs deep copy on entity passed in and save over what we currently have
      */
     public void save(){
-        Entity response = targetResource.put(this);
-        this.dynamic_properties.putAll(response.getDynamicProperties());
+        List<Entity> response = targetResource.put(this).getEntities();
+        Entity entity = response.get(0);
+        this.dynamic_properties.putAll(entity.getDynamicProperties());
     }
 
 
@@ -248,8 +242,8 @@ public class Entity implements Serializable, Map<String,Object> {
         return "Entity(" + getProperties() + ")";
     }
 
-    public Collection getTargetResource(){return targetResource;}
-    public void setTargetResource(Collection targetResource){this.targetResource = targetResource;}
+    public CollectionResource getTargetResource(){return targetResource;}
+    public void setTargetResource(CollectionResource targetResource){this.targetResource = targetResource;}
 
     @JsonAnySetter
     public void setDynamicProperty( String key, Object value ) {

@@ -17,9 +17,12 @@
 package org.apache.usergrid.rest.test.resource2point0.endpoints;
 
 
+import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 import com.sun.jersey.api.client.WebResource;
+
+import java.util.UUID;
 
 
 /**
@@ -68,4 +71,28 @@ public class NamedResource implements UrlResource {
         this.useToken = useToken;
         return useToken;
     }
+
+    protected WebResource addParametersToResource(final WebResource resource, final QueryParameters parameters){
+        if(parameters == null){
+            return resource;
+        }
+        if ( parameters.getQuery() != null ) {
+            resource.queryParam( "ql", parameters.getQuery() );
+        }
+
+        if ( parameters.getCursor() != null ) {
+           resource.queryParam( "cursor", parameters.getCursor() );
+        }
+
+        if ( parameters.getStart() != null ) {
+            resource.queryParam("start", parameters.getStart().toString());
+        }
+
+        if ( parameters.getLimit() != null ) {
+             resource.queryParam("limit", parameters.getLimit().toString());
+        }
+        return resource;
+    }
+
+
 }

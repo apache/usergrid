@@ -19,106 +19,71 @@ package org.apache.usergrid.rest.test.resource2point0.endpoints;
 
 import java.util.UUID;
 
+import com.sun.jersey.api.client.WebResource;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.apache.usergrid.rest.test.resource2point0.model.EntityResponse;
+import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 import com.google.common.base.Optional;
+
+import javax.ws.rs.core.MediaType;
 
 
 /**
  * Holds POST,PUT,GET,DELETE methods for Collections. Models the rest endpoints for the different ways
  * to get an entity out of UG.
  */
-public  class Collection extends NamedResource {
+public  class CollectionResource extends NamedResource {
 
 
-    public Collection( final String name, final ClientContext context,  final UrlResource parent ) {
+    public CollectionResource(final String name, final ClientContext context, final UrlResource parent) {
         super( name, context, parent );
     }
 
+    public EntityResource getEntityResource(final String identifier){
+        return new EntityResource( identifier, context, this );
+    }
+
     /**
      * Get a list of entities
      * @return
      */
-    public ApiResponse get(final Optional<String> cursor){
-       return get(cursor,true);
+    public ApiResponse get( final QueryParameters parameters){
+       return get(parameters,true);
     }
     /**
      * Get a list of entities
      * @return
      */
-    public ApiResponse get(final Optional<String> cursor, final boolean useToken){
-      return  getResource(useToken).get( ApiResponse.class );
+    public ApiResponse get(final QueryParameters parameters, final boolean useToken){
+        WebResource resource  = getResource(useToken);
+        addParametersToResource(getResource(), parameters);
+        return resource.type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
+                .get(ApiResponse.class);
     }
-
-
-    /**
-     * Get the response as an entity response
-     * @return
-     */
-    public EntityResponse getEntityResponse(){
-        return EntityResponse.fromCollection( this );
-    }
-
 
     /**
      * Post the entity to the users collection
-     * @param user
+     * @param entity
      * @return
      */
-    public Entity post(final Entity user){
-        return null;
+    public ApiResponse post(final Entity entity){
+        return getResource(true).post(ApiResponse.class,entity);
     }
-
 
     /**
-     * Get the entity by uuid
-     * @param uuid
+     * Put the entity to the users collection
+     * @param entity
      * @return
      */
-    public Entity get(final UUID uuid){
-        return get(uuid.toString());
+    public ApiResponse put(final Entity entity){
+        return getResource(true).post(ApiResponse.class,entity);
     }
 
 
-    /**
-     * Get the entity by name
-     * @param name
-     * @return
-     */
-    public Entity get(final String name){
-        return null;
-    }
 
 
-    /**
-     * Updte the entity
-     * @param toUpdate
-     * @return
-     */
-    public Entity put(final Entity toUpdate){
-        return null;
-    }
 
-
-    /**
-     * Delete the entity
-     * @param uuid
-     * @return
-     */
-    public Entity delete(final UUID uuid){
-        return delete(uuid.toString());
-    }
-
-
-    /**
-     * Delete the entity by name
-     * @param name
-     * @return
-     */
-    public Entity delete(final String name){
-        return null;
-    }
 }
