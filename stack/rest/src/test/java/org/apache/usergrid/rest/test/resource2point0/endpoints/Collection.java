@@ -38,13 +38,19 @@ public  class Collection extends NamedResource {
         super( name, context, parent );
     }
 
-
     /**
      * Get a list of entities
      * @return
      */
     public ApiResponse get(final Optional<String> cursor){
-      return getResource().get( ApiResponse.class );
+       return get(cursor,true);
+    }
+    /**
+     * Get a list of entities
+     * @return
+     */
+    public ApiResponse get(final Optional<String> cursor, final boolean useToken){
+      return  getResource(useToken).get( ApiResponse.class );
     }
 
 

@@ -40,7 +40,7 @@ public class OrganizationResource extends NamedResource {
         super( name, context, parent );
     }
     public Organization get() {
-        Map<String,Object> response = getResourceWithToken().type(MediaType.APPLICATION_JSON_TYPE)
+        Map<String,Object> response = getResource(true).type(MediaType.APPLICATION_JSON_TYPE)
                 .accept(MediaType.APPLICATION_JSON).get(Organization.class);
         Organization org =  new Organization().mapOrgResponse(response);
         return org;
