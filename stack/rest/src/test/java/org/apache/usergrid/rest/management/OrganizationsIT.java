@@ -84,7 +84,7 @@ public class OrganizationsIT extends AbstractRestIT {
         //TODO:seperate entity properties from organization properties.
         //organization.addProperty( "" ).addProperty(  )
 
-        OrgOwner orgOwner = clientSetup.getRestClient().management().orgs().post( organization );
+        Organization orgOwner = clientSetup.getRestClient().management().orgs().post( organization );
 
         assertNotNull( orgOwner );
 

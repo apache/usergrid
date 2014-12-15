@@ -47,13 +47,33 @@ public class OrgResource  extends NamedResource {
     //TODO: why take in a map? Just use base resource and call post from there,
     //TODO: Why ApiResponse when we could just type what we expect back.
     //TODO: wouldn't a user be part of an organization in this sense? They get passed in together, they should be torn out together
-    public OrgOwner post(Organization organization){
+    public Organization post(Organization organization){
         ApiResponse response = getResource().type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
                      .post( ApiResponse.class,organization );
 
         organization = new Organization(response);
-
-        return new OrgOwner(organization,new User( response ));
+        organization.setOwner(new User( response ));
+        return organization;
     }
 
+    public Organization put(Organization organization){
+        ApiResponse response = getResource().type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
+                .put(ApiResponse.class, organization);
+
+        return new Organization(response);
+
+    }
+
+    public Organization get(){
+        ApiResponse response = getResource().type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
+                .get(ApiResponse.class);
+
+       return new Organization(response);
+    }
+
+    public void delete(){
+        ApiResponse response = getResource().type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
+                .delete(ApiResponse.class);
+
+    }
 }

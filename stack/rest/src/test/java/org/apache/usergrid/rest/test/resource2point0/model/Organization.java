@@ -35,6 +35,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
  */
 public class Organization extends Entity {
 
+    private User user;
+
     public Organization() {
 
     }
@@ -85,5 +87,12 @@ public class Organization extends Entity {
 
     public Object getPasswordHistorySize() {
         return  (Integer) this.get("passwordHistorySize");
+    }
+
+    public User getOwner(){
+        return user;
+    }
+    public void setOwner(User user){
+        this.user = user;
     }
 }

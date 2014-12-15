@@ -37,14 +37,7 @@ public class ApplicationResource extends NamedResource {
     }
 
 
-    /**
-     * Currently hardcoded to users, this is because we expect to create and chain different cases of collections.
-     * The pattern should look like: orgs.apps.users , orgs.apps.groups and so on...
-     * @return
-     */
-    public Collection users(){
-           return new Collection("users", context , this);
-        }
+
 
     public Application post(Application application){
         ApiResponse response = getResource().type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
@@ -53,4 +46,64 @@ public class ApplicationResource extends NamedResource {
         return new Application(response);
 
     }
+
+    public Application put(Application application){
+        ApiResponse response = getResource().type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
+                .put( ApiResponse.class, application );
+
+        return new Application(response);
+
+    }
+
+
+    public Application get(){
+        ApiResponse response = getResource().type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
+                .get(ApiResponse.class);
+
+        return new Application(response);
+
+    }
+
+    public void delete(Application application){
+        ApiResponse response = getResource().type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
+                .delete( ApiResponse.class );
+    }
+
+
+    /**
+     * Currently hardcoded to users, this is because we expect to create and chain different cases of collections.
+     * The pattern should look like: orgs.apps.users , orgs.apps.groups and so on...
+     * @return
+     */
+    public Collection users(){
+        return new Collection("users", context , this);
+    }
+
+    /**
+     * Currently hardcoded to users, this is because we expect to create and chain different cases of collections.
+     * The pattern should look like: orgs.apps.users , orgs.apps.groups and so on...
+     * @return
+     */
+    public Collection roles(){
+        return new Collection("roles", context , this);
+    }
+
+    /**
+     * Currently hardcoded to users, this is because we expect to create and chain different cases of collections.
+     * The pattern should look like: orgs.apps.users , orgs.apps.groups and so on...
+     * @return
+     */
+    public Collection permissions(){
+        return new Collection("permissions", context , this);
+    }
+
+    /**
+     * Currently hardcoded to users, this is because we expect to create and chain different cases of collections.
+     * The pattern should look like: orgs.apps.users , orgs.apps.groups and so on...
+     * @return
+     */
+    public Collection notifications(){
+        return new Collection("notifications", context , this);
+    }
+
 }

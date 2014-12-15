@@ -82,7 +82,7 @@ public class ClientSetup implements TestRule {
 //TODO: also create a new application
         Organization organization = new Organization( username,username,username+"@usergrid.com",username,username,null  );
 
-        OrgOwner orgOwner = restClient.management().orgs().post( organization );
+        Organization orgOwner = restClient.management().orgs().post( organization );
         //ApiResponse response = restClient.management().orgs().post( mapOrganization(username,username,username+"@usergrid.com",username,username ) );
         System.out.println();
 
