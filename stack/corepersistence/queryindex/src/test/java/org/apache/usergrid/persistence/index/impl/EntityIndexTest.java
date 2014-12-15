@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.usergrid.persistence.index.*;
-import org.apache.usergrid.persistence.index.query.CandidateResult;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -91,6 +90,7 @@ public class EntityIndexTest extends BaseIT {
         testQueries( indexScope, searchTypes,  entityIndex );
     }
 
+
     @Test
     public void testMultipleIndexInitializations(){
         Id appId = new SimpleId( "application" );
@@ -104,6 +104,7 @@ public class EntityIndexTest extends BaseIT {
         }
 
     }
+
 
     @Test
     public void testAddMultipleIndexes() throws IOException {
@@ -135,6 +136,7 @@ public class EntityIndexTest extends BaseIT {
 
         testQuery(indexScope, searchTypes, entityIndex, "name = 'Lowe Kelley'", 1 );
     }
+
 
     @Test
     public void testDeleteByQueryWithAlias() throws IOException {
@@ -172,7 +174,13 @@ public class EntityIndexTest extends BaseIT {
 
     }
 
-    private void insertJsonBlob(EntityIndex entityIndex, String entityType, IndexScope indexScope, String filePath,final int max,final int startIndex) throws IOException {
+    private void insertJsonBlob(
+            EntityIndex entityIndex, 
+            String entityType, IndexScope indexScope, 
+            String filePath,
+            final int max,
+            final int startIndex) throws IOException {
+
         InputStream is = this.getClass().getResourceAsStream( filePath );
         ObjectMapper mapper = new ObjectMapper();
         List<Object> sampleJson = mapper.readValue( is, new TypeReference<List<Object>>() {} );
@@ -241,7 +249,8 @@ public class EntityIndexTest extends BaseIT {
         EntityUtils.setVersion( entity, UUIDGenerator.newTimeUUID() );
         entityIndex.createBatch().index(indexScope , entity ).executeAndRefresh();
 
-        CandidateResults candidateResults = entityIndex.search( indexScope, SearchTypes.fromTypes(entity.getId().getType()),
+        CandidateResults candidateResults = entityIndex.search( indexScope, 
+                SearchTypes.fromTypes(entity.getId().getType()),
                 Query.fromQL( "name contains 'Ferrari*'" ) );
         assertEquals( 1, candidateResults.size() );
 
@@ -250,12 +259,15 @@ public class EntityIndexTest extends BaseIT {
         batch.executeAndRefresh();
         entityIndex.refresh();
 
-        candidateResults = entityIndex.search( indexScope, SearchTypes.fromTypes(entity.getId().getType()), Query.fromQL( "name contains 'Ferrari*'" ) );
+        candidateResults = entityIndex.search( indexScope, 
+                SearchTypes.fromTypes(entity.getId().getType()), 
+                Query.fromQL( "name contains 'Ferrari*'" ) );
         assertEquals( 0, candidateResults.size() );
     }
 
 
-    private CandidateResults testQuery(final IndexScope scope, final SearchTypes searchTypes, final EntityIndex entityIndex, final String queryString, final int num ) {
+    private CandidateResults testQuery(final IndexScope scope, final SearchTypes searchTypes, 
+            final EntityIndex entityIndex, final String queryString, final int num ) {
 
         StopWatch timer = new StopWatch();
         timer.start();
@@ -270,7 +282,8 @@ public class EntityIndexTest extends BaseIT {
     }
 
 
-    private void testQueries(final IndexScope scope, SearchTypes searchTypes, final EntityIndex entityIndex ) {
+    private void testQueries(final IndexScope scope, 
+            SearchTypes searchTypes, final EntityIndex entityIndex ) {
 
 
         testQuery(scope, searchTypes, entityIndex, "name = 'Morgan Pierce'", 1 );
@@ -308,7 +321,7 @@ public class EntityIndexTest extends BaseIT {
         testQuery(scope, searchTypes, entityIndex, "friends.name = 'Jack the Ripper'", 0 );
 
         // everybody doesn't have a friend named Jack the Ripper
-        testQuery(scope,  searchTypes,entityIndex, "not (friends.name = 'Jack the Ripper')", totalUsers );
+        testQuery(scope, searchTypes,entityIndex, "not (friends.name = 'Jack the Ripper')", totalUsers );
 
         // one person has a friend named Shari Hahn
         testQuery(scope, searchTypes, entityIndex, "friends.name = 'Wendy Moody'", 1 );
