@@ -60,8 +60,6 @@ import org.apache.usergrid.persistence.cassandra.index.IndexBucketScanner;
 import org.apache.usergrid.persistence.cassandra.index.IndexScanner;
 import org.apache.usergrid.persistence.cassandra.index.NoOpIndexScanner;
 import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.EntityCollectionManager;
-import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.entities.User;
@@ -378,7 +376,6 @@ public class CpRelationManager implements RelationManager {
 
         // loop through all types of edge to target
 
-
         final EntityIndex ei = managerCache.getEntityIndex( applicationScope );
 
         final EntityIndexBatch entityIndexBatch = ei.createBatch();
@@ -388,6 +385,7 @@ public class CpRelationManager implements RelationManager {
 
                 // for each edge type, emit all the edges of that type
                 .flatMap( new Func1<String, Observable<Edge>>() {
+
                     @Override
                     public Observable<Edge> call( final String etype ) {
                         return gm.loadEdgesToTarget( new SimpleSearchByEdgeType(
@@ -398,11 +396,12 @@ public class CpRelationManager implements RelationManager {
 
                 //for each edge we receive index and add to the batch
                 .doOnNext( new Action1<Edge>() {
+
                     @Override
                     public void call( final Edge edge ) {
 
-                        EntityRef sourceEntity =
-                                new SimpleEntityRef( edge.getSourceNode().getType(), edge.getSourceNode().getUuid() );
+                        EntityRef sourceEntity = new SimpleEntityRef( 
+                                edge.getSourceNode().getType(), edge.getSourceNode().getUuid() );
 
                         // reindex the entity in the source entity's collection or connection index
 
@@ -410,28 +409,20 @@ public class CpRelationManager implements RelationManager {
                         if ( CpNamingUtils.isCollectionEdgeType( edge.getType() ) ) {
 
                             String collName = CpNamingUtils.getCollectionName( edge.getType() );
-                            indexScope =
-                                    new IndexScopeImpl( new SimpleId( sourceEntity.getUuid(), sourceEntity.getType() ),
-                                            CpNamingUtils.getCollectionScopeNameFromCollectionName( collName ) );
+                            indexScope = new IndexScopeImpl( 
+                                new SimpleId( sourceEntity.getUuid(), sourceEntity.getType() ), 
+                                CpNamingUtils.getCollectionScopeNameFromCollectionName( collName ));
                         }
                         else {
 
                             String connName = CpNamingUtils.getConnectionType( edge.getType() );
-                            indexScope =
-                                    new IndexScopeImpl( new SimpleId( sourceEntity.getUuid(), sourceEntity.getType() ),
-                                            CpNamingUtils.getConnectionScopeName( connName ) );
+                            indexScope = new IndexScopeImpl( 
+                                new SimpleId( sourceEntity.getUuid(), sourceEntity.getType() ),
+                                CpNamingUtils.getConnectionScopeName( connName ) );
                         }
 
                         entityIndexBatch.index( indexScope, cpEntity );
 
-                        // reindex the entity in the source entity's all-types index
-
-                        //TODO REMOVE INDEX CODE
-                        //                        indexScope = new IndexScopeImpl( new SimpleId(
-                        //                            sourceEntity.getUuid(), sourceEntity.getType() ), CpNamingUtils
-                        // .ALL_TYPES, entityType );
-                        //
-                        //                        entityIndexBatch.index( indexScope, cpEntity );
                     }
                 } ).count().toBlocking().lastOrDefault( 0 );
 
