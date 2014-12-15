@@ -37,14 +37,12 @@ public class NamedResource implements UrlResource {
     i.e If we had a ApplicationResource ( an instance of a namedResource ) this would contain the OrganizationResource.
      */
     protected final UrlResource parent;
-    private  boolean useToken;
 
 
     public NamedResource( final String name, final ClientContext context, final UrlResource parent ) {
         this.name = name;
         this.context = context;
         this.parent = parent;
-        this.useToken = false;
     }
 
 
@@ -61,15 +59,6 @@ public class NamedResource implements UrlResource {
     public WebResource getResource(boolean useToken) {
         WebResource resource = parent.getResource().path( getPath() );
         return useToken ? resource.queryParam("access_token",this.context.getToken().getAccessToken()) :  parent.getResource().path( getPath() );
-    }
-
-    public boolean useToken(){
-        return useToken;
-    }
-
-    public boolean useToken(boolean useToken){
-        this.useToken = useToken;
-        return useToken;
     }
 
     protected WebResource addParametersToResource(final WebResource resource, final QueryParameters parameters){
