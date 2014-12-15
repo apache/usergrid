@@ -31,6 +31,7 @@ import org.apache.usergrid.persistence.entities.Notifier;
 import javax.net.ssl.SSLContext;
 import java.io.InputStream;
 import java.security.KeyStore;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -41,7 +42,7 @@ public class EntityPushManager extends PushManager<SimpleApnsPushNotification> {
     private final Notifier notifier;
     private final EntityManager entityManager;
 
-    public EntityPushManager( Notifier notifier, EntityManager entityManager, LinkedBlockingQueue<SimpleApnsPushNotification> queue, PushManagerConfiguration configuration) {
+    public EntityPushManager( Notifier notifier, EntityManager entityManager, BlockingQueue<SimpleApnsPushNotification> queue, PushManagerConfiguration configuration) {
         super(getApnsEnvironment(notifier), getSSLContext(notifier), null, null, queue, configuration, notifier.getName());
         this.notifier = notifier;
         this.entityManager = entityManager;
