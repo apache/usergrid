@@ -16,19 +16,11 @@
  */
 package org.apache.usergrid.rest.test.resource2point0;
 
-import java.util.Map;
-import java.util.UUID;
-
 import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
 
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
-import org.apache.usergrid.rest.test.resource2point0.model.User;
-import org.apache.usergrid.utils.MapUtils;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 
 /**
@@ -38,27 +30,11 @@ import static org.junit.Assert.assertNotNull;
 
 public class DumbClient extends AbstractRestIT {
 
-    //TODO: maybe this should just take in the raw uri.
-    //TODO:fix this so it can work a lot like the context.
-    //@Rule
-    //public final RestClient client = new RestClient( getBaseURI().toString() );
-
-
-
-
     @Test
     public void stuff(){
 
         String name = "stuff"+ UUIDUtils.newTimeUUID();
-        User user = new User( "derp","derp", "derp"  );
-        //so user could have an instance of save, then the save does a deep copy of all properties and saves over the previous versions.
-        //Save is part of the entities.
-
-
-//        clientSetup.getRestClient().org(  ).getApp( "" ).users().post( user );
-//        clientSetup.getRestClient().org(  ).getApp( "" ).users().get(user.getUuid());
-//        clientSetup.getRestClient().org(  ).getApp( "" ).users().put(user);
-
+       // User user = new User( "derp","derp", "derp"  );
 
 
         //Organization org = clientSetup.getRestClient().management().orgs().post(  )
@@ -66,16 +42,9 @@ public class DumbClient extends AbstractRestIT {
        // OrganizationResource response =  clientSetup.getRestClient().management().orgs().organization( "" );
         //assertNotNull( response );
         //EntityResponse itr  =  client.org( "test" ).getApp( "test" ).users().getEntityResponse();
-
-        //        for(Entity entity: itr){
+        //for(Entity entity: itr){
     }
 
-    public Map<String,String> mapOrganization(String orgName, String username, String email, String name, String password){
-
-        return MapUtils.hashMap( "organization", orgName ).map( "username", username )
-                       .map( "email", email ).map( "name", name )
-                       .map( "password", password);
-    }
 
     @Ignore
     public void stateful(){

@@ -19,6 +19,7 @@ package org.apache.usergrid.rest.test.resource2point0.model;
 
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
@@ -34,20 +35,13 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
  */
 public class Organization extends Entity {
 
-
-//    private String organization;
-//    private String username;
-//    private String email;
-//    private String name;
-//    private String password;
-//    private String passwordHistorySize;
-
-
     public Organization() {
 
     }
+    //TODO: create constructor here so that it can regenerate itself from a ApiResponse/factory
 
-    public Organization( String orgName, String username, String email, String ownerName, String password ){
+
+    public Organization( String orgName, String username, String email, String ownerName, String password, Map<String,Object> properties ){
 
         this.put( "organization", orgName );
         this.put( "username", username);
@@ -55,6 +49,9 @@ public class Organization extends Entity {
         //TODO: create clearer distinction between ownerName and username in the backend.
         this.put( "name", ownerName);
         this.put( "password", password);
+
+        if(properties != null)
+            setProperties( properties );
     }
 
     @JsonSerialize( include = JsonSerialize.Inclusion.NON_NULL )
@@ -84,5 +81,14 @@ public class Organization extends Entity {
 
     public Object getPasswordHistorySize() {
         return  (Integer) this.get("passwordHistorySize");
+    }
+
+
+    public void setResponse( final ApiResponse response ) {
+        LinkedHashMap linkedHashMap = ( LinkedHashMap ) response.getData();
+        //organization.putAll( response.getData());
+        //Organization organization1 //= ( Organization ) linkedHashMap.get( "organization" ); //.get( "organization" );
+
+        this.putAll( ( Map<? extends String, ?> ) linkedHashMap.get("organization") );
     }
 }

@@ -76,7 +76,7 @@ public class Entity implements Serializable, Map<String,Object> {
 
     @JsonSerialize( include = JsonSerialize.Inclusion.NON_NULL )
     public UUID getUuid(){
-        return  UUID.fromString( (String) get("uuid") ); //get( "uuid" );
+        return  UUID.fromString( (String) get("uuid") );
     }
 
 
@@ -161,6 +161,10 @@ public class Entity implements Serializable, Map<String,Object> {
 //    }
 
 
+    public Entity addProperty(String key, Object value){
+        put(key,value);
+        return this;
+    }
     public void setProperties( Map<String, Object> properties ) {
         putAll( properties );
     }

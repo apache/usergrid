@@ -17,6 +17,8 @@
 package org.apache.usergrid.rest.test.resource2point0.model;
 
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import org.apache.usergrid.rest.test.resource.TestContext;
@@ -25,75 +27,70 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 
 /**
- * Created by ApigeeCorporation on 12/10/14.
+ * Models the user class for response from REST calls.
  */
-public class User {
+public class User extends Entity {
 
-    protected String user;
-    protected String password;
-    protected String email;
-    protected String token;
-    protected UUID uuid;
+    public User (ApiResponse response){
+        setResponse( response );
+    }
+    //TODO: create another constructor to take in the nessesary things to post to a user.
 
-
-    /**
-     * @param user
-     * @param password
-     * @param email
-     */
-    public User( String user, String password, String email ) {
-        this.user = user;
-        this.password = password;
-        this.email = email;
+    public Boolean getActivated(){
+        return (Boolean) this.get( "activated" );
     }
 
-    /**
-     * Manually set our token for this user.
-     * @param token
-     */
-    public void setToken(String token){
-        this.token = token;
+    public Boolean getAdminUser(){
+        return (Boolean) this.get( "adminUser" );
     }
 
-    /** @return the user */
-    public String getUser() {
-        return user;
+    public UUID getApplicationId(){
+        return  UUID.fromString( (String) get("applicationId") );
     }
 
-
-    /** @return the password */
-    public String getPassword() {
-        return password;
+    public Boolean getConfirmed(){
+        return (Boolean) this.get("confirmed");
     }
 
-
-    /** @return the email */
-    public String getEmail() {
-        return email;
+    public Boolean getDisabled(){
+        return (Boolean) this.get("disabled");
     }
 
-
-    public String getToken() {
-        return this.token;
+    public String getDisplayEmailAddress(){
+        return (String) this.get("displayEmailAddress");
     }
 
-
-    /** @return the uuid */
-    public UUID getUuid() {
-        return uuid;
+    public String getEmail(){
+        return (String) this.get("email");
     }
 
-    public void setUUID(UUID uuid) {
-        this.uuid = uuid;
+    public String getHtmlDisplayEmailAddress(){
+        return (String) this.get("htmldisplayEmailAddress");
     }
 
-    public boolean isLoggedIn() {
-        return this.token != null;
+    public String getName(){
+        return (String) this.get("name");
     }
 
-    /** Log out */
-    public void logout() {
-        token = null;
+    public Map<String,Object> getProperties(){
+        return (Map<String,Object>) this.get("properties");
+    }
+
+    public String getUsername(){
+        return (String) this.get("username");
+    }
+
+    public UUID getUuid(){
+        return UUID.fromString( (String) get("uuid") );
+    }
+
+    //For the owner , should have different cases that looks at the different types it could be
+    public User setResponse( final ApiResponse response ) {
+        LinkedHashMap linkedHashMap = ( LinkedHashMap ) response.getData();
+
+        this.putAll( ( Map<? extends String, ?> ) linkedHashMap.get("owner") );
+
+        return this;
     }
 
 }
