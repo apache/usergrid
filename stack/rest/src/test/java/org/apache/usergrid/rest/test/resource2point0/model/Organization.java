@@ -93,4 +93,9 @@ public class Organization extends Entity {
     public void setOwner(User user){
         this.user = user;
     }
+
+    public Organization mapOrgResponse(Map<String,Object> map){
+        putAll((Map<String, Object>) map.get("organization"));
+        return this;
+    }
 }

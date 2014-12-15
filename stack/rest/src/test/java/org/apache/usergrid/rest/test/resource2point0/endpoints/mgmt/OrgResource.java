@@ -40,7 +40,7 @@ public class OrgResource  extends NamedResource {
 
 
     public OrganizationResource organization (final String orgname){
-        return new OrganizationResource( orgname,context,parent );
+        return new OrganizationResource( orgname,context,this );
     }
 
     public Organization post(Organization organization){
@@ -61,10 +61,7 @@ public class OrgResource  extends NamedResource {
     }
 
     public Organization get(){
-        ApiResponse response = getResource().queryParam( "access_token", context.getToken() ).type( MediaType.APPLICATION_JSON_TYPE )
-                                            .accept( MediaType.APPLICATION_JSON ).get(ApiResponse.class);
-
-       return new Organization(response);
+        throw new UnsupportedOperationException("service doesn't exist");
     }
 
     public void delete(){

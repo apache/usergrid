@@ -22,6 +22,7 @@ import java.util.Map;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource2point0.model.Organization;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 import org.apache.usergrid.utils.MapUtils;
 
@@ -41,7 +42,7 @@ public class OrganizationResource extends NamedResource {
         super( name, context, parent );
     }
 
-    public ApplicationResource getApp(final String app){
+    public ApplicationResource app(final String app){
         return new ApplicationResource( app, context ,this );
     }
 
@@ -51,4 +52,7 @@ public class OrganizationResource extends NamedResource {
                      .post( ApiResponse.class, organization );
     }
 
+    public Organization get(){
+        throw new UnsupportedOperationException("service doesn't exist");
+    }
 }

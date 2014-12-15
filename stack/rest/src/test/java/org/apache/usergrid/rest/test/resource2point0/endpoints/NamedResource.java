@@ -53,4 +53,10 @@ public class NamedResource implements UrlResource {
     public WebResource getResource() {
         return parent.getResource().path( getPath() );
     }
+
+    public WebResource getResourceWithToken() {
+        WebResource resource = parent.getResource().path( getPath() );
+        return resource.queryParam("access_token",this.context.getToken().getAccessToken());
+    }
+
 }

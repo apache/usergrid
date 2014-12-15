@@ -100,40 +100,11 @@ public class OrganizationsIT extends AbstractRestIT {
 
         assertNotNull( tokenBack );
 
+        assertNotNull( clientSetup.getRestClient().getContext().getToken() );
 
+        Organization org = clientSetup.getRestClient().management().orgs().organization(orgName).get();
 
-//        Map payload =
-//                hashMap( "email", email ).map( "username", username ).map( "name", name ).map( "password", password )
-//                                         .map( "organization", orgName ).map( "company", "Apigee" );
-
-//        Map payload2 = hashMap( "grant_type", "password" ).map( "username", username ).map( "password", password );
-//
-//        //TODO: make it easier to distinguish between owner/entity/response uuid.
-//        UUID userUuid = UUID.fromString( node.get( "data" ).get( "owner" ).get( "uuid" ).asText() );
-//
-//        node = mapper.readTree( resource().path( "/management/token" ).accept( MediaType.APPLICATION_JSON )
-//                                          .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload2 ) );
-//
-//        //assertNotNull( node );
-//
-//        node = mapper.readTree( resource().path( "/management/organizations/" + orgName + "/apps/sandbox" )
-//                                          .queryParam( "access_token", node.get( "access_token" ).textValue() )
-//                                          .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-//                                          .get( String.class ) );
-//
-//        assertNotNull( node );
-//
-//        Set<String> rolePerms = setup.getEmf().getEntityManager(
-//                UUID.fromString( node.get( "entities" ).get( 0 ).get( "uuid" ).asText() ) )
-//                                     .getRolePermissions( "guest" );
-//        assertNotNull( rolePerms );
-//        assertTrue( rolePerms.contains( "get,post,put,delete:/**" ) );
-//        logNode( node );
-//
-//        EntityManager em = setup.getEmf().getEntityManager( setup.getEmf().getManagementAppId() );
-//        User user = em.get( userUuid, User.class );
-//        assertEquals( name, user.getName() );
-//        assertEquals( "Apigee", user.getProperty( "company" ) );
+        assertTrue(org != null && org.getName().equals(orgName));
     }
 
 //

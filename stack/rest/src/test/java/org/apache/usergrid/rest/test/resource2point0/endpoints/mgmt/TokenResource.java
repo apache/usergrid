@@ -38,21 +38,15 @@ public class TokenResource extends NamedResource {
 
     /**
      * Obtains an access token of type "application user"
-     * @param grant
-     * @param username
-     * @param password
+     * @param token
      * @return
      */
     public Token post(Token token){
-
-        return getResource().type( MediaType.APPLICATION_JSON_TYPE )
+        token = getResource().type( MediaType.APPLICATION_JSON_TYPE )
                                     .accept( MediaType.APPLICATION_JSON ).post(Token.class,token);
-//        ApiResponse response = getResource().type( MediaType.APPLICATION_JSON_TYPE )
-//                            .accept( MediaType.APPLICATION_JSON ).post(ApiResponse.class,token);
+        this.context.setToken(token);
+        return token;
 
-//        Token returnedToken = new Token( response );
-//        returnedToken.setUser(new User(response));
-        //return returnedToken;
     }
 
 }

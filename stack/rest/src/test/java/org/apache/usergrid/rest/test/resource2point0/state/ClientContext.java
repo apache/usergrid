@@ -18,6 +18,7 @@ package org.apache.usergrid.rest.test.resource2point0.state;
 
 
 import org.apache.usergrid.rest.test.resource2point0.model.Organization;
+import org.apache.usergrid.rest.test.resource2point0.model.Token;
 import org.apache.usergrid.rest.test.resource2point0.model.User;
 
 
@@ -26,18 +27,18 @@ import org.apache.usergrid.rest.test.resource2point0.model.User;
  * This includes token,orgName and uuid, appName and uuid, and user information
  */
 public class ClientContext {
-    private String token;
+    private Token token;
 //    private Organization organization;
 //    private User user;
 
 
 
-    public String getToken() {
+    public Token getToken() {
         return token;
     }
 
 
-    public void setToken( final String token ) {
+    public void setToken( final Token token ) {
         this.token = token;
     }
 

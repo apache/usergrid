@@ -52,8 +52,12 @@ public class Token extends Entity{
         return (Long) this.get("passwordChanged");
     }
 
-//    public User setUser(User user){
-//        this.user =
-//    }
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public User getUser() {
+        return user;
+    }
 }
 

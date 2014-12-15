@@ -25,6 +25,7 @@ import org.apache.usergrid.rest.test.resource2point0.endpoints.ApplicationResour
 import org.apache.usergrid.rest.test.resource2point0.endpoints.NamedResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.UrlResource;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource2point0.model.Organization;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 
@@ -35,21 +36,13 @@ import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
  */
 public class OrganizationResource extends NamedResource {
 
-//TODO: need to find a way to integrate having the orgs/<org_name> into the same endpoint.
-    //maybe I could append the orgs to the end of the parent
     public OrganizationResource( final String name, final ClientContext context, final UrlResource parent ) {
         super( name, context, parent );
     }
-
-    //TODO: change this so that it reflects the management endpoint
-//    public ApplicationResource getApp(final String app){
-//        return new ApplicationResource( app, context ,this );
-//    }
-
-//    public ApiResponse post(Map<String,String> organization){
-//
-//        return getResource().type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
-//                     .post( ApiResponse.class, organization );
-//    }
-
+    public Organization get() {
+        Map<String,Object> response = getResourceWithToken().type(MediaType.APPLICATION_JSON_TYPE)
+                .accept(MediaType.APPLICATION_JSON).get(Organization.class);
+        Organization org =  new Organization().mapOrgResponse(response);
+        return org;
+    }
 }
