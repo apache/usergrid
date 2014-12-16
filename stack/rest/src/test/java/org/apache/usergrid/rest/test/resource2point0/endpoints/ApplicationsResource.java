@@ -30,7 +30,7 @@ import javax.ws.rs.core.MediaType;
  * Should also contain the GET,PUT,POST,DELETE methods of functioning in here.
  * This class also holds how we're currently interaction with collections.
  */
-public class ApplicationsResource extends AbstractCollectionResource<Application,ApplicationResource> {
+public class ApplicationsResource extends AbstractCollectionResource<Application,CollectionResource> {
 
 
     public ApplicationsResource(final String name, final ClientContext context, final UrlResource parent) {
@@ -43,11 +43,10 @@ public class ApplicationsResource extends AbstractCollectionResource<Application
     }
 
     @Override
-    protected ApplicationResource instantiateK(String identifier, ClientContext context, UrlResource parent) {
-        return new ApplicationResource(identifier,context,parent);
+    protected CollectionResource instantiateK(String identifier, ClientContext context, UrlResource parent) {
+        return new CollectionResource(identifier,context,parent);
     }
 
-    public CollectionResource collection(final String name){ return new CollectionResource(name,context,this);}
 
     /**
      * Currently hardcoded to users, this is because we expect to create and chain different cases of collections.

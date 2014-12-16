@@ -36,7 +36,7 @@ public abstract class AbstractCollectionResource<T,K> extends NamedResource {
         super(name, context, parent);
     }
 
-    public K entity(final String identifier){
+    public K getSubResource(final String identifier){
         return instantiateK(identifier, context, this);
     }
 
