@@ -65,6 +65,12 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.model.ColumnFamily;
 import com.netflix.astyanax.model.CqlResult;
 import com.netflix.astyanax.serializers.StringSerializer;
+import org.apache.usergrid.persistence.collection.EntityDeletedFactory;
+import org.apache.usergrid.persistence.collection.EntityVersionCleanupFactory;
+import org.apache.usergrid.persistence.collection.EntityVersionCreatedFactory;
+import org.apache.usergrid.persistence.collection.guice.CollectionTaskExecutor;
+import org.apache.usergrid.persistence.core.task.Task;
+import org.apache.usergrid.persistence.core.task.TaskExecutor;
 
 import rx.Observable;
 import rx.Subscriber;
@@ -101,21 +107,36 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     private final MvccEntitySerializationStrategy entitySerializationStrategy;
     private final UniqueValueSerializationStrategy uniqueValueSerializationStrategy;
 
+    private final EntityVersionCleanupFactory entityVersionCleanupFactory;
+    private final EntityVersionCreatedFactory entityVersionCreatedFactory;
+    private final EntityDeletedFactory entityDeletedFactory;
+    private final TaskExecutor taskExecutor;
+
     private final Keyspace keyspace;
     private SerializationFig config;
 
 
     @Inject
-    public EntityCollectionManagerImpl( @Write final WriteStart writeStart, @WriteUpdate final WriteStart writeUpdate,
-                                        final WriteUniqueVerify writeVerifyUnique,
-                                        final WriteOptimisticVerify writeOptimisticVerify,
-                                        final WriteCommit writeCommit, final RollbackAction rollback,
-                                        final MarkStart markStart, final MarkCommit markCommit,
-                                        @ProxyImpl final MvccEntitySerializationStrategy entitySerializationStrategy,
-                                        final UniqueValueSerializationStrategy uniqueValueSerializationStrategy,
-                                        final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy,
-                                        final Keyspace keyspace, final SerializationFig config,
-                                        @Assisted final CollectionScope collectionScope ) {
+    public EntityCollectionManagerImpl( 
+        @Write final WriteStart                    writeStart, 
+        @WriteUpdate final WriteStart              writeUpdate,
+        final WriteUniqueVerify                    writeVerifyUnique,
+        final WriteOptimisticVerify                writeOptimisticVerify,
+        final WriteCommit                          writeCommit, 
+        final RollbackAction                       rollback,
+        final MarkStart                            markStart, 
+        final MarkCommit                           markCommit,
+        @ProxyImpl final MvccEntitySerializationStrategy entitySerializationStrategy,
+        final UniqueValueSerializationStrategy     uniqueValueSerializationStrategy,
+        final MvccLogEntrySerializationStrategy    mvccLogEntrySerializationStrategy,
+        final Keyspace                             keyspace, 
+        final SerializationFig                     config,
+        final EntityVersionCleanupFactory          entityVersionCleanupFactory,
+        final EntityVersionCreatedFactory          entityVersionCreatedFactory,
+        final EntityDeletedFactory                 entityDeletedFactory,
+        @CollectionTaskExecutor final TaskExecutor taskExecutor,
+        @Assisted final CollectionScope            collectionScope
+    ) {
         this.uniqueValueSerializationStrategy = uniqueValueSerializationStrategy;
         this.entitySerializationStrategy = entitySerializationStrategy;
 
@@ -134,6 +155,11 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
         this.keyspace = keyspace;
         this.config = config;
+
+        this.entityVersionCleanupFactory = entityVersionCleanupFactory;
+        this.entityVersionCreatedFactory = entityVersionCreatedFactory;
+        this.entityDeletedFactory = entityDeletedFactory;
+        this.taskExecutor = taskExecutor;
 
         this.collectionScope = collectionScope;
         this.mvccLogEntrySerializationStrategy = mvccLogEntrySerializationStrategy;
@@ -161,25 +187,42 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         // observable = Concurrent.concurrent( observable, Schedulers.io(), new WaitZip(), 
         //                  writeVerifyUnique, writeOptimisticVerify );
 
-        // return the commit result.
-        return observable.map( writeCommit ).doOnError( rollback );
+        return observable.map(writeCommit).doOnNext(new Action1<Entity>() {
+            @Override
+            public void call(final Entity entity) {
+                //TODO fire the created task first then the entityVersioncleanup
+                taskExecutor.submit(entityVersionCreatedFactory.getTask(collectionScope,entity));
+                taskExecutor.submit(entityVersionCleanupFactory.getTask(collectionScope, entityId,entity.getVersion()));
+                //post-processing to come later. leave it empty for now.
+            }
+        }).doOnError(rollback);
     }
 
 
     @Override
-    public Observable<Void> delete( final Id entityId ) {
+    public Observable<Id> delete( final Id entityId ) {
 
         Preconditions.checkNotNull( entityId, "Entity id is required in this stage" );
         Preconditions.checkNotNull( entityId.getUuid(), "Entity id is required in this stage" );
         Preconditions.checkNotNull( entityId.getType(), "Entity type is required in this stage" );
 
-        return Observable.from( new CollectionIoEvent<Id>( collectionScope, entityId ) ).map( markStart )
-                         .doOnNext( markCommit ).map( new Func1<CollectionIoEvent<MvccEntity>, Void>() {
-                    @Override
-                    public Void call( final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent ) {
-                        return null;
-                    }
-                } );
+        Observable<Id> o = Observable.from(new CollectionIoEvent<Id>(collectionScope, entityId))
+            .map( markStart)
+            .doOnNext( markCommit)
+            .map( new Func1<CollectionIoEvent<MvccEntity>, Id>() {
+
+                @Override
+                public Id call(final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent) {
+                    MvccEntity entity = mvccEntityCollectionIoEvent.getEvent();
+                    Task<Void> task = entityDeletedFactory
+                        .getTask( collectionScope, entity.getId(), entity.getVersion());
+                    taskExecutor.submit(task);
+                    return entity.getId();
+                }
+            }
+        );
+
+        return o;
     }
 
 
@@ -277,6 +320,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                 logger.debug( "sending entity to the queue" );
 
                 //we an update, signal the fix
+                taskExecutor.submit(entityVersionCreatedFactory.getTask(collectionScope,entity));
 
                 //TODO T.N Change this to fire a task
                 //                Observable.from( new CollectionIoEvent<Id>(collectionScope,

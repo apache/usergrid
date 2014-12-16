@@ -218,7 +218,8 @@ public class CpRelationManager implements RelationManager {
         this.indexBucketLocator = indexBucketLocator; // TODO: this also
 
         // load the Core Persistence version of the head entity as well
-        this.headEntityScope = getCollectionScopeNameFromEntityType(applicationScope.getApplication(), headEntity.getType());
+        this.headEntityScope = getCollectionScopeNameFromEntityType(
+                applicationScope.getApplication(), headEntity.getType());
 
         if ( logger.isDebugEnabled() ) {
             logger.debug( "Loading head entity {}:{} from scope\n   app {}\n   owner {}\n   name {}",
@@ -595,7 +596,8 @@ public class CpRelationManager implements RelationManager {
     public Entity addToCollection( String collName, EntityRef itemRef, boolean connectBack ) 
             throws Exception {
 
-        CollectionScope memberScope = getCollectionScopeNameFromEntityType(applicationScope.getApplication(), itemRef.getType());
+        CollectionScope memberScope = getCollectionScopeNameFromEntityType(
+                applicationScope.getApplication(), itemRef.getType());
 
         Id entityId = new SimpleId( itemRef.getUuid(), itemRef.getType() ); 
         org.apache.usergrid.persistence.model.entity.Entity memberEntity = 
@@ -628,7 +630,8 @@ public class CpRelationManager implements RelationManager {
         }
 
         // load the new member entity to be added to the collection from its default scope
-        CollectionScope memberScope = getCollectionScopeNameFromEntityType(applicationScope.getApplication(), itemRef.getType());
+        CollectionScope memberScope = getCollectionScopeNameFromEntityType(
+                applicationScope.getApplication(), itemRef.getType());
 
         //TODO, this double load should disappear once events are in
         Id entityId = new SimpleId( itemRef.getUuid(), itemRef.getType() );
@@ -780,7 +783,8 @@ public class CpRelationManager implements RelationManager {
         }
 
         // load the entity to be removed to the collection
-        CollectionScope memberScope = getCollectionScopeNameFromEntityType(applicationScope.getApplication(), itemRef.getType());
+        CollectionScope memberScope = getCollectionScopeNameFromEntityType(
+                applicationScope.getApplication(), itemRef.getType());
 
         if ( logger.isDebugEnabled() ) {
             logger.debug( "Loading entity to remove from collection "
@@ -996,7 +1000,8 @@ public class CpRelationManager implements RelationManager {
 
         ConnectionRefImpl connection = new ConnectionRefImpl( headEntity, connectionType, connectedEntityRef );
 
-        CollectionScope targetScope = getCollectionScopeNameFromEntityType(applicationScope.getApplication(), connectedEntityRef.getType());
+        CollectionScope targetScope = getCollectionScopeNameFromEntityType(
+                applicationScope.getApplication(), connectedEntityRef.getType());
 
         if ( logger.isDebugEnabled() ) {
             logger.debug("createConnection(): "
@@ -1324,7 +1329,8 @@ public class CpRelationManager implements RelationManager {
             headEntity = em.validate( headEntity );
 
 
-            IndexScope indexScope = new IndexScopeImpl( cpHeadEntity.getId(), CpNamingUtils.getConnectionScopeName( connectionType ) );
+            IndexScope indexScope = new IndexScopeImpl( 
+                    cpHeadEntity.getId(), CpNamingUtils.getConnectionScopeName( connectionType ) );
 
             final SearchTypes searchTypes = SearchTypes.fromNullableTypes( connectedEntityType );
 
@@ -1555,7 +1561,8 @@ public class CpRelationManager implements RelationManager {
      * @param crs Candidates to be considered for results
      * @param collName Name of collection or null if querying all types
      */
-    private Results buildResults( final IndexScope indexScope, final Query query, final CandidateResults crs, final String collName ) {
+    private Results buildResults( final IndexScope indexScope, final Query query, 
+            final CandidateResults crs, final String collName ) {
 
         logger.debug( "buildResults() for {} from {} candidates", collName, crs.size() );
 

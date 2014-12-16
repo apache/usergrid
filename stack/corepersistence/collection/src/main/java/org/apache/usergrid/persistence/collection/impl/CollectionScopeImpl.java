@@ -24,6 +24,8 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.MvccValidationUtil
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.google.inject.Inject;
+
 
 /**
  * Simple impl of hte collection context
@@ -34,7 +36,7 @@ public class CollectionScopeImpl extends ApplicationScopeImpl implements Collect
     private final Id ownerId;
     private final String name;
 
-
+    @Inject
     public CollectionScopeImpl( final Id applicationId, final Id ownerId, final String name ) {
         super( applicationId );
         this.ownerId = ownerId;
