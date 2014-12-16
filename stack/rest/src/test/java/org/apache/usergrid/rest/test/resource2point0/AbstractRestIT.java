@@ -21,6 +21,7 @@ import java.net.URI;
 import java.net.URLClassLoader;
 import java.util.Arrays;
 
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 

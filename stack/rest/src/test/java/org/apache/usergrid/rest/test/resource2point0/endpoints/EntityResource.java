@@ -36,13 +36,9 @@ public class EntityResource extends NamedResource {
         super(name, context, parent);
     }
 
-    public ApiResponse get(){
-        return get(new QueryParameters());
-    }
 
-    public ApiResponse get(final QueryParameters parameters){
+    public ApiResponse get(){
         WebResource resource  =getResource(true);
-        addParametersToResource(resource,parameters);
         return resource.type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
                 .get(ApiResponse.class);
     }

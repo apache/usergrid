@@ -27,6 +27,7 @@ import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 import com.google.common.base.Optional;
+import org.apache.usergrid.services.ServiceParameter;
 
 import javax.ws.rs.core.MediaType;
 
@@ -42,7 +43,7 @@ public  class CollectionResource extends NamedResource {
         super( name, context, parent );
     }
 
-    public EntityResource getEntityResource(final String identifier){
+    public EntityResource entity(final String identifier){
         return new EntityResource( identifier, context, this );
     }
 
