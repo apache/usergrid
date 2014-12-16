@@ -75,7 +75,6 @@ module.exports = function(grunt) {
             'js/libs/jquery/jquery-1.9.1.min.js',
             'js/libs/jquery/jquery-migrate-1.1.1.min.js',
             'js/libs/jquery/jquery.sparkline.min.js',
-            'js/libs/Highcharts-2.3.5/js/highcharts.js',
             'js/libs/angular-1.2.5/angular.min.js',
             'js/libs/angular-1.2.5/angular-route.min.js',
             'js/libs/angular-1.2.5/angular-resource.min.js',
