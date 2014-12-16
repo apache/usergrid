@@ -88,7 +88,7 @@ public class ClientSetup implements TestRule {
 
         username = "user_"+name + UUIDUtils.newTimeUUID();
         orgName = "org_"+name+UUIDUtils.newTimeUUID();
-        orgName = "app_"+name+UUIDUtils.newTimeUUID();
+        appName = "app_"+name+UUIDUtils.newTimeUUID();
 
         organization = restClient.management().orgs().post(new Organization( orgName,username,username+"@usergrid.com",username,username, null  ));
 

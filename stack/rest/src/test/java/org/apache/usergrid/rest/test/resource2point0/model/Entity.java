@@ -51,12 +51,23 @@ public class Entity implements Serializable, Map<String,Object> {
 
     private CollectionResource targetResource;
 
+    public Entity(){}
+
+    public Entity(ApiResponse response){
+        if(response.getEntities() !=null &&  response.getEntities().size()>=1){
+            List<Entity>  entities =  response.getEntities();
+            Map<String,Object> entity = entities.get(0);
+            this.putAll(entity);
+        }
+    }
+
     /**
      * Performs deep copy on entity passed in and save over what we currently have
      */
     public void save(){
-        List<Entity> response = targetResource.put(this).getEntities();
-        Entity entity = response.get(0);
+        targetResource.put(this);
+        ApiResponse response = targetResource.entity(this.getName()).get();
+        Entity entity = new Entity(response);
         this.dynamic_properties.putAll(entity.getDynamicProperties());
     }
 

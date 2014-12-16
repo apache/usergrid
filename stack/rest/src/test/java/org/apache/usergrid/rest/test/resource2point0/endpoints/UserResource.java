@@ -18,22 +18,23 @@
  *
  */
 
-package org.apache.usergrid.rest.test.resource2point0.model;
+package org.apache.usergrid.rest.test.resource2point0.endpoints;
 
-import java.util.List;
-import java.util.Map;
+import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource2point0.model.Entity;
+import org.apache.usergrid.rest.test.resource2point0.model.User;
+import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 /**
  * Classy class class.
  */
-public class Application extends Entity {
-    public Application(){  }
-
-    public Application(String name){
-        this.put("name",name);
+public class UserResource extends AbstractEntityResource<User>  {
+    public UserResource(String name, ClientContext context, UrlResource parent) {
+        super(name, context, parent);
     }
 
-    public Application(ApiResponse response){
-        super(response);
+    @Override
+    protected User instantiateT(ApiResponse response) {
+        return new User(response);
     }
 }

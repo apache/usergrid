@@ -36,55 +36,25 @@ import javax.ws.rs.core.MediaType;
  * Holds POST,PUT,GET,DELETE methods for Collections. Models the rest endpoints for the different ways
  * to get an entity out of UG.
  */
-public  class CollectionResource extends NamedResource {
+public  class CollectionResource extends AbstractCollectionResource<Entity,EntityResource> {
 
 
     public CollectionResource(final String name, final ClientContext context, final UrlResource parent) {
         super( name, context, parent );
     }
 
-    public EntityResource entity(final String identifier){
+
+    @Override
+    protected Entity instantiateT(ApiResponse response) {
+        Entity entity = new Entity(response);
+        return entity;
+    }
+
+    @Override
+    protected EntityResource instantiateK(String identifier, ClientContext context, UrlResource parent) {
         return new EntityResource( identifier, context, this );
+
     }
-
-    /**
-     * Get a list of entities
-     * @return
-     */
-    public ApiResponse get( final QueryParameters parameters){
-       return get(parameters,true);
-    }
-    /**
-     * Get a list of entities
-     * @return
-     */
-    public ApiResponse get(final QueryParameters parameters, final boolean useToken){
-        WebResource resource  = getResource(useToken);
-        addParametersToResource(getResource(), parameters);
-        return resource.type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
-                .get(ApiResponse.class);
-    }
-
-    /**
-     * Post the entity to the users collection
-     * @param entity
-     * @return
-     */
-    public ApiResponse post(final Entity entity){
-        return getResource(true).post(ApiResponse.class,entity);
-    }
-
-    /**
-     * Put the entity to the users collection
-     * @param entity
-     * @return
-     */
-    public ApiResponse put(final Entity entity){
-        return getResource(true).post(ApiResponse.class,entity);
-    }
-
-
-
 
 
 }
