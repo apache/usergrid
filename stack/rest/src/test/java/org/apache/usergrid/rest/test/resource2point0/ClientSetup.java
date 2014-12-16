@@ -94,7 +94,7 @@ public class ClientSetup implements TestRule {
 
         Token token = restClient.management().token().post(new Token(username,username));
 
-        application = restClient.management().orgs().organization(organization.getName()).app().post(new Application(appName));
+        restClient.management().orgs().organization(organization.getName()).app().post(new Application(appName));
 
         //ApiResponse response = restClient.management().orgs().post( mapOrganization(username,username,username+"@usergrid.com",username,username ) );
         System.out.println();

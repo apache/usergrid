@@ -39,11 +39,9 @@ public class ApplicationResource extends NamedResource {
         super("applications", context, parent);
     }
 
-    public Application post(Application application) {
-        ApiResponse response = getResource(true).type(MediaType.APPLICATION_JSON_TYPE)
-                .accept(MediaType.APPLICATION_JSON).post(ApiResponse.class,application);
-        Application app =  new Application(response);
-        return app;
+    public void post(Application application) {
+        getResource(true).type(MediaType.APPLICATION_JSON_TYPE)
+                .accept(MediaType.APPLICATION_JSON).post(application);
     }
 
 }

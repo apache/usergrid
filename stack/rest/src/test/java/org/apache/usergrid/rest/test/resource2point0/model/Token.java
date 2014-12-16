@@ -29,7 +29,7 @@ public class Token extends Entity{
     }
 
     public Token( String username, String password){
-        this.put("grant_type","token");
+        this.put("grant_type","password");
         this.put("username", username);
         this.put("password", password);
     }
