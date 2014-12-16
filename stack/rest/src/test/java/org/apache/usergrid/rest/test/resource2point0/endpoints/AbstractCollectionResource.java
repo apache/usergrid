@@ -76,6 +76,7 @@ public abstract class AbstractCollectionResource<T,Subresource> extends NamedRes
     public T put(final T entity){
         return instantiateT(getResource(true).type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
                 .put(ApiResponse.class, entity));
+
     }
 
     protected abstract T instantiateT(ApiResponse response);

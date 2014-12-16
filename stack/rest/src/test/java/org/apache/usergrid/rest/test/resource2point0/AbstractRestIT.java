@@ -21,6 +21,7 @@ import java.net.URI;
 import java.net.URLClassLoader;
 import java.util.Arrays;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.ApplicationsResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.OrganizationResource;
 import org.junit.ClassRule;
@@ -61,6 +62,8 @@ public class AbstractRestIT extends JerseyTest {
         super( descriptor );
     }
 
+
+    protected ObjectMapper mapper = new ObjectMapper();
 
     static {
         clientConfig.getFeatures().put( JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE );
