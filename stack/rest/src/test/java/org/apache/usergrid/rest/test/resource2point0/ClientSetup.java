@@ -24,6 +24,10 @@ package org.apache.usergrid.rest.test.resource2point0;
 import java.io.IOException;
 import java.util.Map;
 
+import org.apache.usergrid.rest.test.resource2point0.endpoints.ApplicationResource;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.OrganizationResource;
+import org.apache.usergrid.rest.test.resource2point0.model.Application;
+import org.apache.usergrid.rest.test.resource2point0.model.Token;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -41,8 +45,13 @@ import org.apache.usergrid.utils.MapUtils;
 public class ClientSetup implements TestRule {
 
     RestClient restClient;
+    protected String username, orgName, appName;
+    protected Organization organization;
+    protected Application application;
+
 
     public ClientSetup (String serverUrl) {
+
         restClient = new RestClient( serverUrl );
     }
 
@@ -77,15 +86,26 @@ public class ClientSetup implements TestRule {
         String methodName = description.getMethodName();
         String name = testClass + "." + methodName;
 
-        String username = name + UUIDUtils.newTimeUUID();
-//TODO: also create a new application
-        Organization organization = new Organization( username,username,username+"@usergrid.com",username,username,null  );
+        username = "user_"+name + UUIDUtils.newTimeUUID();
+        orgName = "org_"+name+UUIDUtils.newTimeUUID();
+        orgName = "app_"+name+UUIDUtils.newTimeUUID();
 
-        Organization orgOwner = restClient.management().orgs().post( organization );
+        organization = restClient.management().orgs().post(new Organization( orgName,username,username+"@usergrid.com",username,username, null  ));
+
+        Token token = restClient.management().token().post(new Token(username,username));
+
+        application = restClient.management().orgs().organization(organization.getName()).app().post(new Application(appName));
+
         //ApiResponse response = restClient.management().orgs().post( mapOrganization(username,username,username+"@usergrid.com",username,username ) );
         System.out.println();
 
+    }
+    protected OrganizationResource getOrganizationResource(){
+        return restClient.org(orgName);
+    }
 
+    protected ApplicationResource getApplicationResource(){
+        return getOrganizationResource().app(appName);
     }
 
     public RestClient getRestClient(){

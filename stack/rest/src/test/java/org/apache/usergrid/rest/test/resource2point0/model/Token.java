@@ -28,6 +28,12 @@ public class Token extends Entity{
 
     }
 
+    public Token( String username, String password){
+        this.put("grant_type","token");
+        this.put("username", username);
+        this.put("password", password);
+    }
+
     /**
      * Constructor for admin/application user ( difference is in the path )
      * @param grantType

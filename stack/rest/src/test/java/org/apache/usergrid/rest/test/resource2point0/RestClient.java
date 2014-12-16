@@ -16,6 +16,7 @@
  */
 package org.apache.usergrid.rest.test.resource2point0;
 
+import org.apache.usergrid.rest.test.resource2point0.endpoints.TokenResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.ManagementResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.OrganizationResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.UrlResource;
@@ -84,6 +85,10 @@ public class RestClient implements UrlResource {
      */
     public OrganizationResource org( final String orgName ) {
         return new OrganizationResource( orgName, context, this );
+    }
+
+    public TokenResource token(){
+        return new TokenResource(context,this);
     }
 
 

@@ -18,25 +18,36 @@
  *
  */
 
-package org.apache.usergrid.rest.test.resource2point0.model;
+package org.apache.usergrid.rest.test.resource2point0.endpoints;
 
-import java.util.List;
+
+
+import org.apache.usergrid.rest.test.resource2point0.model.Token;
+import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
+
+import javax.ws.rs.core.MediaType;
 
 /**
  * Classy class class.
  */
-public class Application extends Entity {
-    public Application(){  }
-
-    public Application(String name){
-        this.put("name",name);
+public class TokenResource extends NamedResource {
+    public TokenResource(final ClientContext context, final UrlResource parent) {
+        super("token", context, parent);
     }
 
-    public Application(ApiResponse response){
-        if(response.getEntities() !=null &&  response.getEntities().size()>=1){
-            List<Entity>  entities =  response.getEntities();
-            Entity entity = entities.get(0);
-            this.putAll(entity.dynamic_properties);
-        }
+
+    /**
+     * Obtains an access token of type "application user"
+     *
+     * @param token
+     * @return
+     */
+    public Token post(Token token) {
+        token = getResource().type(MediaType.APPLICATION_JSON_TYPE)
+                .accept(MediaType.APPLICATION_JSON).post(Token.class, token);
+        this.context.setToken(token);
+        return token;
+
     }
+
 }

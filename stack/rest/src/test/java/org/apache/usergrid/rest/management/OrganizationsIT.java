@@ -26,6 +26,7 @@ import java.util.UUID;
 
 import javax.ws.rs.core.MediaType;
 
+import org.apache.usergrid.rest.test.resource2point0.ClientSetup;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -62,9 +63,6 @@ import static org.junit.Assert.assertTrue;
  */
 public class OrganizationsIT extends AbstractRestIT {
     private static final Logger LOG = LoggerFactory.getLogger( OrganizationsIT.class );
-
-    @Rule
-    public TestContextSetup context = new TestContextSetup( this );
 
 
     /**
