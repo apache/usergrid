@@ -92,20 +92,27 @@ public class ClientSetup implements TestRule {
 
         organization = restClient.management().orgs().post(new Organization( orgName,username,username+"@usergrid.com",username,username, null  ));
 
-        Token token = restClient.management().token().post(new Token(username,username));
+        restClient.management().token().post(new Token(username,username));
 
         restClient.management().orgs().organization(organization.getName()).app().post(new Application(appName));
 
-        //ApiResponse response = restClient.management().orgs().post( mapOrganization(username,username,username+"@usergrid.com",username,username ) );
         System.out.println();
 
     }
-    protected OrganizationResource getOrganizationResource(){
+
+    public String getUsername(){return username;}
+
+    public Organization getOrganization(){return organization;}
+
+    public String getAppName() {return appName;}
+
+    public OrganizationResource getOrganizationResource(){
         return restClient.org(orgName);
     }
+    public ApplicationResource getApplicationResource(){
+        restClient.token().post(new Token(username,username));
 
-    protected ApplicationResource getApplicationResource(){
-        return getOrganizationResource().app(appName);
+        return restClient.org(orgName).app(appName);
     }
 
     public RestClient getRestClient(){
