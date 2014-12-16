@@ -54,8 +54,8 @@ public class ApplicationsResource extends AbstractCollectionResource<Application
      * The pattern should look like: orgs.apps.users , orgs.apps.groups and so on...
      * @return
      */
-    public CollectionResource users(){
-        return new CollectionResource("users", context , this);
+    public UsersResource users(){
+        return new UsersResource( context , this);
     }
 
     /**

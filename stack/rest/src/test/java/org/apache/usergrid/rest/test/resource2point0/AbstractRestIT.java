@@ -103,4 +103,8 @@ public class AbstractRestIT extends JerseyTest {
         return clientSetup.restClient.org(clientSetup.getOrganization().getName()).app(clientSetup.getAppName());
     }
 
+    protected ApplicationsResource getAppResource(){
+        return getApplicationResource();
+    }
+
 }
