@@ -24,11 +24,6 @@ import javax.ws.rs.core.MediaType;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Organization;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
-import org.apache.usergrid.utils.MapUtils;
-
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
 
 
 /**
@@ -42,8 +37,8 @@ public class OrganizationResource extends NamedResource {
         super( name, context, parent );
     }
 
-    public ApplicationResource app(final String app){
-        return new ApplicationResource( app, context ,this );
+    public ApplicationsResource app(final String app){
+        return new ApplicationsResource( app, context ,this );
     }
 
     public void post(Map<String,String> organization) {

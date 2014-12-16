@@ -21,9 +21,8 @@ import java.net.URI;
 import java.net.URLClassLoader;
 import java.util.Arrays;
 
-import org.apache.usergrid.rest.test.resource2point0.endpoints.ApplicationResource;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.ApplicationsResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.OrganizationResource;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 
@@ -100,7 +99,7 @@ public class AbstractRestIT extends JerseyTest {
         return clientSetup.restClient.org(clientSetup.getOrganization().getName());
     }
 
-    protected ApplicationResource getApplicationResource(){
+    protected ApplicationsResource getApplicationResource(){
         return clientSetup.restClient.org(clientSetup.getOrganization().getName()).app(clientSetup.getAppName());
     }
 

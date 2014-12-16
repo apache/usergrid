@@ -22,10 +22,7 @@ package org.apache.usergrid.rest.test.resource2point0;
 
 
 import java.io.IOException;
-import java.util.Map;
 
-import org.apache.usergrid.rest.test.resource2point0.endpoints.ApplicationResource;
-import org.apache.usergrid.rest.test.resource2point0.endpoints.OrganizationResource;
 import org.apache.usergrid.rest.test.resource2point0.model.Application;
 import org.apache.usergrid.rest.test.resource2point0.model.Token;
 import org.junit.rules.TestRule;
@@ -33,10 +30,7 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
-import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Organization;
-import org.apache.usergrid.rest.test.security.TestAdminUser;
-import org.apache.usergrid.utils.MapUtils;
 
 
 /**
