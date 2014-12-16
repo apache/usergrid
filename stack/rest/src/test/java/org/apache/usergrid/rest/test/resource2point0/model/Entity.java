@@ -66,7 +66,7 @@ public class Entity implements Serializable, Map<String,Object> {
      */
     public void save(){
         targetResource.put(this);
-        Entity entity = targetResource.getSubResource(this.getName()).get();
+        Entity entity = targetResource.getCollectionResource(this.getName()).get();
         this.dynamic_properties.putAll(entity.getDynamicProperties());
     }
 
