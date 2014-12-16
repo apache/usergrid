@@ -57,15 +57,24 @@ public class ApplicationsResource extends AbstractCollectionResource<Application
         return new UsersResource( context , this);
     }
 
+    public GroupsResource groups(){
+        return new GroupsResource( context , this);
+    }
+
+    public RolesResource roles(){
+        return new RolesResource( context , this);
+    }
+
     /**
      * Currently hardcoded to users, this is because we expect to create and chain different cases of collections.
      * The pattern should look like: orgs.apps.users , orgs.apps.groups and so on...
      * @return
      */
+    /*
     public CollectionResource roles(){
         return new CollectionResource("roles", context , this);
     }
-
+*/
     /**
      * Currently hardcoded to users, this is because we expect to create and chain different cases of collections.
      * The pattern should look like: orgs.apps.users , orgs.apps.groups and so on...

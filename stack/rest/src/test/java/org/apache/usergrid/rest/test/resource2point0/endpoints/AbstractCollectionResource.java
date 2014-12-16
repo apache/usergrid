@@ -64,7 +64,7 @@ public abstract class AbstractCollectionResource<T,K> extends NamedResource {
      * @return
      */
     public T post(final T entity){
-        return instantiateT(getResource(true).post(ApiResponse.class, entity));
+        return instantiateT(getResource(true).type(MediaType.APPLICATION_JSON_TYPE).accept(MediaType.APPLICATION_JSON).post(ApiResponse.class, entity));
     }
 
     /**
@@ -73,7 +73,7 @@ public abstract class AbstractCollectionResource<T,K> extends NamedResource {
      * @return
      */
     public T put(final T entity){
-        return instantiateT(getResource(true).put(ApiResponse.class, entity));
+        return instantiateT(getResource(true).type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON ).put(ApiResponse.class, entity));
     }
 
     protected abstract T instantiateT(ApiResponse response);

@@ -20,13 +20,10 @@
 
 package org.apache.usergrid.rest.test.resource2point0.endpoints;
 
-import com.sun.jersey.api.client.WebResource;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
-import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
+import org.apache.usergrid.rest.test.resource2point0.model.Group;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
-
-import javax.ws.rs.core.MediaType;
 
 /**
  * Classy class class.
