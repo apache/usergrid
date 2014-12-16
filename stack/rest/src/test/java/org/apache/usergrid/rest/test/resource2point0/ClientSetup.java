@@ -104,16 +104,10 @@ public class ClientSetup implements TestRule {
 
     public Organization getOrganization(){return organization;}
 
+    public String getOrganizationName(){return orgName;}
+
     public String getAppName() {return appName;}
 
-    public OrganizationResource getOrganizationResource(){
-        return restClient.org(orgName);
-    }
-    public ApplicationResource getApplicationResource(){
-        restClient.token().post(new Token(username,username));
-
-        return restClient.org(orgName).app(appName);
-    }
 
     public RestClient getRestClient(){
         return restClient;
