@@ -43,7 +43,7 @@ public class ApplicationsResource extends AbstractCollectionResource<Application
     }
 
     @Override
-    protected CollectionResource instantiateK(String identifier, ClientContext context, UrlResource parent) {
+    protected CollectionResource instantiateSubresource(String identifier, ClientContext context, UrlResource parent) {
         return new CollectionResource(identifier,context,parent);
     }
 

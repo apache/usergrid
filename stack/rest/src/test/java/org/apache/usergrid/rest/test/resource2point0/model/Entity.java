@@ -49,7 +49,7 @@ public class Entity implements Serializable, Map<String,Object> {
 
     protected Map<String, Object> dynamic_properties = new TreeMap<String, Object>( String.CASE_INSENSITIVE_ORDER );
 
-    private CollectionResource targetResource;
+    private CollectionResource collectionResource;
 
     public Entity(){}
 
@@ -65,8 +65,8 @@ public class Entity implements Serializable, Map<String,Object> {
      * Performs deep copy on entity passed in and save over what we currently have
      */
     public void save(){
-        targetResource.put(this);
-        Entity entity = targetResource.getCollectionResource(this.getName()).get();
+        collectionResource.put(this);
+        Entity entity = collectionResource.getSubresource(this.getName()).get();
         this.dynamic_properties.putAll(entity.getDynamicProperties());
     }
 
@@ -252,8 +252,8 @@ public class Entity implements Serializable, Map<String,Object> {
         return "Entity(" + getProperties() + ")";
     }
 
-    public CollectionResource getTargetResource(){return targetResource;}
-    public void setTargetResource(CollectionResource targetResource){this.targetResource = targetResource;}
+    public CollectionResource getCollectionResource(){return collectionResource;}
+    public void setCollectionResource(CollectionResource collectionResource){this.collectionResource = collectionResource;}
 
     @JsonAnySetter
     public void setDynamicProperty( String key, Object value ) {

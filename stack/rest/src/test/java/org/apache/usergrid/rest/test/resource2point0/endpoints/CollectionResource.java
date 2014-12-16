@@ -51,7 +51,7 @@ public  class CollectionResource extends AbstractCollectionResource<Entity,Entit
     }
 
     @Override
-    protected EntityResource instantiateK(String identifier, ClientContext context, UrlResource parent) {
+    protected EntityResource instantiateSubresource(String identifier, ClientContext context, UrlResource parent) {
         return new EntityResource( identifier, context, this );
 
     }

@@ -43,7 +43,7 @@ public class UsersResource extends AbstractCollectionResource<User,UserResource>
     }
 
     @Override
-    protected UserResource instantiateK(String name, ClientContext context, UrlResource parent) {
+    protected UserResource instantiateSubresource(String name, ClientContext context, UrlResource parent) {
         return new UserResource(name,context,parent);
     }
 }

@@ -31,13 +31,13 @@ import javax.ws.rs.core.MediaType;
 /**
  * Classy class class.
  */
-public abstract class AbstractCollectionResource<T,K> extends NamedResource {
+public abstract class AbstractCollectionResource<T,Subresource> extends NamedResource {
     public AbstractCollectionResource(String name, ClientContext context, UrlResource parent) {
         super(name, context, parent);
     }
 
-    public K getCollectionResource(final String identifier){
-        return instantiateK(identifier, context, this);
+    public Subresource getSubresource(final String identifier){
+        return instantiateSubresource(identifier, context, this);
     }
 
     /**
@@ -64,7 +64,8 @@ public abstract class AbstractCollectionResource<T,K> extends NamedResource {
      * @return
      */
     public T post(final T entity){
-        return instantiateT(getResource(true).post(ApiResponse.class, entity));
+        return instantiateT(getResource(true).type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
+                .post(ApiResponse.class, entity));
     }
 
     /**
@@ -73,11 +74,12 @@ public abstract class AbstractCollectionResource<T,K> extends NamedResource {
      * @return
      */
     public T put(final T entity){
-        return instantiateT(getResource(true).put(ApiResponse.class, entity));
+        return instantiateT(getResource(true).type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
+                .put(ApiResponse.class, entity));
     }
 
     protected abstract T instantiateT(ApiResponse response);
 
-    protected abstract K instantiateK(String identifier, ClientContext context, UrlResource parent);
+    protected abstract Subresource instantiateSubresource(String identifier, ClientContext context, UrlResource parent);
 
 }
