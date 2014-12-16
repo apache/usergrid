@@ -33,7 +33,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.TestContextSetup;
 import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
@@ -41,6 +40,7 @@ import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Organization;
 import org.apache.usergrid.rest.test.resource2point0.model.Token;
+import org.apache.usergrid.rest.test.resource2point0.model.User;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.jersey.api.client.ClientResponse;
@@ -53,6 +53,7 @@ import static junit.framework.Assert.fail;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 
@@ -68,7 +69,6 @@ public class OrganizationsIT extends AbstractRestIT {
 
     /**
      * Tests that a Organization and Owner can be created and that they persist properties and default permissions.
-     * @throws Exception
      */
 
     @Test
@@ -80,88 +80,96 @@ public class OrganizationsIT extends AbstractRestIT {
         String orgName = username;
         String email = username + "@usergrid.com";
 
-        Map<String, Object> organizationProperties = new HashMap<String, Object>();
-        organizationProperties.put( "securityLevel", 5 );
-        organizationProperties.put( "company", "Apigee" );
-
-
-        Organization organization = new Organization(orgName,username,email,name,password,organizationProperties);
         //TODO:seperate entity properties from organization properties.
-        //organization.addProperty( "" ).addProperty(  )
+        Map<String, Object> userProperties = new HashMap<String, Object>();
+        userProperties.put( "company", "Apigee" );
 
-        Organization orgOwner = clientSetup.getRestClient().management().orgs().post( organization );
+        //Create organization
+        Organization organization = new Organization( orgName, username, email, name, password, userProperties );
 
-        assertNotNull( orgOwner );
+        //Get back organization response
+        Organization organizationResponse = clientSetup.getRestClient().management().orgs().post( organization );
 
-       // orgOwner = clientSetup.getRestClient().management().orgs().get();
+        assertNotNull( organizationResponse );
 
-        Token token = new Token( "password",username,password );
-        Token tokenBack = clientSetup.getRestClient().management().token().post(token);
 
-        assertNotNull( tokenBack );
+        //Creates token
+        Token token =
+                clientSetup.getRestClient().management().token().post( new Token( "password", username, password ) );
+
+        assertNotNull( token );
 
         assertNotNull( clientSetup.getRestClient().getContext().getToken() );
 
-        Organization org = clientSetup.getRestClient().management().orgs().organization(orgName).get();
+        Organization returnedOrg = clientSetup.getRestClient().management().orgs().organization( orgName ).get();
 
-        assertTrue(org != null && org.getName().equals(orgName));
+        //TODO: clean this up
+        User returnedUser =
+                new User().mapSpecificUserResponse( ( Map<String, Object> ) returnedOrg.get( "users" ), username );
+        assertTrue( returnedOrg != null && returnedOrg.getName().equals( orgName ) );
+
+        assertEquals( "Apigee", returnedUser.getProperties().get( "company" ) );
     }
 
-//
-//    @Test
-//    public void testCreateDuplicateOrgName() throws Exception {
-//
-//        // create organization with name
-//        String timeuuid = UUIDUtils.newTimeUUID().toString();
-//        Map<String, String> payload =
-//                hashMap( "email", "create-duplicate-org" + timeuuid + "@mockserver.com" ).map( "password", "password" )
-//                                                                                         .map( "organization",
-//                                                                                                 "create-duplicate-orgname-org"
-//                                                                                                         + timeuuid );
-//        JsonNode node = mapper.readTree(
-//                resource().path( "/management/organizations" ).accept( MediaType.APPLICATION_JSON )
-//                          .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ) );
-//
-//        logNode( node );
-//        assertNotNull( node );
-//
-//        refreshIndex( "create-duplicate-orgname-org" + timeuuid, "dummy" );
-//
-//        // create another org with that same name, but a different user
-//        payload = hashMap( "email", "create-duplicate-org2@mockserver.com" ).map( "username", "create-dupe-orgname2" )
-//                                                                            .map( "password", "password" )
-//                                                                            .map( "organization",
-//                                                                                    "create-duplicate-orgname-org"
-//                                                                                            + timeuuid );
-//        try {
-//            node = mapper.readTree( resource().path( "/management/organizations" ).accept( MediaType.APPLICATION_JSON )
-//                                              .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ) );
-//        }
-//        catch ( Exception ex ) {
-//        }
-//
-//        refreshIndex( "create-duplicate-orgname-org" + timeuuid, "dummy" );
-//
-//        // now attempt to login as the user for the second organization
-//        payload = hashMap( "grant_type", "password" ).map( "username", "create-dupe-orgname2" )
-//                                                     .map( "password", "password" );
-//        try {
-//            node = mapper.readTree( resource().path( "/management/token" ).accept( MediaType.APPLICATION_JSON )
-//                                              .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ) );
-//            fail( "Should not have created user" );
-//        }
-//        catch ( Exception ex ) {
-//        }
-//        logNode( node );
-//
-//        refreshIndex( "create-duplicate-orgname-org" + timeuuid, "dummy" );
-//
-//        payload = hashMap( "username", "create-duplicate-org@mockserver.com" ).map( "grant_type", "password" )
-//                                                                              .map( "password", "password" );
-//        node = mapper.readTree( resource().path( "/management/token" ).accept( MediaType.APPLICATION_JSON )
-//                                          .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ) );
-//        logNode( node );
-//    }
+
+    /**
+     * Creates a organization with an owner, then attempts to create an organization with the same name ( making sure it
+     * fails) When it fails it verifies that the original is still intact.
+     * @throws Exception
+     */
+    @Test
+    public void testCreateDuplicateOrgName() throws Exception {
+
+        // create organization with name
+        String username = "testCreateDuplicateOrgName" + UUIDUtils.newTimeUUID();
+        String name = username;
+        String password = "password";
+        String orgName = username;
+        String email = username + "@usergrid.com";
+
+
+        //Create organization
+        Organization orgPayload = new Organization( orgName, username, email, name, password, null );
+
+        Organization orgCreatedResponse = clientSetup.getRestClient().management().orgs().post( orgPayload );
+
+
+        assertNotNull( orgCreatedResponse );
+
+        //TODO: Check to see if we still need to refresh the index.
+
+        Organization orgTestDuplicatePayload =
+                new Organization( orgName, username + "test", email + "test", name + "test", password, null );
+        Organization orgTestDuplicateResponse = null;
+        try {
+            orgTestDuplicateResponse = clientSetup.getRestClient().management().orgs().post( orgTestDuplicatePayload );
+        }
+        catch ( Exception ex ) {
+            //TODO: add a check here to make sure proper error message was returned
+        }
+
+        //refreshIndex( "create-duplicate-orgname-org" + timeuuid, "dummy" );
+
+        // now attempt to login as the user for the second organization
+
+        Token tokenPayload = new Token( "password", username + "test", password );
+        Token tokenError = null;
+        try {
+            tokenError = clientSetup.getRestClient().management().token().post( tokenPayload );
+            fail( "Should not have created user" );
+        }
+        catch ( UniformInterfaceException ex ) {
+            //TODO: Should throw a 404 not a 400.
+            System.out.println();
+        }
+
+        assertNull( tokenError );
+
+        tokenPayload = new Token( "password", username, password );
+        Token tokenReturned = clientSetup.getRestClient().management().token().post( tokenPayload );
+
+        assertNotNull( tokenReturned );
+    }
 //
 //
 //    @Test

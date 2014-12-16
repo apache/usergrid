@@ -31,6 +31,8 @@ import com.fasterxml.jackson.databind.JsonNode;
  */
 public class User extends Entity {
 
+
+    public User(){}
     /**
      * This could also be a user
      * @param response
@@ -88,6 +90,9 @@ public class User extends Entity {
         return UUID.fromString( (String) get("uuid") );
     }
 
-
+    public User mapSpecificUserResponse(Map<String,Object> map,String username){
+        putAll((Map<String, Object>) map.get(username));
+        return this;
+    }
 
 }
