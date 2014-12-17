@@ -62,12 +62,12 @@ public abstract class AbstractEntityResource<T extends Entity> extends NamedReso
                 .delete(ApiResponse.class);
     }
 
-    public ConnectionResource connectionByVerb(String verb, String collection, String entityId){
-        return new ConnectionResource(verb,collection,entityId,context,this);
+    public ConnectionsResource connections(String verb, String collection){
+        return new ConnectionsResource(verb,collection,context,this);
     }
 
-    public ConnectionResource connection(String collection, String entityId){
-        return new ConnectionResource(collection,entityId,context,this);
+    public ConnectionsResource connections(String collection){
+        return new ConnectionsResource(collection,context,this);
     }
 
     protected abstract T instantiateT(ApiResponse response);

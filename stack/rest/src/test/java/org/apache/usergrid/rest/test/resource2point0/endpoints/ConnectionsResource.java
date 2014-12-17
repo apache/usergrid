@@ -20,25 +20,35 @@
 
 package org.apache.usergrid.rest.test.resource2point0.endpoints;
 
-import com.google.common.base.Optional;
-import com.sun.jersey.api.client.WebResource;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
-import javax.ws.rs.core.MediaType;
-
 /**
- * //myorg/myapp/mycollection/myentityid/verborcollection/collection/entityId
+ * /myorg/myapp/collection/id/verborcollection/collection
  */
-public class ConnectionResource extends  AbstractEntityResource<Entity>  {
+public class ConnectionsResource extends AbstractCollectionResource<Entity,ConnectionResource> {
 
-    public ConnectionResource(String entityId,ClientContext context, UrlResource parent) {
-        super(entityId, context, parent);
+    public ConnectionsResource(String verb, String collection,ClientContext context, UrlResource parent) {
+        super(verb+"/"+collection, context, parent);
+    }
+    public ConnectionsResource( String collection,ClientContext context, UrlResource parent) {
+        super(collection, context, parent);
     }
 
     @Override
     protected Entity instantiateT(ApiResponse response) {
         return new Entity(response);
     }
+
+    @Override
+    protected ConnectionResource instantiateEntityResource(String identifier, ClientContext context, UrlResource parent) {
+        return new ConnectionResource(identifier,context,parent);
+    }
+
+    public ConnectionResource connection(String entityId){
+        return new ConnectionResource(entityId,context,this);
+    }
+
+
 }
