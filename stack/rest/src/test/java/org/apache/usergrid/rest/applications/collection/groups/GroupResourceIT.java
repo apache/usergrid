@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Group;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -46,7 +47,7 @@ public class GroupResourceIT extends AbstractRestIT {
         String groupName = "testgroup";
         String groupPath = "testgroup";
         Group group = new Group(groupName, groupPath);
-        Group testGroup = this.getAppResource().groups().post(group);
+        Group testGroup = this.app().groups().post(group);
         assertNull(testGroup.get("errors"));
         assertEquals(testGroup.get("path"), groupPath);
 
@@ -60,10 +61,11 @@ public class GroupResourceIT extends AbstractRestIT {
     @Test()
     public void createGroupSlashInNameAndPathValidation() throws IOException {
 
+        //create the group with a slash in the name
         String groupNameSlash = "test/group";
         String groupPathSlash = "test/group";
         Group group = new Group(groupNameSlash, groupPathSlash);
-        Group testGroup = this.getAppResource().groups().post(group);
+        Group testGroup = this.app().groups().post(group);
         assertNull(testGroup.get("errors"));
         assertEquals(testGroup.get("path"), groupPathSlash);
 
@@ -77,10 +79,11 @@ public class GroupResourceIT extends AbstractRestIT {
     @Test()
     public void createGroupSpaceInNameValidation() throws IOException {
 
+        //create the group with a space in the name
         String groupSpaceName = "test group";
         String groupPath = "testgroup";
         Group group = new Group(groupSpaceName, groupPath);
-        Group testGroup = this.getAppResource().groups().post(group);
+        Group testGroup = this.app().groups().post(group);
         assertNull(testGroup.get("errors"));
         assertEquals(testGroup.get("path"), groupPath);
 
@@ -99,7 +102,7 @@ public class GroupResourceIT extends AbstractRestIT {
         Group group = new Group(groupName, groupSpacePath);
 
         try {
-            Group testGroup = this.getAppResource().groups().post(group);
+            Group testGroup = this.app().groups().post(group);
         } catch (UniformInterfaceException e) {
             //verify the correct error was returned
             JsonNode node = mapper.readTree( e.getResponse().getEntity( String.class ));
@@ -107,6 +110,28 @@ public class GroupResourceIT extends AbstractRestIT {
         }
 
     }
+
+    /***
+     *
+     * Verify that we can create a group and then change the name
+     */
+    @Test()
+    public void changeGroupNameValidation() throws IOException {
+
+        String groupName = "testgroup";
+        String groupPath = "testgroup";
+        String newGroupPath = "newtestgroup";
+        Group testGroup = this.app().groups().post(new Group(groupName, groupPath));
+        assertNull(testGroup.get("errors"));
+        assertEquals(testGroup.get("path"), groupPath);
+
+        //now change the name
+        testGroup.put("path", newGroupPath);
+        Group group = this.app().groups().name(testGroup.getName()).put(testGroup);
+        assertNull(testGroup.get("errors"));
+        assertEquals(testGroup.get("path"), newGroupPath);
+    }
+
 
     /***
      *

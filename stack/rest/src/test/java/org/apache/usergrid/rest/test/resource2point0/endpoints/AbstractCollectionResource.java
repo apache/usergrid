@@ -31,13 +31,17 @@ import javax.ws.rs.core.MediaType;
 /**
  * Classy class class.
  */
-public abstract class AbstractCollectionResource<T extends Entity,Subresource> extends NamedResource {
+public abstract class AbstractCollectionResource<T extends Entity,SubResource> extends NamedResource {
     public AbstractCollectionResource(String name, ClientContext context, UrlResource parent) {
         super(name, context, parent);
     }
 
-    public Subresource getSubresource(final String identifier){
-        return instantiateSubresource(identifier, context, this);
+    public SubResource getSubResource(final String identifier){
+        return instantiateSubResource(identifier, context, this);
+    }
+
+    public SubResource name(final String identifier){
+        return instantiateSubResource(identifier, context, this);
     }
 
     /**
@@ -83,6 +87,6 @@ public abstract class AbstractCollectionResource<T extends Entity,Subresource> e
 
     protected abstract T instantiateT(ApiResponse response);
 
-    protected abstract Subresource instantiateSubresource(String identifier, ClientContext context, UrlResource parent);
+    protected abstract SubResource instantiateSubResource(String identifier, ClientContext context, UrlResource parent);
 
 }
