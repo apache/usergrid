@@ -29,41 +29,22 @@ import javax.ws.rs.core.MediaType;
 /**
  * Created by rockerston on 12/16/14.
  */
-public class RolesResource extends NamedResource{
+public class RolesResource extends AbstractCollectionResource<Role,RoleResource>{
 
     public RolesResource(ClientContext context, UrlResource parent) {
         super("roles", context, parent);
     }
 
-
-    public Role post(Role role){
-        ApiResponse response =getResource(true).type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
-                .post( ApiResponse.class, role );
-
+    @Override
+    protected Role instantiateT(ApiResponse response) {
         return new Role(response);
-
     }
 
-    public Application put(Application application){
-        ApiResponse response =getResource(true).type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
-                .put(ApiResponse.class, application );
-
-        return new Application(response);
-
+    @Override
+    protected RoleResource instantiateSubResource(String identifier, ClientContext context, UrlResource parent) {
+        return new RoleResource(identifier,context,parent);
     }
 
 
-    public ApiResponse get(){
-        ApiResponse response =getResource(true).type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
-                .get(ApiResponse.class);
-
-        return response;
-
-    }
-
-    public void delete(Application application){
-        ApiResponse response =getResource(true).type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
-                .delete(ApiResponse.class );
-    }
 
 }
