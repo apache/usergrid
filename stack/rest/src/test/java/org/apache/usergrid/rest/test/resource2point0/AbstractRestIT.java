@@ -31,6 +31,8 @@ import org.apache.usergrid.java.client.Client;
 import org.apache.usergrid.rest.ITSetup;
 import org.apache.usergrid.rest.RestITSuite;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
@@ -38,6 +40,9 @@ import com.sun.jersey.test.framework.AppDescriptor;
 import com.sun.jersey.test.framework.JerseyTest;
 import com.sun.jersey.test.framework.WebAppDescriptor;
 import com.sun.jersey.test.framework.spi.container.TestContainerFactory;
+
+import static org.junit.Assert.assertEquals;
+
 
 
 /**
@@ -110,4 +115,11 @@ public class AbstractRestIT extends JerseyTest {
         return getApplicationResource();
     }
 
+
+    public void errorParse(Integer expectedStatus, String expectedErrorMessage, UniformInterfaceException uie){
+        assertEquals((Integer)400,expectedStatus);
+        JsonNode errorJson = uie.getResponse().getEntity( JsonNode.class );
+        assertEquals( expectedErrorMessage, errorJson.get( "error" ).asText() );
+
+    }
 }
