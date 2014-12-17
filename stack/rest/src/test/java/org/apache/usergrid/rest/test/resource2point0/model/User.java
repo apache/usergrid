@@ -38,7 +38,7 @@ public class User extends Entity {
      * @param response
      */
     public User (ApiResponse response){
-        setResponse( response,"owner" );
+        super(response);
     }
     //TODO: create another constructor to take in the nessesary things to post to a user.
 
