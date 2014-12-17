@@ -22,6 +22,7 @@ package org.apache.usergrid.rest.test.resource2point0.endpoints;
 
 import com.sun.jersey.api.client.WebResource;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 import javax.ws.rs.core.MediaType;
@@ -29,7 +30,7 @@ import javax.ws.rs.core.MediaType;
 /**
  * Classy class class.
  */
-public abstract class AbstractEntityResource<T> extends NamedResource {
+public abstract class AbstractEntityResource<T extends Entity> extends NamedResource {
 
     public AbstractEntityResource(String identifier, ClientContext context, UrlResource parent) {
         super(identifier, context, parent);
@@ -42,17 +43,22 @@ public abstract class AbstractEntityResource<T> extends NamedResource {
         return instantiateT(response);
     }
 
-    public ApiResponse post(final T entity) {
+    public T post(final T entity) {
         WebResource resource = getResource(true);
-        return resource.type(MediaType.APPLICATION_JSON_TYPE).accept(MediaType.APPLICATION_JSON)
-                .post(ApiResponse.class, entity);
+        return instantiateT(resource.type(MediaType.APPLICATION_JSON_TYPE).accept(MediaType.APPLICATION_JSON)
+                .post(ApiResponse.class, entity));
     }
 
-    public ApiResponse put(final T entity) {
+    public T put(final T entity) {
         WebResource resource = getResource(true);
-        return resource.type(MediaType.APPLICATION_JSON_TYPE).accept(MediaType.APPLICATION_JSON)
-                .put(ApiResponse.class, entity);
+        return instantiateT(resource.type(MediaType.APPLICATION_JSON_TYPE).accept(MediaType.APPLICATION_JSON)
+                .put(ApiResponse.class, entity));
     }
 
+    public void delete(final T entity) {
+        WebResource resource = getResource(true);
+        resource.type(MediaType.APPLICATION_JSON_TYPE).accept(MediaType.APPLICATION_JSON)
+                .delete(ApiResponse.class, entity);
+    }
     protected abstract T instantiateT(ApiResponse response);
 }

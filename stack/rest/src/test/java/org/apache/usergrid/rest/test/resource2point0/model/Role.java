@@ -30,7 +30,7 @@ public class Role extends Entity{
     }
 
     public Role (ApiResponse response){
-        setResponse( response,"owner" );
+        super(response);
     }
 
     public String getName(){

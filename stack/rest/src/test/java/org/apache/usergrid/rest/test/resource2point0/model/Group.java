@@ -33,11 +33,7 @@ public class Group extends Entity{
     }
 
     public Group (ApiResponse<Entity> response){
-        if(response.getEntities() !=null &&  response.getEntities().size()>=1){
-            List<Entity> entities =  response.getEntities();
-            Map<String,Object> entity = entities.get(0);
-            this.putAll(entity);
-        }
+        super(response);
     }
 
     public String getName(){

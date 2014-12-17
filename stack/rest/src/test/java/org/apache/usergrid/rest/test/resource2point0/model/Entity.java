@@ -28,6 +28,7 @@ import java.util.*;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.usergrid.persistence.annotations.EntityProperty;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.AbstractCollectionResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.CollectionResource;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
@@ -49,7 +50,6 @@ public class Entity implements Serializable, Map<String,Object> {
 
     protected Map<String, Object> dynamic_properties = new TreeMap<String, Object>( String.CASE_INSENSITIVE_ORDER );
 
-    private CollectionResource collectionResource;
 
     public Entity(){}
 
@@ -61,14 +61,6 @@ public class Entity implements Serializable, Map<String,Object> {
         }
     }
 
-    /**
-     * Performs deep copy on entity passed in and save over what we currently have
-     */
-    public void save(){
-        collectionResource.put(this);
-        Entity entity = collectionResource.getSubresource(this.getName()).get();
-        this.dynamic_properties.putAll(entity.getDynamicProperties());
-    }
 
 
     @JsonSerialize( include = JsonSerialize.Inclusion.NON_NULL )
@@ -251,9 +243,6 @@ public class Entity implements Serializable, Map<String,Object> {
     public String toString() {
         return "Entity(" + getProperties() + ")";
     }
-
-    public CollectionResource getCollectionResource(){return collectionResource;}
-    public void setCollectionResource(CollectionResource collectionResource){this.collectionResource = collectionResource;}
 
     @JsonAnySetter
     public void setDynamicProperty( String key, Object value ) {

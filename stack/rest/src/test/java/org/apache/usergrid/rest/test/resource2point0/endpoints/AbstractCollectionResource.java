@@ -31,7 +31,7 @@ import javax.ws.rs.core.MediaType;
 /**
  * Classy class class.
  */
-public abstract class AbstractCollectionResource<T,Subresource> extends NamedResource {
+public abstract class AbstractCollectionResource<T extends Entity,Subresource> extends NamedResource {
     public AbstractCollectionResource(String name, ClientContext context, UrlResource parent) {
         super(name, context, parent);
     }
@@ -47,6 +47,7 @@ public abstract class AbstractCollectionResource<T,Subresource> extends NamedRes
     public ApiResponse get( final QueryParameters parameters){
         return get(parameters,true);
     }
+
     /**
      * Get a list of entities
      * @return
@@ -64,8 +65,9 @@ public abstract class AbstractCollectionResource<T,Subresource> extends NamedRes
      * @return
      */
     public T post(final T entity){
-        return instantiateT(getResource(true).type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
+        T obj = instantiateT(getResource(true).type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
                 .post(ApiResponse.class, entity));
+        return obj;
     }
 
     /**
