@@ -127,7 +127,7 @@ public class GroupResourceIT extends AbstractRestIT {
 
         //now change the name
         testGroup.put("path", newGroupPath);
-        Group group = this.app().groups().name(testGroup.getName()).put(testGroup);
+        Group group = this.app().groups().uniqueID(testGroup.getName()).put(testGroup);
         assertNull(testGroup.get("errors"));
         assertEquals(testGroup.get("path"), newGroupPath);
     }
