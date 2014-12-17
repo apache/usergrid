@@ -20,7 +20,12 @@
 
 package org.apache.usergrid.rest.test.resource2point0.model;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
+
+import org.apache.usergrid.services.ServiceParameter;
+
 
 /**
  * Classy class class.
@@ -30,6 +35,7 @@ public class QueryParameters {
     private String cursor;
     private UUID start;
     private Integer limit;
+    private Map<String,String> formPostData = new HashMap<String,String>(  );
 
     public QueryParameters() {
     }
@@ -69,5 +75,15 @@ public class QueryParameters {
         this.limit = new Integer(limit);
         return this;
     }
+
+    public Map<String,String> getFormPostData(){
+        return formPostData;
+    }
+
+    public QueryParameters setKeyValue(String key, String value){
+        this.formPostData.put(key,value);
+        return this;
+    }
+
 
 }

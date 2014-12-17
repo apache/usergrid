@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-//jnote to self, remaining test failures are due to duplicate org names in the cassandra external. Easily fixed.
 package org.apache.usergrid.rest.management;
 
 
@@ -40,6 +39,12 @@ import org.apache.usergrid.rest.TestContextSetup;
 import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 
+import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource2point0.model.Organization;
+import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
+import org.apache.usergrid.rest.test.resource2point0.model.Token;
+import org.apache.usergrid.rest.test.resource2point0.model.User;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -47,25 +52,26 @@ import com.sun.jersey.api.representation.Form;
 
 import junit.framework.Assert;
 
-import static junit.framework.Assert.fail;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 
 /**
- * Created by ApigeeCorporation on 9/17/14.
+ * Handles all management organization endpoint tests. Any tests that work with organizations specifically can be found here
  */
 public class OrganizationsIT extends AbstractRestIT {
     private static final Logger LOG = LoggerFactory.getLogger( OrganizationsIT.class );
 
+    String duplicateUniquePropertyExistsErrorMessage = "duplicate_unique_property_exists";
+    String invalidGrantErrorMessage = "invalid_grant";
 
     /**
      * Tests that a Organization and Owner can be created and that they persist properties and default permissions.
      */
-
     @Test
     public void createOrgAndOwner() throws Exception {
 
@@ -114,13 +120,11 @@ public class OrganizationsIT extends AbstractRestIT {
     @Test
     public void testCreateDuplicateOrgName() throws Exception {
 
-        // create organization with name
         String username = "testCreateDuplicateOrgName" + UUIDUtils.newTimeUUID();
         String name = username;
         String password = "password";
         String orgName = username;
         String email = username + "@usergrid.com";
-
 
         //Create organization
         Organization orgPayload = new Organization( orgName, username, email, name, password, null );
@@ -137,14 +141,15 @@ public class OrganizationsIT extends AbstractRestIT {
         Organization orgTestDuplicateResponse = null;
         try {
             orgTestDuplicateResponse = clientSetup.getRestClient().management().orgs().post( orgTestDuplicatePayload );
+            fail("Should not have been able to create duplicate organization");
         }
-        catch ( Exception ex ) {
-            //TODO: add a check here to make sure proper error message was returned
+        catch ( UniformInterfaceException ex ) {
+            errorParse( 400,duplicateUniquePropertyExistsErrorMessage, ex );
         }
 
         //refreshIndex( "create-duplicate-orgname-org" + timeuuid, "dummy" );
 
-        // now attempt to login as the user for the second organization
+        // Post to get token of what should be a non existent user.
 
         Token tokenPayload = new Token( "password", username + "test", password );
         Token tokenError = null;
@@ -153,8 +158,8 @@ public class OrganizationsIT extends AbstractRestIT {
             fail( "Should not have created user" );
         }
         catch ( UniformInterfaceException ex ) {
-            //TODO: Should throw a 404 not a 400.
-            System.out.println();
+            errorParse( 400,invalidGrantErrorMessage, ex );
+
         }
 
         assertNull( tokenError );
@@ -164,128 +169,122 @@ public class OrganizationsIT extends AbstractRestIT {
 
         assertNotNull( tokenReturned );
     }
-//
-//
-//    @Test
-//    public void testCreateDuplicateOrgEmail() throws Exception {
-//
-//        String timeUuid = UUIDUtils.newTimeUUID().toString();
-//        Map<String, String> payload =
-//                hashMap( "email", "duplicate-email" + timeUuid + "@mockserver.com" ).map( "password", "password" )
-//                                                                                    .map( "organization",
-//                                                                                            "very-nice-org"
-//                                                                                                    + timeUuid );
-//
-//        JsonNode node = mapper.readTree(
-//                resource().path( "/management/organizations" ).accept( MediaType.APPLICATION_JSON )
-//                          .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ) );
-//
-//        logNode( node );
-//        assertNotNull( node );
-//
-//        payload = hashMap( "email", "duplicate-email" + timeUuid + "@mockserver.com" ).map( "username", "anotheruser" )
-//                                                                                      .map( "password", "password" )
-//                                                                                      .map( "organization",
-//                                                                                              "not-so-nice-org"
-//                                                                                                      + timeUuid );
-//
-//        boolean failed = false;
-//        try {
-//            node = mapper.readTree( resource().path( "/management/organizations" ).accept( MediaType.APPLICATION_JSON )
-//                                              .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ) );
-//        }
-//        catch ( UniformInterfaceException ex ) {
-//            Assert.assertEquals( 400, ex.getResponse().getStatus() );
-//            JsonNode errorJson = ex.getResponse().getEntity( JsonNode.class );
-//            Assert.assertEquals( "duplicate_unique_property_exists", errorJson.get( "error" ).asText() );
-//            failed = true;
-//        }
-//        Assert.assertTrue( failed );
-//
-//        refreshIndex( "test-organization", "test-app" );
-//
-//        payload = hashMap( "grant_type", "password" ).map( "username", "create-dupe-orgname2" )
-//                                                     .map( "password", "password" );
-//        try {
-//            node = mapper.readTree( resource().path( "/management/token" ).accept( MediaType.APPLICATION_JSON )
-//                                              .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ) );
-//            fail( "Should not have created user" );
-//        }
-//        catch ( Exception ex ) {
-//        }
-//
-//        logNode( node );
-//
-//        refreshIndex( "test-organization", "test-app" );
-//
-//        payload =
-//                hashMap( "username", "duplicate-email" + timeUuid + "@mockserver.com" ).map( "grant_type", "password" )
-//                                                                                       .map( "password", "password" );
-//        node = mapper.readTree( resource().path( "/management/token" ).accept( MediaType.APPLICATION_JSON )
-//                                          .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ) );
-//        logNode( node );
-//    }
-//
-//
-//    @Test
-//    public void testOrgPOSTParams() throws IOException {
-//        UUID timeUuid = UUIDUtils.newTimeUUID();
-//        JsonNode node = mapper.readTree( resource().path( "/management/organizations" )
-//                                                   .queryParam( "organization", "testOrgPOSTParams" + timeUuid )
-//                                                   .queryParam( "username", "testOrgPOSTParams" + timeUuid )
-//                                                   .queryParam( "grant_type", "password" ).queryParam( "email",
-//                        "testOrgPOSTParams" + timeUuid + "@apigee.com" + timeUuid )
-//                                                   .queryParam( "name", "testOrgPOSTParams" )
-//                                                   .queryParam( "password", "password" )
-//
-//                                                   .accept( MediaType.APPLICATION_JSON )
-//                                                   .type( MediaType.APPLICATION_FORM_URLENCODED )
-//                                                   .post( String.class ) );
-//
-//        assertEquals( "ok", node.get( "status" ).asText() );
-//    }
-//
-//
-//    @Test
-//    public void testOrgPOSTForm() throws IOException {
-//
-//        UUID timeUuid = UUIDUtils.newTimeUUID();
-//        Form form = new Form();
-//        form.add( "organization", "testOrgPOSTForm" + timeUuid );
-//        form.add( "username", "testOrgPOSTForm" + timeUuid );
-//        form.add( "grant_type", "password" );
-//        form.add( "email", "testOrgPOSTForm" + timeUuid + "@apigee.com" );
-//        form.add( "name", "testOrgPOSTForm" );
-//        form.add( "password", "password" );
-//
-//        JsonNode node = mapper.readTree(
-//                resource().path( "/management/organizations" ).accept( MediaType.APPLICATION_JSON )
-//                          .type( MediaType.APPLICATION_FORM_URLENCODED ).post( String.class, form ) );
-//
-//        assertEquals( "ok", node.get( "status" ).asText() );
-//    }
-//
-//
-//    @Test
-//    public void noOrgDelete() throws IOException {
-//
-//
-//        String mgmtToken = context.getActiveUser().getToken();
-//
-//        ClientResponse.Status status = null;
-//        JsonNode node = null;
-//
-//        try {
-//            node = mapper.readTree( resource().path( context.getOrgName() ).queryParam( "access_token", mgmtToken )
-//                                              .accept( MediaType.APPLICATION_JSON )
-//                                              .type( MediaType.APPLICATION_JSON_TYPE ).delete( String.class ) );
-//        }
-//        catch ( UniformInterfaceException uie ) {
-//            status = uie.getResponse().getClientResponseStatus();
-//        }
-//
-//        assertEquals( ClientResponse.Status.NOT_IMPLEMENTED, status );
-//    }
+
+
+    /**
+     * Tests creation of an organization with a duplicate email. Then checks to make sure correct
+     * error message is thrown. Also makes sure that the owner of the duplicate org isn't created
+     * while the original is still intact.
+     * @throws Exception
+     */
+    @Test
+    public void testCreateDuplicateOrgEmail() throws Exception {
+
+        String username = "testCreateDuplicateOrgEmail" + UUIDUtils.newTimeUUID();
+        String name = username;
+        String password = "password";
+        String orgName = username;
+        String email = username + "@usergrid.com";
+
+        Organization orgPayload = new Organization( orgName, username, email, name, password, null );
+
+        Organization orgCreatedResponse = clientSetup.getRestClient().management().orgs().post( orgPayload );
+
+        assertNotNull( orgCreatedResponse );
+
+        orgPayload = new Organization( orgName+"test", username+"test", email, name+"test", password+"test", null );
+
+        try {
+            clientSetup.getRestClient().management().orgs().post( orgPayload );
+            fail( "Should not have created organization" );
+        }
+        catch ( UniformInterfaceException ex ) {
+            errorParse( 400,duplicateUniquePropertyExistsErrorMessage,ex);
+        }
+
+        //refreshIndex( "test-organization", "test-app" );
+
+        Token tokenPayload = new Token( "password", username + "test", password );
+        Token tokenError = null;
+        try {
+            tokenError = clientSetup.getRestClient().management().token().post( tokenPayload );
+            fail( "Should not have created organization" );
+        }
+        catch ( UniformInterfaceException ex ) {
+            //TODO: Should throw a 404 not a 400.
+            errorParse( 400,invalidGrantErrorMessage,ex );
+        }
+
+        assertNull( tokenError );
+
+        tokenPayload = new Token( "password", username, password );
+        Token tokenReturned = clientSetup.getRestClient().management().token().post( tokenPayload );
+
+        assertNotNull( tokenReturned );
+    }
+
+
+    //TODO:
+    @Test
+    public void testOrgPOSTParams() throws IOException {
+
+        String username = "testCreateDuplicateOrgEmail" + UUIDUtils.newTimeUUID();
+        String name = username;
+        String password = "password";
+        String orgName = username;
+        String email = username + "@usergrid.com";
+
+        UUID timeUuid = UUIDUtils.newTimeUUID();
+
+        QueryParameters queryParameters = new QueryParameters();
+        queryParameters.setKeyValue( "organization",orgName );
+        queryParameters.setKeyValue( "username",username );
+        queryParameters.setKeyValue( "grant_type",password );
+        queryParameters.setKeyValue( "email",email  );
+        queryParameters.setKeyValue( "name",name );
+        queryParameters.setKeyValue( "password",password );
+
+        Organization organization = clientSetup.getRestClient().management().orgs().post( queryParameters );
+
+        assertNotNull( organization );
+        assertEquals( orgName,organization.getName() );
+    }
+
+    @Test
+    public void testOrgPOSTForm() throws IOException {
+
+        UUID timeUuid = UUIDUtils.newTimeUUID();
+        Form form = new Form();
+        form.add( "organization", "testOrgPOSTForm" + timeUuid );
+        form.add( "username", "testOrgPOSTForm" + timeUuid );
+        form.add( "grant_type", "password" );
+        form.add( "email", "testOrgPOSTForm" + timeUuid + "@apigee.com" );
+        form.add( "name", "testOrgPOSTForm" );
+        form.add( "password", "password" );
+
+        Organization organization = clientSetup.getRestClient().management().orgs().post( form );
+
+        assertNotNull( organization );
+        assertEquals( "testOrgPOSTForm" + timeUuid ,organization.getName() );
+    }
+
+
+    /**
+     * Returns error from unimplemented delete method
+     * @throws IOException
+     */
+    @Test
+    public void noOrgDelete() throws IOException {
+
+        try {
+            clientSetup.getRestClient().management().orgs().organization( clientSetup.getOrganizationName() ).delete();
+            fail( "Delete is not implemented yet" );
+        }catch(UniformInterfaceException uie){
+            assertEquals(500,uie.getResponse().getStatus());
+           // assertEquals( ClientResponse.Status.NOT_IMPLEMENTED ,uie.getResponse().getStatus());
+        }
+
+    }
 //
 //
 //    @Test

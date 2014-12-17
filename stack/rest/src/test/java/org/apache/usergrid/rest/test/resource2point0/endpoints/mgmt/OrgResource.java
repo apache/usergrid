@@ -23,17 +23,23 @@ import org.apache.usergrid.rest.test.resource2point0.endpoints.NamedResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.UrlResource;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Organization;
+import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource2point0.model.User;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.sun.jersey.api.client.UniformInterfaceException;
+import com.sun.jersey.api.client.WebResource;
 
+import com.sun.jersey.api.representation.Form;
+
+
+//TODO: add error checking to each of the rest calls.
 /**
  * Manages the Management/ORG endpoint.
  */
 public class OrgResource  extends NamedResource {
 
-    //TODO: need to find a way to integrate having the orgs/<org_name> into the same endpoint.
-    //maybe I could append the orgs to the end of the parent
     public OrgResource( final ClientContext context, final UrlResource parent ) {
         super( "orgs", context, parent );
     }
@@ -41,6 +47,39 @@ public class OrgResource  extends NamedResource {
 
     public OrganizationResource organization (final String orgname){
         return new OrganizationResource( orgname,context,this );
+    }
+
+    /**
+     * This post is for the POST params case, where the entire call is made using queryParameters
+     * @return
+     */
+    public Organization post(Form form){
+        //Seems like an apiresponse can't handle what gets returned from the from urlended media type
+
+        ApiResponse response = getResource().type( MediaType.APPLICATION_FORM_URLENCODED )
+                                       .accept( MediaType.APPLICATION_JSON ).post( ApiResponse.class, form );
+
+
+        Organization organization = new Organization(response);
+        organization.setOwner(new User( response ));
+        return organization;
+    }
+
+    /**
+     * This post is for the POST params case, where the entire call is made using queryParameters
+     * @return
+     */
+    public Organization post(QueryParameters parameters){
+        //Seems like an apiresponse can't handle what gets returned from the from urlended media type
+        WebResource resource = addParametersToResource( getResource(), parameters);
+
+            ApiResponse response = resource.type( MediaType.APPLICATION_FORM_URLENCODED )
+                                        .accept( MediaType.APPLICATION_JSON ).post( ApiResponse.class );
+
+
+        Organization organization = new Organization(response);
+        organization.setOwner(new User( response ));
+        return organization;
     }
 
     public Organization post(Organization organization){
@@ -69,4 +108,5 @@ public class OrgResource  extends NamedResource {
                 .delete(ApiResponse.class);
 
     }
+
 }

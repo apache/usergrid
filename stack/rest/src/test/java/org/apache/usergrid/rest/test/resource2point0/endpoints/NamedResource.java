@@ -22,6 +22,10 @@ import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 import com.sun.jersey.api.client.WebResource;
 
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 
@@ -61,24 +65,38 @@ public class NamedResource implements UrlResource {
         return useToken ? resource.queryParam("access_token",this.context.getToken().getAccessToken()) :  parent.getResource().path( getPath() );
     }
 
-    protected WebResource addParametersToResource(final WebResource resource, final QueryParameters parameters){
+    protected WebResource addParametersToResource(WebResource resource, final QueryParameters parameters){
+
         if(parameters == null){
             return resource;
         }
         if ( parameters.getQuery() != null ) {
-            resource.queryParam( "ql", parameters.getQuery() );
+            resource = resource.queryParam( "ql", parameters.getQuery() );
         }
 
         if ( parameters.getCursor() != null ) {
-           resource.queryParam( "cursor", parameters.getCursor() );
+           resource = resource.queryParam( "cursor", parameters.getCursor() );
         }
 
         if ( parameters.getStart() != null ) {
-            resource.queryParam("start", parameters.getStart().toString());
+            resource = resource.queryParam("start", parameters.getStart().toString());
         }
 
         if ( parameters.getLimit() != null ) {
-             resource.queryParam("limit", parameters.getLimit().toString());
+             resource = resource.queryParam("limit", parameters.getLimit().toString());
+        }
+        //We can also post the params as queries
+        if ( parameters.getFormPostData().size() > 0){
+            Map<String,String> formData = parameters.getFormPostData();
+            Set<String> keySet = formData.keySet();
+            Iterator<String> keyIterator = keySet.iterator();
+
+
+            while(keyIterator.hasNext()){
+                String key = keyIterator.next();
+                String value = formData.get( key );
+                resource = resource.queryParam( key, value );
+            }
         }
         return resource;
     }

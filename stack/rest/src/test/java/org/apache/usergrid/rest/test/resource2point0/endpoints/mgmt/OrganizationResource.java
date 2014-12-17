@@ -47,6 +47,18 @@ public class OrganizationResource extends NamedResource {
         return org;
     }
 
+
+    /**
+     * This has not been implemented and will return an error.
+     * @return
+     */
+    public Organization delete(){
+        Map<String,Object> response = getResource(true).type(MediaType.APPLICATION_JSON_TYPE)
+                                                       .accept(MediaType.APPLICATION_JSON).delete(Organization.class);
+        Organization org =  new Organization().mapOrgResponse(response);
+        return org;
+    }
+
     public ApplicationResource app(){
         return new ApplicationResource(  context ,this );
     }
