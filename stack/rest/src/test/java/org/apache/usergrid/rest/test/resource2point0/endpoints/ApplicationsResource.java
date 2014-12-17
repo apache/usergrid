@@ -32,7 +32,6 @@ import javax.ws.rs.core.MediaType;
  */
 public class ApplicationsResource extends AbstractCollectionResource<Application,CollectionResource> {
 
-
     public ApplicationsResource(final String name, final ClientContext context, final UrlResource parent) {
         super( name, context, parent );
     }
@@ -42,8 +41,10 @@ public class ApplicationsResource extends AbstractCollectionResource<Application
         return new Application(response);
     }
 
+    //myorg/myapp/collectionname
+
     @Override
-    protected CollectionResource instantiateSubResource(String identifier, ClientContext context, UrlResource parent) {
+    protected CollectionResource instantiateEntityResource(String identifier, ClientContext context, UrlResource parent) {
         return new CollectionResource(identifier,context,parent);
     }
 

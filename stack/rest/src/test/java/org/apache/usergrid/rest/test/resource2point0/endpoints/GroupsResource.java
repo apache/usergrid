@@ -37,7 +37,7 @@ public class GroupsResource extends AbstractCollectionResource<Group,GroupResour
     }
 
     @Override
-    protected GroupResource instantiateSubResource(String name, ClientContext context, UrlResource parent) {
+    protected GroupResource instantiateEntityResource(String name, ClientContext context, UrlResource parent) {
         return new GroupResource(name,context,parent);
     }
 

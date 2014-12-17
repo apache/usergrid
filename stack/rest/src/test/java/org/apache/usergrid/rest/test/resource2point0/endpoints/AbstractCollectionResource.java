@@ -29,19 +29,20 @@ import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 import javax.ws.rs.core.MediaType;
 
 /**
- * Classy class class.
+ * //myorg/myapp/mycollection
  */
-public abstract class AbstractCollectionResource<T extends Entity,SubResource> extends NamedResource {
+public abstract class AbstractCollectionResource<T extends Entity,EntityResource> extends NamedResource {
     public AbstractCollectionResource(String name, ClientContext context, UrlResource parent) {
         super(name, context, parent);
     }
 
-    public SubResource getSubResource(final String identifier){
-        return instantiateSubResource(identifier, context, this);
+
+    public EntityResource entityResource(final String identifier){
+        return instantiateEntityResource(identifier, context, this);
     }
 
-    public SubResource uniqueID(final String identifier){
-        return instantiateSubResource(identifier, context, this);
+    public EntityResource uniqueID(final String identifier){
+        return instantiateEntityResource(identifier, context, this);
     }
 
     /**
@@ -49,7 +50,7 @@ public abstract class AbstractCollectionResource<T extends Entity,SubResource> e
      * @return
      */
     public ApiResponse get( final QueryParameters parameters){
-        return get(parameters,true);
+        return get(parameters, true);
     }
 
     /**
@@ -87,6 +88,6 @@ public abstract class AbstractCollectionResource<T extends Entity,SubResource> e
 
     protected abstract T instantiateT(ApiResponse response);
 
-    protected abstract SubResource instantiateSubResource(String identifier, ClientContext context, UrlResource parent);
+    protected abstract EntityResource instantiateEntityResource(String identifier, ClientContext context, UrlResource parent);
 
 }

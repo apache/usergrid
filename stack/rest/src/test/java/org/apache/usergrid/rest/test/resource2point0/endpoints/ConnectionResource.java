@@ -20,8 +20,8 @@
 
 package org.apache.usergrid.rest.test.resource2point0.endpoints;
 
+import com.google.common.base.Optional;
 import com.sun.jersey.api.client.WebResource;
-import org.apache.usergrid.rest.test.resource.Connection;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
@@ -29,46 +29,32 @@ import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 import javax.ws.rs.core.MediaType;
 
 /**
- * //myorg/myapp/mycollection/myentityid
+ * //myorg/myapp/mycollection/myentityid/verb/collection/entityId
  */
-public abstract class AbstractEntityResource<T extends Entity> extends NamedResource {
+public class ConnectionResource extends NamedResource {
 
-    public AbstractEntityResource(String identifier, ClientContext context, UrlResource parent) {
-        super(identifier, context, parent);
+    public ConnectionResource(String verb, String collection, String entityId,ClientContext context, UrlResource parent) {
+        super(verb+"/"+collection+"/"+entityId, context, parent);
     }
+    public ConnectionResource( String collection, String entityId,ClientContext context, UrlResource parent) {
+        super(collection+"/"+entityId, context, parent);
+    }
+    //TODO: figure out how to do a get
 
-    public T get() {
+    public void post(final Optional<Entity> entity) {
         WebResource resource = getResource(true);
-        ApiResponse response = resource.type(MediaType.APPLICATION_JSON_TYPE).accept(MediaType.APPLICATION_JSON)
-                .get(ApiResponse.class);
-        return instantiateT(response);
+        resource.type(MediaType.APPLICATION_JSON_TYPE).accept(MediaType.APPLICATION_JSON)
+                .post(ApiResponse.class, entity);
     }
 
-    public T post(final T entity) {
+    public void put(final Optional<Entity> entity) {
         WebResource resource = getResource(true);
-        return instantiateT(resource.type(MediaType.APPLICATION_JSON_TYPE).accept(MediaType.APPLICATION_JSON)
-                .post(ApiResponse.class, entity));
+        resource.type(MediaType.APPLICATION_JSON_TYPE).accept(MediaType.APPLICATION_JSON)
+                .put(ApiResponse.class, entity);
     }
-
-    public T put(final T entity) {
-        WebResource resource = getResource(true);
-        return instantiateT(resource.type(MediaType.APPLICATION_JSON_TYPE).accept(MediaType.APPLICATION_JSON)
-                .put(ApiResponse.class, entity));
-    }
-
     public void delete() {
         WebResource resource = getResource(true);
         resource.type(MediaType.APPLICATION_JSON_TYPE).accept(MediaType.APPLICATION_JSON)
                 .delete(ApiResponse.class);
     }
-
-    public ConnectionResource connectionByVerb(String verb, String collection, String entityId){
-        return new ConnectionResource(verb,collection,entityId,context,this);
-    }
-
-    public ConnectionResource connection(String collection, String entityId){
-        return new ConnectionResource(collection,entityId,context,this);
-    }
-
-    protected abstract T instantiateT(ApiResponse response);
 }

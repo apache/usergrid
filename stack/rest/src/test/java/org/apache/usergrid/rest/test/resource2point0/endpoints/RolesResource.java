@@ -41,7 +41,7 @@ public class RolesResource extends AbstractCollectionResource<Role,RoleResource>
     }
 
     @Override
-    protected RoleResource instantiateSubResource(String identifier, ClientContext context, UrlResource parent) {
+    protected RoleResource instantiateEntityResource(String identifier, ClientContext context, UrlResource parent) {
         return new RoleResource(identifier,context,parent);
     }
 

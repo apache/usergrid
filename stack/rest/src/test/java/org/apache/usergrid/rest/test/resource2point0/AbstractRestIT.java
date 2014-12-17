@@ -103,10 +103,12 @@ public class AbstractRestIT extends JerseyTest {
         return new com.sun.jersey.test.framework.spi.container.external.ExternalTestContainerFactory();
     }
 
+    ///myorg/
     protected OrganizationResource org(){
         return clientSetup.restClient.org(clientSetup.getOrganization().getName());
     }
 
+    //myorg/myapp
     protected ApplicationsResource app(){
         return clientSetup.restClient.org(clientSetup.getOrganization().getName()).app(clientSetup.getAppName());
 
