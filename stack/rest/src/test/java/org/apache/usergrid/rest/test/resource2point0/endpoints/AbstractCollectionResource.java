@@ -40,7 +40,7 @@ public abstract class AbstractCollectionResource<T extends Entity,SubResource> e
         return instantiateSubResource(identifier, context, this);
     }
 
-    public SubResource name(final String identifier){
+    public SubResource uniqueID(final String identifier){
         return instantiateSubResource(identifier, context, this);
     }
 
