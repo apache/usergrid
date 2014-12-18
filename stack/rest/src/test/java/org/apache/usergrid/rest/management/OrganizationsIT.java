@@ -26,6 +26,7 @@ import java.util.UUID;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.usergrid.rest.test.resource2point0.ClientSetup;
+import org.apache.usergrid.rest.test.resource2point0.RestClient;
 import org.apache.usergrid.rest.test.resource2point0.model.*;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -285,14 +286,22 @@ public class OrganizationsIT extends AbstractRestIT {
         }
 
     }
-//
-//
-//    @Test
-//    public void testCreateOrgUserAndReturnCorrectUsername() throws Exception {
-//
-//
-//        String mgmtToken = context.getActiveUser().getToken();
-//
+
+
+    @Test
+    public void testCreateOrgUserAndReturnCorrectUsername() throws Exception {
+
+        String username = "testCreateOrgUserAndReturnCorrectUsername"+UUIDUtils.newTimeUUID();
+
+        RestClient restClient = clientSetup.getRestClient();
+
+        User adminUserPayload = new User(username,username,username+"@usergrid.com",username  );
+
+        User adminUserResponse = restClient.management().orgs().organization( clientSetup.getOrganizationName() )
+                                           .users().post( adminUserPayload );
+
+        assertNotNull( adminUserResponse );
+
 //        Map<String, String> payload = hashMap( "username", "test-user-2" ).map( "name", "Test User 2" )
 //                                                                          .map( "email", "test-user-2@mockserver.com" )
 //                                                                          .map( "password", "password" );
@@ -301,6 +310,8 @@ public class OrganizationsIT extends AbstractRestIT {
 //                resource().path( "/management/organizations/" + context.getOrgName() + "/users" )
 //                          .queryParam( "access_token", mgmtToken ).accept( MediaType.APPLICATION_JSON )
 //                          .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ) );
+//
+//        clientSetup.getRestClient().management().orgs()
 //
 //        logNode( node );
 //        assertNotNull( node );
@@ -316,7 +327,7 @@ public class OrganizationsIT extends AbstractRestIT {
 //        assertEquals( "test-user-2", username );
 //        assertEquals( "Test User 2", name );
 //        assertEquals( "test-user-2@mockserver.com", email );
-//    }
+    }
 //
 //
 //    @Test

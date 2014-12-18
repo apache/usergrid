@@ -23,6 +23,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.usergrid.rest.test.resource2point0.endpoints.NamedResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.UrlResource;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.UserResource;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Application;
 import org.apache.usergrid.rest.test.resource2point0.model.Organization;
@@ -54,7 +55,7 @@ public class OrganizationResource extends NamedResource {
      */
     public Organization delete(){
         Map<String,Object> response = getResource(true).type(MediaType.APPLICATION_JSON_TYPE)
-                                                       .accept(MediaType.APPLICATION_JSON).delete(Organization.class);
+                                                       .accept(MediaType.APPLICATION_JSON).delete( Organization.class );
         Organization org =  new Organization().mapOrgResponse(response);
         return org;
     }
@@ -63,4 +64,8 @@ public class OrganizationResource extends NamedResource {
         return new ApplicationResource(  context ,this );
     }
 
+    //TODO: add user management resource, this is placeholder for regular users.
+    public AdminUsersResource users() {
+        return new AdminUsersResource( context, this );
+    }
 }
