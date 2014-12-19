@@ -24,14 +24,19 @@ import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
-import org.apache.usergrid.rest.AbstractRestIT;
+
+import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.TestContextSetup;
 import org.apache.usergrid.rest.test.resource.CustomCollection;
+import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource2point0.model.Collection;
+import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 
 import org.apache.commons.lang.ArrayUtils;
 
 import static org.junit.Assert.assertEquals;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
+import static org.junit.Assert.assertNotNull;
 
 
 /**
@@ -42,100 +47,86 @@ import static org.apache.usergrid.utils.MapUtils.hashMap;
  */
 public class PagingEntitiesTest extends AbstractRestIT {
 
-    @Rule
-    public TestContextSetup context = new TestContextSetup( this );
-
 
     @Test //USERGRID-266
     public void pageThroughConnectedEntities() throws IOException {
 
-        CustomCollection activities = context.customCollection( "activities" );
 
         long created = 0;
         int maxSize = 100;
-        long[] verifyCreated = new long[maxSize];
-        Map actor = hashMap( "displayName", "Erin" );
-        Map props = new HashMap();
+        Map<String, Object> entityPayload = new HashMap<String,Object>(  );
+        String collectionName = "merp"+ UUIDUtils.newTimeUUID();
 
+        for( created = 0; created < maxSize; created++) {
 
-        props.put( "actor", actor );
-        props.put( "verb", "go" );
+            entityPayload.put( "name","value"+created );
+            Entity entity = new Entity(entityPayload );
+            this.app().collection( collectionName).post( entity );
 
-        for ( int i = 0; i < maxSize; i++ ) {
-
-            props.put( "ordinal", i );
-            JsonNode activity = activities.create( props );
-            verifyCreated[i] = activity.findValue( "created" ).longValue();
-            if ( i == 0 ) {
-                created = activity.findValue( "created" ).longValue();
-            }
         }
-        ArrayUtils.reverse( verifyCreated );
-        
-        refreshIndex(context.getOrgName(), context.getAppName());
 
-        String query = "select * where created >= " + created;
+        this.refreshIndex();
 
+        Collection sandboxCollection = this.app().collection( collectionName).get();
+        assertNotNull( sandboxCollection );
 
-        JsonNode node = activities.query( query, "limit", "2" ); //activities.query(query,"");
-        int index = 0;
-        while ( node.get( "entities" ).get( "created" ) != null ) {
-            assertEquals( 2, node.get( "entities" ).size() );
-
-            if ( node.get( "cursor" ) != null ) {
-                node = activities.query( query, "cursor", node.get( "cursor" ).toString() );
+        created = 0;
+        for(int i = 0; i< 10; i++) {
+            while ( sandboxCollection.hasNext() ) {
+                Entity returnedEntity = sandboxCollection.next();
+                assertEquals( "value" + created++, returnedEntity.get( "name" ) );
             }
-
-            else {
-                break;
-            }
+            sandboxCollection = this.app().collection( collectionName ).getNextPage( sandboxCollection, true );
         }
+
+
+
     }
 
-
-    @Test //USERGRID-1253
-    public void pagingQueryReturnCorrectResults() throws Exception {
-
-        CustomCollection activities = context.customCollection( "activities" );
-
-        long created = 0;
-        int maxSize = 23;
-        long[] verifyCreated = new long[maxSize];
-        Map actor = hashMap( "displayName", "Erin" );
-        Map props = new HashMap();
-
-        props.put( "actor", actor );
-        props.put( "content", "bragh" );
-
-        for ( int i = 0; i < maxSize; i++ ) {
-
-            if ( i > 17 && i < 23 ) {
-                props.put( "verb", "stop" );
-            }
-            else {
-                props.put( "verb", "go" );
-            }
-            props.put( "ordinal", i );
-            JsonNode activity = activities.create( props );
-            verifyCreated[i] = activity.findValue( "created" ).longValue();
-            if ( i == 18 ) {
-                created = activity.findValue( "created" ).longValue();
-            }
-        }
-
-        refreshIndex(context.getOrgName(), context.getAppName());
-
-        String query = "select * where created >= " + created + " or verb = 'stop'";
-
-        JsonNode node = activities.withQuery( query ).get();
-
-        for ( int index = 0; index < 5; index++ ) {
-            assertEquals( verifyCreated[maxSize - 1 - index],
-                    node.get( "entities" ).get( index ).get( "created" ).longValue() );
-        }
-
-        int totalEntitiesContained = activities.countEntities( query );
-
-        assertEquals( 5, totalEntitiesContained );
-    }
+//
+//    @Test //USERGRID-1253
+//    public void pagingQueryReturnCorrectResults() throws Exception {
+//
+//        CustomCollection activities = context.customCollection( "activities" );
+//
+//        long created = 0;
+//        int maxSize = 23;
+//        long[] verifyCreated = new long[maxSize];
+//        Map actor = hashMap( "displayName", "Erin" );
+//        Map props = new HashMap();
+//
+//        props.put( "actor", actor );
+//        props.put( "content", "bragh" );
+//
+//        for ( int i = 0; i < maxSize; i++ ) {
+//
+//            if ( i > 17 && i < 23 ) {
+//                props.put( "verb", "stop" );
+//            }
+//            else {
+//                props.put( "verb", "go" );
+//            }
+//            props.put( "ordinal", i );
+//            JsonNode activity = activities.create( props );
+//            verifyCreated[i] = activity.findValue( "created" ).longValue();
+//            if ( i == 18 ) {
+//                created = activity.findValue( "created" ).longValue();
+//            }
+//        }
+//
+//        refreshIndex(context.getOrgName(), context.getAppName());
+//
+//        String query = "select * where created >= " + created + " or verb = 'stop'";
+//
+//        JsonNode node = activities.withQuery( query ).get();
+//
+//        for ( int index = 0; index < 5; index++ ) {
+//            assertEquals( verifyCreated[maxSize - 1 - index],
+//                    node.get( "entities" ).get( index ).get( "created" ).longValue() );
+//        }
+//
+//        int totalEntitiesContained = activities.countEntities( query );
+//
+//        assertEquals( 5, totalEntitiesContained );
+//    }
 }

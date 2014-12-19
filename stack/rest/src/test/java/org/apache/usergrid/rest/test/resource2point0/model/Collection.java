@@ -21,6 +21,7 @@
 package org.apache.usergrid.rest.test.resource2point0.model;
 
 import java.util.Iterator;
+import java.util.Map;
 
 
 /**
@@ -76,7 +77,7 @@ public class Collection implements Iterable<Entity>, Iterator<Entity> {
 
     @Override
     public Entity next() {
-        return (Entity)entities.next();
+        return new Entity( ( Map<String, Object> ) entities.next() );
     }
 
     @Override

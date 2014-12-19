@@ -21,6 +21,8 @@ import java.net.URI;
 import java.net.URLClassLoader;
 import java.util.Arrays;
 
+import javax.ws.rs.core.MediaType;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.ApplicationsResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.OrganizationResource;
@@ -105,12 +107,22 @@ public class AbstractRestIT extends JerseyTest {
 
     ///myorg/
     protected OrganizationResource org(){
-        return clientSetup.restClient.org(clientSetup.getOrganization().getName());
+        return clientSetup.restClient.org( clientSetup.getOrganization().getName() );
     }
 
     //myorg/myapp
     protected ApplicationsResource app(){
-        return clientSetup.restClient.org(clientSetup.getOrganization().getName()).app(clientSetup.getAppName());
+        return clientSetup.restClient.org(clientSetup.getOrganization().getName()).app( clientSetup.getAppName() );
+
+    }
+
+    public void refreshIndex() {
+        //TODO: add error checking and logging
+        clientSetup.restClient.getResource().path( "/refreshindex" )
+                              .queryParam( "org_name", clientSetup.getOrganization().getName() )
+                              .queryParam( "app_name", clientSetup.getAppName() )
+                              .accept( MediaType.APPLICATION_JSON ).post();
+
 
     }
 
