@@ -90,8 +90,6 @@ public class ClientSetup implements TestRule {
 
         restClient.management().orgs().organization(organization.getName()).app().post(new Application(appName));
 
-        System.out.println();
-
     }
 
     public String getUsername(){return username;}

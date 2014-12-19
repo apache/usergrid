@@ -39,7 +39,7 @@ public class ApplicationsResource extends CollectionEndpoint {
 
 
     public CollectionEndpoint collection(String name) {
-        return new CollectionEndpoint(name,context,parent);
+        return new CollectionEndpoint(name,context,this);
     }
 
 

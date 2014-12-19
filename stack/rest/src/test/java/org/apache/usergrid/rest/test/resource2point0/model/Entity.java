@@ -68,9 +68,6 @@ public class Entity implements Serializable, Map<String,Object> {
         }
     }
 
-
-
-    @JsonSerialize( include = JsonSerialize.Inclusion.NON_NULL )
     public UUID getUuid(){
         return  UUID.fromString( (String) get("uuid") );
     }
@@ -91,8 +88,6 @@ public class Entity implements Serializable, Map<String,Object> {
         put("type",type);
     }
 
-
-    @JsonSerialize( include = JsonSerialize.Inclusion.NON_NULL )
     public Long getCreated() {
         return (Long) get( "created" );
     }
@@ -106,8 +101,6 @@ public class Entity implements Serializable, Map<String,Object> {
     }
 
 
-    @EntityProperty( indexed = true, required = true, mutable = true )
-    @JsonSerialize( include = JsonSerialize.Inclusion.NON_NULL )
     public Long getModified() {
         return (Long) get( "modified" );
     }
@@ -121,7 +114,6 @@ public class Entity implements Serializable, Map<String,Object> {
     }
 
 
-    @JsonSerialize( include = JsonSerialize.Inclusion.NON_NULL )
     public String getName() {
         Object value = getProperty( PROPERTY_NAME );
 
@@ -163,7 +155,6 @@ public class Entity implements Serializable, Map<String,Object> {
         return this;
     }
 
-    @JsonSerialize( include = JsonSerialize.Inclusion.NON_NULL )
     public Object getMetadata( String key ) {
         return getDataset( "metadata", key );
     }

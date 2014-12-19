@@ -58,7 +58,6 @@ public class GroupResourceIT extends AbstractRestIT {
 
         Entity groupResponse = this.app().collection("groups").post(group);
 
-       // assertNull(groupResponse.get("errors"));
         assertEquals(groupResponse.get("path"), groupPath);
         assertEquals(groupResponse.get("name"), groupName);
 
