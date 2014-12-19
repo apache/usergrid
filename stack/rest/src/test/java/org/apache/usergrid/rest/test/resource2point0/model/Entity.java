@@ -39,7 +39,6 @@ import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
  * minumum of what other classes use. Such as . users or groups.
  */
 
-@XmlRootElement
 public class Entity implements Serializable, Map<String,Object> {
 
 
@@ -63,84 +62,6 @@ public class Entity implements Serializable, Map<String,Object> {
         }
     }
 
-    public UUID getUuid(){
-        return  UUID.fromString( (String) get("uuid") );
-    }
-
-
-    public void setUuid( UUID uuid ) {
-        put("uuid", uuid);
-    }
-
-    //TODO: see if this is needed
-    //    @JsonSerialize( include = JsonSerialize.Inclusion.NON_NULL )
-    public String getType() {
-        return (String) get( "type" );
-    }
-
-
-    public void setType( String type ) {
-        put("type",type);
-    }
-
-    public Long getCreated() {
-        return (Long) get( "created" );
-    }
-
-
-    public void setCreated( Long created ) {
-        if ( created == null ) {
-            created = System.currentTimeMillis();
-        }
-        put( "created", created );
-    }
-
-
-    public Long getModified() {
-        return (Long) get( "modified" );
-    }
-
-
-    public void setModified( Long modified ) {
-        if ( modified == null ) {
-            modified = System.currentTimeMillis();
-        }
-        put( "modified", modified );
-    }
-
-
-    public String getName() {
-        Object value = getProperty( PROPERTY_NAME );
-
-        if ( value instanceof UUID ) {
-            // fixes existing data that uses UUID in USERGRID-2099
-            return value.toString();
-        }
-
-        return (String) get( "name" );
-    }
-
-
-    @JsonIgnore
-    public Map<String, Object> getProperties() {
-        return dynamic_properties;
-    }
-
-
-    public final Object getProperty( String propertyName ) {
-        return get( propertyName );
-    }
-
-
-
-    public Entity addProperty(String key, Object value){
-        put(key,value);
-        return this;
-    }
-    public void setProperties( Map<String, Object> properties ) {
-        putAll( properties );
-    }
-
     //For the owner , should have different cases that looks at the different types it could be
     protected Entity setResponse(final ApiResponse response, String key) {
         LinkedHashMap linkedHashMap = (LinkedHashMap) response.getData();
@@ -150,107 +71,10 @@ public class Entity implements Serializable, Map<String,Object> {
         return this;
     }
 
-    public Object getMetadata( String key ) {
-        return getDataset( "metadata", key );
+    public void setProperties( Map<String, Object> properties ) {
+        putAll( properties );
     }
 
-
-    public void setMetadata( String key, Object value ) {
-        setDataset( "metadata", key, value );
-    }
-
-
-    public void mergeMetadata( Map<String, Object> new_metadata ) {
-        mergeDataset( "metadata", new_metadata );
-    }
-
-
-    public void clearMetadata() {
-        clearDataset("metadata");
-    }
-
-
-    public <T> T getDataset( String property, String key ) {
-        Object md = get( property );
-        if ( md == null ) {
-            return null;
-        }
-        if ( !( md instanceof Map<?, ?> ) ) {
-            return null;
-        }
-        @SuppressWarnings( "unchecked" ) Map<String, T> metadata = ( Map<String, T> ) md;
-        return metadata.get( key );
-    }
-
-
-    public <T> void setDataset( String property, String key, T value ) {
-        if ( key == null ) {
-            return;
-        }
-        Object md = get( property );
-        if ( !( md instanceof Map<?, ?> ) ) {
-            md = new HashMap<String, T>();
-            put( property, md );
-        }
-        @SuppressWarnings( "unchecked" ) Map<String, T> metadata = ( Map<String, T> ) md;
-        metadata.put(key, value);
-    }
-
-
-    public <T> void mergeDataset( String property, Map<String, T> new_metadata ) {
-        Object md = get( property );
-        if ( !( md instanceof Map<?, ?> ) ) {
-            md = new HashMap<String, T>();
-            put( property, md );
-        }
-        @SuppressWarnings( "unchecked" ) Map<String, T> metadata = ( Map<String, T> ) md;
-        metadata.putAll( new_metadata );
-    }
-
-
-    public void clearDataset( String property ) {
-        remove(property);
-    }
-
-
-    public List<org.apache.usergrid.persistence.Entity> getCollections( String key ) {
-        return getDataset( "collections", key );
-    }
-
-
-    public void setCollections( String key, List<org.apache.usergrid.persistence.Entity> results ) {
-        setDataset("collections", key, results);
-    }
-
-
-    public List<org.apache.usergrid.persistence.Entity> getConnections( String key ) {
-        return getDataset( "connections", key );
-    }
-
-
-    public void setConnections( String key, List<org.apache.usergrid.persistence.Entity> results ) {
-        setDataset( "connections", key, results );
-    }
-
-
-    public String toString() {
-        return "Entity(" + getProperties() + ")";
-    }
-
-    @JsonAnySetter
-    public void setDynamicProperty( String key, Object value ) {
-        if ( value == null || value.equals( "" ) ) {
-            if ( containsKey( key ) ) {
-                remove( key );
-            }
-        }
-        else {
-            put( key, value );
-        }
-    }
-
-
-    @JsonAnyGetter
     public Map<String, Object> getDynamicProperties() {
         return dynamic_properties;
     }
