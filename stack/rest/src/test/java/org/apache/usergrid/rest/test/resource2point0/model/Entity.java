@@ -54,6 +54,10 @@ public class Entity implements Serializable, Map<String,Object> {
 
     public Entity(){}
 
+    public Entity (Map<String,Object> payload){
+        this.putAll(payload);
+    }
+
     public Entity(ApiResponse response){
         this.response = response;
 

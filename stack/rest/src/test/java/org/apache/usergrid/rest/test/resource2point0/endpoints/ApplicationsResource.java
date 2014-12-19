@@ -29,73 +29,18 @@ import javax.ws.rs.core.MediaType;
  * Holds the information required for building and chaining application objects to collections.
  * Should also contain the GET,PUT,POST,DELETE methods of functioning in here.
  * This class also holds how we're currently interaction with collections.
+ * app("applications").post();
  */
-public class ApplicationsResource extends AbstractCollectionResource<Application,CollectionResource> {
+public class ApplicationsResource extends CollectionEndpoint {
 
     public ApplicationsResource(final String name, final ClientContext context, final UrlResource parent) {
         super( name, context, parent );
     }
 
-    @Override
-    protected Application instantiateT(ApiResponse response) {
-        return new Application(response);
+
+    public CollectionEndpoint collection(String name) {
+        return new CollectionEndpoint(name,context,parent);
     }
 
-    //myorg/myapp/collectionname
-
-    @Override
-    protected CollectionResource instantiateEntityResource(String identifier, ClientContext context, UrlResource parent) {
-        return new CollectionResource(identifier,context,parent);
-    }
-
-    public CollectionResource collections(String name) {
-        return this.uniqueID(name);
-    }
-
-
-    /**
-     * Currently hardcoded to users, this is because we expect to create and chain different cases of collections.
-     * The pattern should look like: orgs.apps.users , orgs.apps.groups and so on...
-     * @return
-     */
-    public UsersResource users(){
-        return new UsersResource( context , this);
-    }
-
-    public GroupsResource groups(){
-        return new GroupsResource( context , this);
-    }
-
-    public RolesResource roles(){
-        return new RolesResource( context , this);
-    }
-
-    /**
-     * Currently hardcoded to users, this is because we expect to create and chain different cases of collections.
-     * The pattern should look like: orgs.apps.users , orgs.apps.groups and so on...
-     * @return
-     */
-    /*
-    public CollectionResource roles(){
-        return new CollectionResource("roles", context , this);
-    }
-*/
-    /**
-     * Currently hardcoded to users, this is because we expect to create and chain different cases of collections.
-     * The pattern should look like: orgs.apps.users , orgs.apps.groups and so on...
-     * @return
-     */
-    public CollectionResource permissions(){
-        return new CollectionResource("permissions", context , this);
-    }
-
-    /**
-     * Currently hardcoded to users, this is because we expect to create and chain different cases of collections.
-     * The pattern should look like: orgs.apps.users , orgs.apps.groups and so on...
-     * @return
-     */
-    public CollectionResource notifications(){
-        return new CollectionResource("notifications", context , this);
-    }
 
 }

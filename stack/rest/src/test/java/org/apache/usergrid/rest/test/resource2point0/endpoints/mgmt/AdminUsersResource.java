@@ -22,7 +22,6 @@ package org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt;
 
 import org.apache.usergrid.rest.test.resource2point0.endpoints.AbstractCollectionResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.UrlResource;
-import org.apache.usergrid.rest.test.resource2point0.endpoints.UserResource;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.User;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;

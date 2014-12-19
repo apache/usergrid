@@ -175,9 +175,9 @@ public class CollectionEndpoint extends NamedResource {
      * POST /users {"color","red"}
      *
      */
-    public Entity post(Entity entity){
+    public Entity post(Entity payload){
         ApiResponse response = getResource(true).type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
-                .post(ApiResponse.class, entity);
+                .post(ApiResponse.class, payload);
         return new Entity(response);
     }
 
