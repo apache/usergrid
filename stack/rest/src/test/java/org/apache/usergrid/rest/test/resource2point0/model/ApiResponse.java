@@ -53,7 +53,7 @@ public class ApiResponse<Entity> {
     private String cursor;
 
 
-    private final Map<String, JsonNode> properties = new HashMap<String, JsonNode>();
+    private final Map<String, Object> properties = new HashMap<String, Object>();
 
 
     public ApiResponse() {
@@ -61,13 +61,13 @@ public class ApiResponse<Entity> {
 
 
     @JsonAnyGetter
-    public Map<String, JsonNode> getProperties() {
+    public Map<String, Object> getProperties() {
         return properties;
     }
 
 
     @JsonAnySetter
-    public void setProperty( String key, JsonNode value ) {
+    public void setProperty( String key, Object value ) {
         properties.put( key, value );
     }
 

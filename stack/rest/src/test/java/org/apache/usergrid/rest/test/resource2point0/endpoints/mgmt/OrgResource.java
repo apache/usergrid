@@ -59,7 +59,7 @@ public class OrgResource  extends NamedResource {
 
 
         Organization organization = new Organization(response);
-        organization.setOwner(new User( response ));
+        organization.setOwner( response );
         return organization;
     }
 
@@ -75,25 +75,29 @@ public class OrgResource  extends NamedResource {
                                         .accept( MediaType.APPLICATION_JSON ).post( ApiResponse.class );
 
 
-        Organization organization = new Organization(response);
-        organization.setOwner(new User( response ));
-        return organization;
+        Organization org = new Organization(response);
+        org.setOwner( response );
+        return org;
     }
 
     public Organization post(Organization organization){
         ApiResponse response = getResource().type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
                      .post( ApiResponse.class,organization );
 
-        organization = new Organization(response);
-        organization.setOwner(new User( response ));
-        return organization;
+        Organization org = new Organization(response);
+        org.setOwner( response );
+
+        return org;
     }
 
     public Organization put(Organization organization){
         ApiResponse response = getResource().type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
                 .put(ApiResponse.class, organization);
 
-        return new Organization(response);
+        Organization org = new Organization(response);
+        org.setOwner( response );
+
+        return org;
 
     }
 

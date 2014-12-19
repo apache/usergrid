@@ -88,9 +88,9 @@ public class OrganizationsIT extends AbstractRestIT {
         Organization returnedOrg = clientSetup.getRestClient().management().orgs().organization( orgName ).get();
 
         //TODO: clean this up
-        User returnedUser =
-                new User().mapSpecificUserResponse( ( Map<String, Object> ) returnedOrg.get( "users" ), username );
         assertTrue( returnedOrg != null && returnedOrg.getName().equals( orgName ) );
+
+        User returnedUser = returnedOrg.getOwner();
 
         assertEquals( "Apigee", returnedUser.getProperties().get( "company" ) );
     }

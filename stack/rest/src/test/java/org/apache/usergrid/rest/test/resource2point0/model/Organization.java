@@ -18,6 +18,7 @@
 package org.apache.usergrid.rest.test.resource2point0.model;
 
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -49,7 +50,7 @@ public class Organization extends Entity {
     }
 
     public Organization(ApiResponse response){
-        setResponse(response,"organization");
+        setResponse( response, "organization" );
     }
 
     @JsonSerialize( include = JsonSerialize.Inclusion.NON_NULL )
@@ -84,8 +85,26 @@ public class Organization extends Entity {
     public User getOwner(){
         return user;
     }
-    public void setOwner(User user){
-        this.user = user;
+
+    public void setOwner(ApiResponse response){
+        setOwner( response, "owner" );
+    }
+
+    public void setOwner(ApiResponse response, String nameOverride){
+        this.user = new User( response, nameOverride);
+    }
+
+
+    /**
+     * Created specifically so that we could set the organization owner to the Organization model from a get Organization
+     * call. This call is hidden a few layers below and stored in the properties.
+     * @param response
+     */
+    public void setUserOwner(ApiResponse response){
+        LinkedHashMap orgHashMap = ( LinkedHashMap ) response.getProperties().get( "organization" );
+        LinkedHashMap userHashMap = (LinkedHashMap) orgHashMap.get( "users" );
+        //this gets the first value in the users entities and returns it .
+        this.user = new User( ( Map<String, Object> ) userHashMap.get( userHashMap.keySet().iterator().next() ) ); //new User().mapOrgGetResponse(orgHashMap.get( "users" ));
     }
 
     public Organization mapOrgResponse(Map<String,Object> map){

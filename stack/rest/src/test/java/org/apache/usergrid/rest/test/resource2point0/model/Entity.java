@@ -66,6 +66,10 @@ public class Entity implements Serializable, Map<String,Object> {
     protected Entity setResponse(final ApiResponse response, String key) {
         LinkedHashMap linkedHashMap = (LinkedHashMap) response.getData();
 
+        if(linkedHashMap == null){
+            linkedHashMap =  new LinkedHashMap( response.getProperties());
+        }
+
         this.putAll((Map<? extends String, ?>) linkedHashMap.get(key));
 
         return this;

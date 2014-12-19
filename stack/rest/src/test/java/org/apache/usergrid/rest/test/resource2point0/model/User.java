@@ -32,11 +32,11 @@ public class User extends Entity {
      * This could also be a user
      * @param response
      */
-    public User(ApiResponse response){
-        //HashMap<String,Object> userResponse = ( HashMap<String, Object> ) response.getData();
-        //this.putAll( ( Map<? extends String, ?> ) userResponse.get( "user" ) );
-        super(response);
+
+    public User (ApiResponse response, String dataName){
+        setResponse( response, dataName );
     }
+
     //TODO: create another constructor to take in the nessesary things to post to a user.
 
     public User(String username, String name, String email, String password){
@@ -44,6 +44,10 @@ public class User extends Entity {
         this.put( "name", name);
         this.put( "email", email);
         this.put( "password", password);
+    }
+
+    public User(Map<String,Object> map){
+        this.putAll( map );
     }
 
     public Boolean getActivated(){
@@ -92,11 +96,6 @@ public class User extends Entity {
 
     public UUID getUuid(){
         return UUID.fromString( (String) get("uuid") );
-    }
-
-    public User mapSpecificUserResponse(Map<String,Object> map,String username){
-        putAll((Map<String, Object>) map.get(username));
-        return this;
     }
 
 }

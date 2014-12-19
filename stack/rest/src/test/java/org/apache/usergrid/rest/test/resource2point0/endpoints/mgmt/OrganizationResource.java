@@ -23,7 +23,9 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.usergrid.rest.test.resource2point0.endpoints.NamedResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.UrlResource;
+import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Organization;
+import org.apache.usergrid.rest.test.resource2point0.model.User;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 
@@ -38,9 +40,12 @@ public class OrganizationResource extends NamedResource {
         super( name, context, parent );
     }
     public Organization get() {
-        Map<String,Object> response = getResource(true).type(MediaType.APPLICATION_JSON_TYPE)
-                .accept(MediaType.APPLICATION_JSON).get(Organization.class);
-        Organization org =  new Organization().mapOrgResponse(response);
+        ApiResponse rep = getResource(true).type(MediaType.APPLICATION_JSON_TYPE)
+                                           .accept( MediaType.APPLICATION_JSON ).get( ApiResponse.class );
+
+        //TODO: not sure if this will work for multiple users.
+        Organization org =  new Organization( rep );
+        org.setUserOwner( rep );
         return org;
     }
 
