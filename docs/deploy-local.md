@@ -111,6 +111,10 @@ Here's a complete example properties file to get you started.
 
     # The cassandra host to use
     cassandra.url=localhost:9160
+
+    # if your cassandra instance requires username/password
+    cassandra.username=someuser
+    cassandra.password=somepassword
     
     # The strategy to use when creating the keyspace. This is the default. 
     # We recommend creating the keyspace with this default, then editing it 
