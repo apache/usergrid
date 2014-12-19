@@ -180,6 +180,8 @@ if [[ $publish == 1 ]]; then
 #  done
 fi
 
+current_commit_id=`git rev-parse HEAD`
+
 cd ${base_dir}
 
 echo "Done creating the release. The following draft email has been created"
@@ -211,6 +213,8 @@ ${usergrid_git_web_url};a=blob_plain;f=CHANGELOG;hb=${current_version}
 
 The tag used to create the release with is ${current_version}:
 ${usergrid_git_web_url};a=commit;h=${current_version}
+
+The current Git commit ID is ${current_commit_id}
 
 The release is available at:
 ${usergrid_svn_dist_url}/${current_version}/${dist_name}.tar.gz

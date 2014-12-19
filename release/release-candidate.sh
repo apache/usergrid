@@ -220,6 +220,8 @@ fi
 
 cd ${base_dir}
 
+current_commit_id=`git rev-parse HEAD`
+
 echo "Done creating the release candidate. The following draft email has been created"
 echo "to send to the dev@usergrid.incubator.apache.org mailing list"
 echo
@@ -248,6 +250,8 @@ ${usergrid_git_web_url}&f=CHANGELOG&hb=${current_version_tag}
 
 The branch used to create the release candidate is:
 ${usergrid_git_web_url}&hb=${current_version_tag}
+
+The current Git commit ID is ${current_commit_id}
 
 The release candidate is available at:
 ${usergrid_svn_dist_url}/${current_version_tag}/${dist_name}.tar.gz
