@@ -17,13 +17,16 @@
 package org.apache.usergrid.rest.applications.collection.groups;
 
 
+import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.jersey.api.client.UniformInterfaceException;
+
+import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
@@ -48,17 +51,18 @@ public class GroupResourceIT extends AbstractRestIT {
     @Test()
     public void createGroupValidation() throws IOException {
 
-        String groupName = "testgroup";
-        String groupPath = "testgroup";
+        String groupName = "testgroup"+ UUIDUtils.newTimeUUID();
+        String groupPath = groupName;
 
-        Entity payload = new Entity();
-        payload.put("name", groupName);
-        payload.put("path", groupPath);
+        Entity group = new Entity();
+        group.put("name", groupName);
+        group.put("path", groupPath);
+        Entity groupResponse = null;
 
-        Entity group = this.app().collection("groups").post(payload);
+        groupResponse = this.app().collection( "groups" ).post( group );
 
-        assertEquals(group.get("path"), groupPath);
-        assertEquals(group.get("name"), groupName);
+        assertEquals( groupPath, groupResponse.get( "path" ) );
+        assertEquals( groupName, groupResponse.get("name"));
 
     }
 
@@ -69,20 +73,15 @@ public class GroupResourceIT extends AbstractRestIT {
 
     @Test()
     public void createGroupSlashInNameAndPathValidation() throws IOException {
-
+/*
         //create the group with a slash in the name
         String groupNameSlash = "test/group";
         String groupPathSlash = "test/group";
-
-        Entity payload = new Entity();
-        payload.put("name", groupNameSlash);
-        payload.put("path", groupPathSlash);
-
-        Entity group = this.app().collection("groups").post(payload);
-
-        assertEquals(group.get("name"), groupNameSlash);
-        assertEquals(group.get("path"), groupPathSlash);
-
+        Group group = new Group(groupNameSlash, groupPathSlash);
+        Group testGroup = this.app().groups().post(group);
+        assertNull(testGroup.get("errors"));
+        assertEquals(testGroup.get("path"), groupPathSlash);
+*/
     }
 
     /***
@@ -92,20 +91,15 @@ public class GroupResourceIT extends AbstractRestIT {
 
     @Test()
     public void createGroupSpaceInNameValidation() throws IOException {
-
+/*
         //create the group with a space in the name
         String groupSpaceName = "test group";
         String groupPath = "testgroup";
-
-        Entity payload = new Entity();
-        payload.put("name", groupSpaceName);
-        payload.put("path", groupPath);
-
-        Entity group = this.app().collection("groups").post(payload);
-
-        assertEquals(group.get("name"), groupSpaceName);
-        assertEquals(group.get("path"), groupPath);
-
+        Group group = new Group(groupSpaceName, groupPath);
+        Group testGroup = this.app().groups().post(group);
+        assertNull(testGroup.getError());
+        assertEquals(testGroup.get("path"), groupPath);
+*/
     }
 
     /***
@@ -118,79 +112,127 @@ public class GroupResourceIT extends AbstractRestIT {
 
         String groupName = "testgroup";
         String groupSpacePath = "test group";
+        //Group group = new Group(groupName, groupSpacePath);
 
-        Entity payload = new Entity();
-        payload.put("name", groupName);
-        payload.put("path", groupSpacePath);
-
-
+        /*
         try {
-            this.app().collection("groups").post(payload);
-            fail("Should not be able to create a group with a space in the path");
+            Group testGroup = this.app().groups().post(group);
         } catch (UniformInterfaceException e) {
             //verify the correct error was returned
             JsonNode node = mapper.readTree( e.getResponse().getEntity( String.class ));
             assertEquals( "illegal_argument", node.get( "error" ).textValue() );
         }
+*/
+        /*
+        Group testGroup = this.app().groups().post(group);
 
+        group.save();
+
+        group.connect()..
+
+        String error = testGroup.getError();
+        String errorCode = testGroup.getErrorCode();
+        String errorDescription = testGroup.getErrorDescription();
+        assertEquals(testGroup.getError(), "illegal_argument");
+*/
     }
 
     /***
      *
      * Verify that we can create a group and then change the name
-     */
+     *//*
     @Test()
     public void changeGroupNameValidation() throws IOException {
 
         String groupName = "testgroup";
         String groupPath = "testgroup";
         String newGroupPath = "newtestgroup";
-
-        Entity payload = new Entity();
-        payload.put("name", groupName);
-        payload.put("path", groupPath);
-
-        Entity group = this.app().collection("groups").post(payload);
-        assertEquals(group.get("path"), groupPath);
-
+        Group testGroup = this.app().groups().post(new Group(groupName, groupPath));
+        assertNull(testGroup.get("errors"));
+        assertEquals(testGroup.get("path"), groupPath);
+        /** connections
+         *   this.app().groups()
+         .entityResource("carlovers")
+         .connections("likes","cars")
+         .connection("ferraris").delete();
+         */
+    /*
         //now change the name
-        group.put("path", newGroupPath);
-        this.app().collection("groups").entity(group).put(group);
-        assertEquals(group.get("path"), newGroupPath);
+        testGroup.put("path", newGroupPath);
+        Group group = this.app().groups().uniqueID(testGroup.getName()).put(testGroup);
+        Group group = this.app().collection("groups").uniqueID(testGroup.get("username")).put(testGroup);
+
+        assertNull(testGroup.get("errors"));
+        assertEquals(testGroup.get("path"), newGroupPath);
+
 
         //now delete the group
-        ApiResponse response = this.app().collection("groups").entity(group).delete();
+        this.app().groups().uniqueID(testGroup.getName()).delete();
 
 
+        Group newGroup = this.app().groups().uniqueID(groupName).get();
+        if (newGroup.hasError()) {
+            assertEquals(newGroup.ErrorMessage(), "some error");
+            assertNotEquals(newGroup.ErrorCode(), "400");
+
+        }
+            /*
+            if (newgroup.ErrorMessage() == "some error") {
+
+            }
+
+
+
+            if (newGroup.errorCode() == "400") {
+
+
+            } else if (newGroup.errorCode() == "500") {
+
+            }
+        }
+
+        /*
         try {
-            Entity newGroup = this.app().collection("groups").uniqueID(groupName).get();
-            fail("Entity still exists");
+            //now get the group again
+
+            Group newGroup = this.app().groups().uniqueID(groupName).get();
+            fail("doh!");
+
+
+
         } catch (UniformInterfaceException e) {
             //verify the correct error was returned
             JsonNode node = mapper.readTree( e.getResponse().getEntity( String.class ));
             assertEquals( "illegal_argument", node.get( "error" ).textValue() );
         }
+        */
+   // }
 
-    }
 
     /***
      *
-     * Verify that we can create a group and then add a user to it
+     * Verify that we cannot create a group with a space in the path
      */
-    @Test()
-    public void createGroupAndAddAUserValidation() throws IOException {
-
-    }
-    /***
-     *
-     * Verify that we can create a group and then add a role to it
-     */
-    @Test()
-    public void createGroupAndAddARoleValidation() throws IOException {
-
-    }
-
     /*
+    @Test
+    public void postGroupActivity() throws IOException {
+
+
+        //1. create a group
+        GroupsCollection groups = context.groups();
+
+        //create a group with a normal name
+        String groupName = "groupTitle";
+        String groupPath = "groupPath";
+        JsonNode testGroup = groups.create(groupName, groupPath);
+        //verify the group was created
+        assertNull(testGroup.get("errors"));
+        assertEquals(testGroup.get("path").asText(), groupPath);
+
+        //2. post group activity
+
+        //TODO: actually post a group activity
+    }
 
     @Test
     public void addRemovePermission() throws IOException {
@@ -343,34 +385,5 @@ public class GroupResourceIT extends AbstractRestIT {
         assertFalse( node.get( "entities" ).findValuesAsText( "name" ).contains( roleName ) );
     }
     */
-
-
-    /***
-     *
-     * Post a group activity
-     */
-
-    @Test
-    public void postGroupActivity() throws IOException {
-
-        /*
-
-        //1. create a group
-        GroupsCollection groups = context.groups();
-
-        //create a group with a normal name
-        String groupName = "groupTitle";
-        String groupPath = "groupPath";
-        JsonNode testGroup = groups.create(groupName, groupPath);
-        //verify the group was created
-        assertNull(testGroup.get("errors"));
-        assertEquals(testGroup.get("path").asText(), groupPath);
-
-        //2. post group activity
-
-        //TODO: actually post a group activity
-        */
-    }
-
 
 }

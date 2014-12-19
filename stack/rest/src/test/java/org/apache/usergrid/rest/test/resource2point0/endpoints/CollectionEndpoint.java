@@ -16,6 +16,8 @@
  */
 package org.apache.usergrid.rest.test.resource2point0.endpoints;
 
+import java.util.Map;
+
 import com.sun.jersey.api.client.WebResource;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Collection;
@@ -177,7 +179,7 @@ public class CollectionEndpoint extends NamedResource {
      */
     public Entity post(Entity payload){
         ApiResponse response = getResource(true).type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
-                .post(ApiResponse.class, payload.getDynamicProperties());
+                .post(ApiResponse.class, payload);
         return new Entity(response);
     }
 
