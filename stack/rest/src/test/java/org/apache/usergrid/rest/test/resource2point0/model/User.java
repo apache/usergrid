@@ -17,6 +17,7 @@
 package org.apache.usergrid.rest.test.resource2point0.model;
 
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -38,9 +39,18 @@ public class User extends Entity {
      * @param response
      */
     public User (ApiResponse response){
+        //HashMap<String,Object> userResponse = ( HashMap<String, Object> ) response.getData();
+        //this.putAll( ( Map<? extends String, ?> ) userResponse.get( "user" ) );
         super(response);
     }
     //TODO: create another constructor to take in the nessesary things to post to a user.
+
+    public User (String username, String name, String email, String password){
+        this.put( "username",username );
+        this.put( "name", name);
+        this.put( "email", email);
+        this.put( "password", password);
+    }
 
     public Boolean getActivated(){
         return (Boolean) this.get( "activated" );
