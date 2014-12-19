@@ -86,7 +86,7 @@ public class GroupResourceIT extends AbstractRestIT {
         String groupPath = "testgroup";
         Group group = new Group(groupSpaceName, groupPath);
         Group testGroup = this.app().groups().post(group);
-        assertNull(testGroup.get("errors"));
+        assertNull(testGroup.getError());
         assertEquals(testGroup.get("path"), groupPath);
 
     }
@@ -103,6 +103,7 @@ public class GroupResourceIT extends AbstractRestIT {
         String groupSpacePath = "test group";
         Group group = new Group(groupName, groupSpacePath);
 
+        /*
         try {
             Group testGroup = this.app().groups().post(group);
         } catch (UniformInterfaceException e) {
@@ -110,13 +111,25 @@ public class GroupResourceIT extends AbstractRestIT {
             JsonNode node = mapper.readTree( e.getResponse().getEntity( String.class ));
             assertEquals( "illegal_argument", node.get( "error" ).textValue() );
         }
+*/
+        /*
+        Group testGroup = this.app().groups().post(group);
 
+        group.save();
+
+        group.connect()..
+
+        String error = testGroup.getError();
+        String errorCode = testGroup.getErrorCode();
+        String errorDescription = testGroup.getErrorDescription();
+        assertEquals(testGroup.getError(), "illegal_argument");
+*/
     }
 
     /***
      *
      * Verify that we can create a group and then change the name
-     */
+     *//*
     @Test()
     public void changeGroupNameValidation() throws IOException {
 
@@ -132,12 +145,57 @@ public class GroupResourceIT extends AbstractRestIT {
          .connections("likes","cars")
          .connection("ferraris").delete();
          */
+    /*
         //now change the name
         testGroup.put("path", newGroupPath);
         Group group = this.app().groups().uniqueID(testGroup.getName()).put(testGroup);
+        Group group = this.app().collection("groups").uniqueID(testGroup.get("username")).put(testGroup);
+
         assertNull(testGroup.get("errors"));
         assertEquals(testGroup.get("path"), newGroupPath);
-    }
+
+
+        //now delete the group
+        this.app().groups().uniqueID(testGroup.getName()).delete();
+
+
+        Group newGroup = this.app().groups().uniqueID(groupName).get();
+        if (newGroup.hasError()) {
+            assertEquals(newGroup.ErrorMessage(), "some error");
+            assertNotEquals(newGroup.ErrorCode(), "400");
+
+        }
+            /*
+            if (newgroup.ErrorMessage() == "some error") {
+
+            }
+
+
+
+            if (newGroup.errorCode() == "400") {
+
+
+            } else if (newGroup.errorCode() == "500") {
+
+            }
+        }
+
+        /*
+        try {
+            //now get the group again
+
+            Group newGroup = this.app().groups().uniqueID(groupName).get();
+            fail("doh!");
+
+
+
+        } catch (UniformInterfaceException e) {
+            //verify the correct error was returned
+            JsonNode node = mapper.readTree( e.getResponse().getEntity( String.class ));
+            assertEquals( "illegal_argument", node.get( "error" ).textValue() );
+        }
+        */
+   // }
 
 
     /***

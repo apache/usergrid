@@ -20,6 +20,9 @@
 
 package org.apache.usergrid.rest.test.resource2point0.endpoints;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import org.apache.usergrid.rest.test.resource.Connection;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
@@ -27,6 +30,7 @@ import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 import javax.ws.rs.core.MediaType;
+import java.io.IOException;
 
 /**
  * //myorg/myapp/mycollection/myentityid
@@ -37,17 +41,51 @@ public abstract class AbstractEntityResource<T extends Entity> extends NamedReso
         super(identifier, context, parent);
     }
 
+    protected ObjectMapper mapper = new ObjectMapper();
+
     public T get() {
         WebResource resource = getResource(true);
-        ApiResponse response = resource.type(MediaType.APPLICATION_JSON_TYPE).accept(MediaType.APPLICATION_JSON)
-                .get(ApiResponse.class);
-        return instantiateT(response);
+        try {
+            ApiResponse response = resource.type(MediaType.APPLICATION_JSON_TYPE).accept(MediaType.APPLICATION_JSON)
+                    .get(ApiResponse.class);
+            return instantiateT(response);
+        } catch (UniformInterfaceException e) {
+
+            ApiResponse response = new ApiResponse();
+            //copy exceptions and such from response
+            try {
+                JsonNode node = mapper.readTree(e.getResponse().getEntity(String.class));
+                response.setError(node.get("error").textValue());
+                response.setErrorDescription(node.get("error").textValue());
+            } catch (IOException e1) {
+                response.setError("io_error");
+                response.setErrorDescription("The API response was empty or not parsable.  Is the API running?");
+            }
+            return instantiateT(response);
+        }
+
     }
 
     public T post(final T entity) {
         WebResource resource = getResource(true);
-        return instantiateT(resource.type(MediaType.APPLICATION_JSON_TYPE).accept(MediaType.APPLICATION_JSON)
-                .post(ApiResponse.class, entity));
+        try {
+            ApiResponse response = resource.type(MediaType.APPLICATION_JSON_TYPE).accept(MediaType.APPLICATION_JSON)
+                    .post(ApiResponse.class, entity);
+            return instantiateT(response);
+        } catch (UniformInterfaceException e) {
+
+            ApiResponse response = new ApiResponse();
+            //copy exceptions and such from response
+            try {
+                JsonNode node = mapper.readTree(e.getResponse().getEntity(String.class));
+                response.setError(node.get("error").textValue());
+                response.setErrorDescription(node.get("error").textValue());
+            } catch (IOException e1) {
+                response.setError("io_error");
+                response.setErrorDescription("The API response was empty or not parsable.  Is the API running?");
+            }
+            return instantiateT(response);
+        }
     }
 
     public T put(final T entity) {

@@ -50,10 +50,13 @@ public class Entity implements Serializable, Map<String,Object> {
 
     protected Map<String, Object> dynamic_properties = new TreeMap<String, Object>( String.CASE_INSENSITIVE_ORDER );
 
+    ApiResponse response;
 
     public Entity(){}
 
     public Entity(ApiResponse response){
+        this.response = response;
+
         if(response.getEntities() !=null &&  response.getEntities().size()>=1){
             List<Entity>  entities =  response.getEntities();
             Map<String,Object> entity = entities.get(0);
@@ -70,7 +73,7 @@ public class Entity implements Serializable, Map<String,Object> {
 
 
     public void setUuid( UUID uuid ) {
-        put( "uuid", uuid );
+        put("uuid", uuid);
     }
 
     //TODO: see if this is needed
@@ -173,7 +176,7 @@ public class Entity implements Serializable, Map<String,Object> {
 
 
     public void clearMetadata() {
-        clearDataset( "metadata" );
+        clearDataset("metadata");
     }
 
 
@@ -200,7 +203,7 @@ public class Entity implements Serializable, Map<String,Object> {
             put( property, md );
         }
         @SuppressWarnings( "unchecked" ) Map<String, T> metadata = ( Map<String, T> ) md;
-        metadata.put( key, value );
+        metadata.put(key, value);
     }
 
 
@@ -216,7 +219,7 @@ public class Entity implements Serializable, Map<String,Object> {
 
 
     public void clearDataset( String property ) {
-        remove( property );
+        remove(property);
     }
 
 
@@ -226,7 +229,7 @@ public class Entity implements Serializable, Map<String,Object> {
 
 
     public void setCollections( String key, List<org.apache.usergrid.persistence.Entity> results ) {
-        setDataset( "collections", key, results );
+        setDataset("collections", key, results);
     }
 
 
@@ -292,6 +295,17 @@ public class Entity implements Serializable, Map<String,Object> {
         return getDynamicProperties().get( key );
     }
 
+    public String getError () {
+        return (String) this.get("error").toString();
+    }
+
+    public String getErrorCode () {
+        return (String) this.get("errorCode").toString();
+    }
+
+    public String getErrorDescription () {
+        return (String) this.get("errorDescription").toString();
+    }
 
     @Override
     public Object put( final String key, final Object value ) {

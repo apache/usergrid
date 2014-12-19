@@ -26,11 +26,7 @@ package org.apache.usergrid.rest.test.resource2point0.model;
 
         import java.util.Iterator;
 
-        import org.apache.usergrid.rest.test.resource.app.Collection;
         import org.apache.usergrid.rest.test.resource2point0.endpoints.CollectionResource;
-
-        import com.google.common.base.Optional;
-        import org.apache.usergrid.rest.test.resource2point0.endpoints.NamedResource;
 
 
 /**
@@ -52,22 +48,34 @@ package org.apache.usergrid.rest.test.resource2point0.model;
  * 2. GET /users/fred/groups
  *
  */
-public class EntityResponse implements Iterable<Entity>, Iterator<Entity> {
+public class Collection implements Iterable<Entity>, Iterator<Entity> {
 
-    private final CollectionResource sourceEndpoint;
 
     private String cursor;
 
     public Iterator entities;
 
+    public ApiResponse response;
+
 
     /**
+     * Collection usersCollection =  app.collection("users").get();
+     * while(usersCollection.hasNext()){
+     *  Entity bob = usersCollection.next();
+     *     assert("blah",bob.get("words"));
+     * }
+     * QueryParams = new QueryParams(usersCollection.cursor)
+     * app.collections("users").get(queryParams);
+     *
+     * usersCollection = app.collections("users").getNextPage(usersCollection.cursor);
+     *
      * Use the factory method instead
-     * @param sourceCollection
+     * @param response
      */
-    private EntityResponse( final CollectionResource sourceCollection ){
-        this.sourceEndpoint = sourceCollection;
-        loadPage();
+    public Collection(ApiResponse response) {
+        this.response = response;
+        this.cursor = response.getCursor();
+        entities = response.getEntities().iterator();
     }
 
 
@@ -79,11 +87,11 @@ public class EntityResponse implements Iterable<Entity>, Iterator<Entity> {
 
     @Override
     public boolean hasNext() {
-        if(!entities.hasNext()){
-            advance();
-        }
-
         return entities.hasNext();
+    }
+
+    public String getCursor(){
+        return cursor;
     }
 
 
@@ -92,43 +100,11 @@ public class EntityResponse implements Iterable<Entity>, Iterator<Entity> {
         return (Entity)entities.next();
     }
 
-
-    /**
-     * Go back to the endpoint and try to load the next page
-     */
-    private void advance(){
-
-
-        //no next page
-        if(cursor == null){
-            return;
-        }
-
-        loadPage();
-
-
-    }
-
-    private void loadPage(){
-        final ApiResponse response = sourceEndpoint.get( new QueryParameters().setCursor( cursor));
-
-        cursor = response.getCursor();
-    }
-
-
     @Override
     public void remove() {
         throw new UnsupportedOperationException( "Remove is unsupported" );
     }
 
 
-    /**
-     * Create a new instance of the iterator (uninitialized) from the collection
-     * @param collection
-     * @return The iterator
-     */
-    public static EntityResponse fromCollection(final CollectionResource collection){
-        return new EntityResponse(collection);
-    }
 }
 

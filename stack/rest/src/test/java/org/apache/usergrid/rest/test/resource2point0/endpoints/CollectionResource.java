@@ -17,19 +17,9 @@
 package org.apache.usergrid.rest.test.resource2point0.endpoints;
 
 
-import java.util.UUID;
-
-import com.sun.jersey.api.client.WebResource;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
-import org.apache.usergrid.rest.test.resource2point0.model.EntityResponse;
-import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
-
-import com.google.common.base.Optional;
-import org.apache.usergrid.services.ServiceParameter;
-
-import javax.ws.rs.core.MediaType;
 
 
 /**
