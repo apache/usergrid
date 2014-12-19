@@ -37,7 +37,6 @@ import static org.junit.Assert.*;
  */
 public class BasicGeoTests extends AbstractRestIT {
 
-  public final String latitude = "latitude";
 
   /**
    * Create a entity with a geo location point in it
@@ -87,8 +86,8 @@ public class BasicGeoTests extends AbstractRestIT {
         .map("latitude", lat)
         .map("longitude", lon));
 
-    Entity testEntity=null;
-    try{
+    Entity testEntity = null;
+    try {
       testEntity = this.app().collection(collectionType).post(entity);
     } catch (UniformInterfaceException e) {
       JsonNode nodeError = mapper.readTree(e.getResponse().getEntity(String.class));
@@ -154,7 +153,6 @@ public class BasicGeoTests extends AbstractRestIT {
   public void createEntitiesWithBadSpelling() throws IOException {
 
     String collectionType = "stores";
-    JsonNode node = null;
     Double lat = 37.776753;
     Double lon = -122.407846;
 
@@ -198,9 +196,7 @@ public class BasicGeoTests extends AbstractRestIT {
   public void createEntitiesWithBadPoints() throws IOException {
 
     String collectionType = "stores";
-    JsonNode node = null;
     Double lat = 37.776753;
-    Double lon = -122.407846;
 
     // 1. pass only one point instead of two
     Entity entity = new Entity();
