@@ -18,13 +18,7 @@
 package org.apache.usergrid.rest.test.resource2point0.model;
 
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.TreeMap;
-import java.util.UUID;
-
-import org.apache.usergrid.utils.MapUtils;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 

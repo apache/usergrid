@@ -20,32 +20,11 @@
 
 package org.apache.usergrid.rest.test.resource2point0.model;
 
-
-
-
-
-        import java.util.Iterator;
-
-        import org.apache.usergrid.rest.test.resource2point0.endpoints.CollectionResource;
+import java.util.Iterator;
 
 
 /**
  * A stateful iterable collection response. Used to dole out entities in iterable form
- * Ignore the below for now.
- * Keep generics? Maybe just use entities for now
- * 1.) Primary key
- * 2.) Default data-> default data is different from type to type. (Groups would need path and title, Activities require actors...etc)
- * 3.) Things that you can do with them-> Groups create connections or something else. Adding users to a group. ( this can be boiled down to creating a connection )
- *
- * Two connecting builder patterns
- * 1. POST /collection/entity/verb (e.g. likes or following)/collection/entity  //connect any two entities
- *  - POST /users/fred/following/users/barney
- * 2. POST /collection/entity/collection/entity //for built in collections e.g. add user to group, add role to group, etc
- *  - POST users/fred/groups/funlovincriminals
- *
- * Two similar builder patterns for getting connected entities
- * 1. GET /users/fred/following
- * 2. GET /users/fred/groups
  *
  */
 public class Collection implements Iterable<Entity>, Iterator<Entity> {

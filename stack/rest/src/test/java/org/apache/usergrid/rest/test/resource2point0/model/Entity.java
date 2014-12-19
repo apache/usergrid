@@ -26,11 +26,6 @@ import java.io.Serializable;
 import java.util.*;
 
 import javax.xml.bind.annotation.XmlRootElement;
-
-import org.apache.usergrid.persistence.annotations.EntityProperty;
-import org.apache.usergrid.rest.test.resource2point0.endpoints.AbstractCollectionResource;
-import org.apache.usergrid.rest.test.resource2point0.endpoints.CollectionResource;
-
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;

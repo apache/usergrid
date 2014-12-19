@@ -17,7 +17,6 @@
 package org.apache.usergrid.rest.applications.collection.groups;
 
 
-import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
@@ -25,9 +24,7 @@ import java.util.Map;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
-import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
-import org.apache.usergrid.rest.test.resource2point0.model.Group;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -109,7 +106,7 @@ public class GroupResourceIT extends AbstractRestIT {
 
         String groupName = "testgroup";
         String groupSpacePath = "test group";
-        Group group = new Group(groupName, groupSpacePath);
+        //Group group = new Group(groupName, groupSpacePath);
 
         /*
         try {

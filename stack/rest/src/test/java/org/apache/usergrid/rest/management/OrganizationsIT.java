@@ -20,40 +20,23 @@ package org.apache.usergrid.rest.management;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
-import javax.ws.rs.core.MediaType;
-
-import org.apache.usergrid.rest.test.resource2point0.ClientSetup;
-import org.apache.usergrid.rest.test.resource2point0.RestClient;
-import org.apache.usergrid.rest.test.resource2point0.model.*;
-import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
-import org.apache.usergrid.rest.TestContextSetup;
-import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 
-import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Organization;
 import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource2point0.model.Token;
 import org.apache.usergrid.rest.test.resource2point0.model.User;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.representation.Form;
 
-import junit.framework.Assert;
-
-import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -290,7 +273,7 @@ public class OrganizationsIT extends AbstractRestIT {
 
     @Test
     public void testCreateOrgUserAndReturnCorrectUsername() throws Exception {
-
+/*
         String username = "testCreateOrgUserAndReturnCorrectUsername"+UUIDUtils.newTimeUUID();
 
         RestClient restClient = clientSetup.getRestClient();
@@ -301,7 +284,7 @@ public class OrganizationsIT extends AbstractRestIT {
                                            .users().post( adminUserPayload );
 
         assertNotNull( adminUserResponse );
-
+*/
 //        Map<String, String> payload = hashMap( "username", "test-user-2" ).map( "name", "Test User 2" )
 //                                                                          .map( "email", "test-user-2@mockserver.com" )
 //                                                                          .map( "password", "password" );

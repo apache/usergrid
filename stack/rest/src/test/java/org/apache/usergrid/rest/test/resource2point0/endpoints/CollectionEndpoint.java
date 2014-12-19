@@ -168,7 +168,7 @@ public class CollectionEndpoint extends NamedResource {
 
     /**
      * Post an entity to a collection
-     * @param entity
+     * @param payload
      * @return
      *
      * app.collection("users").post(entity);

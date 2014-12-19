@@ -23,10 +23,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.usergrid.rest.test.resource2point0.endpoints.NamedResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.UrlResource;
-import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
-import org.apache.usergrid.rest.test.resource2point0.model.Application;
 import org.apache.usergrid.rest.test.resource2point0.model.Organization;
-import org.apache.usergrid.rest.test.resource2point0.model.User;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 
@@ -63,8 +60,5 @@ public class OrganizationResource extends NamedResource {
         return new ApplicationResource(  context ,this );
     }
 
-    //TODO: add user management resource, this is placeholder for regular users.
-    public AdminUsersResource users() {
-        return new AdminUsersResource( context, this );
-    }
+
 }
