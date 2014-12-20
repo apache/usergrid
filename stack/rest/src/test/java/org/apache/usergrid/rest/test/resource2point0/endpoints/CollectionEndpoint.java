@@ -44,18 +44,7 @@ public class CollectionEndpoint extends NamedResource {
         return new EntityEndpoint(identifier, context, this);
     }
 
-    /**
-     *
-     * app.collection("users").uniqueID("fred").connection("following).get();
-     * GET /users/fred/following
-     *
-     */
-    public CollectionEndpoint connection(final String identifier) {
-        return new CollectionEndpoint(identifier, context, this);
-    }
-    public CollectionEndpoint connection(){
-        return this;
-    }
+
 
     /**
      *

@@ -97,7 +97,7 @@ public class EntityEndpoint extends NamedResource {
      */
     public Entity put(Entity entity){
         ApiResponse response = getResource(true).type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
-                .post(ApiResponse.class, entity);
+                .put(ApiResponse.class, entity);
         return new Entity(response);
     }
 
@@ -125,7 +125,24 @@ public class EntityEndpoint extends NamedResource {
     }
 
 
-
+    /**
+     *
+     * app.collection("users").uniqueID("fred").connection("following).get();
+     * GET /users/fred/following
+     *
+     * app.collection("users").uniqueID("fred").connection("following").collection("users").uniqueID("barney").post();
+     * POST /users/fred/following/users/barney?token=<token>
+     *
+     * app.collection("users").uniqueID("fred").connection().collection("users").uniqueID("barney").post();
+     * POST /users/fred/following/users/barney?token=<token>
+     *
+     */
+    public CollectionEndpoint connection(final String identifier) {
+        return new CollectionEndpoint(identifier, context, this);
+    }
+    public CollectionEndpoint connection(){
+        return new CollectionEndpoint("", context, this);
+    }
 
 
 
