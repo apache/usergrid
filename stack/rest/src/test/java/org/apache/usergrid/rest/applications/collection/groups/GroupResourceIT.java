@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource2point0.model.Collection;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -41,6 +42,39 @@ public class GroupResourceIT extends AbstractRestIT {
 
     public GroupResourceIT() throws Exception { }
 
+    private Entity createGroup(String groupName, String groupPath) throws IOException{
+        Entity payload = new Entity();
+        payload.put("name", groupName);
+        payload.put("path", groupPath);
+        Entity entity = this.app().collection("groups").post(payload);
+        assertEquals(entity.get("name"), groupName);
+        assertEquals(entity.get("path"), groupPath);
+        this.refreshIndex();
+        return entity;
+    }
+
+    private Entity createRole(String roleName, String roleTitle) throws IOException{
+        Entity payload = new Entity();
+        payload.put("name", roleName);
+        payload.put("title", roleTitle);
+        Entity entity = this.app().collection("roles").post(payload);
+        assertEquals(entity.get("name"), roleName);
+        assertEquals(entity.get("title"), roleTitle);
+        this.refreshIndex();
+        return entity;
+    }
+
+    private Entity createUser(String username, String email) throws IOException{
+        Entity payload = new Entity();
+        payload.put("username", username);
+        payload.put("email", email);
+        Entity entity = this.app().collection("users").post(payload);
+        assertEquals(entity.get("username"), username);
+        assertEquals(entity.get("email"), email);
+        this.refreshIndex();
+        return entity;
+    }
+
     /***
      *
      * Verify that we can create a group with a standard string in the name and path
@@ -50,15 +84,7 @@ public class GroupResourceIT extends AbstractRestIT {
 
         String groupName = "testgroup";
         String groupPath = "testgroup";
-
-        Entity payload = new Entity();
-        payload.put("name", groupName);
-        payload.put("path", groupPath);
-
-        Entity group = this.app().collection("groups").post(payload);
-
-        assertEquals(group.get("path"), groupPath);
-        assertEquals(group.get("name"), groupName);
+        this.createGroup(groupName, groupPath);
 
     }
 
@@ -70,18 +96,9 @@ public class GroupResourceIT extends AbstractRestIT {
     @Test()
     public void createGroupSlashInNameAndPathValidation() throws IOException {
 
-        //create the group with a slash in the name
         String groupNameSlash = "test/group";
         String groupPathSlash = "test/group";
-
-        Entity payload = new Entity();
-        payload.put("name", groupNameSlash);
-        payload.put("path", groupPathSlash);
-
-        Entity group = this.app().collection("groups").post(payload);
-
-        assertEquals(group.get("name"), groupNameSlash);
-        assertEquals(group.get("path"), groupPathSlash);
+        this.createGroup(groupNameSlash, groupPathSlash);
 
     }
 
@@ -93,18 +110,9 @@ public class GroupResourceIT extends AbstractRestIT {
     @Test()
     public void createGroupSpaceInNameValidation() throws IOException {
 
-        //create the group with a space in the name
         String groupSpaceName = "test group";
         String groupPath = "testgroup";
-
-        Entity payload = new Entity();
-        payload.put("name", groupSpaceName);
-        payload.put("path", groupPath);
-
-        Entity group = this.app().collection("groups").post(payload);
-
-        assertEquals(group.get("name"), groupSpaceName);
-        assertEquals(group.get("path"), groupPath);
+        this.createGroup(groupSpaceName, groupPath);
 
     }
 
@@ -118,14 +126,8 @@ public class GroupResourceIT extends AbstractRestIT {
 
         String groupName = "testgroup";
         String groupSpacePath = "test group";
-
-        Entity payload = new Entity();
-        payload.put("name", groupName);
-        payload.put("path", groupSpacePath);
-
-
         try {
-            this.app().collection("groups").post(payload);
+            Entity group = this.createGroup(groupName, groupSpacePath);
             fail("Should not be able to create a group with a space in the path");
         } catch (UniformInterfaceException e) {
             //verify the correct error was returned
@@ -137,50 +139,204 @@ public class GroupResourceIT extends AbstractRestIT {
 
     /***
      *
-     * Verify that we can create a group and then change the name
+     * Verify that we can create a group, change the name, then delete it
      */
     @Test()
     public void changeGroupNameValidation() throws IOException {
 
+        //1. create a group
         String groupName = "testgroup";
         String groupPath = "testgroup";
+        Entity group = this.createGroup(groupName, groupPath);
+
+        //2. change the name
         String newGroupPath = "newtestgroup";
-
-        Entity payload = new Entity();
-        payload.put("name", groupName);
-        payload.put("path", groupPath);
-
-        Entity group = this.app().collection("groups").post(payload);
-        assertEquals(group.get("path"), groupPath);
-
-        //now change the name
         group.put("path", newGroupPath);
-        this.app().collection("groups").entity(group).put(group);
-        assertEquals(group.get("path"), newGroupPath);
+        Entity groupResponse = this.app().collection("groups").entity(group).put(group);
+        assertEquals(groupResponse.get("path"), newGroupPath);
+        this.refreshIndex();
 
-        //now delete the group
+        //3. do a GET to verify the property really was set
+        Entity groupResponseGET = this.app().collection("groups").entity(group).get();
+        assertEquals(groupResponseGET.get("path"), newGroupPath);
+
+        //4. now delete the group
         ApiResponse response = this.app().collection("groups").entity(group).delete();
+        //todo: what to do with delete responses?
 
-
+        //5. do a GET to make sure the entity was deleted
         try {
-            Entity newGroup = this.app().collection("groups").uniqueID(groupName).get();
+            this.app().collection("groups").uniqueID(groupName).get();
             fail("Entity still exists");
         } catch (UniformInterfaceException e) {
             //verify the correct error was returned
             JsonNode node = mapper.readTree( e.getResponse().getEntity( String.class ));
-            assertEquals( "illegal_argument", node.get( "error" ).textValue() );
+            assertEquals( "service_resource_not_found", node.get( "error" ).textValue() );
         }
 
     }
 
     /***
      *
-     * Verify that we can create a group and then add a user to it
+     * Verify that we can create a group, user, add user to group, delete connection
      */
     @Test()
-    public void createGroupAndAddAUserValidation() throws IOException {
+    public void addRemoveUserGroup() throws IOException {
+
+        //1. create a group
+        String groupName = "testgroup";
+        String groupPath = "testgroup";
+        Entity group = this.createGroup(groupName, groupPath);
+
+        // 2. create a user
+        String username = "fred";
+        String email = "fred@usergrid.com";
+        Entity user = this.createUser(username, email);
+
+        // 3. add the user to the group
+        Entity response = this.app().collection("users").entity(user).connection().collection("groups").entity(group).post();
+        assertEquals(response.get("name"), groupName);
+        this.refreshIndex();
+
+        // 4. make sure the user is in the group
+        Collection collection = this.app().collection("groups").entity(group).connection().collection("users").get();
+        Entity entity = collection.next();
+        assertEquals(entity.get("username"), username);
+
+        //5. try it the other way around
+        collection = this.app().collection("users").entity(user).connection().collection("groups").get();
+        entity = collection.next();
+        assertEquals(entity.get("name"), groupName);
+
+        //6. remove the user from the group
+        ApiResponse responseDel = this.app().collection("group").entity(group).connection().collection("users").entity(user).delete();
+        this.refreshIndex();
+        //todo: how to check response from delete
+
+        //6. make sure the connection no longer exists
+        collection = this.app().collection("group").entity(group).connection().collection("users").get();
+        assertEquals(collection.hasNext(), false);
+
+        //8. do a GET to make sure the user still exists and did not get deleted with the collection delete
+        Entity userEntity = this.app().collection("user").entity(user).get();
+        assertEquals(userEntity.get("username"), username);
 
     }
+
+    /***
+     *
+     * Verify that we can create a group, role, add role to group, delete connection
+     */
+    @Test
+    public void addRemoveRoleGroup() throws IOException {
+
+        //1. create a group
+        String groupName = "testgroup";
+        String groupPath = "testgroup";
+        Entity group = this.createGroup(groupName, groupPath);
+
+        //2. create a role
+        String roleName = "tester";
+        String roleTitle = "tester";
+        Entity role = this.createRole(roleName, roleTitle);
+
+        //3. add role to the group
+        Entity response = this.app().collection("role").entity(role).connection().collection("groups").entity(group).post();
+        assertEquals(response.get("name"), roleName);
+        this.refreshIndex();
+
+        //4. make sure the role is in the group
+        Collection collection = this.app().collection("groups").entity(group).connection().collection("roles").get();
+        Entity entity = collection.next();
+        assertEquals(entity.get("name"), roleName);
+
+        //5. remove Role from the group (should only delete the connection)
+        ApiResponse responseDel = this.app().collection("role").entity(role).connection().collection("groups").entity(group).delete();
+        this.refreshIndex();
+        //todo: how to check response from delete
+
+        //6. make sure the connection no longer exists
+        collection = this.app().collection("groups").entity(group).connection().collection("roles").get();
+        try {
+            collection.next();
+            fail("Entity still exists");
+        } catch (UniformInterfaceException e) {
+            //verify the correct error was returned
+            JsonNode node = mapper.readTree( e.getResponse().getEntity( String.class ));
+            assertEquals( "service_resource_not_found", node.get( "error" ).textValue() );
+        }
+
+        //7. check root roles to make sure role still exists
+        role = this.app().collection("roles").uniqueID(roleName).get();
+        assertEquals(role.get("name"), roleName);
+
+        //8. delete the role
+        ApiResponse responseDel2 = this.app().collection("role").entity(role).delete();
+        this.refreshIndex();
+        //todo: what to do with response from delete call?
+
+        //9. do a GET to make sure the role was deleted
+        try {
+            this.app().collection("role").entity(role).get();
+            fail("Entity still exists");
+        } catch (UniformInterfaceException e) {
+            //verify the correct error was returned
+            JsonNode node = mapper.readTree( e.getResponse().getEntity( String.class ));
+            assertEquals( "service_resource_not_found", node.get( "error" ).textValue() );
+        }
+
+    }
+
+
+    /***
+     *
+     * Verify that group / role permissions work
+     *
+     *  create group
+     *  create user
+     *  create role
+     *  add permissions to role (e.g. POST, GET on /cats)
+     *  add role to group
+     *  add user to group
+     *  delete default role (to ensure no app-level user operations are allowed)
+     *  delete guest role (to ensure no app-level user operations are allowed)
+     *  create a /cats/fluffy
+     *  read /cats/fluffy
+     *  update /cats/fluffy (should fail)
+     *  delete /cats/fluffy (should fail)
+     */
+    @Test()
+    public void addRolePermissionToGroupVerifyPermission() throws IOException {
+
+        //1. create a group
+        String groupName = "testgroup";
+        String groupPath = "testgroup";
+        Entity group = this.createGroup(groupName, groupPath);
+
+        //2. create a user
+        String username = "fred";
+        String email = "fred@usergrid.com";
+        Entity user = this.createUser(username, email);
+
+        //3. create a role
+        String roleName = "tester";
+        String roleTitle = "tester";
+        Entity role = this.createRole(roleName, roleTitle);
+
+        //4. add permissions to role
+
+
+        //5. add role to the group
+        Entity addRoleresponse = this.app().collection("role").entity(role).connection().collection("groups").entity(group).post();
+        assertEquals(addRoleresponse.get("name"), roleName);
+        this.refreshIndex();
+
+        //6. add user to group
+        Entity addUserResponse = this.app().collection("users").entity(user).connection().collection("groups").entity(group).post();
+        assertEquals(addUserResponse.get("name"), groupName);
+        this.refreshIndex();
+    }
+
     /***
      *
      * Verify that we can create a group and then add a role to it
@@ -188,6 +344,13 @@ public class GroupResourceIT extends AbstractRestIT {
     @Test()
     public void createGroupAndAddARoleValidation() throws IOException {
 
+        /*
+        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/roles" ).queryParam( "access_token", access_token )
+                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
+        assertNull( node.get( "errors" ) );
+        assertTrue( node.get( "entities" ).findValuesAsText( "name" ).contains( roleName ) );
+
+        */
     }
 
     /*
@@ -251,98 +414,6 @@ public class GroupResourceIT extends AbstractRestIT {
         assertNull( node.get( "errors" ) );
         assertTrue( node.get( "data" ).size() == 0 );
     }
-
-/*
-    @Test
-    public void addRemoveRole() throws IOException {
-
-        UUID id = UUIDUtils.newTimeUUID();
-
-        String groupName = "groupname" + id;
-        String roleName = "rolename" + id;
-
-        ApiResponse response = client.createGroup( groupName );
-        assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
-
-        UUID createdId = response.getEntities().get( 0 ).getUuid();
-
-        refreshIndex("test-organization", "test-app");
-
-        // create Role
-
-        String json = "{\"title\":\"" + roleName + "\",\"name\":\"" + roleName + "\"}";
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/roles" ).queryParam( "access_token", access_token )
-                        .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                        .post( String.class, json ));
-
-        // check it
-        assertNull( node.get( "errors" ) );
-
-
-        refreshIndex("test-organization", "test-app");
-
-        // add Role
-
-        node = mapper.readTree( resource().path( "/test-organization/test-app/groups/" + createdId + "/roles/" + roleName )
-                .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class ));
-
-        refreshIndex("test-organization", "test-app");
-
-        // check it
-        assertNull( node.get( "errors" ) );
-        assertEquals( node.get( "entities" ).get( 0 ).get( "name" ).asText(), roleName );
-
-        node = mapper.readTree( resource().path( "/test-organization/test-app/groups/" + createdId + "/roles" )
-                .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
-        assertNull( node.get( "errors" ) );
-        assertEquals( node.get( "entities" ).get( 0 ).get( "name" ).asText(), roleName );
-
-        // check root roles
-        node = mapper.readTree( resource().path( "/test-organization/test-app/roles" ).queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
-        assertNull( node.get( "errors" ) );
-        assertTrue( node.get( "entities" ).findValuesAsText( "name" ).contains( roleName ) );
-
-        refreshIndex("test-organization", "test-app");
-
-        // remove Role
-
-        node = mapper.readTree( resource().path( "/test-organization/test-app/groups/" + createdId + "/roles/" + roleName )
-                .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).delete( String.class ));
-        assertNull( node.get( "errors" ) );
-
-        refreshIndex("test-organization", "test-app");
-
-        node = mapper.readTree( resource().path( "/test-organization/test-app/groups/" + createdId + "/roles" )
-                .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
-        assertNull( node.get( "errors" ) );
-        assertTrue( node.get( "entities" ).size() == 0 );
-
-        // check root roles - role should remain
-        node = mapper.readTree( resource().path( "/test-organization/test-app/roles" ).queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
-        assertNull( node.get( "errors" ) );
-        assertTrue( node.get( "entities" ).findValuesAsText( "name" ).contains( roleName ) );
-
-        // now kill the root role
-        node = mapper.readTree( resource().path( "/test-organization/test-app/roles/" + roleName )
-                .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).delete( String.class ));
-        assertNull( node.get( "errors" ) );
-
-        refreshIndex("test-organization", "test-app");
-
-        // now it should be gone
-        node = mapper.readTree( resource().path( "/test-organization/test-app/roles" ).queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
-        assertNull( node.get( "errors" ) );
-        assertFalse( node.get( "entities" ).findValuesAsText( "name" ).contains( roleName ) );
-    }
-    */
 
 
     /***
