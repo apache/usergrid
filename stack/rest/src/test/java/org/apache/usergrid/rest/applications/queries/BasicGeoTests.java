@@ -86,14 +86,7 @@ public class BasicGeoTests extends AbstractRestIT {
         .map("latitude", lat)
         .map("longitude", lon));
 
-    Entity testEntity = null;
-    try {
-      testEntity = this.app().collection(collectionType).post(entity);
-    } catch (UniformInterfaceException e) {
-      JsonNode nodeError = mapper.readTree(e.getResponse().getEntity(String.class));
-      fail(nodeError.get("error").textValue());
-    }
-
+    Entity testEntity = this.app().collection(collectionType).post(entity);
 
     assertNotNull(testEntity);
     assertEquals(lat.toString(), ((HashMap<String, Object>) testEntity.get("location")).get("latitude").toString());
@@ -102,12 +95,8 @@ public class BasicGeoTests extends AbstractRestIT {
 //        context.refreshIndex();
 
     //2. read back that entity make sure it is accurate
-    try {
-      testEntity = this.app().collection(collectionType).entity(testEntity).get();
-    } catch (UniformInterfaceException e) {
-      JsonNode nodeError = mapper.readTree(e.getResponse().getEntity(String.class));
-      fail(nodeError.get("error").textValue());
-    }
+    testEntity = this.app().collection(collectionType).entity(testEntity).get();
+
     assertNotNull(testEntity);
     assertEquals(lat.toString(), ((HashMap<String, Object>) testEntity.get("location")).get("latitude").toString());
     assertEquals(lon.toString(), ((HashMap<String, Object>) testEntity.get("location")).get("longitude").toString());
@@ -119,24 +108,15 @@ public class BasicGeoTests extends AbstractRestIT {
         .map("latitude", newLat)
         .map("longitude", newLon));
 
-    try {
-      testEntity = this.app().collection(collectionType).entity(testEntity).put(testEntity);
-    } catch (UniformInterfaceException e) {
-      JsonNode nodeError = mapper.readTree(e.getResponse().getEntity(String.class));
-      fail(nodeError.get("error").textValue());
-    }
+    testEntity = this.app().collection(collectionType).entity(testEntity).put(testEntity);
 
     assertNotNull(testEntity);
     assertEquals(newLat.toString(), ((HashMap<String, Object>) testEntity.get("location")).get("latitude").toString());
     assertEquals(newLon.toString(), ((HashMap<String, Object>) testEntity.get("location")).get("longitude").toString());
 
     //4. read back the updated entity, make sure it is accurate
-    try {
-      testEntity = this.app().collection(collectionType).entity(testEntity).get();
-    } catch (UniformInterfaceException e) {
-      JsonNode nodeError = mapper.readTree(e.getResponse().getEntity(String.class));
-      fail(nodeError.get("error").textValue());
-    }
+    testEntity = this.app().collection(collectionType).entity(testEntity).get();
+
     assertNotNull(testEntity);
     assertEquals(newLat.toString(), ((HashMap<String, Object>) testEntity.get("location")).get("latitude").toString());
     assertEquals(newLon.toString(), ((HashMap<String, Object>) testEntity.get("location")).get("longitude").toString());
