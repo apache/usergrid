@@ -64,10 +64,11 @@ public class GroupResourceIT extends AbstractRestIT {
         return entity;
     }
 
-    private Entity createUser(String username, String email) throws IOException{
+    private Entity createUser(String username, String email, String password) throws IOException{
         Entity payload = new Entity();
         payload.put("username", username);
         payload.put("email", email);
+        payload.put("password", password);
         Entity entity = this.app().collection("users").post(payload);
         assertEquals(entity.get("username"), username);
         assertEquals(entity.get("email"), email);
@@ -191,7 +192,8 @@ public class GroupResourceIT extends AbstractRestIT {
         // 2. create a user
         String username = "fred";
         String email = "fred@usergrid.com";
-        Entity user = this.createUser(username, email);
+        String password = "password";
+        Entity user = this.createUser(username, email, password);
 
         // 3. add the user to the group
         Entity response = this.app().collection("users").entity(user).connection().collection("groups").entity(group).post();
@@ -300,6 +302,7 @@ public class GroupResourceIT extends AbstractRestIT {
      *  add user to group
      *  delete default role (to ensure no app-level user operations are allowed)
      *  delete guest role (to ensure no app-level user operations are allowed)
+     *  log the user in with
      *  create a /cats/fluffy
      *  read /cats/fluffy
      *  update /cats/fluffy (should fail)
@@ -316,7 +319,8 @@ public class GroupResourceIT extends AbstractRestIT {
         //2. create a user
         String username = "fred";
         String email = "fred@usergrid.com";
-        Entity user = this.createUser(username, email);
+        String password = "password";
+        Entity user = this.createUser(username, email, password);
 
         //3. create a role
         String roleName = "tester";
@@ -324,95 +328,69 @@ public class GroupResourceIT extends AbstractRestIT {
         Entity role = this.createRole(roleName, roleTitle);
 
         //4. add permissions to role
-
+        Entity payload = new Entity();
+        payload.put("permission","get,post:/cats");
+        Entity permission = this.app().collection("roles").uniqueID(roleName).connection("permissions").post(payload);
+        assertEquals(permission.get("data"), "get,post:/cats");
+        this.refreshIndex();
 
         //5. add role to the group
-        Entity addRoleresponse = this.app().collection("role").entity(role).connection().collection("groups").entity(group).post();
-        assertEquals(addRoleresponse.get("name"), roleName);
+        Entity addRoleResponse = this.app().collection("groups").entity(group).connection().collection("roles").entity(role).post();
+        assertEquals(addRoleResponse.get("name"), roleName);
         this.refreshIndex();
 
         //6. add user to group
         Entity addUserResponse = this.app().collection("users").entity(user).connection().collection("groups").entity(group).post();
         assertEquals(addUserResponse.get("name"), groupName);
         this.refreshIndex();
-    }
 
-    /***
-     *
-     * Verify that we can create a group and then add a role to it
-     */
-    @Test()
-    public void createGroupAndAddARoleValidation() throws IOException {
+        //7. delete the default role
+        ApiResponse responseDelDefault = this.app().collection("role").uniqueID("Default").delete();
+        this.refreshIndex();
+        //todo: what to do with response from delete call?
 
-        /*
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/roles" ).queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
-        assertNull( node.get( "errors" ) );
-        assertTrue( node.get( "entities" ).findValuesAsText( "name" ).contains( roleName ) );
+        //8. delete the guest role
+        ApiResponse responseDelGuest = this.app().collection("role").uniqueID("Guest").delete();
+        this.refreshIndex();
+        //todo: what to do with response from delete call?
 
-        */
-    }
-
-    /*
-
-    @Test
-    public void addRemovePermission() throws IOException {
-
-        GroupsCollection groups = context.groups();
+        //log user in, should then be using the app user's token not the admin token
+        //todo: need to log user in here - how?
 
 
+        //create a cat - permissions should allow this
+        String catName = "fluffy";
+        payload = new Entity();
+        payload.put("name", catName);
+        Entity fluffy = this.app().collection("cats").post(payload);
+        assertEquals(fluffy.get("name"), catName);
+        this.refreshIndex();
 
-        UUID id = UUIDUtils.newTimeUUID();
+        //get the cat - permissions should allow this
+        fluffy = this.app().collection("cats").uniqueID(catName).get();
+        assertEquals(fluffy.get("name"), catName);
 
-        String groupName = "groupname" + id;
+        //edit the cat - permissions should not allow this
+        fluffy.put("color", "brown");
+        try {
+            this.app().collection("cats").uniqueID(catName).put(fluffy);
+            fail("permissions should not allow this");
+        } catch (UniformInterfaceException e) {
+            //verify the correct error was returned
+            JsonNode node = mapper.readTree( e.getResponse().getEntity( String.class ));
+            assertEquals( "improper credentials or something", node.get( "error" ).textValue() );
+        }
 
-        ApiResponse response = client.createGroup( groupName );
-        assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
+        //delete the cat - permissions should not allow this
+        try {
+            this.app().collection("cats").uniqueID(catName).delete();
+            fail("permissions should not allow this");
+        } catch (UniformInterfaceException e) {
+            //verify the correct error was returned
+            JsonNode node = mapper.readTree( e.getResponse().getEntity( String.class ));
+            assertEquals( "improper credentials or something", node.get( "error" ).textValue() );
+        }
 
-        refreshIndex("test-organization", "test-app");
-
-        UUID createdId = response.getEntities().get( 0 ).getUuid();
-
-        // add Permission
-        String orgName = context.getOrgName();
-        String appName = context.getAppName();
-        String path = "/"+orgName+"/"+appName+"/groups/";
-
-        String json = "{\"permission\":\"delete:/test\"}";
-        JsonNode node = mapper.readTree( resource().path( path + createdId + "/permissions" )
-                .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, json ));
-
-        // check it
-        assertNull( node.get( "errors" ) );
-        assertEquals( node.get( "data" ).get( 0 ).asText(), "delete:/test" );
-
-        refreshIndex("test-organization", "test-app");
-
-        node = mapper.readTree( resource().path( "/test-organization/test-app/groups/" + createdId + "/permissions" )
-                .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
-        assertNull( node.get( "errors" ) );
-        assertEquals( node.get( "data" ).get( 0 ).asText(), "delete:/test" );
-
-
-        // remove Permission
-
-        node = mapper.readTree( resource().path( "/test-organization/test-app/groups/" + createdId + "/permissions" )
-                .queryParam( "access_token", access_token ).queryParam( "permission", "delete%3A%2Ftest" )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).delete( String.class ));
-
-        // check it
-        assertNull( node.get( "errors" ) );
-        assertTrue( node.get( "data" ).size() == 0 );
-
-        refreshIndex("test-organization", "test-app");
-
-        node = mapper.readTree( resource().path( "/test-organization/test-app/groups/" + createdId + "/permissions" )
-                .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
-        assertNull( node.get( "errors" ) );
-        assertTrue( node.get( "data" ).size() == 0 );
     }
 
 
