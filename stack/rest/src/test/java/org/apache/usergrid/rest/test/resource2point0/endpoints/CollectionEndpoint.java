@@ -93,7 +93,7 @@ public class CollectionEndpoint extends NamedResource {
 
     public Collection get(final QueryParameters parameters, final boolean useToken){
         WebResource resource  = getResource(useToken);
-        addParametersToResource(resource, parameters);
+        resource = addParametersToResource(resource, parameters);
         ApiResponse response = resource.type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
                 .get(ApiResponse.class);
 
