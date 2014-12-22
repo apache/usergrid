@@ -122,6 +122,17 @@ public class AbstractRestIT extends JerseyTest {
         return this.clientSetup.getRestClient().getContext();
     }
 
+
+    protected Token getToken(String username, String password){
+        return this.clientSetup.getRestClient().management().token().post(new Token(username,password));
+    }
+
+    protected Token getAdminToken(){
+        return this.clientSetup.getRestClient().management().token().post(
+                new Token(this.clientSetup.getUsername(),this.clientSetup.getUsername())
+        );
+    }
+
     public void refreshIndex() {
         //TODO: add error checking and logging
         clientSetup.restClient.getResource().path( "/refreshindex" )
