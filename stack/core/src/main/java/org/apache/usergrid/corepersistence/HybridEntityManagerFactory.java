@@ -52,6 +52,10 @@ public class HybridEntityManagerFactory implements EntityManagerFactory, Applica
         }
     }
 
+    public EntityManagerFactory getImplementation() {
+        return factory; 
+    }
+
     @Override
     public String getImpementationDescription() throws Exception {
         return factory.getImpementationDescription();

@@ -18,11 +18,17 @@
 package org.apache.usergrid.persistence.collection.guice;
 
 
+
 import org.safehaus.guicyfig.GuicyFigModule;
 
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerSync;
+import org.apache.usergrid.persistence.collection.EntityDeletedFactory;
+import org.apache.usergrid.persistence.collection.EntityVersionCleanupFactory;
+import org.apache.usergrid.persistence.collection.EntityVersionCreatedFactory;
+import org.apache.usergrid.persistence.collection.event.EntityDeleted;
+import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerImpl;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerSyncImpl;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
@@ -43,7 +49,8 @@ import com.google.inject.Inject;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
-
+import com.google.inject.multibindings.Multibinder;
+import org.apache.usergrid.persistence.collection.event.EntityVersionCreated;
 
 
 /**
@@ -57,11 +64,21 @@ public class CollectionModule extends AbstractModule {
     @Override
     protected void configure() {
 
-        //noinspection unchecked
+        // noinspection unchecked
         install( new GuicyFigModule( SerializationFig.class ) );
-
         install( new SerializationModule() );
         install( new ServiceModule() );
+
+        install ( new FactoryModuleBuilder().build( EntityVersionCleanupFactory.class ));
+        install ( new FactoryModuleBuilder().build( EntityDeletedFactory.class));
+        install ( new FactoryModuleBuilder().build( EntityVersionCreatedFactory.class ));
+
+        // users of this module can add their own implemementations
+        // for more information: https://github.com/google/guice/wiki/Multibindings
+
+        Multibinder.newSetBinder( binder(), EntityVersionDeleted.class );
+        Multibinder.newSetBinder( binder(), EntityVersionCreated.class );
+        Multibinder.newSetBinder( binder(), EntityDeleted.class );
 
         // create a guice factor for getting our collection manager
         install( new FactoryModuleBuilder()
@@ -70,7 +87,6 @@ public class CollectionModule extends AbstractModule {
             .build( EntityCollectionManagerFactory.class ) );
 
         bind( UniqueValueSerializationStrategy.class ).to( UniqueValueSerializationStrategyImpl.class );
-
         bind( ChangeLogGenerator.class).to( ChangeLogGeneratorImpl.class);
 
     }

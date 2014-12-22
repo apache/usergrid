@@ -69,6 +69,7 @@ import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ENTITY_CO
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.GEO_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.NUMBER_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.STRING_PREFIX;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createContextName;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createIndexDocId;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createContextName;
 
@@ -149,7 +150,8 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
         log.debug( "Indexing entity documentId {} data {} ", indexId, entityAsMap );
 
-        bulkRequest.add( client.prepareIndex(alias.getWriteAlias(), entityType, indexId ).setSource( entityAsMap ) );
+        bulkRequest.add( client.prepareIndex(
+                alias.getWriteAlias(), entityType, indexId ).setSource( entityAsMap ) );
 
         maybeFlush();
 
@@ -228,6 +230,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
     }
 
 
+
     @Override
     public void execute() {
         execute( bulkRequest.setRefresh( refresh ) );
@@ -287,9 +290,9 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
     /**
      * Set the entity as a map with the context
+     *
      * @param entity The entity
      * @param context The context this entity appears in
-     * @return
      */
     private static Map entityToMap( final Entity entity, final String context ) {
         final Map entityMap = entityToMap( entity );
@@ -329,8 +332,6 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
                 if ( !list.isEmpty() ) {
                     if ( list.get( 0 ) instanceof String ) {
-                        Joiner joiner = Joiner.on( " " ).skipNulls();
-                        String joined = joiner.join( list );
                         entityMap.put( ANALYZED_STRING_PREFIX + field.getName().toLowerCase(),
                                 new ArrayList( processCollectionForMap( list ) ) );
                     }

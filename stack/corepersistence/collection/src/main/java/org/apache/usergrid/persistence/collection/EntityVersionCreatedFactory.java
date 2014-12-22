@@ -18,30 +18,14 @@
  */
 package org.apache.usergrid.persistence.collection;
 
+
+import java.util.UUID;
+
+import org.apache.usergrid.persistence.collection.impl.EntityVersionCreatedTask;
+import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+public interface EntityVersionCreatedFactory {
+    public EntityVersionCreatedTask getTask( final CollectionScope scope, final Entity entity);
 
-/**
- * Represents a set of entities
- */
-public interface EntitySet {
-
-    /**
-     * Get the entity from the result set
-     * @param entityId
-     * @return
-     */
-    public MvccEntity getEntity(Id entityId);
-
-    /**
-     * Get the number of entities in this set
-     * @return
-     */
-    public int size();
-
-    /**
-     * Return true if the set is empty
-     * @return
-     */
-    public boolean isEmpty();
 }
