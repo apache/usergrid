@@ -26,6 +26,8 @@ import javax.ws.rs.core.MediaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.ApplicationsResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.OrganizationResource;
+import org.apache.usergrid.rest.test.resource2point0.model.Token;
+import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 import org.junit.ClassRule;
 import org.junit.Rule;
 
@@ -112,8 +114,12 @@ public class AbstractRestIT extends JerseyTest {
 
     //myorg/myapp
     protected ApplicationsResource app(){
-        return clientSetup.restClient.org(clientSetup.getOrganization().getName()).app( clientSetup.getAppName() );
+        return clientSetup.restClient.org(clientSetup.getOrganization().getName()).app(clientSetup.getAppName());
 
+    }
+
+    protected ClientContext context(){
+        return this.clientSetup.getRestClient().getContext();
     }
 
     public void refreshIndex() {
