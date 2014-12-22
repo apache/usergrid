@@ -41,9 +41,12 @@ public class CollectionEndpoint extends NamedResource {
 
     public EntityEndpoint entity(final Entity entity){
         String identifier = (String) entity.get("uuid");
-        return new EntityEndpoint(identifier, context, this);
+        return entity(identifier);
     }
 
+    public EntityEndpoint entity(final String identifier ){
+        return new EntityEndpoint(identifier, context, this);
+    }
 
 
     /**

@@ -21,8 +21,6 @@ import java.net.URI;
 import java.net.URLClassLoader;
 import java.util.Arrays;
 
-import javax.ws.rs.core.MediaType;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.ApplicationsResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.OrganizationResource;
@@ -31,7 +29,6 @@ import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 import org.junit.ClassRule;
 import org.junit.Rule;
 
-import org.apache.usergrid.java.client.Client;
 import org.apache.usergrid.rest.ITSetup;
 import org.apache.usergrid.rest.RestITSuite;
 
@@ -56,7 +53,6 @@ public class AbstractRestIT extends JerseyTest {
 
     private static ClientConfig clientConfig = new DefaultClientConfig();
 
-    protected static Client client;
 
     @ClassRule
     public static ITSetup setup = new ITSetup( RestITSuite.cassandraResource );
@@ -123,8 +119,8 @@ public class AbstractRestIT extends JerseyTest {
     }
 
 
-    protected Token getToken(String username, String password){
-        return this.clientSetup.getRestClient().management().token().post(new Token(username,password));
+    protected Token getAppUserToken(String username, String password){
+        return this.clientSetup.getRestClient().token().post(new Token(username,password));
     }
 
     protected Token getAdminToken(){
@@ -135,12 +131,7 @@ public class AbstractRestIT extends JerseyTest {
 
     public void refreshIndex() {
         //TODO: add error checking and logging
-        clientSetup.restClient.getResource().path( "/refreshindex" )
-                              .queryParam( "org_name", clientSetup.getOrganization().getName() )
-                              .queryParam( "app_name", clientSetup.getAppName() )
-                              .accept( MediaType.APPLICATION_JSON ).post();
-
-
+        clientSetup.refreshIndex();
     }
 
 

@@ -165,4 +165,13 @@ public class Entity implements Serializable, Map<String,Object> {
     public Set<Entry<String, Object>> entrySet() {
         return getDynamicProperties().entrySet();
     }
+
+    public UUID getUuid(){
+        return (UUID)get("uuid");
+    }
+
+    public Entity chainPut(final String key, final Object value){
+        put(key,value);
+        return this;
+    }
 }

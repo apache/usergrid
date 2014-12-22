@@ -27,16 +27,16 @@ import java.util.UUID;
 
 import javax.ws.rs.core.MediaType;
 
+import org.apache.usergrid.rest.test.resource.CollectionResource;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.CollectionEndpoint;
+import org.apache.usergrid.rest.test.resource2point0.model.Collection;
+import org.apache.usergrid.rest.test.resource2point0.model.Entity;
+import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
+import org.aspectj.lang.annotation.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.java.client.Client.Query;
-import org.apache.usergrid.java.client.entities.Activity;
-import org.apache.usergrid.java.client.entities.Activity.ActivityObject;
-import org.apache.usergrid.java.client.entities.Entity;
-import org.apache.usergrid.java.client.entities.User;
-import org.apache.usergrid.java.client.response.ApiResponse;
 
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.management.ApplicationInfo;
@@ -64,77 +64,64 @@ import static org.junit.Assert.fail;
  * @author tnine
  */
 @Concurrent()
-public class UserResourceIT extends AbstractRestIT {
+public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point0.AbstractRestIT {
 
     private static Logger log = LoggerFactory.getLogger( UserResourceIT.class );
+    UserRepo userRepo ;
+    CollectionEndpoint usersResource;
 
+    @Before("Before users")
+    public void setup(){
+        userRepo = new UserRepo(clientSetup);
+        userRepo.load();
+        usersResource = this.app().collection("users");
+        clientSetup.refreshIndex();
+    }
 
     @Test
     public void usernameQuery() throws IOException {
 
-        UserRepo.INSTANCE.load( resource(), access_token );
-        refreshIndex("test-organization", "test-app");
 
         String ql = "username = 'unq_user*'";
-
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/users" ).queryParam( "ql", ql )
-                                  .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                                  .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
-
-        assertEquals( UserRepo.INSTANCE.getByUserName( "unq_user1" ), getIdFromSearchResults( node, 0 ) );
-        assertEquals( UserRepo.INSTANCE.getByUserName( "unq_user2" ), getIdFromSearchResults( node, 1 ) );
-        assertEquals( UserRepo.INSTANCE.getByUserName( "unq_user3" ), getIdFromSearchResults( node, 2 ) );
+        Collection collection =usersResource.get(new QueryParameters().setQuery(ql));
+        assertEquals(userRepo.getByUserName("unq_user1"), getIdFromSearchResults(collection, 0));
+        assertEquals(userRepo.getByUserName("unq_user2"), getIdFromSearchResults(collection, 1));
+        assertEquals(userRepo.getByUserName("unq_user3"), getIdFromSearchResults(collection, 2));
     }
 
 
     @Test
     public void nameQuery() throws IOException {
 
-        UserRepo.INSTANCE.load( resource(), access_token );
-        refreshIndex("test-organization", "test-app");
-
         String ql = "name = 'John*'";
 
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/users" ).queryParam( "ql", ql )
-                                  .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                                  .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
+        Collection collection =usersResource.get(new QueryParameters().setQuery(ql));
 
-        assertEquals( UserRepo.INSTANCE.getByUserName( "user2" ), getIdFromSearchResults( node, 0 ) );
-        assertEquals( UserRepo.INSTANCE.getByUserName( "user3" ), getIdFromSearchResults( node, 1 ) );
+
+        assertEquals( userRepo.getByUserName( "user2" ), getIdFromSearchResults( collection, 0 ) );
+        assertEquals( userRepo.getByUserName( "user3" ), getIdFromSearchResults( collection, 1 ) );
     }
 
 
     @Test
     public void nameQueryByUUIDs() throws Exception {
-        UserRepo.INSTANCE.load( resource(), access_token );
-        refreshIndex("test-organization", "test-app");
-
+        this.refreshIndex();
         String ql = "select uuid name = 'John*'";
-
-        ApplicationInfo appInfo = setup.getMgmtSvc().getApplicationInfo( "test-organization/test-app" );
-        OrganizationInfo orgInfo = setup.getMgmtSvc().getOrganizationByName( "test-organization" );
-
-        resource().path( "/" + orgInfo.getUuid() + "/" + appInfo.getId() + "/users" ).queryParam( "ql", ql )
-                  .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                  .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class );
+        this.app().collection("users").get(new QueryParameters().setQuery(ql));
     }
 
 
     @Test
     public void nameFullTextQuery() throws IOException {
 
-        UserRepo.INSTANCE.load( resource(), access_token );
-        refreshIndex("test-organization", "test-app");
 
         String ql = "name contains 'Smith' order by name ";
 
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/users" ).queryParam( "ql", ql )
-                                  .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                                  .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
+        Collection collection =usersResource.get(new QueryParameters().setQuery(ql));
 
-        assertEquals( UserRepo.INSTANCE.getByUserName( "user1" ), getIdFromSearchResults( node, 0 ) );
-        assertEquals( UserRepo.INSTANCE.getByUserName( "user2" ), getIdFromSearchResults( node, 1 ) );
-        assertEquals( UserRepo.INSTANCE.getByUserName( "user3" ), getIdFromSearchResults( node, 2 ) );
+        assertEquals( userRepo.getByUserName( "user1" ), getIdFromSearchResults( collection, 0 ) );
+        assertEquals( userRepo.getByUserName( "user2" ), getIdFromSearchResults( collection, 1 ) );
+        assertEquals( userRepo.getByUserName( "user3" ), getIdFromSearchResults( collection, 2 ) );
     }
 
 
@@ -145,14 +132,10 @@ public class UserResourceIT extends AbstractRestIT {
     @Test(expected = UniformInterfaceException.class)
     public void fullTextQueryNotFullTextIndexed() throws IOException {
 
-        UserRepo.INSTANCE.load( resource(), access_token );
-        refreshIndex("test-organization", "test-app");
-
         String ql = "username contains 'user' ";
 
-        resource().path( "/test-organization/test-app/users" ).queryParam( "ql", ql )
-                  .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                  .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class );
+        Collection collection =usersResource.get(new QueryParameters().setQuery(ql));
+
     }
 
 
@@ -163,14 +146,11 @@ public class UserResourceIT extends AbstractRestIT {
     @Test(expected = UniformInterfaceException.class)
     public void fullQueryNotIndexed() throws IOException {
 
-        UserRepo.INSTANCE.load( resource(), access_token );
-        refreshIndex("test-organization", "test-app");
 
         String ql = "picture = 'foo' ";
 
-        resource().path( "/test-organization/test-app/users" ).queryParam( "ql", ql )
-                  .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                  .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class );
+        Collection collection =usersResource.get(new QueryParameters().setQuery(ql));
+
     }
 
 
@@ -179,22 +159,20 @@ public class UserResourceIT extends AbstractRestIT {
      */
     @Test
     public void emtpyActorActivity() throws IOException {
-        UserRepo.INSTANCE.load( resource(), access_token );
-        UUID userId = UserRepo.INSTANCE.getByUserName( "user1" );
-        refreshIndex("test-organization", "test-app");
 
-        Activity activity = new Activity();
-        activity.setProperty( "email", "rod@rodsimpson.com" );
-        activity.setProperty( "verb", "POST" );
-        activity.setProperty( "content", "Look! more new content" );
+        UUID userId = userRepo.getByUserName( "user1" );
 
-        ApiResponse response = client.postUserActivity( userId.toString(), activity );
 
-        assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
+        Entity activity = new Entity();
+        activity.put("email", "rod@rodsimpson.com");
+        activity.put("verb", "POST");
+        activity.put("content", "Look! more new content");
 
-        Entity entity = response.getEntities().get( 0 );
 
-        UUID activityId = entity.getUuid();
+        Entity entity = usersResource.entity(userId.toString()).connection("activities").post(activity);
+
+
+        UUID activityId =(UUID) entity.get("uuid");
 
         assertNotNull( activityId );
 
@@ -214,28 +192,23 @@ public class UserResourceIT extends AbstractRestIT {
     @Test
     public void noUUIDorEmail() throws IOException {
 
-        UserRepo.INSTANCE.load( resource(), access_token );
-        refreshIndex("test-organization", "test-app");
+        UUID userId = userRepo.getByUserName( "user1" );
 
-        UUID userId = UserRepo.INSTANCE.getByUserName( "user1" );
-
-        Activity activity = new Activity();
-        activity.setProperty( "email", "rod@rodsimpson.com" );
-        activity.setProperty( "verb", "POST" );
-        activity.setProperty( "content", "Look! more new content" );
+        Entity activity = new Entity();
+        activity.put("email", "rod@rodsimpson.com");
+        activity.put("verb", "POST");
+        activity.put("content", "Look! more new content");
 
         // same as above, but with actor partially filled out
 
-        ActivityObject actorPost = new ActivityObject();
-        actorPost.setDisplayName( "Dino" );
+        Map<String,Object> actorPost = new HashMap<>();
+        actorPost.put("displayName","Dino" );
 
-        activity.setActor( actorPost );
+        activity.put("actor", actorPost);
 
-        ApiResponse response = client.postUserActivity( userId.toString(), activity );
 
-        assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
 
-        Entity entity = response.getEntities().get( 0 );
+        Entity entity = usersResource.entity(userId.toString()).connection("activities").post(activity);
 
         UUID activityId = entity.getUuid();
 
@@ -256,33 +229,29 @@ public class UserResourceIT extends AbstractRestIT {
      */
     @Test
     public void ignoreUUIDandEmail() throws IOException {
-        UserRepo.INSTANCE.load( resource(), access_token );
-        UUID userId = UserRepo.INSTANCE.getByUserName( "user1" );
-        refreshIndex("test-organization", "test-app");
+
+        UUID userId = userRepo.getByUserName( "user1" );
+
 
         UUID testUUID = UUIDUtils.newTimeUUID();
         String testEmail = "foo@bar.com";
 
-        // same as above, but with actor partially filled out
-        Activity activity = new Activity();
-        activity.setProperty( "email", "rod@rodsimpson.com" );
-        activity.setProperty( "verb", "POST" );
-        activity.setProperty( "content", "Look! more new content" );
+        Entity activity = new Entity();
+        activity.put("email", "rod@rodsimpson.com");
+        activity.put("verb", "POST");
+        activity.put("content", "Look! more new content");
 
         // same as above, but with actor partially filled out
 
-        ActivityObject actorPost = new ActivityObject();
-        actorPost.setDisplayName( "Dino" );
-        actorPost.setUuid( testUUID );
-        actorPost.setDynamicProperty( "email", testEmail );
+        Map<String,Object> actorPost = new HashMap<>();
+        actorPost.put("displayName", "Dino");
+        actorPost.put("uuid",testUUID);
+        actorPost.put("email",testEmail);
+        activity.put("actor", actorPost);
+        // same as above, but with actor partially filled out
 
-        activity.setActor( actorPost );
 
-        ApiResponse response = client.postUserActivity( userId.toString(), activity );
-
-        assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
-
-        Entity entity = response.getEntities().get( 0 );
+        Entity entity = usersResource.entity(userId.toString()).connection("activities").post(activity);
 
         UUID activityId = entity.getUuid();
 
@@ -303,47 +272,38 @@ public class UserResourceIT extends AbstractRestIT {
      */
     @Test
     public void userActivitiesDefaultOrder() throws IOException {
-        UserRepo.INSTANCE.load( resource(), access_token );
-        UUID userId = UserRepo.INSTANCE.getByUserName( "user1" );
-        refreshIndex("test-organization", "test-app");
 
-        Activity activity = new Activity();
-        activity.setProperty( "email", "rod@rodsimpson.com" );
-        activity.setProperty( "verb", "POST" );
-        activity.setProperty( "content", "activity 1" );
+        UUID userId = userRepo.getByUserName( "user1" );
 
-        ApiResponse response = client.postUserActivity( userId.toString(), activity );
+        Entity activity = new Entity();
+        activity.put("email", "rod@rodsimpson.com");
+        activity.put("verb", "POST");
+        activity.put("content", "Look! more new content");
 
-        assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
+        // same as above, but with actor partially filled out
 
-        refreshIndex("test-organization", "test-app");
-
-        Entity entity = response.getFirstEntity();
+        Entity entity = usersResource.entity(userId.toString()).connection("activities").post(activity);
+        refreshIndex();
 
         UUID firstActivityId = entity.getUuid();
 
-        activity = new Activity();
-        activity.setProperty( "email", "rod@rodsimpson.com" );
-        activity.setProperty( "verb", "POST" );
-        activity.setProperty( "content", "activity 2" );
+         activity = new Entity();
+        activity.put("email", "rod@rodsimpson.com");
+        activity.put("verb", "POST");
+        activity.put("content", "activity 2");
+        Entity entity = usersResource.entity(userId.toString()).connection("activities").post(activity);
 
-        response = client.postUserActivity( userId.toString(), activity );
-
-        assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
-
-        refreshIndex("test-organization", "test-app");
-
-        entity = response.getFirstEntity();
+        refreshIndex();
 
         UUID secondActivityId = entity.getUuid();
 
-        Query query = client.queryActivity();
+        Collection activities = usersResource.entity(userId.toString()).connection("activities").get();
 
-        entity = query.getResponse().getEntities().get( 0 );
+        entity = (Entity) activities.getResponse().getEntities().get(0);
 
         assertEquals( secondActivityId, entity.getUuid() );
 
-        entity = query.getResponse().getEntities().get( 1 );
+        entity = (Entity) activities.getResponse().getEntities().get(1);
 
         assertEquals( firstActivityId, entity.getUuid() );
     }
@@ -357,30 +317,29 @@ public class UserResourceIT extends AbstractRestIT {
         String name = "name" + id;
         String email = "email" + id + "@usergrid.org";
 
-        ApiResponse response = client.createUser( username, name, email, "password" );
-        assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
+        Map<String,Object> map = new HashMap<>();
+        map.put("username",username);
+        map.put("name",name);
+        map.put("email",email);
 
-        refreshIndex("test-organization", "test-app");
-
-        Entity userEntity = response.getEntities().get( 0 );
+        Entity userEntity = usersResource.post(new Entity(map));
+        refreshIndex();
 
         // get the user with username property that has an email value
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/users/" + username )
-                                  .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                                  .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
+        Entity testUser = usersResource.entity(username).get();
 
-        assertEquals( username, node.get( "entities" ).get( 0 ).get( "username" ).asText() );
-        assertEquals( name, node.get( "entities" ).get( 0 ).get( "name" ).asText() );
-        assertEquals( email, node.get( "entities" ).get( 0 ).get( "email" ).asText() );
+        assertEquals( username,testUser.get("username").toString() );
+        assertEquals( name,testUser.get("name").toString() );
+        assertEquals( email, testUser.get("email" ).toString() );
 
         // get the user with email property value
-        node = mapper.readTree( resource().path( "/test-organization/test-app/users/" + email )
-                         .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                         .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
+        // get the user with username property that has an email value
+        testUser = usersResource.entity(email).get();
 
-        assertEquals( username, node.get( "entities" ).get( 0 ).get( "username" ).asText() );
-        assertEquals( name, node.get( "entities" ).get( 0 ).get( "name" ).asText() );
-        assertEquals( email, node.get( "entities" ).get( 0 ).get( "email" ).asText() );
+        assertEquals( username,testUser.get("username").toString() );
+        assertEquals( name,testUser.get("name").toString() );
+        assertEquals( email, testUser.get("email" ).toString() );
+
     }
 
 
@@ -389,35 +348,26 @@ public class UserResourceIT extends AbstractRestIT {
      */
     @Test
     public void resultSizeSame() throws IOException {
-        UserRepo.INSTANCE.load( resource(), access_token );
 
-        refreshIndex("test-organization", "test-app");
+        UUID userId1 = userRepo.getByUserName( "user1" );
+        UUID userId2 = userRepo.getByUserName( "user2" );
+        UUID userId3 = userRepo.getByUserName( "user3" );
 
-        UUID userId1 = UserRepo.INSTANCE.getByUserName( "user1" );
-        UUID userId2 = UserRepo.INSTANCE.getByUserName( "user2" );
-        UUID userId3 = UserRepo.INSTANCE.getByUserName( "user3" );
+        Collection collection = usersResource.get();
 
-        Query query = client.queryUsers();
+        int nonOrderedSize = collection.getResponse().getEntities().size();
 
-        ApiResponse response = query.getResponse();
+        collection = usersResource.get(new QueryParameters().setQuery("order by username"));
 
-        assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
-
-        int nonOrderedSize = response.getEntities().size();
-
-        query = client.queryUsers( "order by username" );
-
-        response = query.getResponse();
-
-        int orderedSize = response.getEntities().size();
+        int orderedSize = collection.getResponse().getEntities().size();
 
         assertEquals( "Sizes match", nonOrderedSize, orderedSize );
 
-        int firstEntityIndex = getEntityIndex( userId1, response );
+        int firstEntityIndex = getEntityIndex( userId1, collection );
 
-        int secondEntityIndex = getEntityIndex( userId2, response );
+        int secondEntityIndex = getEntityIndex( userId2, collection );
 
-        int thirdEntityIndex = getEntityIndex( userId3, response );
+        int thirdEntityIndex = getEntityIndex( userId3, collection );
 
         assertTrue( "Ordered correctly", firstEntityIndex < secondEntityIndex );
 
@@ -425,8 +375,8 @@ public class UserResourceIT extends AbstractRestIT {
     }
 
 
-    private int getEntityIndex( UUID entityId, ApiResponse response ) {
-        List<Entity> entities = response.getEntities();
+    private int getEntityIndex( UUID entityId, Collection collection ) {
+        List<Entity> entities = collection.getResponse().getEntities();
 
         for ( int i = 0; i < entities.size(); i++ ) {
             if ( entityId.equals( entities.get( i ).getUuid() ) ) {
@@ -446,15 +396,13 @@ public class UserResourceIT extends AbstractRestIT {
         String username = "username" + id;
         String name = "name" + id;
 
-        ApiResponse response = client.createUser( username, name, id + "@usergrid.org", "password" );
-        assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
-        refreshIndex("test-organization", "test-app");
+        Entity entity = new Entity().chainPut("username",username).chainPut("name", name).chainPut("email", id + "@usergrid.org").chainPut("password","password");
 
-        UUID createdId = response.getEntities().get( 0 ).getUuid();
+        entity = usersResource.post(entity);
+        UUID createdId = entity.getUuid();
 
-        Query results = client.queryUsers( String.format( "name = '%s'", name ) );
-        User user = results.getResponse().getEntities( User.class ).get( 0 );
-
+        Collection results = usersResource.get(new QueryParameters().setQuery(String.format("name = '%s'", name)));
+        Entity user = (Entity) results.getResponse().getEntities(  ).get( 0 );
         assertEquals( createdId, user.getUuid() );
     }
 
@@ -1382,13 +1330,13 @@ public class UserResourceIT extends AbstractRestIT {
     @Test
     public void queryForUserUuids() throws Exception {
 
-        UserRepo.INSTANCE.load( resource(), access_token );
+        userRepo.load( resource(), access_token );
         refreshIndex("test-organization", "test-app");
 
         Status status = null;
 
 
-        String ql = "uuid = " + UserRepo.INSTANCE.getByUserName( "user1" );
+        String ql = "uuid = " + userRepo.getByUserName( "user1" );
 
         JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/users" ).queryParam( "ql", ql )
                                   .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )

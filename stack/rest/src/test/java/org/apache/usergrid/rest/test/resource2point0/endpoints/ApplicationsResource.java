@@ -42,5 +42,4 @@ public class ApplicationsResource extends CollectionEndpoint {
         return new CollectionEndpoint(name,context,this);
     }
 
-
 }
