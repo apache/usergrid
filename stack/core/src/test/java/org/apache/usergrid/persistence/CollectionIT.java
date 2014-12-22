@@ -934,10 +934,10 @@ public class
         EntityManager em = app.getEntityManager();
         assertNotNull( em );
 
-        int size = 20;
+        int initialSize = 20;
         List<UUID> entityIds = new ArrayList<UUID>();
 
-        for ( int i = 0; i < size; i++ ) {
+        for ( int i = 0; i < initialSize; i++ ) {
             Map<String, Object> properties = new LinkedHashMap<String, Object>();
             properties.put( "name", "object" + i );
             Entity created = em.create( "objects", properties );
@@ -954,28 +954,33 @@ public class
 
         LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
 
-        assertEquals( size, r.size() );
+        assertEquals(initialSize, r.size() );
 
         // check they're all the same before deletion
-        for ( int i = 0; i < size; i++ ) {
+        for ( int i = 0; i < initialSize; i++ ) {
             assertEquals( entityIds.get( i ), r.getEntities().get( i ).getUuid() );
         }
 
         // now delete 5 items that will span the 10 pages
+        int numDeleted = 0;
         for ( int i = 5; i < 10; i++ ) {
             Entity entity = r.getEntities().get( i );
             em.delete( entity );
             entityIds.remove( entity.getUuid() );
+            numDeleted++;
         }
 
         em.refreshIndex();
+
+        // wait for indexes to be cleared
+        Thread.sleep( 500 );
 
         // now query with paging
         query = new Query();
 
         r = em.searchCollection( em.getApplicationRef(), "objects", query );
 
-        assertEquals( 10, r.size() );
+        assertEquals( query.getLimit(), r.size() );
 
         for ( int i = 0; i < 10; i++ ) {
             assertEquals( entityIds.get( i ), r.getEntities().get( i ).getUuid() );

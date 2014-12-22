@@ -124,7 +124,8 @@ public class TestContext {
     }
 
 
-    /** Create the app if it doesn't exist with the given TestUser. If the app exists, the user is logged in */
+    /** Create the app if it doesn't exist with the given TestUser. 
+     * If the app exists, the user is logged in */
     public TestContext loginUser() {
         // nothing to do
         if ( activeUser.isLoggedIn() ) {

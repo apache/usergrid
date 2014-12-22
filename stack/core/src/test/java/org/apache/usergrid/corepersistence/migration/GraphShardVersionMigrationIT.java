@@ -28,7 +28,6 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.CoreApplication;
 import org.apache.usergrid.corepersistence.CpSetup;
 import org.apache.usergrid.corepersistence.EntityWriteHelper;
 import org.apache.usergrid.corepersistence.ManagerCache;
@@ -37,11 +36,9 @@ import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationManagerImpl;
 import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerialization;
-import org.apache.usergrid.persistence.core.migration.schema.MigrationException;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.model.entity.Id;
-import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -52,6 +49,7 @@ import rx.functions.Action1;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import org.junit.Ignore;
 
 
 public class GraphShardVersionMigrationIT extends AbstractCoreIT {
@@ -83,6 +81,7 @@ public class GraphShardVersionMigrationIT extends AbstractCoreIT {
 
 
     @Test
+    @Ignore("Ignored awaiting fix for USERGRID-268")
     public void testIdMapping() throws Throwable {
 
         assertEquals( "version 2 expected", 2, graphShardVersionMigration.getVersion() );

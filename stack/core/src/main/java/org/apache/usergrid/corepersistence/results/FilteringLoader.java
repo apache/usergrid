@@ -71,7 +71,12 @@ public class FilteringLoader implements ResultsLoader {
      * @param applicationScope The application scope to perform the load
      * @param indexScope The index scope used in the search
      */
-    protected FilteringLoader( final ManagerCache managerCache, final ResultsVerifier resultsVerifier,  final ApplicationScope applicationScope, final IndexScope indexScope ) {
+    protected FilteringLoader( 
+            final ManagerCache managerCache, 
+            final ResultsVerifier resultsVerifier,  
+            final ApplicationScope applicationScope, 
+            final IndexScope indexScope ) {
+
         this.managerCache = managerCache;
         this.resultsVerifier = resultsVerifier;
         this.applicationScope = applicationScope;
