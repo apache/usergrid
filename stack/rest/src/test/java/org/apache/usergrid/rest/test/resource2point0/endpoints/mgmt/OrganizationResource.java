@@ -39,6 +39,11 @@ public class OrganizationResource extends NamedResource {
     public OrganizationResource( final String name, final ClientContext context, final UrlResource parent ) {
         super( name, context, parent );
     }
+
+    public UsersResource users(){
+        return new UsersResource( context,this );
+    }
+
     public Organization get() {
         ApiResponse rep = getResource(true).type(MediaType.APPLICATION_JSON_TYPE)
                                            .accept( MediaType.APPLICATION_JSON ).get( ApiResponse.class );
