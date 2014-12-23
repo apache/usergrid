@@ -41,9 +41,6 @@ public class OrganizationResource extends NamedResource {
         return new ApplicationsResource( app, context ,this );
     }
 
-    public ApplicationsResource token(){
-        return new ApplicationsResource( "token", context ,this );
-    }
 
     public void post(Map<String,String> organization) {
 

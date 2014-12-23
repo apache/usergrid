@@ -18,15 +18,10 @@ package org.apache.usergrid.rest.applications.collection.groups;
 
 
 import java.io.IOException;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.NoSuchElementException;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
-import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Collection;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.junit.Test;
@@ -36,10 +31,14 @@ import org.apache.usergrid.cassandra.Concurrent;
 
 import static org.junit.Assert.*;
 
-/** @author rockerston */
+/**
+ * @author rockerston
+ *
+ * REST tests for /groups endpoint
+ *
+ * */
 @Concurrent()
 public class GroupResourceIT extends AbstractRestIT {
-    private static Logger log = LoggerFactory.getLogger( GroupResourceIT.class );
 
     public GroupResourceIT() throws Exception { }
 
@@ -145,7 +144,7 @@ public class GroupResourceIT extends AbstractRestIT {
         String groupName = "testgroup";
         String groupSpacePath = "test group";
         try {
-            Entity group = this.createGroup(groupName, groupSpacePath);
+            this.createGroup(groupName, groupSpacePath);
             fail("Should not be able to create a group with a space in the path");
         } catch (UniformInterfaceException e) {
             //verify the correct error was returned
@@ -281,11 +280,8 @@ public class GroupResourceIT extends AbstractRestIT {
 
         //6. make sure the connection no longer exists
         collection = this.app().collection("groups").entity(group).connection().collection("roles").get();
-        try {
-            collection.next();
+        if (collection.hasNext()) {
             fail("Entity still exists");
-        } catch (NoSuchElementException e) {
-            //all good - there shouldn't be an element!
         }
 
         //7. check root roles to make sure role still exists
@@ -390,7 +386,7 @@ public class GroupResourceIT extends AbstractRestIT {
 
     /***
      *
-     * Post a group activity
+     * Post a group activity and make sure it can be read back only by group members
      *
      */
     @Test
@@ -438,8 +434,8 @@ public class GroupResourceIT extends AbstractRestIT {
 
         //8. post an activity to the group
         //JSON should look like this:
-        //{'{"actor":{"displayName":"fdsafdsa","uuid":"2b70e83a-8a3f-11e4-9716-235107bcadb1","username":"fdsafdsa"},
-        // "verb":"post","content":"fdsafdsa"}'
+        //{'{"actor":{"displayName":"fred","uuid":"2b70e83a-8a3f-11e4-9716-235107bcadb1","username":"fred"},
+        // "verb":"post","content":"content"}'
         Entity payload = new Entity();
         payload.put("displayName", "fred");
         payload.put("uuid", user1.get("uuid"));
@@ -447,21 +443,22 @@ public class GroupResourceIT extends AbstractRestIT {
         Entity activity = new Entity();
         activity.put("actor", payload);
         activity.put("verb", "post");
-        activity.put("content", "content");
+        String content = "content";
+        activity.put("content", content);
         Entity activityResponse = this.app().collection("groups").uniqueID(groupName).connection("activities").post(activity);
-        assertEquals(activityResponse.get("content"), "content");
+        assertEquals(activityResponse.get("content"), content);
         this.refreshIndex();
 
         //9. delete the default role
         this.app().collection("role").uniqueID("Default").delete();
-
+/*
         //10. add permissions to group: {"permission":"get,post,put,delete:/groups/${group}/**"}'
         payload = new Entity();
         String permission = "get,post,put,delete:/groups/${group}/**";
         payload.put("permission",permission);
         Entity permissionResponse = this.app().collection("groups").entity(group).connection("permissions").post(payload);
         assertEquals(permissionResponse.get("data"), permission);
-
+*/
         //11. log user1 in, should then be using the app user's token not the admin token
         this.getAppUserToken(user1Username, password);
 
@@ -473,7 +470,7 @@ public class GroupResourceIT extends AbstractRestIT {
         boolean found = false;
         while (user1ActivityResponse.hasNext()) {
             Entity tempActivity = user1ActivityResponse.next();
-            if (tempActivity.get("type").equals("activity") && tempActivity.get("content").equals("content")) {
+            if (tempActivity.get("type").equals("activity") && tempActivity.get("content").equals(content)) {
                 found = true;
             }
         }
@@ -487,7 +484,7 @@ public class GroupResourceIT extends AbstractRestIT {
         found = false;
         while (user2ActivityResponse.hasNext()) {
             Entity tempActivity = user2ActivityResponse.next();
-            if (tempActivity.get("type").equals("activity") && tempActivity.get("content").equals("content")) {
+            if (tempActivity.get("type").equals("activity") && tempActivity.get("content").equals(content)) {
                 found = true;
             }
         }
