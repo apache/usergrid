@@ -43,4 +43,7 @@ public class ApplicationsResource extends CollectionEndpoint {
     }
 
 
+    public TokenResource token() {
+        return new TokenResource(context,this);
+    }
 }
