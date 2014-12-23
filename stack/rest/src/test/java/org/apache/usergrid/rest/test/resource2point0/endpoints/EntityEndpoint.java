@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.jersey.api.client.WebResource;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
+import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 import javax.ws.rs.core.MediaType;
@@ -59,6 +60,16 @@ public class EntityEndpoint extends NamedResource {
         WebResource resource  = getResource(useToken);
         ApiResponse response = resource.type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
                 .get(ApiResponse.class);
+
+        return new Entity(response);
+    }
+
+    //For testing purposes only
+    public Entity get(QueryParameters parameters, final boolean useToken){
+        WebResource resource  = getResource(useToken);
+        resource = addParametersToResource(resource, parameters);
+        ApiResponse response = resource.type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
+                                       .get(ApiResponse.class);
 
         return new Entity(response);
     }

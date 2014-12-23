@@ -150,7 +150,7 @@ public class CollectionEndpoint extends NamedResource {
 
     public ApiResponse delete(final QueryParameters parameters, final boolean useToken){
         WebResource resource  = getResource(useToken);
-        addParametersToResource(getResource(), parameters);
+        resource = addParametersToResource(resource, parameters);
         return resource.type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
                 .delete(ApiResponse.class);
     }

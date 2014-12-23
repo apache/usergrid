@@ -33,9 +33,9 @@ public class Collection implements Iterable<Entity>, Iterator<Entity> {
 
     private String cursor;
 
-    public Iterator entities;
+    private Iterator entities;
 
-    public ApiResponse response;
+    private ApiResponse response;
 
 
     /**
@@ -58,6 +58,9 @@ public class Collection implements Iterable<Entity>, Iterator<Entity> {
         entities = response.getEntities().iterator();
     }
 
+    public ApiResponse getResponse(){
+        return response;
+    }
 
     @Override
     public Iterator iterator() {
@@ -84,7 +87,5 @@ public class Collection implements Iterable<Entity>, Iterator<Entity> {
     public void remove() {
         throw new UnsupportedOperationException( "Remove is unsupported" );
     }
-
-
 }
 

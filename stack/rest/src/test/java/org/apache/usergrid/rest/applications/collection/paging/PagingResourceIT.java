@@ -17,285 +17,246 @@
 package org.apache.usergrid.rest.applications.collection.paging;
 
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
-import javax.ws.rs.core.MediaType;
-import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.java.client.entities.Entity;
-import org.apache.usergrid.java.client.response.ApiResponse;
-import org.apache.usergrid.rest.AbstractRestIT;
-import org.apache.usergrid.rest.TestContextSetup;
-import org.apache.usergrid.rest.test.resource.CustomCollection;
-import org.apache.usergrid.rest.test.resource.EntityResource;
-import static org.apache.usergrid.utils.MapUtils.hashMap;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import org.junit.Ignore;
-import org.junit.Rule;
+
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.usergrid.cassandra.Concurrent;
+import org.apache.usergrid.persistence.index.utils.UUIDUtils;
+import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource2point0.model.Collection;
+import org.apache.usergrid.rest.test.resource2point0.model.Entity;
+import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
 
-/** Simple tests to test querying at the REST tier */
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
+
+/**
+ * Checks about different aspects of using a cursor combined with a query.
+ */
 @Concurrent()
 public class PagingResourceIT extends AbstractRestIT {
 
     private static final Logger logger = LoggerFactory.getLogger( PagingResourceIT.class );
 
-    @Rule
-    public TestContextSetup context = new TestContextSetup( this );
-
-    private static ObjectMapper mapper = new ObjectMapper();
-
-    private static final ApiResponse parse( JsonNode response ) throws Exception {
-        String jsonResponseString = mapper.writeValueAsString( response );
-        return mapper.readValue( jsonResponseString, ApiResponse.class );
-    }
-
-
+    /**
+     * Creates 40 objects and then retrieves all 40 by paging through sets of 10 with a cursor.
+     * @throws Exception
+     */
     @Test
     public void collectionPaging() throws Exception {
 
-        CustomCollection things = context.application().customCollection( "test1things" );
+        String collectionName = "testCollectionPaging" + UUIDUtils.newTimeUUID();
 
         int size = 40;
 
-        List<Map<String, String>> created = new ArrayList<Map<String, String>>( size );
-
+        //Creates 40 entities by posting to collection
         for ( int i = 0; i < size; i++ ) {
-            Map<String, String> entity = hashMap( "name", String.valueOf( i ) );
-            things.create( entity );
+            Map<String, Object> entityPayload = new HashMap<String, Object>();
+            entityPayload.put( "name", String.valueOf( i ) );
+            Entity entity = new Entity( entityPayload );
 
-            created.add( entity );
+            this.app().collection( collectionName ).post( entity );
         }
 
-        refreshIndex(context.getOrgName(), context.getAppName());
+        this.refreshIndex();
 
-        // now page them all
-        ApiResponse response = null;
-        Iterator<Map<String, String>> entityItr = created.iterator();
+        Collection testCollections = this.app().collection( collectionName ).get();
 
-        do {
-
-            response = parse( things.get() );
-
-            for ( Entity e : response.getEntities() ) {
-                assertTrue( entityItr.hasNext() );
-                assertEquals( entityItr.next().get( "name" ), e.getProperties().get( "name" ).asText() );
-                logger.debug("Got item value {}", e.getProperties().get( "name" ).asText());
-            }
-
-            logger.debug("response cursor: " + response.getCursor() );
-            
-            things = things.withCursor( response.getCursor() );
-        }
-        while ( response != null && response.getCursor() != null );
-
-        assertFalse("Should have paged them all", entityItr.hasNext() );
-    }
-
-
-    @Test
-    @Ignore("ignored because currently startPaging is only be supported for queues and not for  "
-            + "generic collections as this test assumes. "
-            + "see also: https://issues.apache.org/jira/browse/USERGRID-211 ")
-    public void startPaging() throws Exception {
-
-        CustomCollection things = context.application().customCollection( "test2things" );
-
-        int size = 40;
-
-        List<Map<String, String>> created = new ArrayList<Map<String, String>>( size );
-
-        for ( int i = 0; i < size; i++ ) {
-            Map<String, String> entity = hashMap( "name", String.valueOf( i ) );
-            things.create( entity );
-
-            created.add( entity );
-        }
-
-        refreshIndex(context.getOrgName(), context.getAppName());
-
-        // now page them all
-        ApiResponse response = null;
-
-        UUID start = null;
+        //checks to make sure we can page through all entities in order.
         int index = 0;
-
-        do {
-
-            response = parse( things.get() );
-
-            for ( Entity e : response.getEntities() ) {
-                logger.debug("Getting item {} value {}", index, e.getProperties().get( "name" ).asText());
-                assertEquals( created.get( index ).get( "name" ), e.getProperties().get( "name" ).asText() );
-                index++;
+        for ( int i = 0; i < 4; i++ ) {
+            while ( testCollections.hasNext() ) {
+                Entity returnedEntity = testCollections.next();
+                assertEquals( String.valueOf( index++ ), returnedEntity.get( "name" ) );
             }
-
-            // decrement since we'll get this one again
-            index--;
-
-            start = response.getEntities().get( response.getEntities().size() - 1 ).getUuid();
-
-            things = things.withStart( start );
+            testCollections = this.app().collection( collectionName ).getNextPage( testCollections, true );
         }
-        while ( response != null && response.getEntities().size() > 1 );
-
-        // we paged them all
-        assertEquals( created.size() - 1, index );
+        //make sure the cursor is null after we have no more entities to page through.
+        assertNull( testCollections.getCursor() );
     }
 
+    //
+    //    @Test
+    //    @Ignore("ignored because currently startPaging is only be supported for queues and not for  "
+    //            + "generic collections as this test assumes. "
+    //            + "see also: https://issues.apache.org/jira/browse/USERGRID-211 ")
+    //    public void startPaging() throws Exception {
+    //
+    //        CustomCollection things = context.application().customCollection( "test2things" );
+    //
+    //        int size = 40;
+    //
+    //        List<Map<String, String>> created = new ArrayList<Map<String, String>>( size );
+    //
+    //        for ( int i = 0; i < size; i++ ) {
+    //            Map<String, String> entity = hashMap( "name", String.valueOf( i ) );
+    //            things.create( entity );
+    //
+    //            created.add( entity );
+    //        }
+    //
+    //        refreshIndex(context.getOrgName(), context.getAppName());
+    //
+    //        // now page them all
+    //        ApiResponse response = null;
+    //
+    //        UUID start = null;
+    //        int index = 0;
+    //
+    //        do {
+    //
+    //            response = parse( things.get() );
+    //
+    //            for ( Entity e : response.getEntities() ) {
+    //                logger.debug("Getting item {} value {}", index, e.getProperties().get( "name" ).asText());
+    //                assertEquals( created.get( index ).get( "name" ), e.getProperties().get( "name" ).asText() );
+    //                index++;
+    //            }
+    //
+    //            // decrement since we'll get this one again
+    //            index--;
+    //
+    //            start = response.getEntities().get( response.getEntities().size() - 1 ).getUuid();
+    //
+    //            things = things.withStart( start );
+    //        }
+    //        while ( response != null && response.getEntities().size() > 1 );
+    //
+    //        // we paged them all
+    //        assertEquals( created.size() - 1, index );
+    //    }
 
+
+    /**
+     * Creates 40 objects and then creates a query to delete sets of 10 entities per call. Checks at the end
+     * to make sure there are no entities remaining.
+     * @throws Exception
+     */
     @Test
     public void collectionBatchDeleting() throws Exception {
 
-        CustomCollection things = context.application().customCollection( "test3things" );
 
+        String collectionName = "testCollectionBatchDeleting" + UUIDUtils.newTimeUUID();
+
+        //Creates 40 entities by posting to collection
         int size = 40;
-
-        List<Map<String, String>> created = new ArrayList<Map<String, String>>( size );
-
         for ( int i = 0; i < size; i++ ) {
-            Map<String, String> entity = hashMap( "name", String.valueOf( i ) );
-            things.create( entity );
+            Map<String, Object> entityPayload = new HashMap<String, Object>();
+            entityPayload.put( "name", String.valueOf( i ) );
+            Entity entity = new Entity( entityPayload );
 
-            created.add( entity );
+            this.app().collection( collectionName ).post( entity );
         }
 
-        refreshIndex(context.getOrgName(), context.getAppName());
+        this.refreshIndex();
 
-        ApiResponse response;
+        //sets the number of entities we want to delete per call.
         int deletePageSize = 10;
+        QueryParameters queryParameters = new QueryParameters();
+        queryParameters.setLimit( deletePageSize );
 
-        things = things.withLimit( deletePageSize );
-
+        //deletes the entities using the above set value. Then verifies that those entities were deleted.
         for ( int i = 0; i < size / deletePageSize; i++ ) {
-            response = parse( things.delete() );
 
-            refreshIndex(context.getOrgName(), context.getAppName());
+            ApiResponse response = this.app().collection( collectionName ).delete( queryParameters );
+
+            this.refreshIndex();
 
             assertEquals( "Only 10 entities should have been deleted", 10, response.getEntityCount() );
         }
 
-        response = parse( things.get() );
+        //verifies that we can't get anymore entities from the collection
+        Collection getCollection = this.app().collection( collectionName ).get();
 
-        assertEquals( "All entities should have been removed", 0, response.getEntityCount() );
+        assertEquals( "All entities should have been removed", 0, getCollection.getResponse().getEntityCount() );
 
-        //now do 1 more delete, we should get any results
-
-        response = parse( things.delete() );
-
+        //now do 1 more delete, we shouldn't get any results
+        ApiResponse response = this.app().collection( collectionName ).delete( queryParameters );
         assertEquals( "No more entities deleted", 0, response.getEntityCount() );
     }
 
 
+    /**
+     * Checks to make sure we can get an entity despite having a empty query, and limit parameter
+     * @throws Exception
+     */
     @Test
     public void emptyQlandLimitIgnored() throws Exception {
 
-        CustomCollection things = context.application().customCollection( "test4things" );
+        String collectionName = "testEmptyQAndLimitIgnored" + UUIDUtils.newTimeUUID();
 
-        Map<String, String> data = hashMap( "name", "thing1" );
-        JsonNode response = things.create( data );
 
-        refreshIndex(context.getOrgName(), context.getAppName());
+        Map<String, Object> entityPayload = new HashMap<String, Object>();
+        entityPayload.put( "name", "thing1" );
+        Entity entity = new Entity( entityPayload );
 
-        JsonNode entity = getEntity( response, 0 );
+        this.app().collection( collectionName ).post( entity );
 
-        String uuid = entity.get( "uuid" ).asText();
+        this.refreshIndex();
 
-        EntityResource entityRequest = things.entity( "thing1" ).withParam( "ql", "" ).withParam( "limit", "" );
+        //passes in empty parameters
+        QueryParameters parameters = new QueryParameters();
+        parameters.setKeyValue( "ql", "" );
+        parameters.setKeyValue( "limit", "" );
 
-        JsonNode returnedEntity = getEntity( entityRequest.get(), 0 );
+        //make get using empty parameters
+        Entity testEntity = this.app().collection( collectionName ).uniqueID( ( String ) entity.get( "name" ) )
+                                .get( parameters, true );
 
-        assertEquals( entity, returnedEntity );
-
-        entityRequest = things.entity( uuid ).withParam( "ql", "" ).withParam( "limit", "" );
-
-        returnedEntity = getEntity( entityRequest.get(), 0 );
-
-        assertEquals( entity, returnedEntity );
-
-        // now do a delete
-        returnedEntity = getEntity( entityRequest.delete(), 0 );
-
-        assertEquals( entity, returnedEntity );
-
-        refreshIndex(context.getOrgName(), context.getAppName());
-
-        // verify it's gone
-        returnedEntity = getEntity( things.entity( uuid ).get(), 0 );
-
-        assertNull( returnedEntity );
+        assertEquals( entity.get( "name" ), testEntity.get( "name" ) );
     }
 
 
+    /**
+     * Checks to make sure we get a cursor when we should ( by creating 50 entities ) and then checks to make sure
+     * we do not get a cursor when we create a collection of only 5 entities.
+     * @throws Exception
+     */
     @Test
     public void testCursor() throws Exception {
 
         // test that we do get cursor when we need one
-        // create 50 widgets
-        int widgetsSize = 50;
-        CustomCollection widgets = context.application().customCollection( "widgets" );
-        for (int i = 0; i < widgetsSize; i++) {
-            Map<String, String> entity = hashMap("name", String.valueOf(i));
-            widgets.create(entity);
+        // create enough widgets to make sure we need a cursor
+        int widgetsSize = 11;
+        Map<String, Object> entityPayload = new HashMap<String, Object>();
+        String collectionName = "testCursor" + UUIDUtils.newTimeUUID();
+
+        for ( int i = 0; i < widgetsSize; i++ ) {
+
+            entityPayload.put( "name", "value" + i );
+            Entity entity = new Entity( entityPayload );
+            this.app().collection( collectionName ).post( entity );
         }
-        refreshIndex(context.getOrgName(), context.getAppName());
 
-        // fetch all widgets 
-        JsonNode widgetsNode = mapper.readTree(
-            resource().path("/" + context.getOrgName() + "/" + context.getAppName() + "/widgets")
-                .queryParam("access_token", context.getActiveUser().getToken())
-                .accept(MediaType.APPLICATION_JSON)
-                .get(String.class));
-        assertEquals(10, widgetsNode.get("count").asInt()); // get back default page size of 10
-        assertNotNull(widgetsNode.get("cursor")); // with a cursor
+        this.refreshIndex();
 
-        // test that we DO NOT get cursor when we should not get cursor
-        // create 5 trinkets
+        //checks to make sure we have a cursor
+        Collection testCollection = this.app().collection( collectionName ).get();
+        assertNotNull( testCollection.getCursor() );
+        assertEquals( 10, testCollection.getResponse().getEntityCount() );
+
+        //Create new collection of only 5 entities
+        String trinketCollectionName = "trinkets" + UUIDUtils.newTimeUUID();
         int trinketsSize = 5;
-        CustomCollection trinkets = context.application().customCollection( "trinkets" );
-        for (int i = 0; i < trinketsSize; i++) {
-            Map<String, String> entity = hashMap("name", String.valueOf(i));
-            trinkets.create(entity);
+        for ( int i = 0; i < trinketsSize; i++ ) {
+
+            entityPayload.put( "name", "value" + i );
+            Entity entity = new Entity( entityPayload );
+            this.app().collection( trinketCollectionName ).post( entity );
         }
-        refreshIndex(context.getOrgName(), context.getAppName());
 
-        // fetch all trinkets 
-        JsonNode trinketsNode = mapper.readTree(
-            resource().path("/" + context.getOrgName() + "/" + context.getAppName() + "/trinkets")
-                .queryParam("access_token", context.getActiveUser().getToken())
-                .accept(MediaType.APPLICATION_JSON)
-                .get(String.class));
-        assertEquals(trinketsSize, trinketsNode.get("count").asInt()); // get back all 
-        assertNull(trinketsNode.get("cursor")); // and no cursor
+        this.refreshIndex();
+
+        //checks to make sure we don't get a cursor for just 5 entities.
+        testCollection = this.app().collection( trinketCollectionName ).get();
+        assertNull( testCollection.getCursor() );
+        assertEquals( 5, testCollection.getResponse().getEntityCount() );
     }
-
-
-//    @Test
-//    public void testPagingWithUpdates() throws IOException {
-//
-//        // create 500 widgets
-//        int widgetsSize = 500;
-//        List<String> widgetIds = new ArrayList<String>();
-//        CustomCollection widgets = context.application().collection("widgets");
-//        for (int i = 0; i < widgetsSize; i++) {
-//            Map<String, String> entity = hashMap("name", String.valueOf(i));
-//            JsonNode widgetNode = widgets.create(entity);
-//            logger.info("widgetNode: " + widgetNode.toString());
-//        }
-//
-//        refreshIndex(context.getOrgName(), context.getAppName());
-//    }
-
 }
