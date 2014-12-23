@@ -20,11 +20,11 @@ package org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt;
 
 import javax.ws.rs.core.MediaType;
 
+import org.apache.usergrid.rest.test.resource2point0.endpoints.EntityEndpoint;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.NamedResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.UrlResource;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
-import org.apache.usergrid.rest.test.resource2point0.model.User;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 import com.sun.jersey.api.client.WebResource;
@@ -39,9 +39,20 @@ public class UsersResource extends NamedResource {
         super( "users", context, parent );
     }
 
+
+    /**
+     * Should this be here? this would facilitate calling the entity endpoint as a way to get/put things
+     * @param identifier
+     * @return
+     */
+    //TODO: See if this should be reused here or if we should rename it to something else.
+    public EntityEndpoint entity(String identifier) {
+        return new EntityEndpoint(identifier, context, this);
+    }
+
     public Entity post(Entity userPayload){
         WebResource resource = getResource(true);
-
+//TODO: need to parse the specific response gotten for admin entities. It is different from regular entities.
         ApiResponse response = resource.type( MediaType.APPLICATION_JSON_TYPE )
                 .accept( MediaType.APPLICATION_JSON ).post( ApiResponse.class, userPayload);
         return new Entity(response);

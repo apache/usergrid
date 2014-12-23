@@ -276,7 +276,6 @@ public class OrganizationsIT extends AbstractRestIT {
             assertEquals(500,uie.getResponse().getStatus());
            // assertEquals( ClientResponse.Status.NOT_IMPLEMENTED ,uie.getResponse().getStatus());
         }
-
     }
 
 
@@ -304,8 +303,13 @@ public class OrganizationsIT extends AbstractRestIT {
         assertNotNull( adminUserResponse );
         assertEquals( username, adminUserResponse.get( "username" ) );
 
-        Entity adminUserGetResponse = restClient.management().orgs().organization( clientSetup.getOrganizationName() )
-                                                .users()//needs an additional endpoint here
+        adminUserResponse = restClient.management().orgs().organization( clientSetup.getOrganizationName() )
+                                                .users().entity( username ).get();
+
+        assertNotNull( adminUserResponse );
+        assertEquals( username , adminUserResponse.get( "username" ) );
+        assertEquals( username, adminUserResponse.get( "name" ) );
+        assertEquals( username, adminUserResponse.get( "email" ));
 
 //        Map<String, String> payload = hashMap( "username", "test-user-2" ).map( "name", "Test User 2" )
 //                                                                          .map( "email", "test-user-2@mockserver.com" )
