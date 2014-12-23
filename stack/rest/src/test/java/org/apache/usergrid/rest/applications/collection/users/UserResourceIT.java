@@ -134,7 +134,7 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
         Entity entity = usersResource.entity(userId.toString()).activities().post(activity);
 
 
-        UUID activityId =(UUID) entity.get("uuid");
+        UUID activityId = entity.getUuid();
 
         assertNotNull( activityId );
         Map<String,Object> actor = (Map<String,Object>)entity.get("actor");
@@ -250,11 +250,11 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
 
         Collection activities = usersResource.entity(userId.toString()).activities().get();
 
-        entity = (Entity) activities.getResponse().getEntities().get(0);
+        entity =  activities.getResponse().getEntities().get(0);
 
         assertEquals( secondActivityId, entity.getUuid() );
 
-        entity = (Entity) activities.getResponse().getEntities().get(1);
+        entity =  activities.getResponse().getEntities().get(1);
 
         assertEquals( firstActivityId, entity.getUuid() );
     }
@@ -794,7 +794,7 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
             responseStatus = uie.getResponse().getStatus();
         }
 
-        assertEquals( Status.BAD_REQUEST, responseStatus );
+        assertEquals( Status.BAD_REQUEST.getStatusCode(), responseStatus );
     }
 
 

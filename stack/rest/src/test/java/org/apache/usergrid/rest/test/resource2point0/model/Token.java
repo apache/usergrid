@@ -17,6 +17,9 @@
 package org.apache.usergrid.rest.test.resource2point0.model;
 
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 /**
  * Token model that contains the operations that can be done on a token.
  */
@@ -63,7 +66,7 @@ public class Token extends Entity{
     }
 
     public User getUser() {
-        return user;
+        return user != null ? user : new User((LinkedHashMap)get("user"));
     }
 }
 
