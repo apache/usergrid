@@ -167,7 +167,7 @@ public class Entity implements Serializable, Map<String,Object> {
     }
 
     public UUID getUuid(){
-        return (UUID)get("uuid");
+        return UUID.fromString((String) get("uuid"));
     }
 
     public Entity chainPut(final String key, final Object value){
