@@ -43,6 +43,11 @@ public class GroupResourceIT extends AbstractRestIT {
 
     public GroupResourceIT() throws Exception { }
 
+    /***
+     *
+     * helper method to create a group
+     *
+     */
     private Entity createGroup(String groupName, String groupPath) throws IOException{
         Entity payload = new Entity();
         payload.put("name", groupName);
@@ -54,6 +59,11 @@ public class GroupResourceIT extends AbstractRestIT {
         return entity;
     }
 
+    /***
+     *
+     * helper method to create a role
+     *
+     */
     private Entity createRole(String roleName, String roleTitle) throws IOException{
         Entity payload = new Entity();
         payload.put("name", roleName);
@@ -65,6 +75,11 @@ public class GroupResourceIT extends AbstractRestIT {
         return entity;
     }
 
+    /***
+     *
+     * helper method to create an app level user
+     *
+     */
     private Entity createUser(String username, String email, String password) throws IOException{
         Entity payload = new Entity();
         payload.put("username", username);
@@ -80,6 +95,7 @@ public class GroupResourceIT extends AbstractRestIT {
     /***
      *
      * Verify that we can create a group with a standard string in the name and path
+     *
      */
     @Test()
     public void createGroupValidation() throws IOException {
@@ -93,8 +109,8 @@ public class GroupResourceIT extends AbstractRestIT {
     /***
      *
      * Verify that we can create a group with a slash in the name and path
+     *
      */
-
     @Test()
     public void createGroupSlashInNameAndPathValidation() throws IOException {
 
@@ -107,8 +123,8 @@ public class GroupResourceIT extends AbstractRestIT {
     /***
      *
      * Verify that we can create a group with a space in the name
+     *
      */
-
     @Test()
     public void createGroupSpaceInNameValidation() throws IOException {
 
@@ -121,8 +137,8 @@ public class GroupResourceIT extends AbstractRestIT {
     /***
      *
      * Verify that we cannot create a group with a space in the path
+     *
      */
-
     @Test()
     public void createGroupSpaceInPathValidation() throws IOException {
 
@@ -142,6 +158,7 @@ public class GroupResourceIT extends AbstractRestIT {
     /***
      *
      * Verify that we can create a group, change the name, then delete it
+     *
      */
     @Test()
     public void groupCRUDOperations() throws IOException {
@@ -184,6 +201,7 @@ public class GroupResourceIT extends AbstractRestIT {
     /***
      *
      * Verify that we can create a group, user, add user to group, delete connection
+     *
      */
     @Test()
     public void addRemoveUserGroup() throws IOException {
@@ -231,6 +249,7 @@ public class GroupResourceIT extends AbstractRestIT {
     /***
      *
      * Verify that we can create a group, role, add role to group, delete connection
+     *
      */
     @Test
     public void addRemoveRoleGroup() throws IOException {
@@ -293,19 +312,6 @@ public class GroupResourceIT extends AbstractRestIT {
      *
      * Verify that group / role permissions work
      *
-     *  create group
-     *  create user
-     *  create role
-     *  add permissions to role (e.g. POST, GET on /cats)
-     *  add role to group
-     *  add user to group
-     *  delete default role (to ensure no app-level user operations are allowed)
-     *  delete guest role (to ensure no app-level user operations are allowed)
-     *  log the user in with
-     *  create a /cats/fluffy
-     *  read /cats/fluffy
-     *  update /cats/fluffy (should fail)
-     *  delete /cats/fluffy (should fail)
      */
     @Test()
     public void addRolePermissionToGroupVerifyPermission() throws IOException {
@@ -343,14 +349,10 @@ public class GroupResourceIT extends AbstractRestIT {
         //7. delete the default role
         this.app().collection("role").uniqueID("Default").delete();
 
-        //8. delete the guest role
-        this.app().collection("role").uniqueID("Guest").delete();
-
-        //9. log user in, should then be using the app user's token not the admin token
+        //8. log user in, should then be using the app user's token not the admin token
         this.getAppUserToken(username, password);
 
-
-        //10. create a cat - permissions should allow this
+        //9. create a cat - permissions should allow this
         String catName = "fluffy";
         payload = new Entity();
         payload.put("name", catName);
@@ -358,11 +360,11 @@ public class GroupResourceIT extends AbstractRestIT {
         assertEquals(fluffy.get("name"), catName);
         this.refreshIndex();
 
-        //11. get the cat - permissions should allow this
+        //10. get the cat - permissions should allow this
         fluffy = this.app().collection("cats").uniqueID(catName).get();
         assertEquals(fluffy.get("name"), catName);
 
-        //12. edit the cat - permissions should not allow this
+        //11. edit the cat - permissions should not allow this
         fluffy.put("color", "brown");
         try {
             this.app().collection("cats").uniqueID(catName).put(fluffy);
@@ -373,7 +375,7 @@ public class GroupResourceIT extends AbstractRestIT {
             assertEquals( "unauthorized", node.get( "error" ).textValue() );
         }
 
-        //13. delete the cat - permissions should not allow this
+        //12. delete the cat - permissions should not allow this
         try {
             this.app().collection("cats").uniqueID(catName).delete();
             fail("permissions should not allow this");
@@ -389,8 +391,8 @@ public class GroupResourceIT extends AbstractRestIT {
     /***
      *
      * Post a group activity
+     *
      */
-
     @Test
     public void postGroupActivity() throws IOException {
 
@@ -401,26 +403,40 @@ public class GroupResourceIT extends AbstractRestIT {
         Entity group = this.createGroup(groupName, groupPath);
 
         //2. create user 1
-        String username = "fred";
-        String email = "fred@usergrid.com";
+        String user1Username = "fred";
+        String user1Email = "fred@usergrid.com";
         String password = "password";
-        Entity user1 = this.createUser(username, email, password);
+        Entity user1 = this.createUser(user1Username, user1Email, password);
 
         //3. create user 2
-        username = "barney";
-        email = "fred@usergrid.com";
+        String user2Username = "barney";
+        String user2Email = "barney@usergrid.com";
         password = "password";
-        Entity user2 = this.createUser(username, email, password);
+        Entity user2 = this.createUser(user2Username, user2Email, password);
 
-        //4. add user1 to the group
+        //4. create user 3
+        String user3Username = "wilma";
+        String user3Email = "wilma@usergrid.com";
+        password = "password";
+        Entity user3 = this.createUser(user3Username, user3Email, password);
+
+        //5. add user1 to the group
         Entity addUser1Response = this.app().collection("users").entity(user1).connection().collection("groups").entity(group).post();
         assertEquals(addUser1Response.get("name"), groupName);
 
-        //5. add user2 to the group
+        //6. add user2 to the group
         Entity addUser2Response = this.app().collection("users").entity(user2).connection().collection("groups").entity(group).post();
         assertEquals(addUser2Response.get("name"), groupName);
 
-        //6. post an activity to the group
+        // user 3 does not get added to the group
+
+        //7. get all the users in the groups
+        this.refreshIndex();
+        Collection usersInGroup = this.app().collection("groups").uniqueID(groupName).connection("users").get();
+        assertEquals(usersInGroup.response.getEntityCount(), 2);
+
+
+        //8. post an activity to the group
         //JSON should look like this:
         //{'{"actor":{"displayName":"fdsafdsa","uuid":"2b70e83a-8a3f-11e4-9716-235107bcadb1","username":"fdsafdsa"},
         // "verb":"post","content":"fdsafdsa"}'
@@ -432,17 +448,64 @@ public class GroupResourceIT extends AbstractRestIT {
         activity.put("actor", payload);
         activity.put("verb", "post");
         activity.put("content", "content");
-        Entity activityResponse = this.app().collection("users").post(activity);
+        Entity activityResponse = this.app().collection("groups").uniqueID(groupName).connection("activities").post(activity);
         assertEquals(activityResponse.get("content"), "content");
-        assertEquals(activityResponse, activity);
         this.refreshIndex();
 
-        //7. make sure the activity appears in the feed of user 1
+        //9. delete the default role
+        this.app().collection("role").uniqueID("Default").delete();
+
+        //10. add permissions to group: {"permission":"get,post,put,delete:/groups/${group}/**"}'
+        payload = new Entity();
+        String permission = "get,post,put,delete:/groups/${group}/**";
+        payload.put("permission",permission);
+        Entity permissionResponse = this.app().collection("groups").entity(group).connection("permissions").post(payload);
+        assertEquals(permissionResponse.get("data"), permission);
+
+        //11. log user1 in, should then be using the app user's token not the admin token
+        this.getAppUserToken(user1Username, password);
 
 
-        //8. make sure the activity appears in the feed of user 2
+        //TODO: next failing currently because permissions seem to be borked in the stack
 
+        //12. make sure the activity appears in the feed of user 1
+        Collection user1ActivityResponse = this.app().collection("groups").entity(group).connection("activities").get();
+        boolean found = false;
+        while (user1ActivityResponse.hasNext()) {
+            Entity tempActivity = user1ActivityResponse.next();
+            if (tempActivity.get("type").equals("activity") && tempActivity.get("content").equals("content")) {
+                found = true;
+            }
+        }
+        assertTrue(found);
 
+        //13. log user2 in, should then be using the app user's token not the admin token
+        this.getAppUserToken(user2Username, password);
+
+        //14. make sure the activity appears in the feed of user 2
+        Collection user2ActivityResponse = this.app().collection("groups").entity(group).connection("activities").get();
+        found = false;
+        while (user2ActivityResponse.hasNext()) {
+            Entity tempActivity = user2ActivityResponse.next();
+            if (tempActivity.get("type").equals("activity") && tempActivity.get("content").equals("content")) {
+                found = true;
+            }
+        }
+        assertTrue(found);
+
+        //15. log user3 in, should then be using the app user's token not the admin token
+        this.getAppUserToken(user3Username, password);
+
+        //16. make sure the activity does not appear in the feed of user 3, since they are not part of the group
+        Collection user3ActivityResponse = this.app().collection("groups").entity(group).connection("activities").get();
+        found = false;
+        while (user3ActivityResponse.hasNext()) {
+            Entity tempActivity = user3ActivityResponse.next();
+            if (tempActivity.get("type").equals("activity") && tempActivity.get("content").equals("content")) {
+                found = true;
+            }
+        }
+        assertFalse(found);
 
 
     }
