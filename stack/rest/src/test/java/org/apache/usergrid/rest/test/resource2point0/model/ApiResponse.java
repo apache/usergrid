@@ -185,6 +185,10 @@ public class ApiResponse {
         this.entities = entities;
     }
 
+    public List<String> list(){
+        return (List<String>)getProperties().get("list");
+    }
+
 
     public int getEntityCount() {
         if ( entities == null ) {

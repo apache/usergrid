@@ -27,6 +27,7 @@ import javax.ws.rs.core.MediaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -47,12 +48,14 @@ import static org.apache.usergrid.utils.MapUtils.hashMap;
 @Concurrent()
 public class AssetResourceIT extends AbstractRestIT {
 
-    private final String access_token;
+    private String access_token;
     private Logger LOG = LoggerFactory.getLogger( AssetResourceIT.class );
     UserRepo userRepo;
-    public AssetResourceIT(){
+
+    @Before
+    public void setup(){
         userRepo = new UserRepo(this.clientSetup);
-         access_token = this.getAdminToken().getAccessToken();
+        access_token = this.getAdminToken().getAccessToken();
     }
 
 

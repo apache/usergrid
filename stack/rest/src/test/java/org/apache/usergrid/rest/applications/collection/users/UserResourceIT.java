@@ -31,8 +31,8 @@ import org.apache.usergrid.rest.test.resource.CollectionResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.CollectionEndpoint;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.EntityEndpoint;
 import org.apache.usergrid.rest.test.resource2point0.model.*;
-import org.aspectj.lang.annotation.Before;
 import org.jclouds.rest.annotations.Api;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -71,36 +71,31 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
     CollectionEndpoint usersResource;
     CollectionEndpoint userResource;
 
-    @Before("Before users")
+    @Before
     public void setup(){
         userRepo = new UserRepo(clientSetup);
         userRepo.load();
         usersResource = this.app().collection("users");
-        usersResource = this.app().collection("user");
+        userResource = this.app().collection("user");
 
         clientSetup.refreshIndex();
     }
 
     @Test
     public void usernameQuery() throws IOException {
-
-
-        String ql = "username = 'unq_user*'";
+        String ql = "username = 'user*'";
         Collection collection =usersResource.get(new QueryParameters().setQuery(ql));
-        assertEquals(userRepo.getByUserName("unq_user1"), getIdFromSearchResults(collection, 0));
-        assertEquals(userRepo.getByUserName("unq_user2"), getIdFromSearchResults(collection, 1));
-        assertEquals(userRepo.getByUserName("unq_user3"), getIdFromSearchResults(collection, 2));
+        assertEquals(userRepo.getByUserName("user1"), getIdFromSearchResults(collection, 0));
+        assertEquals(userRepo.getByUserName("user2"), getIdFromSearchResults(collection, 1));
+        assertEquals(userRepo.getByUserName("user3"), getIdFromSearchResults(collection, 2));
     }
 
 
     @Test
     public void nameQuery() throws IOException {
-
         String ql = "name = 'John*'";
 
         Collection collection =usersResource.get(new QueryParameters().setQuery(ql));
-
-
         assertEquals( userRepo.getByUserName( "user2" ), getIdFromSearchResults( collection, 0 ) );
         assertEquals( userRepo.getByUserName( "user3" ), getIdFromSearchResults( collection, 1 ) );
     }
@@ -108,52 +103,19 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
 
     @Test
     public void nameQueryByUUIDs() throws Exception {
-        this.refreshIndex();
         String ql = "select uuid name = 'John*'";
-        this.app().collection("users").get(new QueryParameters().setQuery(ql));
+        Collection response = this.app().collection("users").get(new QueryParameters().setQuery(ql));
+        assertNotNull(response.getResponse().list());
     }
 
 
     @Test
     public void nameFullTextQuery() throws IOException {
-
-
         String ql = "name contains 'Smith' order by name ";
-
         Collection collection =usersResource.get(new QueryParameters().setQuery(ql));
-
         assertEquals( userRepo.getByUserName( "user1" ), getIdFromSearchResults( collection, 0 ) );
         assertEquals( userRepo.getByUserName( "user2" ), getIdFromSearchResults( collection, 1 ) );
         assertEquals( userRepo.getByUserName( "user3" ), getIdFromSearchResults( collection, 2 ) );
-    }
-
-
-    /**
-     * Tests that when a full text index is run on a field that isn't full text indexed an error is thrown
-     */
-    @Ignore("No longer relevant because all text fields are full-text indexed with Core Persistence")
-    @Test(expected = UniformInterfaceException.class)
-    public void fullTextQueryNotFullTextIndexed() throws IOException {
-
-        String ql = "username contains 'user' ";
-
-        Collection collection =usersResource.get(new QueryParameters().setQuery(ql));
-
-    }
-
-
-    /**
-     * Tests that when a full text index is run on a field that isn't full text indexed an error is thrown
-     */
-    @Ignore("This test is being ignored as users ")
-    @Test(expected = UniformInterfaceException.class)
-    public void fullQueryNotIndexed() throws IOException {
-
-
-        String ql = "picture = 'foo' ";
-
-        Collection collection =usersResource.get(new QueryParameters().setQuery(ql));
-
     }
 
 
@@ -1111,8 +1073,8 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
         {
             final Collection response = usersResource.get(new QueryParameters().setQuery("select uuid"));
 
-            assertNotNull( "List must exist", response.getResponse().getEntities(  ) );
-            assertTrue("Must be some list items", response.getResponse().getEntities(  ).size()>0);
+            assertNotNull( "List must exist", response.getResponse().list(  ) );
+            assertTrue("Must be some list items", response.getResponse().list(  ).size()>0);
         }
     }
 

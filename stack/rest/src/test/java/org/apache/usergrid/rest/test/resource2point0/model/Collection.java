@@ -55,7 +55,7 @@ public class Collection implements Iterable<Entity>, Iterator<Entity> {
     public Collection(ApiResponse response) {
         this.response = response;
         this.cursor = response.getCursor();
-        this.entities = response.getEntities().iterator();
+        this.entities = response.getEntities()!=null?  response.getEntities().iterator():null;
     }
 
 
