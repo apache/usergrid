@@ -18,6 +18,7 @@ package org.apache.usergrid.rest.test.resource2point0.endpoints;
 
 
 import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
+import org.apache.usergrid.rest.test.resource2point0.model.Token;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 import com.sun.jersey.api.client.WebResource;
@@ -33,7 +34,7 @@ import java.util.UUID;
  * Base class that is extended by named endpoints.
  * The NamedResource stores the parent of the class, the context in which the class operates and then Name of this resource
  */
-public class NamedResource implements UrlResource {
+public abstract class NamedResource implements UrlResource {
 
     protected final String name;
     protected final ClientContext context;
@@ -59,10 +60,13 @@ public class NamedResource implements UrlResource {
     public WebResource getResource() {
         return getResource(false);
     }
-
     public WebResource getResource(boolean useToken) {
+        return getResource(useToken,null);
+    }
+    public WebResource getResource(boolean useToken,Token token) {
         WebResource resource = parent.getResource().path( getPath() );
-        return useToken ? resource.queryParam("access_token",this.context.getToken().getAccessToken()) :  parent.getResource().path( getPath() );
+        token = token !=null ? token : this.context.getToken();
+        return  useToken    ? resource.queryParam("access_token",token.getAccessToken()) :  parent.getResource().path( getPath() );
     }
 
     protected WebResource addParametersToResource(WebResource resource, final QueryParameters parameters){

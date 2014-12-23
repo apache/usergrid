@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.jersey.api.client.WebResource;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
+import org.apache.usergrid.rest.test.resource2point0.model.Token;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 import javax.ws.rs.core.MediaType;
@@ -56,7 +57,14 @@ public class EntityEndpoint extends NamedResource {
     }
 
     public Entity get(final boolean useToken){
-        WebResource resource  = getResource(useToken);
+        return get(useToken,null);
+    }
+    public Entity get(final Token token){
+        return get(true,token);
+    }
+
+    public Entity get(final boolean useToken, final Token token){
+        WebResource resource  = getResource(useToken,token);
         ApiResponse response = resource.type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
                 .get(ApiResponse.class);
 
@@ -140,10 +148,15 @@ public class EntityEndpoint extends NamedResource {
     public CollectionEndpoint connection(final String identifier) {
         return new CollectionEndpoint(identifier, context, this);
     }
+    public CollectionEndpoint collection(final String identifier) {
+        return new CollectionEndpoint(identifier, context, this);
+    }
     public CollectionEndpoint connection(){
         return new CollectionEndpoint("", context, this);
     }
 
 
-
+    public CollectionEndpoint activities() {
+        return connection("activities");
+    }
 }

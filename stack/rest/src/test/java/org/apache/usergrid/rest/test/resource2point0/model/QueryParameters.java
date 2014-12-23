@@ -86,4 +86,8 @@ public class QueryParameters {
     }
 
 
+    public QueryParameters addParam(String key, String value) {
+        formPostData.put(key,value);
+        return this;
+    }
 }

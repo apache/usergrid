@@ -20,6 +20,7 @@ package org.apache.usergrid.rest.test.resource2point0.endpoints;
 import org.apache.usergrid.rest.test.resource.app.Collection;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Application;
+import org.apache.usergrid.rest.test.resource2point0.model.Token;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 import javax.ws.rs.core.MediaType;
@@ -38,8 +39,13 @@ public class ApplicationsResource extends CollectionEndpoint {
     }
 
 
+
     public CollectionEndpoint collection(String name) {
         return new CollectionEndpoint(name,context,this);
+    }
+
+    public TokenResource token(){
+        return new TokenResource(context,this);
     }
 
 }
