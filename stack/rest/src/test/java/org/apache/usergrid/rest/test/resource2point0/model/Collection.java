@@ -37,6 +37,9 @@ public class Collection implements Iterable<Entity>, Iterator<Entity> {
 
     private ApiResponse response;
 
+    //TODO: implement way to have the collection store its own name?
+    private String name;
+
 
     /**
      * Collection usersCollection =  app.collection("users").get();
