@@ -24,8 +24,9 @@ import java.util.Arrays;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.ApplicationsResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.OrganizationResource;
-import org.apache.usergrid.rest.test.resource2point0.model.Token;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
+import org.apache.usergrid.rest.test.resource2point0.model.Entity;
+import org.apache.usergrid.rest.test.resource2point0.model.Token;
 import org.junit.ClassRule;
 import org.junit.Rule;
 
@@ -123,12 +124,6 @@ public class AbstractRestIT extends JerseyTest {
         return this.clientSetup.getRestClient().token().post(new Token(username,password));
     }
 
-    protected Token getAdminToken(){
-        return this.clientSetup.getRestClient().management().token().post(
-                new Token(this.clientSetup.getUsername(),this.clientSetup.getUsername())
-        );
-    }
-
     public void refreshIndex() {
         //TODO: add error checking and logging
         clientSetup.refreshIndex();
@@ -140,5 +135,18 @@ public class AbstractRestIT extends JerseyTest {
         JsonNode errorJson = uie.getResponse().getEntity( JsonNode.class );
         assertEquals( expectedErrorMessage, errorJson.get( "error" ).asText() );
 
+    }
+
+
+    protected Token getAdminToken(String username, String password){
+        return this.clientSetup.getRestClient().management().token().post(
+                new Token(username, password)
+        );
+    }
+
+    protected Token getAdminToken(){
+        return this.clientSetup.getRestClient().management().token().post(
+                new Token(this.clientSetup.getUsername(),this.clientSetup.getUsername())
+        );
     }
 }

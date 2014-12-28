@@ -42,6 +42,7 @@ public class OrganizationResource extends NamedResource {
         return new ApplicationsResource( app, context ,this );
     }
 
+
     public void post(Map<String,String> organization) {
 
         getResource().type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
