@@ -429,7 +429,7 @@ public class GroupResourceIT extends AbstractRestIT {
         //7. get all the users in the groups
         this.refreshIndex();
         Collection usersInGroup = this.app().collection("groups").uniqueID(groupName).connection("users").get();
-        assertEquals(usersInGroup.response.getEntityCount(), 2);
+        assertEquals(usersInGroup.getResponse().getEntityCount(), 2);
 
 
         //8. post an activity to the group

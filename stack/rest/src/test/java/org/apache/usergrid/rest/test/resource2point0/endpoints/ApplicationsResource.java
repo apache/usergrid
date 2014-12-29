@@ -38,11 +38,11 @@ public class ApplicationsResource extends CollectionEndpoint {
         super( name, context, parent );
     }
 
-
-
     public CollectionEndpoint collection(String name) {
         return new CollectionEndpoint(name,context,this);
     }
+
+    public TokenResource token(){return new TokenResource(context,this);}
 
 
 }
