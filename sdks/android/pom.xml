@@ -25,19 +25,19 @@
 	</properties>
 
 	<parent>
-		<groupId>org.sonatype.oss</groupId>
-		<artifactId>oss-parent</artifactId>
-		<version>7</version>
+		<groupId>org.apache.usergrid</groupId>
+		<artifactId>usergrid</artifactId>
+		<version>1.0.0</version>
+		<relativePath>../../stack</relativePath>
 	</parent>
 	
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.apache.usergrid</groupId>
 	<artifactId>usergrid-android</artifactId>
 	<version>0.0.8</version>
 	
 	<packaging>jar</packaging>
 	<description>A simple java client for usergrid</description>
-	<url>https://github.com/apigee/usergrid-stack-internal</url>
+	<url>http://usergrid.incubator.apache.org</url>
 	
 	<licenses>
 		<license>
@@ -61,12 +61,6 @@
 			<name>Scott Ganyo</name>
 		</developer>
 	</developers>
-	<scm>
-		<connection>scm:git:git@github.com:apigee/usergrid-android-sdk.git</connection>
-		<developerConnection>scm:git:git@github.com:apigee/usergrid-android-sdk.git</developerConnection>
-		<url>git@github.com:apigee/usergrid-android-sdk.git</url>
-	</scm>
-
     <build>
         <plugins>
             <plugin>
@@ -109,12 +103,4 @@
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>
-
-    <repositories>
-        <repository>
-            <id>local-dependencies</id>
-            <name>local-depedendencies</name>
-            <url>file://${project.basedir}/m2/repository</url>
-        </repository>
-    </repositories>
 </project>
