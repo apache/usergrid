@@ -22,9 +22,19 @@ var Usergrid = Usergrid || {};
 
 Usergrid.showNotifcations = true;
 
+/* Single tomcat (all-in-one) installations. 
+   Try and use the same hostname and port for the APIURL - Assumes that Portal and Usergrid
+   are deployed on the same tomcat instance
+*/
+var urlNPort = location.protocol+'//'+location.hostname+(location.port ? ':'+location.port: '') + "/";
 
-// used only if hostname does not match a real server name
-Usergrid.overrideUrl = 'http://localhost:8080/';
+if(urlNPort.indexOf("http") != -1) {
+    Usergrid.overrideUrl = urlNPort
+}
+else {
+    // used only if hostname does not match a real server name
+    Usergrid.overrideUrl = 'http://localhost:8080/';
+}
 
 Usergrid.options = {
   client:{
