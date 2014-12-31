@@ -28,6 +28,7 @@ import java.util.UUID;
 import javax.ws.rs.core.MediaType;
 
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +43,8 @@ import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.rest.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource.Response;
+import org.apache.usergrid.rest.TestContextSetup;
 import org.apache.usergrid.rest.applications.utils.UserRepo;
 import org.apache.usergrid.utils.UUIDUtils;
 
@@ -68,6 +71,8 @@ public class UserResourceIT extends AbstractRestIT {
 
     private static Logger log = LoggerFactory.getLogger( UserResourceIT.class );
 
+    @Rule
+    public TestContextSetup context = new TestContextSetup( this );
 
     @Test
     public void usernameQuery() throws IOException {
@@ -78,8 +83,8 @@ public class UserResourceIT extends AbstractRestIT {
         String ql = "username = 'unq_user*'";
 
         JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/users" ).queryParam( "ql", ql )
-                                  .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                                  .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
+                                                   .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
+                                                   .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
 
         assertEquals( UserRepo.INSTANCE.getByUserName( "unq_user1" ), getIdFromSearchResults( node, 0 ) );
         assertEquals( UserRepo.INSTANCE.getByUserName( "unq_user2" ), getIdFromSearchResults( node, 1 ) );

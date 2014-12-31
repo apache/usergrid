@@ -24,12 +24,16 @@ import java.util.UUID;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+
 import com.sun.jersey.api.client.WebResource;
 import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
+
+import org.apache.usergrid.rest.test.resource.app.ResponseEntityIterator;
 
 
 /** @author tnine */
@@ -97,7 +101,15 @@ public abstract class ValueResource extends NamedResource {
     //TODO: fix error reporting
     protected JsonNode postInternal( Map<String, ?> entity ) throws IOException {
 
-        return mapper.readTree( jsonMedia( withParams( withToken( resource() ) ) ).post( String.class, entity ));
+        return mapper.readTree( jsonMedia( withParams( withToken( resource() ) ) ).post( String.class, entity ) );
+    }
+
+    //TODO: eventually we need to merge this and make it the offical postInternal. this was not done to keep tests compiling.
+    //TODO: need to change this to a ResponseEntityIterator so that it can be used in conjunction with With Clauses
+    protected Response postInternalResponse( Map<String, ?> entity ) throws IOException {
+
+        return mapper.readValue( jsonMedia( withParams( withToken( resource() ) ) ).post( String.class, entity ),
+                Response.class );
     }
 
 
@@ -127,6 +139,23 @@ public abstract class ValueResource extends NamedResource {
             return getInternal();
         } catch (IOException ex) {
             throw new RuntimeException("Cannot parse JSON data", ex);
+
+        }
+    }
+    //TODO: I think this class needs to return a ApiResponseCollection
+
+    public Response getInternalResponse() {
+        try {
+//TODO: I believe this code needs to be added here so that we can use the with Keywords and still get the appropriate  apiResponsecollection Back
+            //TODO: the problem with changing the code here is we use this class in the ResponseEntityIterator to get the Response. We can't change it here or there will be a circular dependency in classes
+            //TODO: which means we would have to make yet another method to detail how we would get the response. This is probably not the ideal way to go about using the response.
+//            CollectionResource collectionResource = new CollectionResource( this.getName(),this.getParent() );
+//            ResponseEntityIterator collectionRevisedApiResponse = new ResponseEntityIterator(collectionResource,this.getInternalResponse() );
+//            return collectionRevisedApiResponse;
+            return getInternalApiResponse();
+        }
+        catch ( IOException e ) {
+            throw new RuntimeException("Cannot parse JSON data", e);
         }
     }
 
@@ -216,6 +245,29 @@ public abstract class ValueResource extends NamedResource {
         String json = jsonMedia( resource ).get( String.class );
         //logger.debug(json);
         return mapper.readTree( json );
+    }
+//TODO: find better name / design paradigm for the methods that call upon this class
+    protected Response getInternalApiResponse() throws IOException {
+        WebResource resource = withParams( withToken( resource() ) );
+
+
+        if ( query != null ) {
+            resource = resource.queryParam( "ql", query );
+        }
+
+        if ( cursor != null ) {
+            resource = resource.queryParam( "cursor", cursor );
+        }
+
+        if ( start != null ) {
+            resource = resource.queryParam( "start", start.toString() );
+        }
+
+        if ( limit != null ) {
+            resource = resource.queryParam( "limit", limit.toString() );
+        }
+
+        return  jsonMedia( resource ).get( Response.class );
     }
 
 

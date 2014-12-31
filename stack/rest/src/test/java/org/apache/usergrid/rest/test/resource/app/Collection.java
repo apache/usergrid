@@ -19,6 +19,9 @@ package org.apache.usergrid.rest.test.resource.app;
 
 import java.io.IOException;
 import java.util.Map;
+
+import org.apache.usergrid.rest.test.resource.Response;
+import org.apache.usergrid.rest.test.resource.CollectionResource;
 import org.apache.usergrid.rest.test.resource.NamedResource;
 import org.apache.usergrid.rest.test.resource.SetResource;
 import org.apache.usergrid.utils.MapUtils;
@@ -29,6 +32,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 //TODO: G make sure this no longer returns JsonNodes and instead returns EntityObjects.
 //TODO: Add in full rest suite of GET,PUT,DELETE methods. Delete will be mostly universal.
 public class Collection extends SetResource {
+
 
     public Collection( String collectionName, NamedResource parent ) {
         super( collectionName, parent );
@@ -65,7 +69,8 @@ public class Collection extends SetResource {
     }
 
     /**
-     * POST an entity with only a Map
+     * POST an entity with only a Map. Talk to rod about this. I think the ApiResponse should only handle responses back
+     * that were called but maybe
      * @param entityData
      * @return JsonNode
      * @throws IOException
@@ -73,8 +78,29 @@ public class Collection extends SetResource {
     public JsonNode post(Map entityData) throws IOException{
 
         JsonNode response = this.postInternal( entityData );
-
         return getEntity( response, 0 );
+    }
+
+    public ResponseEntityIterator postResponse(Map entityData) throws IOException{
+
+        CollectionResource collectionResource = new CollectionResource( this.getName(),this.getParent() );
+        Response response = this.postInternalResponse( entityData );
+        ResponseEntityIterator collectionRevisedApiResponse = new ResponseEntityIterator(collectionResource,response );
+
+        return collectionRevisedApiResponse;
+    }
+
+
+    /**
+     * Creates a ApiResponseCollection which takes in an api response returns it as a collection of the type handed in
+     * @return
+     * @throws IOException
+     */
+    public ResponseEntityIterator getResponse() throws IOException  {
+        CollectionResource collectionResource = new CollectionResource( this.getName(),this.getParent() );
+        ResponseEntityIterator
+                collectionRevisedApiResponse = new ResponseEntityIterator(collectionResource,this.getInternalResponse() );
+        return collectionRevisedApiResponse;
     }
 
 }

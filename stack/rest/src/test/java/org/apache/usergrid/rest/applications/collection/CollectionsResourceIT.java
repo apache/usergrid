@@ -25,20 +25,27 @@ import javax.ws.rs.core.MediaType;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.rest.AbstractRestIT;
+import org.apache.usergrid.rest.TestContextSetup;
+import org.apache.usergrid.rest.test.resource.Response;
+import org.apache.usergrid.rest.test.resource.app.ResponseEntityIterator;
 import org.apache.usergrid.utils.UUIDUtils;
+import org.apache.usergrid.rest.test.resource.app.model.Entity;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
 import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
+import static org.junit.Assert.fail;
 
 
 /**
@@ -50,6 +57,8 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
     private static Logger log = LoggerFactory.getLogger( CollectionsResourceIT.class );
 
+    @Rule
+    public TestContextSetup context = new TestContextSetup( this );
 
     @Test
     public void postToBadPath() throws IOException {
@@ -66,16 +75,32 @@ public class CollectionsResourceIT extends AbstractRestIT {
     }
 
 
+    /**
+     * Posts an empty payload to an empty collection and expects nothing back
+     * @throws IOException
+     */
     @Test
     public void postToEmptyCollection() throws IOException {
         Map<String, String> payload = new HashMap<String, String>();
 
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/cities" ).queryParam( "access_token", access_token )
-                        .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                        .post( String.class, payload ));
-        assertNull( getEntity( node, 0 ) );
-        assertNull( node.get( "count" ) );
+        ResponseEntityIterator node = context.collection( "cities" ).postResponse( payload );
+
+        assertFalse( node.hasNext() );
+
     }
+
+    @Test
+    public void postToEmptyCollectionApiResponse() throws IOException {
+        Map<String, String> payload = new HashMap<String, String>();
+
+        ResponseEntityIterator node = context.collection( "cities" ).postResponse( payload );
+        assertFalse( node.hasNext() );
+
+        ResponseEntityIterator collection = context.collection( "cities" ).getResponse();
+
+        assertEquals( ( Object ) 0, collection.getResponse().getCount() );
+    }
+
 
 
     /**
@@ -127,44 +152,48 @@ public class CollectionsResourceIT extends AbstractRestIT {
     }
 
 
+    /**
+     * Checks that we can post a string with spaces and get it back in the response.
+     * @throws IOException
+     */
     @Test
     public void stringWithSpaces() throws IOException {
+
+
+        String collectionName = "calendarlists";
         Map<String, String> payload = hashMap( "summaryOverview", "My Summary" ).map( "caltype", "personal" );
+        Entity entity = null;
 
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/calendarlists" )
-                .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
+        ResponseEntityIterator arc = context.collection( collectionName ).postResponse( payload );
+        //pattern to check if entity that was posted , was returned in the response
+        if(arc.hasNext()){
+            entity = arc.next();
+        }
+        else
+            fail( "No entities found from post" );
 
-
-        UUID id = getEntityId( node, 0 );
+        UUID id = entity.getUuid();
 
         //post a second entity
-
-
         payload = hashMap( "summaryOverview", "Your Summary" ).map( "caltype", "personal" );
 
-        node = mapper.readTree( resource().path( "/test-organization/test-app/calendarlists" ).queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                .post( String.class, payload ));
+        context.collection( "calendarlists" ).postResponse( payload );
 
-
-        refreshIndex("test-organization", "test-app");
+        context.refreshIndex();
 
         //query for the first entity
 
         String query = "summaryOverview = 'My Summary'";
 
-
-        JsonNode queryResponse = mapper.readTree( resource().path( "/test-organization/test-app/calendarlists" )
-                .queryParam( "access_token", access_token ).queryParam( "ql", query )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
+        //TODO: fix it so that queries and the other 'with' keywords can reutrn instances of iterable entities.Not just response.
+        Response queryResponse = context.collection( "calendarlists" ).withQuery( query ).getInternalResponse();
 
 
-        UUID returnedId = getEntityId( queryResponse, 0 );
+        UUID returnedId = queryResponse.getEntities().get( 0 ).getUuid();
 
         assertEquals( id, returnedId );
 
-        assertEquals( 1, queryResponse.get( "entities" ).size() );
+        assertEquals( 1, queryResponse.getEntities().size() );
     }
 
 

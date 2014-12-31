@@ -56,10 +56,7 @@ public class GroupsCollection extends CollectionResource {
 
         return getEntity( response, 0 );
     }
-
-
-
-
+    
     public Me me() {
         return new Me( this );
     }

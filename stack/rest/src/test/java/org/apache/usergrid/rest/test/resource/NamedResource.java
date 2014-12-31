@@ -127,7 +127,8 @@ public abstract class NamedResource {
         return resource;
     }
 
-
+//TODO: change get Entity to return generic type, then when called in specific CollectionResource classes ( i.e userscollection,rolesCollectgion,GroupsCollection)
+    //it would defin
     /**
      * Get the entity from the entity array in the response
      */
