@@ -10,6 +10,7 @@
 * [Ruby on Rails gem](https://github.com/apache/incubator-usergrid/tree/master/sdks/ruby-on-rails)
 * [PHP library](https://github.com/apache/incubator-usergrid/tree/master/sdks/php)
 * [Java library](https://github.com/apache/incubator-usergrid/tree/master/sdks/java)
+* [Perl module](https://github.com/apache/incubator-usergrid/tree/master/sdks/perl)
 
 ## Tools
 [ugc — the Command-line Client](https://github.com/apache/incubator-usergrid/tree/master/ugc#usergrid-command-line-ugc)
