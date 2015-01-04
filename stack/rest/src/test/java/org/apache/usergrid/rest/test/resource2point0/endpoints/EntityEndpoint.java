@@ -132,7 +132,6 @@ public class EntityEndpoint extends NamedResource {
         return new Entity(response);
     }
 
-
     /**
      *
      * app.collection("users").uniqueID("fred").connection("following).get();
@@ -145,8 +144,12 @@ public class EntityEndpoint extends NamedResource {
      * POST /users/fred/following/users/barney?token=<token>
      *
      */
-    public CollectionEndpoint connection(final String identifier) {
-        return new CollectionEndpoint(identifier, context, this);
+    public CollectionEndpoint connection(final String connection,final String collection) {
+        return new CollectionEndpoint(connection+"/"+collection, context, this);
+    }
+    public CollectionEndpoint connection(final String connection) {
+        return new CollectionEndpoint(connection, context, this);
+
     }
     public CollectionEndpoint collection(final String identifier) {
         return new CollectionEndpoint(identifier, context, this);
@@ -157,6 +160,6 @@ public class EntityEndpoint extends NamedResource {
 
 
     public CollectionEndpoint activities() {
-        return connection("activities");
+        return collection("activities");
     }
 }

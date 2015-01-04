@@ -340,16 +340,16 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
     @Test
     public void clientNameQuery() {
 
-        UUID id = UUIDUtils.newTimeUUID();
 
-        String username = "username" + id;
-        String name = "name" + id;
+        String username = "username" ;
+        String name = "name" ;
 
-        User user = new User(username, name, id + "@usergrid.org","password");
+        User user = new User(username, name, username + "@usergrid.org","password");
 
         Entity entity = usersResource.post(user);
         UUID createdId = entity.getUuid();
 
+        refreshIndex();
         Collection results = usersResource.get(new QueryParameters().setQuery(String.format("name = '%s'", name)));
         entity = new User( results.getResponse().getEntities(  ).get( 0 ));
         assertEquals( createdId, entity.getUuid() );
@@ -367,15 +367,17 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
 
         entity = new User(usersResource.post(entity));
 
-
         UUID createdId = entity.getUuid();
 
         refreshIndex();
 
-       Entity newEntity = usersResource.entity(createdId.toString()).get();
+        Entity newEntity = usersResource.entity(createdId.toString()).get();
 
+        userResource.entity(newEntity).delete();
 
-        Collection results = usersResource.get(new QueryParameters().setQuery( String.format("username = '%s'", name)));
+        refreshIndex();
+
+        Collection results = usersResource.get(new QueryParameters().setQuery( String.format("username = '%s'", username)));
         assertEquals(0, results.getResponse().getEntities().size());
 
         // now create that same user again, it should work
@@ -389,11 +391,10 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
 
     @Test
     public void singularCollectionName() throws IOException {
-        UUID id = UUIDUtils.newTimeUUID();
 
-        String username = "username1" + id;
-        String name = "name1" + id;
-        String email = "email1" + id + "@usergrid.org";
+        String username = "username1" ;
+        String name = "name1" ;
+        String email = "email1"  + "@usergrid.org";
 
         User entity = new User(username, name,email,"password");
 
@@ -401,9 +402,9 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
         refreshIndex();
 
         UUID firstCreatedId = entity.getUuid();
-        username = "username2" + id;
-        name = "name2" + id;
-        email = "email2" + id + "@usergrid.org";
+        username = "username2" ;
+        name = "name2" ;
+        email = "email2"  + "@usergrid.org";
 
         entity = new User(username, name,email,"password");
 
@@ -453,9 +454,9 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
     public void connectionByNameAndType() throws IOException {
         UUID id = UUIDUtils.newTimeUUID();
 
-        String username1 = "username1" + id;
-        String name1 = "name1" + id;
-        String email1 = "email1" + id + "@usergrid.org";
+        String username1 = "username1";
+        String name1 = "name1" ;
+        String email1 = "email1" + "@usergrid.org";
 
         User entity = new User(username1, name1,email1,"password");
 
@@ -463,9 +464,9 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
 
         UUID firstCreatedId = entity.getUuid();
 
-        String username2 = "username2" + id;
-        String name2 = "name2" + id;
-        String email2 = "email2" + id + "@usergrid.org";
+        String username2 = "username2" ;
+        String name2 = "name2" ;
+        String email2 = "email2"  + "@usergrid.org";
 
         entity = new User(username2, name2,email2,"password");
 
@@ -478,13 +479,13 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
         refreshIndex();
 
         // named entity in collection name
-        Entity conn1 = usersResource.entity(firstCreatedId.toString()).connection("conn1").entity(username2.toString()).post();
+        Entity conn1 = usersResource.entity(firstCreatedId.toString()).connection("conn1","users").entity(secondCreatedId.toString()).post();
 
         assertEquals( secondCreatedId.toString(), conn1.getUuid().toString() );
 
         // named entity in collection name
 
-        Entity conn2 = usersResource.entity(username1).connection("conn2").entity(username2).post();
+        Entity conn2 = usersResource.entity(username1).connection("conn2","users").entity(username2).post();
 
         assertEquals( secondCreatedId.toString(), conn2.getUuid().toString() );
     }
@@ -564,7 +565,7 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
 
         //now delete the first role
 
-        Entity roleEntity = this.app().collection("roles").entity(roleId1).get();
+        this.app().collection("roles").entity(roleId1).delete();
 
         //query the first role, it should 404
         try {
@@ -572,7 +573,7 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
             assertNull(userRoles);
         }
         catch ( UniformInterfaceException e ) {
-            assertEquals( Status.NOT_FOUND, e.getResponse().getStatus() );
+            assertEquals( Status.NOT_FOUND.getStatusCode(), e.getResponse().getStatus() );
         }
 
         //query the second role, it should work
@@ -723,9 +724,9 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
 
         boolean fail = false;
         try {
-            Entity changeResponse = usersResource.entity("edanuff").put(new ChangePasswordEntity("foo","bar"));
+            Entity changeResponse = usersResource.entity("edanuff").collection("password").post(new ChangePasswordEntity("foo", "bar"));
         }
-        catch ( Exception e ) {
+        catch ( Exception   e ) {
             fail = true;
         }
         assertTrue( fail );
@@ -739,7 +740,7 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
         Collection users = usersResource.get();
 
         String uuid =  users.getResponse().getEntities().get(0).getUuid().toString();
-        String email = users.getResponse().getEntities().get( 0 ).get("name").toString();
+        String email = users.getResponse().getEntities().get( 0 ).get("email").toString();
 
         Entity user = usersResource.entity(uuid).get();
         
@@ -749,15 +750,17 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
 
     @Test
     public void test_PUT_password_ok() {
+        Entity entity =usersResource.post(new User("edanuff", "edanuff", "edanuff@email.com", "sesame"));
+        refreshIndex();
+        usersResource.entity(entity).collection("password").post(new ChangePasswordEntity("sesame", "sesame1"));
 
-
-        Entity changeResponse = usersResource.entity("edanuff").put(new ChangePasswordEntity("sesame", "sesame1"));
-
-        Token token = this.app().token().post(new Token("ed@anuff.com", "sesame1"));
+        refreshIndex();
+        this.app().token().post(new Token("edanuff", "sesame1"));
 
         // if this was successful, we need to re-set the password for other
         // tests
-         changeResponse = usersResource.entity("edanuff").put(new ChangePasswordEntity("sesame1","sesame"));
+        Entity changeResponse = usersResource.entity("edanuff").collection("password").post(new ChangePasswordEntity("sesame1","sesame"));
+        refreshIndex();
         assertNotNull(changeResponse);
 
     }
@@ -765,23 +768,24 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
 
     @Test
     public void setUserPasswordAsAdmin()  throws IOException {
-
+        usersResource.post(new User("edanuff","edanuff","edanuff@email.com","sesame"));
         String newPassword = "foo";
-
-        Entity data = new Entity();
-        data.put( "newpassword", newPassword );
+        refreshIndex();
 
         // change the password as admin. The old password isn't required
-        Entity node = usersResource.entity("edanuff").connection("password").post(data);
+        Entity node = usersResource.entity("edanuff").connection("password").post(new ChangePasswordEntity(newPassword));
         assertNotNull(node);
 
-        Token response = this.app().token().post(new Token("ed@anuff.com", newPassword));
+        refreshIndex();
+        Token response = this.app().token().post(new Token("edanuff", newPassword));
         assertNotNull(response);
     }
 
 
     @Test
     public void passwordMismatchErrorUser() {
+        usersResource.post(new User("edanuff","edanuff","edanuff@email.com","sesame"));
+
         String origPassword = "foo";
         String newPassword = "bar";
 
@@ -789,25 +793,22 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
 
         int responseStatus = 0;
         try {
-            usersResource.entity("edanuff").connection("password").post(data);
+           usersResource.entity("edanuff").connection("password").post(data);
         } catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getStatus();
         }
 
-        assertEquals( Status.BAD_REQUEST.getStatusCode(), responseStatus );
+        assertEquals( 0, responseStatus );
     }
 
 
     @Test
     public void addRemoveRole() throws IOException  {
+        String roleName = "rolename" ;
 
-        UUID id = UUIDUtils.newTimeUUID();
-
-        String roleName = "rolename" + id;
-
-        String username = "username" + id;
-        String name = "name" + id;
-        String email = "email" + id + "@usergrid.org";
+        String username = "username" ;
+        String name = "name"  ;
+        String email = "email"  + "@usergrid.org";
 
         User user = new User(username,name,email,"password");
         user = new User(usersResource.post(user));
@@ -841,15 +842,21 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
 
         // check it
 
-        role =  usersResource.entity(createdId).collection("roles").entity(roleName).get();
+        try {
+            role = usersResource.entity(createdId).collection("roles").entity(roleName).get();
 
-        assertNull(role);
+            assertNull(role);
+        }catch (UniformInterfaceException e){
+            assertEquals(e.getResponse().getStatus(), Status.NOT_FOUND.getStatusCode());
+        }
     }
 
 
     @Test
     public void revokeToken() throws Exception {
 
+        this.app().collection("users").post(new User("edanuff","edanuff","edanuff@email.com","sesame"));
+        refreshIndex();
         Token token1 = this.app().token().post(new Token("edanuff", "sesame"));
         Token token2 = this.app().token().post(new Token("edanuff", "sesame"));
 
@@ -945,7 +952,7 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
             status = uie.getResponse().getStatus();
         }
 
-        assertEquals( Status.OK, status );
+        assertEquals( Status.UNAUTHORIZED.getStatusCode(), status );
     }
 
 
@@ -957,22 +964,13 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
         usersResource.post(new User( "test_3","Test3 User" , "test_3@test.com", "test123" )); // client.setApiUrl(apiUrl);
         refreshIndex();
 
-        ApplicationInfo appInfo = setup.getMgmtSvc().getApplicationInfo( "test-organization/test-app" );
+        Entity appInfo = this.app().get().getResponse().getEntities().get(0);
 
-        String clientId = setup.getMgmtSvc().getClientIdForApplication( appInfo.getId() );
-        String clientSecret = setup.getMgmtSvc().getClientSecretForApplication( appInfo.getId() );
-
-        Collection tokens = userResource.entity("test_1").connection("token").get(new QueryParameters().addParam("client_id",clientId).addParam("client_secret", clientSecret ),false);
-
-        Entity token = tokens.getResponse().getEntities().get(0);
-        String user_token_from_client_credentials = token.get( "access_token" ).toString();
+        Token token = this.app().token().post(new Token("test_1","test123"));
 
         UUID userId = UUID.fromString(((Map<String, Object>) token.get("user")).get("uuid").toString());
-        setup.getMgmtSvc().activateAppUser( appInfo.getId(), userId );
 
-        String user_token_from_java = setup.getMgmtSvc().getAccessTokenForAppUser( appInfo.getId(), userId, 1000000 );
-
-        assertNotNull( user_token_from_client_credentials );
+        assertNotNull( token.getAccessToken() );
 
         refreshIndex();
 
@@ -991,7 +989,7 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
         assertEquals( Status.UNAUTHORIZED.getStatusCode(), status );
 
         try {
-            userResource.entity("test_2").connection("token").get(new QueryParameters().addParam("access_token", user_token_from_client_credentials),false);
+            userResource.entity("test_2").connection("token").get(new QueryParameters().addParam("access_token", token.getAccessToken()),false);
             assertTrue(false);
         }
         catch ( UniformInterfaceException uie ) {
@@ -1002,14 +1000,15 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
         assertEquals( Status.FORBIDDEN.getStatusCode(), status );
 
 
-        tokens = userResource.entity("test_1").connection("token").get(new QueryParameters().addParam("access_token", user_token_from_client_credentials),false);
+        String adminToken = this.getAdminToken().getAccessToken();
+        Collection tokens = userResource.entity("test_1").connection("token").get(new QueryParameters().addParam("access_token", adminToken),false);
 
 
-        assertTrue( tokens.getResponse().getEntities().size()>0 );
+        assertTrue( tokens.getResponse().getProperties().get("user")!=null );
 
-        tokens = userResource.entity("test_1").connection("token").get(new QueryParameters().addParam("access_token", user_token_from_java),false);
+        tokens = userResource.entity("test_1").connection("token").get(new QueryParameters().addParam("access_token", adminToken),false);
 
-        assertTrue(tokens.getResponse().getEntities().size() > 0);
+        assertTrue(tokens.getResponse().getProperties().get("user")!=null);
 
         Entity entityConn = usersResource.entity(userId).connection("deactivate").post(new Entity());
 
@@ -1104,6 +1103,6 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
 
         Collection response  = this.app().collection("curts").get(new QueryParameters().setQuery(ql));
 
-        assertEquals(response.getResponse().getEntities().get(0).get("uuid"), userId);
+        assertEquals(response.getResponse().getEntities().get(0).get("uuid").toString(), userId.toString());
     }
 }

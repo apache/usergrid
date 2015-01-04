@@ -184,7 +184,9 @@ public class CollectionEndpoint extends NamedResource {
     }
 
     public ApiResponse post(List<Entity> entityList){
-        throw new RuntimeException("not implemented");
+        ApiResponse response = getResource(true).type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
+                .post(ApiResponse.class,entityList);
+        return response;
     }
 
     /**

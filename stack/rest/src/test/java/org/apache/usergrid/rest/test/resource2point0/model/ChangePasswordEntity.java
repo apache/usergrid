@@ -24,7 +24,10 @@ package org.apache.usergrid.rest.test.resource2point0.model;
  * Provide guidance on change passwords
  */
 public class ChangePasswordEntity extends Entity {
+    public ChangePasswordEntity( String newPassword){
+        this.chainPut("newpassword", newPassword);
+    }
     public ChangePasswordEntity(String oldPassword, String newPassword){
-        this.chainPut("newpassword", oldPassword).chainPut("oldpassword", newPassword);
+        this.chainPut("oldpassword", oldPassword).chainPut("newpassword", newPassword);
     }
 }
