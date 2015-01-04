@@ -721,7 +721,9 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
 
     @Test
     public void test_PUT_password_fail() {
-
+        Entity entity =usersResource.post(new User("edanuff", "edanuff", "edanuff@email.com", "sesame"));
+        this.app().token().post(new Token("edanuff","sesame"));
+        refreshIndex();
         boolean fail = false;
         try {
             Entity changeResponse = usersResource.entity("edanuff").collection("password").post(new ChangePasswordEntity("foo", "bar"));
