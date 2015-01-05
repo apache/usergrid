@@ -32,6 +32,8 @@ import org.junit.runners.model.Statement;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.test.resource2point0.model.Organization;
 
+import javax.ws.rs.core.MediaType;
+
 
 /**
  * This class is used to setup the client rule that will setup the RestClient and create default applications.
@@ -100,6 +102,9 @@ public class ClientSetup implements TestRule {
 
     public String getAppName() {return appName;}
 
+    public void refreshIndex() {
+        this.restClient.refreshIndex(getOrganizationName(),getAppName());
+    }
 
     public RestClient getRestClient(){
         return restClient;

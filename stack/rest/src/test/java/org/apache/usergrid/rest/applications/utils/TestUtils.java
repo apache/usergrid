@@ -20,6 +20,8 @@ package org.apache.usergrid.rest.applications.utils;
 import java.util.UUID;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import org.apache.usergrid.rest.test.resource2point0.model.Collection;
+import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.junit.Ignore;
 import org.apache.usergrid.utils.UUIDUtils;
 
@@ -43,5 +45,22 @@ public class TestUtils {
         }
 
         return UUIDUtils.tryExtractUUID( entity.get( "uuid" ).asText() );
+    }
+
+    /** Get the uuid at the given index for the root node.  If it doesn't exist, null is returned */
+    public static UUID getIdFromSearchResults( Collection collection, int index ) {
+
+
+        if ( collection == null ) {
+            return null;
+        }
+
+        Entity entity = (Entity)collection.getResponse().getEntities().get(index);
+
+        if ( entity == null ) {
+            return null;
+        }
+
+        return UUIDUtils.tryExtractUUID( entity.get( "uuid" ).toString() );
     }
 }

@@ -28,6 +28,8 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 
+import javax.ws.rs.core.MediaType;
+
 
 /**
  * This REST client was made to be able to send calls to any backend system that accepts calls. To do this It needs to
@@ -90,7 +92,13 @@ public class RestClient implements UrlResource {
     public TokenResource token(){
         return new TokenResource(context,this);
     }
-
+    public void refreshIndex(String orgname, String appName) {
+        //TODO: add error checking and logging
+        this.getResource().path( "/refreshindex" )
+                .queryParam( "org_name", orgname )
+                .queryParam( "app_name",appName )
+                .accept( MediaType.APPLICATION_JSON ).post();
+    }
 
     //todo:fix this method for the client.
 //    public void loginAdminUser( final String username, final String password ) {

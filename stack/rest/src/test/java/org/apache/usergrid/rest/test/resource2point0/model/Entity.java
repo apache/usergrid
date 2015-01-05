@@ -55,9 +55,15 @@ public class Entity implements Serializable, Map<String,Object> {
     public Entity(ApiResponse response){
         this.response = response;
 
-        if(response.getEntities() !=null &&  response.getEntities().size()>=1){
+        if(response.getEntities() != null &&  response.getEntities().size()>=1){
             List<Entity>  entities =  response.getEntities();
             Map<String,Object> entity = entities.get(0);
+            this.putAll(entity);
+        }
+        else if (response.getData() != null){
+            ArrayList<String> data = (ArrayList <String>) response.getData();
+            Entity entity = new Entity();
+            entity.put("data", data.get(0));
             this.putAll(entity);
         }
     }
@@ -164,5 +170,14 @@ public class Entity implements Serializable, Map<String,Object> {
     @Override
     public Set<Entry<String, Object>> entrySet() {
         return getDynamicProperties().entrySet();
+    }
+
+    public UUID getUuid(){
+        return UUID.fromString((String) get("uuid"));
+    }
+
+    public Entity chainPut(final String key, final Object value){
+        put(key,value);
+        return this;
     }
 }
