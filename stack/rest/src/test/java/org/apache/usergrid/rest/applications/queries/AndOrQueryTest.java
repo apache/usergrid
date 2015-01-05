@@ -18,15 +18,23 @@ package org.apache.usergrid.rest.applications.queries;
 
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
+
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.RandomStringUtils;
+import org.apache.usergrid.rest.test.resource2point0.model.Collection;
+import org.apache.usergrid.rest.test.resource2point0.model.Entity;
+import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
+import org.apache.usergrid.utils.MapUtils;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import org.apache.usergrid.rest.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.TestContextSetup;
 import org.apache.usergrid.rest.test.resource.CustomCollection;
 
@@ -42,26 +50,21 @@ import static org.apache.usergrid.utils.MapUtils.hashMap;
  */
 public class AndOrQueryTest extends AbstractRestIT {
 
-    @Rule
-    public TestContextSetup context = new TestContextSetup( this );
-
-
     @Test //USERGRID-900
     public void queriesWithAndPastLimit() throws IOException {
 
-        CustomCollection activities = context.customCollection( "activities" );
 
         long created = 0;
-        Map actor = hashMap( "displayName", "Erin" );
-        Map props = new HashMap();
-
+      Entity actor = new Entity();
+      actor.put("displayName", "Erin");
+      Entity props = new Entity();
         props.put( "actor", actor );
         props.put( "verb", "go" );
         props.put( "content", "bragh" );
 
 
-        for ( int i = 0; i < 2000; i++ ) {
-            if ( i < 1000 ) {
+        for ( int i = 0; i < 20; i++ ) {
+            if ( i < 10 ) {
                 props.put( "madeup", false );
             }
             else {
@@ -69,136 +72,208 @@ public class AndOrQueryTest extends AbstractRestIT {
             }
 
             props.put( "ordinal", i );
-            JsonNode activity = activities.create( props );
+            Entity activity = this.app().collection("activities").post(props);
             if ( i == 0 ) {
-                created = activity.findValue( "created" ).longValue();
+                created = Long.parseLong(activity.get("created").toString());
             }
         }
 
-        this.refreshIndex( context.getAppUuid() );
+        this.refreshIndex();
 
         String errorQuery = "select * where created >= " + created + "AND madeup = true";
-        JsonNode incorrectNode = activities.withQuery( errorQuery ).get();
+      QueryParameters params= new QueryParameters();
+      params.setQuery(errorQuery);
+       Collection activities=this.app().collection("activities").get(params);
 
-        assertEquals( 10, incorrectNode.get( "entities" ).size() );
+        assertEquals( 10, activities.response.getEntityCount() );
     }
 
 
     @Test //USERGRID-1475
     public void displayFullQueriesInLimit() throws IOException {
 
-        CustomCollection activities = context.customCollection( "activities" );
+      int numValuesTested = 20;
+      Entity actor = new Entity();
+      actor.put("displayName", "Erin");
+      Entity props = new Entity();
+      props.put( "actor", actor );
+      props.put( "verb", "go" );
+      props.put( "content", "bragh" );
 
-        Map actor = hashMap( "displayName", "Erin" );
-        Map props = new HashMap();
-        props.put( "actor", actor );
-        props.put( "content", "bragh" );
 
-        for ( int i = 0; i < 20; i++ ) {
-
-            if ( i < 10 ) {
-                props.put( "verb", "go" );
-            }
-            else {
-                props.put( "verb", "stop" );
-            }
-
-            props.put( "ordinal", i );
-            JsonNode activity = activities.create( props );
+      for ( int i = 0; i < numValuesTested; i++ ) {
+        if ( i < numValuesTested/2 ) {
+          props.put( "verb", "go" );
+        }
+        else {
+          props.put( "verb", "stop" );
         }
 
-        this.refreshIndex( context.getAppUuid() );
+        props.put( "ordinal", i );
+        this.app().collection("activities").post(props);
+      }
+
+
+        this.refreshIndex();
 
         String query = "select * where not verb = 'go'";
-        JsonNode incorrectNode = activities.query( query, "limit", Integer.toString( 10 ) );
+      QueryParameters params= new QueryParameters();
+      params.setQuery(query);
+      Collection activities=this.app().collection("activities").get(params);
 
-        assertEquals( 10, incorrectNode.get( "entities" ).size() );
+      assertEquals( numValuesTested/2, activities.response.getEntityCount() );
+      List entities = activities.response.getEntities();
 
-        for ( int i = 0; i < 10; i++ ) {
-            assertEquals( 19 - i, incorrectNode.get( "entities" ).get( i ).get( "ordinal" ).intValue() );
-            assertEquals( "stop", incorrectNode.get( "entities" ).get( i ).get( "verb" ).textValue() );
+        for ( int i = 0; i < numValuesTested/2; i++ ) {
+            assertEquals(numValuesTested - i, Integer.parseInt(((LinkedHashMap<String, Object>) entities.get(i)).get("ordinal").toString()));
+            assertEquals( "stop", ((LinkedHashMap<String, Object>) entities.get(i)).get("verb").toString() );
         }
     }
-
+  
 
     @Test //USERGRID-1615
     public void queryReturnCount() throws Exception {
 
-        CustomCollection activities = context.customCollection( "activities" );
-
-        Map actor = hashMap( "displayName", "Erin" );
-        Map props = new HashMap();
 
         int numValuesTested = 20;
 
+      Entity actor = new Entity();
+      actor.put("displayName", "Erin");
+      Entity props = new Entity();
+      props.put( "actor", actor );
+      props.put( "verb", "go" );
+      props.put( "content", "bragh" );
+      Entity[] correctValues = new Entity[numValuesTested];
+      for(int i=0; i< numValuesTested; i++){
+        props.put("ordinal", i);
+        correctValues[i] = this.app().collection("activities").post(props);
+      }
+      this.refreshIndex();
 
-        props.put( "actor", actor );
-        props.put( "verb", "go" );
-        props.put( "content", "bragh" );
+      String inCorrectQuery = "select * where ordinal >= 10 order by ordinal asc";
+      QueryParameters params = new QueryParameters();
+      params.setQuery(inCorrectQuery);
+      Collection activities=this.app().collection("activities").get(params);
 
-        JsonNode[] correctValues = activities.createEntitiesWithOrdinal( props, numValuesTested );
+      assertEquals( 10, activities.response.getEntityCount() );
 
-        this.refreshIndex( context.getAppUuid() );
+//      verificationOfQueryResults( "activities", (Entity[])ArrayUtils.subarray(correctValues, 10, 19), false, inCorrectQuery );
+      List entities = activities.response.getEntities();
 
-        String inCorrectQuery = "select * where verb = 'go' and ordinal >= 10 ";
+      for ( int i = 0; i < 10; i++ ) {
+        assertEquals(10+i, Integer.parseInt(((LinkedHashMap<String, Object>) entities.get(i)).get("ordinal").toString()));
+//        assertEquals( "stop", ((LinkedHashMap<String, Object>) entities.get(i)).get("verb").toString() );
+      }
 
-        activities.verificationOfQueryResults( correctValues, true, inCorrectQuery );
     }
 
 
     @Test //Check to make sure that asc works
     public void queryCheckAsc() throws Exception {
+      int numOfEntities = 10;
+        String collectionName = "imagination" + RandomStringUtils.randomAlphabetic( 5 );
 
-        CustomCollection madeupStuff = context.customCollection(
-                "imagination" + RandomStringUtils.randomAlphabetic( 5 ) );
-        Map character = hashMap( "WhoHelpedYou", "Ruff" );
+      Entity[] correctValues = new Entity[numOfEntities];
+      Entity props = new Entity();
+      props.put( "WhoHelpedYou", "Ruff" );
+      for(int i=0; i< numOfEntities; i++){
+        props.put("ordinal", i);
+        correctValues[i] = this.app().collection(collectionName).post(props);
+      }
 
-        JsonNode[] correctValues;
-        correctValues = madeupStuff.createEntitiesWithOrdinal( character, 10 );
-
-        this.refreshIndex( context.getAppUuid() );
+        this.refreshIndex(  );
 
         String inquisitiveQuery = "select * where Ordinal gte 0 and Ordinal lte 10 "
                 + "or WhoHelpedYou eq 'Ruff' ORDER BY Ordinal asc";
 
-        int totalEntitiesContained = madeupStuff.verificationOfQueryResults( correctValues, false, inquisitiveQuery );
-
-        assertEquals( 10, totalEntitiesContained );
-    }
-
-
-    @Ignore("Test to make sure all 1000 exist with a regular query")
-    public void queryReturnCheck() throws Exception {
-        CustomCollection madeupStuff = context.customCollection( "imagination" );
-        Map character = hashMap( "WhoHelpedYou", "Ruff" );
-
-        int numOfEntities = 1000;
-
-        JsonNode[] correctValues = madeupStuff.createEntitiesWithOrdinal( character, numOfEntities );
-
-        this.refreshIndex( context.getAppUuid() );
-
-        String inquisitiveQuery = "select * where Ordinal >= 0 and Ordinal <= 2000 or WhoHelpedYou = 'Ruff'";
-
-        int totalEntitiesContained = madeupStuff.verificationOfQueryResults( correctValues, true, inquisitiveQuery );
+        int totalEntitiesContained = verificationOfQueryResults( collectionName, correctValues, false, inquisitiveQuery );
 
         assertEquals( numOfEntities, totalEntitiesContained );
     }
 
 
-    @Ignore
-    public void queryReturnCheckWithShortHand() throws IOException {
-        CustomCollection madeupStuff = context.customCollection( "imagination" );
-        Map character = hashMap( "WhoHelpedYou", "Ruff" );
+//    @Ignore("Test to make sure all 1000 exist with a regular query")
+    @Test
+    public void queryReturnCheck() throws Exception {
+        int numOfEntities = 20;
 
-        madeupStuff.createEntitiesWithOrdinal( character, 1000 );
+      String collectionName = "imagination" + RandomStringUtils.randomAlphabetic( 5 );
 
-        this.refreshIndex( context.getAppUuid() );
+      Entity[] correctValues = new Entity[numOfEntities];
+      Entity props = new Entity();
+      props.put( "WhoHelpedYou", "Ruff" );
+      for(int i=0; i< numOfEntities; i++){
+        props.put("ordinal", i);
+        correctValues[i] = this.app().collection(collectionName).post(props);
+      }
 
-        String inquisitiveQuery = "select * where Ordinal gte 0 and Ordinal lte 2000 or WhoHelpedYou eq 'Ruff'";
+      this.refreshIndex(  );
 
-        int totalEntitiesContained = madeupStuff.countEntities( inquisitiveQuery );
+        String inquisitiveQuery = "select * where ordinal >= 0 and ordinal <= 2000 or WhoHelpedYou = 'Ruff'";
 
-        assertEquals( 1000, totalEntitiesContained );
+        int totalEntitiesContained = verificationOfQueryResults( collectionName, correctValues, true, inquisitiveQuery );
+
+        assertEquals( numOfEntities, totalEntitiesContained );
     }
+
+
+    @Test
+    public void queryReturnCheckWithShortHand() throws Exception {
+      int numOfEntities = 20;
+
+      String collectionName = "imagination" + RandomStringUtils.randomAlphabetic( 5 );
+
+      Entity[] correctValues = new Entity[numOfEntities];
+      Entity props = new Entity();
+      props.put( "WhoHelpedYou", "Ruff" );
+      for(int i=0; i< numOfEntities; i++){
+        props.put("ordinal", i);
+        correctValues[i] = this.app().collection(collectionName).post(props);
+      }
+
+      this.refreshIndex(  );
+
+      String inquisitiveQuery = "select * where Ordinal gte 0 and Ordinal lte 2000 or WhoHelpedYou eq 'Ruff'";
+
+      int totalEntitiesContained = verificationOfQueryResults( collectionName, correctValues, true, inquisitiveQuery );
+
+      assertEquals( numOfEntities, totalEntitiesContained );
+
+    }
+
+  public int verificationOfQueryResults( String collectionName, Entity[] correctValues, boolean reverse, String checkedQuery )
+      throws Exception {
+
+    int totalEntitiesContained = 0;
+    QueryParameters params = new QueryParameters();
+    params.setQuery(checkedQuery);
+    Collection checkedNodes = this.app().collection(collectionName).get(params);
+
+    while ( correctValues.length != totalEntitiesContained )//correctNode.get("entities") != null)
+    {
+      totalEntitiesContained += checkedNodes.response.getEntityCount();
+      if ( !reverse ) {
+        for ( int index = 0; index < checkedNodes.response.getEntityCount(); index++ ) {
+          assertEquals( correctValues[index].get("uuid"),
+              ((LinkedHashMap)checkedNodes.response.getEntities().get( index )).get("uuid") );
+        }
+      }
+      else {
+        for ( int index = 0; index < checkedNodes.response.getEntityCount(); index++ ) {
+          assertEquals( correctValues[correctValues.length - 1 - index].get("uuid"),
+              ((LinkedHashMap)checkedNodes.response.getEntities().get( index )).get("uuid") );
+        }
+      }
+
+      if ( checkedNodes.getCursor() != null ) {
+        checkedNodes = this.app().getNextPage(checkedNodes,true);
+      }
+
+      else {
+        break;
+      }
+    }
+    return totalEntitiesContained;
+  }
+
 }

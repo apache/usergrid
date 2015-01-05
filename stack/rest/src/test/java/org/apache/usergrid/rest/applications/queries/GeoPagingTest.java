@@ -250,7 +250,6 @@ public class GeoPagingTest extends AbstractRestIT {
 
   /**
    * Creates two users, then a matrix of coordinates, then checks to see if any of the coordinates are near our users
-   * <p/>
    * 1. Create 2 users
    * 2. Create a list of geo points
    * 3. Test each to ensure it is not within 10000 meters of our users
