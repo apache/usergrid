@@ -49,7 +49,6 @@ import com.sun.jersey.api.client.ClientResponse.Status;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import java.io.IOException;
 
-import static org.apache.usergrid.rest.applications.utils.TestUtils.getIdFromSearchResults;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -66,13 +65,13 @@ import static org.junit.Assert.fail;
 @Concurrent()
 public class UserResourceIT extends AbstractRestIT {
 
-    private static Logger log = LoggerFactory.getLogger( UserResourceIT.class );
-    UserRepo userRepo ;
+    private static Logger log = LoggerFactory.getLogger(UserResourceIT.class);
+    UserRepo userRepo;
     CollectionEndpoint usersResource;
     CollectionEndpoint userResource;
 
     @Before
-    public void setup(){
+    public void setup() {
         userRepo = new UserRepo(clientSetup);
         userRepo.load();
         usersResource = this.app().collection("users");
@@ -84,7 +83,7 @@ public class UserResourceIT extends AbstractRestIT {
     @Test
     public void usernameQuery() throws IOException {
         String ql = "username = 'user*'";
-        Collection collection =usersResource.get(new QueryParameters().setQuery(ql));
+        Collection collection = usersResource.get(new QueryParameters().setQuery(ql));
         assertEquals(userRepo.getByUserName("user1"), getIdFromSearchResults(collection, 0));
         assertEquals(userRepo.getByUserName("user2"), getIdFromSearchResults(collection, 1));
         assertEquals(userRepo.getByUserName("user3"), getIdFromSearchResults(collection, 2));
@@ -95,8 +94,8 @@ public class UserResourceIT extends AbstractRestIT {
     public void nameQuery() throws IOException {
         String ql = "name = 'John*'";
 
-        Collection collection =usersResource.get(new QueryParameters().setQuery(ql));
-        assertEquals( userRepo.getByUserName( "user2" ), getIdFromSearchResults( collection, 0 ) );
+        Collection collection = usersResource.get(new QueryParameters().setQuery(ql));
+        assertEquals(userRepo.getByUserName("user2"), getIdFromSearchResults(collection, 0));
         assertEquals(userRepo.getByUserName("user3"), getIdFromSearchResults(collection, 1));
     }
 
@@ -112,12 +111,28 @@ public class UserResourceIT extends AbstractRestIT {
     @Test
     public void nameFullTextQuery() throws IOException {
         String ql = "name contains 'Smith' order by name ";
-        Collection collection =usersResource.get(new QueryParameters().setQuery(ql));
-        assertEquals( userRepo.getByUserName( "user1" ), getIdFromSearchResults( collection, 0 ) );
-        assertEquals( userRepo.getByUserName( "user2" ), getIdFromSearchResults( collection, 1 ) );
-        assertEquals( userRepo.getByUserName( "user3" ), getIdFromSearchResults( collection, 2 ) );
+        Collection collection = usersResource.get(new QueryParameters().setQuery(ql));
+        assertEquals(userRepo.getByUserName("user1"), getIdFromSearchResults(collection, 0));
+        assertEquals(userRepo.getByUserName("user2"), getIdFromSearchResults(collection, 1));
+        assertEquals(userRepo.getByUserName("user3"), getIdFromSearchResults(collection, 2));
     }
 
+    /** Get the uuid at the given index for the root node.  If it doesn't exist, null is returned */
+    static UUID getIdFromSearchResults( Collection collection, int index ) {
+
+
+        if ( collection == null ) {
+            return null;
+        }
+
+        Entity entity = (Entity)collection.getResponse().getEntities().get(index);
+
+        if ( entity == null ) {
+            return null;
+        }
+
+        return UUIDUtils.tryExtractUUID( entity.get( "uuid" ).toString() );
+    }
 
     /**
      * Test that when activity is pushed with not actor, it's set to the user who created it
@@ -125,10 +140,10 @@ public class UserResourceIT extends AbstractRestIT {
     @Test
     public void emtpyActorActivity() throws IOException {
 
-        UUID userId = userRepo.getByUserName( "user1" );
+        UUID userId = userRepo.getByUserName("user1");
 
 
-        ActivityEntity activity = new ActivityEntity("rod@rodsimpson.com","POST", "Look! more new content");
+        ActivityEntity activity = new ActivityEntity("rod@rodsimpson.com", "POST", "Look! more new content");
 
 
         Entity entity = usersResource.entity(userId.toString()).activities().post(activity);
@@ -136,15 +151,15 @@ public class UserResourceIT extends AbstractRestIT {
 
         UUID activityId = entity.getUuid();
 
-        assertNotNull( activityId );
-        Map<String,Object> actor = (Map<String,Object>)entity.get("actor");
+        assertNotNull(activityId);
+        Map<String, Object> actor = (Map<String, Object>) entity.get("actor");
 
 
-        UUID actorId = UUIDUtils.tryGetUUID( actor.get( "uuid" ).toString() );
+        UUID actorId = UUIDUtils.tryGetUUID(actor.get("uuid").toString());
 
-        assertEquals( userId, actorId );
+        assertEquals(userId, actorId);
 
-        assertEquals( "user1@apigee.com", actor.get( "email" ).toString() );
+        assertEquals("user1@apigee.com", actor.get("email").toString());
     }
 
 
@@ -154,32 +169,31 @@ public class UserResourceIT extends AbstractRestIT {
     @Test
     public void noUUIDorEmail() throws IOException {
 
-        UUID userId = userRepo.getByUserName( "user1" );
+        UUID userId = userRepo.getByUserName("user1");
 
-        ActivityEntity activity = new ActivityEntity("rod@rodsimpson.com","POST", "Look! more new content");
+        ActivityEntity activity = new ActivityEntity("rod@rodsimpson.com", "POST", "Look! more new content");
 
         // same as above, but with actor partially filled out
 
-        Map<String,Object> actorPost = new HashMap<>();
-        actorPost.put("displayName","Dino" );
+        Map<String, Object> actorPost = new HashMap<>();
+        actorPost.put("displayName", "Dino");
 
         activity.putActor(actorPost);
-
 
 
         Entity entity = usersResource.entity(userId.toString()).activities().post(activity);
 
         UUID activityId = entity.getUuid();
 
-        assertNotNull( activityId );
+        assertNotNull(activityId);
 
-        Map<String,Object> actor = (Map<String,Object>)entity.get("actor");
+        Map<String, Object> actor = (Map<String, Object>) entity.get("actor");
 
-        UUID actorId = UUIDUtils.tryGetUUID( actor.get( "uuid" ).toString() );
+        UUID actorId = UUIDUtils.tryGetUUID(actor.get("uuid").toString());
 
-        assertEquals( userId, actorId );
+        assertEquals(userId, actorId);
 
-        assertEquals( "user1@apigee.com", actor.get( "email" ).toString() );
+        assertEquals("user1@apigee.com", actor.get("email").toString());
     }
 
 
@@ -189,20 +203,20 @@ public class UserResourceIT extends AbstractRestIT {
     @Test
     public void ignoreUUIDandEmail() throws IOException {
 
-        UUID userId = userRepo.getByUserName( "user1" );
+        UUID userId = userRepo.getByUserName("user1");
 
 
         UUID testUUID = UUIDUtils.newTimeUUID();
         String testEmail = "foo@bar.com";
 
 
-        ActivityEntity activity = new ActivityEntity("rod@rodsimpson.com","POST", "Look! more new content");
+        ActivityEntity activity = new ActivityEntity("rod@rodsimpson.com", "POST", "Look! more new content");
 
         // same as above, but with actor partially filled out
 
-        Map<String,Object> actorPost = new HashMap<>();
+        Map<String, Object> actorPost = new HashMap<>();
         actorPost.put("displayName", "Dino");
-        actorPost.put("uuid",testUUID);
+        actorPost.put("uuid", testUUID);
         actorPost.put("email", testEmail);
         activity.putActor(actorPost);
         // same as above, but with actor partially filled out
@@ -214,13 +228,13 @@ public class UserResourceIT extends AbstractRestIT {
 
         assertNotNull(activityId);
 
-        Map<String,Object> actor = new ActivityEntity(entity).getActor();
+        Map<String, Object> actor = new ActivityEntity(entity).getActor();
 
-        UUID actorId = UUIDUtils.tryGetUUID( actor.get( "uuid" ).toString() );
+        UUID actorId = UUIDUtils.tryGetUUID(actor.get("uuid").toString());
 
-        assertEquals( testUUID, actorId );
+        assertEquals(testUUID, actorId);
 
-        assertEquals( testEmail, actor.get( "email" ).toString() );
+        assertEquals(testEmail, actor.get("email").toString());
     }
 
 
@@ -232,7 +246,7 @@ public class UserResourceIT extends AbstractRestIT {
 
         UUID userId = userRepo.getByUserName("user1");
 
-        ActivityEntity activity = new ActivityEntity(  "rod@rodsimpson.com", "POST", "Look! more new content");
+        ActivityEntity activity = new ActivityEntity("rod@rodsimpson.com", "POST", "Look! more new content");
 
         // same as above, but with actor partially filled out
 
@@ -241,7 +255,7 @@ public class UserResourceIT extends AbstractRestIT {
 
         UUID firstActivityId = entity.getUuid();
 
-        activity = new ActivityEntity("rod@rodsimpson.com","POST", "activity 2");
+        activity = new ActivityEntity("rod@rodsimpson.com", "POST", "activity 2");
         entity = usersResource.entity(userId.toString()).activities().post(activity);
 
         refreshIndex();
@@ -250,13 +264,13 @@ public class UserResourceIT extends AbstractRestIT {
 
         Collection activities = usersResource.entity(userId.toString()).activities().get();
 
-        entity =  activities.getResponse().getEntities().get(0);
+        entity = activities.getResponse().getEntities().get(0);
 
-        assertEquals( secondActivityId, entity.getUuid() );
+        assertEquals(secondActivityId, entity.getUuid());
 
-        entity =  activities.getResponse().getEntities().get(1);
+        entity = activities.getResponse().getEntities().get(1);
 
-        assertEquals( firstActivityId, entity.getUuid() );
+        assertEquals(firstActivityId, entity.getUuid());
     }
 
 
@@ -268,8 +282,8 @@ public class UserResourceIT extends AbstractRestIT {
         String name = "name" + id;
         String email = "email" + id + "@usergrid.org";
 
-        User map = new User(username,name,email,null);
-        map.put("email",email);
+        User map = new User(username, name, email, null);
+        map.put("email", email);
 
         Entity userEntity = usersResource.post(new Entity(map));
         refreshIndex();
@@ -277,9 +291,9 @@ public class UserResourceIT extends AbstractRestIT {
         // get the user with username property that has an email value
         Entity testUser = usersResource.entity(username).get();
 
-        assertEquals( username,testUser.get("username").toString() );
-        assertEquals( name,testUser.get("name").toString() );
-        assertEquals( email, testUser.get("email" ).toString() );
+        assertEquals(username, testUser.get("username").toString());
+        assertEquals(name, testUser.get("name").toString());
+        assertEquals(email, testUser.get("email").toString());
 
         // get the user with email property value
         // get the user with username property that has an email value
@@ -287,7 +301,7 @@ public class UserResourceIT extends AbstractRestIT {
 
         assertEquals(username, testUser.get("username").toString());
         assertEquals(name, testUser.get("name").toString());
-        assertEquals( email, testUser.get("email" ).toString() );
+        assertEquals(email, testUser.get("email").toString());
 
     }
 
@@ -299,8 +313,8 @@ public class UserResourceIT extends AbstractRestIT {
     public void resultSizeSame() throws IOException {
 
         UUID userId1 = userRepo.getByUserName("user1");
-        UUID userId2 = userRepo.getByUserName( "user2" );
-        UUID userId3 = userRepo.getByUserName( "user3" );
+        UUID userId2 = userRepo.getByUserName("user2");
+        UUID userId3 = userRepo.getByUserName("user3");
 
         Collection collection = usersResource.get();
 
@@ -310,25 +324,25 @@ public class UserResourceIT extends AbstractRestIT {
 
         int orderedSize = collection.getResponse().getEntities().size();
 
-        assertEquals( "Sizes match", nonOrderedSize, orderedSize );
+        assertEquals("Sizes match", nonOrderedSize, orderedSize);
 
-        int firstEntityIndex = getEntityIndex( userId1, collection );
+        int firstEntityIndex = getEntityIndex(userId1, collection);
 
-        int secondEntityIndex = getEntityIndex( userId2, collection );
+        int secondEntityIndex = getEntityIndex(userId2, collection);
 
-        int thirdEntityIndex = getEntityIndex( userId3, collection );
+        int thirdEntityIndex = getEntityIndex(userId3, collection);
 
-        assertTrue( "Ordered correctly", firstEntityIndex < secondEntityIndex );
+        assertTrue("Ordered correctly", firstEntityIndex < secondEntityIndex);
 
-        assertTrue( "Ordered correctly", secondEntityIndex < thirdEntityIndex );
+        assertTrue("Ordered correctly", secondEntityIndex < thirdEntityIndex);
     }
 
 
-    private int getEntityIndex( UUID entityId, Collection collection ) {
+    private int getEntityIndex(UUID entityId, Collection collection) {
         List<Entity> entities = collection.getResponse().getEntities();
 
-        for ( int i = 0; i < entities.size(); i++ ) {
-            if ( entityId.equals( entities.get( i ).getUuid() ) ) {
+        for (int i = 0; i < entities.size(); i++) {
+            if (entityId.equals(entities.get(i).getUuid())) {
                 return i;
             }
         }
@@ -341,29 +355,29 @@ public class UserResourceIT extends AbstractRestIT {
     public void clientNameQuery() {
 
 
-        String username = "username" ;
-        String name = "name" ;
+        String username = "username";
+        String name = "name";
 
-        User user = new User(username, name, username + "@usergrid.org","password");
+        User user = new User(username, name, username + "@usergrid.org", "password");
 
         Entity entity = usersResource.post(user);
         UUID createdId = entity.getUuid();
 
         refreshIndex();
         Collection results = usersResource.get(new QueryParameters().setQuery(String.format("name = '%s'", name)));
-        entity = new User( results.getResponse().getEntities(  ).get( 0 ));
+        entity = new User(results.getResponse().getEntities().get(0));
         assertEquals(createdId, entity.getUuid());
     }
 
 
     @Test
-    public void deleteUser() throws IOException  {
+    public void deleteUser() throws IOException {
 
         UUID id = UUIDUtils.newTimeUUID();
 
         String username = "username" + id;
         String name = "name" + id;
-        User entity = new User(username, name, id + "@usergrid.org","password");
+        User entity = new User(username, name, id + "@usergrid.org", "password");
 
         entity = new User(usersResource.post(entity));
 
@@ -377,38 +391,38 @@ public class UserResourceIT extends AbstractRestIT {
 
         refreshIndex();
 
-        Collection results = usersResource.get(new QueryParameters().setQuery( String.format("username = '%s'", username)));
+        Collection results = usersResource.get(new QueryParameters().setQuery(String.format("username = '%s'", username)));
         assertEquals(0, results.getResponse().getEntities().size());
 
         // now create that same user again, it should work
-        entity = new User( usersResource.post(entity));
+        entity = new User(usersResource.post(entity));
 
         createdId = entity.getUuid();
 
-        assertNotNull( createdId );
+        assertNotNull(createdId);
     }
 
 
     @Test
     public void singularCollectionName() throws IOException {
 
-        String username = "username1" ;
-        String name = "name1" ;
-        String email = "email1"  + "@usergrid.org";
+        String username = "username1";
+        String name = "name1";
+        String email = "email1" + "@usergrid.org";
 
-        User entity = new User(username, name,email,"password");
+        User entity = new User(username, name, email, "password");
 
-        entity = new User( usersResource.post(entity));
+        entity = new User(usersResource.post(entity));
         refreshIndex();
 
         UUID firstCreatedId = entity.getUuid();
-        username = "username2" ;
-        name = "name2" ;
-        email = "email2"  + "@usergrid.org";
+        username = "username2";
+        name = "name2";
+        email = "email2" + "@usergrid.org";
 
-        entity = new User(username, name,email,"password");
+        entity = new User(username, name, email, "password");
 
-        entity = new User( usersResource.post(entity));
+        entity = new User(usersResource.post(entity));
         refreshIndex();
 
         UUID secondCreatedId = entity.getUuid();
@@ -420,33 +434,32 @@ public class UserResourceIT extends AbstractRestIT {
 
         Entity conn1 = usersResource.entity(firstCreatedId.toString()).connection("conn1").entity(secondCreatedId.toString()).post();
 
-        assertEquals(secondCreatedId.toString(),conn1.getUuid().toString());
+        assertEquals(secondCreatedId.toString(), conn1.getUuid().toString());
 
         refreshIndex();
 
 
-
         Entity conn2 = usersResource.entity(firstCreatedId.toString()).connection("conn2").entity(secondCreatedId.toString()).post();
 
-        assertEquals( secondCreatedId.toString(), conn2.getUuid().toString() );
+        assertEquals(secondCreatedId.toString(), conn2.getUuid().toString());
 
         refreshIndex();
 
         Collection conn1Connections = usersResource.entity(firstCreatedId.toString()).connection("conn1").get();
 
-        assertEquals( secondCreatedId.toString(),((Entity) conn1Connections.getResponse().getEntities().get(0)).getUuid().toString() );
+        assertEquals(secondCreatedId.toString(), ((Entity) conn1Connections.getResponse().getEntities().get(0)).getUuid().toString());
 
         conn1Connections = userResource.entity(firstCreatedId.toString()).connection("conn1").get();
 
-        assertEquals( secondCreatedId.toString(),((Entity) conn1Connections.getResponse().getEntities().get(0)).getUuid().toString() );
+        assertEquals(secondCreatedId.toString(), ((Entity) conn1Connections.getResponse().getEntities().get(0)).getUuid().toString());
 
         Collection conn2Connections = usersResource.entity(firstCreatedId.toString()).connection("conn1").get();
 
-        assertEquals( secondCreatedId.toString(),((Entity) conn2Connections.getResponse().getEntities().get(0)).getUuid().toString() );
+        assertEquals(secondCreatedId.toString(), ((Entity) conn2Connections.getResponse().getEntities().get(0)).getUuid().toString());
 
         conn2Connections = userResource.entity(firstCreatedId.toString()).connection("conn1").get();
 
-        assertEquals( secondCreatedId.toString(),((Entity) conn2Connections.getResponse().getEntities().get(0)).getUuid().toString() );
+        assertEquals(secondCreatedId.toString(), ((Entity) conn2Connections.getResponse().getEntities().get(0)).getUuid().toString());
     }
 
 
@@ -455,22 +468,22 @@ public class UserResourceIT extends AbstractRestIT {
         UUID id = UUIDUtils.newTimeUUID();
 
         String username1 = "username1";
-        String name1 = "name1" ;
+        String name1 = "name1";
         String email1 = "email1" + "@usergrid.org";
 
-        User entity = new User(username1, name1,email1,"password");
+        User entity = new User(username1, name1, email1, "password");
 
-        entity = new User( usersResource.post(entity));
+        entity = new User(usersResource.post(entity));
 
         UUID firstCreatedId = entity.getUuid();
 
-        String username2 = "username2" ;
-        String name2 = "name2" ;
-        String email2 = "email2"  + "@usergrid.org";
+        String username2 = "username2";
+        String name2 = "name2";
+        String email2 = "email2" + "@usergrid.org";
 
-        entity = new User(username2, name2,email2,"password");
+        entity = new User(username2, name2, email2, "password");
 
-        entity = new User( usersResource.post(entity));
+        entity = new User(usersResource.post(entity));
 
         UUID secondCreatedId = entity.getUuid();
 
@@ -479,15 +492,15 @@ public class UserResourceIT extends AbstractRestIT {
         refreshIndex();
 
         // named entity in collection name
-        Entity conn1 = usersResource.entity(firstCreatedId.toString()).connection("conn1","users").entity(secondCreatedId.toString()).post();
+        Entity conn1 = usersResource.entity(firstCreatedId.toString()).connection("conn1", "users").entity(secondCreatedId.toString()).post();
 
-        assertEquals( secondCreatedId.toString(), conn1.getUuid().toString() );
+        assertEquals(secondCreatedId.toString(), conn1.getUuid().toString());
 
         // named entity in collection name
 
-        Entity conn2 = usersResource.entity(username1).connection("conn2","users").entity(username2).post();
+        Entity conn2 = usersResource.entity(username1).connection("conn2", "users").entity(username2).post();
 
-        assertEquals( secondCreatedId.toString(), conn2.getUuid().toString() );
+        assertEquals(secondCreatedId.toString(), conn2.getUuid().toString());
     }
 
 
@@ -501,13 +514,13 @@ public class UserResourceIT extends AbstractRestIT {
         String name = "name1" + id;
         String email = "email1" + id + "@usergrid.org";
 
-        User entity = new User(email, name,email,"password");
+        User entity = new User(email, name, email, "password");
 
-        entity =new User( usersResource.post(entity));
+        entity = new User(usersResource.post(entity));
 
         UUID userId = entity.getUuid();
 
-        Entity role = new Entity(  );
+        Entity role = new Entity();
         role.put("name", "connectionQuerybyEmail1");
 
         role = this.app().collection("roles").post(role);
@@ -517,24 +530,24 @@ public class UserResourceIT extends AbstractRestIT {
         //add permissions to the role
 
         Map<String, Object> perms = new HashMap<>();
-        perms.put( "permission", "get:/stuff/**" );
+        perms.put("permission", "get:/stuff/**");
 
 
         Entity perms1 = this.app().collection("roles").entity(roleId1.toString()).connection("permissions").post(new Entity(perms));
 
 
         //Create the second role
-        role = new Entity(  );
+        role = new Entity();
         role.put("name", "connectionQuerybyEmail2");
         role = this.app().collection("roles").post(role);
 
 
-        UUID roleId2 =role.getUuid();
+        UUID roleId2 = role.getUuid();
 
         //add permissions to the role
 
         perms = new HashMap<>();
-        perms.put( "permission", "get:/stuff/**" );
+        perms.put("permission", "get:/stuff/**");
         Entity perms2 = this.app().collection("roles").entity(roleId2.toString()).connection("permissions").post(new Entity(perms));
         refreshIndex();
         //connect the entities where role is the root
@@ -543,24 +556,24 @@ public class UserResourceIT extends AbstractRestIT {
         // now create a connection of "likes" between the first user and the
         // second using pluralized form
 
-        assertEquals( userId.toString(),perms3.getUuid().toString());
+        assertEquals(userId.toString(), perms3.getUuid().toString());
 
 
         //connect the second role
 
         Entity perms4 = this.app().collection("roles").entity(roleId2).connection("users").entity(userId).post();
 
-        assertEquals( userId.toString(),perms4.getUuid().toString() );
+        assertEquals(userId.toString(), perms4.getUuid().toString());
 
         refreshIndex();
         //query the second role, it should work
-        Collection userRoles = this.app().collection("roles").entity(roleId2).connection("users").get(new QueryParameters().setQuery("select%20*%20where%20username%20=%20'"+ email + "'"));
-        assertEquals( userId.toString(),((Entity)userRoles.iterator().next()).getUuid().toString() );
+        Collection userRoles = this.app().collection("roles").entity(roleId2).connection("users").get(new QueryParameters().setQuery("select%20*%20where%20username%20=%20'" + email + "'"));
+        assertEquals(userId.toString(), ((Entity) userRoles.iterator().next()).getUuid().toString());
 
 
         //query the first role, it should work
-        userRoles = this.app().collection("roles").entity(roleId1).connection("users").get(new QueryParameters().setQuery("select%20*%20where%20username%20=%20'"+ email + "'"));
-        assertEquals( userId.toString(),((Entity)userRoles.iterator().next()).getUuid().toString() );
+        userRoles = this.app().collection("roles").entity(roleId1).connection("users").get(new QueryParameters().setQuery("select%20*%20where%20username%20=%20'" + email + "'"));
+        assertEquals(userId.toString(), ((Entity) userRoles.iterator().next()).getUuid().toString());
 
 
         //now delete the first role
@@ -569,11 +582,10 @@ public class UserResourceIT extends AbstractRestIT {
 
         //query the first role, it should 404
         try {
-            userRoles = this.app().collection("roles").entity(roleId1).connection("users").get(new QueryParameters().setQuery("select%20*%20where%20username%20=%20'"+ email + "'"));
+            userRoles = this.app().collection("roles").entity(roleId1).connection("users").get(new QueryParameters().setQuery("select%20*%20where%20username%20=%20'" + email + "'"));
             assertNull(userRoles);
-        }
-        catch ( UniformInterfaceException e ) {
-            assertEquals( Status.NOT_FOUND.getStatusCode(), e.getResponse().getStatus() );
+        } catch (UniformInterfaceException e) {
+            assertEquals(Status.NOT_FOUND.getStatusCode(), e.getResponse().getStatus());
         }
 
         //query the second role, it should work
@@ -590,9 +602,9 @@ public class UserResourceIT extends AbstractRestIT {
         String username1 = "username1" + id;
         String name1 = "name1" + id;
         String email1 = "email1" + id + "@usergrid.org";
-        User entity = new User(username1, name1,email1,"password");
+        User entity = new User(username1, name1, email1, "password");
 
-        entity = new User( usersResource.post(entity));
+        entity = new User(usersResource.post(entity));
 
         UUID firstCreatedId = entity.getUuid();
 
@@ -630,17 +642,17 @@ public class UserResourceIT extends AbstractRestIT {
         String username = "username" + id;
         String name = "name" + id;
         String email = "email" + id + "@usergrid.org";
-        User entity = new User(username, name,email,"password");
+        User entity = new User(username, name, email, "password");
 
         Entity userEntity = usersResource.post(entity);
 
         refreshIndex();
         // attempt to log in
-        Token token = this.app().token().post(new Token(username,"password"));
+        Token token = this.app().token().post(new Token(username, "password"));
 
-        assertEquals( username, token.getUser().getUsername() );
-        assertEquals( name, token.getUser().getName() );
-        assertEquals( email, token.getUser().getEmail() );
+        assertEquals(username, token.getUser().getUsername());
+        assertEquals(name, token.getUser().getName());
+        assertEquals(email, token.getUser().getEmail());
 
         // now update the name and email
         String newName = "newName";
@@ -658,7 +670,7 @@ public class UserResourceIT extends AbstractRestIT {
         // now see if we've updated
 
 
-        token = this.app().token().post(new Token(username,"password"));
+        token = this.app().token().post(new Token(username, "password"));
 
 
         assertEquals(username, token.getUser().getUsername());
@@ -672,22 +684,22 @@ public class UserResourceIT extends AbstractRestIT {
     @Test
     public void test_POST_batch() throws IOException {
 
-        log.info( "UserResourceIT.test_POST_batch" );
+        log.info("UserResourceIT.test_POST_batch");
 
 
         List<Entity> batch = new ArrayList<>();
 
         Entity properties = new Entity();
-        properties.put( "username", "test_user_1" );
-        properties.put( "email", "user1@test.com" );
+        properties.put("username", "test_user_1");
+        properties.put("email", "user1@test.com");
         batch.add(properties);
 
         properties = new Entity();
-        properties.put( "username", "test_user_2" );
+        properties.put("username", "test_user_2");
         batch.add(properties);
 
         properties = new Entity();
-        properties.put( "username", "test_user_3" );
+        properties.put("username", "test_user_3");
         batch.add(properties);
 
         ApiResponse response = usersResource.post(batch);
@@ -701,10 +713,10 @@ public class UserResourceIT extends AbstractRestIT {
 
         UUID newUserUuid = UUIDUtils.newTimeUUID();
 
-        String userName = String.format( "test%s", newUserUuid );
+        String userName = String.format("test%s", newUserUuid);
 
         User entity =
-                (User)new User(userName, "Ed Anuff",String.format("%s@anuff.com", newUserUuid),"sesame").chainPut("pin", "1234");
+                (User) new User(userName, "Ed Anuff", String.format("%s@anuff.com", newUserUuid), "sesame").chainPut("pin", "1234");
 
         usersResource.post(entity);
         refreshIndex();
@@ -714,24 +726,23 @@ public class UserResourceIT extends AbstractRestIT {
         Map<String, String> data = new HashMap<String, String>();
         Entity entityConn = usersResource.entity(userName).connection("deactivate").post(new Entity());
 
-        assertFalse( (boolean)entityConn.get( "activated" ) );
-        assertNotNull( entityConn.get( "deactivated" ) );
+        assertFalse((boolean) entityConn.get("activated"));
+        assertNotNull(entityConn.get("deactivated"));
     }
 
 
     @Test
     public void test_PUT_password_fail() {
-        Entity entity =usersResource.post(new User("edanuff", "edanuff", "edanuff@email.com", "sesame"));
-        this.app().token().post(new Token("edanuff","sesame"));
+        Entity entity = usersResource.post(new User("edanuff", "edanuff", "edanuff@email.com", "sesame"));
+        this.app().token().post(new Token("edanuff", "sesame"));
         refreshIndex();
         boolean fail = false;
         try {
             Entity changeResponse = usersResource.entity("edanuff").collection("password").post(new ChangePasswordEntity("foo", "bar"));
-        }
-        catch ( Exception   e ) {
+        } catch (Exception e) {
             fail = true;
         }
-        assertTrue( fail );
+        assertTrue(fail);
     }
 
 
@@ -741,18 +752,18 @@ public class UserResourceIT extends AbstractRestIT {
         // TODO figure out what is being overridden? why 400?
         Collection users = usersResource.get();
 
-        String uuid =  users.getResponse().getEntities().get(0).getUuid().toString();
-        String email = users.getResponse().getEntities().get( 0 ).get("email").toString();
+        String uuid = users.getResponse().getEntities().get(0).getUuid().toString();
+        String email = users.getResponse().getEntities().get(0).get("email").toString();
 
         Entity user = usersResource.entity(uuid).get();
-        
-        assertEquals( email, user.get("email").toString() );
+
+        assertEquals(email, user.get("email").toString());
     }
 
 
     @Test
     public void test_PUT_password_ok() {
-        Entity entity =usersResource.post(new User("edanuff", "edanuff", "edanuff@email.com", "sesame"));
+        Entity entity = usersResource.post(new User("edanuff", "edanuff", "edanuff@email.com", "sesame"));
         refreshIndex();
         usersResource.entity(entity).collection("password").post(new ChangePasswordEntity("sesame", "sesame1"));
 
@@ -761,7 +772,7 @@ public class UserResourceIT extends AbstractRestIT {
 
         // if this was successful, we need to re-set the password for other
         // tests
-        Entity changeResponse = usersResource.entity("edanuff").collection("password").post(new ChangePasswordEntity("sesame1","sesame"));
+        Entity changeResponse = usersResource.entity("edanuff").collection("password").post(new ChangePasswordEntity("sesame1", "sesame"));
         refreshIndex();
         assertNotNull(changeResponse);
 
@@ -769,8 +780,8 @@ public class UserResourceIT extends AbstractRestIT {
 
 
     @Test
-    public void setUserPasswordAsAdmin()  throws IOException {
-        usersResource.post(new User("edanuff","edanuff","edanuff@email.com","sesame"));
+    public void setUserPasswordAsAdmin() throws IOException {
+        usersResource.post(new User("edanuff", "edanuff", "edanuff@email.com", "sesame"));
         String newPassword = "foo";
         refreshIndex();
 
@@ -786,61 +797,61 @@ public class UserResourceIT extends AbstractRestIT {
 
     @Test
     public void passwordMismatchErrorUser() {
-        usersResource.post(new User("edanuff","edanuff","edanuff@email.com","sesame"));
+        usersResource.post(new User("edanuff", "edanuff", "edanuff@email.com", "sesame"));
 
         String origPassword = "foo";
         String newPassword = "bar";
 
-        ChangePasswordEntity data = new ChangePasswordEntity(origPassword,newPassword);
+        ChangePasswordEntity data = new ChangePasswordEntity(origPassword, newPassword);
 
         int responseStatus = 0;
         try {
-           usersResource.entity("edanuff").connection("password").post(data);
-        } catch ( UniformInterfaceException uie ) {
+            usersResource.entity("edanuff").connection("password").post(data);
+        } catch (UniformInterfaceException uie) {
             responseStatus = uie.getResponse().getStatus();
         }
 
-        assertEquals( 0, responseStatus );
+        assertEquals(0, responseStatus);
     }
 
 
     @Test
-    public void addRemoveRole() throws IOException  {
-        String roleName = "rolename" ;
+    public void addRemoveRole() throws IOException {
+        String roleName = "rolename";
 
-        String username = "username" ;
-        String name = "name"  ;
-        String email = "email"  + "@usergrid.org";
+        String username = "username";
+        String name = "name";
+        String email = "email" + "@usergrid.org";
 
-        User user = new User(username,name,email,"password");
+        User user = new User(username, name, email, "password");
         user = new User(usersResource.post(user));
         UUID createdId = user.getUuid();
 
         // create Role
 
-        Entity role = new Entity().chainPut("title",roleName).chainPut("name",roleName);
+        Entity role = new Entity().chainPut("title", roleName).chainPut("name", roleName);
         this.app().collection("roles").post(role);
         // check it
 
         refreshIndex();
         // add Role
 
-        role =  usersResource.entity(createdId).collection("roles").entity(roleName).post();
+        role = usersResource.entity(createdId).collection("roles").entity(roleName).post();
 
         refreshIndex();
         // check it
-        assertNotNull( role );
-        assertNotNull(role.get("name") );
-        assertEquals( role.get("name").toString(), roleName );
+        assertNotNull(role);
+        assertNotNull(role.get("name"));
+        assertEquals(role.get("name").toString(), roleName);
 
-        role =  usersResource.entity(createdId).collection("roles").entity(roleName).get();
+        role = usersResource.entity(createdId).collection("roles").entity(roleName).get();
 
-        assertNotNull( role );
-        assertNotNull(role.get("name") );
-        assertEquals( role.get("name").toString(), roleName );
+        assertNotNull(role);
+        assertNotNull(role.get("name"));
+        assertEquals(role.get("name").toString(), roleName);
 
         // remove Role
-        ApiResponse response =  usersResource.entity(createdId).collection("roles").entity(roleName).delete();
+        ApiResponse response = usersResource.entity(createdId).collection("roles").entity(roleName).delete();
 
         // check it
 
@@ -848,7 +859,7 @@ public class UserResourceIT extends AbstractRestIT {
             role = usersResource.entity(createdId).collection("roles").entity(roleName).get();
 
             assertNull(role);
-        }catch (UniformInterfaceException e){
+        } catch (UniformInterfaceException e) {
             assertEquals(e.getResponse().getStatus(), Status.NOT_FOUND.getStatusCode());
         }
     }
@@ -857,7 +868,7 @@ public class UserResourceIT extends AbstractRestIT {
     @Test
     public void revokeToken() throws Exception {
 
-        this.app().collection("users").post(new User("edanuff","edanuff","edanuff@email.com","sesame"));
+        this.app().collection("users").post(new User("edanuff", "edanuff", "edanuff@email.com", "sesame"));
         refreshIndex();
         Token token1 = this.app().token().post(new Token("edanuff", "sesame"));
         Token token2 = this.app().token().post(new Token("edanuff", "sesame"));
@@ -867,14 +878,14 @@ public class UserResourceIT extends AbstractRestIT {
         this.app().token().setToken(token2);
         Entity entity2 = usersResource.entity("edanuff").get();
 
-        assertNotNull( entity1 );
+        assertNotNull(entity1);
 
-        assertNotNull( entity2);
-        Token adminToken = this.clientSetup.getRestClient().management().token().post(new Token(clientSetup.getUsername(),clientSetup.getUsername()));
+        assertNotNull(entity2);
+        Token adminToken = this.clientSetup.getRestClient().management().token().post(new Token(clientSetup.getUsername(), clientSetup.getUsername()));
         // now revoke the tokens
         this.app().token().setToken(adminToken);
 
-        usersResource.entity("edanuff").connection("revoketokens").post(new Entity().chainPut("token",token1));
+        usersResource.entity("edanuff").connection("revoketokens").post(new Entity().chainPut("token", token1));
         refreshIndex();
         // the tokens shouldn't work
 
@@ -885,12 +896,11 @@ public class UserResourceIT extends AbstractRestIT {
 
             usersResource.entity("edanuff").get();
             assertFalse(true);
-        }
-        catch ( UniformInterfaceException uie ) {
+        } catch (UniformInterfaceException uie) {
             status = uie.getResponse().getStatus();
         }
 
-        assertEquals( Status.UNAUTHORIZED.getStatusCode(), status );
+        assertEquals(Status.UNAUTHORIZED.getStatusCode(), status);
 
         status = 0;
 
@@ -898,12 +908,11 @@ public class UserResourceIT extends AbstractRestIT {
             this.app().token().setToken(token2);
 
             usersResource.entity("edanuff").get();
-        }
-        catch ( UniformInterfaceException uie ) {
+        } catch (UniformInterfaceException uie) {
             status = uie.getResponse().getStatus();
         }
 
-        assertEquals( Status.UNAUTHORIZED.getStatusCode(), status );
+        assertEquals(Status.UNAUTHORIZED.getStatusCode(), status);
 
         Token token3 = this.app().token().post(new Token("edanuff", "sesame"));
         Token token4 = this.app().token().post(new Token("edanuff", "sesame"));
@@ -920,7 +929,7 @@ public class UserResourceIT extends AbstractRestIT {
         assertNotNull(entity2);
 
         // now revoke the token3
-        adminToken = this.clientSetup.getRestClient().management().token().post(new Token(clientSetup.getUsername(),clientSetup.getUsername()));
+        adminToken = this.clientSetup.getRestClient().management().token().post(new Token(clientSetup.getUsername(), clientSetup.getUsername()));
         // now revoke the tokens
         this.app().token().setToken(adminToken);
         usersResource.entity("edanuff").connection("revoketokens").post();
@@ -934,12 +943,11 @@ public class UserResourceIT extends AbstractRestIT {
             this.app().token().setToken(token3);
             usersResource.entity("edanuff").get();
 
-        }
-        catch ( UniformInterfaceException uie ) {
+        } catch (UniformInterfaceException uie) {
             status = uie.getResponse().getStatus();
         }
 
-        assertEquals( Status.UNAUTHORIZED.getStatusCode(), status );
+        assertEquals(Status.UNAUTHORIZED.getStatusCode(), status);
 
         status = 0;
 
@@ -949,12 +957,11 @@ public class UserResourceIT extends AbstractRestIT {
 
 
             status = Status.OK.getStatusCode();
-        }
-        catch ( UniformInterfaceException uie ) {
+        } catch (UniformInterfaceException uie) {
             status = uie.getResponse().getStatus();
         }
 
-        assertEquals( Status.UNAUTHORIZED.getStatusCode(), status );
+        assertEquals(Status.UNAUTHORIZED.getStatusCode(), status);
     }
 
 
@@ -972,7 +979,7 @@ public class UserResourceIT extends AbstractRestIT {
 
         UUID userId = UUID.fromString(((Map<String, Object>) token.get("user")).get("uuid").toString());
 
-        assertNotNull( token.getAccessToken() );
+        assertNotNull(token.getAccessToken());
 
         refreshIndex();
 
@@ -980,35 +987,33 @@ public class UserResourceIT extends AbstractRestIT {
 
         // bad access token
         try {
-            userResource.entity("test_1").connection("token").get(new QueryParameters().addParam("access_token", "blah"),false);
+            userResource.entity("test_1").connection("token").get(new QueryParameters().addParam("access_token", "blah"), false);
             assertTrue(false);
-        }
-        catch ( UniformInterfaceException uie ) {
+        } catch (UniformInterfaceException uie) {
             status = uie.getResponse().getStatus();
-            log.info( "Error Response Body: " + uie.getResponse().getEntity( String.class ) );
+            log.info("Error Response Body: " + uie.getResponse().getEntity(String.class));
         }
 
         assertEquals(Status.UNAUTHORIZED.getStatusCode(), status);
 
         try {
-            userResource.entity("test_2").connection("token").get(new QueryParameters().addParam("access_token", token.getAccessToken()),false);
+            userResource.entity("test_2").connection("token").get(new QueryParameters().addParam("access_token", token.getAccessToken()), false);
             assertTrue(false);
-        }
-        catch ( UniformInterfaceException uie ) {
+        } catch (UniformInterfaceException uie) {
             status = uie.getResponse().getStatus();
-            log.info( "Error Response Body: " + uie.getResponse().getEntity( String.class ) );
+            log.info("Error Response Body: " + uie.getResponse().getEntity(String.class));
         }
 
-        assertEquals( Status.FORBIDDEN.getStatusCode(), status );
+        assertEquals(Status.FORBIDDEN.getStatusCode(), status);
 
 
         String adminToken = this.getAdminToken().getAccessToken();
-        Collection tokens = userResource.entity("test_1").connection("token").get(new QueryParameters().addParam("access_token", adminToken),false);
+        Collection tokens = userResource.entity("test_1").connection("token").get(new QueryParameters().addParam("access_token", adminToken), false);
 
 
         assertTrue(tokens.getResponse().getProperties().get("user") != null);
 
-        tokens = userResource.entity("test_1").connection("token").get(new QueryParameters().addParam("access_token", adminToken),false);
+        tokens = userResource.entity("test_1").connection("token").get(new QueryParameters().addParam("access_token", adminToken), false);
 
         assertTrue(tokens.getResponse().getProperties().get("user") != null);
 
@@ -1019,12 +1024,11 @@ public class UserResourceIT extends AbstractRestIT {
 
         try {
             this.app().token().post(new Token("test_1", "test123"));
-            fail( "request for deactivated user should fail" );
-        }
-        catch ( UniformInterfaceException uie ) {
+            fail("request for deactivated user should fail");
+        } catch (UniformInterfaceException uie) {
             status = uie.getResponse().getStatus();
-            JsonNode body = mapper.readTree( uie.getResponse().getEntity( String.class ));
-            assertEquals( "user not activated", body.findPath( "error_description" ).textValue() );
+            JsonNode body = mapper.readTree(uie.getResponse().getEntity(String.class));
+            assertEquals("user not activated", body.findPath("error_description").textValue());
         }
     }
 
@@ -1032,19 +1036,19 @@ public class UserResourceIT extends AbstractRestIT {
     @Test
     public void delegatePutOnNotFound() throws Exception {
         String randomName = "user1_" + UUIDUtils.newTimeUUID().toString();
-        User user = new User ( randomName,randomName, randomName + "@apigee.com", "password" );
+        User user = new User(randomName, randomName, randomName + "@apigee.com", "password");
         usersResource.post(user);
         refreshIndex();
 
         // should update a field
         Entity response = usersResource.entity(randomName).get();
-        assertNotNull( response );
+        assertNotNull(response);
         // PUT on user
 
         // PUT a new user
         randomName = "user2_" + UUIDUtils.newTimeUUID().toString();
 
-        User user2 =(User) new User ( randomName,randomName, randomName + "@apigee.com", "password" ).chainPut( "pin", "1234" );
+        User user2 = (User) new User(randomName, randomName, randomName + "@apigee.com", "password").chainPut("pin", "1234");
 
         response = usersResource.post(user2);
 
@@ -1087,23 +1091,23 @@ public class UserResourceIT extends AbstractRestIT {
         int status = 0;
 
 
-        String ql = "uuid = " + userRepo.getByUserName( "user1" );
+        String ql = "uuid = " + userRepo.getByUserName("user1");
 
         usersResource.get(new QueryParameters().setQuery(ql));
 
-        Entity payload = new Entity().chainPut( "name", "Austin" ).chainPut("state", "TX");
+        Entity payload = new Entity().chainPut("name", "Austin").chainPut("state", "TX");
 
         Entity responseEntity = this.app().collection("curts").post(payload);
 
         UUID userId = UUID.fromString(responseEntity.getUuid().toString());
 
-        assertNotNull( userId );
+        assertNotNull(userId);
 
         refreshIndex();
 
         ql = "uuid = " + userId;
 
-        Collection response  = this.app().collection("curts").get(new QueryParameters().setQuery(ql));
+        Collection response = this.app().collection("curts").get(new QueryParameters().setQuery(ql));
 
         assertEquals(response.getResponse().getEntities().get(0).get("uuid").toString(), userId.toString());
     }
