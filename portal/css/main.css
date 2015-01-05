@@ -605,7 +605,7 @@ i.pictogram.apichart {
 
 [class^="sdk-icon-"], [class*=" sdk-icon-"] {
     display: inline-block;
-    width: 32px;
+    width: 25px;
     height: 29px;
     margin: -3px 3px 0 0;
     line-height: 32px;
@@ -634,29 +634,32 @@ i.pictogram.apichart {
 }
 
 .sdk-icon-ios {
-    background-position: -6px -4px;
+    background-position: -10px -4px;
 }
 
 .sdk-icon-android {
-    background-position: -59px -3px;
+    background-position: -48px -3px;
 }
 
 .sdk-icon-js {
-    background-position: -109px -4px;
+    background-position: -86px -4px;
 }
 
 .sdk-icon-node {
-    background-position: -154px -3px;
+    background-position: -120px -3px;
 }
 
 .sdk-icon-ruby {
-    background-position: -204px -3px;
+    background-position: -163px -3px;
 }
 
 .sdk-icon-net {
-    background-position: -256px -4px;
+    background-position: -199px -4px;
 }
 
+.sdk-icon-perl {
+    background-position: -231px -4px;
+}
 
 .sdk-icon-large-ios {
     background-position: -6px -3px;
@@ -680,6 +683,10 @@ i.pictogram.apichart {
 
 .sdk-icon-large-net {
     background-position: -537px -3px;
+}
+
+.sdk-icon-large-perl {
+    background-position: -630px -3px;
 }
 
 /*---------------------------- orange apigee header*/
