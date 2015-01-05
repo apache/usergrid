@@ -28,6 +28,7 @@ import java.util.UUID;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.usergrid.rest.test.resource.CollectionResource;
+import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.CollectionEndpoint;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.EntityEndpoint;
 import org.apache.usergrid.rest.test.resource2point0.model.*;
@@ -41,7 +42,6 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
-import org.apache.usergrid.rest.AbstractRestIT;
 import org.apache.usergrid.rest.applications.utils.UserRepo;
 import org.apache.usergrid.utils.UUIDUtils;
 
@@ -64,7 +64,7 @@ import static org.junit.Assert.fail;
  * @author tnine
  */
 @Concurrent()
-public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point0.AbstractRestIT {
+public class UserResourceIT extends AbstractRestIT {
 
     private static Logger log = LoggerFactory.getLogger( UserResourceIT.class );
     UserRepo userRepo ;
@@ -97,7 +97,7 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
 
         Collection collection =usersResource.get(new QueryParameters().setQuery(ql));
         assertEquals( userRepo.getByUserName( "user2" ), getIdFromSearchResults( collection, 0 ) );
-        assertEquals( userRepo.getByUserName( "user3" ), getIdFromSearchResults( collection, 1 ) );
+        assertEquals(userRepo.getByUserName("user3"), getIdFromSearchResults(collection, 1));
     }
 
 
@@ -203,7 +203,7 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
         Map<String,Object> actorPost = new HashMap<>();
         actorPost.put("displayName", "Dino");
         actorPost.put("uuid",testUUID);
-        actorPost.put("email",testEmail);
+        actorPost.put("email", testEmail);
         activity.putActor(actorPost);
         // same as above, but with actor partially filled out
 
@@ -212,7 +212,7 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
 
         UUID activityId = entity.getUuid();
 
-        assertNotNull( activityId );
+        assertNotNull(activityId);
 
         Map<String,Object> actor = new ActivityEntity(entity).getActor();
 
@@ -230,7 +230,7 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
     @Test
     public void userActivitiesDefaultOrder() throws IOException {
 
-        UUID userId = userRepo.getByUserName( "user1" );
+        UUID userId = userRepo.getByUserName("user1");
 
         ActivityEntity activity = new ActivityEntity(  "rod@rodsimpson.com", "POST", "Look! more new content");
 
@@ -285,8 +285,8 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
         // get the user with username property that has an email value
         testUser = usersResource.entity(email).get();
 
-        assertEquals( username,testUser.get("username").toString() );
-        assertEquals( name,testUser.get("name").toString() );
+        assertEquals(username, testUser.get("username").toString());
+        assertEquals(name, testUser.get("name").toString());
         assertEquals( email, testUser.get("email" ).toString() );
 
     }
@@ -298,7 +298,7 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
     @Test
     public void resultSizeSame() throws IOException {
 
-        UUID userId1 = userRepo.getByUserName( "user1" );
+        UUID userId1 = userRepo.getByUserName("user1");
         UUID userId2 = userRepo.getByUserName( "user2" );
         UUID userId3 = userRepo.getByUserName( "user3" );
 
@@ -352,7 +352,7 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
         refreshIndex();
         Collection results = usersResource.get(new QueryParameters().setQuery(String.format("name = '%s'", name)));
         entity = new User( results.getResponse().getEntities(  ).get( 0 ));
-        assertEquals( createdId, entity.getUuid() );
+        assertEquals(createdId, entity.getUuid());
     }
 
 
@@ -613,13 +613,13 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
         // named entity in collection name
         Entity conn1 = usersResource.entity(firstCreatedId).connection("conn1").collection("pizzas").entity(secondCreatedId).post();
 
-        assertEquals( secondCreatedId.toString(),conn1.getUuid().toString() );
+        assertEquals(secondCreatedId.toString(), conn1.getUuid().toString());
 
         // named entity in collection name
         Entity conn2 = usersResource.entity(username1).connection("conn2").collection("pizzas").entity(name).post();
 
 
-        assertEquals( secondCreatedId.toString(), conn2.getUuid().toString() );
+        assertEquals(secondCreatedId.toString(), conn2.getUuid().toString());
     }
 
 
@@ -680,15 +680,15 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
         Entity properties = new Entity();
         properties.put( "username", "test_user_1" );
         properties.put( "email", "user1@test.com" );
-        batch.add( properties );
+        batch.add(properties);
 
         properties = new Entity();
         properties.put( "username", "test_user_2" );
-        batch.add( properties );
+        batch.add(properties);
 
         properties = new Entity();
         properties.put( "username", "test_user_3" );
-        batch.add( properties );
+        batch.add(properties);
 
         ApiResponse response = usersResource.post(batch);
 
@@ -961,14 +961,14 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
     @Test
     public void getToken() throws Exception {
 
-        usersResource.post(new User("test_1","Test1 User", "test_1@test.com", "test123")); // client.setApiUrl(apiUrl);
-        usersResource.post(new User( "test_2", "Test2 User" , "test_2@test.com", "test123")); // client.setApiUrl(apiUrl);
-        usersResource.post(new User( "test_3","Test3 User" , "test_3@test.com", "test123" )); // client.setApiUrl(apiUrl);
+        usersResource.post(new User("test_1", "Test1 User", "test_1@test.com", "test123")); // client.setApiUrl(apiUrl);
+        usersResource.post(new User("test_2", "Test2 User", "test_2@test.com", "test123")); // client.setApiUrl(apiUrl);
+        usersResource.post(new User("test_3", "Test3 User", "test_3@test.com", "test123")); // client.setApiUrl(apiUrl);
         refreshIndex();
 
         Entity appInfo = this.app().get().getResponse().getEntities().get(0);
 
-        Token token = this.app().token().post(new Token("test_1","test123"));
+        Token token = this.app().token().post(new Token("test_1", "test123"));
 
         UUID userId = UUID.fromString(((Map<String, Object>) token.get("user")).get("uuid").toString());
 
@@ -988,7 +988,7 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
             log.info( "Error Response Body: " + uie.getResponse().getEntity( String.class ) );
         }
 
-        assertEquals( Status.UNAUTHORIZED.getStatusCode(), status );
+        assertEquals(Status.UNAUTHORIZED.getStatusCode(), status);
 
         try {
             userResource.entity("test_2").connection("token").get(new QueryParameters().addParam("access_token", token.getAccessToken()),false);
@@ -1006,11 +1006,11 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
         Collection tokens = userResource.entity("test_1").connection("token").get(new QueryParameters().addParam("access_token", adminToken),false);
 
 
-        assertTrue( tokens.getResponse().getProperties().get("user")!=null );
+        assertTrue(tokens.getResponse().getProperties().get("user") != null);
 
         tokens = userResource.entity("test_1").connection("token").get(new QueryParameters().addParam("access_token", adminToken),false);
 
-        assertTrue(tokens.getResponse().getProperties().get("user")!=null);
+        assertTrue(tokens.getResponse().getProperties().get("user") != null);
 
         Entity entityConn = usersResource.entity(userId).connection("deactivate").post(new Entity());
 
@@ -1018,7 +1018,7 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
         refreshIndex();
 
         try {
-            this.app().token().post(new Token("test_1","test123"));
+            this.app().token().post(new Token("test_1", "test123"));
             fail( "request for deactivated user should fail" );
         }
         catch ( UniformInterfaceException uie ) {
@@ -1067,15 +1067,15 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
         {
             final Collection response = usersResource.get(new QueryParameters().setQuery("select *"));
             assertNotNull("Entities must exist", response.getResponse().getEntities());
-            assertTrue("Must be some entities", response.getResponse().getEntities().size() > 0 );
+            assertTrue("Must be some entities", response.getResponse().getEntities().size() > 0);
             assertEquals("Must be users", "user", response.getResponse().getEntities().get(0).get("type").toString());
         }
 
         {
             final Collection response = usersResource.get(new QueryParameters().setQuery("select uuid"));
 
-            assertNotNull( "List must exist", response.getResponse().list(  ) );
-            assertTrue("Must be some list items", response.getResponse().list(  ).size()>0);
+            assertNotNull("List must exist", response.getResponse().list());
+            assertTrue("Must be some list items", response.getResponse().list().size() > 0);
         }
     }
 
@@ -1095,7 +1095,7 @@ public class UserResourceIT extends org.apache.usergrid.rest.test.resource2point
 
         Entity responseEntity = this.app().collection("curts").post(payload);
 
-        UUID userId = UUID.fromString( responseEntity.getUuid().toString() );
+        UUID userId = UUID.fromString(responseEntity.getUuid().toString());
 
         assertNotNull( userId );
 
