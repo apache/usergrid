@@ -17,14 +17,13 @@
 package org.apache.usergrid.rest.test.resource2point0.endpoints;
 
 import com.sun.jersey.api.client.WebResource;
-import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
-import org.apache.usergrid.rest.test.resource2point0.model.Collection;
-import org.apache.usergrid.rest.test.resource2point0.model.Entity;
-import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
+import org.apache.usergrid.rest.test.resource2point0.model.*;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 import org.apache.usergrid.services.ServiceParameter;
 
 import javax.ws.rs.core.MediaType;
+import java.util.List;
+import java.util.UUID;
 
 
 /**
@@ -41,9 +40,17 @@ public class CollectionEndpoint extends NamedResource {
 
     public EntityEndpoint entity(final Entity entity){
         String identifier = (String) entity.get("uuid");
-        return new EntityEndpoint(identifier, context, this);
+        return entity(identifier);
     }
 
+    public EntityEndpoint entity(final UUID identifier ){
+        return entity(identifier.toString());
+    }
+
+
+    public EntityEndpoint entity(final String identifier ){
+        return new EntityEndpoint(identifier, context, this);
+    }
 
 
     /**
@@ -172,6 +179,18 @@ public class CollectionEndpoint extends NamedResource {
         ApiResponse response = getResource(true).type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
                 .post(ApiResponse.class, payload);
         return new Entity(response);
+    }
+
+    public Entity post(){
+        ApiResponse response = getResource(true).type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
+                .post(ApiResponse.class);
+        return new Entity(response);
+    }
+
+    public ApiResponse post(List<Entity> entityList){
+        ApiResponse response = getResource(true).type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
+                .post(ApiResponse.class,entityList);
+        return response;
     }
 
     /**

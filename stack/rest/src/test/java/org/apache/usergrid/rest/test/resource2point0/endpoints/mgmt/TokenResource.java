@@ -47,4 +47,8 @@ public class TokenResource extends NamedResource {
 
     }
 
+    public TokenResource setToken(Token token) {
+        this.context.setToken(token);
+        return this;
+    }
 }

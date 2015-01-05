@@ -41,6 +41,7 @@ public class Collection implements Iterable<Entity>, Iterator<Entity> {
     private String name;
 
 
+
     /**
      * Collection usersCollection =  app.collection("users").get();
      * while(usersCollection.hasNext()){
@@ -58,13 +59,9 @@ public class Collection implements Iterable<Entity>, Iterator<Entity> {
     public Collection(ApiResponse response) {
         this.response = response;
         this.cursor = response.getCursor();
-        entities = response.getEntities().iterator();
+        this.entities = response.getEntities()!=null?  response.getEntities().iterator():null;
     }
-
-    public ApiResponse getResponse(){
-        return response;
-    }
-
+    
     @Override
     public Iterator iterator() {
         return this;
@@ -90,5 +87,9 @@ public class Collection implements Iterable<Entity>, Iterator<Entity> {
     public void remove() {
         throw new UnsupportedOperationException( "Remove is unsupported" );
     }
+
+
+    public ApiResponse getResponse(){return response;}
+
 }
 

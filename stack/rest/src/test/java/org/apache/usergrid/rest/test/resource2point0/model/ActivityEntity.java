@@ -18,40 +18,27 @@
  *
  */
 
-package org.apache.usergrid.rest.test.resource2point0.endpoints;
+package org.apache.usergrid.rest.test.resource2point0.model;
 
-
-
-import org.apache.usergrid.rest.test.resource2point0.model.Token;
-import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
-
-import javax.ws.rs.core.MediaType;
+import java.util.Map;
 
 /**
- * Classy class class.
+ * Provide Guidance on ActivityEntity
  */
-public class TokenResource extends NamedResource {
-    public TokenResource(final ClientContext context, final UrlResource parent) {
-        super("token", context, parent);
+public class ActivityEntity extends Entity {
+    public ActivityEntity(String email, String verb, String content){
+        this.chainPut("content",content).chainPut("verb",verb).chainPut("email",email);
+    }
+    public ActivityEntity(Map<String,Object> map){
+        this.putAll(map);
     }
 
-
-    /**
-     * Obtains an access token
-     *
-     * @param token
-     * @return
-     */
-    public Token post(Token token) {
-        token = getResource().type(MediaType.APPLICATION_JSON_TYPE)
-                .accept(MediaType.APPLICATION_JSON).post(Token.class, token);
-        this.context.setToken(token);
-        return token;
-    }
-
-    public TokenResource setToken(Token token) {
-        this.context.setToken(token);
+    public ActivityEntity putActor(Map<String, Object> actorPost) {
+        this.put("actor",actorPost);
         return this;
     }
 
+    public Map<String, Object> getActor() {
+        return (Map<String, Object>) this.get("actor");
+    }
 }

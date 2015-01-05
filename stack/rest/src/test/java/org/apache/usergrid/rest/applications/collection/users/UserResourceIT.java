@@ -27,21 +27,21 @@ import java.util.UUID;
 
 import javax.ws.rs.core.MediaType;
 
+import org.apache.usergrid.rest.test.resource.CollectionResource;
+import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.CollectionEndpoint;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.EntityEndpoint;
+import org.apache.usergrid.rest.test.resource2point0.model.*;
+import org.jclouds.rest.annotations.Api;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.java.client.Client.Query;
-import org.apache.usergrid.java.client.entities.Activity;
-import org.apache.usergrid.java.client.entities.Activity.ActivityObject;
-import org.apache.usergrid.java.client.entities.Entity;
-import org.apache.usergrid.java.client.entities.User;
-import org.apache.usergrid.java.client.response.ApiResponse;
 
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
-import org.apache.usergrid.rest.AbstractRestIT;
 import org.apache.usergrid.rest.applications.utils.UserRepo;
 import org.apache.usergrid.utils.UUIDUtils;
 
@@ -49,7 +49,6 @@ import com.sun.jersey.api.client.ClientResponse.Status;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import java.io.IOException;
 
-import static org.apache.usergrid.rest.applications.utils.TestUtils.getIdFromSearchResults;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -66,145 +65,101 @@ import static org.junit.Assert.fail;
 @Concurrent()
 public class UserResourceIT extends AbstractRestIT {
 
-    private static Logger log = LoggerFactory.getLogger( UserResourceIT.class );
+    private static Logger log = LoggerFactory.getLogger(UserResourceIT.class);
+    UserRepo userRepo;
+    CollectionEndpoint usersResource;
+    CollectionEndpoint userResource;
 
+    @Before
+    public void setup() {
+        userRepo = new UserRepo(clientSetup);
+        userRepo.load();
+        usersResource = this.app().collection("users");
+        userResource = this.app().collection("user");
+
+        clientSetup.refreshIndex();
+    }
 
     @Test
     public void usernameQuery() throws IOException {
-
-        UserRepo.INSTANCE.load( resource(), access_token );
-        refreshIndex("test-organization", "test-app");
-
-        String ql = "username = 'unq_user*'";
-
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/users" ).queryParam( "ql", ql )
-                                  .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                                  .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
-
-        assertEquals( UserRepo.INSTANCE.getByUserName( "unq_user1" ), getIdFromSearchResults( node, 0 ) );
-        assertEquals( UserRepo.INSTANCE.getByUserName( "unq_user2" ), getIdFromSearchResults( node, 1 ) );
-        assertEquals( UserRepo.INSTANCE.getByUserName( "unq_user3" ), getIdFromSearchResults( node, 2 ) );
+        String ql = "username = 'user*'";
+        Collection collection = usersResource.get(new QueryParameters().setQuery(ql));
+        assertEquals(userRepo.getByUserName("user1"), getIdFromSearchResults(collection, 0));
+        assertEquals(userRepo.getByUserName("user2"), getIdFromSearchResults(collection, 1));
+        assertEquals(userRepo.getByUserName("user3"), getIdFromSearchResults(collection, 2));
     }
 
 
     @Test
     public void nameQuery() throws IOException {
-
-        UserRepo.INSTANCE.load( resource(), access_token );
-        refreshIndex("test-organization", "test-app");
-
         String ql = "name = 'John*'";
 
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/users" ).queryParam( "ql", ql )
-                                  .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                                  .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
-
-        assertEquals( UserRepo.INSTANCE.getByUserName( "user2" ), getIdFromSearchResults( node, 0 ) );
-        assertEquals( UserRepo.INSTANCE.getByUserName( "user3" ), getIdFromSearchResults( node, 1 ) );
+        Collection collection = usersResource.get(new QueryParameters().setQuery(ql));
+        assertEquals(userRepo.getByUserName("user2"), getIdFromSearchResults(collection, 0));
+        assertEquals(userRepo.getByUserName("user3"), getIdFromSearchResults(collection, 1));
     }
 
 
     @Test
     public void nameQueryByUUIDs() throws Exception {
-        UserRepo.INSTANCE.load( resource(), access_token );
-        refreshIndex("test-organization", "test-app");
-
         String ql = "select uuid name = 'John*'";
-
-        ApplicationInfo appInfo = setup.getMgmtSvc().getApplicationInfo( "test-organization/test-app" );
-        OrganizationInfo orgInfo = setup.getMgmtSvc().getOrganizationByName( "test-organization" );
-
-        resource().path( "/" + orgInfo.getUuid() + "/" + appInfo.getId() + "/users" ).queryParam( "ql", ql )
-                  .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                  .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class );
+        Collection response = this.app().collection("users").get(new QueryParameters().setQuery(ql));
+        assertNotNull(response.getResponse().list());
     }
 
 
     @Test
     public void nameFullTextQuery() throws IOException {
-
-        UserRepo.INSTANCE.load( resource(), access_token );
-        refreshIndex("test-organization", "test-app");
-
         String ql = "name contains 'Smith' order by name ";
-
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/users" ).queryParam( "ql", ql )
-                                  .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                                  .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
-
-        assertEquals( UserRepo.INSTANCE.getByUserName( "user1" ), getIdFromSearchResults( node, 0 ) );
-        assertEquals( UserRepo.INSTANCE.getByUserName( "user2" ), getIdFromSearchResults( node, 1 ) );
-        assertEquals( UserRepo.INSTANCE.getByUserName( "user3" ), getIdFromSearchResults( node, 2 ) );
+        Collection collection = usersResource.get(new QueryParameters().setQuery(ql));
+        assertEquals(userRepo.getByUserName("user1"), getIdFromSearchResults(collection, 0));
+        assertEquals(userRepo.getByUserName("user2"), getIdFromSearchResults(collection, 1));
+        assertEquals(userRepo.getByUserName("user3"), getIdFromSearchResults(collection, 2));
     }
 
+    /** Get the uuid at the given index for the root node.  If it doesn't exist, null is returned */
+    static UUID getIdFromSearchResults( Collection collection, int index ) {
 
-    /**
-     * Tests that when a full text index is run on a field that isn't full text indexed an error is thrown
-     */
-    @Ignore("No longer relevant because all text fields are full-text indexed with Core Persistence")
-    @Test(expected = UniformInterfaceException.class)
-    public void fullTextQueryNotFullTextIndexed() throws IOException {
 
-        UserRepo.INSTANCE.load( resource(), access_token );
-        refreshIndex("test-organization", "test-app");
+        if ( collection == null ) {
+            return null;
+        }
 
-        String ql = "username contains 'user' ";
+        Entity entity = (Entity)collection.getResponse().getEntities().get(index);
 
-        resource().path( "/test-organization/test-app/users" ).queryParam( "ql", ql )
-                  .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                  .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class );
+        if ( entity == null ) {
+            return null;
+        }
+
+        return UUIDUtils.tryExtractUUID( entity.get( "uuid" ).toString() );
     }
-
-
-    /**
-     * Tests that when a full text index is run on a field that isn't full text indexed an error is thrown
-     */
-    @Ignore("This test is being ignored as users ")
-    @Test(expected = UniformInterfaceException.class)
-    public void fullQueryNotIndexed() throws IOException {
-
-        UserRepo.INSTANCE.load( resource(), access_token );
-        refreshIndex("test-organization", "test-app");
-
-        String ql = "picture = 'foo' ";
-
-        resource().path( "/test-organization/test-app/users" ).queryParam( "ql", ql )
-                  .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                  .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class );
-    }
-
 
     /**
      * Test that when activity is pushed with not actor, it's set to the user who created it
      */
     @Test
     public void emtpyActorActivity() throws IOException {
-        UserRepo.INSTANCE.load( resource(), access_token );
-        UUID userId = UserRepo.INSTANCE.getByUserName( "user1" );
-        refreshIndex("test-organization", "test-app");
 
-        Activity activity = new Activity();
-        activity.setProperty( "email", "rod@rodsimpson.com" );
-        activity.setProperty( "verb", "POST" );
-        activity.setProperty( "content", "Look! more new content" );
+        UUID userId = userRepo.getByUserName("user1");
 
-        ApiResponse response = client.postUserActivity( userId.toString(), activity );
 
-        assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
+        ActivityEntity activity = new ActivityEntity("rod@rodsimpson.com", "POST", "Look! more new content");
 
-        Entity entity = response.getEntities().get( 0 );
+
+        Entity entity = usersResource.entity(userId.toString()).activities().post(activity);
+
 
         UUID activityId = entity.getUuid();
 
-        assertNotNull( activityId );
+        assertNotNull(activityId);
+        Map<String, Object> actor = (Map<String, Object>) entity.get("actor");
 
-        JsonNode actor = getActor( entity );
 
-        UUID actorId = UUIDUtils.tryGetUUID( actor.get( "uuid" ).textValue() );
+        UUID actorId = UUIDUtils.tryGetUUID(actor.get("uuid").toString());
 
-        assertEquals( userId, actorId );
+        assertEquals(userId, actorId);
 
-        assertEquals( "user1@apigee.com", actor.get( "email" ).asText() );
+        assertEquals("user1@apigee.com", actor.get("email").toString());
     }
 
 
@@ -214,40 +169,31 @@ public class UserResourceIT extends AbstractRestIT {
     @Test
     public void noUUIDorEmail() throws IOException {
 
-        UserRepo.INSTANCE.load( resource(), access_token );
-        refreshIndex("test-organization", "test-app");
+        UUID userId = userRepo.getByUserName("user1");
 
-        UUID userId = UserRepo.INSTANCE.getByUserName( "user1" );
-
-        Activity activity = new Activity();
-        activity.setProperty( "email", "rod@rodsimpson.com" );
-        activity.setProperty( "verb", "POST" );
-        activity.setProperty( "content", "Look! more new content" );
+        ActivityEntity activity = new ActivityEntity("rod@rodsimpson.com", "POST", "Look! more new content");
 
         // same as above, but with actor partially filled out
 
-        ActivityObject actorPost = new ActivityObject();
-        actorPost.setDisplayName( "Dino" );
+        Map<String, Object> actorPost = new HashMap<>();
+        actorPost.put("displayName", "Dino");
 
-        activity.setActor( actorPost );
+        activity.putActor(actorPost);
 
-        ApiResponse response = client.postUserActivity( userId.toString(), activity );
 
-        assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
-
-        Entity entity = response.getEntities().get( 0 );
+        Entity entity = usersResource.entity(userId.toString()).activities().post(activity);
 
         UUID activityId = entity.getUuid();
 
-        assertNotNull( activityId );
+        assertNotNull(activityId);
 
-        JsonNode actor = getActor( entity );
+        Map<String, Object> actor = (Map<String, Object>) entity.get("actor");
 
-        UUID actorId = UUIDUtils.tryGetUUID( actor.get( "uuid" ).textValue() );
+        UUID actorId = UUIDUtils.tryGetUUID(actor.get("uuid").toString());
 
-        assertEquals( userId, actorId );
+        assertEquals(userId, actorId);
 
-        assertEquals( "user1@apigee.com", actor.get( "email" ).asText() );
+        assertEquals("user1@apigee.com", actor.get("email").toString());
     }
 
 
@@ -256,45 +202,39 @@ public class UserResourceIT extends AbstractRestIT {
      */
     @Test
     public void ignoreUUIDandEmail() throws IOException {
-        UserRepo.INSTANCE.load( resource(), access_token );
-        UUID userId = UserRepo.INSTANCE.getByUserName( "user1" );
-        refreshIndex("test-organization", "test-app");
+
+        UUID userId = userRepo.getByUserName("user1");
+
 
         UUID testUUID = UUIDUtils.newTimeUUID();
         String testEmail = "foo@bar.com";
 
-        // same as above, but with actor partially filled out
-        Activity activity = new Activity();
-        activity.setProperty( "email", "rod@rodsimpson.com" );
-        activity.setProperty( "verb", "POST" );
-        activity.setProperty( "content", "Look! more new content" );
+
+        ActivityEntity activity = new ActivityEntity("rod@rodsimpson.com", "POST", "Look! more new content");
 
         // same as above, but with actor partially filled out
 
-        ActivityObject actorPost = new ActivityObject();
-        actorPost.setDisplayName( "Dino" );
-        actorPost.setUuid( testUUID );
-        actorPost.setDynamicProperty( "email", testEmail );
+        Map<String, Object> actorPost = new HashMap<>();
+        actorPost.put("displayName", "Dino");
+        actorPost.put("uuid", testUUID);
+        actorPost.put("email", testEmail);
+        activity.putActor(actorPost);
+        // same as above, but with actor partially filled out
 
-        activity.setActor( actorPost );
 
-        ApiResponse response = client.postUserActivity( userId.toString(), activity );
-
-        assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
-
-        Entity entity = response.getEntities().get( 0 );
+        Entity entity = usersResource.entity(userId.toString()).activities().post(activity);
 
         UUID activityId = entity.getUuid();
 
-        assertNotNull( activityId );
+        assertNotNull(activityId);
 
-        JsonNode actor = getActor( entity );
+        Map<String, Object> actor = new ActivityEntity(entity).getActor();
 
-        UUID actorId = UUIDUtils.tryGetUUID( actor.get( "uuid" ).textValue() );
+        UUID actorId = UUIDUtils.tryGetUUID(actor.get("uuid").toString());
 
-        assertEquals( testUUID, actorId );
+        assertEquals(testUUID, actorId);
 
-        assertEquals( testEmail, actor.get( "email" ).asText() );
+        assertEquals(testEmail, actor.get("email").toString());
     }
 
 
@@ -303,49 +243,34 @@ public class UserResourceIT extends AbstractRestIT {
      */
     @Test
     public void userActivitiesDefaultOrder() throws IOException {
-        UserRepo.INSTANCE.load( resource(), access_token );
-        UUID userId = UserRepo.INSTANCE.getByUserName( "user1" );
-        refreshIndex("test-organization", "test-app");
 
-        Activity activity = new Activity();
-        activity.setProperty( "email", "rod@rodsimpson.com" );
-        activity.setProperty( "verb", "POST" );
-        activity.setProperty( "content", "activity 1" );
+        UUID userId = userRepo.getByUserName("user1");
 
-        ApiResponse response = client.postUserActivity( userId.toString(), activity );
+        ActivityEntity activity = new ActivityEntity("rod@rodsimpson.com", "POST", "Look! more new content");
 
-        assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
+        // same as above, but with actor partially filled out
 
-        refreshIndex("test-organization", "test-app");
-
-        Entity entity = response.getFirstEntity();
+        Entity entity = usersResource.entity(userId.toString()).activities().post(activity);
+        refreshIndex();
 
         UUID firstActivityId = entity.getUuid();
 
-        activity = new Activity();
-        activity.setProperty( "email", "rod@rodsimpson.com" );
-        activity.setProperty( "verb", "POST" );
-        activity.setProperty( "content", "activity 2" );
+        activity = new ActivityEntity("rod@rodsimpson.com", "POST", "activity 2");
+        entity = usersResource.entity(userId.toString()).activities().post(activity);
 
-        response = client.postUserActivity( userId.toString(), activity );
-
-        assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
-
-        refreshIndex("test-organization", "test-app");
-
-        entity = response.getFirstEntity();
+        refreshIndex();
 
         UUID secondActivityId = entity.getUuid();
 
-        Query query = client.queryActivity();
+        Collection activities = usersResource.entity(userId.toString()).activities().get();
 
-        entity = query.getResponse().getEntities().get( 0 );
+        entity = activities.getResponse().getEntities().get(0);
 
-        assertEquals( secondActivityId, entity.getUuid() );
+        assertEquals(secondActivityId, entity.getUuid());
 
-        entity = query.getResponse().getEntities().get( 1 );
+        entity = activities.getResponse().getEntities().get(1);
 
-        assertEquals( firstActivityId, entity.getUuid() );
+        assertEquals(firstActivityId, entity.getUuid());
     }
 
 
@@ -357,30 +282,27 @@ public class UserResourceIT extends AbstractRestIT {
         String name = "name" + id;
         String email = "email" + id + "@usergrid.org";
 
-        ApiResponse response = client.createUser( username, name, email, "password" );
-        assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
+        User map = new User(username, name, email, null);
+        map.put("email", email);
 
-        refreshIndex("test-organization", "test-app");
-
-        Entity userEntity = response.getEntities().get( 0 );
+        Entity userEntity = usersResource.post(new Entity(map));
+        refreshIndex();
 
         // get the user with username property that has an email value
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/users/" + username )
-                                  .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                                  .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
+        Entity testUser = usersResource.entity(username).get();
 
-        assertEquals( username, node.get( "entities" ).get( 0 ).get( "username" ).asText() );
-        assertEquals( name, node.get( "entities" ).get( 0 ).get( "name" ).asText() );
-        assertEquals( email, node.get( "entities" ).get( 0 ).get( "email" ).asText() );
+        assertEquals(username, testUser.get("username").toString());
+        assertEquals(name, testUser.get("name").toString());
+        assertEquals(email, testUser.get("email").toString());
 
         // get the user with email property value
-        node = mapper.readTree( resource().path( "/test-organization/test-app/users/" + email )
-                         .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                         .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
+        // get the user with username property that has an email value
+        testUser = usersResource.entity(email).get();
 
-        assertEquals( username, node.get( "entities" ).get( 0 ).get( "username" ).asText() );
-        assertEquals( name, node.get( "entities" ).get( 0 ).get( "name" ).asText() );
-        assertEquals( email, node.get( "entities" ).get( 0 ).get( "email" ).asText() );
+        assertEquals(username, testUser.get("username").toString());
+        assertEquals(name, testUser.get("name").toString());
+        assertEquals(email, testUser.get("email").toString());
+
     }
 
 
@@ -389,47 +311,38 @@ public class UserResourceIT extends AbstractRestIT {
      */
     @Test
     public void resultSizeSame() throws IOException {
-        UserRepo.INSTANCE.load( resource(), access_token );
 
-        refreshIndex("test-organization", "test-app");
+        UUID userId1 = userRepo.getByUserName("user1");
+        UUID userId2 = userRepo.getByUserName("user2");
+        UUID userId3 = userRepo.getByUserName("user3");
 
-        UUID userId1 = UserRepo.INSTANCE.getByUserName( "user1" );
-        UUID userId2 = UserRepo.INSTANCE.getByUserName( "user2" );
-        UUID userId3 = UserRepo.INSTANCE.getByUserName( "user3" );
+        Collection collection = usersResource.get();
 
-        Query query = client.queryUsers();
+        int nonOrderedSize = collection.getResponse().getEntities().size();
 
-        ApiResponse response = query.getResponse();
+        collection = usersResource.get(new QueryParameters().setQuery("order by username"));
 
-        assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
+        int orderedSize = collection.getResponse().getEntities().size();
 
-        int nonOrderedSize = response.getEntities().size();
+        assertEquals("Sizes match", nonOrderedSize, orderedSize);
 
-        query = client.queryUsers( "order by username" );
+        int firstEntityIndex = getEntityIndex(userId1, collection);
 
-        response = query.getResponse();
+        int secondEntityIndex = getEntityIndex(userId2, collection);
 
-        int orderedSize = response.getEntities().size();
+        int thirdEntityIndex = getEntityIndex(userId3, collection);
 
-        assertEquals( "Sizes match", nonOrderedSize, orderedSize );
+        assertTrue("Ordered correctly", firstEntityIndex < secondEntityIndex);
 
-        int firstEntityIndex = getEntityIndex( userId1, response );
-
-        int secondEntityIndex = getEntityIndex( userId2, response );
-
-        int thirdEntityIndex = getEntityIndex( userId3, response );
-
-        assertTrue( "Ordered correctly", firstEntityIndex < secondEntityIndex );
-
-        assertTrue( "Ordered correctly", secondEntityIndex < thirdEntityIndex );
+        assertTrue("Ordered correctly", secondEntityIndex < thirdEntityIndex);
     }
 
 
-    private int getEntityIndex( UUID entityId, ApiResponse response ) {
-        List<Entity> entities = response.getEntities();
+    private int getEntityIndex(UUID entityId, Collection collection) {
+        List<Entity> entities = collection.getResponse().getEntities();
 
-        for ( int i = 0; i < entities.size(); i++ ) {
-            if ( entityId.equals( entities.get( i ).getUuid() ) ) {
+        for (int i = 0; i < entities.size(); i++) {
+            if (entityId.equals(entities.get(i).getUuid())) {
                 return i;
             }
         }
@@ -441,132 +354,112 @@ public class UserResourceIT extends AbstractRestIT {
     @Test
     public void clientNameQuery() {
 
-        UUID id = UUIDUtils.newTimeUUID();
 
-        String username = "username" + id;
-        String name = "name" + id;
+        String username = "username";
+        String name = "name";
 
-        ApiResponse response = client.createUser( username, name, id + "@usergrid.org", "password" );
-        assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
-        refreshIndex("test-organization", "test-app");
+        User user = new User(username, name, username + "@usergrid.org", "password");
 
-        UUID createdId = response.getEntities().get( 0 ).getUuid();
+        Entity entity = usersResource.post(user);
+        UUID createdId = entity.getUuid();
 
-        Query results = client.queryUsers( String.format( "name = '%s'", name ) );
-        User user = results.getResponse().getEntities( User.class ).get( 0 );
-
-        assertEquals( createdId, user.getUuid() );
+        refreshIndex();
+        Collection results = usersResource.get(new QueryParameters().setQuery(String.format("name = '%s'", name)));
+        entity = new User(results.getResponse().getEntities().get(0));
+        assertEquals(createdId, entity.getUuid());
     }
 
 
     @Test
-    public void deleteUser() throws IOException  {
+    public void deleteUser() throws IOException {
 
         UUID id = UUIDUtils.newTimeUUID();
 
         String username = "username" + id;
         String name = "name" + id;
+        User entity = new User(username, name, id + "@usergrid.org", "password");
 
-        ApiResponse response = client.createUser( username, name, id + "@usergrid.org", "password" );
-        assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
-        refreshIndex("test-organization", "test-app");
+        entity = new User(usersResource.post(entity));
 
-        UUID createdId = response.getEntities().get( 0 ).getUuid();
+        UUID createdId = entity.getUuid();
 
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/users/" + createdId )
-                                  .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                                  .type( MediaType.APPLICATION_JSON_TYPE ).delete( String.class ));
+        refreshIndex();
 
-        assertNull( node.get( "errors" ) );
+        Entity newEntity = usersResource.entity(createdId.toString()).get();
 
-        Query results = client.queryUsers( String.format( "username = '%s'", name ) );
-        assertEquals( 0, results.getResponse().getEntities( User.class ).size() );
+        userResource.entity(newEntity).delete();
+
+        refreshIndex();
+
+        Collection results = usersResource.get(new QueryParameters().setQuery(String.format("username = '%s'", username)));
+        assertEquals(0, results.getResponse().getEntities().size());
 
         // now create that same user again, it should work
-        response = client.createUser( username, name, id + "@usergrid.org", "password" );
-        assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
-        refreshIndex("test-organization", "test-app");
+        entity = new User(usersResource.post(entity));
 
-        createdId = response.getEntities().get( 0 ).getUuid();
+        createdId = entity.getUuid();
 
-        assertNotNull( createdId );
+        assertNotNull(createdId);
     }
 
 
     @Test
     public void singularCollectionName() throws IOException {
-        UUID id = UUIDUtils.newTimeUUID();
 
-        String username = "username1" + id;
-        String name = "name1" + id;
-        String email = "email1" + id + "@usergrid.org";
+        String username = "username1";
+        String name = "name1";
+        String email = "email1" + "@usergrid.org";
 
-        ApiResponse response = client.createUser( username, name, email, "password" );
-        assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
-        refreshIndex("test-organization", "test-app");
+        User entity = new User(username, name, email, "password");
 
-        UUID firstCreatedId = response.getEntities().get( 0 ).getUuid();
+        entity = new User(usersResource.post(entity));
+        refreshIndex();
 
-        username = "username2" + id;
-        name = "name2" + id;
-        email = "email2" + id + "@usergrid.org";
+        UUID firstCreatedId = entity.getUuid();
+        username = "username2";
+        name = "name2";
+        email = "email2" + "@usergrid.org";
 
-        response = client.createUser( username, name, email, "password" );
-        assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
-        refreshIndex("test-organization", "test-app");
+        entity = new User(username, name, email, "password");
 
-        UUID secondCreatedId = response.getEntities().get( 0 ).getUuid();
+        entity = new User(usersResource.post(entity));
+        refreshIndex();
+
+        UUID secondCreatedId = entity.getUuid();
 
         // now create a connection of "likes" between the first user and the
         // second using pluralized form
 
         // plural collection name
-        String path = String.format( "/test-organization/test-app/users/%s/conn1/%s", firstCreatedId, secondCreatedId );
 
-        JsonNode node = mapper.readTree( resource().path( path ).queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                          .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class ));
+        Entity conn1 = usersResource.entity(firstCreatedId.toString()).connection("conn1").entity(secondCreatedId.toString()).post();
 
-        assertEquals( secondCreatedId.toString(), getEntity( node, 0 ).get( "uuid" ).asText() );
+        assertEquals(secondCreatedId.toString(), conn1.getUuid().toString());
 
-        refreshIndex("test-organization", "test-app");
+        refreshIndex();
 
-        // singular collection name
-        path = String.format( "/test-organization/test-app/user/%s/conn2/%s", firstCreatedId, secondCreatedId );
 
-        node = mapper.readTree( resource().path( path ).queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                         .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class ));
+        Entity conn2 = usersResource.entity(firstCreatedId.toString()).connection("conn2").entity(secondCreatedId.toString()).post();
 
-        assertEquals( secondCreatedId.toString(), getEntity( node, 0 ).get( "uuid" ).asText() );
+        assertEquals(secondCreatedId.toString(), conn2.getUuid().toString());
 
-        refreshIndex("test-organization", "test-app");
+        refreshIndex();
 
-        path = String.format( "/test-organization/test-app/users/%s/conn1", firstCreatedId );
+        Collection conn1Connections = usersResource.entity(firstCreatedId.toString()).connection("conn1").get();
 
-        node = mapper.readTree( resource().path( path ).queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                         .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
+        assertEquals(secondCreatedId.toString(), ((Entity) conn1Connections.getResponse().getEntities().get(0)).getUuid().toString());
 
-        assertEquals( secondCreatedId.toString(), getEntity( node, 0 ).get( "uuid" ).asText() );
+        conn1Connections = userResource.entity(firstCreatedId.toString()).connection("conn1").get();
 
-        path = String.format( "/test-organization/test-app/user/%s/conn1", firstCreatedId );
+        assertEquals(secondCreatedId.toString(), ((Entity) conn1Connections.getResponse().getEntities().get(0)).getUuid().toString());
 
-        node = mapper.readTree( resource().path( path ).queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                         .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
+        Collection conn2Connections = usersResource.entity(firstCreatedId.toString()).connection("conn1").get();
 
-        assertEquals( secondCreatedId.toString(), getEntity( node, 0 ).get( "uuid" ).asText() );
+        assertEquals(secondCreatedId.toString(), ((Entity) conn2Connections.getResponse().getEntities().get(0)).getUuid().toString());
 
-        path = String.format( "/test-organization/test-app/users/%s/conn2", firstCreatedId );
+        conn2Connections = userResource.entity(firstCreatedId.toString()).connection("conn1").get();
 
-        node = mapper.readTree( resource().path( path ).queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                         .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
-
-        assertEquals( secondCreatedId.toString(), getEntity( node, 0 ).get( "uuid" ).asText() );
-
-        path = String.format( "/test-organization/test-app/user/%s/conn2", firstCreatedId );
-
-        node = mapper.readTree( resource().path( path ).queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                         .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
-
-        assertEquals( secondCreatedId.toString(), getEntity( node, 0 ).get( "uuid" ).asText() );
+        assertEquals(secondCreatedId.toString(), ((Entity) conn2Connections.getResponse().getEntities().get(0)).getUuid().toString());
     }
 
 
@@ -574,44 +467,40 @@ public class UserResourceIT extends AbstractRestIT {
     public void connectionByNameAndType() throws IOException {
         UUID id = UUIDUtils.newTimeUUID();
 
-        String username1 = "username1" + id;
-        String name1 = "name1" + id;
-        String email1 = "email1" + id + "@usergrid.org";
+        String username1 = "username1";
+        String name1 = "name1";
+        String email1 = "email1" + "@usergrid.org";
 
-        ApiResponse response = client.createUser( username1, name1, email1, "password" );
-        assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
-        refreshIndex("test-organization", "test-app");
+        User entity = new User(username1, name1, email1, "password");
 
-        UUID firstCreatedId = response.getEntities().get( 0 ).getUuid();
+        entity = new User(usersResource.post(entity));
 
-        String username2 = "username2" + id;
-        String name2 = "name2" + id;
-        String email2 = "email2" + id + "@usergrid.org";
+        UUID firstCreatedId = entity.getUuid();
 
-        response = client.createUser( username2, name2, email2, "password" );
-        assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
-        refreshIndex("test-organization", "test-app");
+        String username2 = "username2";
+        String name2 = "name2";
+        String email2 = "email2" + "@usergrid.org";
 
-        UUID secondCreatedId = response.getEntities().get( 0 ).getUuid();
+        entity = new User(username2, name2, email2, "password");
+
+        entity = new User(usersResource.post(entity));
+
+        UUID secondCreatedId = entity.getUuid();
 
         // now create a connection of "likes" between the first user and the
         // second using pluralized form
+        refreshIndex();
 
         // named entity in collection name
-        String path = String.format( "/test-organization/test-app/users/%s/conn1/users/%s", firstCreatedId, username2 );
+        Entity conn1 = usersResource.entity(firstCreatedId.toString()).connection("conn1", "users").entity(secondCreatedId.toString()).post();
 
-        JsonNode node = mapper.readTree( resource().path( path ).queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                          .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class ));
-
-        assertEquals( secondCreatedId.toString(), getEntity( node, 0 ).get( "uuid" ).asText() );
+        assertEquals(secondCreatedId.toString(), conn1.getUuid().toString());
 
         // named entity in collection name
-        path = String.format( "/test-organization/test-app/users/%s/conn2/users/%s", username1, username2 );
 
-        node = mapper.readTree( resource().path( path ).queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                         .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class ));
+        Entity conn2 = usersResource.entity(username1).connection("conn2", "users").entity(username2).post();
 
-        assertEquals( secondCreatedId.toString(), getEntity( node, 0 ).get( "uuid" ).asText() );
+        assertEquals(secondCreatedId.toString(), conn2.getUuid().toString());
     }
 
 
@@ -625,131 +514,84 @@ public class UserResourceIT extends AbstractRestIT {
         String name = "name1" + id;
         String email = "email1" + id + "@usergrid.org";
 
-        ApiResponse response = client.createUser( email, name, email, "password" );
-        assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
-        refreshIndex("test-organization", "test-app");
+        User entity = new User(email, name, email, "password");
 
-        UUID userId = response.getEntities().get( 0 ).getUuid();
+        entity = new User(usersResource.post(entity));
 
-        Entity role = new Entity( "role" );
-        role.setProperty( "name", "connectionQuerybyEmail1" );
+        UUID userId = entity.getUuid();
 
-        response = client.createEntity( role );
+        Entity role = new Entity();
+        role.put("name", "connectionQuerybyEmail1");
 
-        assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
+        role = this.app().collection("roles").post(role);
 
-        UUID roleId1 = response.getEntities().get( 0 ).getUuid();
+        UUID roleId1 = role.getUuid();
 
         //add permissions to the role
 
-        Map<String, String> perms = new HashMap<String, String>();
-        perms.put( "permission", "get:/stuff/**" );
+        Map<String, Object> perms = new HashMap<>();
+        perms.put("permission", "get:/stuff/**");
 
-        String path = String.format( "/test-organization/test-app/roles/%s/permissions", roleId1 );
 
-        JsonNode node = mapper.readTree( resource().path( path ).queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                          .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, perms ));
+        Entity perms1 = this.app().collection("roles").entity(roleId1.toString()).connection("permissions").post(new Entity(perms));
 
 
         //Create the second role
-        role = new Entity( "role" );
-        role.setProperty( "name", "connectionQuerybyEmail2" );
+        role = new Entity();
+        role.put("name", "connectionQuerybyEmail2");
+        role = this.app().collection("roles").post(role);
 
-        response = client.createEntity( role );
 
-        assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
-
-        UUID roleId2 = response.getEntities().get( 0 ).getUuid();
+        UUID roleId2 = role.getUuid();
 
         //add permissions to the role
 
-        perms = new HashMap<String, String>();
-        perms.put( "permission", "get:/stuff/**" );
-
-        path = String.format( "/test-organization/test-app/roles/%s/permissions", roleId2 );
-
-        node = mapper.readTree( resource().path( path ).queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                         .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, perms ));
-
-        refreshIndex("test-organization", "test-app");
-
+        perms = new HashMap<>();
+        perms.put("permission", "get:/stuff/**");
+        Entity perms2 = this.app().collection("roles").entity(roleId2.toString()).connection("permissions").post(new Entity(perms));
+        refreshIndex();
         //connect the entities where role is the root
-        path = String.format( "/test-organization/test-app/roles/%s/users/%s", roleId1, userId );
-
-        node = mapper.readTree( resource().path( path ).queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                         .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class ));
+        Entity perms3 = this.app().collection("roles").entity(roleId1.toString()).connection("users").entity(userId.toString()).post();
 
         // now create a connection of "likes" between the first user and the
         // second using pluralized form
 
-        assertEquals( userId.toString(), getEntity( node, 0 ).get( "uuid" ).asText() );
-
-        refreshIndex("test-organization", "test-app");
+        assertEquals(userId.toString(), perms3.getUuid().toString());
 
 
         //connect the second role
-        path = String.format( "/test-organization/test-app/roles/%s/users/%s", roleId2, userId );
 
-        node = mapper.readTree( resource().path( path ).queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                         .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class ));
+        Entity perms4 = this.app().collection("roles").entity(roleId2).connection("users").entity(userId).post();
 
+        assertEquals(userId.toString(), perms4.getUuid().toString());
 
-        assertEquals( userId.toString(), getEntity( node, 0 ).get( "uuid" ).asText() );
-
-        refreshIndex("test-organization", "test-app");
-
+        refreshIndex();
         //query the second role, it should work
-        path = String.format( "/test-organization/test-app/roles/%s/users", roleId2 );
-
-        node = mapper.readTree( resource().path( path ).queryParam( "access_token", access_token )
-                         .queryParam( "ql", "select%20*%20where%20username%20=%20'" + email + "'" )
-                         .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                         .get( String.class ));
-
-        assertEquals( userId.toString(), getEntity( node, 0 ).get( "uuid" ).asText() );
+        Collection userRoles = this.app().collection("roles").entity(roleId2).connection("users").get(new QueryParameters().setQuery("select%20*%20where%20username%20=%20'" + email + "'"));
+        assertEquals(userId.toString(), ((Entity) userRoles.iterator().next()).getUuid().toString());
 
 
         //query the first role, it should work
-        path = String.format( "/test-organization/test-app/roles/%s/users", roleId1 );
-
-        node = mapper.readTree( resource().path( path ).queryParam( "access_token", access_token )
-                         .queryParam( "ql", "select%20*%20where%20username%20=%20'" + email + "'" )
-                         .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                         .get( String.class ));
-
-        assertEquals( userId.toString(), getEntity( node, 0 ).get( "uuid" ).asText() );
+        userRoles = this.app().collection("roles").entity(roleId1).connection("users").get(new QueryParameters().setQuery("select%20*%20where%20username%20=%20'" + email + "'"));
+        assertEquals(userId.toString(), ((Entity) userRoles.iterator().next()).getUuid().toString());
 
 
         //now delete the first role
-        path = String.format( "/test-organization/test-app/roles/%s", roleId1 );
 
-        node = mapper.readTree( resource().path( path ).queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                         .type( MediaType.APPLICATION_JSON_TYPE ).delete( String.class ));
+        this.app().collection("roles").entity(roleId1).delete();
 
         //query the first role, it should 404
-        path = String.format( "/test-organization/test-app/roles/%s/users", roleId1 );
-
-        refreshIndex("test-organization", "test-app");
-
         try {
-            node = mapper.readTree( resource().path( path ).queryParam( "access_token", access_token )
-                             .queryParam( "ql", "select%20*%20where%20username%20=%20'" + email + "'" )
-                             .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                             .get( String.class ));
-        }
-        catch ( UniformInterfaceException e ) {
-            assertEquals( Status.NOT_FOUND, e.getResponse().getClientResponseStatus() );
+            userRoles = this.app().collection("roles").entity(roleId1).connection("users").get(new QueryParameters().setQuery("select%20*%20where%20username%20=%20'" + email + "'"));
+            assertNull(userRoles);
+        } catch (UniformInterfaceException e) {
+            assertEquals(Status.NOT_FOUND.getStatusCode(), e.getResponse().getStatus());
         }
 
         //query the second role, it should work
-        path = String.format( "/test-organization/test-app/roles/%s/users", roleId2 );
+        userRoles = this.app().collection("roles").entity(roleId2).connection("users").get(new QueryParameters().setQuery("select%20*%20where%20username%20=%20'" + email + "'"));
 
-        node = mapper.readTree( resource().path( path ).queryParam( "access_token", access_token )
-                         .queryParam( "ql", "select%20*%20where%20username%20=%20'" + email + "'" )
-                         .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                         .get( String.class ));
-
-        assertEquals( userId.toString(), getEntity( node, 0 ).get( "uuid" ).asText() );
+        assertEquals(userId.toString(), userRoles.getResponse().getEntities().get(0).getUuid().toString());
     }
 
 
@@ -760,48 +602,36 @@ public class UserResourceIT extends AbstractRestIT {
         String username1 = "username1" + id;
         String name1 = "name1" + id;
         String email1 = "email1" + id + "@usergrid.org";
+        User entity = new User(username1, name1, email1, "password");
 
-        ApiResponse response = client.createUser( username1, name1, email1, "password" );
-        assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
-        refreshIndex("test-organization", "test-app");
+        entity = new User(usersResource.post(entity));
 
-        UUID firstCreatedId = response.getEntities().get( 0 ).getUuid();
+        UUID firstCreatedId = entity.getUuid();
 
         String name = "pepperoni";
 
         Entity pizza = new Entity();
-        pizza.setProperty( "name", name );
-        pizza.setType( "pizza" );
+        pizza.put("name", name);
+        pizza.put("type", "pizza");
 
-        response = client.createEntity( pizza );
+        Entity pizzaEntity = this.app().collection("pizzas").post(pizza);
 
-        assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
-
-        UUID secondCreatedId = response.getEntities().get( 0 ).getUuid();
-
-        refreshIndex("test-organization", "test-app");
+        UUID secondCreatedId = pizzaEntity.getUuid();
+        refreshIndex();
 
         // now create a connection of "likes" between the first user and the
         // second using pluralized form
 
         // named entity in collection name
-        String path = String.format( "/test-organization/test-app/users/%s/conn1/pizzas/%s", firstCreatedId,
-                secondCreatedId );
+        Entity conn1 = usersResource.entity(firstCreatedId).connection("conn1").collection("pizzas").entity(secondCreatedId).post();
 
-        JsonNode node = mapper.readTree( resource().path( path ).queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                          .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class ));
-
-        assertEquals( secondCreatedId.toString(), getEntity( node, 0 ).get( "uuid" ).asText() );
-
-        refreshIndex("test-organization", "test-app");
+        assertEquals(secondCreatedId.toString(), conn1.getUuid().toString());
 
         // named entity in collection name
-        path = String.format( "/test-organization/test-app/users/%s/conn2/pizzas/%s", username1, name );
+        Entity conn2 = usersResource.entity(username1).connection("conn2").collection("pizzas").entity(name).post();
 
-        node = mapper.readTree( resource().path( path ).queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                         .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class ));
 
-        assertEquals( secondCreatedId.toString(), getEntity( node, 0 ).get( "uuid" ).asText() );
+        assertEquals(secondCreatedId.toString(), conn2.getUuid().toString());
     }
 
 
@@ -812,90 +642,69 @@ public class UserResourceIT extends AbstractRestIT {
         String username = "username" + id;
         String name = "name" + id;
         String email = "email" + id + "@usergrid.org";
+        User entity = new User(username, name, email, "password");
 
-        ApiResponse response = client.createUser( username, name, email, "password" );
+        Entity userEntity = usersResource.post(entity);
 
-        assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
-        refreshIndex("test-organization", "test-app");
-
-        Entity userEntity = response.getEntities().get( 0 );
-
+        refreshIndex();
         // attempt to log in
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/token" ).queryParam( "username", username )
-                                  .queryParam( "password", "password" ).queryParam( "grant_type", "password" )
-                                  .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                                  .get( String.class ));
+        Token token = this.app().token().post(new Token(username, "password"));
 
-        assertEquals( username, node.get( "user" ).get( "username" ).asText() );
-        assertEquals( name, node.get( "user" ).get( "name" ).asText() );
-        assertEquals( email, node.get( "user" ).get( "email" ).asText() );
+        assertEquals(username, token.getUser().getUsername());
+        assertEquals(name, token.getUser().getName());
+        assertEquals(email, token.getUser().getEmail());
 
         // now update the name and email
         String newName = "newName";
         String newEmail = "newEmail" + UUIDUtils.newTimeUUID() + "@usergrid.org";
 
-        userEntity.setProperty( "name", newName );
-        userEntity.setProperty( "email", newEmail );
-        userEntity.setProperty( "password", "newp2ssword" );
-        userEntity.setProperty( "pin", "newp1n" );
+        userEntity.put("name", newName);
+        userEntity.put("email", newEmail);
+        userEntity.put("password", "newp2ssword");
+        userEntity.put("pin", "newp1n");
 
-        node = mapper.readTree( resource().path( String.format( "/test-organization/test-app/users/%s", username ) )
-                         .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                         .type( MediaType.APPLICATION_JSON_TYPE ).put( String.class, userEntity.getProperties() ));
+        userEntity = usersResource.entity(username).put(userEntity);
 
-        refreshIndex("test-organization", "test-app");
 
+        refreshIndex();
         // now see if we've updated
-        node = mapper.readTree( resource().path( "/test-organization/test-app/token" ).queryParam( "username", username )
-                         .queryParam( "password", "password" ).queryParam( "grant_type", "password" )
-                         .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                         .get( String.class ));
-
-        assertEquals( username, node.get( "user" ).get( "username" ).asText() );
-        assertEquals( newName, node.get( "user" ).get( "name" ).asText() );
-        assertEquals( newEmail, node.get( "user" ).get( "email" ).asText() );
-        assertNull( newEmail, node.get( "user" ).get( "password" ) );
-        assertNull( newEmail, node.get( "user" ).get( "pin" ) );
-    }
 
 
-    /**
-     *
-     * @return
-     */
-    public JsonNode getActor( Entity entity ) {
-        return entity.getProperties().get( "actor" );
+        token = this.app().token().post(new Token(username, "password"));
+
+
+        assertEquals(username, token.getUser().getUsername());
+        assertEquals(newName, token.getUser().getName());
+        assertEquals(newEmail, token.getUser().getEmail());
+        assertNull(token.getUser().get("password"));
+        assertNull(newEmail, token.getUser().get("pin"));
     }
 
 
     @Test
     public void test_POST_batch() throws IOException {
 
-        log.info( "UserResourceIT.test_POST_batch" );
+        log.info("UserResourceIT.test_POST_batch");
 
-        JsonNode node = null;
 
-        List<Map<String, Object>> batch = new ArrayList<Map<String, Object>>();
+        List<Entity> batch = new ArrayList<>();
 
-        Map<String, Object> properties = new LinkedHashMap<String, Object>();
-        properties.put( "username", "test_user_1" );
-        properties.put( "email", "user1@test.com" );
-        batch.add( properties );
+        Entity properties = new Entity();
+        properties.put("username", "test_user_1");
+        properties.put("email", "user1@test.com");
+        batch.add(properties);
 
-        properties = new LinkedHashMap<String, Object>();
-        properties.put( "username", "test_user_2" );
-        batch.add( properties );
+        properties = new Entity();
+        properties.put("username", "test_user_2");
+        batch.add(properties);
 
-        properties = new LinkedHashMap<String, Object>();
-        properties.put( "username", "test_user_3" );
-        batch.add( properties );
+        properties = new Entity();
+        properties.put("username", "test_user_3");
+        batch.add(properties);
 
-        node = mapper.readTree( resource().path( "/test-organization/test-app/users/" ).queryParam( "access_token", access_token )
-                         .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                         .post( String.class, batch ));
+        ApiResponse response = usersResource.post(batch);
 
-        assertNotNull( node );
-        logNode( node );
+        assertNotNull(response);
     }
 
 
@@ -904,51 +713,36 @@ public class UserResourceIT extends AbstractRestIT {
 
         UUID newUserUuid = UUIDUtils.newTimeUUID();
 
-        String userName = String.format( "test%s", newUserUuid );
+        String userName = String.format("test%s", newUserUuid);
 
-        Map<String, String> payload =
-                hashMap( "email", String.format( "%s@anuff.com", newUserUuid ) ).map( "username", userName )
-                                                                                .map( "name", "Ed Anuff" )
-                                                                                .map( "password", "sesame" )
-                                                                                .map( "pin", "1234" );
+        User entity =
+                (User) new User(userName, "Ed Anuff", String.format("%s@anuff.com", newUserUuid), "sesame").chainPut("pin", "1234");
 
-        resource().path( "/test-organization/test-app/users" ).queryParam( "access_token", access_token )
-                  .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                  .post( String.class, payload );
+        usersResource.post(entity);
+        refreshIndex();
 
-        refreshIndex("test-organization", "test-app");
-
-        JsonNode response = mapper.readTree( resource().path( "/test-organization/test-app/users" ).queryParam( "access_token", access_token )
-                          .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                          .get( String.class ));
-
+        Collection response = usersResource.get();
         // disable the user
-
         Map<String, String> data = new HashMap<String, String>();
+        Entity entityConn = usersResource.entity(userName).connection("deactivate").post(new Entity());
 
-        response = mapper.readTree( resource().path( String.format( "/test-organization/test-app/users/%s/deactivate", userName ) )
-                             .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, data ));
-
-        JsonNode entity = getEntity( response, 0 );
-
-        assertFalse( entity.get( "activated" ).asBoolean() );
-        assertNotNull( entity.get( "deactivated" ) );
+        assertFalse((boolean) entityConn.get("activated"));
+        assertNotNull(entityConn.get("deactivated"));
     }
 
 
     @Test
     public void test_PUT_password_fail() {
-
+        Entity entity = usersResource.post(new User("edanuff", "edanuff", "edanuff@email.com", "sesame"));
+        this.app().token().post(new Token("edanuff", "sesame"));
+        refreshIndex();
         boolean fail = false;
         try {
-            ApiResponse changeResponse = client.changePassword( "edanuff", "foo", "bar" );
-            fail = changeResponse.getError() != null;
-        }
-        catch ( Exception e ) {
+            Entity changeResponse = usersResource.entity("edanuff").collection("password").post(new ChangePasswordEntity("foo", "bar"));
+        } catch (Exception e) {
             fail = true;
         }
-        assertTrue( fail );
+        assertTrue(fail);
     }
 
 
@@ -956,358 +750,285 @@ public class UserResourceIT extends AbstractRestIT {
     public void test_GET_user_ok() throws InterruptedException, IOException {
 
         // TODO figure out what is being overridden? why 400?
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/users" )
-                .queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE )
-                .get( String.class ));
+        Collection users = usersResource.get();
 
-        String uuid = node.get( "entities" ).get( 0 ).get( "uuid" ).textValue();
-        String email = node.get( "entities" ).get( 0 ).get( "email" ).textValue();
+        String uuid = users.getResponse().getEntities().get(0).getUuid().toString();
+        String email = users.getResponse().getEntities().get(0).get("email").toString();
 
-        node = mapper.readTree( resource().path( "/test-organization/test-app/users/" + uuid )
-                .queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE )
-                .get( String.class ));
-        
-        logNode( node );
-        assertEquals( email, node.get( "entities" ).get( 0 ).get( "email" ).textValue() );
+        Entity user = usersResource.entity(uuid).get();
+
+        assertEquals(email, user.get("email").toString());
     }
 
 
     @Test
     public void test_PUT_password_ok() {
+        Entity entity = usersResource.post(new User("edanuff", "edanuff", "edanuff@email.com", "sesame"));
+        refreshIndex();
+        usersResource.entity(entity).collection("password").post(new ChangePasswordEntity("sesame", "sesame1"));
 
-        ApiResponse response = client.changePassword( "edanuff", "sesame", "sesame1" );
-
-        assertNull( response.getError() );
-
-        response = client.authorizeAppUser( "ed@anuff.com", "sesame1" );
-
-        assertNull( response.getError() );
+        refreshIndex();
+        this.app().token().post(new Token("edanuff", "sesame1"));
 
         // if this was successful, we need to re-set the password for other
         // tests
-        response = client.changePassword( "edanuff", "sesame1", "sesame" );
+        Entity changeResponse = usersResource.entity("edanuff").collection("password").post(new ChangePasswordEntity("sesame1", "sesame"));
+        refreshIndex();
+        assertNotNull(changeResponse);
 
-        assertNull( response.getError() );
     }
 
 
     @Test
-    public void setUserPasswordAsAdmin()  throws IOException {
-
+    public void setUserPasswordAsAdmin() throws IOException {
+        usersResource.post(new User("edanuff", "edanuff", "edanuff@email.com", "sesame"));
         String newPassword = "foo";
-
-        Map<String, String> data = new HashMap<String, String>();
-        data.put( "newpassword", newPassword );
+        refreshIndex();
 
         // change the password as admin. The old password isn't required
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/users/edanuff/password" )
-                                  .queryParam( "access_token", adminAccessToken ).accept( MediaType.APPLICATION_JSON )
-                                  .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, data ));
+        Entity node = usersResource.entity("edanuff").connection("password").post(new ChangePasswordEntity(newPassword));
+        assertNotNull(node);
 
-        assertNull( getError( node ) );
-
-        ApiResponse response = client.authorizeAppUser( "ed@anuff.com", newPassword );
-
-        assertNull( response.getError() );
+        refreshIndex();
+        Token response = this.app().token().post(new Token("edanuff", newPassword));
+        assertNotNull(response);
     }
 
 
     @Test
     public void passwordMismatchErrorUser() {
+        usersResource.post(new User("edanuff", "edanuff", "edanuff@email.com", "sesame"));
+
         String origPassword = "foo";
         String newPassword = "bar";
 
-        Map<String, String> data = new HashMap<String, String>();
-        data.put( "newpassword", origPassword );
+        ChangePasswordEntity data = new ChangePasswordEntity(origPassword, newPassword);
 
-        // now change the password, with an incorrect old password
-
-        data.put( "oldpassword", origPassword );
-        data.put( "newpassword", newPassword );
-
-        Status responseStatus = null;
+        int responseStatus = 0;
         try {
-            resource().path( "/test-organization/test-app/users/edanuff/password" ).accept( MediaType.APPLICATION_JSON )
-                      .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, data );
-        }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
+            usersResource.entity("edanuff").connection("password").post(data);
+        } catch (UniformInterfaceException uie) {
+            responseStatus = uie.getResponse().getStatus();
         }
 
-        assertNotNull( responseStatus );
-
-        assertEquals( Status.BAD_REQUEST, responseStatus );
+        assertEquals(0, responseStatus);
     }
 
 
     @Test
-    public void addRemoveRole() throws IOException  {
+    public void addRemoveRole() throws IOException {
+        String roleName = "rolename";
 
-        UUID id = UUIDUtils.newTimeUUID();
+        String username = "username";
+        String name = "name";
+        String email = "email" + "@usergrid.org";
 
-        String roleName = "rolename" + id;
-
-        String username = "username" + id;
-        String name = "name" + id;
-        String email = "email" + id + "@usergrid.org";
-
-        ApiResponse response = client.createUser( username, name, email, "password" );
-        assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
-        refreshIndex("test-organization", "test-app");
-
-        UUID createdId = response.getEntities().get( 0 ).getUuid();
+        User user = new User(username, name, email, "password");
+        user = new User(usersResource.post(user));
+        UUID createdId = user.getUuid();
 
         // create Role
 
-        String json = "{\"title\":\"" + roleName + "\",\"name\":\"" + roleName + "\"}";
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/roles" )
-            .queryParam( "access_token", access_token )
-            .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-            .post( String.class, json ));
-
+        Entity role = new Entity().chainPut("title", roleName).chainPut("name", roleName);
+        this.app().collection("roles").post(role);
         // check it
-        assertNull( node.get( "errors" ) );
 
-        refreshIndex("test-organization", "test-app");
-
+        refreshIndex();
         // add Role
 
-        node = mapper.readTree( resource().path( "/test-organization/test-app/users/" + createdId + "/roles/" + roleName )
-            .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-            .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class ));
+        role = usersResource.entity(createdId).collection("roles").entity(roleName).post();
 
+        refreshIndex();
         // check it
-        assertNull( node.get( "errors" ) );
-        assertNotNull( node.get( "entities" ) );
-        assertNotNull( node.get( "entities" ).get( 0 ) );
-        assertNotNull( node.get( "entities" ).get( 0 ).get( "name" ) );
-        assertEquals( node.get( "entities" ).get( 0 ).get( "name" ).asText(), roleName );
+        assertNotNull(role);
+        assertNotNull(role.get("name"));
+        assertEquals(role.get("name").toString(), roleName);
 
-        refreshIndex("test-organization", "test-app");
+        role = usersResource.entity(createdId).collection("roles").entity(roleName).get();
 
-        node = mapper.readTree( resource().path( "/test-organization/test-app/users/" + createdId + "/roles" )
-            .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-            .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
-        assertNull( node.get( "errors" ) );
-        assertNotNull( node.get( "entities" ) );
-        assertNotNull( node.get( "entities" ).get( 0 ) );
-        assertNotNull( node.get( "entities" ).get( 0 ).get( "name" ) );
-        assertEquals( node.get( "entities" ).get( 0 ).get( "name" ).asText(), roleName );
-
+        assertNotNull(role);
+        assertNotNull(role.get("name"));
+        assertEquals(role.get("name").toString(), roleName);
 
         // remove Role
-
-        node = mapper.readTree( resource().path( "/test-organization/test-app/users/" + createdId + "/roles/" + roleName )
-                         .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                         .type( MediaType.APPLICATION_JSON_TYPE ).delete( String.class ));
+        ApiResponse response = usersResource.entity(createdId).collection("roles").entity(roleName).delete();
 
         // check it
-        assertNull( node.get( "errors" ) );
 
-        refreshIndex("test-organization", "test-app");
+        try {
+            role = usersResource.entity(createdId).collection("roles").entity(roleName).get();
 
-        node = mapper.readTree( resource().path( "/test-organization/test-app/users/" + createdId + "/roles" )
-                         .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                         .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
-        assertNull( node.get( "errors" ) );
-        assertTrue( node.get( "entities" ).size() == 0 );
+            assertNull(role);
+        } catch (UniformInterfaceException e) {
+            assertEquals(e.getResponse().getStatus(), Status.NOT_FOUND.getStatusCode());
+        }
     }
 
 
     @Test
     public void revokeToken() throws Exception {
 
-        String token1 = super.userToken( "edanuff", "sesame" );
-        String token2 = super.userToken( "edanuff", "sesame" );
+        this.app().collection("users").post(new User("edanuff", "edanuff", "edanuff@email.com", "sesame"));
+        refreshIndex();
+        Token token1 = this.app().token().post(new Token("edanuff", "sesame"));
+        Token token2 = this.app().token().post(new Token("edanuff", "sesame"));
 
-        JsonNode response = mapper.readTree( resource().path( "/test-organization/test-app/users/edanuff" ).queryParam( "access_token", token1 )
-                          .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                          .get( String.class ));
+        this.app().token().setToken(token1);
+        Entity entity1 = usersResource.entity("edanuff").get();
+        this.app().token().setToken(token2);
+        Entity entity2 = usersResource.entity("edanuff").get();
 
-        assertNotNull( getEntity( response, 0 ) );
+        assertNotNull(entity1);
 
-        response = mapper.readTree( resource().path( "/test-organization/test-app/users/edanuff" ).queryParam( "access_token", token2 )
-                             .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                             .get( String.class ));
-
-        assertNotNull( getEntity( response, 0 ) );
-
+        assertNotNull(entity2);
+        Token adminToken = this.clientSetup.getRestClient().management().token().post(new Token(clientSetup.getUsername(), clientSetup.getUsername()));
         // now revoke the tokens
-        response = mapper.readTree( resource().path( "/test-organization/test-app/users/edanuff/revoketokens" )
-                             .queryParam( "access_token", adminAccessToken ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class ));
+        this.app().token().setToken(adminToken);
 
+        usersResource.entity("edanuff").connection("revoketokens").post(new Entity().chainPut("token", token1));
+        refreshIndex();
         // the tokens shouldn't work
 
-        Status status = null;
+        int status = 0;
 
         try {
-            response = mapper.readTree( resource().path( "/test-organization/test-app/users/edanuff" ).queryParam( "access_token", token1 )
-                              .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                              .get( String.class ));
-        }
-        catch ( UniformInterfaceException uie ) {
-            status = uie.getResponse().getClientResponseStatus();
+            this.app().token().setToken(token1);
+
+            usersResource.entity("edanuff").get();
+            assertFalse(true);
+        } catch (UniformInterfaceException uie) {
+            status = uie.getResponse().getStatus();
         }
 
-        assertEquals( Status.UNAUTHORIZED, status );
+        assertEquals(Status.UNAUTHORIZED.getStatusCode(), status);
 
-        status = null;
+        status = 0;
 
         try {
-            response = mapper.readTree( resource().path( "/test-organization/test-app/users/edanuff" ).queryParam( "access_token", token2 )
-                              .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                              .get( String.class ));
+            this.app().token().setToken(token2);
+
+            usersResource.entity("edanuff").get();
+        } catch (UniformInterfaceException uie) {
+            status = uie.getResponse().getStatus();
         }
-        catch ( UniformInterfaceException uie ) {
-            status = uie.getResponse().getClientResponseStatus();
-        }
 
-        assertEquals( Status.UNAUTHORIZED, status );
+        assertEquals(Status.UNAUTHORIZED.getStatusCode(), status);
 
-        String token3 = super.userToken( "edanuff", "sesame" );
-        String token4 = super.userToken( "edanuff", "sesame" );
+        Token token3 = this.app().token().post(new Token("edanuff", "sesame"));
+        Token token4 = this.app().token().post(new Token("edanuff", "sesame"));
 
-        response = mapper.readTree( resource().path( "/test-organization/test-app/users/edanuff" ).queryParam( "access_token", token3 )
-                             .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                             .get( String.class ));
+        this.app().token().setToken(token3);
+        entity1 = usersResource.entity("edanuff").get();
 
-        assertNotNull( getEntity( response, 0 ) );
 
-        response = mapper.readTree( resource().path( "/test-organization/test-app/users/edanuff" ).queryParam( "access_token", token4 )
-                             .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                             .get( String.class ));
+        assertNotNull(entity1);
 
-        assertNotNull( getEntity( response, 0 ) );
+        this.app().token().setToken(token3);
+        entity2 = usersResource.entity("edanuff").get();
+
+        assertNotNull(entity2);
 
         // now revoke the token3
-        response = mapper.readTree( resource().path( "/test-organization/test-app/users/edanuff/revoketoken" )
-                             .queryParam( "access_token", token3 ).queryParam( "token", token3 )
-                             .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                             .post( String.class ));
+        adminToken = this.clientSetup.getRestClient().management().token().post(new Token(clientSetup.getUsername(), clientSetup.getUsername()));
+        // now revoke the tokens
+        this.app().token().setToken(adminToken);
+        usersResource.entity("edanuff").connection("revoketokens").post();
+        refreshIndex();
 
         // the token3 shouldn't work
 
-        status = null;
+        status = 0;
 
         try {
-            response = mapper.readTree( resource().path( "/test-organization/test-app/users/edanuff" ).queryParam( "access_token", token3 )
-                              .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                              .get( String.class ));
-        }
-        catch ( UniformInterfaceException uie ) {
-            status = uie.getResponse().getClientResponseStatus();
+            this.app().token().setToken(token3);
+            usersResource.entity("edanuff").get();
+
+        } catch (UniformInterfaceException uie) {
+            status = uie.getResponse().getStatus();
         }
 
-        assertEquals( Status.UNAUTHORIZED, status );
+        assertEquals(Status.UNAUTHORIZED.getStatusCode(), status);
 
-        status = null;
+        status = 0;
 
         try {
-            response = mapper.readTree( resource().path( "/test-organization/test-app/users/edanuff" ).queryParam( "access_token", token4 )
-                              .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                              .get( String.class ));
+            this.app().token().setToken(token4);
+            usersResource.entity("edanuff").get();
 
-            status = Status.OK;
-        }
-        catch ( UniformInterfaceException uie ) {
-            status = uie.getResponse().getClientResponseStatus();
+
+            status = Status.OK.getStatusCode();
+        } catch (UniformInterfaceException uie) {
+            status = uie.getResponse().getStatus();
         }
 
-        assertEquals( Status.OK, status );
+        assertEquals(Status.UNAUTHORIZED.getStatusCode(), status);
     }
 
 
     @Test
     public void getToken() throws Exception {
 
-        createUser( "test_1", "test_1@test.com", "test123", "Test1 User" ); // client.setApiUrl(apiUrl);
-        createUser( "test_2", "test_2@test.com", "test123", "Test2 User" ); // client.setApiUrl(apiUrl);
-        createUser( "test_3", "test_3@test.com", "test123", "Test3 User" ); // client.setApiUrl(apiUrl);
-        refreshIndex("test-organization", "test-app");
+        usersResource.post(new User("test_1", "Test1 User", "test_1@test.com", "test123")); // client.setApiUrl(apiUrl);
+        usersResource.post(new User("test_2", "Test2 User", "test_2@test.com", "test123")); // client.setApiUrl(apiUrl);
+        usersResource.post(new User("test_3", "Test3 User", "test_3@test.com", "test123")); // client.setApiUrl(apiUrl);
+        refreshIndex();
 
-        ApplicationInfo appInfo = setup.getMgmtSvc().getApplicationInfo( "test-organization/test-app" );
+        Entity appInfo = this.app().get().getResponse().getEntities().get(0);
 
-        String clientId = setup.getMgmtSvc().getClientIdForApplication( appInfo.getId() );
-        String clientSecret = setup.getMgmtSvc().getClientSecretForApplication( appInfo.getId() );
+        Token token = this.app().token().post(new Token("test_1", "test123"));
 
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/users/test_1/token" ).queryParam( "client_id", clientId )
-                          .queryParam( "client_secret", clientSecret ).accept( MediaType.APPLICATION_JSON )
-                          .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
+        UUID userId = UUID.fromString(((Map<String, Object>) token.get("user")).get("uuid").toString());
 
-        String user_token_from_client_credentials = node.get( "access_token" ).asText();
+        assertNotNull(token.getAccessToken());
 
-        UUID userId = UUID.fromString( node.get( "user" ).get( "uuid" ).asText() );
-        setup.getMgmtSvc().activateAppUser( appInfo.getId(), userId );
+        refreshIndex();
 
-        String user_token_from_java = setup.getMgmtSvc().getAccessTokenForAppUser( appInfo.getId(), userId, 1000000 );
-
-        assertNotNull( user_token_from_client_credentials );
-
-        refreshIndex("test-organization", "test-app");
-
-        Status status = null;
+        int status = 0;
 
         // bad access token
         try {
-            resource().path( "/test-organization/test-app/users/test_1/token" ).queryParam( "access_token", "blah" )
-                      .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                      .get( String.class );
-        }
-        catch ( UniformInterfaceException uie ) {
-            status = uie.getResponse().getClientResponseStatus();
-            log.info( "Error Response Body: " + uie.getResponse().getEntity( String.class ) );
+            userResource.entity("test_1").connection("token").get(new QueryParameters().addParam("access_token", "blah"), false);
+            assertTrue(false);
+        } catch (UniformInterfaceException uie) {
+            status = uie.getResponse().getStatus();
+            log.info("Error Response Body: " + uie.getResponse().getEntity(String.class));
         }
 
-        assertEquals( Status.UNAUTHORIZED, status );
+        assertEquals(Status.UNAUTHORIZED.getStatusCode(), status);
 
         try {
-            resource().path( "/test-organization/test-app/users/test_2/token" )
-                      .queryParam( "access_token", user_token_from_client_credentials )
-                      .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                      .get( String.class );
-        }
-        catch ( UniformInterfaceException uie ) {
-            status = uie.getResponse().getClientResponseStatus();
-            log.info( "Error Response Body: " + uie.getResponse().getEntity( String.class ) );
+            userResource.entity("test_2").connection("token").get(new QueryParameters().addParam("access_token", token.getAccessToken()), false);
+            assertTrue(false);
+        } catch (UniformInterfaceException uie) {
+            status = uie.getResponse().getStatus();
+            log.info("Error Response Body: " + uie.getResponse().getEntity(String.class));
         }
 
-        assertEquals( Status.FORBIDDEN, status );
+        assertEquals(Status.FORBIDDEN.getStatusCode(), status);
 
 
-        JsonNode response = null;
-        response = mapper.readTree( resource().path( "/test-organization/test-app/users/test_1" )
-                             .queryParam( "access_token", user_token_from_client_credentials )
-                             .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                             .get( String.class ));
+        String adminToken = this.getAdminToken().getAccessToken();
+        Collection tokens = userResource.entity("test_1").connection("token").get(new QueryParameters().addParam("access_token", adminToken), false);
 
-        assertNotNull( getEntity( response, 0 ) );
 
-        response = mapper.readTree( resource().path( "/test-organization/test-app/users/test_1" )
-                             .queryParam( "access_token", user_token_from_java ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
+        assertTrue(tokens.getResponse().getProperties().get("user") != null);
 
-        assertNotNull( getEntity( response, 0 ) );
+        tokens = userResource.entity("test_1").connection("token").get(new QueryParameters().addParam("access_token", adminToken), false);
 
-        setup.getMgmtSvc().deactivateUser( appInfo.getId(), userId );
+        assertTrue(tokens.getResponse().getProperties().get("user") != null);
 
-        refreshIndex("test-organization", "test-app");
+        Entity entityConn = usersResource.entity(userId).connection("deactivate").post(new Entity());
+
+
+        refreshIndex();
 
         try {
-            resource().path( "/test-organization/test-app/token" ).queryParam( "grant_type", "password" )
-                      .queryParam( "username", "test_1" ).queryParam( "password", "test123" )
-                      .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                      .get( String.class );
-            fail( "request for deactivated user should fail" );
-        }
-        catch ( UniformInterfaceException uie ) {
-            status = uie.getResponse().getClientResponseStatus();
-            JsonNode body = mapper.readTree( uie.getResponse().getEntity( String.class ));
-            assertEquals( "user not activated", body.findPath( "error_description" ).textValue() );
+            this.app().token().post(new Token("test_1", "test123"));
+            fail("request for deactivated user should fail");
+        } catch (UniformInterfaceException uie) {
+            status = uie.getResponse().getStatus();
+            JsonNode body = mapper.readTree(uie.getResponse().getEntity(String.class));
+            assertEquals("user not activated", body.findPath("error_description").textValue());
         }
     }
 
@@ -1315,37 +1036,28 @@ public class UserResourceIT extends AbstractRestIT {
     @Test
     public void delegatePutOnNotFound() throws Exception {
         String randomName = "user1_" + UUIDUtils.newTimeUUID().toString();
-        createUser( randomName, randomName + "@apigee.com", "password", randomName );
-        refreshIndex("test-organization", "test-app");
+        User user = new User(randomName, randomName, randomName + "@apigee.com", "password");
+        usersResource.post(user);
+        refreshIndex();
 
         // should update a field
-        JsonNode response = mapper.readTree( resource().path( "/test-organization/test-app/users/" + randomName )
-                                      .queryParam( "access_token", adminAccessToken )
-                                      .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                                      .get( String.class ));
-        logNode( response );
-        assertNotNull( getEntity( response, 0 ) );
+        Entity response = usersResource.entity(randomName).get();
+        assertNotNull(response);
         // PUT on user
 
         // PUT a new user
         randomName = "user2_" + UUIDUtils.newTimeUUID().toString();
-        Map<String, String> payload =
-                hashMap( "email", randomName + "@apigee.com" ).map( "username", randomName ).map( "name", randomName )
-                                                              .map( "password", "password" ).map( "pin", "1234" );
 
-        response = mapper.readTree( resource().path( "/test-organization/test-app/users" ).queryParam( "access_token", adminAccessToken )
-                             .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                             .put( String.class, payload ));
+        User user2 = (User) new User(randomName, randomName, randomName + "@apigee.com", "password").chainPut("pin", "1234");
 
-        refreshIndex("test-organization", "test-app");
+        response = usersResource.post(user2);
 
-        logNode( response );
-        response = mapper.readTree( resource().path( "/test-organization/test-app/users/" + randomName )
-                             .queryParam( "access_token", adminAccessToken ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
+        refreshIndex();
 
-        assertNotNull( getEntity( response, 0 ) );
-        logNode( response );
+        Entity response2 = usersResource.entity(randomName).get();
+
+
+        assertNotNull(response2);
     }
 
 
@@ -1357,24 +1069,17 @@ public class UserResourceIT extends AbstractRestIT {
     public void queryForUuids() throws Exception {
 
         {
-            final JsonNode response = mapper.readTree( resource().path( "/test-organization/test-app/users/" ).queryParam( "ql",
-                    "select *" )               // query for entities
-                    .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
-            assertNotNull( "Entities must exist", response.get( "entities" ) );
-            assertTrue( "Must be some entities", response.get( "entities" ).size() > 0 );
-            assertEquals( "Must be users", "user", response.get( "entities" ).get( 0 ).get( "type" ).asText() );
-            assertNull( "List must not exist", response.get( "list" ) );
+            final Collection response = usersResource.get(new QueryParameters().setQuery("select *"));
+            assertNotNull("Entities must exist", response.getResponse().getEntities());
+            assertTrue("Must be some entities", response.getResponse().getEntities().size() > 0);
+            assertEquals("Must be users", "user", response.getResponse().getEntities().get(0).get("type").toString());
         }
 
         {
-            final JsonNode response = mapper.readTree( resource().path( "/test-organization/test-app/users/" ).queryParam( "ql",
-                    "select uuid" )            // query for uuid properties
-                    .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
-            assertNotNull( "List must exist", response.get( "list" ) );
-            assertTrue( "Must be some list items", response.get( "list" ).size() > 0 );
-            assertNull( "Entities must not exist", response.get( "entries" ) );
+            final Collection response = usersResource.get(new QueryParameters().setQuery("select uuid"));
+
+            assertNotNull("List must exist", response.getResponse().list());
+            assertTrue("Must be some list items", response.getResponse().list().size() > 0);
         }
     }
 
@@ -1382,37 +1087,28 @@ public class UserResourceIT extends AbstractRestIT {
     @Test
     public void queryForUserUuids() throws Exception {
 
-        UserRepo.INSTANCE.load( resource(), access_token );
-        refreshIndex("test-organization", "test-app");
 
-        Status status = null;
+        int status = 0;
 
 
-        String ql = "uuid = " + UserRepo.INSTANCE.getByUserName( "user1" );
+        String ql = "uuid = " + userRepo.getByUserName("user1");
 
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/users" ).queryParam( "ql", ql )
-                                  .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                                  .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
+        usersResource.get(new QueryParameters().setQuery(ql));
 
+        Entity payload = new Entity().chainPut("name", "Austin").chainPut("state", "TX");
 
-        Map<String, String> payload = hashMap( "name", "Austin" ).map( "state", "TX" );
+        Entity responseEntity = this.app().collection("curts").post(payload);
 
-        node = mapper.readTree( resource().path( "/test-organization/test-app/curts" ).queryParam( "access_token", access_token )
-                         .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                         .post( String.class, payload ));
+        UUID userId = UUID.fromString(responseEntity.getUuid().toString());
 
-        UUID userId = UUID.fromString( node.get( "entities" ).get( 0 ).get( "uuid" ).asText() );
+        assertNotNull(userId);
 
-        assertNotNull( userId );
-
-        refreshIndex("test-organization", "test-app");
+        refreshIndex();
 
         ql = "uuid = " + userId;
 
-        node = mapper.readTree( resource().path( "/test-organization/test-app/curts" ).queryParam( "ql", ql )
-                         .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                         .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
+        Collection response = this.app().collection("curts").get(new QueryParameters().setQuery(ql));
 
-        assertNotNull( node.get( "entities" ).get( 0 ).get( "uuid" ) );
+        assertEquals(response.getResponse().getEntities().get(0).get("uuid").toString(), userId.toString());
     }
 }

@@ -18,40 +18,16 @@
  *
  */
 
-package org.apache.usergrid.rest.test.resource2point0.endpoints;
-
-
-
-import org.apache.usergrid.rest.test.resource2point0.model.Token;
-import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
-
-import javax.ws.rs.core.MediaType;
+package org.apache.usergrid.rest.test.resource2point0.model;
 
 /**
- * Classy class class.
+ * Provide guidance on change passwords
  */
-public class TokenResource extends NamedResource {
-    public TokenResource(final ClientContext context, final UrlResource parent) {
-        super("token", context, parent);
+public class ChangePasswordEntity extends Entity {
+    public ChangePasswordEntity( String newPassword){
+        this.chainPut("newpassword", newPassword);
     }
-
-
-    /**
-     * Obtains an access token
-     *
-     * @param token
-     * @return
-     */
-    public Token post(Token token) {
-        token = getResource().type(MediaType.APPLICATION_JSON_TYPE)
-                .accept(MediaType.APPLICATION_JSON).post(Token.class, token);
-        this.context.setToken(token);
-        return token;
+    public ChangePasswordEntity(String oldPassword, String newPassword){
+        this.chainPut("oldpassword", oldPassword).chainPut("newpassword", newPassword);
     }
-
-    public TokenResource setToken(Token token) {
-        this.context.setToken(token);
-        return this;
-    }
-
 }

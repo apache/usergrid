@@ -25,6 +25,7 @@ import com.sun.jersey.api.client.WebResource;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
+import org.apache.usergrid.rest.test.resource2point0.model.Token;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 import javax.ws.rs.core.MediaType;
@@ -57,7 +58,14 @@ public class EntityEndpoint extends NamedResource {
     }
 
     public Entity get(final boolean useToken){
-        WebResource resource  = getResource(useToken);
+        return get(useToken,null);
+    }
+    public Entity get(final Token token){
+        return get(true,token);
+    }
+
+    public Entity get(final boolean useToken, final Token token){
+        WebResource resource  = getResource(useToken,token);
         ApiResponse response = resource.type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
                 .get(ApiResponse.class);
 
@@ -135,7 +143,6 @@ public class EntityEndpoint extends NamedResource {
         return new Entity(response);
     }
 
-
     /**
      *
      * app.collection("users").uniqueID("fred").connection("following).get();
@@ -148,7 +155,14 @@ public class EntityEndpoint extends NamedResource {
      * POST /users/fred/following/users/barney?token=<token>
      *
      */
-    public CollectionEndpoint connection(final String identifier) {
+    public CollectionEndpoint connection(final String connection,final String collection) {
+        return new CollectionEndpoint(connection+"/"+collection, context, this);
+    }
+    public CollectionEndpoint connection(final String connection) {
+        return new CollectionEndpoint(connection, context, this);
+
+    }
+    public CollectionEndpoint collection(final String identifier) {
         return new CollectionEndpoint(identifier, context, this);
     }
     public CollectionEndpoint connection(){
@@ -156,5 +170,7 @@ public class EntityEndpoint extends NamedResource {
     }
 
 
-
+    public CollectionEndpoint activities() {
+        return collection("activities");
+    }
 }

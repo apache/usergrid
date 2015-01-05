@@ -18,6 +18,7 @@ package org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt;
 
 
 import org.apache.usergrid.rest.test.resource2point0.endpoints.*;
+import org.apache.usergrid.rest.test.resource2point0.model.Token;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 

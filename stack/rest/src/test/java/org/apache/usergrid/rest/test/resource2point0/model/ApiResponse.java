@@ -35,7 +35,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize.Inclusion;
 /**
  * Contains the needed types
  */
-public class ApiResponse<Entity> {
+public class ApiResponse {
 
     private String accessToken;
 
@@ -183,6 +183,10 @@ public class ApiResponse<Entity> {
 
     public void setEntities( List<Entity> entities ) {
         this.entities = entities;
+    }
+
+    public List<String> list(){
+        return (List<String>)getProperties().get("list");
     }
 
 
