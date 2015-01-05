@@ -61,7 +61,7 @@ public class Collection implements Iterable<Entity>, Iterator<Entity> {
         this.cursor = response.getCursor();
         this.entities = response.getEntities()!=null?  response.getEntities().iterator():null;
     }
-    
+
     @Override
     public Iterator iterator() {
         return this;

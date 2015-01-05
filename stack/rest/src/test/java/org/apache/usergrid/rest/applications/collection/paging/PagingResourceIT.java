@@ -25,23 +25,19 @@ import java.util.Map;
 
 import org.junit.Ignore;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Collection;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
-import org.apache.usergrid.services.ServiceParameter;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-//TODO: combine with PagingEntitiesTest
 /**
  * Tests paging with respect to entities. Also tests cursors and queries with respect to paging.
  */
@@ -91,58 +87,6 @@ public class PagingResourceIT extends AbstractRestIT {
 
         return entities;
     }
-
-    //
-    //    @Test
-    //    @Ignore("ignored because currently startPaging is only be supported for queues and not for  "
-    //            + "generic collections as this test assumes. "
-    //            + "see also: https://issues.apache.org/jira/browse/USERGRID-211 ")
-    //    public void startPaging() throws Exception {
-    //
-    //        CustomCollection things = context.application().customCollection( "test2things" );
-    //
-    //        int size = 40;
-    //
-    //        List<Map<String, String>> created = new ArrayList<Map<String, String>>( size );
-    //
-    //        for ( int i = 0; i < size; i++ ) {
-    //            Map<String, String> entity = hashMap( "name", String.valueOf( i ) );
-    //            things.create( entity );
-    //
-    //            created.add( entity );
-    //        }
-    //
-    //        refreshIndex(context.getOrgName(), context.getAppName());
-    //
-    //        // now page them all
-    //        ApiResponse response = null;
-    //
-    //        UUID start = null;
-    //        int index = 0;
-    //
-    //        do {
-    //
-    //            response = parse( things.get() );
-    //
-    //            for ( Entity e : response.getEntities() ) {
-    //                logger.debug("Getting item {} value {}", index, e.getProperties().get( "name" ).asText());
-    //                assertEquals( created.get( index ).get( "name" ), e.getProperties().get( "name" ).asText() );
-    //                index++;
-    //            }
-    //
-    //            // decrement since we'll get this one again
-    //            index--;
-    //
-    //            start = response.getEntities().get( response.getEntities().size() - 1 ).getUuid();
-    //
-    //            things = things.withStart( start );
-    //        }
-    //        while ( response != null && response.getEntities().size() > 1 );
-    //
-    //        // we paged them all
-    //        assertEquals( created.size() - 1, index );
-    //    }
-
 
     /**
      * Creates 40 objects and then creates a query to delete sets of 10 entities per call. Checks at the end
@@ -202,11 +146,6 @@ public class PagingResourceIT extends AbstractRestIT {
         }
     }
 
-
-
-
-
-
     /**
      * Checks to make sure we can get an entity despite having a empty query, and limit parameter
      * @throws Exception
@@ -216,59 +155,19 @@ public class PagingResourceIT extends AbstractRestIT {
 
         String collectionName = "testEmptyQAndLimitIgnored";
 
-        List<Entity> entities = createEntities( collectionName, 1 );
-
-
-//        Map<String, Object> entityPayload = new HashMap<String, Object>();
-//        entityPayload.put( "name", "thing1" );
-//        Entity entity = new Entity( entityPayload );
-//
-//        this.app().collection( collectionName ).post( entity );
-//
-//        this.refreshIndex();
+        createEntities( collectionName, 1 );
 
         //passes in empty parameters
         QueryParameters parameters = new QueryParameters();
         parameters.setKeyValue( "ql", "" );
         parameters.setKeyValue( "limit", "" );
 
-        //make get using empty parameters
+        //sends GET call using empty parameters
         pageAndVerifyEntities( collectionName,parameters, 1 );
-//        Entity testEntity = this.app().collection( collectionName ).uniqueID( ( String ) entity.get( "name" ) )
-//                                .get( parameters, true );
-//
-//        assertEquals( entities.get( 0 ), testEntity.get( "name" ) );
+
     }
 
-    /**
-     * Pages the specificed collectionName
-     * @param collectionName
-     * @param numOfPages
-     * @return
-     */
-    public Collection pageAndVerifyEntities(String collectionName,QueryParameters queryParameters, int numOfPages ){
-        //Get the entities that exist in the collection
-        Collection testCollections = this.app().collection( collectionName ).get(queryParameters);
 
-        //checks to make sure we can page through all entities in order.
-
-        //Used as an index to see what value we're on.
-        int index = 0;
-        //Tells us how many pages we want to sort through
-        for ( int i = 0; i < numOfPages; i++ ) {
-            //page through returned entities.
-            while ( testCollections.hasNext() ) {
-                Entity returnedEntity = testCollections.next();
-                //verifies that the names are in order
-                assertEquals( String.valueOf( index++ ), returnedEntity.get( "name" ) );
-            }
-            testCollections = this.app().collection( collectionName ).getNextPage( testCollections,queryParameters, true );
-        }
-
-        //make sure the cursor is null after we have no more entities to page through.
-        assertNull( testCollections.getCursor() );
-        return testCollections;
-    }
 
     /**
      * Checks to make sure we get a cursor when we should ( by creating 50 entities ) and then checks to make sure
@@ -282,182 +181,176 @@ public class PagingResourceIT extends AbstractRestIT {
         // create enough widgets to make sure we need a cursor
         int widgetsSize = 11;
         Map<String, Object> entityPayload = new HashMap<String, Object>();
-        String collectionName = "testCursor" + UUIDUtils.newTimeUUID();
+        String collectionName = "testCursor" ;
 
-        for ( int i = 0; i < widgetsSize; i++ ) {
-
-            entityPayload.put( "name", "value" + i );
-            Entity entity = new Entity( entityPayload );
-            this.app().collection( collectionName ).post( entity );
-        }
-
-        this.refreshIndex();
+        createEntities( collectionName, widgetsSize );
 
         //checks to make sure we have a cursor
-        Collection testCollection = this.app().collection( collectionName ).get();
-        assertNotNull( testCollection.getCursor() );
-        assertEquals( 10, testCollection.getResponse().getEntityCount() );
+        pageAndVerifyEntities( collectionName,null,2 );
 
         //Create new collection of only 5 entities
-        String trinketCollectionName = "trinkets" + UUIDUtils.newTimeUUID();
+        String trinketCollectionName = "trinkets" ;
         int trinketsSize = 5;
-        for ( int i = 0; i < trinketsSize; i++ ) {
-
-            entityPayload.put( "name", "value" + i );
-            Entity entity = new Entity( entityPayload );
-            this.app().collection( trinketCollectionName ).post( entity );
-        }
-
-        this.refreshIndex();
+        createEntities( trinketCollectionName,trinketsSize );
 
         //checks to make sure we don't get a cursor for just 5 entities.
-        testCollection = this.app().collection( trinketCollectionName ).get();
-        assertNull( testCollection.getCursor() );
-        assertEquals( 5, testCollection.getResponse().getEntityCount() );
+        pageAndVerifyEntities( trinketCollectionName,null,1 );
+
     }
-
-
 
     /**
      * Tests that we can create 100 entities and then get them back in the order that they were created 10 at a time and
      * retrieving the next 10 with a cursor.
      */
-    @Test //TODO: add comments to test.
+    @Test
     public void pagingEntities() throws IOException {
+        int maxSize = 100;
+        int totalPagesExpected = 10;
+        String collectionName = "testPagingEntities" ;
+
+        //creates entities
+        createEntities( collectionName,maxSize );
+
+        //pages through entities and verifies that they are correct.
+        pageAndVerifyEntities( collectionName,null,totalPagesExpected );
+    }
+
+
+    /**
+     * Pages through entities that are connected to each other
+     * @throws IOException
+     */
+    @Ignore("This does not return a page for any entities. It just keeps returning them in bulk."
+            + " Not sure about intended functionality")
+    @Test
+    public void pageThroughConnectedEntities() throws IOException {
+
+
         long created = 0;
         int maxSize = 100;
         int totalPagesExpected = 10;
+        Entity connectedEntity = null;
         Map<String, Object> entityPayload = new HashMap<String, Object>();
-        //TODO: set below in a helper method , don't need uuid since org+app unique for each test
-        String collectionName = "testPagingEntities" + UUIDUtils.newTimeUUID();
+        String collectionName = "pageThroughConnectedEntities" ;
 
         for ( created = 0; created < maxSize; created++ ) {
 
             entityPayload.put( "name", "value" + created );
             Entity entity = new Entity( entityPayload );
-            this.app().collection( collectionName ).post( entity );
-        }
-
-        this.refreshIndex();
-
-        Collection sandboxCollection = this.app().collection( collectionName ).get();
-        assertNotNull( sandboxCollection );
-
-        //TODO: put in helper method.
-        created = 0;
-        for ( int i = 0; i < totalPagesExpected; i++ ) {
-            while ( sandboxCollection.hasNext() ) {
-                Entity returnedEntity = sandboxCollection.next();
-                assertEquals( "value" + created++, returnedEntity.get( "name" ) );
+            entity = this.app().collection( collectionName ).post( entity );
+            if(created == 0){
+                connectedEntity = entity;
             }
-            sandboxCollection = this.app().collection( collectionName ).getNextPage( sandboxCollection, null, true );
+            else if (created > 0){
+                this.app().collection( collectionName ).entity( connectedEntity ).connection( "likes" ).entity( entity ).post();
+            }
         }
-    }
+
+        Collection colConnection =  this.app().collection( collectionName ).entity( connectedEntity ).connection( "likes" ).get();
+        assertNotNull( colConnection );
+        assertNotNull( colConnection.getCursor() );
+        pageAndVerifyEntities( collectionName,null,totalPagesExpected );
+
+        /**
+         * the below checks to make sure we get a cursor back and go through each one to page the entities.
+         */
 
 
-    @Ignore( "This test only checks activities and if we can retrieve them using a limit"
-            + "Doesn't check to make sure we can page through entities that are connected using connections." )
-    @Test
-    public void pageThroughConnectedEntities() throws IOException {
-
-        //        CustomCollection activities = context.collection( "activities" );
-        //
-        //        long created = 0;
-        //        int maxSize = 100;
-        //        long[] verifyCreated = new long[maxSize];
-        //        Map actor = hashMap( "displayName", "Erin" );
-        //        Map props = new HashMap();
-        //
-        //
-        //        props.put( "actor", actor );
-        //        props.put( "verb", "go" );
-        //
-        //        for ( int i = 0; i < maxSize; i++ ) {
-        //
-        //            props.put( "ordinal", i );
-        //            JsonNode activity = activities.create( props );
-        //            verifyCreated[i] = activity.findValue( "created" ).longValue();
-        //            if ( i == 0 ) {
-        //                created = activity.findValue( "created" ).longValue();
-        //            }
-        //        }
-        //        ArrayUtils.reverse( verifyCreated );
-        //
-        //        refreshIndex( context.getOrgName(), context.getAppName() );
-        //
-        //        String query = "select * where created >= " + created;
-        //
-        //
-        //        JsonNode node = activities.query( query, "limit", "2" ); //activities.query(query,"");
-        //        int index = 0;
-        //        while ( node.get( "entities" ).get( "created" ) != null ) {
-        //            assertEquals( 2, node.get( "entities" ).size() );
-        //
-        //            if ( node.get( "cursor" ) != null ) {
-        //                node = activities.query( query, "cursor", node.get( "cursor" ).toString() );
-        //            }
-        //
-        //            else {
-        //                break;
-        //            }
-        //        }
     }
 
 
     /**
      * Checks to make sure the query gives us the correct result set.
+     * Creates entities with different verbs and does a query to make sure the exact same entities are returned
+     * when queried for. This is accomplished by saving the created entities in a list.
      * @throws Exception
      */
-    //TODO: rework test
     @Test
     public void pagingQueryReturnCorrectResults() throws Exception {
 
         long created = 0;
+        int indexForChangedEntities = 15;
         int maxSize = 20;
+        int numOfChangedEntities = maxSize - indexForChangedEntities;
         Map<String, Object> entityPayload = new HashMap<String, Object>();
-        List<Entity> entityPayloadVerifier = new LinkedList<>(  );
-        long createdTimestamp = 0;
-        String collectionName = "merp" + createdTimestamp;
 
+        String collectionName = "merp";
+
+        //Creates Entities
         for ( created = 0; created < maxSize; created++ ) {
 
-            if ( created >= 15 && created < 20 ) {
+            //Creates all entities between 15 and 20 with the verb stop
+            if ( created >= indexForChangedEntities && created < maxSize ) {
 
                 entityPayload.put( "verb", "stop" );
             }
+            //all other entities are tagged with the verb go
             else {
                 entityPayload.put( "verb", "go" );
             }
 
             entityPayload.put( "name", "value" + created );
             Entity entity = new Entity( entityPayload );
-            entityPayloadVerifier.add( entity );
-            if(created == 15) {
-                createdTimestamp = System.currentTimeMillis();
-            }
+
             this.app().collection( collectionName ).post( entity );
         }
 
         this.refreshIndex();
 
-        String query = "select * where created >= " + createdTimestamp + " or verb = 'stop'";
-
+        //Creates query looking for entities with the very stop.
+        String query = "select * where verb = 'stop'";
         QueryParameters queryParameters = new QueryParameters();
         queryParameters.setQuery( query );
-        Collection queryCollection = this.app().collection( collectionName ).get( queryParameters );
 
+        //Get the collection with the query applied to it
+        Collection queryCollection = this.app().collection( collectionName ).get( queryParameters );
         assertNotNull( queryCollection );
         assertNull( queryCollection.getCursor() );
-        assertEquals( 5, queryCollection.getResponse().getEntities().size() );
+        assertEquals( numOfChangedEntities, queryCollection.getResponse().getEntities().size() );
 
-        for(int i = 15;i<maxSize;i++){
-            Entity correctEntity = entityPayloadVerifier.get( i );
-            Entity returnedEntity = queryCollection.next();
-            assertEquals( correctEntity.get( "name" ), returnedEntity.get( "name" ) );
-            assertEquals( correctEntity.get( "verb" ), returnedEntity.get( "verb" ) );
-
+        //Gets the supposed number of changed entities and checks they have the correct verb.
+        for(int i = 0; i<numOfChangedEntities; i++){
+            assertEquals( "stop", queryCollection.next().get( "verb" ) );
         }
+        //makes sure there are no entities left in the collection.
+        assertFalse( queryCollection.hasNext() );
     }
 
+    /**
+     * Not a test
+     * Helper method that takes in the <collectionName> collection applies the queryParameters and pages through
+     * results for the given number of pages.
+     * @param collectionName
+     * @param numOfPages
+     * @return
+     */
+    //TODO: add in a +1 to numOfPAges so that if we want to loop through a collection with no pages we would put in 0 instead of 1 page.
+    public Collection pageAndVerifyEntities(String collectionName,QueryParameters queryParameters, int numOfPages ){
+        //Get the entities that exist in the collection
+        Collection testCollections = this.app().collection( collectionName ).get(queryParameters);
+
+        //checks to make sure we can page through all entities in order.
+
+        //Used as an index to see what value we're on.
+        int index = 0;
+
+        //Tells us how many pages we want to sort through
+        for ( int i = 0; i < numOfPages; i++ ) {
+            //page through returned entities.
+            while ( testCollections.hasNext() ) {
+                Entity returnedEntity = testCollections.next();
+                //verifies that the names are in order
+                assertEquals( String.valueOf( index++ ), returnedEntity.get( "name" ) );
+            }
+            if(testCollections.getCursor()!=null) {
+                testCollections =
+                        this.app().collection( collectionName ).getNextPage( testCollections, queryParameters, true );
+            }
+        }
+
+        //make sure the cursor is null after we have no more entities to page through.
+        assertNull( testCollections.getCursor() );
+        return testCollections;
+    }
 
 }
