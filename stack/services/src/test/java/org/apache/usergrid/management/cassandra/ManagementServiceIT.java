@@ -74,7 +74,7 @@ public class ManagementServiceIT {
 
 
     @ClassRule
-    public static SpringResource springResource = SpringResource.setPortsAndStartSpring();
+    public static SpringResource springResource = SpringResource.getInstance();
 
 
     @ClassRule

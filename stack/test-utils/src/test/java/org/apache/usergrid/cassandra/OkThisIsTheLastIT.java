@@ -27,12 +27,11 @@ import org.slf4j.LoggerFactory;
 @Concurrent()
 public class OkThisIsTheLastIT {
     public static final Logger logger = LoggerFactory.getLogger( SpringResource.class );
-    private static final long WAIT = 200L;
 
     @Rule
     public TestName name = new TestName();
 
-    private SpringResource springResource = CassandraResourceITSuite.springResource;
+    private SpringResource springResource = SpringResource.getInstance();
 
 
     @Test
@@ -47,7 +46,6 @@ public class OkThisIsTheLastIT {
     public void testItAgainAndAgain() throws Exception {
         String testBean = springResource.getBean( "testBean", String.class );
         logger.info( "Got another testBean again: {}", testBean );
-        Thread.sleep( WAIT );
     }
 
 
@@ -55,7 +53,6 @@ public class OkThisIsTheLastIT {
     public void testItAgainAndAgain2() throws Exception {
         String testBean = springResource.getBean( "testBean", String.class );
         logger.info( "Got another testBean again: {}", testBean );
-        Thread.sleep( WAIT );
     }
 
 
@@ -63,7 +60,6 @@ public class OkThisIsTheLastIT {
     public void testItAgainAndAgain3() throws Exception {
         String testBean = springResource.getBean( "testBean", String.class );
         logger.info( "Got another testBean again: {}", testBean );
-        Thread.sleep( WAIT );
     }
 
 
@@ -71,7 +67,6 @@ public class OkThisIsTheLastIT {
     public void testItAgainAndAgain4() throws Exception {
         String testBean = springResource.getBean( "testBean", String.class );
         logger.info( "Got another testBean again: {}", testBean );
-        Thread.sleep( WAIT );
     }
 
 
@@ -79,7 +74,6 @@ public class OkThisIsTheLastIT {
     public void testItAgainAndAgain5() throws Exception {
         String testBean = springResource.getBean( "testBean", String.class );
         logger.info( "Got another testBean again: {}", testBean );
-        Thread.sleep( WAIT );
     }
 
 
@@ -87,6 +81,5 @@ public class OkThisIsTheLastIT {
     public void testItAgainAndAgain6() throws Exception {
         String testBean = springResource.getBean( "testBean", String.class );
         logger.info( "Got another testBean again: {}", testBean );
-        Thread.sleep( WAIT );
     }
 }

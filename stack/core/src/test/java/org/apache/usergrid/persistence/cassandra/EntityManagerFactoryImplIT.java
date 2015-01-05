@@ -62,7 +62,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
 
     @ClassRule
-    public static SpringResource springResource = SpringResource.setPortsAndStartSpring();
+    public static SpringResource springResource = SpringResource.getInstance();
 
     @ClassRule
     public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();

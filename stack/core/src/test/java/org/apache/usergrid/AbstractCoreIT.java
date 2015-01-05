@@ -32,7 +32,7 @@ public abstract class AbstractCoreIT {
     private static final Logger LOG = LoggerFactory.getLogger( AbstractCoreIT.class );
 
     @ClassRule
-    public static SpringResource springResource = SpringResource.setPortsAndStartSpring();
+    public static SpringResource springResource = SpringResource.getInstance();
 
     @ClassRule
     public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();

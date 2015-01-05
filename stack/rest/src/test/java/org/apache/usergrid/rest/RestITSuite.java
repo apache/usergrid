@@ -60,5 +60,5 @@ public class RestITSuite {
     public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
 
     @ClassRule
-    public static SpringResource springResource = SpringResource.setPortsAndStartSpring();
+    public static SpringResource springResource = SpringResource.getInstance();
 }

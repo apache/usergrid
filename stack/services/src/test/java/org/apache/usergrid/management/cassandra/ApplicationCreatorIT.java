@@ -45,7 +45,7 @@ import static org.junit.Assert.assertTrue;
 @Concurrent()
 public class ApplicationCreatorIT {
     @ClassRule
-    public static SpringResource springResource = SpringResource.setPortsAndStartSpring();
+    public static SpringResource springResource = SpringResource.getInstance();
 
     @ClassRule
     public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();

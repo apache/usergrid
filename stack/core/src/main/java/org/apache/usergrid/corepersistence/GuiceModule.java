@@ -38,7 +38,6 @@ import org.slf4j.LoggerFactory;
  * Guice Module that encapsulates Core Persistence.
  */
 public class GuiceModule  extends AbstractModule {
-    private static final Logger log = LoggerFactory.getLogger( GuiceModule.class );
 
     @Override
     protected void configure() {

@@ -63,5 +63,5 @@ import org.apache.usergrid.rest.management.organizations.AdminEmailEncodingIT;
 public class ConcurrentRestITSuite {
 
     @ClassRule
-    public static SpringResource springResource = SpringResource.setPortsAndStartSpring();
+    public static SpringResource springResource = SpringResource.getInstance();
 }

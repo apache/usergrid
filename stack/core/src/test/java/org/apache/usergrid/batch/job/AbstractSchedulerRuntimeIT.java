@@ -46,7 +46,7 @@ public class AbstractSchedulerRuntimeIT {
 
 
     @ClassRule
-    public static SpringResource springResource = SpringResource.setPortsAndStartSpring();
+    public static SpringResource springResource = SpringResource.getInstance();
 
 
     @ClassRule

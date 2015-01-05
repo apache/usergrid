@@ -38,7 +38,7 @@ import static org.junit.Assert.assertTrue;
 public class UsergridSystemMonitorIT {
 
     @ClassRule
-    public static SpringResource springResource = SpringResource.setPortsAndStartSpring();
+    public static SpringResource springResource = SpringResource.getInstance();
 
     private UsergridSystemMonitor usergridSystemMonitor;
 

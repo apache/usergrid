@@ -22,60 +22,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static junit.framework.Assert.assertTrue;
+import static junit.framework.TestCase.assertSame;
 
 
 /** This tests the CassandraResource. */
 @Concurrent()
 public class SpringResourceTest {
     public static final Logger LOG = LoggerFactory.getLogger( SpringResourceTest.class );
-    public static final long WAIT = 200L;
-
-
-    /** Tests to make sure port overrides works properly. */
-    @Test
-    public void testPortOverride() throws Throwable {
-        int rpcPort;
-        int storagePort;
-        int sslStoragePort;
-        int nativeTransportPort;
-
-        do {
-            rpcPort = AvailablePortFinder.getNextAvailable( SpringResource.DEFAULT_RPC_PORT + 1 );
-        }
-        while ( rpcPort == SpringResource.DEFAULT_RPC_PORT );
-        LOG.info( "Setting rpc_port to {}", rpcPort );
-
-        do {
-            storagePort = AvailablePortFinder.getNextAvailable( SpringResource.DEFAULT_STORAGE_PORT + 1 );
-        }
-        while ( storagePort == SpringResource.DEFAULT_STORAGE_PORT || storagePort == rpcPort );
-        LOG.info( "Setting storage_port to {}", storagePort );
-
-        do {
-            sslStoragePort = AvailablePortFinder.getNextAvailable( SpringResource.DEFAULT_SSL_STORAGE_PORT + 1 );
-        }
-        while ( sslStoragePort == SpringResource.DEFAULT_SSL_STORAGE_PORT || storagePort == sslStoragePort );
-        LOG.info( "Setting ssl_storage_port to {}", sslStoragePort );
-
-        do {
-            nativeTransportPort =
-                    AvailablePortFinder.getNextAvailable( SpringResource.DEFAULT_NATIVE_TRANSPORT_PORT + 1 );
-        }
-        while ( nativeTransportPort == SpringResource.DEFAULT_NATIVE_TRANSPORT_PORT
-                || sslStoragePort == nativeTransportPort );
-        LOG.info( "Setting native_transport_port to {}", nativeTransportPort );
-
-        final SpringResource springResource =
-                new SpringResource( rpcPort, storagePort, sslStoragePort, nativeTransportPort );
-
-        springResource.before();
-
-        // test here to see if we can access cassandra's ports
-        // TODO - add some test code here using Hector
-
-        LOG.info( "Got the test bean: " );
-    }
-
 
 
 
@@ -87,25 +40,21 @@ public class SpringResourceTest {
      */
     @Test
     public void testDoubleTrouble() throws Throwable {
-        SpringResource c1 = SpringResource.setPortsAndStartSpring();
-        LOG.info( "Starting up first Cassandra instance: {}", c1 );
-        c1.before();
+        SpringResource c1 = SpringResource.getInstance();
+        LOG.info( "Starting up first Spring instance: {}", c1 );
 
         LOG.debug( "Waiting for the new instance to come online." );
-        while ( !c1.isReady() ) {
-            Thread.sleep( WAIT );
-        }
 
-        SpringResource c2 = SpringResource.setPortsAndStartSpring();
-        LOG.debug( "Starting up second Cassandra instance: {}", c2 );
-        c2.before();
+        SchemaManager c1SchemaManager = c1.getBean( SchemaManager.class );
+
+        SpringResource c2 = SpringResource.getInstance();
+        LOG.debug( "Starting up second Spring instance: {}", c2 );
+
+        SchemaManager c2SchemaManager = c2.getBean( SchemaManager.class );
 
         LOG.debug( "Waiting a few seconds for second instance to be ready before shutting down." );
-        while ( !c2.isReady() ) {
-            Thread.sleep( WAIT );
-        }
 
-        LOG.debug( "Shutting Cassandra instances down." );
+        assertSame("Instances should be from the same spring context", c1SchemaManager, c2SchemaManager);
 
     }
 }

@@ -25,6 +25,8 @@ import javax.ws.rs.core.UriBuilder;
 import org.junit.rules.ExternalResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.management.ApplicationCreator;
 import org.apache.usergrid.management.ManagementService;
@@ -44,6 +46,7 @@ public class ITSetup extends ExternalResource {
 
     private static final Logger LOG = LoggerFactory.getLogger( ITSetup.class );
     private final ElasticSearchResource elasticSearchResource;
+    private final CassandraResource cassandraResource;
     private final SpringResource springResource;
     private final TomcatResource tomcatResource;
 
@@ -61,12 +64,12 @@ public class ITSetup extends ExternalResource {
 
 
     public ITSetup( SpringResource springResource ) {
-        
+
         try {
             String[] locations = { "usergrid-properties-context.xml" };
-            ConfigurableApplicationContext appContext = 
+            ConfigurableApplicationContext appContext =
                     new ClassPathXmlApplicationContext( locations );
-            
+
             properties = (Properties)appContext.getBean("properties");
 
         } catch (Exception ex) {
@@ -81,6 +84,7 @@ public class ITSetup extends ExternalResource {
 //        elasticSearchResource = new ElasticSearchResource().startEs();
 
         elasticSearchResource = new ElasticSearchResource();
+        cassandraResource = new CassandraResource();
 
     }
 
@@ -109,16 +113,9 @@ public class ITSetup extends ExternalResource {
 //                setupCalled = true;
 //            }
 
-            String esStartup = properties.getProperty("elasticsearch.startup");
-            if ( "embedded".equals(esStartup)) {
-                tomcatResource.setCassandraPort( springResource.getRpcPort() );
-                tomcatResource.setElasticSearchPort( 
-                    Integer.parseInt( System.getProperty(LOCAL_ES_PORT_PROPNAME)) );
-                
-            } else {
-                tomcatResource.setCassandraPort( springResource.getRpcPort() );
-                tomcatResource.setElasticSearchPort(elasticSearchResource.getPort());
-            }
+            tomcatResource.setCassandraPort( cassandraResource.getPort() );
+            tomcatResource.setElasticSearchPort( elasticSearchResource.getPort() );
+
 
             tomcatResource.before();
 

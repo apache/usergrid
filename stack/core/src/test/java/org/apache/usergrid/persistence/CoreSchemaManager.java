@@ -64,6 +64,7 @@ public class CoreSchemaManager implements SchemaManager {
         try {
             setup.createDefaultApplications();
         }
+
         catch ( Exception ex ) {
             LOG.error( "Could not create default applications", ex );
         }

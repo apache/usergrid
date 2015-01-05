@@ -48,7 +48,7 @@ public class RoleIT {
     private static final Logger LOG = LoggerFactory.getLogger( RoleIT.class );
 
     @ClassRule
-    public static SpringResource springResource = SpringResource.setPortsAndStartSpring();
+    public static SpringResource springResource = SpringResource.getInstance();
 
     @ClassRule
     public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();

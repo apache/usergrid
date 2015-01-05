@@ -46,6 +46,7 @@ import static org.apache.usergrid.persistence.cassandra.CassandraService.TOKENS_
 import static org.apache.usergrid.persistence.cassandra.CassandraService.USE_VIRTUAL_KEYSPACES;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.keyspaceForApplication;
 import org.apache.usergrid.persistence.cassandra.Setup;
+import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
 import org.apache.usergrid.persistence.core.migration.schema.MigrationException;
 import org.apache.usergrid.persistence.core.migration.schema.MigrationManager;
 import org.apache.usergrid.persistence.entities.Application;

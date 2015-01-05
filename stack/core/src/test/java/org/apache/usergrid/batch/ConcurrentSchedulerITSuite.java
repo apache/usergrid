@@ -43,5 +43,5 @@ import org.apache.usergrid.cassandra.ConcurrentSuite;
 @Concurrent()
 public class ConcurrentSchedulerITSuite {
     @ClassRule
-    public static SpringResource springResource = SpringResource.setPortsAndStartSpring();
+    public static SpringResource springResource = SpringResource.getInstance();
 }
