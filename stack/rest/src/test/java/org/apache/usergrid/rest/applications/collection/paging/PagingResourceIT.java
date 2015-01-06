@@ -117,7 +117,7 @@ public class PagingResourceIT extends AbstractRestIT {
         //verifies that we can't get anymore entities from the collection
         Collection getCollection = this.app().collection( collectionName ).get();
 
-        assertEquals( "All entities should have been removed", 0, getCollection.getResponse().getEntityCount() );
+        assertFalse( "All entities should have been removed", getCollection.hasNext());
 
         //now do 1 more delete, we shouldn't get any results
         ApiResponse response = this.app().collection( collectionName ).delete( queryParameters );
@@ -306,7 +306,7 @@ public class PagingResourceIT extends AbstractRestIT {
         Collection queryCollection = this.app().collection( collectionName ).get( queryParameters );
         assertNotNull( queryCollection );
         assertNull( queryCollection.getCursor() );
-        assertEquals( numOfChangedEntities, queryCollection.getResponse().getEntities().size() );
+        assertEquals( numOfChangedEntities, queryCollection.getNumOfEntities() );
 
         //Gets the supposed number of changed entities and checks they have the correct verb.
         for(int i = 0; i<numOfChangedEntities; i++){

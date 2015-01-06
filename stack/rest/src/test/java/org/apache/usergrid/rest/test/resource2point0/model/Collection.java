@@ -88,6 +88,9 @@ public class Collection implements Iterable<Entity>, Iterator<Entity> {
         throw new UnsupportedOperationException( "Remove is unsupported" );
     }
 
+    public int getNumOfEntities(){
+        return response.getEntityCount();
+    }
 
     public ApiResponse getResponse(){return response;}
 
