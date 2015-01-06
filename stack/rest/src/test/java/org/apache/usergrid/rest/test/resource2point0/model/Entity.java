@@ -120,7 +120,7 @@ public class Entity implements Serializable, Map<String,Object> {
     }
     public String getString( final Object key ) {
         //All values are strings , so doing the cast here saves doing the cast elsewhere
-        return String.valueOf(getDynamicProperties().get( key ));
+        return (String) getDynamicProperties().get( key );
     }
 
     public String getError () {
