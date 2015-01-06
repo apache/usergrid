@@ -53,5 +53,9 @@ public class TokenResource extends NamedResource {
         this.context.setToken(token);
         return this;
     }
+    public TokenResource clearToken() {
+        this.context.setToken(null);
+        return this;
+    }
 
 }
