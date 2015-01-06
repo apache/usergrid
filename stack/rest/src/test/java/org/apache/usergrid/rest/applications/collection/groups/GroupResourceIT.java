@@ -347,7 +347,6 @@ public class GroupResourceIT extends AbstractRestIT {
 
         //8. log user in, should then be using the app user's token not the admin token
         this.getAppUserToken(username, password);
-
         //9. create a cat - permissions should allow this
         String catName = "fluffy";
         payload = new Entity();

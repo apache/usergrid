@@ -163,6 +163,7 @@ public class OrganizationsIT extends AbstractRestIT {
     @Test
     public void testCreateDuplicateOrgEmail() throws Exception {
 
+        //Setup the org/owner combo
         String username = "testCreateDuplicateOrgEmail" + UUIDUtils.newTimeUUID();
         String name = username;
         String password = "password";
@@ -171,14 +172,17 @@ public class OrganizationsIT extends AbstractRestIT {
 
         Organization orgPayload = new Organization( orgName, username, email, name, password, null );
 
+        //create the org/owner
         Organization orgCreatedResponse = clientSetup.getRestClient().management().orgs().post( orgPayload );
 
         this.refreshIndex();
 
         assertNotNull( orgCreatedResponse );
 
+        //recreate a new payload using a duplicate email
         orgPayload = new Organization( orgName+"test", username+"test", email, name+"test", password+"test", null );
 
+        //verify that we cannot create an organization that shares a email with another preexisting organization.
         try {
             clientSetup.getRestClient().management().orgs().post( orgPayload );
             fail( "Should not have created organization" );
@@ -187,6 +191,7 @@ public class OrganizationsIT extends AbstractRestIT {
             errorParse( 400,duplicateUniquePropertyExistsErrorMessage,ex);
         }
 
+        //try to get the token from the organization that failed to be created to verify it was not made.
         Token tokenPayload = new Token( "password", username + "test", password );
         Token tokenError = null;
         try {
@@ -200,6 +205,7 @@ public class OrganizationsIT extends AbstractRestIT {
 
         assertNull( tokenError );
 
+        //get token from organization that was created to verify it exists.
         tokenPayload = new Token( "password", username, password );
         Token tokenReturned = clientSetup.getRestClient().management().token().post( tokenPayload );
 
@@ -244,6 +250,7 @@ public class OrganizationsIT extends AbstractRestIT {
     @Test
     public void testOrgPOSTForm() throws IOException {
 
+        //create the form to hold the organization
         UUID timeUuid = UUIDUtils.newTimeUUID();
         Form form = new Form();
         form.add( "organization", "testOrgPOSTForm" + timeUuid );
@@ -285,105 +292,75 @@ public class OrganizationsIT extends AbstractRestIT {
      */
     @Test
     public void testCreateOrgUserAndReturnCorrectUsername() throws Exception {
-
-
         String username = "testCreateOrgUserAndReturnCorrectUsername"+UUIDUtils.newTimeUUID();
 
         RestClient restClient = clientSetup.getRestClient();
 
+        //Create adminUser values
         Entity adminUserPayload = new Entity();
         adminUserPayload.put( "username", username );
         adminUserPayload.put( "name", username );
         adminUserPayload.put( "email", username+"@usergrid.com" );
         adminUserPayload.put( "password", username );
 
+        //create adminUser
         Entity adminUserResponse = restClient.management().orgs().organization( clientSetup.getOrganizationName() )
                                            .users().post( adminUserPayload );
 
+        //verify that the response contains the correct data
         assertNotNull( adminUserResponse );
         assertEquals( username, adminUserResponse.get( "username" ) );
 
-        adminUserResponse = restClient.management().orgs().organization( clientSetup.getOrganizationName() )
-                                                .users().entity( username ).get();
+        //fetch the stored response
+        adminUserResponse = restClient.management().users().entity( username ).get(this.getAdminToken(username,username));
 
+        //verify that values match stored response
         assertNotNull( adminUserResponse );
         assertEquals( username , adminUserResponse.get( "username" ) );
         assertEquals( username, adminUserResponse.get( "name" ) );
-        assertEquals( username, adminUserResponse.get( "email" ));
+        assertEquals( username+"@usergrid.com", adminUserResponse.get( "email" ));
 
-//        Map<String, String> payload = hashMap( "username", "test-user-2" ).map( "name", "Test User 2" )
-//                                                                          .map( "email", "test-user-2@mockserver.com" )
-//                                                                          .map( "password", "password" );
-//
-//        JsonNode node = mapper.readTree(
-//                resource().path( "/management/organizations/" + context.getOrgName() + "/users" )
-//                          .queryParam( "access_token", mgmtToken ).accept( MediaType.APPLICATION_JSON )
-//                          .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ) );
-//
-//        clientSetup.getRestClient().management().orgs()
-//
-//        logNode( node );
-//        assertNotNull( node );
-//
-//        String username = node.get( "data" ).get( "user" ).get( "username" ).asText();
-//        String name = node.get( "data" ).get( "user" ).get( "name" ).asText();
-//        String email = node.get( "data" ).get( "user" ).get( "email" ).asText();
-//
-//        assertNotNull( username );
-//        assertNotNull( name );
-//        assertNotNull( email );
-//
-//        assertEquals( "test-user-2", username );
-//        assertEquals( "Test User 2", name );
-//        assertEquals( "test-user-2@mockserver.com", email );
     }
-//
-//
-//    @Test
-//    public void testOrganizationUpdate() throws Exception {
-//        String accessToken = context.getActiveUser().getToken();
-//        Map<String, Object> properties = new HashMap<String, Object>();
-//        properties.put( "securityLevel", 5 );
-//        Map payload = new HashMap();
-//        payload.put( OrganizationsResource.ORGANIZATION_PROPERTIES, properties );
-//
-//
-//        //update the organizations
-//        mapper.readTree( resource().path( "/management/organizations/" + context.getOrgName() )
-//                                   .queryParam( "access_token", accessToken ).accept( MediaType.APPLICATION_JSON )
-//                                   .type( MediaType.APPLICATION_JSON_TYPE ).put( String.class, payload ) );
-//
-//
-//        refreshIndex( context.getOrgName(), context.getAppName() );
-//
-//        //get the organization
-//        JsonNode node = mapper.readTree( resource().path( "/management/organizations/" + context.getOrgName() )
-//                                                   .queryParam( "access_token", accessToken )
-//                                                   .accept( MediaType.APPLICATION_JSON )
-//                                                   .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ) );
-//
-//        assertEquals( 5L, node.get( "organization" ).get( "properties" ).get( "securityLevel" )
-//                              .asLong() );//orgInfo.getProperties().get( "securityLevel" ) );
-//
-//        payload = new HashMap();
-//        properties.put( "securityLevel", 6 );
-//        payload.put( OrganizationsResource.ORGANIZATION_PROPERTIES, properties );
-//
-//        node = mapper.readTree( resource().path( "/management/organizations/" + context.getOrgName() )
-//                                          .queryParam( "access_token", accessToken )
-//                                          .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-//                                          .put( String.class, payload ) );
-//        logNode( node );
-//
-//        refreshIndex( context.getOrgName(), context.getAppName() );
-//
-//        node = mapper.readTree( resource().path( "/management/organizations/" + context.getOrgName() )
-//                                          .queryParam( "access_token", accessToken )
-//                                          .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-//                                          .get( String.class ) );
-//        logNode( node );
-//        Assert.assertEquals( 6,
-//                node.get( "organization" ).get( OrganizationsResource.ORGANIZATION_PROPERTIES ).get( "securityLevel" )
-//                    .asInt() );
-//    }
+
+
+    /**
+     * Inserts a value into the default organization then update that value and see if the value persists.
+     * @throws Exception
+     */
+    @Test
+    public void testOrganizationUpdate() throws Exception {
+
+        RestClient restClient = clientSetup.getRestClient();
+
+        //Setup what will be interested into the organization
+        Map<String, Object> properties = new HashMap<String, Object>();
+        properties.put( "securityLevel", 5 );
+
+        Organization orgPayload = clientSetup.getOrganization();
+        orgPayload.put( "properties", properties );
+
+        //update the organization.
+        restClient.management().orgs().organization( clientSetup.getOrganizationName() ).put(orgPayload);
+
+        this.refreshIndex();
+
+        //retrieve the organization
+        Organization orgResponse = restClient.management().orgs().organization( clientSetup.getOrganizationName() ).get();
+
+        assertEquals( 5, orgResponse.getProperties().get( "securityLevel" ));
+
+        //update the value added to the organization
+        properties.put( "securityLevel", 6 );
+        orgPayload.put( "properties", properties );
+
+        //update the organization.
+        restClient.management().orgs().organization( clientSetup.getOrganizationName() ).put(orgPayload);
+
+        this.refreshIndex();
+
+        orgResponse = restClient.management().orgs().organization( clientSetup.getOrganizationName() ).get();
+
+        assertEquals( 6, orgResponse.getProperties().get( "securityLevel" ));
+
+    }
 }

@@ -94,6 +94,9 @@ public class Organization extends Entity {
         this.user = new User( response, nameOverride);
     }
 
+    public Map<String,Object> getProperties(){
+        return (Map) this.get( "properties" );
+    }
 
     /**
      * Created specifically so that we could set the organization owner to the Organization model from a get Organization

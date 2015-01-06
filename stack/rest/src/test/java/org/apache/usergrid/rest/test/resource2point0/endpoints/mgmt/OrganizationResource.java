@@ -67,6 +67,14 @@ public class OrganizationResource extends NamedResource {
         return org;
     }
 
+    //Doesn't return anything useful.
+    public void put( Organization organization ){
+        Map<String,Object> response = getResource(true).type(MediaType.APPLICATION_JSON_TYPE)
+                                                       .accept(MediaType.APPLICATION_JSON).put( Organization.class,
+                        organization );
+
+    }
+
     public ApplicationResource app(){
         return new ApplicationResource(  context ,this );
     }

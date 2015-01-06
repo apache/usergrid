@@ -61,10 +61,21 @@ public class Entity implements Serializable, Map<String,Object> {
             this.putAll(entity);
         }
         else if (response.getData() != null){
-            ArrayList<String> data = (ArrayList <String>) response.getData();
-            Entity entity = new Entity();
-            entity.put("data", data.get(0));
-            this.putAll(entity);
+            LinkedHashMap dataResponse = ( LinkedHashMap ) response.getData();
+
+            //covers case for admin users
+            if(dataResponse.get( "user" )!=null){
+                //Entity entity = new Entity();
+                //entity.put( "data", dataResponse.get( "user" ) );
+                this.putAll( ( Map<? extends String, ?> ) dataResponse.get( "user" ) );
+            }
+            else {
+                //Doesn't always type correct below.
+                //ArrayList<String> data = ( ArrayList<String> ) response.getData();
+                //Entity entity = new Entity();
+               // entity.put( "data", data.get( 0 ) );
+                this.putAll( dataResponse );
+            }
         }
     }
 
@@ -179,5 +190,9 @@ public class Entity implements Serializable, Map<String,Object> {
     public Entity chainPut(final String key, final Object value){
         put(key,value);
         return this;
+    }
+
+    public ApiResponse getResponse(){
+        return response;
     }
 }
