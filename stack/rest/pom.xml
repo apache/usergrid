@@ -584,6 +584,11 @@
       <classifier>tests</classifier>
     </dependency>
 
+    <dependency>
+      <groupId>org.mindrot</groupId>
+      <artifactId>jbcrypt</artifactId>
+    </dependency>
+
   </dependencies>
 
 </project>
