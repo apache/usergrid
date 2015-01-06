@@ -29,6 +29,7 @@ import org.apache.usergrid.rest.test.resource2point0.endpoints.CollectionEndpoin
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Collection;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
+import org.apache.usergrid.rest.test.resource2point0.model.User;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -36,10 +37,8 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import java.io.IOException;
 
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
+import static org.junit.Assert.*;
 
 
 /**
@@ -49,7 +48,7 @@ import static org.apache.usergrid.utils.MapUtils.hashMap;
  * @since 4.0
  */
 public class ConnectionResourceTest extends AbstractRestIT {
-   
+
 
 
     @Test
@@ -58,31 +57,22 @@ public class ConnectionResourceTest extends AbstractRestIT {
 
         CollectionEndpoint activities = this.app().collection("peeps");
 
-        Entity stuff = new Entity().chainPut("type", "chicken");
+        Entity stuff = new Entity().chainPut("name", "chicken").chainPut("type","chicken");
 
         activities.post(stuff);
 
 
-        Entity payload = new Entity();
-        payload.put( "username", "todd" );
+        User payload = new User("todd", "todd", "todd@apigee.com", "password");
+        payload.put("username", "todd");
+        this.app().collection("users").post(payload);
+        payload = new User("scott", "scott", "scott@apigee.com", "password");
+        this.app().collection("users").post(payload);
 
-        Entity objectOfDesire = new Entity();
-        objectOfDesire.put( "codingmunchies", "doritoes" );
-
-        Entity entity = this.app().collection("users").post(payload);
-
-
-        payload.put( "username", "scott" );
-
-         entity = this.app().collection("users").post(payload);
         refreshIndex();
 
+        /*finish setting up the two users */
 
-    /*finish setting up the two users */
-
-
-
-        entity = this.app().collection("users").entity("todd").connection("likes").entity("peeps").post();
+        Entity entity = this.app().collection("users").entity("todd").connection("likes").collection("peeps").entity("chicken").post();
 
         assertNotNull(entity);
 
@@ -113,50 +103,27 @@ public class ConnectionResourceTest extends AbstractRestIT {
 
         UUID thing2Id = things.post( new Entity().chainPut("name", "thing2") ).getUuid();
 
-
         refreshIndex();
 
         //create the connection
         things.entity( thing1Id ).connection( "likes" ).entity( thing2Id ).post();
-
+        things.entity( thing2Id ).connection( "likes" ).entity( thing1Id ).post();
 
         refreshIndex();
 
         //test we have the "likes" in our connection meta data response
 
-        Entity response = things.entity( "thing1" ).get();
+        Collection collection =this.app().collection("things").entity(thing1Id).connection( "likes" ).get();
 
-        String url =((Map) ((Map)response.get( "metadata" )).get( "connections" )).get( "likes" ).toString();
+        assertTrue("Connection url returned in entity", collection.hasNext());
 
-
-        assertNotNull( "Connection url returned in entity", url );
-
-        //trim off the start /
-        url = url.substring( 1 );
-
-
-        //now that we know the URl is correct, follow it
-
-        Collection collection = this.app().collection(url).get();
-
-        Entity entity  =collection.next();
-        UUID returnedUUID = entity.getUuid();
+        UUID returnedUUID  = collection.next().getUuid();
 
         assertEquals( thing2Id, returnedUUID );
 
-
         //now follow the loopback, which should be pointers to the other entity
 
-        url = ((Map) ((Map)entity.get( "metadata" )).get( "connections" )).get("likes").toString();
-
-        assertNotNull( "Incoming edge URL provited", url );
-
-        //trim off the start /
-        url = url.substring( 1 );
-
-        //now we should get thing1 from the loopback url
-
-        collection = this.app().collection(url).get();
+        collection  = this.app().collection("things").entity(thing2Id).connection("likes").get();
 
         UUID returned = collection.next().getUuid();
 
@@ -186,7 +153,7 @@ public class ConnectionResourceTest extends AbstractRestIT {
 
         Entity response = things.entity( "thing1" ).get();
 
-        String url =((Map) ((Map)response.get( "metadata" )).get( "connections" )).get( "likes" ).toString();
+        String url =((Map) ((Map)response.get( "metadata" )).get( "connections" )).get("likes").toString();
 
 
         assertNotNull( "Connection url returned in entity", url );
@@ -232,9 +199,14 @@ public class ConnectionResourceTest extends AbstractRestIT {
 
         refreshIndex();
 
-        Entity node = things.entity ( "thing2" ).get();
+        int status = 0;
+        try {
+            Entity node = things.entity("thing2").get();
+        }catch (UniformInterfaceException e){
+            status = e.getResponse().getStatus();
+        }
+        assertEquals(404,status);
 
-        assertNull(node);
 
     }
 
@@ -256,9 +228,13 @@ public class ConnectionResourceTest extends AbstractRestIT {
 
         refreshIndex();
 
-        Entity node = things.entity ( "thing1" ).get();
-
-        assertNull(node);
+        int status = 0;
+        try {
+            Entity node = things.entity("thing1").get();
+        }catch (UniformInterfaceException e){
+            status = e.getResponse().getStatus();
+        }
+        assertEquals(404,status);
 
     }
 
