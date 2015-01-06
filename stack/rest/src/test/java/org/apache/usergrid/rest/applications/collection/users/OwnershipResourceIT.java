@@ -19,16 +19,15 @@ package org.apache.usergrid.rest.applications.collection.users;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
+
+import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.CollectionEndpoint;
+import org.apache.usergrid.rest.test.resource2point0.model.*;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.rest.AbstractRestIT;
-import org.apache.usergrid.rest.TestContextSetup;
-import org.apache.usergrid.rest.test.resource.Connection;
-import org.apache.usergrid.rest.test.resource.CustomCollection;
-import org.apache.usergrid.rest.test.resource.app.queue.DevicesCollection;
-import org.apache.usergrid.rest.test.security.TestAppUser;
-import org.apache.usergrid.rest.test.security.TestUser;
+
 import org.apache.usergrid.utils.MapUtils;
 
 import static org.junit.Assert.assertEquals;
@@ -44,35 +43,46 @@ import static org.junit.Assert.fail;
 @Concurrent()
 public class OwnershipResourceIT extends AbstractRestIT {
 
-    @Rule
-    public TestContextSetup context = new TestContextSetup( this );
+    private CollectionEndpoint usersResource;
+    private User user1;
+    private User user2;
 
+    @Before
+    public void setup(){
+        this.usersResource =  this.app().collection("users");
+        String email = "testuser1@usergrid.org";
+        String email2 = "testuser2@usergrid.org";
+
+        user2 = new User("testuser2","testuser2", email, "password" );
+
+        user1 = new User("testuser1","testuser1", email, "password" );
+        user1 = new User(this.usersResource.post(user1));
+        user2 = new User(this.usersResource.post(user2));
+
+        refreshIndex();
+    }
 
     @Test
     public void meVerify() throws Exception {
 
-        context.clearUser();
+        this.app().token().clearToken();
 
-        String email = "testuser1@usergrid.org";
-        TestUser user1 = new TestAppUser( email, "password", email ).create( context );
-        refreshIndex(context.getOrgName(), context.getAppName());
-        user1.login( context ).makeActive( context );
+        Token token = this.app().token().post(new Token(user1.getUsername(),"password"));
 
-        refreshIndex(context.getOrgName(), context.getAppName());
+        Entity userNode = usersResource.entity("me").get();
 
-        String token = user1.getToken();
-        JsonNode userNode = context.application().users().user( "me" ).get();
         assertNotNull( userNode );
 
-        String uuid = userNode.get( "entities" ).get( 0 ).get( "uuid" ).textValue();
+        String uuid = userNode.getUuid().toString();
         assertNotNull( uuid );
 
-        setup.getMgmtSvc().revokeAccessTokenForAppUser( token );
+        usersResource.entity(user1).connection("revoketokens").post(new Entity().chainPut("token", token.getAccessToken()));
 
-        refreshIndex(context.getOrgName(), context.getAppName());
+        refreshIndex();
 
         try {
-            context.application().users().user( "me" ).get();
+             userNode = usersResource.entity("me").get();
+
             fail();
         }
         catch ( Exception ex ) {
@@ -86,98 +96,93 @@ public class OwnershipResourceIT extends AbstractRestIT {
     public void contextualPathOwnership() throws IOException {
 
         // anonymous user
-        context.clearUser();
+        this.app().token().clearToken();
 
-        refreshIndex(context.getOrgName(), context.getAppName());
 
-        TestUser user1 = new TestAppUser( "testuser1@usergrid.org", "password", "testuser1@usergrid.org" ).create( context );
-        refreshIndex(context.getOrgName(), context.getAppName());
-        user1.login( context );
-        user1.makeActive( context );
+        Token token = this.app().token().post(new Token(user1.getUsername(),"password"));
 
-        refreshIndex(context.getOrgName(), context.getAppName());
 
         // create device 1 on user1 devices
-        context.application().users().user( "me" ).devices()
-               .create( MapUtils.hashMap( "name", "device1" ).map( "number", "5551112222" ) );
+        usersResource.entity("me").collection("devices")
+               .post(new Entity( ).chainPut("name", "device1").chainPut("number", "5551112222"));
+        refreshIndex();
 
         // anonymous user
-        context.clearUser();
-        refreshIndex(context.getOrgName(), context.getAppName());
+        this.app().token().clearToken();
 
         // create device 2 on user 2
-        TestUser user2 = new TestAppUser( "testuser2@usergrid.org", "password", "testuser2@usergrid.org" ).create( context );
-        refreshIndex(context.getOrgName(), context.getAppName());
-        user2.login( context );
-        user2.makeActive( context );
+         token = this.app().token().post(new Token(user2.getUsername(),"password"));
+        usersResource.entity("me").collection("devices")
+                .post(new Entity( ).chainPut("name", "device2").chainPut("number", "5552223333"));
 
-        refreshIndex(context.getOrgName(), context.getAppName());
-
-        context.application().users().user( "me" ).devices()
-               .create( MapUtils.hashMap( "name", "device2" ).map( "number", "5552223333" ) );
-
-        refreshIndex(context.getOrgName(), context.getAppName());
+        refreshIndex();
 
         // now query on user 1.
+        token = this.app().token().post(new Token(user1.getUsername(),"password"));
 
-        DevicesCollection devices = context.withUser( user1 ).application().users().user( "me" ).devices();
+        CollectionEndpoint devices = usersResource.entity( user1 ).collection("devices");
 
-        JsonNode data = devices.device( "device1" ).get();
+        Entity data = devices.entity("device1").get();
         assertNotNull( data );
-        assertEquals( "device1", getEntity( data, 0 ).get( "name" ).asText() );
+        assertEquals("device1", data.get("name").toString());
 
         // check we can't see device2
-        data = devices.device( "device2" ).get();
+        data = devices.entity("device2").get();
         assertNull( data );
 
         // do a collection load, make sure we're not loading device 2
-        data = devices.get();
+        Collection devicesData = devices.get();
 
-        assertEquals( "device1", getEntity( data, 0 ).get( "name" ).asText() );
-        assertNull( getEntity( data, 1 ) );
+        assertEquals("device1", devicesData.next().get("name").toString());
+        assertTrue(!devicesData.hasNext());
 
         // log in as user 2 and check it
-        devices = context.withUser( user2 ).application().users().user( "me" ).devices();
+        token = this.app().token().post(new Token(user2.getUsername(),"password"));
 
-        data = devices.device( "device2" ).get();
+        devices =  usersResource.entity("me").collection("devices");
+
+        data = devices.entity("device2").get();
         assertNotNull( data );
-        assertEquals( "device2", getEntity( data, 0 ).get( "name" ).asText() );
+        assertEquals( "device2", data.get("name").toString() );
 
         // check we can't see device1
-        data = devices.device( "device1" ).get();
+        data = devices.entity("device1").get();
         assertNull( data );
 
         // do a collection load, make sure we're not loading device 1
-        data = devices.get();
+        devicesData = devices.get();
 
-        assertEquals( "device2", getEntity( data, 0 ).get( "name" ).asText() );
-        assertNull( getEntity( data, 1 ) );
+        assertEquals("device2", devicesData.next().get("name").toString());
+        assertTrue(!devicesData.hasNext());
 
         // we should see both devices when loaded from the root application
 
         // test for user 1
+        token = this.app().token().post(new Token(user1.getUsername(),"password"));
 
-        devices = context.withUser( user1 ).application().devices();
-        data = devices.device( "device1" ).get();
-
-        assertNotNull( data );
-        assertEquals( "device1", getEntity( data, 0 ).get( "name" ).asText() );
-
-        data = devices.device( "device2" ).get();
+        devices = usersResource.entity(user1).collection("devices");
+        data = devices.entity("device1").get();
 
         assertNotNull( data );
-        assertEquals( "device2", getEntity( data, 0 ).get( "name" ).asText() );
+        assertEquals( "device1", data.get("name").toString() );
+
+        data = devices.entity("device2").get();
+
+        assertNotNull( data );
+        assertEquals( "device2", data.get("name").toString() );
 
         // test for user 2
-        data = context.withUser( user2 ).application().devices().device( "device1" ).get();
+        token = this.app().token().post(new Token(user2.getUsername(),"password"));
+
+        data =usersResource.entity(user2).collection("devices").entity( "device1" ).get();
 
         assertNotNull( data );
-        assertEquals( "device1", getEntity( data, 0 ).get( "name" ).asText() );
+        assertEquals( "device1",data.get( "name" ).toString() );
 
-        data = devices.device( "device2" ).get();
+        data = devices.entity( "device2" ).get();
 
         assertNotNull( data );
-        assertEquals( "device2", getEntity( data, 0 ).get( "name" ).asText() );
+        assertEquals( "device2",data.get( "name" ).toString() );
     }
 
 
@@ -185,66 +190,56 @@ public class OwnershipResourceIT extends AbstractRestIT {
     public void contextualConnectionOwnership() throws IOException {
 
         // anonymous user
-        context.clearUser();
+        this.app().token().clearToken();
 
-        refreshIndex(context.getOrgName(), context.getAppName());
+         this.app().token().post(new Token(user1.getUsername(),"password"));
 
-        String email = "testuser1@usergrid.org";
-        TestUser user1 = new TestAppUser( email, "password", email ).create( context );
-        refreshIndex(context.getOrgName(), context.getAppName());
-        user1.login( context ).makeActive( context );
 
         // create a 4peaks restaurant
-        JsonNode data = context.application()
-                .customCollection( "restaurants" ).create( MapUtils.hashMap( "name", "4peaks" ) );
+        Entity data = this.app().collection("restaurants").post(new Entity().chainPut("name", "4peaks"));
 
-        refreshIndex(context.getOrgName(), context.getAppName());
+        refreshIndex();
 
         // create our connection
-        data = context.application().users().user( "me" )
-                .connection( "likes" ).collection( "restaurants" ).entity( "4peaks" ).post();
+        data = usersResource.entity("me")
+                .connection("likes").collection( "restaurants" ).entity( "4peaks" ).post();
 
-        refreshIndex(context.getOrgName(), context.getAppName());
+        refreshIndex();
 
-       String peaksId = getEntity( data, 0 ).get( "uuid" ).asText();
+       String peaksId = data.getUuid().toString();
 
         // anonymous user
-        context.clearUser();
+        this.app().token().clearToken();
 
         // create a restaurant and link it to user 2
-        email = "testuser2@usergrid.org";
-        TestUser user2 = new TestAppUser( email, "password", email ).create( context );
-        refreshIndex(context.getOrgName(), context.getAppName());
+        this.app().token().post(new Token(user2.getUsername(),"password"));
 
-        user2.login( context ).makeActive( context );
-        refreshIndex(context.getOrgName(), context.getAppName());
+        data = this.app().collection("restaurants")
+                      .post(new Entity().chainPut("name", "arrogantbutcher"));
+        refreshIndex();
 
-        data = context.application().customCollection( "restaurants" )
-                      .create( MapUtils.hashMap( "name", "arrogantbutcher" ) );
-        refreshIndex(context.getOrgName(), context.getAppName());
-
-        data = context.application().users().user( "me" ).connection( "likes" ).collection( "restaurants" )
+        data = usersResource.entity("me").connection( "likes" ).collection( "restaurants" )
                       .entity( "arrogantbutcher" ).post();
-        refreshIndex(context.getOrgName(), context.getAppName());
+        refreshIndex();
 
-        String arrogantButcherId = getEntity( data, 0 ).get( "uuid" ).asText();
+        String arrogantButcherId = data.getUuid().toString();
 
         // now query on user 1.
+        this.app().token().post(new Token(user1.getUsername(),"password"));
 
-        CustomCollection likeRestaurants =
-                context.withUser( user1 ).application().users().user( "me" ).connection( "likes" )
+        CollectionEndpoint likeRestaurants =
+                usersResource.entity( "me" ).connection( "likes" )
                        .collection( "restaurants" );
-        refreshIndex(context.getOrgName(), context.getAppName());
 
         // check we can get it via id
-        data = likeRestaurants.entity( peaksId ).get();
+        data = likeRestaurants.entity(peaksId).get();
         assertNotNull( data );
-        assertEquals( "4peaks", getEntity( data, 0 ).get( "name" ).asText() );
+        assertEquals("4peaks", data.get("name").toString());
 
         // check we can get it by name
         data = likeRestaurants.entity( "4peaks" ).get();
         assertNotNull( data );
-        assertEquals( "4peaks", getEntity( data, 0 ).get( "name" ).asText() );
+        assertEquals( "4peaks", data.get("name").toString() );
 
         // check we can't see arrogantbutcher by name or id
         data = likeRestaurants.entity( "arrogantbutcher" ).get();
@@ -254,22 +249,24 @@ public class OwnershipResourceIT extends AbstractRestIT {
         assertNull( data );
 
         // do a collection load, make sure we're not entities we shouldn't see
-        data = likeRestaurants.get();
+        Collection collectionData = likeRestaurants.get();
 
-        assertEquals( "4peaks", getEntity( data, 0 ).get( "name" ).asText() );
-        assertNull( getEntity( data, 1 ) );
+        assertEquals("4peaks", collectionData.next().get("name").toString());
+        assertNull( collectionData.next() );
 
         // log in as user 2 and check it
-        likeRestaurants = context.withUser( user2 ).application().users().user( "me" ).connection( "likes" )
+        this.app().token().post(new Token(user2.getUsername(),"password"));
+
+        likeRestaurants = usersResource.entity("me").connection( "likes" )
                                  .collection( "restaurants" );
 
         data = likeRestaurants.entity( arrogantButcherId ).get();
         assertNotNull( data );
-        assertEquals( "arrogantbutcher", getEntity( data, 0 ).get( "name" ).asText() );
+        assertEquals( "arrogantbutcher", data.get("name").toString() );
 
         data = likeRestaurants.entity( "arrogantbutcher" ).get();
         assertNotNull( data );
-        assertEquals( "arrogantbutcher", getEntity( data, 0 ).get( "name" ).asText() );
+        assertEquals( "arrogantbutcher", data.get("name").toString() );
 
         // check we can't see 4peaks
         data = likeRestaurants.entity( "4peaks" ).get();
@@ -279,37 +276,39 @@ public class OwnershipResourceIT extends AbstractRestIT {
         assertNull( data );
 
         // do a collection load, make sure we're not loading device 1
-        data = likeRestaurants.get();
+        collectionData = likeRestaurants.get();
 
-        assertEquals( "arrogantbutcher", getEntity( data, 0 ).get( "name" ).asText() );
-        assertNull( getEntity( data, 1 ) );
+        assertEquals("arrogantbutcher", collectionData.next().get("name").toString());
+        assertNull( collectionData.next() );
 
         // we should see both devices when loaded from the root application
 
         // test for user 1
+        this.app().token().post(new Token(user1.getUsername(),"password"));
 
-        CustomCollection restaurants = context.withUser( user1 ).application().customCollection( "restaurants" );
+        CollectionEndpoint restaurants = this.app().collection( "restaurants" );
         data = restaurants.entity( "4peaks" ).get();
 
         assertNotNull( data );
-        assertEquals( "4peaks", getEntity( data, 0 ).get( "name" ).asText() );
+        assertEquals( "4peaks", data.get("name").toString() );
 
         data = restaurants.entity( "arrogantbutcher" ).get();
 
         assertNotNull( data );
-        assertEquals( "arrogantbutcher", getEntity( data, 0 ).get( "name" ).asText() );
+        assertEquals( "arrogantbutcher", data.get("name").toString() );
 
         // test for user 2
-        restaurants = context.withUser( user1 ).application().customCollection( "restaurants" );
+        this.app().token().post(new Token(user2.getUsername(),"password"));
+        restaurants = this.app().collection("restaurants");
         data = restaurants.entity( "4peaks" ).get();
 
         assertNotNull( data );
-        assertEquals( "4peaks", getEntity( data, 0 ).get( "name" ).asText() );
+        assertEquals( "4peaks",data.get("name").toString() );
 
         data = restaurants.entity( "arrogantbutcher" ).get();
 
         assertNotNull( data );
-        assertEquals( "arrogantbutcher", getEntity( data, 0 ).get( "name" ).asText() );
+        assertEquals( "arrogantbutcher",data.get("name").toString() );
     }
 
 
@@ -317,63 +316,61 @@ public class OwnershipResourceIT extends AbstractRestIT {
     public void contextualConnectionOwnershipGuestAccess() throws IOException {
 
         //set up full GET,PUT,POST,DELETE access for guests
-        context.application().customCollection( "roles" ).entity( "guest" ).collection( "permissions" )
-               .create( MapUtils.hashMap( "permission", "get,put,post,delete:/**" ) );
+        this.app().collection("roles").entity( "guest" ).collection( "permissions" )
+                .post(new Entity().chainPut("permission", "get,put,post,delete:/**"));
 
 
-        // anonymous user
-        context.clearUser();
 
+        Entity city = this.app().collection("cities").post(new Entity().chainPut("name", "tempe"));
 
-        JsonNode city = context.application().customCollection( "cities" ).create( MapUtils.hashMap( "name", "tempe" ) );
+        refreshIndex();
 
-        refreshIndex(context.getOrgName(), context.getAppName());
-
-        String cityId = getEntity( city, 0 ).get( "uuid" ).asText();
+        String cityId = city.get("uuid").toString();
 
         // create a 4peaks restaurant
-        JsonNode data = context.application().customCollection( "cities" ).entity( "tempe" ).connection( "likes" )
-                               .collection( "restaurants" ).create( MapUtils.hashMap( "name", "4peaks" ) );
+        Entity data = this.app().collection("cities").entity( "tempe" ).connection( "likes" )
+                               .collection( "restaurants" ).post(new Entity().chainPut("name", "4peaks"));
 
-        String peaksId = getEntity( data, 0 ).get( "uuid" ).asText();
+        String peaksId = data.get("uuid").toString();
 
-        data = context.application().customCollection( "cities" ).entity( "tempe" ).connection( "likes" )
-                      .collection( "restaurants" ).create( MapUtils.hashMap( "name", "arrogantbutcher" ) );
+        data = this.app().collection("cities").entity( "tempe" ).connection( "likes" )
+                      .collection( "restaurants" ).post(new Entity().chainPut("name", "arrogantbutcher"));
 
-        String arrogantButcherId = getEntity( data, 0 ).get( "uuid" ).asText();
+        String arrogantButcherId = data.get("uuid").toString();
 
         // now query on user 1.
+        this.app().token().post(new Token(user1.getUsername(),"password"));
 
-        Connection likeRestaurants =
-                context.application().customCollection( "cities" ).entity( "tempe" ).connection( "likes" );
+        CollectionEndpoint likeRestaurants =
+                this.app().collection("cities").entity( "tempe" ).connection( "likes" );
 
-        refreshIndex(context.getOrgName(), context.getAppName());
+        refreshIndex();
 
         // check we can get it via id with no collection name
         data = likeRestaurants.entity( peaksId ).get();
         assertNotNull( data );
-        assertEquals( "4peaks", getEntity( data, 0 ).get( "name" ).asText() );
+        assertEquals( "4peaks", data.get("name").toString() );
 
         data = likeRestaurants.entity( arrogantButcherId ).get();
-        assertEquals( "arrogantbutcher", getEntity( data, 0 ).get( "name" ).asText() );
+        assertEquals( "arrogantbutcher", data.get("name").toString() );
 
         // check we can get it via id with a collection name
         data = likeRestaurants.collection( "restaurants" ).entity( peaksId ).get();
         assertNotNull( data );
-        assertEquals( "4peaks", getEntity( data, 0 ).get( "name" ).asText() );
+        assertEquals( "4peaks", data.get("name").toString() );
 
         data = likeRestaurants.collection( "restaurants" ).entity( arrogantButcherId ).get();
-        assertEquals( "arrogantbutcher", getEntity( data, 0 ).get( "name" ).asText() );
+        assertEquals( "arrogantbutcher", data.get("name").toString() );
 
         // do a delete either token should work
-        data = likeRestaurants.collection( "restaurants" ).entity( peaksId ).delete();
+        ApiResponse deleteResponse = likeRestaurants.collection( "restaurants" ).entity( peaksId ).delete();
 
-        assertNotNull( data );
-        assertEquals( "4peaks", getEntity( data, 0 ).get( "name" ).asText() );
+        assertNotNull( deleteResponse );
+        assertEquals( "4peaks", deleteResponse.getEntities().get(0).get("name").toString() );
 
-        data = likeRestaurants.collection( "restaurants" ).entity( arrogantButcherId ).delete();
+        deleteResponse = likeRestaurants.collection( "restaurants" ).entity( arrogantButcherId ).delete();
 
-        assertNotNull( data );
-        assertEquals( "arrogantbutcher", getEntity( data, 0 ).get( "name" ).asText() );
+        assertNotNull( deleteResponse );
+        assertEquals( "arrogantbutcher", deleteResponse.getEntities().get(0).get("name").toString() );
     }
 }

@@ -24,11 +24,13 @@ import java.util.UUID;
 import javax.ws.rs.core.MediaType;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.CollectionEndpoint;
+import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource2point0.model.Collection;
+import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.junit.Rule;
 import org.junit.Test;
-import org.apache.usergrid.rest.AbstractRestIT;
-import org.apache.usergrid.rest.TestContextSetup;
-import org.apache.usergrid.rest.test.resource.CustomCollection;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -47,61 +49,53 @@ import static org.apache.usergrid.utils.MapUtils.hashMap;
  * @since 4.0
  */
 public class ConnectionResourceTest extends AbstractRestIT {
-    @Rule
-    public TestContextSetup context = new TestContextSetup( this );
+   
 
 
     @Test
     public void connectionsQueryTest() throws IOException {
 
 
-        CustomCollection activities = context.customCollection( "peeps" );
+        CollectionEndpoint activities = this.app().collection("peeps");
 
-        Map stuff = hashMap( "type", "chicken" );
+        Entity stuff = new Entity().chainPut("type", "chicken");
 
-        activities.create( stuff );
+        activities.post(stuff);
 
 
-        Map<String, Object> payload = new LinkedHashMap<String, Object>();
+        Entity payload = new Entity();
         payload.put( "username", "todd" );
 
-        Map<String, Object> objectOfDesire = new LinkedHashMap<String, Object>();
+        Entity objectOfDesire = new Entity();
         objectOfDesire.put( "codingmunchies", "doritoes" );
 
-        resource().path( "/test-organization/test-app/users" ).queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                .post( String.class, payload );
+        Entity entity = this.app().collection("users").post(payload);
+
 
         payload.put( "username", "scott" );
 
+         entity = this.app().collection("users").post(payload);
+        refreshIndex();
 
-        resource().path( "/test-organization/test-app/users" ).queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                .post( String.class, payload );
+
     /*finish setting up the two users */
 
 
-        refreshIndex("test-organization", "test-app");
 
-        ClientResponse toddWant = resource().path( "/test-organization/test-app/users/todd/likes/peeps" )
-                .queryParam( "access_token", access_token ).accept( MediaType.TEXT_HTML )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( ClientResponse.class, objectOfDesire );
+        entity = this.app().collection("users").entity("todd").connection("likes").entity("peeps").post();
 
-        assertEquals( 200, toddWant.getStatus() );
+        assertNotNull(entity);
 
-        refreshIndex("test-organization", "test-app");
+        refreshIndex();
 
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/peeps" ).queryParam( "access_token", access_token )
-                        .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                        .get( String.class ));
+        Collection collection = this.app().collection("peeps").get();
 
-        String uuid = node.get( "entities" ).get( 0 ).get( "uuid" ).textValue();
+        String uuid = collection.next().get("uuid").toString();
 
 
         try {
-            node = mapper.readTree( resource().path( "/test-organization/test-app/users/scott/likes/" + uuid )
-                    .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
+            entity = this.app().collection("users").entity("scott").connection("likes").entity(uuid).get();
+
             assert ( false );
         }
         catch ( UniformInterfaceException uie ) {
@@ -113,26 +107,26 @@ public class ConnectionResourceTest extends AbstractRestIT {
     @Test
     public void connectionsLoopbackTest() throws IOException {
 
-        CustomCollection things = context.customCollection( "things" );
+        CollectionEndpoint things = this.app().collection("things");
 
-        UUID thing1Id = getEntityId( things.create( hashMap( "name", "thing1" ) ), 0 );
+        UUID thing1Id =  things.post( new Entity().chainPut("name", "thing1") ).getUuid();
 
-        UUID thing2Id = getEntityId( things.create( hashMap( "name", "thing2" ) ), 0 );
+        UUID thing2Id = things.post( new Entity().chainPut("name", "thing2") ).getUuid();
 
 
-        refreshIndex(context.getOrgName(), context.getAppName());
+        refreshIndex();
 
         //create the connection
         things.entity( thing1Id ).connection( "likes" ).entity( thing2Id ).post();
 
 
-        refreshIndex(context.getOrgName(), context.getAppName());
+        refreshIndex();
 
         //test we have the "likes" in our connection meta data response
 
-        JsonNode response = things.entity( "thing1" ).get();
+        Entity response = things.entity( "thing1" ).get();
 
-        String url = getEntity( response, 0 ).get( "metadata" ).get( "connections" ).get( "likes" ).asText();
+        String url =((Map) ((Map)response.get( "metadata" )).get( "connections" )).get( "likes" ).toString();
 
 
         assertNotNull( "Connection url returned in entity", url );
@@ -143,16 +137,17 @@ public class ConnectionResourceTest extends AbstractRestIT {
 
         //now that we know the URl is correct, follow it
 
-        response = context.customCollection( url ).get();
+        Collection collection = this.app().collection(url).get();
 
-        UUID returnedUUID = getEntityId( response, 0 );
+        Entity entity  =collection.next();
+        UUID returnedUUID = entity.getUuid();
 
         assertEquals( thing2Id, returnedUUID );
 
 
         //now follow the loopback, which should be pointers to the other entity
 
-        url = getEntity( response, 0 ).get( "metadata" ).get( "connecting" ).get( "likes" ).asText();
+        url = ((Map) ((Map)entity.get( "metadata" )).get( "connections" )).get("likes").toString();
 
         assertNotNull( "Incoming edge URL provited", url );
 
@@ -161,9 +156,9 @@ public class ConnectionResourceTest extends AbstractRestIT {
 
         //now we should get thing1 from the loopback url
 
-        response = context.customCollection( url ).get();
+        collection = this.app().collection(url).get();
 
-        UUID returned = getEntityId( response, 0 );
+        UUID returned = collection.next().getUuid();
 
         assertEquals( "Should point to thing1 as an incoming entity connection", thing1Id, returned );
     }
@@ -172,26 +167,26 @@ public class ConnectionResourceTest extends AbstractRestIT {
     @Test
     public void connectionsUUIDTest() throws IOException {
 
-        CustomCollection things = context.customCollection( "things" );
+        CollectionEndpoint things = this.app().collection("things");
 
-        UUID thing1Id = getEntityId( things.create( hashMap( "name", "thing1" ) ), 0 );
+        UUID thing1Id =   things.post( new Entity().chainPut("name", "thing1") ).getUuid();
 
-        UUID thing2Id = getEntityId( things.create( hashMap( "name", "thing2" ) ), 0 );
+        UUID thing2Id =  things.post( new Entity().chainPut("name", "thing2") ).getUuid();
 
 
-        refreshIndex(context.getOrgName(), context.getAppName());
+        refreshIndex();
 
         //create the connection
         things.entity( thing1Id ).connection( "likes" ).entity( thing2Id ).post();
 
 
-        refreshIndex(context.getOrgName(), context.getAppName());
+        refreshIndex();
 
         //test we have the "likes" in our connection meta data response
 
-        JsonNode response = things.entity( "thing1" ).get();
+        Entity response = things.entity( "thing1" ).get();
 
-        String url = getEntity( response, 0 ).get( "metadata" ).get( "connections" ).get( "likes" ).asText();
+        String url =((Map) ((Map)response.get( "metadata" )).get( "connections" )).get( "likes" ).toString();
 
 
         assertNotNull( "Connection url returned in entity", url );
@@ -202,9 +197,9 @@ public class ConnectionResourceTest extends AbstractRestIT {
 
         //now that we know the URl is correct, follow it
 
-        response = context.customCollection( url ).get();
+        Collection collection = this.app().collection(url).get();
 
-        UUID returnedUUID = getEntityId( response, 0 );
+        UUID returnedUUID =collection.next().getUuid();
 
         assertEquals( thing2Id, returnedUUID );
 
@@ -214,7 +209,7 @@ public class ConnectionResourceTest extends AbstractRestIT {
 
         response = things.entity( thing1Id ).connection( "likes" ).entity( thing2Id ).get();
 
-        UUID returned = getEntityId( response, 0 );
+        UUID returned = response.getUuid();
 
         assertEquals( "Should point to thing2 as an entity connection", thing2Id, returned );
     }
@@ -222,22 +217,22 @@ public class ConnectionResourceTest extends AbstractRestIT {
     @Test //USERGRID-3011
     public void connectionsDeleteSecondEntityInConnectionTest() throws IOException {
 
-        CustomCollection things = context.customCollection( "things" );
+        CollectionEndpoint things = this.app().collection("things");
 
-        UUID thing1Id = getEntityId( things.create( hashMap( "name", "thing1" ) ), 0 );
+        UUID thing1Id =  things.post( new Entity().chainPut("name", "thing1") ).getUuid();
 
-        UUID thing2Id = getEntityId( things.create( hashMap( "name", "thing2" ) ), 0 );
+        UUID thing2Id = things.post( new Entity().chainPut("name", "thing2") ).getUuid();
 
-        refreshIndex(context.getOrgName(), context.getAppName());
+        refreshIndex();
 
         //create the connection
         things.entity( thing1Id ).connection( "likes" ).entity( thing2Id ).post();
 
-        JsonNode response = things.entity( "thing2" ).delete();
+        ApiResponse response = things.entity( "thing2" ).delete();
 
-        refreshIndex(context.getOrgName(), context.getAppName());
+        refreshIndex();
 
-        JsonNode node = things.entity ( "thing2" ).get();
+        Entity node = things.entity ( "thing2" ).get();
 
         assertNull(node);
 
@@ -246,22 +241,22 @@ public class ConnectionResourceTest extends AbstractRestIT {
     @Test //USERGRID-3011
     public void connectionsDeleteFirstEntityInConnectionTest() throws IOException {
 
-        CustomCollection things = context.customCollection( "things" );
+        CollectionEndpoint things = this.app().collection("things");
 
-        UUID thing1Id = getEntityId( things.create( hashMap( "name", "thing1" ) ), 0 );
+        UUID thing1Id =   things.post( new Entity().chainPut("name", "thing1") ).getUuid();
 
-        UUID thing2Id = getEntityId( things.create( hashMap( "name", "thing2" ) ), 0 );
+        UUID thing2Id =   things.post( new Entity().chainPut("name", "thing2") ).getUuid();
 
-        refreshIndex(context.getOrgName(), context.getAppName());
+        refreshIndex();
 
         //create the connection
         things.entity( thing1Id ).connection( "likes" ).entity( thing2Id ).post();
 
-        JsonNode response = things.entity( "thing1" ).delete();
+        ApiResponse response = things.entity( "thing1" ).delete();
 
-        refreshIndex(context.getOrgName(), context.getAppName());
+        refreshIndex();
 
-        JsonNode node = things.entity ( "thing1" ).get();
+        Entity node = things.entity ( "thing1" ).get();
 
         assertNull(node);
 
