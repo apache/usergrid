@@ -121,7 +121,7 @@ public class AbstractRestIT extends JerseyTest {
 
 
     protected Token getAppUserToken(String username, String password){
-        return this.clientSetup.getRestClient().token().post(new Token(username,password));
+        return this.app().token().post(new Token(username,password));
     }
 
     public void refreshIndex() {
