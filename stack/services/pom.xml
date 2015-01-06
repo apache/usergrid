@@ -322,6 +322,11 @@
       </exclusions>
     </dependency>
 
+    <dependency>
+      <groupId>org.mindrot</groupId>
+      <artifactId>jbcrypt</artifactId>
+    </dependency>
+
     <!-- Apache Dependencies -->
 
     <dependency>
