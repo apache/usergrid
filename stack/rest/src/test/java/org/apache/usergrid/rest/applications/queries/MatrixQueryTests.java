@@ -16,114 +16,89 @@
  */
 package org.apache.usergrid.rest.applications.queries;
 
-import java.util.Map;
-import java.util.UUID;
-import org.apache.usergrid.rest.AbstractRestIT;
-import org.apache.usergrid.rest.TestContextSetup;
-import org.apache.usergrid.rest.test.resource.CustomCollection;
-import org.apache.usergrid.rest.test.resource.app.UsersCollection;
-import static org.apache.usergrid.utils.MapUtils.hashMap;
-import org.junit.Rule;
+import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource2point0.model.Collection;
+import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 
 public class MatrixQueryTests extends AbstractRestIT {
 
-    @Rule
-    public TestContextSetup context = new TestContextSetup( this );
+  /**
+   * Test standard connection queries
+   * 1. Insert a number of users
+   * 2. Insert a number of restaurants
+   * 3. Create "likes" connections between users and restaurants
+   * 4. Retrieve "likes" connections per user and ensure the correct restaurants are returned
+   *
+   * @throws Exception
+   */
+  @Test
+  public void connectionsTest() throws Exception {
 
+    //1. Insert a number of users
+    Entity user1 = new Entity();
+    user1.put("username", "user1");
+    user1.put("email", "testuser1@usergrid.com");
+    user1.put("fullname", "Bob Smith");
 
-    @Test
-    public void simpleMatrix() throws Exception {
+    Entity user2 = new Entity();
+    user2.put("username", "user2");
+    user2.put("email", "testuser2@usergrid.com");
+    user2.put("fullname", "Fred Smith");
 
-        /**
-         * Create 3 users which we will use for sub searching
-         */
-        UsersCollection users = context.users();
+    Entity user3 = new Entity();
+    user3.put("username", "user3");
+    user3.put("email", "testuser3@usergrid.com");
+    user3.put("fullname", "Frank Grimes");
 
-        Map user1 =
-                hashMap( "username", "user1" ).map( "email", "testuser1@usergrid.com" ).map( "fullname", "Bob Smith" );
+    user1 = this.app().collection("users").post(user1);
+    user2 = this.app().collection("users").post(user2);
+    user3 = this.app().collection("users").post(user3);
 
-        users.create( user1 );
+    //2. Insert a number of restaurants
 
+    Entity restaurant1 = new Entity();
+    restaurant1.put("name", "Old Major");
+    Entity restaurant2 = new Entity();
+    restaurant2.put("name", "tag");
+    Entity restaurant3 = new Entity();
+    restaurant3.put("name", "Squeaky Bean");
+    Entity restaurant4 = new Entity();
+    restaurant4.put("name", "Lola");
+    restaurant1 = this.app().collection("restaurants").post(restaurant1);
+    restaurant2 = this.app().collection("restaurants").post(restaurant2);
+    restaurant3 = this.app().collection("restaurants").post(restaurant3);
+    restaurant4 = this.app().collection("restaurants").post(restaurant4);
+    this.refreshIndex();
 
-        Map user2 =
-                hashMap( "username", "user2" ).map( "email", "testuser2@usergrid.com" ).map( "fullname", "Fred Smith" );
+    //3. Create "likes" connections between users and restaurants
+    //user 1 likes old major
+    this.app().collection("users").entity(user1).connection("likes").collection("restaurants").entity(restaurant1).post();
+    this.app().collection("users").entity(user1).connection("likes").collection("restaurants").entity(restaurant2).post();
 
-        users.create( user2 );
+    //user 2 likes tag and squeaky bean
+    this.app().collection("users").entity(user2).connection("likes").collection("restaurants").entity(restaurant2).post();
+    this.app().collection("users").entity(user2).connection("likes").collection("restaurants").entity(restaurant3).post();
 
+    //user 3 likes  Lola (it shouldn't appear in the results)
+    this.app().collection("users").entity(user3).connection("likes").collection("restaurants").entity(restaurant4).post();
+    this.refreshIndex();
 
-        Map user3 = hashMap( "username", "user3" ).map( "email", "testuser3@usergrid.com" )
-                .map( "fullname", "Frank Grimes" );
+    //4. Retrieve "likes" connections per user and ensure the correct restaurants are returned
+    Collection user1likes = this.app().collection("users").entity(user1).connection("likes").get();
+    assertEquals(2, user1likes.getResponse().getEntityCount());
 
-        users.create( user3 );
+    Collection user2likes = this.app().collection("users").entity(user2).connection("likes").get();
+    assertEquals(2, user2likes.getResponse().getEntityCount());
 
+    Collection user3likes = this.app().collection("users").entity(user3).connection("likes").get();
+    assertEquals(1, user3likes.getResponse().getEntityCount());
+  }
 
-        //now create 4 restaurants
-
-        CustomCollection restaurants = context.customCollection( "restaurants" );
-
-
-        Map restaurant1 = hashMap( "name", "Old Major" );
-
-        UUID restaurant1Id = getEntityId( restaurants.create( restaurant1 ), 0 );
-
-        Map restaurant2 = hashMap( "name", "tag" );
-
-        UUID restaurant2Id = getEntityId( restaurants.create( restaurant2 ), 0 );
-
-        Map restaurant3 = hashMap( "name", "Squeaky Bean" );
-
-        UUID restaurant3Id = getEntityId( restaurants.create( restaurant3 ), 0 );
-
-        Map restaurant4 = hashMap( "name", "Lola" );
-
-        UUID restaurant4Id = getEntityId( restaurants.create( restaurant4 ), 0 );
-
-
-        //now like our 3 users
-
-
-        //user 1 likes old major
-        users.user( "user1" ).connection( "likes" ).entity( restaurant1Id ).post();
-
-        users.user( "user1" ).connection( "likes" ).entity( restaurant2Id ).post();
-
-
-        //user 2 likes tag and squeaky bean
-        users.user( "user2" ).connection( "likes" ).entity( restaurant2Id ).post();
-
-        users.user( "user2" ).connection( "likes" ).entity( restaurant3Id ).post();
-
-        //user 3 likes  Lola (it shouldn't appear in the results)
-
-        users.user( "user3" ).connection( "likes" ).entity( restaurant4Id ).post();
-
-
-        //now query with matrix params
-
-
-//        JsonNode testGetUsers = context.collection( "users" ).get().get( "entities" );
-//
-//        JsonNode likesNode =
-//                context.collection( "users" ).entity( "user1" ).connection( "likes" ).get().get( "entities" );
-//
-//
-//        JsonNode queryResponse = context.collection( "users" ).withMatrix(
-//                hashMap( "ql", "where fullname contains 'Smith'" ).map( "limit", "1000" ) ).connection( "likes" ).get();
-//
-//        assertEquals( "Old Major", getEntityName( queryResponse, 0 ) );
-//
-//        assertEquals( "tag", getEntityName( queryResponse, 1 ) );
-//
-//        assertEquals( "Squeaky Bean", getEntityName( queryResponse, 2 ) );
-//
-//        /**
-//         * No additional elements in the response
-//         */
-//        assertNull( getEntity( queryResponse, 3 ) );
-    }
-
+  //TODO implement matrix parameters and tests!!!
 
 //    @Test
 //    public void largeRootElements() {
