@@ -60,6 +60,7 @@ public class MultiProcessLocalLock {
         File file = new File( fileName );
 
         if ( !file.exists() ) {
+            file.getParentFile().mkdirs();
             file.createNewFile();
         }
 

@@ -19,14 +19,17 @@ package org.apache.usergrid;
 
 import org.junit.ClassRule;
 import org.junit.Rule;
+import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
+import org.apache.usergrid.setup.SpringIntegrationRunner;
 import org.apache.usergrid.utils.JsonUtils;
 
 
+@RunWith( SpringIntegrationRunner.class )
 public abstract class AbstractCoreIT {
 
     private static final Logger LOG = LoggerFactory.getLogger( AbstractCoreIT.class );

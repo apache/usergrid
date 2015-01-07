@@ -21,6 +21,7 @@ package org.apache.usergrid.setup;
 
 
 import org.junit.ClassRule;
+import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.Statement;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -33,10 +34,9 @@ import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 /**
  * Initializes the casandra and configuration before starting spring
  */
-public class SpringIntegrationRunner extends SpringJUnit4ClassRunner {
+public class SpringIntegrationRunner extends BlockJUnit4ClassRunner {
 
-       public static ElasticSearchResource ELASTICSEARCH = new ElasticSearchResource();
-    public static CassandraResource CASSANDRA_RESOURCE = new CassandraResource();
+
 
     private static boolean initialized;
 
@@ -45,7 +45,6 @@ public class SpringIntegrationRunner extends SpringJUnit4ClassRunner {
 
     /**
      *
-     * @see #createTestContextManager(Class)
      */
     public SpringIntegrationRunner( final Class<?> clazz ) throws InitializationError {
         super( clazz );
@@ -55,11 +54,37 @@ public class SpringIntegrationRunner extends SpringJUnit4ClassRunner {
     @Override
     protected Statement withBeforeClasses( final Statement statement ) {
 
+        if(!initialized){
+            runSetup();
+        }
 
 
         final Statement toReturn =  super.withBeforeClasses( statement );
 
         return toReturn;
+
+    }
+
+
+    /**
+     * Run the setup once per JVM
+     */
+    public static synchronized void runSetup() {
+
+        if(initialized){
+            return;
+        }
+
+        try {
+            new SystemSetup().maybeInitialize();
+        }
+        catch ( Exception e ) {
+            throw new RuntimeException( "Unable to initialize the system", e );
+        }
+
+
+        initialized = true;
+
 
     }
 }

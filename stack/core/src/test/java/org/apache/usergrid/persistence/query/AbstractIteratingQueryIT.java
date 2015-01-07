@@ -28,6 +28,7 @@ import java.util.TreeSet;
 
 import org.junit.ClassRule;
 import org.junit.Rule;
+import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.CoreApplication;
@@ -38,12 +39,14 @@ import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.setup.SpringIntegrationRunner;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 
 /** @author tnine */
+@RunWith(  SpringIntegrationRunner.class)
 public abstract class AbstractIteratingQueryIT {
     private static final Logger LOG = LoggerFactory.getLogger( AbstractIteratingQueryIT.class );
 

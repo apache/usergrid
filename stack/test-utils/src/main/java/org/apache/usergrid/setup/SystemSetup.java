@@ -22,9 +22,6 @@ package org.apache.usergrid.setup;
 
 import java.io.File;
 
-import org.junit.runner.Description;
-import org.junit.runner.notification.RunListener;
-
 import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.lock.MultiProcessBarrier;
@@ -35,7 +32,8 @@ import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 /**
  * Perform the following setup in the system.
  *
- * 1) Inject the properties
+ * 1) Inject the properties for Cassandra 2) Inject the properties for Elastic Search 3) Initialize spring 4) If we
+ * obtain the lock, we then initialize cassandra. 5) After initialization, we proceed.
  */
 public class SystemSetup {
 
@@ -44,31 +42,30 @@ public class SystemSetup {
     public static final String START_BARRIER_NAME = TEMP_FILE_PATH + "/start_barrier";
 
 
-//    public static final long ONE_MINUTE = 60000;
+    public static final long ONE_MINUTE = 60000;
+
+    final MultiProcessLocalLock lock = new MultiProcessLocalLock( LOCK_NAME );
+    final MultiProcessBarrier barrier = new MultiProcessBarrier( START_BARRIER_NAME );
+
 
     /**
-     *
+     * Use the file system to create a multi process lock.  If we have the lock, perform the initialization of the
+     * system.
      */
-    public static CassandraResource cassandraResource = new CassandraResource();
-
-    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
-
-    public static SpringResource springResource = SpringResource.getInstance();
-
-    private SystemSetup(){
-
-    }
-
-
     public void maybeInitialize() throws Exception {
 
-        final MultiProcessLocalLock lock = new MultiProcessLocalLock( LOCK_NAME );
-
-        final MultiProcessBarrier barrier = new MultiProcessBarrier( START_BARRIER_NAME );
 
         //we have a lock, so init the system
         if ( lock.tryLock() ) {
-            initSystem();
+
+            //wire up cassandra and elasticsearch before we start spring, otherwise this won't work
+            new CassandraResource().start();
+
+            new ElasticSearchResource().start();
+
+            SpringResource.getInstance().migrate();
+
+            //signal to other processes we've migrated, and they can proceed
             barrier.proceed();
         }
 
@@ -78,8 +75,19 @@ public class SystemSetup {
         //it doesn't matter who finishes first.  We need to remove the resources so we start correctly next time.
         //not ideal, but a clean will solve this issue too
         if ( lock.hasLock() ) {
-            deleteFile( LOCK_NAME );
-            deleteFile( START_BARRIER_NAME );
+
+            //add a shutdown hook so we clean up after ourselves.  Kinda fugly, but works since we can't clean on start
+            Runtime.getRuntime().addShutdownHook( new Thread() {
+
+                public void run() {
+
+                    System.out.println( "Shutdown Hook is running !" );
+                    deleteFile( LOCK_NAME );
+                    deleteFile( START_BARRIER_NAME );
+                }
+            } );
+
+
             lock.releaseLock();
         }
     }
@@ -94,15 +102,5 @@ public class SystemSetup {
         if ( file.exists() ) {
             file.delete();
         }
-    }
-
-
-    /**
-     * Initialize the system
-     */
-    public void initSystem() {
-        cassandraResource.start();
-        elasticSearchResource.start();
-        springResource.migrate();
     }
 }
