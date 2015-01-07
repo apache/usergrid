@@ -61,6 +61,7 @@ public class OrganizationsIT extends AbstractRestIT {
     @Test
     public void createOrgAndOwner() throws Exception {
 
+        //Created a uuid username because I am creating a organization
         String username = "createOrgAndOwner" + UUIDUtils.newTimeUUID();
         String name = username;
         String password = "password";
@@ -85,8 +86,6 @@ public class OrganizationsIT extends AbstractRestIT {
 
         assertNotNull( token );
 
-        assertNotNull( clientSetup.getRestClient().getContext().getToken() );
-
         //Assert that the get returns the correct org and owner.
         Organization returnedOrg = clientSetup.getRestClient().management().orgs().organization( orgName ).get();
 
@@ -94,6 +93,7 @@ public class OrganizationsIT extends AbstractRestIT {
 
         User returnedUser = returnedOrg.getOwner();
 
+        //Assert that the property was retained in the owner of the organization.
         assertEquals( "Apigee", returnedUser.getProperties().get( "company" ) );
     }
 
@@ -118,23 +118,28 @@ public class OrganizationsIT extends AbstractRestIT {
         Organization orgCreatedResponse = clientSetup.getRestClient().management().orgs().post( orgPayload );
         this.refreshIndex();
 
+        //Ensure that the token from the newly created organization works.
+        Token tokenPayload = new Token( "password", username, password );
+        Token tokenReturned = clientSetup.getRestClient().management().token().post( tokenPayload );
+
+        assertNotNull( tokenReturned );
+
         assertNotNull( orgCreatedResponse );
 
-
+        //Try to create a organization with the same name as an organization that already exists, ensure that it fails
         Organization orgTestDuplicatePayload =
                 new Organization( orgName, username + "test", email + "test", name + "test", password, null );
         try {
-            Organization orgTestDuplicateResponse = clientSetup.getRestClient()
-                                                               .management().orgs().post( orgTestDuplicatePayload );
+            clientSetup.getRestClient().management().orgs().post( orgTestDuplicatePayload );
             fail("Should not have been able to create duplicate organization");
         }
         catch ( UniformInterfaceException ex ) {
             errorParse( 400,duplicateUniquePropertyExistsErrorMessage, ex );
         }
 
-        // Post to get token of what should be a non existent user.
+        // Post to get token of what should be a non existent user due to the failure of creation above
 
-        Token tokenPayload = new Token( "password", username + "test", password );
+        tokenPayload = new Token( "password", username + "test", password );
         Token tokenError = null;
         try {
             tokenError = clientSetup.getRestClient().management().token().post( tokenPayload );
@@ -146,11 +151,6 @@ public class OrganizationsIT extends AbstractRestIT {
         }
 
         assertNull( tokenError );
-
-        tokenPayload = new Token( "password", username, password );
-        Token tokenReturned = clientSetup.getRestClient().management().token().post( tokenPayload );
-
-        assertNotNull( tokenReturned );
     }
 
 
@@ -199,7 +199,7 @@ public class OrganizationsIT extends AbstractRestIT {
             fail( "Should not have created organization" );
         }
         catch ( UniformInterfaceException ex ) {
-            //TODO: Should throw a 404 not a 400.
+            //TODO: Should throw a 404 not a 400?
             errorParse( 400,invalidGrantErrorMessage,ex );
         }
 
@@ -220,12 +220,14 @@ public class OrganizationsIT extends AbstractRestIT {
     @Test
     public void testOrgPOSTParams() throws IOException {
 
+        //Create organization defaults
         String username = "testCreateDuplicateOrgEmail" + UUIDUtils.newTimeUUID();
         String name = username;
         String password = "password";
         String orgName = username;
         String email = username + "@usergrid.com";
 
+        //Append them to the end as query parameters
         QueryParameters queryParameters = new QueryParameters();
         queryParameters.setKeyValue( "organization",orgName );
         queryParameters.setKeyValue( "username",username );
@@ -234,6 +236,7 @@ public class OrganizationsIT extends AbstractRestIT {
         queryParameters.setKeyValue( "name",name );
         queryParameters.setKeyValue( "password",password );
 
+        //Post the organization and verify it worked
         Organization organization = clientSetup.getRestClient().management().orgs().post( queryParameters );
 
         this.refreshIndex();
@@ -260,6 +263,7 @@ public class OrganizationsIT extends AbstractRestIT {
         form.add( "name", "testOrgPOSTForm" );
         form.add( "password", "password" );
 
+        //Post the organization and verify it worked.
         Organization organization = clientSetup.getRestClient().management().orgs().post( form );
 
         this.refreshIndex();
@@ -270,17 +274,19 @@ public class OrganizationsIT extends AbstractRestIT {
 
 
     /**
-     * Returns error from unimplemented delete method
+     * Returns error from unimplemented delete method by trying to call the delete organization endpoint
      * @throws IOException
      */
     @Test
     public void noOrgDelete() throws IOException {
 
         try {
+            //Delete default organization
             clientSetup.getRestClient().management().orgs().organization( clientSetup.getOrganizationName() ).delete();
             fail( "Delete is not implemented yet" );
         }catch(UniformInterfaceException uie){
             assertEquals(500,uie.getResponse().getStatus());
+            //TODO: I think the below is what it should return,but instead it expects the above
            // assertEquals( ClientResponse.Status.NOT_IMPLEMENTED ,uie.getResponse().getStatus());
         }
     }
@@ -292,12 +298,11 @@ public class OrganizationsIT extends AbstractRestIT {
      */
     @Test
     public void testCreateOrgUserAndReturnCorrectUsername() throws Exception {
-        String username = "testCreateOrgUserAndReturnCorrectUsername"+UUIDUtils.newTimeUUID();
-
         RestClient restClient = clientSetup.getRestClient();
 
         //Create adminUser values
         Entity adminUserPayload = new Entity();
+        String username = "testCreateOrgUserAndReturnCorrectUsername"+UUIDUtils.newTimeUUID();
         adminUserPayload.put( "username", username );
         adminUserPayload.put( "name", username );
         adminUserPayload.put( "email", username+"@usergrid.com" );

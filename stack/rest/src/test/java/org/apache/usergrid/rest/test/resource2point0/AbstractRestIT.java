@@ -130,8 +130,15 @@ public class AbstractRestIT extends JerseyTest {
     }
 
 
-    public void errorParse(Integer expectedStatus, String expectedErrorMessage, UniformInterfaceException uie){
-        assertEquals((Integer)400,expectedStatus);
+    /**
+     * Takes in the expectedStatus message and the expectedErrorMessage then compares it to the UniformInterfaceException
+     * to make sure that we got what we expected.
+     * @param expectedStatus
+     * @param expectedErrorMessage
+     * @param uie
+     */
+    public void errorParse(int expectedStatus, String expectedErrorMessage, UniformInterfaceException uie){
+        assertEquals(expectedStatus,uie.getResponse().getStatus());
         JsonNode errorJson = uie.getResponse().getEntity( JsonNode.class );
         assertEquals( expectedErrorMessage, errorJson.get( "error" ).asText() );
 
