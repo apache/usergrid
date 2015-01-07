@@ -171,10 +171,10 @@ public class OrderByTest extends AbstractRestIT {
       //loop through the current page of results
       for (int i = 0; i < returnSize; i++, index--) {
         assertEquals(activitiesResponse.getResponse().getEntities().get(i).get("uuid").toString(),
-            (activities[index]).get("uuid").toString());
+            (activities[i]).get("uuid").toString());
       }
       //grab the next page of results
-      activitiesResponse = this.app().getNextPage(activitiesResponse, true);
+      activitiesResponse = this.app().getNextPage(activitiesResponse, params, true);
     }
     while (activitiesResponse.getCursor() != null);
   }
