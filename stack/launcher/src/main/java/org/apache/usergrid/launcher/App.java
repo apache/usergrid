@@ -42,9 +42,12 @@ public class App {
 
     private static final Logger logger = LoggerFactory.getLogger( App.class );
 
-    private static final String GH_PORTAL_URL = "http://apigee.github.io/usergrid-portal/";
+    // TODO: host portal on Apache infrastructure, or build portal into launcher
+    private static final String GH_PORTAL_URL = 
+        "http://usergrid.incubator.apache.org/v101-portal-demo";
 
-    public static boolean MAC_OS_X = ( System.getProperty( "os.name" ).toLowerCase().startsWith( "mac os x" ) );
+    public static boolean MAC_OS_X = 
+        ( System.getProperty( "os.name" ).toLowerCase().startsWith( "mac os x" ) );
 
     LogViewerFrame logViewer = null;
     LauncherFrame launcher = null;
