@@ -161,7 +161,6 @@ public class OrderByTest extends AbstractRestIT {
     long lastCreated = Long.parseLong(activities[0].get("created").toString());
     //2. Query for the entities in descending order
     String errorQuery = String.format("select * where created <= %d order by created desc", lastCreated);
-    String cursor = null;
     int index = size - 1;
 
     QueryParameters params = new QueryParameters().setQuery(errorQuery);
@@ -172,7 +171,7 @@ public class OrderByTest extends AbstractRestIT {
       //loop through the current page of results
       for (int i = 0; i < returnSize; i++, index--) {
         assertEquals(((LinkedHashMap<String, Object>) activitiesResponse.response.getEntities().get(i)).get("uuid").toString(),
-            ((Entity) activities[index]).get("uuid").toString());
+            (activities[index]).get("uuid").toString());
       }
       //grab the next page of results
       activitiesResponse = this.app().getNextPage(activitiesResponse, true);

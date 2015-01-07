@@ -17,14 +17,11 @@
 package org.apache.usergrid.rest.applications.queries;
 
 
-import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.model.Collection;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -41,23 +38,22 @@ import static org.junit.Assert.assertTrue;
  * @since 4.0
  */
 public class AndOrQueryTest extends AbstractRestIT {
-  private static Logger log = LoggerFactory.getLogger(AndOrQueryTest.class);
-
   /**
    * Ensure limit is respected in queries
    * 1. Insert a number of entities
    * 2. Set half the entities to have a 'madeup' property of 'true'
-   *  and set the other half to 'false'
+   * and set the other half to 'false'
    * 3. Query all entities where "madeup = true"
    * 4. Limit the query to half of the number of entities
    * 5. Ensure the correct entities are returned
+   *
    * @throws IOException
    */
   @Test //USERGRID-900
   public void queriesWithAndPastLimit() throws IOException {
     int numValuesTested = 40;
     long created = 0;
-    
+
     Entity actor = new Entity();
     actor.put("displayName", "Erin");
     Entity props = new Entity();
@@ -90,7 +86,7 @@ public class AndOrQueryTest extends AbstractRestIT {
     Collection activities = this.app().collection("activities").get(params);
     //5. Ensure the correct entities are returned
     assertEquals(numValuesTested / 2, activities.response.getEntityCount());
-    while(activities.hasNext()){
+    while (activities.hasNext()) {
       assertTrue(Boolean.parseBoolean(activities.next().get("madeup").toString()));
     }
   }
@@ -100,10 +96,11 @@ public class AndOrQueryTest extends AbstractRestIT {
    * Test negated query
    * 1. Insert a number of entities
    * 2. Set half the entities to have a 'verb' property of 'go'
-   *  and set the other half to 'stop'
+   * and set the other half to 'stop'
    * 3. Query all entities where "NOT verb = 'go'"
    * 4. Limit the query to half of the number of entities
    * 5. Ensure the returned entities have "verb = 'stop'"
+   *
    * @throws IOException
    */
   @Test //USERGRID-1475
@@ -139,7 +136,7 @@ public class AndOrQueryTest extends AbstractRestIT {
     Collection activities = this.app().collection("activities").get(params);
     //5. Ensure the returned entities have "verb = 'stop'"
     assertEquals(numValuesTested / 2, activities.response.getEntityCount());
-    while(activities.hasNext()){
+    while (activities.hasNext()) {
       assertEquals("stop", activities.next().get("verb").toString());
     }
 
@@ -151,6 +148,7 @@ public class AndOrQueryTest extends AbstractRestIT {
    * 1. Insert a number of entities
    * 2. Query for a subset of the entities
    * 3. Validate that the correct entities are returned
+   *
    * @throws Exception
    */
   @Test //USERGRID-1615
@@ -163,11 +161,10 @@ public class AndOrQueryTest extends AbstractRestIT {
     props.put("actor", actor);
     props.put("verb", "go");
     props.put("content", "bragh");
-    Entity[] correctValues = new Entity[numValuesTested];
     //1. Insert a number of entities
     for (int i = 0; i < numValuesTested; i++) {
       props.put("ordinal", i);
-      correctValues[i] = this.app().collection("activities").post(props);
+      this.app().collection("activities").post(props);
     }
     this.refreshIndex();
     //2. Query for a subset of the entities
@@ -189,6 +186,7 @@ public class AndOrQueryTest extends AbstractRestIT {
    * 1. Insert entities
    * 2. Use AND/OR query to retrieve entities
    * 3. Verify the order of results
+   *
    * @throws Exception
    */
   @Test
@@ -196,13 +194,12 @@ public class AndOrQueryTest extends AbstractRestIT {
     int numOfEntities = 20;
     String collectionName = "imagination";
 
-    Entity[] correctValues = new Entity[numOfEntities];
     Entity props = new Entity();
     props.put("WhoHelpedYou", "Ruff");
     //1. Insert entities
     for (int i = 0; i < numOfEntities; i++) {
       props.put("ordinal", i);
-      correctValues[i] = this.app().collection(collectionName).post(props);
+      this.app().collection(collectionName).post(props);
     }
 
     this.refreshIndex();
@@ -227,6 +224,7 @@ public class AndOrQueryTest extends AbstractRestIT {
    * 1. Insert a number of entities
    * 2. Issue a query
    * 3. validate that a full page of (10) entities is returned
+   *
    * @throws Exception
    */
   @Test
@@ -234,13 +232,12 @@ public class AndOrQueryTest extends AbstractRestIT {
     int numOfEntities = 20;
     String collectionName = "imagination";
 
-    Entity[] correctValues = new Entity[numOfEntities];
     Entity props = new Entity();
     props.put("WhoHelpedYou", "Ruff");
     //1. Insert a number of entities
     for (int i = 0; i < numOfEntities; i++) {
       props.put("ordinal", i);
-      correctValues[i] = this.app().collection(collectionName).post(props);
+      this.app().collection(collectionName).post(props);
     }
 
     this.refreshIndex();
@@ -263,6 +260,7 @@ public class AndOrQueryTest extends AbstractRestIT {
    * 1. Insert a number of entities
    * 2. Issue a query using alphanumeric operators
    * 3. validate that a full page of (10) entities is returned
+   *
    * @throws Exception
    */
   @Test
@@ -270,13 +268,12 @@ public class AndOrQueryTest extends AbstractRestIT {
     int numOfEntities = 10;
     String collectionName = "imagination";
 
-    Entity[] correctValues = new Entity[numOfEntities];
     Entity props = new Entity();
     props.put("WhoHelpedYou", "Ruff");
     //1. Insert a number of entities
     for (int i = 0; i < numOfEntities; i++) {
       props.put("ordinal", i);
-      correctValues[i] = this.app().collection(collectionName).post(props);
+      this.app().collection(collectionName).post(props);
     }
 
     this.refreshIndex();

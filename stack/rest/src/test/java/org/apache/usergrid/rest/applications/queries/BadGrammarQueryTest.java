@@ -17,63 +17,49 @@
 package org.apache.usergrid.rest.applications.queries;
 
 
-import java.util.HashMap;
-import java.util.Map;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import org.junit.Rule;
-import org.junit.Test;
-import org.apache.usergrid.rest.AbstractRestIT;
-import org.apache.usergrid.rest.TestContextSetup;
-import org.apache.usergrid.rest.test.resource.CustomCollection;
-
-import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
+import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource2point0.model.Entity;
+import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
+import org.junit.Test;
+
 import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-import static org.apache.usergrid.utils.MapUtils.hashMap;
 
 
 /**
- * @author tnine
+ * Test for an exception with incorrect query grammar
+ * 1. Insert an entity
+ * 2. Issue an invalid query
+ * 3. Check for an exception
  */
 public class BadGrammarQueryTest extends AbstractRestIT {
 
-    @Rule
-    public TestContextSetup context = new TestContextSetup( this );
+  @Test
+  public void catchBadQueryGrammar() throws IOException {
 
+    //1. Insert an entity
+    Entity actor = new Entity();
+    actor.put("displayName", "Erin");
+    Entity props = new Entity();
+    props.put("actor", actor);
+    props.put("content", "bragh");
 
-    @Test
-    public void catchBadQueryGrammar() throws IOException {
+    this.app().collection("things").post(props);
+    refreshIndex();
 
-        CustomCollection things = context.customCollection( "things" );
+    //2. Issue an invalid query
+    String query = "select * where name != 'go'";
+    try {
 
-        Map actor = hashMap( "displayName", "Erin" );
-        Map props = new HashMap();
-        props.put( "actor", actor );
-        props.put( "content", "bragh" );
-
-        JsonNode activity = things.create( props );
-
-        refreshIndex(context.getOrgName(), context.getAppName());
-
-        String query = "select * where name != 'go'";
-
-        ClientResponse.Status status = null;
-
-        try {
-
-            JsonNode incorrectNode = things.query( query, "limit", Integer.toString( 10 ) );
-            fail( "This should throw an exception" );
-        }
-        catch ( UniformInterfaceException uie ) {
-             status = uie.getResponse().getClientResponseStatus();
-
-
-        }
-
-        assertEquals( 400, status.getStatusCode() );
+      QueryParameters params = new QueryParameters().setQuery(query);
+      this.app().collection("things").get(params);
+      fail("This should throw an exception");
+    } catch (UniformInterfaceException uie) {
+      //3. Check for an exception
+      assertEquals(400, uie.getResponse().getStatus());
     }
+  }
 }
