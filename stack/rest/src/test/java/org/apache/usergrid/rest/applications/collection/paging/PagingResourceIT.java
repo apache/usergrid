@@ -45,50 +45,6 @@ import static org.junit.Assert.assertNull;
 public class PagingResourceIT extends AbstractRestIT {
 
     /**
-     * Creates 40 objects and then retrieves all 40 by paging through sets of 10 with a cursor.
-     * @throws Exception
-     */
-    @Test
-    public void collectionPaging() throws Exception {
-
-        String collectionName = "testCollectionPaging" ;
-
-        int size = 40;
-        int numOfPages = 4;
-
-        //Creates 40 entities by posting entities with names 0 - size in order.
-        createEntities( collectionName, size );
-
-        //Pages through 4 pages of entities and verifies that they have the posted names
-        pageAndVerifyEntities( collectionName, null,numOfPages );
-
-    }
-
-    /**
-     * Creates a number of entities with sequential names going up to the numOfEntities and posts them to the
-     * collection specified with CollectionName.
-     * @param collectionName
-     * @param numOfEntities
-     */
-    public List<Entity> createEntities(String collectionName ,int numOfEntities ){
-        List<Entity> entities = new LinkedList<>(  );
-
-        for ( int i = 0; i < numOfEntities; i++ ) {
-            Map<String, Object> entityPayload = new HashMap<String, Object>();
-            entityPayload.put( "name", String.valueOf( i ) );
-            Entity entity = new Entity( entityPayload );
-
-            entities.add( entity );
-
-            this.app().collection( collectionName ).post( entity );
-        }
-
-        this.refreshIndex();
-
-        return entities;
-    }
-
-    /**
      * Creates 40 objects and then creates a query to delete sets of 10 entities per call. Checks at the end
      * to make sure there are no entities remaining.
      * @throws Exception
@@ -107,8 +63,7 @@ public class PagingResourceIT extends AbstractRestIT {
         //sets the number of entities we want to delete per call.
         int deletePageSize = 10;
         int totalNumOfPages = numOfEntities/deletePageSize;
-        QueryParameters queryParameters = new QueryParameters();
-        queryParameters.setLimit( deletePageSize );
+        QueryParameters queryParameters = new QueryParameters().setLimit( deletePageSize );
 
         //deletes the entities using the above set value. Then verifies that those entities were deleted.
         deleteByPage(deletePageSize,totalNumOfPages,collectionName,queryParameters);
@@ -142,7 +97,7 @@ public class PagingResourceIT extends AbstractRestIT {
 
             this.refreshIndex();
 
-            assertEquals( "Only 10 entities should have been deleted", deletePageSize, response.getEntityCount() );
+            assertEquals( "Entities should have been deleted", deletePageSize, response.getEntityCount() );
         }
     }
 
@@ -155,7 +110,10 @@ public class PagingResourceIT extends AbstractRestIT {
 
         String collectionName = "testEmptyQAndLimitIgnored";
 
-        createEntities( collectionName, 1 );
+        int numOfEntities = 1;
+        int numOfPages = 1;
+
+        createEntities( collectionName, numOfEntities );
 
         //passes in empty parameters
         QueryParameters parameters = new QueryParameters();
@@ -163,14 +121,14 @@ public class PagingResourceIT extends AbstractRestIT {
         parameters.setKeyValue( "limit", "" );
 
         //sends GET call using empty parameters
-        pageAndVerifyEntities( collectionName,parameters, 1 );
+        pageAndVerifyEntities( collectionName,parameters, numOfPages, numOfEntities );
 
     }
 
 
 
     /**
-     * Checks to make sure we get a cursor when we should ( by creating 50 entities ) and then checks to make sure
+     * Checks to make sure we get a cursor when we should ( by creating 11 entities ) and then checks to make sure
      * we do not get a cursor when we create a collection of only 5 entities.
      * @throws Exception
      */
@@ -179,22 +137,24 @@ public class PagingResourceIT extends AbstractRestIT {
 
         // test that we do get cursor when we need one
         // create enough widgets to make sure we need a cursor
-        int widgetsSize = 11;
+        int numOfEntities = 11;
+        int numOfPages = 2;
         Map<String, Object> entityPayload = new HashMap<String, Object>();
         String collectionName = "testCursor" ;
 
-        createEntities( collectionName, widgetsSize );
+        createEntities( collectionName, numOfEntities );
 
         //checks to make sure we have a cursor
-        pageAndVerifyEntities( collectionName,null,2 );
+        pageAndVerifyEntities( collectionName,null,numOfPages, numOfEntities );
 
         //Create new collection of only 5 entities
         String trinketCollectionName = "trinkets" ;
-        int trinketsSize = 5;
-        createEntities( trinketCollectionName,trinketsSize );
+        numOfEntities = 5;
+        numOfPages = 1;
+        createEntities( trinketCollectionName, numOfEntities );
 
         //checks to make sure we don't get a cursor for just 5 entities.
-        pageAndVerifyEntities( trinketCollectionName,null,1 );
+        pageAndVerifyEntities( trinketCollectionName,null,numOfPages, numOfEntities );
 
     }
 
@@ -204,15 +164,16 @@ public class PagingResourceIT extends AbstractRestIT {
      */
     @Test
     public void pagingEntities() throws IOException {
-        int maxSize = 100;
-        int totalPagesExpected = 10;
+
+        int numOfEntities = 100;
+        int numOfPages = 10;
         String collectionName = "testPagingEntities" ;
 
         //creates entities
-        createEntities( collectionName,maxSize );
+        createEntities( collectionName,numOfEntities );
 
         //pages through entities and verifies that they are correct.
-        pageAndVerifyEntities( collectionName,null,totalPagesExpected );
+        pageAndVerifyEntities( collectionName,null,numOfPages,numOfEntities);
     }
 
 
@@ -227,18 +188,19 @@ public class PagingResourceIT extends AbstractRestIT {
 
 
         long created = 0;
-        int maxSize = 100;
-        int totalPagesExpected = 10;
+        int numOfEntities = 100;
+        int numOfPages = 10;
         Entity connectedEntity = null;
         Map<String, Object> entityPayload = new HashMap<String, Object>();
         String collectionName = "pageThroughConnectedEntities" ;
 
-        for ( created = 0; created < maxSize; created++ ) {
+        for ( created = 1; created <= numOfEntities; created++ ) {
 
             entityPayload.put( "name", "value" + created );
             Entity entity = new Entity( entityPayload );
             entity = this.app().collection( collectionName ).post( entity );
-            if(created == 0){
+            refreshIndex();
+            if(created == 1){
                 connectedEntity = entity;
             }
             else if (created > 0){
@@ -246,15 +208,12 @@ public class PagingResourceIT extends AbstractRestIT {
             }
         }
 
+        refreshIndex();
+
         Collection colConnection =  this.app().collection( collectionName ).entity( connectedEntity ).connection( "likes" ).get();
         assertNotNull( colConnection );
         assertNotNull( colConnection.getCursor() );
-        pageAndVerifyEntities( collectionName,null,totalPagesExpected );
-
-        /**
-         * the below checks to make sure we get a cursor back and go through each one to page the entities.
-         */
-
+        pageAndVerifyEntities( collectionName,null,numOfPages,numOfEntities );
 
     }
 
@@ -270,17 +229,17 @@ public class PagingResourceIT extends AbstractRestIT {
 
         long created = 0;
         int indexForChangedEntities = 15;
-        int maxSize = 20;
-        int numOfChangedEntities = maxSize - indexForChangedEntities;
+        int numOfEntities = 20;
+        int numOfChangedEntities = numOfEntities - indexForChangedEntities;
         Map<String, Object> entityPayload = new HashMap<String, Object>();
 
         String collectionName = "merp";
 
         //Creates Entities
-        for ( created = 0; created < maxSize; created++ ) {
+        for ( created = 0; created < numOfEntities; created++ ) {
 
             //Creates all entities between 15 and 20 with the verb stop
-            if ( created >= indexForChangedEntities && created < maxSize ) {
+            if ( created >= indexForChangedEntities && created < numOfEntities ) {
 
                 entityPayload.put( "verb", "stop" );
             }
@@ -295,7 +254,7 @@ public class PagingResourceIT extends AbstractRestIT {
             this.app().collection( collectionName ).post( entity );
         }
 
-        this.refreshIndex();
+        refreshIndex();
 
         //Creates query looking for entities with the very stop.
         String query = "select * where verb = 'stop'";
@@ -305,6 +264,7 @@ public class PagingResourceIT extends AbstractRestIT {
         //Get the collection with the query applied to it
         Collection queryCollection = this.app().collection( collectionName ).get( queryParameters );
         assertNotNull( queryCollection );
+        //assert that there is no cursor because there is <10 entities.
         assertNull( queryCollection.getCursor() );
         assertEquals( numOfChangedEntities, queryCollection.getNumOfEntities() );
 
@@ -318,39 +278,82 @@ public class PagingResourceIT extends AbstractRestIT {
 
     /**
      * Not a test
-     * Helper method that takes in the <collectionName> collection applies the queryParameters and pages through
-     * results for the given number of pages.
+     * A method that calls the cursor a numOfPages number of times and verifies that entities are stored in order of
+     * creation from the createEntities method.
      * @param collectionName
      * @param numOfPages
      * @return
      */
-    //TODO: add in a +1 to numOfPAges so that if we want to loop through a collection with no pages we would put in 0 instead of 1 page.
-    public Collection pageAndVerifyEntities(String collectionName,QueryParameters queryParameters, int numOfPages ){
+    public Collection pageAndVerifyEntities(String collectionName,QueryParameters queryParameters, int numOfPages, int numOfEntities ){
         //Get the entities that exist in the collection
         Collection testCollections = this.app().collection( collectionName ).get(queryParameters);
 
         //checks to make sure we can page through all entities in order.
 
-        //Used as an index to see what value we're on.
-        int index = 0;
+        //Used as an index to see what value we're on and also used to keep track of the current index of the entity.
+        int entityIndex = 1;
+        int pageIndex = 0;
 
-        //Tells us how many pages we want to sort through
-        for ( int i = 0; i < numOfPages; i++ ) {
+
+        //Counts all the entities in pages with cursors
+        while(testCollections.getCursor()!=null){
             //page through returned entities.
             while ( testCollections.hasNext() ) {
                 Entity returnedEntity = testCollections.next();
-                //verifies that the names are in order
-                assertEquals( String.valueOf( index++ ), returnedEntity.get( "name" ) );
+                //verifies that the names are in order, named string values will always +1 of the current index
+                assertEquals( String.valueOf( entityIndex ), returnedEntity.get( "name" ) );
+                entityIndex++;
             }
-            if(testCollections.getCursor()!=null) {
-                testCollections =
+            testCollections =
                         this.app().collection( collectionName ).getNextPage( testCollections, queryParameters, true );
-            }
+            //increment the page count because we have just loops through a page of entities
+            pageIndex++;
+
         }
 
-        //make sure the cursor is null after we have no more entities to page through.
-        assertNull( testCollections.getCursor() );
+        //if the testCollection does have entities then increment the page
+        if(testCollections.hasNext()) {
+         pageIndex++;
+        }
+
+        //handles left over entities at the end of the page when the cursor is null.
+        while ( testCollections.hasNext() ) {
+            //increment the page count because having entities ( while no cursor ) counts as having a page.
+            Entity returnedEntity = testCollections.next();
+            //verifies that the names are in order, named string values will always +1 of the current index
+            assertEquals( String.valueOf( entityIndex ), returnedEntity.get( "name" ) );
+            entityIndex++;
+        }
+
+
+        //added in a minus one to account for the adding the additional 1 above.
+        assertEquals( numOfEntities, entityIndex-1 );
+        assertEquals( numOfPages, pageIndex );
         return testCollections;
+    }
+
+    /**
+     * Creates a number of entities with sequential names going up to the numOfEntities and posts them to the
+     * collection specified with CollectionName.
+     * @param collectionName
+     * @param numOfEntities
+     */
+    public List<Entity> createEntities(String collectionName ,int numOfEntities ){
+        List<Entity> entities = new LinkedList<>(  );
+
+        for ( int i = 1; i <= numOfEntities; i++ ) {
+            Map<String, Object> entityPayload = new HashMap<String, Object>();
+            entityPayload.put( "name", String.valueOf( i ) );
+            Entity entity = new Entity( entityPayload );
+
+            entities.add( entity );
+
+            this.app().collection( collectionName ).post( entity );
+        }
+
+        this.refreshIndex();
+
+        return entities;
     }
 
 }
