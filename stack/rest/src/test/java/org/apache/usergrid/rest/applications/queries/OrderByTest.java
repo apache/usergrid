@@ -77,12 +77,12 @@ public class OrderByTest extends AbstractRestIT {
     String query = "select * where created > " + created;
     QueryParameters params = new QueryParameters().setQuery(query);
     Collection activitiesWithoutOrderBy = this.app().collection("activities").get(params);
-    assertEquals(10, activitiesWithoutOrderBy.response.getEntityCount());
+    assertEquals(10, activitiesWithoutOrderBy.getResponse().getEntityCount());
     //3. Query with 'order by'
     query = query + " order by created desc";
     params.setQuery(query);
     Collection activitiesWithOrderBy = this.app().collection("activities").get(params);
-    assertEquals(10, activitiesWithOrderBy.response.getEntityCount());
+    assertEquals(10, activitiesWithOrderBy.getResponse().getEntityCount());
     //4. Ensure the same entities are returned
     while(activitiesWithoutOrderBy.hasNext() && activitiesWithOrderBy.hasNext()) {
       Entity activityWithoutOrderBy = activitiesWithoutOrderBy.next();
@@ -121,7 +121,7 @@ public class OrderByTest extends AbstractRestIT {
     QueryParameters params = new QueryParameters().setQuery(query).setLimit(5);
     Collection activities = this.app().collection("activities").get(params);
     //3. Ensure the correct number of results are returned
-    assertEquals(5, activities.response.getEntityCount());
+    assertEquals(5, activities.getResponse().getEntityCount());
 
   }
 
@@ -167,10 +167,10 @@ public class OrderByTest extends AbstractRestIT {
     Collection activitiesResponse = this.app().collection("activities").get(params);
     //3. Validate that the order is correct
     do {
-      int returnSize = activitiesResponse.response.getEntityCount();
+      int returnSize = activitiesResponse.getResponse().getEntityCount();
       //loop through the current page of results
       for (int i = 0; i < returnSize; i++, index--) {
-        assertEquals(((LinkedHashMap<String, Object>) activitiesResponse.response.getEntities().get(i)).get("uuid").toString(),
+        assertEquals(activitiesResponse.getResponse().getEntities().get(i).get("uuid").toString(),
             (activities[index]).get("uuid").toString());
       }
       //grab the next page of results

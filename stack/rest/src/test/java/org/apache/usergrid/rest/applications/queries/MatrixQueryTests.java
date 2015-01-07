@@ -89,13 +89,13 @@ public class MatrixQueryTests extends AbstractRestIT {
 
     //4. Retrieve "likes" connections per user and ensure the correct restaurants are returned
     Collection user1likes = this.app().collection("users").entity(user1).connection("likes").get();
-    assertEquals(2, user1likes.response.getEntityCount());
+    assertEquals(2, user1likes.getResponse().getEntityCount());
 
     Collection user2likes = this.app().collection("users").entity(user2).connection("likes").get();
-    assertEquals(2, user2likes.response.getEntityCount());
+    assertEquals(2, user2likes.getResponse().getEntityCount());
 
     Collection user3likes = this.app().collection("users").entity(user3).connection("likes").get();
-    assertEquals(1, user3likes.response.getEntityCount());
+    assertEquals(1, user3likes.getResponse().getEntityCount());
   }
 
   //TODO implement matrix parameters and tests!!!

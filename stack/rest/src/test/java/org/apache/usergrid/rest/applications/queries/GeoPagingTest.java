@@ -94,7 +94,7 @@ public class GeoPagingTest extends AbstractRestIT {
     QueryParameters params = new QueryParameters();
     params.setQuery(query);
     Collection collection = this.app().collection("groups").get(params);
-    assertEquals("Query should have returned 1 entity", 1, collection.response.getEntityCount());
+    assertEquals("Query should have returned 1 entity", 1, collection.getResponse().getEntityCount());
     Entity entity = collection.next();
     // 3. Verify that the desired entity i, and only the desired entity, is returned
     assertNotNull("Query should have returned 1 entity", entity);
@@ -142,13 +142,13 @@ public class GeoPagingTest extends AbstractRestIT {
     this.refreshIndex();
 
     Collection collection = this.app().collection(collectionType).get();
-    assertEquals("Should return both entities", 2, collection.response.getEntityCount());
+    assertEquals("Should return both entities", 2, collection.getResponse().getEntityCount());
     // 2. Query within a short distance of the center point to ensure that none are returned
     collection = this.app().collection(collectionType).get(queryClose);
-    assertEquals("Results from nearby, should return nothing", 0, collection.response.getEntityCount());
+    assertEquals("Results from nearby, should return nothing", 0, collection.getResponse().getEntityCount());
     // 3. Query within a huge distance of the center point to ensure that both are returned
     collection = this.app().collection(collectionType).get(queryFar);
-    assertEquals("Results from center point to ridiculously far", 2, collection.response.getEntityCount());
+    assertEquals("Results from center point to ridiculously far", 2, collection.getResponse().getEntityCount());
   }
 
   /**
@@ -193,8 +193,8 @@ public class GeoPagingTest extends AbstractRestIT {
       params.setQuery(query);
       Collection collection = this.app().collection("groups").get(params);
 
-      assertEquals(3, collection.response.getEntityCount());
-      List entities = collection.response.getEntities();
+      assertEquals(3, collection.getResponse().getEntityCount());
+      List entities = collection.getResponse().getEntities();
       // 3. Test that the entities were returned in the order expected
       for (int i = 0; i < 3; i++) {
         // shouldn't start at 10 since you're excluding it above in the query, it should return 9,8,7
@@ -240,11 +240,11 @@ public class GeoPagingTest extends AbstractRestIT {
 
     // 2. Query from the center point to ensure that one is returned
     Collection collection = this.app().collection(collectionType).get(queryClose);
-    assertEquals("Results from nearby, should return 1 store", 1, collection.response.getEntityCount());
+    assertEquals("Results from nearby, should return 1 store", 1, collection.getResponse().getEntityCount());
 
     // 3. Query within a huge distance of the center point to ensure that both are returned
     collection = this.app().collection(collectionType).get(queryFar);
-    assertEquals("Results from center point to ridiculously far", 2, collection.response.getEntityCount());
+    assertEquals("Results from center point to ridiculously far", 2, collection.getResponse().getEntityCount());
   }
 
 
@@ -294,7 +294,7 @@ public class GeoPagingTest extends AbstractRestIT {
       QueryParameters params = new QueryParameters();
       params.setQuery(query);
       Collection collection = this.app().collection("users").get(params);
-      assertEquals("Expected 0 results", 0, collection.response.getEntityCount());
+      assertEquals("Expected 0 results", 0, collection.getResponse().getEntityCount());
     }
   }
 }

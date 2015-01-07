@@ -85,7 +85,7 @@ public class AndOrQueryTest extends AbstractRestIT {
         .setLimit(numValuesTested / 2);//4. Limit the query to half of the number of entities
     Collection activities = this.app().collection("activities").get(params);
     //5. Ensure the correct entities are returned
-    assertEquals(numValuesTested / 2, activities.response.getEntityCount());
+    assertEquals(numValuesTested / 2, activities.getResponse().getEntityCount());
     while (activities.hasNext()) {
       assertTrue(Boolean.parseBoolean(activities.next().get("madeup").toString()));
     }
@@ -135,7 +135,7 @@ public class AndOrQueryTest extends AbstractRestIT {
     QueryParameters params = new QueryParameters().setQuery(query).setLimit(numValuesTested / 2);
     Collection activities = this.app().collection("activities").get(params);
     //5. Ensure the returned entities have "verb = 'stop'"
-    assertEquals(numValuesTested / 2, activities.response.getEntityCount());
+    assertEquals(numValuesTested / 2, activities.getResponse().getEntityCount());
     while (activities.hasNext()) {
       assertEquals("stop", activities.next().get("verb").toString());
     }
@@ -172,11 +172,11 @@ public class AndOrQueryTest extends AbstractRestIT {
     QueryParameters params = new QueryParameters().setQuery(inCorrectQuery).setLimit(numValuesTested / 2);
     Collection activities = this.app().collection("activities").get(params);
     //3. Validate that the correct entities are returned
-    assertEquals(numValuesTested / 2, activities.response.getEntityCount());
+    assertEquals(numValuesTested / 2, activities.getResponse().getEntityCount());
 
-    List entities = activities.response.getEntities();
+    List<Entity> entities = activities.getResponse().getEntities();
     for (int i = 0; i < numValuesTested / 2; i++) {
-      assertEquals(numValuesTested / 2 + i, Integer.parseInt(((LinkedHashMap<String, Object>) entities.get(i)).get("ordinal").toString()));
+      assertEquals(numValuesTested / 2 + i, Integer.parseInt(entities.get(i).get("ordinal").toString()));
     }
 
   }
@@ -211,10 +211,10 @@ public class AndOrQueryTest extends AbstractRestIT {
     Collection activities = this.app().collection(collectionName).get(params);
 
     //3. Verify the order of results
-    assertEquals(numOfEntities / 2, activities.response.getEntityCount());
-    List entities = activities.response.getEntities();
+    assertEquals(numOfEntities / 2, activities.getResponse().getEntityCount());
+    List<Entity> entities = activities.getResponse().getEntities();
     for (int i = 0; i < numOfEntities / 2; i++) {
-      assertEquals(i, Integer.parseInt(((LinkedHashMap<String, Object>) entities.get(i)).get("ordinal").toString()));
+      assertEquals(i, Integer.parseInt(entities.get(i).get("ordinal").toString()));
     }
   }
 
@@ -248,10 +248,10 @@ public class AndOrQueryTest extends AbstractRestIT {
     Collection activities = this.app().collection(collectionName).get(params);
 
     //3. validate that a full page of (10) entities is returned
-    assertEquals(10, activities.response.getEntityCount());
-    List entities = activities.response.getEntities();
+    assertEquals(10, activities.getResponse().getEntityCount());
+    List<Entity> entities = activities.getResponse().getEntities();
     for (int i = 0; i < 10; i++) {
-      assertEquals(i, Integer.parseInt(((LinkedHashMap<String, Object>) entities.get(i)).get("ordinal").toString()));
+      assertEquals(i, Integer.parseInt(entities.get(i).get("ordinal").toString()));
     }
   }
 
@@ -284,10 +284,10 @@ public class AndOrQueryTest extends AbstractRestIT {
     Collection activities = this.app().collection(collectionName).get(params);
 
     //3. validate that a full page of (10) entities is returned
-    assertEquals(10, activities.response.getEntityCount());
-    List entities = activities.response.getEntities();
+    assertEquals(10, activities.getResponse().getEntityCount());
+    List<Entity> entities = activities.getResponse().getEntities();
     for (int i = 0; i < 10; i++) {
-      assertEquals(i, Integer.parseInt(((LinkedHashMap<String, Object>) entities.get(i)).get("ordinal").toString()));
+      assertEquals(i, Integer.parseInt(entities.get(i).get("ordinal").toString()));
     }
   }
 
