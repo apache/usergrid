@@ -52,6 +52,7 @@ import static org.junit.Assert.fail;
 public class OrganizationsIT extends AbstractRestIT {
     private static final Logger LOG = LoggerFactory.getLogger( OrganizationsIT.class );
 
+    //TODO: make enum?
     String duplicateUniquePropertyExistsErrorMessage = "duplicate_unique_property_exists";
     String invalidGrantErrorMessage = "invalid_grant";
 
@@ -68,7 +69,6 @@ public class OrganizationsIT extends AbstractRestIT {
         String orgName = username;
         String email = username + "@usergrid.com";
 
-        //TODO:seperate entity properties from organization properties.
         Map<String, Object> userProperties = new HashMap<String, Object>();
         userProperties.put( "company", "Apigee" );
 
@@ -94,6 +94,7 @@ public class OrganizationsIT extends AbstractRestIT {
         User returnedUser = returnedOrg.getOwner();
 
         //Assert that the property was retained in the owner of the organization.
+        assertNotNull( returnedUser );
         assertEquals( "Apigee", returnedUser.getProperties().get( "company" ) );
     }
 
@@ -118,13 +119,13 @@ public class OrganizationsIT extends AbstractRestIT {
         Organization orgCreatedResponse = clientSetup.getRestClient().management().orgs().post( orgPayload );
         this.refreshIndex();
 
+        assertNotNull( orgCreatedResponse );
+
         //Ensure that the token from the newly created organization works.
         Token tokenPayload = new Token( "password", username, password );
         Token tokenReturned = clientSetup.getRestClient().management().token().post( tokenPayload );
 
         assertNotNull( tokenReturned );
-
-        assertNotNull( orgCreatedResponse );
 
         //Try to create a organization with the same name as an organization that already exists, ensure that it fails
         Organization orgTestDuplicatePayload =
@@ -179,6 +180,12 @@ public class OrganizationsIT extends AbstractRestIT {
 
         assertNotNull( orgCreatedResponse );
 
+        //get token from organization that was created to verify it exists.
+        Token tokenPayload = new Token( "password", username, password );
+        Token tokenReturned = clientSetup.getRestClient().management().token().post( tokenPayload );
+
+        assertNotNull( tokenReturned );
+
         //recreate a new payload using a duplicate email
         orgPayload = new Organization( orgName+"test", username+"test", email, name+"test", password+"test", null );
 
@@ -192,24 +199,18 @@ public class OrganizationsIT extends AbstractRestIT {
         }
 
         //try to get the token from the organization that failed to be created to verify it was not made.
-        Token tokenPayload = new Token( "password", username + "test", password );
+        tokenPayload = new Token( "password", username + "test", password );
         Token tokenError = null;
         try {
             tokenError = clientSetup.getRestClient().management().token().post( tokenPayload );
             fail( "Should not have created organization" );
         }
         catch ( UniformInterfaceException ex ) {
-            //TODO: Should throw a 404 not a 400?
             errorParse( 400,invalidGrantErrorMessage,ex );
         }
 
         assertNull( tokenError );
 
-        //get token from organization that was created to verify it exists.
-        tokenPayload = new Token( "password", username, password );
-        Token tokenReturned = clientSetup.getRestClient().management().token().post( tokenPayload );
-
-        assertNotNull( tokenReturned );
     }
 
 
@@ -239,8 +240,6 @@ public class OrganizationsIT extends AbstractRestIT {
         //Post the organization and verify it worked
         Organization organization = clientSetup.getRestClient().management().orgs().post( queryParameters );
 
-        this.refreshIndex();
-
         assertNotNull( organization );
         assertEquals( orgName,organization.getName() );
     }
@@ -266,8 +265,6 @@ public class OrganizationsIT extends AbstractRestIT {
         //Post the organization and verify it worked.
         Organization organization = clientSetup.getRestClient().management().orgs().post( form );
 
-        this.refreshIndex();
-
         assertNotNull( organization );
         assertEquals( "testOrgPOSTForm" + timeUuid ,organization.getName() );
     }
@@ -286,7 +283,7 @@ public class OrganizationsIT extends AbstractRestIT {
             fail( "Delete is not implemented yet" );
         }catch(UniformInterfaceException uie){
             assertEquals(500,uie.getResponse().getStatus());
-            //TODO: I think the below is what it should return,but instead it expects the above
+            //TODO: I think the below is what it should return (501 not implemented ) ,but instead it expects the above
            // assertEquals( ClientResponse.Status.NOT_IMPLEMENTED ,uie.getResponse().getStatus());
         }
     }
@@ -339,7 +336,7 @@ public class OrganizationsIT extends AbstractRestIT {
 
         //Setup what will be interested into the organization
         Map<String, Object> properties = new HashMap<String, Object>();
-        properties.put( "securityLevel", 5 );
+        properties.put( "puppies", 5 );
 
         Organization orgPayload = clientSetup.getOrganization();
         orgPayload.put( "properties", properties );
@@ -352,10 +349,10 @@ public class OrganizationsIT extends AbstractRestIT {
         //retrieve the organization
         Organization orgResponse = restClient.management().orgs().organization( clientSetup.getOrganizationName() ).get();
 
-        assertEquals( 5, orgResponse.getProperties().get( "securityLevel" ));
+        assertEquals( 5, orgResponse.getProperties().get( "puppies" ));
 
         //update the value added to the organization
-        properties.put( "securityLevel", 6 );
+        properties.put( "puppies", 6 );
         orgPayload.put( "properties", properties );
 
         //update the organization.
@@ -365,7 +362,7 @@ public class OrganizationsIT extends AbstractRestIT {
 
         orgResponse = restClient.management().orgs().organization( clientSetup.getOrganizationName() ).get();
 
-        assertEquals( 6, orgResponse.getProperties().get( "securityLevel" ));
+        assertEquals( 6, orgResponse.getProperties().get( "puppies" ));
 
     }
 }
