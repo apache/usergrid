@@ -156,8 +156,9 @@ public class Server implements org.springframework.context.ApplicationContextAwa
 
         httpServer.getServerConfiguration().addHttpHandler( handler, "/*" );
 
-        ClasspathStaticHttpHandler static_handler = new ClasspathStaticHttpHandler( "/html/css/" );
-        httpServer.getServerConfiguration().addHttpHandler( static_handler, "/css/*" );
+        // TODO: find replacement ClasspathStaticHandler, because we had to remove it for ASF policy reasons 
+//        ClasspathStaticHttpHandler static_handler = new ClasspathStaticHttpHandler( "/html/css/" );
+//        httpServer.getServerConfiguration().addHttpHandler( static_handler, "/css/*" );
 
         httpServer.getServerConfiguration().setJmxEnabled( true );
 
