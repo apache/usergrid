@@ -218,7 +218,8 @@ public class OwnershipResourceIT extends AbstractRestIT {
 
 
     /**
-     *
+     * Tests that we can have our own personal connections without being seen by other users, but are still visible
+     * from a root context. 
      * @throws IOException
      */
     @Test
@@ -373,7 +374,8 @@ public class OwnershipResourceIT extends AbstractRestIT {
 
 
     /**
-     *
+     * Checks that a once guests permissions are opened up that a user can view the connections/entities
+     * and get/post/delete things on that connection.
      * @throws IOException
      */
     @Test
