@@ -54,7 +54,7 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
           break;
       }
       //override with querystring
-      DATA_URL = qs.api_url || DATA_URL;
+      DATA_URL = qs['api_url'] || DATA_URL;
       DATA_URL = DATA_URL.lastIndexOf('/') === DATA_URL.length - 1 ? DATA_URL.substring(0,DATA_URL.length-1) : DATA_URL;
       return {
         DATA_URL: DATA_URL,
