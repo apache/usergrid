@@ -39,7 +39,7 @@ import static org.junit.Assert.fail;
 
 
 /**
- *
+ * Take in tests that handle owner permissions relating to a specific user.
  */
 @Concurrent()
 public class OwnershipResourceIT extends AbstractRestIT {
@@ -48,43 +48,58 @@ public class OwnershipResourceIT extends AbstractRestIT {
     private User user1;
     private User user2;
 
+
+    /**
+     * Setup two user objects for use in the following tests.
+     */
     @Before
     public void setup(){
         this.usersResource =  this.app().collection("users");
         String email = "testuser1@usergrid.org";
         String email2 = "testuser2@usergrid.org";
 
+        user1 = new User("testuser1","testuser1", email, "password" );
         user2 = new User("testuser2","testuser2", email2, "password" );
 
-        user1 = new User("testuser1","testuser1", email, "password" );
         user1 = new User(this.usersResource.post(user1));
         user2 = new User(this.usersResource.post(user2));
 
         refreshIndex();
     }
 
+
+    /**
+     * Verifies that me and user1 are the same and that we can revoke the token from user1 and have the me call fail.
+     * @throws Exception
+     */
     @Test
     public void meVerify() throws Exception {
 
+        //Clear the applications previous token and start anonymous
         this.app().token().clearToken();
 
+        //Set the token for getting the me entity.
         Token token = this.app().token().post(new Token(user1.getUsername(),"password"));
 
+        //Get the entity known as "me" out of the users collection and asserts it isn't null and is equal to user1.
         Entity userNode = usersResource.entity("me").get();
 
         assertNotNull( userNode );
+        assertEquals( user1.getName(), userNode.get( "username" ) );
 
+        //Gets the uuid of the me entity.
         String uuid = userNode.getUuid().toString();
         assertNotNull( uuid );
 
+        //Revoke the user1 token
         usersResource.entity(user1).connection("revoketokens").post(new Entity().chainPut("token", token.getAccessToken()));
 
         refreshIndex();
 
+        //See if we can still access the me entity after revoking its token
         try {
-             userNode = usersResource.entity("me").get();
-
-            fail();
+             usersResource.entity("me").get();
+             fail("This should not work after we've revoked the usertoken");
         }
         catch ( Exception ex ) {
             ex.printStackTrace();
@@ -93,14 +108,19 @@ public class OwnershipResourceIT extends AbstractRestIT {
     }
 
 
+    /**
+     * Checks that that can only see our own devices when looking at our own path. Then checks that we can see
+     * both devices from a root path.
+     * @throws IOException
+     */
     @Test
     public void contextualPathOwnership() throws IOException {
 
-        // anonymous user
+        //Clear the applications previous token and start anonymous
         this.app().token().clearToken();
 
-
-        Token token = this.app().token().post(new Token(user1.getUsername(),"password"));
+        //Setting the token to be in a user1 context.
+        this.app().token().post(new Token(user1.getUsername(),"password"));
 
 
         // create device 1 on user1 devices
@@ -108,17 +128,17 @@ public class OwnershipResourceIT extends AbstractRestIT {
                .post(new Entity( ).chainPut("name", "device1").chainPut("number", "5551112222"));
         refreshIndex();
 
-        // anonymous user
+        //Clear the current user token
         this.app().token().clearToken();
 
-        // create device 2 on user 2
-         token = this.app().token().post(new Token(user2.getUsername(),"password"));
+        // create device 2 on user 2 and switch the context to use user2
+        Token token = this.app().token().post(new Token(user2.getUsername(),"password"));
         usersResource.entity("me").collection("devices")
                 .post(new Entity( ).chainPut("name", "device2").chainPut("number", "5552223333"));
 
         refreshIndex();
 
-        // now query on user 1.
+        //Check that we can get back device1 on user1
         token = this.app().token().post(new Token(user1.getUsername(),"password"));
 
         CollectionEndpoint devices = usersResource.entity( user1 ).collection("devices");
@@ -127,7 +147,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
         assertNotNull( data );
         assertEquals("device1", data.get("name").toString());
 
-        // check we can't see device2
+        // check we can't see device2 on user1
         int status = 0;
         try {
             data = devices.entity("device2").get();
@@ -142,7 +162,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
         assertEquals("device1", devicesData.next().get("name").toString());
         assertTrue(!devicesData.hasNext());
 
-        // log in as user 2 and check it
+        // log in as user 2 and check that we can see device 2
         token = this.app().token().post(new Token(user2.getUsername(),"password"));
 
         devices =  usersResource.entity("me").collection("devices");
@@ -151,7 +171,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
         assertNotNull( data );
         assertEquals( "device2", data.get("name").toString() );
 
-        // check we can't see device1
+        // check we can't see device1 on user2
         status = 0;
         try{
         data = devices.entity("device1").get();
@@ -169,7 +189,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
         // we should see both devices when loaded from the root application
 
         devices  = this.app().collection("devices");
-        // test for user 1
+        // test we can see both devices for user 1 under root application
         token = this.app().token().post(new Token(user1.getUsername(),"password"));
 
         data = devices.entity("device1").get();
@@ -181,7 +201,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
         assertNotNull( data );
         assertEquals( "device2", data.get("name").toString() );
 
-        // test for user 2
+        // test we can see both devices for user 2 under root application
         token = this.app().token().post(new Token(user2.getUsername(),"password"));
 
 
@@ -197,13 +217,18 @@ public class OwnershipResourceIT extends AbstractRestIT {
     }
 
 
+    /**
+     * 
+     * @throws IOException
+     */
     @Test
     public void contextualConnectionOwnership() throws IOException {
 
         // anonymous user
         this.app().token().clearToken();
 
-         this.app().token().post(new Token(user1.getUsername(),"password"));
+        //Setting the token to be in a user1 context.
+        this.app().token().post(new Token(user1.getUsername(),"password"));
 
 
         // create a 4peaks restaurant
@@ -211,13 +236,11 @@ public class OwnershipResourceIT extends AbstractRestIT {
 
         refreshIndex();
 
-        // create our connection
+        //Create a restaurant and link it to user1/me
         data = usersResource.entity("me")
                 .connection("likes").collection( "restaurants" ).entity( "4peaks" ).post();
 
         refreshIndex();
-
-       String peaksId = data.getUuid().toString();
 
         // anonymous user
         this.app().token().clearToken();
@@ -235,24 +258,26 @@ public class OwnershipResourceIT extends AbstractRestIT {
 
         String arrogantButcherId = data.getUuid().toString();
 
-        // now query on user 1.
+        //Setting the token to be in a user1 context.
         this.app().token().post(new Token(user1.getUsername(),"password"));
 
+        //Setup the connection between user1 and the restaurant collection.
         CollectionEndpoint likeRestaurants =
                 usersResource.entity( "me" ).connection( "likes" )
                        .collection( "restaurants" );
 
-        // check we can get it via id
+        //Check that we can get the restaurant by using its uuid
+        String peaksId = data.getUuid().toString();
         data = likeRestaurants.entity(peaksId).get();
         assertNotNull( data );
         assertEquals("4peaks", data.get("name").toString());
 
-        // check we can get it by name
+        //Check that we can get the restaurant by name
         data = likeRestaurants.entity( "4peaks" ).get();
         assertNotNull( data );
         assertEquals( "4peaks", data.get("name").toString() );
 
-        // check we can't see arrogantbutcher by name or id
+        // check we can't see arrogantbutcher by name or id from user1
         int status = 200;
         try {
             data = likeRestaurants.entity("arrogantbutcher").get();
@@ -269,13 +294,13 @@ public class OwnershipResourceIT extends AbstractRestIT {
         }
         assertEquals(status, 404);
 
-        // do a collection load, make sure we're not entities we shouldn't see
+        // do a collection load, make sure we're not getting entities we shouldn't see
         Collection collectionData = likeRestaurants.get();
 
         assertEquals("4peaks", collectionData.next().get("name").toString());
         assertTrue( !collectionData.hasNext() );
 
-        // log in as user 2 and check it
+        // log in as user 2 and check that we can see the arrogantbutcher
         this.app().token().post(new Token(user2.getUsername(),"password"));
 
         likeRestaurants = usersResource.entity("me").connection( "likes" )
@@ -289,7 +314,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
         assertNotNull( data );
         assertEquals( "arrogantbutcher", data.get("name").toString() );
 
-        // check we can't see 4peaks
+        // check we can't see 4peaks as user2
          status = 200;
         try {
             data = likeRestaurants.entity( "4peaks" ).get();
@@ -316,7 +341,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
 
         // we should see both devices when loaded from the root application
 
-        // test for user 1
+        //Check we can see both restaurants as user1 from the root application
         this.app().token().post(new Token(user1.getUsername(),"password"));
 
         CollectionEndpoint restaurants = this.app().collection( "restaurants" );
@@ -330,7 +355,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
         assertNotNull( data );
         assertEquals( "arrogantbutcher", data.get("name").toString() );
 
-        // test for user 2
+        //Check we can see both restaurants as user2 from the root application
         this.app().token().post(new Token(user2.getUsername(),"password"));
         restaurants = this.app().collection("restaurants");
         data = restaurants.entity( "4peaks" ).get();
