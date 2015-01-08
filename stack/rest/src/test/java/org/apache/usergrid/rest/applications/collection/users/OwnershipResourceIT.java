@@ -218,7 +218,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
 
 
     /**
-     * 
+     *
      * @throws IOException
      */
     @Test
@@ -261,12 +261,12 @@ public class OwnershipResourceIT extends AbstractRestIT {
         //Setting the token to be in a user1 context.
         this.app().token().post(new Token(user1.getUsername(),"password"));
 
-        //Setup the connection between user1 and the restaurant collection.
+        //Gets the connection between user1 and the their restaurants. In this case gets 4peaks
         CollectionEndpoint likeRestaurants =
                 usersResource.entity( "me" ).connection( "likes" )
                        .collection( "restaurants" );
 
-        //Check that we can get the restaurant by using its uuid
+        //Check that we can get the 4peaks restaurant by using its uuid
         String peaksId = data.getUuid().toString();
         data = likeRestaurants.entity(peaksId).get();
         assertNotNull( data );
@@ -280,7 +280,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
         // check we can't see arrogantbutcher by name or id from user1
         int status = 200;
         try {
-            data = likeRestaurants.entity("arrogantbutcher").get();
+            likeRestaurants.entity("arrogantbutcher").get();
         }catch (UniformInterfaceException e){
             status = e.getResponse().getStatus();
         }
@@ -288,7 +288,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
 
         status = 200;
         try {
-            data = likeRestaurants.entity( arrogantButcherId ).get();
+            likeRestaurants.entity( arrogantButcherId ).get();
         }catch (UniformInterfaceException e){
             status = e.getResponse().getStatus();
         }
@@ -327,11 +327,13 @@ public class OwnershipResourceIT extends AbstractRestIT {
 
         status = 200;
         try {
-            data = likeRestaurants.entity( peaksId ).get();
+            likeRestaurants.entity( peaksId ).get();
 
         }catch (UniformInterfaceException e){
             status = e.getResponse().getStatus();
         }
+        assertEquals( status,404 );
+
 
         // do a collection load, make sure we're not loading device 1
         collectionData = likeRestaurants.get();
@@ -370,6 +372,10 @@ public class OwnershipResourceIT extends AbstractRestIT {
     }
 
 
+    /**
+     *
+     * @throws IOException
+     */
     @Test
     public void contextualConnectionOwnershipGuestAccess() throws IOException {
 
@@ -378,25 +384,24 @@ public class OwnershipResourceIT extends AbstractRestIT {
                 .post(new Entity().chainPut("permission", "get,put,post,delete:/**"));
 
 
-
+        //Sets up the cities collection with the city tempe
         Entity city = this.app().collection("cities").post(new Entity().chainPut("name", "tempe"));
 
         refreshIndex();
 
-        String cityId = city.get("uuid").toString();
-
-        // create a 4peaks restaurant
+        // create a 4peaks restaurant that is connected by a like to tempe.
         Entity data = this.app().collection("cities").entity( "tempe" ).connection( "likes" )
                                .collection( "restaurants" ).post(new Entity().chainPut("name", "4peaks"));
 
         String peaksId = data.get("uuid").toString();
 
+        // create the arrogantbutcher restaurant that is connected by a like to tempe.
         data = this.app().collection("cities").entity( "tempe" ).connection( "likes" )
                       .collection( "restaurants" ).post(new Entity().chainPut("name", "arrogantbutcher"));
 
         String arrogantButcherId = data.get("uuid").toString();
 
-        // now query on user 1.
+        //Set the user to user1 and get the collection cities
         this.app().token().post(new Token(user1.getUsername(),"password"));
 
         CollectionEndpoint likeRestaurants =
@@ -404,7 +409,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
 
         refreshIndex();
 
-        // check we can get it via id with no collection name
+        // check we can get the resturant entities back via uuid without a collection name
         data = likeRestaurants.entity( peaksId ).get();
         assertNotNull( data );
         assertEquals( "4peaks", data.get("name").toString() );
@@ -412,7 +417,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
         data = likeRestaurants.entity( arrogantButcherId ).get();
         assertEquals( "arrogantbutcher", data.get("name").toString() );
 
-        // check we can get it via id with a collection name
+        // check we can get the restaurant via uuid with a collection name
         data = likeRestaurants.collection( "restaurants" ).entity( peaksId ).get();
         assertNotNull( data );
         assertEquals( "4peaks", data.get("name").toString() );
@@ -420,7 +425,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
         data = likeRestaurants.collection( "restaurants" ).entity( arrogantButcherId ).get();
         assertEquals( "arrogantbutcher", data.get("name").toString() );
 
-        // do a delete either token should work
+        // Delete the restaurants, either token should work for deletion
         ApiResponse deleteResponse = likeRestaurants.collection( "restaurants" ).entity( peaksId ).delete();
 
         assertNotNull( deleteResponse );
