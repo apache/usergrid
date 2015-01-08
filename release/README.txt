@@ -21,7 +21,12 @@ To create a release candidate:
 
 3) Ensure that everything is committed, branch must be clean
 
-4) From the project root directory run release/release-candidate.sh
+4) From the project root directory run release/release-candidate.sh --help
+   to see how to use the script. Then run it with the correct options.
+
+   For example, to create release candidate 4 of a 1.0.1 release you would use:
+
+   $ release/release-candidate.sh -r 4 -l p
 
 
 To create a release:
@@ -33,5 +38,6 @@ To create a release:
 
 3) Ensure that everything is committed, branch must be clean
 
-4) From the project root directory run release/release.sh
+4) From the project root directory run release/release.sh --help
+   to see how to use the script. Then run it with the correct options.
 
