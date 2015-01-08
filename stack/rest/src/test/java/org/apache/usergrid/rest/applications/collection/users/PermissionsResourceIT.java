@@ -50,7 +50,6 @@ import static org.junit.Assert.*;
 /**
  * Tests permissions of adding and removing users from roles as well as groups
  *
- * @author tnine
  */
 @Concurrent()
 public class PermissionsResourceIT extends AbstractRestIT {
@@ -64,7 +63,11 @@ public class PermissionsResourceIT extends AbstractRestIT {
     public PermissionsResourceIT() throws Exception {
 
     }
-    
+
+
+    /**
+     * Creates a user in the default org/app combo for use by all of the tests
+     */
     @Before
     public void setup(){
 
@@ -74,8 +77,14 @@ public class PermissionsResourceIT extends AbstractRestIT {
     }
 
 
+    /**
+     * Tests that we can delete a role that is in use by a user.
+     * @throws IOException
+     */
     @Test
     public void deleteUserFromRole() throws IOException {
+
+        //Create a role and check the response
         Entity data = new Entity().chainPut("name", ROLE);
 
         Entity node = this.app().collection("roles").post(data);
@@ -85,6 +94,8 @@ public class PermissionsResourceIT extends AbstractRestIT {
         assertEquals( ROLE, node.get("name").toString() );
 
         refreshIndex();
+
+        //Post the user with a specific role into the users collection
         node = this.app().collection("roles").entity(node).collection("users").entity(USER).post();
         assertNull( node.get( "error" ) );
 
@@ -116,13 +127,16 @@ public class PermissionsResourceIT extends AbstractRestIT {
     }
 
 
+    /**
+     * Deletes a user from the group.
+     * @throws IOException
+     */
     @Test
     public void deleteUserGroup() throws IOException {
 
-        // don't populate the user, it will use the currently authenticated
-        // user.
         String groupPath = "groupPath" ;
 
+        //Creates and posts a group.
         Entity data = new Entity().chainPut("name",groupPath).chainPut("type", "group").chainPut( "path", groupPath );
 
         Entity node = this.app().collection("groups").post(data);
@@ -131,13 +145,15 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
         refreshIndex();
 
+        //Create a user that is in the group.
         node = this.app().collection("groups").entity(groupPath).collection("users").entity(USER).post();
 
         assertNull( node.get( "error" ) );
 
         refreshIndex();
 
-       Collection groups = this.app().collection("users").entity(USER).collection("groups").get();
+        //Get the user and make sure that they are part of the group
+        Collection groups = this.app().collection("users").entity(USER).collection("groups").get();
 
         assertEquals(groups.next().get("name"), groupPath);
 
@@ -149,6 +165,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
         refreshIndex();
 
+        //Check that the user no longer exists in the group
         int status = 0;
         try {
             groups = this.app().collection("users").entity(USER).collection("groups").get();
@@ -164,17 +181,11 @@ public class PermissionsResourceIT extends AbstractRestIT {
     /**
      * For the record, you should NEVER allow the guest role to add roles. This is a gaping security hole and a VERY BAD
      * IDEA! That being said, this should technically work, and needs testing.
+     *
+     * Tests that you can allow a guest role to add additional roles.
      */
     @Test
     public void dictionaryPermissions() throws Exception {
-        UUID id = UUIDUtils.newTimeUUID();
-
-        String applicationName = "testapp";
-        String orgname = "dictionaryPermissions";
-        String username = "permissionadmin" + id;
-        String password = "password";
-        String email = String.format( "email%s@usergrid.com", id );
-
 
         // add the perms to the guest to allow users in the role to create roles
         // themselves
@@ -195,107 +206,95 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
 
     /**
-     * Tests a real world example with the following steps. Creates an application.
-     * <p/>
-     * Creates a new role "reviewer"
-     * <p/>
-     * Grants a permission to GET, POST, and PUT the reviews url for the reviewer role
-     * <p/>
-     * Grants a permission GET on the reviewer for the
-     * <p/>
-     * Create a user reviewer1 and add them to the reviewer role
-     * <p/>
-     * Test access with reviewer1
-     * <p/>
-     * Create a group reviewergroup and add the "reviewer" group to it
-     * <p/>
-     * Create a user reviewer 2 and add them to the "reveiwergroup"
+     * Test application permissions by posting entities different users and making sure we work within
+     * the permissions given.
      */
     @Test
     public void applicationPermissions() throws Exception {
-        // now create the new role
-        UUID secondUserId = createRoleUser(  "reviewer2", "reviewer2@usergrid.com" );
-        UUID userId = createRoleUser( "reviewer1",  "reviewer1@usergrid.com" );
+        //Creates two new roles: reviewer1 and reviewer2
+        createRoleUser( "reviewer1",  "reviewer1@usergrid.com" );
+        createRoleUser(  "reviewer2", "reviewer2@usergrid.com" );
 
         Entity  data = new Entity().chainPut("name", "reviewer");
 
+        //Creates a new role "reviewer"
         Entity node = this.app().collection("roles").post(data);
 
         assertNull( node.getError() );
 
-        // delete the default role to test permissions later
         refreshIndex();
 
+        // delete the default role to test permissions later
         ApiResponse response = this.app().collection("roles").entity("default").delete();
 
         assertNull( response.getError() );
         refreshIndex();
 
-        // grant the perms to reviewer
+        // Grants a permission to GET, POST, and PUT the reviews url for the reviewer role
         addPermission( "reviewer", "get,put,post:/reviews/**" );
 
-        // grant get to guest
+        // Grants a permission GET on the guests for the reviews url
         addPermission(  "guest", "get:/reviews/**" );
 
+        //Creates a reviewer group
         Entity group = new Entity().chainPut( "path", "reviewergroup" ).chainPut("name","reviewergroup");
 
-        // now create the group
         this.app().collection("groups").post(group);
 
         refreshIndex();
 
+        //Adds the reviewer to the reviewerGroup
         this.app().collection("groups").entity("reviewergroup").collection("roles").entity("reviewer").post();
 
         refreshIndex();
 
-        // add the user to the group
+        //Adds reviewer2 user to the reviewergroup
         this.app().collection("users").entity("reviewer2").collection("groups").entity("reviewergroup").post();
 
         refreshIndex();
 
-        Entity userRole = this.app().collection("users").entity("reviewer1").collection("roles").entity("reviewer").post();
-        // grant this user the "reviewer" role
+        //Adds reviewer1 to the reviewer role
+        this.app().collection("users").entity("reviewer1").collection("roles").entity("reviewer").post();
 
         refreshIndex();
 
+        //Set the current context to reviewer1
         this.app().token().post(new Token("reviewer1","password"));
 
+        //Post reviews to the reviews collection as reviewer1
         Entity review =
                 new Entity().chainPut("rating", "4").chainPut("name", "noca").chainPut("review", "Excellent service and food");
+        this.app().collection("reviews").post( review );
 
-        this.app().collection("reviews").post(review);
-        refreshIndex();
-
-        // post a review as the reviewer1 user
         review = new Entity().chainPut ("rating", "4").chainPut( "name", "4peaks").chainPut("review", "Huge beer selection" );
         this.app().collection("reviews").post(review);
 
         refreshIndex();
 
-        // get the reviews
+        // get the reviews and assert they were created
         Collection reviews = this.app().collection("reviews").get();
 
         assertEquals( "noca",reviews.next().get("name") );
-        assertEquals("4peaks", reviews.next().get("name").toString());
+        assertEquals("4peaks", reviews.next().get( "name" ));
 
-        // can't delete, not in the grants
-
+        //Try to delete the reviews, but it should fail due to have having delete permission in the grants.
         int status = 0;
         try {
             this.app().collection("reviews").entity("noca").delete();
+            fail( "this should have failed due to having insufficient permissions" );
         }
         catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getStatus();
         }
 
         assertEquals( Status.UNAUTHORIZED.getStatusCode(), status );
-
-        refreshIndex();
 
         status = 0;
 
+        //Try to delete the reviews, but it should fail due to have having delete permission in the grants.
         try {
             this.app().collection("reviews").entity("4peaks").delete();
+            fail( "this should have failed due to having insufficient permissions" );
         }
         catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getStatus();
@@ -305,29 +304,22 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
         refreshIndex();
 
-        // now test some groups
+        //TODO: maybe make this into two different tests?
 
-        // post 2 reviews. Should get permissions from the group
+        //Change context to reviewer2
+        this.app().token().post(new Token("reviewer2", "password"));
 
-        Token secondUserToken = this.app().token().post(new Token("reviewer2", "password"));
-
+        // post 2 reviews as reviewer2
         review = new Entity().chainPut("rating", "4").chainPut("name", "cowboyciao").chainPut("review", "Great atmosphoere");
-
-        // post a review as the reviewer2 user
         this.app().collection("reviews").post(review);
 
-        refreshIndex();
         review = new Entity().chainPut( "rating", "4" ).chainPut("name", "currycorner").chainPut( "review", "Authentic" );
-
-        // post a review as the reviewer2 user
         this.app().collection("reviews").post(review);
 
         refreshIndex();
 
+        // get all reviews as reviewer2
         reviews =  this.app().collection("reviews").get();
-
-        // get all reviews as a user
-
 
         assertEquals("noca", reviews.next().get("name").toString());
         assertEquals("4peaks", reviews.next().get("name").toString());
@@ -340,7 +332,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
         try {
             this.app().collection("reviews").entity("cowboyciao").delete();
-      
+            fail( "this should have failed due to having insufficient permissions" );
         }
         catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getStatus();
@@ -354,7 +346,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
         try {
             this.app().collection("reviews").entity("currycorner").delete();
-
+            fail( "this should have failed due to having insufficient permissions" );
         }
         catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getStatus();
@@ -378,20 +370,22 @@ public class PermissionsResourceIT extends AbstractRestIT {
     @Test
     public void wildcardMiddlePermission() throws Exception {
 
+        //Deletes the default role
         this.app().collection("roles").entity("default").delete();
-        Entity data = new Entity().chainPut("name", "reviewer");
 
+        //Creates a reviewer role
+        Entity data = new Entity().chainPut("name", "reviewer");
         this.app().collection("roles").post(data);
 
         refreshIndex();
 
-        // allow access to reviews
+        // allow access to reviews excluding delete
         addPermission( "reviewer",
                 "get,put,post:/reviews/**" );
-        // allow access to all user's connections
+        // allow access to all user's connections excluding delete
         addPermission( "reviewer",
                 "get,put,post:/users/${user}/**" );
-        // allow access to the review relationship
+        // allow access to the review relationship excluding delete
         addPermission( "reviewer",
                 "get,put,post:/books/*/review/*" );
 
@@ -408,24 +402,26 @@ public class PermissionsResourceIT extends AbstractRestIT {
         assertNotNull( userTwoId );
 
         refreshIndex();
-        
+
+        //Add user1 to the reviewer role
         this.app().collection("users").entity(userOneId).collection("roles").entity("reviewer").post();
 
-       
+
         refreshIndex();
 
+        //Add a book to the books collection
         Entity book = new Entity().chainPut( "title", "Ready Player One" ).chainPut("author", "Earnest Cline");
 
         book = this.app().collection("books").post(book);
-        // create a book as admin
-       
 
         assertEquals( "Ready Player One", book.get("title").toString() );
         String bookId = book.get("uuid").toString();
 
         refreshIndex();
 
+        //Switch the contex to be that of user1
         this.app().token().post(new Token("wildcardpermuserone","password"));
+
         // post a review of the book as user1
         // POST https://api.usergrid.com/my-org/my-app/users/$user1/reviewed/books/$uuid
         Entity review =
@@ -438,14 +434,10 @@ public class PermissionsResourceIT extends AbstractRestIT {
         // POST https://api.usergrid.com/my-org/my-app/users/me/wrote/review/${reviewId}
         this.app().collection("users").entity("me").connection("wrote").collection("review").entity(reviewId).post();
 
-
-        refreshIndex();
+        // POST https://api.usergrid.com/my-org/my-app/users/me/reviewed/review/${reviewId}
         this.app().collection("users").entity("me").connection("reviewed").collection("books").entity(bookId).post();
 
-
         refreshIndex();
-
-
 
         // POST https://api.usergrid.com/my-org/my-app/books/${bookId}/review/${reviewId}
         this.app().collection("books").entity(bookId).collection("review").entity(reviewId).post();
@@ -453,10 +445,10 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
         refreshIndex();
 
-        // now try to post the same thing to books to verify as userOne the failure
+        // now try to post the same thing to books to verify as userOne does not have correct permissions
         int status = 0;
         try {
-            this.app().collection("books").post();
+            this.app().collection("books").post(book);
 
         }
         catch ( UniformInterfaceException uie ) {
@@ -464,11 +456,13 @@ public class PermissionsResourceIT extends AbstractRestIT {
         }
         assertEquals( Status.UNAUTHORIZED.getStatusCode(), status );
 
-        refreshIndex();
+        //Gets all books that user1 reviewed\
         this.app().collection("users").entity("me").connection("reviewed").collection("books").get();
 
+        //Gets a specific review
         this.app().collection("reviews").entity(reviewId).get();
 
+        //Gets all the reviews that user1 wrote
         this.app().collection("users").entity("me").connection("wrote").get();
 
     }
@@ -484,15 +478,20 @@ public class PermissionsResourceIT extends AbstractRestIT {
      * <p/>
      * examplepatient add himself to exampledoctor following list
      */
+    //TODO: get this test working.
     @Test
     public void wildcardFollowingPermission() throws Exception {
+        //Delete default role
         app().collection("roles").entity("default").delete();
+
+        //Create new role named patient
         Entity data = new Entity().chainPut( "name", "patient" );
         app().collection("roles").post(data);
 
         //allow patients to add doctors as their followers
         addPermission(  "patient", "delete,post:/users/*/following/users/${user}" );
         refreshIndex();
+
         // create examplepatient
         UUID patientId =  createRoleUser( "examplepatient",  "examplepatient@apigee.com" );
         assertNotNull( patientId );
@@ -522,16 +521,25 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
         Entity entity = this.app().collection("users").post(props);
 
+        assertNotNull( entity );
+
         return entity.getUuid();
     }
 
 
-    /** Test adding the permission to the role */
+    /**
+     * Adds the permission in grant to the rolename role, and tests that they were added correctly
+     * @param rolename
+     * @param grant
+     * @throws IOException
+     */
     private void addPermission(  String rolename, String grant ) throws IOException {
+        //Create and post the permissions
         Entity props = new Entity().chainPut("permission", grant);
 
         this.app().collection("roles").entity(rolename).collection("permissions").post(props);
 
+        //Checks that the permissions were added correctly
         Collection node = this.app().collection("roles").entity(rolename).collection("permissions").get();
 
         List<Object> data =(List) node.getResponse().getData();

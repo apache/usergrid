@@ -219,7 +219,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
 
     /**
      * Tests that we can have our own personal connections without being seen by other users, but are still visible
-     * from a root context. 
+     * from a root context.
      * @throws IOException
      */
     @Test
