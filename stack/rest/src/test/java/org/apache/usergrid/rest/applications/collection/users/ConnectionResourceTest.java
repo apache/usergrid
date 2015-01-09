@@ -17,30 +17,25 @@
 package org.apache.usergrid.rest.applications.collection.users;
 
 
-import java.util.LinkedHashMap;
+import java.io.IOException;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.ws.rs.core.MediaType;
+import org.junit.Before;
+import org.junit.Test;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.CollectionEndpoint;
-import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Collection;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.apache.usergrid.rest.test.resource2point0.model.User;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-
-import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
-import java.io.IOException;
 
-import static org.apache.usergrid.utils.MapUtils.hashMap;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 
 /**
@@ -103,8 +98,7 @@ public class ConnectionResourceTest extends AbstractRestIT {
         //Set user Scott to get back a nonexistant connection.
         try {
             this.app().collection("users").entity("scott").connection("likes").entity(uuid).get();
-
-            assert ( false );
+            fail("We shouldn't be able to see user1 connection through user2");
         }
         catch ( UniformInterfaceException uie ) {
             assertEquals( 404, uie.getResponse().getStatus() );
@@ -142,6 +136,14 @@ public class ConnectionResourceTest extends AbstractRestIT {
         UUID returned = collection.next().getUuid();
 
         assertEquals( "Should point to thing1 as an incoming entity connection", thing1Id, returned );
+
+        //Follow the connection through the loop to make sure it works. 
+        Entity thing1Return = this.app().collection("things").entity(thing1Id).connection( "likes" )
+            .collection( "things" ).entity( thing2Id ).connection( "likes" )
+            .collection( "things" ).entity( thing1Id ).get();
+
+        assertEquals(thing1Id,thing1Return.getUuid());
+
     }
 
 
