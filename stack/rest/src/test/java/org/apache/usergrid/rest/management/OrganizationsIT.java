@@ -24,12 +24,9 @@ import java.util.UUID;
 
 import org.junit.Ignore;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
-
 import org.apache.usergrid.rest.test.resource2point0.RestClient;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.apache.usergrid.rest.test.resource2point0.model.Organization;
@@ -62,19 +59,12 @@ public class OrganizationsIT extends AbstractRestIT {
     @Test
     public void createOrgAndOwner() throws Exception {
 
-        //Created a uuid username because I am creating a organization
-        String username = "createOrgAndOwner" + UUIDUtils.newTimeUUID();
-        String name = username;
-        String password = "password";
-        String orgName = username;
-        String email = username + "@usergrid.com";
-
         //User property to see if owner properties exist when created.
         Map<String, Object> userProperties = new HashMap<String, Object>();
         userProperties.put( "company", "Apigee" );
 
         //Create organization
-        Organization organization = new Organization( orgName, username, email, name, password, userProperties );
+        Organization organization = createOrgPayload( "createOrgAndOwner", userProperties );
 
         //Get back organization response
         Organization organizationResponse = clientSetup.getRestClient().management().orgs().post( organization );
@@ -83,14 +73,15 @@ public class OrganizationsIT extends AbstractRestIT {
 
         //Creates token
         Token token =
-                clientSetup.getRestClient().management().token().post( new Token( "password", username, password ) );
+                clientSetup.getRestClient().management().token().post( new Token( "password",
+                        organization.getUsername(), organization.getPassword() ) );
 
         assertNotNull( token );
 
         //Assert that the get returns the correct org and owner.
-        Organization returnedOrg = clientSetup.getRestClient().management().orgs().organization( orgName ).get();
+        Organization returnedOrg = clientSetup.getRestClient().management().orgs().organization( organization.getOrganization()).get();
 
-        assertTrue( returnedOrg != null && returnedOrg.getName().equals( orgName ) );
+        assertTrue( returnedOrg != null && returnedOrg.getName().equals( organization.getOrganization() ) );
 
         User returnedUser = returnedOrg.getOwner();
 
@@ -108,29 +99,25 @@ public class OrganizationsIT extends AbstractRestIT {
     @Test
     public void testCreateDuplicateOrgName() throws Exception {
 
-        String username = "testCreateDuplicateOrgName" + UUIDUtils.newTimeUUID();
-        String name = username;
-        String password = "password";
-        String orgName = username;
-        String email = username + "@usergrid.com";
-
         //Create organization
-        Organization orgPayload = new Organization( orgName, username, email, name, password, null );
+        Organization organization = createOrgPayload( "testCreateDuplicateOrgName", null );
 
-        Organization orgCreatedResponse = clientSetup.getRestClient().management().orgs().post( orgPayload );
+        Organization orgCreatedResponse = clientSetup.getRestClient().management().orgs().post( organization );
         this.refreshIndex();
 
         assertNotNull( orgCreatedResponse );
 
         //Ensure that the token from the newly created organization works.
-        Token tokenPayload = new Token( "password", username, password );
+        Token tokenPayload = new Token( "password", organization.getUsername(), organization.getPassword() );
         Token tokenReturned = clientSetup.getRestClient().management().token().post( tokenPayload );
 
         assertNotNull( tokenReturned );
 
         //Try to create a organization with the same name as an organization that already exists, ensure that it fails
         Organization orgTestDuplicatePayload =
-                new Organization( orgName, username + "test", email + "test", name + "test", password, null );
+                new Organization( organization.getOrganization(), organization.getUsername() + "test",
+                        organization.getEmail() + "test", organization.getName() + "test",
+                        organization.getPassword(), null );
         try {
             clientSetup.getRestClient().management().orgs().post( orgTestDuplicatePayload );
             fail("Should not have been able to create duplicate organization");
@@ -141,7 +128,7 @@ public class OrganizationsIT extends AbstractRestIT {
 
         // Post to get token of what should be a non existent user due to the failure of creation above
 
-        tokenPayload = new Token( "password", username + "test", password );
+        tokenPayload = new Token( "password", organization.getName() + "test", organization.getPassword() );
         Token tokenError = null;
         try {
             tokenError = clientSetup.getRestClient().management().token().post( tokenPayload );
@@ -165,34 +152,30 @@ public class OrganizationsIT extends AbstractRestIT {
     @Test
     public void testCreateDuplicateOrgEmail() throws Exception {
 
-        //Setup the org/owner combo
-        String username = "testCreateDuplicateOrgEmail" + UUIDUtils.newTimeUUID();
-        String name = username;
-        String password = "password";
-        String orgName = username;
-        String email = username + "@usergrid.com";
-
-        Organization orgPayload = new Organization( orgName, username, email, name, password, null );
+        Organization organization = createOrgPayload( "testCreateDuplicateOrgEmail", null );
 
         //create the org/owner
-        Organization orgCreatedResponse = clientSetup.getRestClient().management().orgs().post( orgPayload );
+        Organization orgCreatedResponse = clientSetup.getRestClient().management().orgs().post( organization );
 
         this.refreshIndex();
 
         assertNotNull( orgCreatedResponse );
 
         //get token from organization that was created to verify it exists.
-        Token tokenPayload = new Token( "password", username, password );
+        Token tokenPayload = new Token( "password", organization.getUsername(), organization.getPassword() );
         Token tokenReturned = clientSetup.getRestClient().management().token().post( tokenPayload );
 
         assertNotNull( tokenReturned );
 
         //recreate a new payload using a duplicate email
-        orgPayload = new Organization( orgName+"test", username+"test", email, name+"test", password+"test", null );
+        Organization orgDuplicatePayload = new Organization( organization.getOrganization()+"test",
+                organization.getUsername()+"test", organization.getEmail(),
+                organization.getName()+"test", organization.getPassword()+"test", null );
+
 
         //verify that we cannot create an organization that shares a email with another preexisting organization.
         try {
-            clientSetup.getRestClient().management().orgs().post( orgPayload );
+            clientSetup.getRestClient().management().orgs().post( orgDuplicatePayload );
             fail( "Should not have created organization" );
         }
         catch ( UniformInterfaceException ex ) {
@@ -200,7 +183,7 @@ public class OrganizationsIT extends AbstractRestIT {
         }
 
         //try to get the token from the organization that failed to be created to verify it was not made.
-        tokenPayload = new Token( "password", username + "test", password );
+        tokenPayload = new Token( "password", organization.getUsername()+"test", organization.getPassword()+"test" );
         Token tokenError = null;
         try {
             tokenError = clientSetup.getRestClient().management().token().post( tokenPayload );
@@ -223,40 +206,33 @@ public class OrganizationsIT extends AbstractRestIT {
     public void testOrgPOSTParams() throws IOException {
 
         //Create organization defaults
-        String username = "testCreateDuplicateOrgEmail" + UUIDUtils.newTimeUUID();
-        String name = username;
-        String password = "password";
-        String orgName = username;
-        String email = username + "@usergrid.com";
+        Organization organization =  createOrgPayload( "testOrgPOSTParams",null );
 
         //Append them to the end as query parameters
         QueryParameters queryParameters = new QueryParameters();
-        queryParameters.setKeyValue( "organization",orgName );
-        queryParameters.setKeyValue( "username",username );
-        queryParameters.setKeyValue( "grant_type",password );
-        queryParameters.setKeyValue( "email",email  );
-        queryParameters.setKeyValue( "name",name );
-        queryParameters.setKeyValue( "password",password );
+        queryParameters.setKeyValue( "organization",organization.getOrganization());
+        queryParameters.setKeyValue( "username",organization.getUsername() );
+        queryParameters.setKeyValue( "grant_type","password" );
+        queryParameters.setKeyValue( "email",organization.getEmail() );
+        queryParameters.setKeyValue( "name",organization.getName() );
+        queryParameters.setKeyValue( "password",organization.getPassword() );
 
         //Post the organization and verify it worked
-        Organization organization = clientSetup.getRestClient().management().orgs().post( queryParameters );
+        Organization organizationReturned = clientSetup.getRestClient().management().orgs().post( queryParameters );
 
-        assertNotNull( organization );
-        assertEquals( orgName, organization.getName() );
+        assertNotNull( organizationReturned );
+        assertEquals( organization.getOrganization(), organizationReturned.getName());
 
         //get token from organization that was created to verify it exists. also sets the current context.
-        Token tokenPayload = new Token( "password", username, password );
+        Token tokenPayload = new Token( "password", organization.getName(), organization.getPassword() );
         Token tokenReturned = clientSetup.getRestClient().management().token().post( tokenPayload );
 
         assertNotNull( tokenReturned );
 
         //Assert that the get returns the correct org and owner.
-        Organization returnedOrg = clientSetup.getRestClient().management().orgs().organization( orgName ).get();
+        Organization returnedOrg = clientSetup.getRestClient().management().orgs().organization( organization.getOrganization() ).get();
 
-        assertTrue( returnedOrg != null && returnedOrg.getName().equals( orgName ) );
-        /**
-         * TODO: check all the parameters, make helper methods for duplicate code.
-         */
+        assertTrue( returnedOrg != null && returnedOrg.getName().equals(organization.getOrganization()) );
 
     }
 
@@ -268,23 +244,34 @@ public class OrganizationsIT extends AbstractRestIT {
     @Test
     public void testOrgPOSTForm() throws IOException {
 
+        Organization organization =  createOrgPayload( "testOrgPOSTForm",null );
+
         //create the form to hold the organization
-        UUID timeUuid = UUIDUtils.newTimeUUID();
         Form form = new Form();
-        form.add( "organization", "testOrgPOSTForm" + timeUuid );
-        form.add( "username", "testOrgPOSTForm" + timeUuid );
+        form.add( "organization", organization.getOrganization() );
+        form.add( "username", organization.getUsername() );
         form.add( "grant_type", "password" );
-        form.add( "email", "testOrgPOSTForm" + timeUuid + "@apigee.com" );
-        form.add( "name", "testOrgPOSTForm" );
-        form.add( "password", "password" );
+        form.add( "email", organization.getEmail() );
+        form.add( "name", organization.getName() );
+        form.add( "password", organization.getPassword() );
 
         //Post the organization and verify it worked.
-        Organization organization = clientSetup.getRestClient().management().orgs().post( form );
+        Organization organizationReturned = clientSetup.getRestClient().management().orgs().post( form );
 
-        assertNotNull( organization );
-        assertEquals( "testOrgPOSTForm" + timeUuid ,organization.getName() );
+        assertNotNull( organizationReturned );
+        assertEquals( organization.getOrganization(),organizationReturned.getName() );
 
-        //TODO: makes changes here as well.
+        //get token from organization that was created to verify it exists. also sets the current context.
+        Token tokenPayload = new Token( "password", organization.getName(), organization.getPassword() );
+        Token tokenReturned = clientSetup.getRestClient().management().token().post( tokenPayload );
+
+        assertNotNull( tokenReturned );
+
+        //Assert that the get returns the correct org and owner.
+        Organization returnedOrg = clientSetup.getRestClient().management().orgs().organization( organization.getOrganization() ).get();
+
+        assertTrue( returnedOrg != null && returnedOrg.getName().equals(organization.getOrganization()) );
+
     }
 
 
@@ -323,8 +310,7 @@ public class OrganizationsIT extends AbstractRestIT {
         adminUserPayload.put( "password", username );
 
         //create adminUser
-        Entity adminUserResponse = restClient.management().orgs().organization( clientSetup.getOrganizationName() )
-                                           .users().post( adminUserPayload );
+        Entity adminUserResponse = restClient.management().orgs().organization( clientSetup.getOrganizationName() ).users().post( adminUserPayload );
 
         //verify that the response contains the correct data
         assertNotNull( adminUserResponse );
@@ -381,5 +367,16 @@ public class OrganizationsIT extends AbstractRestIT {
 
         assertEquals( 6, orgResponse.getProperties().get( "puppies" ));
 
+    }
+    
+    /**
+     * Create an organization payload with almost the same value for everyfield.
+     * @param baseName
+     * @param properties
+     * @return
+     */
+    public Organization createOrgPayload(String baseName,Map properties){
+        String orgName = baseName + UUIDUtils.newTimeUUID();
+        return new Organization( orgName+ UUIDUtils.newTimeUUID(),orgName,orgName+"@usergrid",orgName,orgName, properties);
     }
 }
