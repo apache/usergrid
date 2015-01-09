@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +37,7 @@ import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource2point0.model.Token;
 import org.apache.usergrid.rest.test.resource2point0.model.User;
 
+import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.representation.Form;
 
@@ -50,9 +52,7 @@ import static org.junit.Assert.fail;
  * Handles all management organization endpoint tests. Any tests that work with organizations specifically can be found here
  */
 public class OrganizationsIT extends AbstractRestIT {
-    private static final Logger LOG = LoggerFactory.getLogger( OrganizationsIT.class );
 
-    //TODO: make enum?
     String duplicateUniquePropertyExistsErrorMessage = "duplicate_unique_property_exists";
     String invalidGrantErrorMessage = "invalid_grant";
 
@@ -69,6 +69,7 @@ public class OrganizationsIT extends AbstractRestIT {
         String orgName = username;
         String email = username + "@usergrid.com";
 
+        //User property to see if owner properties exist when created.
         Map<String, Object> userProperties = new HashMap<String, Object>();
         userProperties.put( "company", "Apigee" );
 
@@ -241,7 +242,22 @@ public class OrganizationsIT extends AbstractRestIT {
         Organization organization = clientSetup.getRestClient().management().orgs().post( queryParameters );
 
         assertNotNull( organization );
-        assertEquals( orgName,organization.getName() );
+        assertEquals( orgName, organization.getName() );
+
+        //get token from organization that was created to verify it exists. also sets the current context.
+        Token tokenPayload = new Token( "password", username, password );
+        Token tokenReturned = clientSetup.getRestClient().management().token().post( tokenPayload );
+
+        assertNotNull( tokenReturned );
+
+        //Assert that the get returns the correct org and owner.
+        Organization returnedOrg = clientSetup.getRestClient().management().orgs().organization( orgName ).get();
+
+        assertTrue( returnedOrg != null && returnedOrg.getName().equals( orgName ) );
+        /**
+         * TODO: check all the parameters, make helper methods for duplicate code.
+         */
+
     }
 
 
@@ -267,6 +283,8 @@ public class OrganizationsIT extends AbstractRestIT {
 
         assertNotNull( organization );
         assertEquals( "testOrgPOSTForm" + timeUuid ,organization.getName() );
+
+        //TODO: makes changes here as well.
     }
 
 
@@ -274,6 +292,7 @@ public class OrganizationsIT extends AbstractRestIT {
      * Returns error from unimplemented delete method by trying to call the delete organization endpoint
      * @throws IOException
      */
+    @Ignore("It should return a 501, so when this is fixed the test can be run")
     @Test
     public void noOrgDelete() throws IOException {
 
@@ -282,9 +301,7 @@ public class OrganizationsIT extends AbstractRestIT {
             clientSetup.getRestClient().management().orgs().organization( clientSetup.getOrganizationName() ).delete();
             fail( "Delete is not implemented yet" );
         }catch(UniformInterfaceException uie){
-            assertEquals(500,uie.getResponse().getStatus());
-            //TODO: I think the below is what it should return (501 not implemented ) ,but instead it expects the above
-           // assertEquals( ClientResponse.Status.NOT_IMPLEMENTED ,uie.getResponse().getStatus());
+            assertEquals( ClientResponse.Status.NOT_IMPLEMENTED ,uie.getResponse().getStatus());
         }
     }
 

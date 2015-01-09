@@ -41,6 +41,7 @@ import javax.ws.rs.core.MediaType;
 public class ClientSetup implements TestRule {
 
     RestClient restClient;
+    //TODO: store the password as a string here as well
     protected String username, orgName, appName;
     protected Organization organization;
     protected Application application;
