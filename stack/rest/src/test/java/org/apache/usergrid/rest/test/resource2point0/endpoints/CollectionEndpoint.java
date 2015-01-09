@@ -122,9 +122,13 @@ public class CollectionEndpoint extends NamedResource {
      * }     *
      * usersCollection = app.collections("users").getNextPage(usersCollection.cursor);
      */
-    public Collection getNextPage(Collection collection, final boolean useToken) {
+    //TODO: add queryParameters here
+    public Collection getNextPage(Collection collection, QueryParameters passedParameters ,final boolean useToken) {
         WebResource resource = getResource(useToken);
-        QueryParameters queryParameters = new QueryParameters();
+        QueryParameters queryParameters = passedParameters;
+        if( queryParameters == null){
+            queryParameters = new QueryParameters();
+        }
 
         queryParameters.setCursor(collection.getCursor());
         resource = addParametersToResource(resource, queryParameters);
@@ -157,7 +161,7 @@ public class CollectionEndpoint extends NamedResource {
 
     public ApiResponse delete(final QueryParameters parameters, final boolean useToken){
         WebResource resource  = getResource(useToken);
-        addParametersToResource(getResource(), parameters);
+        resource = addParametersToResource(resource, parameters);
         return resource.type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
                 .delete(ApiResponse.class);
     }

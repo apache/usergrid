@@ -20,6 +20,8 @@
 
 package org.apache.usergrid.rest.test.resource2point0.model;
 
+import org.apache.usergrid.persistence.index.utils.MapUtils;
+
 import java.util.Map;
 
 /**
@@ -28,6 +30,9 @@ import java.util.Map;
 public class ActivityEntity extends Entity {
     public ActivityEntity(String email, String verb, String content){
         this.chainPut("content",content).chainPut("verb",verb).chainPut("email",email);
+    }
+    public ActivityEntity() {
+        this.putAll(new MapUtils.HashMapBuilder<String, Object>());
     }
     public ActivityEntity(Map<String,Object> map){
         this.putAll(map);

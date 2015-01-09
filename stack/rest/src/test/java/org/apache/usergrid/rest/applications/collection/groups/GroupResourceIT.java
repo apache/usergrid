@@ -50,9 +50,14 @@ public class GroupResourceIT extends AbstractRestIT {
      *
      */
     private Entity createGroup(String groupName, String groupPath) throws IOException{
+        String title = "title";
+        return createGroup(groupName, groupPath, title);
+    }
+    private Entity createGroup(String groupName, String groupPath, String groupTitle) throws IOException{
         Entity payload = new Entity();
         payload.put("name", groupName);
         payload.put("path", groupPath);
+        payload.put("title", groupTitle);
         Entity entity = this.app().collection("groups").post(payload);
         assertEquals(entity.get("name"), groupName);
         assertEquals(entity.get("path"), groupPath);
@@ -505,6 +510,33 @@ public class GroupResourceIT extends AbstractRestIT {
             }
         }
         assertFalse(found);
+
+
+    }
+
+    public void updateGroupWithSameNameAsApp() throws IOException {
+
+
+        // create groupMap with same name as app
+        String groupPath = this.clientSetup.getAppName();
+        String groupName = this.clientSetup.getAppName();
+        String title = "Old Title";
+        Entity group = this.createGroup(groupName, groupPath, title);
+
+        String newTitle = "New Title";
+        group.put("title", newTitle);
+        Entity groupResponse = this.app().collection("groups").entity(group).put(group);
+        assertEquals(groupResponse.get("title"), newTitle);
+        this.refreshIndex();
+
+        // update that group by giving it a new title and using UUID in URL
+        String evenNewerTitle = "Even New Title";
+        group.put("title", newTitle);
+        String uuid = group.getString("uuid");
+        groupResponse = this.app().collection("groups").uniqueID(uuid).put(group);
+        assertEquals(groupResponse.get("title"), evenNewerTitle);
+        this.refreshIndex();
+
 
 
     }

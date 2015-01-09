@@ -131,6 +131,10 @@ public class Entity implements Serializable, Map<String,Object> {
         //All values are strings , so doing the cast here saves doing the cast elsewhere
         return getDynamicProperties().get( key );
     }
+    public String getString( final Object key ) {
+        //All values are strings , so doing the cast here saves doing the cast elsewhere
+        return (String) getDynamicProperties().get( key );
+    }
 
     public String getError () {
         return (String) this.get( "error" ).toString();
