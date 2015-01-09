@@ -54,6 +54,8 @@ import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.RestClient;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.*;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.ManagementResource;
+import org.apache.usergrid.rest.test.resource2point0.model.Token;
+import org.apache.usergrid.rest.test.resource2point0.model.User;
 import org.apache.usergrid.rest.test.security.TestAdminUser;
 import org.apache.usergrid.rest.test.security.TestUser;
 import org.apache.usergrid.security.AuthPrincipalInfo;
@@ -61,6 +63,7 @@ import org.apache.usergrid.security.AuthPrincipalType;
 import org.apache.usergrid.utils.UUIDUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.sun.deploy.util.SessionState;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.representation.Form;
@@ -92,67 +95,89 @@ public class AdminUsersIT extends AbstractRestIT {
     }
 
     /**
-     * Test if we can reset our password as an admin
+     * Test if we can reset an admin's password by using that same admins credentials.
      */
-    @Test
-    public void setSelfAdminPasswordAsAdmin() throws IOException {
-
-        String newPassword = "foo";
-
-        Map<String, String> data = new HashMap<String, String>();
-        data.put( "newpassword", newPassword );
-        data.put( "oldpassword", "test" );
-
-        // change the password as admin. The old password isn't required
-        JsonNode node = mapper.readTree( resource().path( "/management/users/test/password" ).accept( MediaType.APPLICATION_JSON )
-                                                   .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, data ));
-
-        assertNull( getError( node ) );
-
-        refreshIndex("test-organization", "test-app");
-
-        adminAccessToken = mgmtToken( "test", newPassword );
-
-        data.put( "oldpassword", newPassword );
-        data.put( "newpassword", "test" );
-
-        node = mapper.readTree( resource().path( "/management/users/test/password" ).queryParam( "access_token", adminAccessToken )
-                                          .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                                          .post( String.class, data ));
-
-        assertNull( getError( node ) );
-    }
-
-//
 //    @Test
-//    public void passwordMismatchErrorAdmin() {
-//        String origPassword = "foo";
-//        String newPassword = "bar";
+//    public void setSelfAdminPasswordAsAdmin() throws IOException {
 //
-//        Map<String, String> data = new HashMap<String, String>();
-//        data.put( "newpassword", origPassword );
+//        String username = clientSetup.getUsername();
+//        String password = clientSetup.getPassword();
 //
-//        // now change the password, with an incorrect old password
 //
-//        data.put( "oldpassword", origPassword );
-//        data.put( "newpassword", newPassword );
+//        Map<String, String> passwordPayload = new HashMap<String, String>();
+//        passwordPayload.put( "newpassword", "testPassword" );
+//        passwordPayload.put( "oldpassword", password );
 //
-//        ClientResponse.Status responseStatus = null;
+//        // change the password as admin. The old password isn't required
+//        JsonNode node = mapper.readTree( resource().path( "/management/users/test/password" ).accept( MediaType.APPLICATION_JSON )
+//                                                   .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, passwordPayload ));
 //
+//
+//
+//        this.refreshIndex();
+//
+//
+//        assertNull( getError( node ) );
+//
+//        //Get the token using the new password
+//        Token tokenPayload = this.app().token().post(new Token(username, "testPassword"));
+//
+//        //Check that we cannot get the token using the old password
 //        try {
-//            resource().path( "/management/users/test/password" ).accept( MediaType.APPLICATION_JSON )
-//                      .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, data );
+//            this.app().token().post( new Token( username, password ) );
+//            fail( "We shouldn't be able to get a token using the old password" );
+//        }catch(UniformInterfaceException uie) {
+//            errorParse( 500,"BadPeople",uie );
 //        }
-//        catch ( UniformInterfaceException uie ) {
-//            responseStatus = uie.getResponse().getClientResponseStatus();
-//        }
-//
-//        assertNotNull( responseStatus );
-//
-//        assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
 //    }
 //
 //
+//    /**
+//     * Check that we cannot change the password by using an older password
+//     */
+//    @Test
+//    public void passwordMismatchErrorAdmin() {
+//
+//
+//
+//        String username = clientSetup.getUsername();
+//        String password = clientSetup.getPassword();
+//
+//
+//        Map<String, String> passwordPayload = new HashMap<String, String>();
+//        passwordPayload.put( "newpassword", "testPassword" );
+//        passwordPayload.put( "oldpassword", password );
+//
+//        // change the password as admin. The old password isn't required
+//        JsonNode node = mapper.readTree( resource().path( "/management/users/test/password" ).accept( MediaType.APPLICATION_JSON )
+//                                                   .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, passwordPayload ));
+//
+//
+//
+//        this.refreshIndex();
+//
+//
+//        //Get the token using the new password
+//        Token tokenPayload = this.app().token().post(new Token(username, "testPassword"));
+//
+//
+//        // Check that we can't change the password using the old password.
+//        try {
+//            resource().path( "/management/users/test/password" ).accept( MediaType.APPLICATION_JSON )
+//                      .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, passwordPayload );
+//            fail("We shouldn't be able to change the password with the same payload");
+//        }
+//        catch ( UniformInterfaceException uie ) {
+//            errorParse( ClientResponse.Status.BAD_REQUEST.getStatusCode(),ClientResponse.Status.BAD_REQUEST.getReasonPhrase(),uie );
+//        }
+//
+//    }
+//
+//
+//    /**
+//     * Checks that as a superuser (i.e with a superuser token ) we can change the password of a admin.
+//     * @throws IOException
+//     */
 //    @Test
 //    public void setAdminPasswordAsSysAdmin() throws IOException {
 //
@@ -794,6 +819,6 @@ public class AdminUsersIT extends AbstractRestIT {
 //        }
 //        catch ( Exception ex ) {
 //        }
-    }
+//    }
 
 }
