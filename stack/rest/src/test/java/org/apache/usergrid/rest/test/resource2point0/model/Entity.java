@@ -61,20 +61,22 @@ public class Entity implements Serializable, Map<String,Object> {
             this.putAll(entity);
         }
         else if (response.getData() != null){
-            LinkedHashMap dataResponse = ( LinkedHashMap ) response.getData();
 
-            //covers case for admin users
-            if(dataResponse.get( "user" )!=null){
-                //Entity entity = new Entity();
-                //entity.put( "data", dataResponse.get( "user" ) );
-                this.putAll( ( Map<? extends String, ?> ) dataResponse.get( "user" ) );
+            if(response.getData() instanceof  LinkedHashMap) {
+                LinkedHashMap dataResponse = ( LinkedHashMap ) response.getData();
+
+                if(dataResponse.get( "user" )!=null){
+                    this.putAll( ( Map<? extends String, ?> ) dataResponse.get( "user" ) );
+                }
+                else{
+                    this.putAll( dataResponse );
+                }
             }
-            else {
-                //Doesn't always type correct below.
-                //ArrayList<String> data = ( ArrayList<String> ) response.getData();
-                //Entity entity = new Entity();
-               // entity.put( "data", data.get( 0 ) );
-                this.putAll( dataResponse );
+            else if (response.getData() instanceof ArrayList){
+                ArrayList<String> data = ( ArrayList<String> ) response.getData();
+                Entity entity = new Entity();
+                entity.put( "data", data.get( 0 ) );
+                this.putAll( entity );
             }
         }
     }
@@ -131,7 +133,7 @@ public class Entity implements Serializable, Map<String,Object> {
     }
 
     public String getError () {
-        return (String) this.get("error").toString();
+        return (String) this.get( "error" ).toString();
     }
 
     public String getErrorCode () {
@@ -184,7 +186,7 @@ public class Entity implements Serializable, Map<String,Object> {
     }
 
     public UUID getUuid(){
-        return UUID.fromString((String) get("uuid"));
+        return UUID.fromString( ( String ) get( "uuid" ) );
     }
 
     public Entity chainPut(final String key, final Object value){

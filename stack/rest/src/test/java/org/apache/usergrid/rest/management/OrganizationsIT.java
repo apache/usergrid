@@ -368,7 +368,7 @@ public class OrganizationsIT extends AbstractRestIT {
         assertEquals( 6, orgResponse.getProperties().get( "puppies" ));
 
     }
-    
+
     /**
      * Create an organization payload with almost the same value for everyfield.
      * @param baseName
