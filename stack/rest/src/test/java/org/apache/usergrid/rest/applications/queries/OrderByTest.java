@@ -30,6 +30,8 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 
 /**
@@ -40,7 +42,207 @@ import static org.junit.Assert.assertEquals;
  */
 public class OrderByTest extends AbstractRestIT {
   private static Logger log = LoggerFactory.getLogger(OrderByTest.class);
+    /**
+     * Create a number of entities in the specified collection
+     * with properties to make them independently searchable
+     *
+     * @param numberOfEntities
+     * @param collectionName
+     * @return an array of the Entity objects created
+     */
+    private Entity[] generateTestEntities(int numberOfEntities, String collectionName) {
+        Entity[] entities = new Entity[numberOfEntities];
+        Entity props = new Entity();
+        //Insert the desired number of entities
+        for (int i = 0; i < numberOfEntities; i++) {
+            Entity actor = new Entity();
+            actor.put("displayName", String.format("Test User %d", i));
+            actor.put("username", String.format("user%d", i));
+            props.put("actor", actor);
+            //give each entity a unique, numeric ordinal value
+            props.put("ordinal", i);
+            //Set half the entities to have a 'madeup' property of 'true'
+            // and set the other half to 'false'
+            if (i < numberOfEntities / 2) {
+                props.put("madeup", false);
+            } else {
+                props.put("madeup", true);
+            }
+            //Set even-numbered users to have a verb of 'go' and the rest to 'stop'
+            if (i % 2 == 0) {
+                props.put("verb", "go");
+            } else {
+                props.put("verb", "stop");
+            }
+            //create the entity in the desired collection and add it to the return array
+            entities[i] = this.app().collection(collectionName).post(props);
+            log.info(entities[i].entrySet().toString());
+        }
+        //refresh the index so that they are immediately searchable
+        this.refreshIndex();
 
+        return entities;
+    }
+
+    /**
+     * Test correct sort order for Long properties
+     * @throws IOException
+     */
+    @Test
+    public void testSortLongAsc() throws IOException{
+        int numOfEntities = 20;
+        String collectionName = "activities";
+        //create our test entities
+        Entity[] entities = generateTestEntities(numOfEntities, collectionName);
+
+        QueryParameters params = new QueryParameters()
+            .setQuery("select * order by ordinal asc")
+            .setLimit(numOfEntities);
+        Collection activities = this.app().collection("activities").get(params);
+        assertEquals(numOfEntities, activities.getResponse().getEntityCount());
+        //results should be ordered by ordinal
+        int index = 0;
+        while (activities.hasNext()) {
+            Entity activity = activities.next();
+            //make sure the correct ordinal properties are returned
+            assertEquals(index++, Long.parseLong(activity.get("ordinal").toString()));
+        }
+    }
+    /**
+     * Test correct sort order for Long properties
+     * @throws IOException
+     */
+    @Test
+    public void testSortLongDesc() throws IOException{
+        int numOfEntities = 20;
+        String collectionName = "activities";
+        //create our test entities
+        Entity[] entities = generateTestEntities(numOfEntities, collectionName);
+
+        QueryParameters params = new QueryParameters()
+            .setQuery("select * order by ordinal desc")
+            .setLimit(numOfEntities);
+        Collection activities = this.app().collection("activities").get(params);
+        assertEquals(numOfEntities, activities.getResponse().getEntityCount());
+        int index = numOfEntities-1;
+        //results should be sorted by ordinal
+        while (activities.hasNext()) {
+            Entity activity = activities.next();
+            //make sure the correct ordinal properties are returned
+            assertEquals(index--, Long.parseLong(activity.get("ordinal").toString()));
+        }
+    }
+    /**
+     * Test correct sort order for Boolean properties
+     * @throws IOException
+     */
+    @Test
+    public void testSortBooleanAsc() throws IOException{
+        int numOfEntities = 20;
+        String collectionName = "activities";
+        //create our test entities
+        Entity[] entities = generateTestEntities(numOfEntities, collectionName);
+
+        QueryParameters params = new QueryParameters()
+            .setQuery("select * order by madeup asc")
+            .setLimit(numOfEntities);
+        Collection activities = this.app().collection("activities").get(params);
+        assertEquals(numOfEntities, activities.getResponse().getEntityCount());
+        int index = 0;
+        //results should be sorted false, then true
+        while (activities.hasNext()) {
+            Entity activity = activities.next();
+            if(index++ < numOfEntities/2){
+                assertEquals("false", activity.get("madeup").toString());
+            }else{
+                assertEquals("true", activity.get("madeup").toString());
+            }
+        }
+    }
+    /**
+     * Test correct sort order for Boolean properties
+     * @throws IOException
+     */
+    @Test
+    public void testSortBooleanDesc() throws IOException{
+        int numOfEntities = 20;
+        String collectionName = "activities";
+        //create our test entities
+        Entity[] entities = generateTestEntities(numOfEntities, collectionName);
+
+        QueryParameters params = new QueryParameters()
+            .setQuery("select * order by madeup desc")
+            .setLimit(numOfEntities);
+        Collection activities = this.app().collection("activities").get(params);
+        assertEquals(numOfEntities, activities.getResponse().getEntityCount());
+        int index = 0;
+        //results should be sorted true, then false
+        while (activities.hasNext()) {
+            Entity activity = activities.next();
+            //make sure the booleans are ordered correctly
+            if(index++ < numOfEntities/2){
+                assertEquals("true", activity.get("madeup").toString());
+            }else{
+                assertEquals("false", activity.get("madeup").toString());
+            }
+        }
+    }
+
+    /**
+     * Test correct sort order for String properties
+     * @throws IOException
+     */
+    @Test
+    public void testSortStringAsc() throws IOException{
+        int numOfEntities = 20;
+        String collectionName = "activities";
+        //create our test entities
+        Entity[] entities = generateTestEntities(numOfEntities, collectionName);
+
+        QueryParameters params = new QueryParameters()
+            .setQuery("select * order by verb asc")
+            .setLimit(numOfEntities);
+        Collection activities = this.app().collection("activities").get(params);
+        assertEquals(numOfEntities, activities.getResponse().getEntityCount());
+        int index = 0;
+        //results should be sorted "go", then "stop"
+        while (activities.hasNext()) {
+            Entity activity = activities.next();
+            if(index++ < numOfEntities/2){
+                assertEquals("go", activity.get("verb").toString());
+            }else{
+                assertEquals("stop", activity.get("verb").toString());
+            }
+        }
+    }
+    /**
+     * Test correct sort order for String properties
+     * @throws IOException
+     */
+    @Test
+    public void testSortStringDesc() throws IOException{
+        int numOfEntities = 20;
+        String collectionName = "activities";
+        //create our test entities
+        Entity[] entities = generateTestEntities(numOfEntities, collectionName);
+
+        QueryParameters params = new QueryParameters()
+            .setQuery("select * order by verb desc")
+            .setLimit(numOfEntities);
+        Collection activities = this.app().collection("activities").get(params);
+        assertEquals(numOfEntities, activities.getResponse().getEntityCount());
+        int index = 0;
+        //results should be sorted "stop", then "go"
+        while (activities.hasNext()) {
+            Entity activity = activities.next();
+            if(index++ < numOfEntities/2){
+                assertEquals("stop", activity.get("verb").toString());
+            }else{
+                assertEquals("go", activity.get("verb").toString());
+            }
+        }
+
+    }
   /**
    * Inserts a number of entities. Query a subset of entities
    * with unspecified 'order by' and then ordered by 'created'
