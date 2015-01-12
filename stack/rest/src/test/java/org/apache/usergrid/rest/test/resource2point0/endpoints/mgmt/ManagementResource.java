@@ -37,4 +37,8 @@ public class ManagementResource extends NamedResource {
     public OrgResource orgs() {
         return new OrgResource( context, this );
     }
+
+    public UsersResource users() {
+        return new UsersResource( context, this );
+    }
 }

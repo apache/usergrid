@@ -41,6 +41,7 @@ import javax.ws.rs.core.MediaType;
 public class ClientSetup implements TestRule {
 
     RestClient restClient;
+
     protected String username, password,orgName, appName;
     protected Organization organization;
     protected Application application;

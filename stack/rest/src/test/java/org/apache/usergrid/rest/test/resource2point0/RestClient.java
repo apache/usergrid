@@ -20,7 +20,6 @@ import org.apache.usergrid.rest.test.resource2point0.endpoints.TokenResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.ManagementResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.OrganizationResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.UrlResource;
-import org.apache.usergrid.rest.test.resource2point0.model.Organization;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 import com.sun.jersey.api.client.Client;

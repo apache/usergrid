@@ -37,7 +37,7 @@ public class TokenResource extends NamedResource {
 
 
     /**
-     * Obtains an access token
+     * Obtains an access token and sets the token for the context to use in later calls
      *
      * @param token
      * @return

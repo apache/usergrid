@@ -61,10 +61,23 @@ public class Entity implements Serializable, Map<String,Object> {
             this.putAll(entity);
         }
         else if (response.getData() != null){
-            ArrayList<String> data = (ArrayList <String>) response.getData();
-            Entity entity = new Entity();
-            entity.put("data", data.get(0));
-            this.putAll(entity);
+
+            if(response.getData() instanceof  LinkedHashMap) {
+                LinkedHashMap dataResponse = ( LinkedHashMap ) response.getData();
+
+                if(dataResponse.get( "user" )!=null){
+                    this.putAll( ( Map<? extends String, ?> ) dataResponse.get( "user" ) );
+                }
+                else{
+                    this.putAll( dataResponse );
+                }
+            }
+            else if (response.getData() instanceof ArrayList){
+                ArrayList<String> data = ( ArrayList<String> ) response.getData();
+                Entity entity = new Entity();
+                entity.put( "data", data.get( 0 ) );
+                this.putAll( entity );
+            }
         }
     }
 
@@ -124,15 +137,15 @@ public class Entity implements Serializable, Map<String,Object> {
     }
 
     public String getError () {
-        return (String) this.get("error").toString();
+        return (String) this.get("error");
     }
 
     public String getErrorCode () {
-        return (String) this.get("errorCode").toString();
+        return (String)this.get("errorCode");
     }
 
     public String getErrorDescription () {
-        return (String) this.get("errorDescription").toString();
+        return (String) this.get("errorDescription");
     }
 
     @Override
@@ -177,11 +190,15 @@ public class Entity implements Serializable, Map<String,Object> {
     }
 
     public UUID getUuid(){
-        return UUID.fromString((String) get("uuid"));
+        return UUID.fromString( ( String ) get( "uuid" ) );
     }
 
     public Entity chainPut(final String key, final Object value){
         put(key,value);
         return this;
+    }
+
+    public ApiResponse getResponse(){
+        return response;
     }
 }
