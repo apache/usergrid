@@ -17,137 +17,118 @@
 package org.apache.usergrid.rest;
 
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.jersey.api.client.UniformInterfaceException;
-import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import javax.ws.rs.core.MediaType;
-
-import org.junit.Rule;
+import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource2point0.model.Entity;
+import org.apache.usergrid.utils.MapUtils;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.fail;
+import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import static org.junit.Assert.*;
 
 
 /**
- * Partial update test. 
+ * Partial update test.
  */
 public class PartialUpdateTest extends AbstractRestIT {
-    private static final Logger log= LoggerFactory.getLogger(PartialUpdateTest.class );
-    
-    @Rule
-    public TestContextSetup context = new TestContextSetup( this );
+    private static final Logger log = LoggerFactory.getLogger(PartialUpdateTest.class);
 
-    double latitude=37.772837;
-    double longitude=-122.409895;
+    double latitude = 37.772837;
+    double longitude = -122.409895;
 
-    Map<String, Object> geolocation = new LinkedHashMap<String, Object>() {{
-        put("latitude", latitude);
-        put("longitude", longitude);
-    }};
+    Map<String, Double> geolocation = new MapUtils.HashMapBuilder<String, Double>()
+        .map("latitude", latitude)
+        .map("longitude", longitude);
 
-    @Test 
+    @Test
     public void testPartialUpdate() throws IOException {
 
         // create user bart
-        Map<String, Object> userProperties = new LinkedHashMap<String, Object>() {{
-            put( "username", "bart" );
-            put( "employer", "Brawndo" );
-            put( "email", "bart@personal-email.example.com" );
-            put( "location", geolocation);
-        }};
+        Entity props = new Entity();
+        props.put("username", "bart");
+        props.put("employer", "Brawndo");
+        props.put("email", "bart@personal-email.example.com");
+        props.put("location", geolocation);
+        // POST the entity
+        Entity userNode = this.app().collection("users").post(props);
+        // make sure it was saved properly
+        assertNotNull(userNode);
+        String uuid = userNode.get("uuid").toString();
+        assertNotNull(uuid);
 
-        JsonNode userNode = mapper.readTree( 
-            resource().path( "/test-organization/test-app/users" )
-                .queryParam( "access_token", adminAccessToken )
-                .accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON )
-                .post( String.class, userProperties ));
-
-        assertNotNull( userNode );
-        String uuid = userNode.withArray("entities").get(0).get("uuid").asText();
-        assertNotNull( uuid );
-        refreshIndex( "test-organization", "test-app" );
+        refreshIndex();
 
         Map<String, Object> updateProperties = new LinkedHashMap<String, Object>();
         // update user bart passing only an update to a property
-        for(int i=1; i<10; i++) {
+        for (int i = 1; i < 10; i++) {
+            // "Move" the user by incrementing their location
+            Entity updateProps = new Entity();
             geolocation.put("latitude", latitude += 0.00001);
             geolocation.put("longitude", longitude += 0.00001);
-            updateProperties.put("employer", "Initech");
-            updateProperties.put("location", geolocation);
+            //update the User's employer property
+            updateProps.put("employer", "Initech");
+            updateProps.put("location", geolocation);
 
             try {
-                JsonNode updatedNode = mapper.readTree(
-                        resource().path("/test-organization/test-app/user/" + uuid)
-                                .queryParam("access_token", adminAccessToken)
-                                .accept(MediaType.APPLICATION_JSON)
-                                .type(MediaType.APPLICATION_JSON)
-                                .put(String.class, updateProperties));
-                assertNotNull(updatedNode);
+                // PUT the updates to the user and ensure they were saved
+                userNode = this.app().collection("users").entity(userNode).put(updateProps);
+                assertNotNull(userNode);
 
             } catch (UniformInterfaceException uie) {
                 fail("Update failed due to: " + uie.getResponse().getEntity(String.class));
             }
 
-            refreshIndex("test-organization", "test-app");
-
-            userNode = mapper.readTree(
-                    resource().path("/test-organization/test-app/users/" + uuid)
-                            .queryParam("access_token", adminAccessToken)
-                            .accept(MediaType.APPLICATION_JSON)
-                            .get(String.class));
+            refreshIndex();
+            // retrieve the user from the backend
+            userNode = this.app().collection("users").entity(userNode).get();
 
             log.info(userNode.toString());
 
+            // verify that the user was returned
             assertNotNull(userNode);
+            // Verify that the user's employer was updated
+            assertEquals("Initech", userNode.get("employer").toString());
+            // verify that the geo data is present
+            assertNotNull(userNode.get("location"));
+            assertNotNull(((Map<String, Object>) userNode.get("location")).get("latitude"));
+            assertNotNull(((Map<String, Object>) userNode.get("location")).get("longitude"));
 
-            assertEquals("Initech", userNode.withArray("entities").get(0).get("employer").asText());
-
-            assertNotNull(userNode.withArray("entities").get(0).get("location"));
-            assertNotNull(userNode.withArray("entities").get(0).get("location").get("latitude"));
-            assertNotNull(userNode.withArray("entities").get(0).get("location").get("longitude"));
-
-            assertNotSame( latitude, 
-                userNode.withArray("entities").get(0).get("location").get("latitude").asDouble());
-            assertNotSame( longitude, 
-                userNode.withArray("entities").get(0).get("location").get("longitude").asDouble());
+            // Verify that the location was updated correctly AND that
+            // it is not the same object reference from the original POST
+            log.info(geolocation.get("latitude") + " != " + Double.parseDouble(((Map<String, Object>) userNode.get("location")).get("latitude").toString()));
+            log.info(geolocation.get("longitude") + " != " + Double.parseDouble(((Map<String, Object>) userNode.get("location")).get("longitude").toString()));
+            assertNotSame(geolocation.get("latitude"),
+                Double.parseDouble(((Map<String, Object>) userNode.get("location")).get("latitude").toString()));
+            assertEquals(geolocation.get("latitude").doubleValue(),
+                Double.parseDouble(((Map<String, Object>) userNode.get("location")).get("latitude").toString()), 0);
+            assertNotSame(geolocation.get("longitude"),
+                Double.parseDouble(((Map<String, Object>) userNode.get("location")).get("longitude").toString()));
+            assertEquals(geolocation.get("longitude").doubleValue(),
+                Double.parseDouble(((Map<String, Object>) userNode.get("location")).get("longitude").toString()), 0);
         }
 
-        // Update bart's employer without specifying any required fields 
+        // Update bart's employer without specifying any required fields
         // (this time with username specified in URL)
+        Entity updateProps = new Entity();
+        updateProps.put("employer", "ACME Corporation");
 
-        updateProperties = new LinkedHashMap<String, Object>() {{
-            put( "employer", "ACME Corporation" );
-        }};
-
-        for(int i=1; i<10; i++) {
+        for (int i = 1; i < 10; i++) {
             try {
-                mapper.readTree(
-                        resource().path("/test-organization/test-app/users/bart")
-                                .queryParam("access_token", adminAccessToken)
-                                .accept(MediaType.APPLICATION_JSON)
-                                .type(MediaType.APPLICATION_JSON)
-                                .put(String.class, updateProperties));
+                userNode = this.app().collection("users").entity((String) props.get("username")).put(updateProps);
 
             } catch (UniformInterfaceException uie) {
                 fail("Update failed due to: " + uie.getResponse().getEntity(String.class));
             }
-            refreshIndex("test-organization", "test-app");
+            refreshIndex();
 
-            userNode = mapper.readTree(
-                    resource().path("/test-organization/test-app/users/bart")
-                            .queryParam("access_token", adminAccessToken)
-                            .accept(MediaType.APPLICATION_JSON)
-                            .get(String.class));
+            userNode = this.app().collection("users").entity(userNode).get();
             assertNotNull(userNode);
-            assertEquals("ACME Corporation", userNode.withArray("entities").get(0).get("employer").asText());
+            assertEquals("ACME Corporation", userNode.get("employer").toString());
         }
     }
 }
