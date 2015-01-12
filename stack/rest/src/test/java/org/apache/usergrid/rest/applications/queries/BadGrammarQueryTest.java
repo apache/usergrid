@@ -41,7 +41,7 @@ public class BadGrammarQueryTest extends QueryTestBase {
      * @throws IOException
      */
     @Test
-    public void catchBadQueryGrammar() throws IOException {
+    public void exceptionOnInvalidOperator() throws IOException {
 
         int numOfEntities = 1;
         String collectionName = "things";

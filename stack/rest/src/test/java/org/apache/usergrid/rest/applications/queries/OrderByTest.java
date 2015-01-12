@@ -45,7 +45,7 @@ public class OrderByTest extends QueryTestBase {
      * @throws IOException
      */
     @Test
-    public void testSortLongAsc() throws IOException {
+    public void orderByLongAsc() throws IOException {
         int numOfEntities = 20;
         String collectionName = "activities";
         //create our test entities
@@ -71,7 +71,7 @@ public class OrderByTest extends QueryTestBase {
      * @throws IOException
      */
     @Test
-    public void testSortLongDesc() throws IOException {
+    public void orderByLongDesc() throws IOException {
         int numOfEntities = 20;
         String collectionName = "activities";
         //create our test entities
@@ -97,7 +97,7 @@ public class OrderByTest extends QueryTestBase {
      * @throws IOException
      */
     @Test
-    public void testSortBooleanAsc() throws IOException {
+    public void orderByBooleanAsc() throws IOException {
         int numOfEntities = 20;
         String collectionName = "activities";
         //create our test entities
@@ -126,7 +126,7 @@ public class OrderByTest extends QueryTestBase {
      * @throws IOException
      */
     @Test
-    public void testSortBooleanDesc() throws IOException {
+    public void orderByBooleanDesc() throws IOException {
         int numOfEntities = 20;
         String collectionName = "activities";
         //create our test entities
@@ -156,7 +156,7 @@ public class OrderByTest extends QueryTestBase {
      * @throws IOException
      */
     @Test
-    public void testSortStringAsc() throws IOException {
+    public void orderByStringAsc() throws IOException {
         int numOfEntities = 20;
         String collectionName = "activities";
         //create our test entities
@@ -185,7 +185,7 @@ public class OrderByTest extends QueryTestBase {
      * @throws IOException
      */
     @Test
-    public void testSortStringDesc() throws IOException {
+    public void orderByStringDesc() throws IOException {
         int numOfEntities = 20;
         String collectionName = "activities";
         //create our test entities

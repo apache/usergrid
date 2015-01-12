@@ -46,7 +46,7 @@ public class AndOrQueryTest extends QueryTestBase {
      * @throws IOException
      */
     @Test
-    public void andQueryInclusive() throws IOException {
+    public void queryAndInclusive() throws IOException {
         int numOfEntities = 20;
         String collectionName = "activities";
         //create our test entities
@@ -74,7 +74,7 @@ public class AndOrQueryTest extends QueryTestBase {
      * @throws IOException
      */
     @Test
-    public void andQueryExclusive() throws IOException {
+    public void queryAndExclusive() throws IOException {
         int numOfEntities = 20;
         String collectionName = "activities";
 
@@ -102,7 +102,7 @@ public class AndOrQueryTest extends QueryTestBase {
      * @throws IOException
      */
     @Test
-    public void orQueryInclusive() throws IOException {
+    public void queryOrInclusive() throws IOException {
         int numOfEntities = 20;
         String collectionName = "activities";
 
@@ -138,7 +138,7 @@ public class AndOrQueryTest extends QueryTestBase {
      * @throws IOException
      */
     @Test
-    public void orQueryExclusive() throws IOException {
+    public void queryOrExclusive() throws IOException {
         int numOfEntities = 30;
         String collectionName = "activities";
 
@@ -177,7 +177,7 @@ public class AndOrQueryTest extends QueryTestBase {
      * @throws IOException
      */
     @Test //USERGRID-900
-    public void queriesWithAndPastLimit() throws IOException {
+    public void queryWithAndPastLimit() throws IOException {
         int numValuesTested = 40;
 
         generateTestEntities(numValuesTested, "activities");
@@ -204,7 +204,7 @@ public class AndOrQueryTest extends QueryTestBase {
      * @throws IOException
      */
     @Test //USERGRID-1475
-    public void negatedQuery() throws IOException {
+    public void queryNegated() throws IOException {
         int numValuesTested = 20;
 
         generateTestEntities(numValuesTested, "activities");
