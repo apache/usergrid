@@ -137,15 +137,15 @@ public class Entity implements Serializable, Map<String,Object> {
     }
 
     public String getError () {
-        return (String) this.get( "error" ).toString();
+        return (String) this.get("error");
     }
 
     public String getErrorCode () {
-        return (String) this.get("errorCode").toString();
+        return (String)this.get("errorCode");
     }
 
     public String getErrorDescription () {
-        return (String) this.get("errorDescription").toString();
+        return (String) this.get("errorDescription");
     }
 
     @Override

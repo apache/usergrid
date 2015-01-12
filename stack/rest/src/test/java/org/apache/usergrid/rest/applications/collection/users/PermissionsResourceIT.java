@@ -18,6 +18,7 @@ package org.apache.usergrid.rest.applications.collection.users;
 
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -25,13 +26,16 @@ import javax.ws.rs.core.MediaType;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource2point0.model.*;
+import org.elasticsearch.common.collect.HppcMaps;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.java.client.entities.Group;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationOwnerInfo;
-import org.apache.usergrid.rest.AbstractRestIT;
 import org.apache.usergrid.utils.UUIDUtils;
 
 import com.sun.jersey.api.client.ClientResponse;
@@ -39,17 +43,13 @@ import com.sun.jersey.api.client.ClientResponse.Status;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import java.io.IOException;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
+import static org.junit.Assert.*;
 
 
 /**
  * Tests permissions of adding and removing users from roles as well as groups
  *
- * @author tnine
  */
 @Concurrent()
 public class PermissionsResourceIT extends AbstractRestIT {
@@ -57,6 +57,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
     private static final String ROLE = "permtestrole";
 
     private static final String USER = "edanuff";
+    private User user;
 
 
     public PermissionsResourceIT() throws Exception {
@@ -64,379 +65,294 @@ public class PermissionsResourceIT extends AbstractRestIT {
     }
 
 
-    @Test
-    public void deleteUserFromRole() throws IOException {
-        Map<String, String> data = hashMap( "name", ROLE );
+    /**
+     * Creates a user in the default org/app combo for use by all of the tests
+     */
+    @Before
+    public void setup(){
 
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/roles" ).queryParam( "access_token", access_token )
-                        .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                        .post( String.class, data ));
-
-        assertNull( node.get( "error" ) );
-
-        assertEquals( ROLE, getEntity( node, 0 ).get( "name" ).asText() );
-
-        refreshIndex("test-organization", "test-app");
-
-        // add the user to the role
-        node = mapper.readTree( resource().path( "/test-organization/test-app/roles/" + ROLE + "/users/" + USER )
-                .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class ));
-
-        assertNull( node.get( "error" ) );
-
-        refreshIndex("test-organization", "test-app");
-
-        // now check the user has the role
-        node = mapper.readTree( resource().path( "/test-organization/test-app/users/" + USER + "/roles" )
-                .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
-
-        // check if the role was assigned
-        assertEquals( ROLE, getEntity( node, 0 ).get( "name" ).asText() );
-
-        // now delete the role
-        node = mapper.readTree( resource().path( "/test-organization/test-app/users/" + USER + "/roles/" + ROLE )
-                .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).delete( String.class ));
-
-        refreshIndex("test-organization", "test-app");
-
-        // check if the role was deleted
-
-        node = mapper.readTree( resource().path( "/test-organization/test-app/users/" + USER + "/roles" )
-                .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
-
-        // check if the role was assigned
-        assertNull( getEntity( node, 0 ) );
+        user = new User(USER,USER,USER+"@apigee.com","password");
+        user = new User( this.app().collection("users").post(user));
+        refreshIndex();
     }
 
 
+    /**
+     * Tests that we can delete a role that is in use by a user.
+     * @throws IOException
+     */
+    @Test
+    public void deleteUserFromRole() throws IOException {
+
+        //Create a role and check the response
+        Entity data = new Entity().chainPut("name", ROLE);
+
+        Entity node = this.app().collection("roles").post(data);
+
+        assertNull(node.get("error"));
+
+        assertEquals( ROLE, node.get("name").toString() );
+
+        refreshIndex();
+
+        //Post the user with a specific role into the users collection
+        node = this.app().collection("roles").entity(node).collection("users").entity(USER).post();
+        assertNull( node.get( "error" ) );
+
+        refreshIndex();
+
+        // now check the user has the role
+        node =  this.app().collection("users").entity(USER).collection("roles").entity(ROLE).get();
+
+
+        // check if the role was assigned
+        assertEquals( ROLE, node.get("name").toString() );
+
+        // now delete the role
+        this.app().collection("users").entity(USER).collection("roles").entity(ROLE).delete();
+
+        refreshIndex();
+
+        // check if the role was deleted
+
+        int status = 0;
+        try {
+            node = this.app().collection("users").entity(USER).collection("roles").entity(ROLE).get();
+        }catch (UniformInterfaceException e){
+            status = e.getResponse().getStatus();
+        }
+
+        // check if the role was assigned
+        assertEquals(status, 404);
+    }
+
+
+    /**
+     * Deletes a user from the group.
+     * @throws IOException
+     */
     @Test
     public void deleteUserGroup() throws IOException {
 
-        // don't populate the user, it will use the currently authenticated
-        // user.
+        String groupPath = "groupPath" ;
 
-        UUID id = UUIDUtils.newTimeUUID();
+        //Creates and posts a group.
+        Entity data = new Entity().chainPut("name",groupPath).chainPut("type", "group").chainPut( "path", groupPath );
 
-        String groupPath = "groupPath" + id;
-
-        Map<String, String> data = hashMap( "type", "group" ).map( "path", groupPath );
-
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/groups" )
-                .queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE )
-                .post( String.class, data ));
+        Entity node = this.app().collection("groups").post(data);
 
         assertNull( node.get( "error" ) );
 
-        refreshIndex("test-organization", "test-app");
+        refreshIndex();
 
-        node = mapper.readTree( 
-            resource().path( "/test-organization/test-app/groups/" + groupPath + "/users/" + USER )
-                .queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE )
-                .post( String.class ));
+        //Create a user that is in the group.
+        node = this.app().collection("groups").entity(groupPath).collection("users").entity(USER).post();
 
         assertNull( node.get( "error" ) );
 
-        refreshIndex("test-organization", "test-app");
+        refreshIndex();
 
-        Map<String, Group> groups = client.getGroupsForUser( USER );
+        //Get the user and make sure that they are part of the group
+        Collection groups = this.app().collection("users").entity(USER).collection("groups").get();
 
-        assertNotNull( groups.get( groupPath ) );
+        assertEquals(groups.next().get("name"), groupPath);
 
         // now delete the group
 
-        node = mapper.readTree( 
-            resource().path( "/test-organization/test-app/groups/" + groupPath + "/users/" + USER )
-                .queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE )
-                .delete( String.class ));
+        ApiResponse response = this.app().collection("groups").entity(groupPath).collection("users").entity(USER).delete();
 
-        assertNull( node.get( "error" ) );
+        assertNull( response.getError() );
 
-        refreshIndex("test-organization", "test-app");
+        refreshIndex();
 
-        groups = client.getGroupsForUser( USER );
+        //Check that the user no longer exists in the group
+        int status = 0;
+        try {
+            groups = this.app().collection("users").entity(USER).collection("groups").get();
+            assertFalse(groups.hasNext());
+        }catch (UniformInterfaceException e){
+            status=e.getResponse().getStatus();
+            fail();
+        }
 
-        assertNull( groups.get( groupPath ) );
     }
 
 
     /**
      * For the record, you should NEVER allow the guest role to add roles. This is a gaping security hole and a VERY BAD
      * IDEA! That being said, this should technically work, and needs testing.
+     *
+     * Tests that you can allow a guest role to add additional roles.
      */
     @Test
     public void dictionaryPermissions() throws Exception {
-        UUID id = UUIDUtils.newTimeUUID();
-
-        String applicationName = "testapp";
-        String orgname = "dictionaryPermissions";
-        String username = "permissionadmin" + id;
-        String password = "password";
-        String email = String.format( "email%s@usergrid.com", id );
-
-        OrganizationOwnerInfo orgs = setup.getMgmtSvc()
-                                          .createOwnerAndOrganization( orgname, username, "noname", email, password,
-                                                  true, false );
-
-        // create the app
-        ApplicationInfo appInfo =
-                setup.getMgmtSvc().createApplication( orgs.getOrganization().getUuid(), applicationName );
-
-        String adminToken = setup.getMgmtSvc().getAccessTokenForAdminUser( orgs.getOwner().getUuid(), 0 );
 
         // add the perms to the guest to allow users in the role to create roles
         // themselves
-        addPermission( orgname, applicationName, adminToken, "guest", "get,put,post:/roles/**" );
+        addPermission(  "guest", "get,put,post:/roles/**" );
 
-        Map<String, String> data = hashMap( "name", "usercreatedrole" );
+        Entity data = new Entity().chainPut("name", "usercreatedrole");
 
         // create a role as the user
-        JsonNode node = mapper.readTree( resource().path( String.format( "/%s/%s/roles", orgname, applicationName ) )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                .post( String.class, data ));
+        Entity entity  = this.app().collection("roles").post(data);
 
-        assertNull( getError( node ) );
+        assertNull( entity.getError() );
 
-        refreshIndex(orgname, applicationName);
+        refreshIndex();
 
         // now try to add permission as the user, this should work
-        addPermission( orgname, applicationName, "usercreatedrole", "get,put,post:/foo/**" );
+        addPermission(  "usercreatedrole", "get,put,post:/foo/**" );
     }
 
 
     /**
-     * Tests a real world example with the following steps. Creates an application.
-     * <p/>
-     * Creates a new role "reviewer"
-     * <p/>
-     * Grants a permission to GET, POST, and PUT the reviews url for the reviewer role
-     * <p/>
-     * Grants a permission GET on the reviewer for the
-     * <p/>
-     * Create a user reviewer1 and add them to the reviewer role
-     * <p/>
-     * Test access with reviewer1
-     * <p/>
-     * Create a group reviewergroup and add the "reviewer" group to it
-     * <p/>
-     * Create a user reviewer 2 and add them to the "reveiwergroup"
+     * Test application permissions by posting entities different users and making sure we work within
+     * the permissions given.
      */
     @Test
     public void applicationPermissions() throws Exception {
-        UUID id = UUIDUtils.newTimeUUID();
+        //Creates two new roles: reviewer1 and reviewer2
+        createRoleUser( "reviewer1",  "reviewer1@usergrid.com" );
+        createRoleUser(  "reviewer2", "reviewer2@usergrid.com" );
 
-        String applicationName = "test";
-        String orgname = "applicationpermissions";
-        String username = "permissionadmin" + id;
-        String password = "password";
-        String email = String.format( "email%s@usergrid.com", id );
+        Entity  data = new Entity().chainPut("name", "reviewer");
 
-        OrganizationOwnerInfo orgs = setup.getMgmtSvc()
-                                          .createOwnerAndOrganization( orgname, username, "noname", email, password,
-                                                  true, false );
+        //Creates a new role "reviewer"
+        Entity node = this.app().collection("roles").post(data);
 
-        // create the app
-        ApplicationInfo appInfo =
-                setup.getMgmtSvc().createApplication( orgs.getOrganization().getUuid(), applicationName );
+        assertNull( node.getError() );
 
-        // now create the new role
-        Map<String, String> data = hashMap( "name", "reviewer" );
-
-        String adminToken = setup.getMgmtSvc().getAccessTokenForAdminUser( orgs.getOwner().getUuid(), 0 );
-
-        JsonNode node = mapper.readTree( resource().path( String.format( "/%s/%s/roles", orgname, applicationName ) )
-                .queryParam( "access_token", adminToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, data ));
-
-        assertNull( getError( node ) );
+        refreshIndex();
 
         // delete the default role to test permissions later
-        node = mapper.readTree( resource().path( String.format( "/%s/%s/roles/default", orgname, applicationName ) )
-                .queryParam( "access_token", adminToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).delete( String.class ));
+        ApiResponse response = this.app().collection("roles").entity("default").delete();
 
-        assertNull( getError( node ) );
-        refreshIndex(orgname, applicationName);
+        assertNull( response.getError() );
+        refreshIndex();
 
-        // grant the perms to reviewer
-        addPermission( orgname, applicationName, adminToken, "reviewer", "get,put,post:/reviews/**" );
+        // Grants a permission to GET, POST, and PUT the reviews url for the reviewer role
+        addPermission( "reviewer", "get,put,post:/reviews/**" );
 
-        // grant get to guest
-        addPermission( orgname, applicationName, adminToken, "guest", "get:/reviews/**" );
+        // Grants a permission GET on the guests for the reviews url
+        addPermission(  "guest", "get:/reviews/**" );
 
-        UUID userId = createRoleUser( orgs.getOrganization().getUuid(), appInfo.getId(), adminToken, "reviewer1",
-                "reviewer1@usergrid.com" );
+        //Creates a reviewer group
+        Entity group = new Entity().chainPut( "path", "reviewergroup" ).chainPut("name","reviewergroup");
 
-        refreshIndex(orgname, applicationName);
+        this.app().collection("groups").post(group);
 
-        // grant this user the "reviewer" role
-        node = mapper.readTree( resource().path( String.format( "/%s/%s/users/reviewer1/roles/reviewer", orgname, applicationName ) )
-                .queryParam( "access_token", adminToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class ));
+        refreshIndex();
 
-        assertNull( getError( node ) );
+        //Adds the reviewer to the reviewerGroup
+        this.app().collection("groups").entity("reviewergroup").collection("roles").entity("reviewer").post();
 
-        refreshIndex(orgname, applicationName);
+        refreshIndex();
 
-        String reviewer1Token = setup.getMgmtSvc().getAccessTokenForAppUser( appInfo.getId(), userId, 0 );
+        //Adds reviewer2 user to the reviewergroup
+        this.app().collection("users").entity("reviewer2").collection("groups").entity("reviewergroup").post();
 
-        Map<String, String> review =
-                hashMap( "rating", "4" ).map( "name", "noca" ).map( "review", "Excellent service and food" );
+        refreshIndex();
 
-        // post a review as the reviewer1 user
-        resource().path( String.format( "/%s/%s/reviews", orgname, applicationName ) )
-                .queryParam( "access_token", reviewer1Token ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, review );
+        //Adds reviewer1 to the reviewer role
+        this.app().collection("users").entity("reviewer1").collection("roles").entity("reviewer").post();
 
-        review = hashMap( "rating", "4" ).map( "name", "4peaks" ).map( "review", "Huge beer selection" );
+        refreshIndex();
 
-        refreshIndex(orgname, applicationName);
+        //Set the current context to reviewer1
+        this.app().token().post(new Token("reviewer1","password"));
 
-        // put a review as the reviewer1 user
-        resource().path( String.format( "/%s/%s/reviews", orgname, applicationName ) )
-                .queryParam( "access_token", reviewer1Token ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).put( String.class, review );
+        //Post reviews to the reviews collection as reviewer1
+        Entity review =
+                new Entity().chainPut("rating", "4").chainPut("name", "noca").chainPut("review", "Excellent service and food");
+        this.app().collection("reviews").post( review );
 
-        refreshIndex(orgname, applicationName);
+        review = new Entity().chainPut ("rating", "4").chainPut( "name", "4peaks").chainPut("review", "Huge beer selection" );
+        this.app().collection("reviews").post(review);
 
-        // get the reviews
+        refreshIndex();
 
-        node = mapper.readTree( resource().path( String.format( "/%s/%s/reviews", orgname, applicationName ) )
-                .queryParam( "access_token", reviewer1Token ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
+        // get the reviews and assert they were created
+        Collection reviews = this.app().collection("reviews").get();
 
-        assertEquals( "noca", getEntity( node, 0 ).get( "name" ).asText() );
-        assertEquals( "4peaks", getEntity( node, 1 ).get( "name" ).asText() );
+        assertEquals( "noca",reviews.next().get("name") );
+        assertEquals("4peaks", reviews.next().get( "name" ));
 
-        // can't delete, not in the grants
-
-        ClientResponse.Status status = null;
-
+        //Try to delete the reviews, but it should fail due to have having delete permission in the grants.
+        int status = 0;
         try {
-            resource().path( String.format( "/%s/%s/reviews/noca", orgname, applicationName ) )
-                    .queryParam( "access_token", reviewer1Token ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).delete( String.class );
+            this.app().collection("reviews").entity("noca").delete();
+            fail( "this should have failed due to having insufficient permissions" );
         }
         catch ( UniformInterfaceException uie ) {
-            status = uie.getResponse().getClientResponseStatus();
+            status = uie.getResponse().getStatus();
         }
 
-        assertEquals( Status.UNAUTHORIZED, status );
+        assertEquals( Status.UNAUTHORIZED.getStatusCode(), status );
 
-        refreshIndex(orgname, applicationName);
+        status = 0;
 
-        status = null;
-
+        //Try to delete the reviews, but it should fail due to have having delete permission in the grants.
         try {
-            resource().path( String.format( "/%s/%s/reviews/4peaks", orgname, applicationName ) )
-                    .queryParam( "access_token", reviewer1Token ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).delete( String.class );
+            this.app().collection("reviews").entity("4peaks").delete();
+            fail( "this should have failed due to having insufficient permissions" );
         }
         catch ( UniformInterfaceException uie ) {
-            status = uie.getResponse().getClientResponseStatus();
+            status = uie.getResponse().getStatus();
         }
 
-        assertEquals( Status.UNAUTHORIZED, status );
+        assertEquals( Status.UNAUTHORIZED.getStatusCode(), status );
 
-        refreshIndex(orgname, applicationName);
+        refreshIndex();
 
-        // now test some groups
-        UUID secondUserId = createRoleUser( orgs.getOrganization().getUuid(), appInfo.getId(), adminToken, "reviewer2",
-                "reviewer2@usergrid.com" );
+        //TODO: maybe make this into two different tests?
 
-        Map<String, String> group = hashMap( "path", "reviewergroup" );
+        //Change context to reviewer2
+        this.app().token().post(new Token("reviewer2", "password"));
 
-        // /now create the group
-        resource().path( String.format( "/%s/%s/groups", orgname, applicationName ) )
-                .queryParam( "access_token", adminToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, group );
+        // post 2 reviews as reviewer2
+        review = new Entity().chainPut("rating", "4").chainPut("name", "cowboyciao").chainPut("review", "Great atmosphoere");
+        this.app().collection("reviews").post(review);
 
-        refreshIndex(orgname, applicationName);
+        review = new Entity().chainPut( "rating", "4" ).chainPut("name", "currycorner").chainPut( "review", "Authentic" );
+        this.app().collection("reviews").post(review);
 
-        // link the group to the role
-        resource().path( String.format( "/%s/%s/groups/reviewergroup/roles/reviewer", orgname, applicationName ) )
-                .queryParam( "access_token", adminToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, group );
+        refreshIndex();
 
-        refreshIndex(orgname, applicationName);
+        // get all reviews as reviewer2
+        reviews =  this.app().collection("reviews").get();
 
-        // add the user to the group
-        resource().path( String.format( "/%s/%s/users/reviewer2/groups/reviewergroup", orgname, applicationName ) )
-                .queryParam( "access_token", adminToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class );
-
-        refreshIndex(orgname, applicationName);
-
-        // post 2 reviews. Should get permissions from the group
-
-        String secondUserToken = setup.getMgmtSvc().getAccessTokenForAppUser( appInfo.getId(), secondUserId, 0 );
-
-        review = hashMap( "rating", "4" ).map( "name", "cowboyciao" ).map( "review", "Great atmosphoere" );
-
-        // post a review as the reviewer2 user
-        resource().path( String.format( "/%s/%s/reviews", orgname, applicationName ) )
-                .queryParam( "access_token", secondUserToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, review );
-
-        review = hashMap( "rating", "4" ).map( "name", "currycorner" ).map( "review", "Authentic" );
-
-        refreshIndex(orgname, applicationName);
-
-        // post a review as the reviewer2 user
-        resource().path( String.format( "/%s/%s/reviews", orgname, applicationName ) )
-                .queryParam( "access_token", secondUserToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, review );
-
-        refreshIndex(orgname, applicationName);
-
-        // get all reviews as a user
-        node = mapper.readTree( resource().path( String.format( "/%s/%s/reviews", orgname, applicationName ) )
-                .queryParam( "access_token", secondUserToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
-
-        assertEquals( "noca", getEntity( node, 0 ).get( "name" ).asText() );
-        assertEquals( "4peaks", getEntity( node, 1 ).get( "name" ).asText() );
-        assertEquals( "cowboyciao", getEntity( node, 2 ).get( "name" ).asText() );
-        assertEquals( "currycorner", getEntity( node, 3 ).get( "name" ).asText() );
+        assertEquals("noca", reviews.next().get("name").toString());
+        assertEquals("4peaks", reviews.next().get("name").toString());
+        assertEquals("cowboyciao", reviews.next().get("name").toString());
+        assertEquals("currycorner", reviews.next().get("name").toString());
 
         // issue a delete, it shouldn't work, no permissions
 
-        status = null;
+        status = 0;
 
         try {
-            resource().path( String.format( "/%s/%s/reviews/cowboyciao", orgname, applicationName ) )
-                    .queryParam( "access_token", secondUserToken ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).delete( String.class );
+            this.app().collection("reviews").entity("cowboyciao").delete();
+            fail( "this should have failed due to having insufficient permissions" );
         }
         catch ( UniformInterfaceException uie ) {
-            status = uie.getResponse().getClientResponseStatus();
+            status = uie.getResponse().getStatus();
         }
 
-        assertEquals( Status.UNAUTHORIZED, status );
+        assertEquals( Status.UNAUTHORIZED.getStatusCode(), status );
 
-        refreshIndex(orgname, applicationName);
+        refreshIndex();
 
-        status = null;
+        status = 0;
 
         try {
-            resource().path( String.format( "/%s/%s/reviews/currycorner", orgname, applicationName ) )
-                    .queryParam( "access_token", secondUserToken ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).delete( String.class );
+            this.app().collection("reviews").entity("currycorner").delete();
+            fail( "this should have failed due to having insufficient permissions" );
         }
         catch ( UniformInterfaceException uie ) {
-            status = uie.getResponse().getClientResponseStatus();
+            status = uie.getResponse().getStatus();
         }
 
-        assertEquals( Status.UNAUTHORIZED, status );
+        assertEquals( Status.UNAUTHORIZED.getStatusCode(), status );
     }
 
 
@@ -454,148 +370,101 @@ public class PermissionsResourceIT extends AbstractRestIT {
     @Test
     public void wildcardMiddlePermission() throws Exception {
 
-         Map<String, String> params = buildOrgAppParams();
-        String orgname =params.get( "orgName" ) ;
-        String applicationName = params.get( "appName" ) ;
-        
-        OrganizationOwnerInfo orgs = setup.getMgmtSvc().createOwnerAndOrganization( params.get( "orgName" ),
-                params.get( "username" ), "noname", params.get( "email" ), params.get( "password" ), true, false );
+        //Deletes the default role
+        this.app().collection("roles").entity("default").delete();
 
-        // create the app
-        ApplicationInfo appInfo =
-                setup.getMgmtSvc().createApplication( orgs.getOrganization().getUuid(), params.get( "appName" ) );
-        assertNotNull( appInfo );
+        //Creates a reviewer role
+        Entity data = new Entity().chainPut("name", "reviewer");
+        this.app().collection("roles").post(data);
 
-        String adminToken = setup.getMgmtSvc().getAccessTokenForAdminUser( orgs.getOwner().getUuid(), 0 );
+        refreshIndex();
 
-        JsonNode node = mapper.readTree( resource()
-                .path( String.format( "/%s/%s/roles/default", params.get( "orgName" ), params.get( "appName" ) ) )
-                .queryParam( "access_token", adminToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).delete( String.class ));
-        Map<String, String> data = hashMap( "name", "reviewer" );
-
-        node = mapper.readTree( resource().path( String.format( "/%s/%s/roles", params.get( "orgName" ), params.get( "appName" ) ) )
-                .queryParam( "access_token", adminToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, data ));
-        assertNull( getError( node ) );
-
-        refreshIndex(orgname, applicationName);
-
-        // allow access to reviews
-        addPermission( params.get( "orgName" ), params.get( "appName" ), adminToken, "reviewer",
+        // allow access to reviews excluding delete
+        addPermission( "reviewer",
                 "get,put,post:/reviews/**" );
-        // allow access to all user's connections
-        addPermission( params.get( "orgName" ), params.get( "appName" ), adminToken, "reviewer",
+        // allow access to all user's connections excluding delete
+        addPermission( "reviewer",
                 "get,put,post:/users/${user}/**" );
-        // allow access to the review relationship
-        addPermission( params.get( "orgName" ), params.get( "appName" ), adminToken, "reviewer",
+        // allow access to the review relationship excluding delete
+        addPermission( "reviewer",
                 "get,put,post:/books/*/review/*" );
 
-        assertNull( getError( node ) );
         // create userOne
         UUID userOneId =
-                createRoleUser( orgs.getOrganization().getUuid(), appInfo.getId(), adminToken, "wildcardpermuserone",
+                createRoleUser( "wildcardpermuserone",
                         "wildcardpermuserone@apigee.com" );
         assertNotNull( userOneId );
 
         // create userTwo
         UUID userTwoId =
-                createRoleUser( orgs.getOrganization().getUuid(), appInfo.getId(), adminToken, "wildcardpermusertwo",
+                createRoleUser( "wildcardpermusertwo",
                         "wildcardpermusertwo@apigee.com" );
         assertNotNull( userTwoId );
 
-        refreshIndex(orgname, applicationName);
+        refreshIndex();
 
-        // assign userOne the reviewer role
-        node = mapper.readTree( resource().path( String
-                .format( "/%s/%s/users/%s/roles/reviewer", params.get( "orgName" ), params.get( "appName" ),
-                        userOneId.toString() ) ).queryParam( "access_token", adminToken )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).post( String.class ));
+        //Add user1 to the reviewer role
+        this.app().collection("users").entity(userOneId).collection("roles").entity("reviewer").post();
 
-        refreshIndex(orgname, applicationName);
 
-        Map<String, String> book = hashMap( "title", "Ready Player One" ).map( "author", "Earnest Cline" );
+        refreshIndex();
 
-        // create a book as admin
-        node = mapper.readTree( resource().path( String.format( "/%s/%s/books", params.get( "orgName" ), params.get( "appName" ) ) )
-                .queryParam( "access_token", adminToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, book ));
+        //Add a book to the books collection
+        Entity book = new Entity().chainPut( "title", "Ready Player One" ).chainPut("author", "Earnest Cline");
 
-        logNode( node );
-        assertEquals( "Ready Player One", getEntity( node, 0 ).get( "title" ).textValue() );
-        String bookId = getEntity( node, 0 ).get( "uuid" ).textValue();
+        book = this.app().collection("books").post(book);
 
-        refreshIndex(orgname, applicationName);
+        assertEquals( "Ready Player One", book.get("title").toString() );
+        String bookId = book.get("uuid").toString();
 
-        String userOneToken = setup.getMgmtSvc().getAccessTokenForAppUser( appInfo.getId(), userOneId, 0 );
+        refreshIndex();
+
+        //Switch the contex to be that of user1
+        this.app().token().post(new Token("wildcardpermuserone","password"));
+
         // post a review of the book as user1
         // POST https://api.usergrid.com/my-org/my-app/users/$user1/reviewed/books/$uuid
-        Map<String, String> review =
-                hashMap( "heading", "Loved It" ).map( "body", "80s Awesomeness set in the future" );
-        node = mapper.readTree( resource().path( String.format( "/%s/%s/reviews", params.get( "orgName" ), params.get( "appName" ) ) )
-                .queryParam( "access_token", userOneToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, review ));
-        String reviewId = getEntity( node, 0 ).get( "uuid" ).textValue();
+        Entity review =
+                new Entity().chainPut( "heading", "Loved It" ).chainPut( "body", "80s Awesomeness set in the future" );
+        review = this.app().collection("reviews").post(review);
+        String reviewId = review.get("uuid").toString();
 
-        refreshIndex(orgname, applicationName);
+        refreshIndex();
 
         // POST https://api.usergrid.com/my-org/my-app/users/me/wrote/review/${reviewId}
-        node = mapper.readTree( resource().path( String
-                .format( "/%s/%s/users/me/wrote/review/%s", params.get( "orgName" ), params.get( "appName" ),
-                        reviewId ) ).queryParam( "access_token", userOneToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class ));
+        this.app().collection("users").entity("me").connection("wrote").collection("review").entity(reviewId).post();
 
-        refreshIndex(orgname, applicationName);
+        // POST https://api.usergrid.com/my-org/my-app/users/me/reviewed/review/${reviewId}
+        this.app().collection("users").entity("me").connection("reviewed").collection("books").entity(bookId).post();
 
-        node = mapper.readTree( resource().path( String
-                .format( "/%s/%s/users/me/reviewed/books/%s", params.get( "orgName" ), params.get( "appName" ),
-                        bookId ) ).queryParam( "access_token", userOneToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class ));
-        logNode( node );
-
-        refreshIndex(orgname, applicationName);
+        refreshIndex();
 
         // POST https://api.usergrid.com/my-org/my-app/books/${bookId}/review/${reviewId}
-        node = mapper.readTree( resource().path( String
-                .format( "/%s/%s/books/%s/review/%s", params.get( "orgName" ), params.get( "appName" ), bookId,
-                        reviewId ) ).queryParam( "access_token", userOneToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class ));
-        logNode( node );
+        this.app().collection("books").entity(bookId).collection("review").entity(reviewId).post();
 
-        refreshIndex(orgname, applicationName);
 
-        // now try to post the same thing to books to verify as userOne the failure
-        Status status = null;
+        refreshIndex();
+
+        // now try to post the same thing to books to verify as userOne does not have correct permissions
+        int status = 0;
         try {
-            node = mapper.readTree( resource().path( String.format( "/%s/%s/books", params.get( "orgName" ), params.get( "appName" ) ) )
-                    .queryParam( "access_token", userOneToken ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class ));
-            logNode( node );
+            this.app().collection("books").post(book);
+
         }
         catch ( UniformInterfaceException uie ) {
-            status = uie.getResponse().getClientResponseStatus();
+            status = uie.getResponse().getStatus();
         }
-        assertEquals( Status.UNAUTHORIZED, status );
+        assertEquals( Status.UNAUTHORIZED.getStatusCode(), status );
 
-        refreshIndex(orgname, applicationName);
+        //Gets all books that user1 reviewed\
+        this.app().collection("users").entity("me").connection("reviewed").collection("books").get();
 
-        node = mapper.readTree( resource().path( String
-                .format( "/%s/%s/users/me/reviewed/books", params.get( "orgName" ), params.get( "appName" ) ) )
-                .queryParam( "access_token", userOneToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
-        logNode( node );
+        //Gets a specific review
+        this.app().collection("reviews").entity(reviewId).get();
 
-        node = mapper.readTree( resource().path( String
-                .format( "/%s/%s/reviews/%s", params.get( "orgName" ), params.get( "appName" ), reviewId ) )
-                .queryParam( "access_token", userOneToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
-        logNode( node );
+        //Gets all the reviews that user1 wrote
+        this.app().collection("users").entity("me").connection("wrote").get();
 
-        node = mapper.readTree( resource()
-                .path( String.format( "/%s/%s/users/me/wrote", params.get( "orgName" ), params.get( "appName" ) ) )
-                .queryParam( "access_token", userOneToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
-        logNode( node );
     }
 
 
@@ -609,128 +478,74 @@ public class PermissionsResourceIT extends AbstractRestIT {
      * <p/>
      * examplepatient add himself to exampledoctor following list
      */
+    //TODO: get this test working.
     @Test
-    @Ignore("Why is this ignored?")
     public void wildcardFollowingPermission() throws Exception {
-        UUID id = UUIDUtils.newTimeUUID();
+        //Delete default role
+        app().collection("roles").entity("default").delete();
 
-        String applicationName = "test";
-        String orgname = "followingpermissions";
-        String username = "permissionadmin" + id;
-        String password = "password";
-        String email = String.format( "email%s@usergrid.com", id );
+        //Create new role named patient
+        Entity data = new Entity().chainPut( "name", "patient" );
+        app().collection("roles").post(data);
 
-        OrganizationOwnerInfo orgs = setup.getMgmtSvc()
-                                          .createOwnerAndOrganization( orgname, username, "noname", email, password,
-                                                  true, false );
-
-        // create the app
-        ApplicationInfo appInfo =
-                setup.getMgmtSvc().createApplication( orgs.getOrganization().getUuid(), applicationName );
-        assertNotNull( appInfo );
-
-        String adminToken = setup.getMgmtSvc().getAccessTokenForAdminUser( orgs.getOwner().getUuid(), 0 );
-
-        JsonNode node = mapper.readTree( resource().path( String.format( "/%s/%s/roles/default", orgname, applicationName ) )
-                .queryParam( "access_token", adminToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).delete( String.class ));
-        Map<String, String> data = hashMap( "name", "patient" );
-
-        node = mapper.readTree( resource().path( String.format( "/%s/%s/roles", orgname, applicationName ) )
-                .queryParam( "access_token", adminToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, data ));
-        assertNull( getError( node ) );
         //allow patients to add doctors as their followers
-        addPermission( orgname, applicationName, adminToken, "patient",
-                "delete,post:/users/*/following/users/${user}" );
+        addPermission(  "patient", "delete,post:/users/*/following/users/${user}" );
+        refreshIndex();
 
-        assertNull( getError( node ) );
         // create examplepatient
-        UUID patientId =
-                createRoleUser( orgs.getOrganization().getUuid(), appInfo.getId(), adminToken, "examplepatient",
-                        "examplepatient@apigee.com" );
+        UUID patientId =  createRoleUser( "examplepatient",  "examplepatient@apigee.com" );
         assertNotNull( patientId );
 
         // create exampledoctor
-        UUID doctorId = createRoleUser( orgs.getOrganization().getUuid(), appInfo.getId(), adminToken, "exampledoctor",
-                "exampledoctor@apigee.com" );
+        UUID doctorId = createRoleUser( "exampledoctor",  "exampledoctor@apigee.com" );
         assertNotNull( doctorId );
-
-
+        refreshIndex();
         // assign examplepatient the patient role
-        node = mapper.readTree( resource().path( String
-                .format( "/%s/%s/users/%s/roles/patient", orgname, applicationName, patientId.toString() ) )
-                .queryParam( "access_token", adminToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class ));
-
-        String patientToken = setup.getMgmtSvc().getAccessTokenForAppUser( appInfo.getId(), patientId, 0 );
-
-        node = mapper.readTree( resource().path( String
-                .format( "/%s/%s/users/%s/following/users/%s", orgname, applicationName, "exampledoctor",
-                        "examplepatient" ) ).queryParam( "access_token", patientToken )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).post( String.class ));
-        logNode( node );
+        this.app().collection("users").entity(patientId).collection("roles").entity("patient").post();
+        refreshIndex();
+        this.app().token().post(new Token("examplepatient","password"));
+        refreshIndex();
+        //not working yet, used to be ignored
+//        this.app().collection("users").entity("exampledoctor").connection("following").collection("users").entity("examplepatient").post();
     }
-
-
-    private Map<String, String> buildOrgAppParams() {
-        UUID id = UUIDUtils.newTimeUUID();
-        Map<String, String> props =
-                hashMap( "username", "wcpermadmin" ).map( "orgName", "orgnamewcperm" ).map( "appName", "test" )
-                        .map( "password", "password" )
-                        .map( "email", String.format( "email%s@apigee.com", id.toString() ) );
-
-        return props;
-    }
-
 
     /**
      * Create the user, check there are no errors
      *
      * @return the userid
      */
-    private UUID createRoleUser( UUID orgId, UUID appId, String adminToken, String username, String email )
+    private UUID createRoleUser(String username, String email)
             throws Exception {
 
-        Map<String, String> props = hashMap( "email", email ).map( "username", username ).map( "name", username )
-                .map( "password", "password" );
+        User props = new User(username, username, email, "password");
 
-        JsonNode node = mapper.readTree( resource().path( String.format( "/%s/%s/users", orgId, appId ) )
-                .queryParam( "access_token", adminToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).put( String.class, props ));
+        Entity entity = this.app().collection("users").post(props);
 
-        assertNull( getError( node ) );
+        assertNotNull( entity );
 
-        UUID userId = UUID.fromString( getEntity( node, 0 ).get( "uuid" ).asText() );
-
-        // manually activate user
-        setup.getMgmtSvc().activateAppUser( appId, userId );
-
-        return userId;
+        return entity.getUuid();
     }
 
 
-    /** Test adding the permission to the role */
-    private void addPermission( String orgname, String appname, String adminToken, String rolename, String grant ) throws IOException {
-        Map<String, String> props = hashMap( "permission", grant );
+    /**
+     * Adds the permission in grant to the rolename role, and tests that they were added correctly
+     * @param rolename
+     * @param grant
+     * @throws IOException
+     */
+    private void addPermission(  String rolename, String grant ) throws IOException {
+        //Create and post the permissions
+        Entity props = new Entity().chainPut("permission", grant);
 
-        String rolePath = String.format( "/%s/%s/roles/%s/permissions", orgname, appname, rolename );
+        this.app().collection("roles").entity(rolename).collection("permissions").post(props);
 
-        JsonNode node = mapper.readTree( resource().path( rolePath ).queryParam( "access_token", adminToken )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                .put( String.class, props ));
+        //Checks that the permissions were added correctly
+        Collection node = this.app().collection("roles").entity(rolename).collection("permissions").get();
 
-        assertNull( getError( node ) );
+        List<Object> data =(List) node.getResponse().getData();
 
-        node = mapper.readTree( resource().path( rolePath ).queryParam( "access_token", adminToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
-
-        ArrayNode data = ( ArrayNode ) node.get( "data" );
-
-        Iterator<JsonNode> iterator = data.elements();
-
-        while ( iterator.hasNext() ) {
-            if ( grant.equals( iterator.next().asText() ) ) {
+        for(Object o : data){
+            if(grant.equals(o.toString())){
                 return;
             }
         }
@@ -739,30 +554,4 @@ public class PermissionsResourceIT extends AbstractRestIT {
     }
 
 
-    /** Test adding the permission to the role */
-    private void addPermission( String orgname, String appname, String rolename, String grant ) throws IOException {
-        Map<String, String> props = hashMap( "permission", grant );
-
-        String rolePath = String.format( "/%s/%s/roles/%s/permissions", orgname, appname, rolename );
-
-        JsonNode node = mapper.readTree( resource().path( rolePath ).accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                        .put( String.class, props ));
-
-        assertNull( getError( node ) );
-
-        node = mapper.readTree( resource().path( rolePath ).accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                .get( String.class ));
-
-        ArrayNode data = ( ArrayNode ) node.get( "data" );
-
-        Iterator<JsonNode> iterator = data.elements();
-
-        while ( iterator.hasNext() ) {
-            if ( grant.equals( iterator.next().asText() ) ) {
-                return;
-            }
-        }
-
-        fail( String.format( "didn't find grant %s in the results", grant ) );
-    }
 }
