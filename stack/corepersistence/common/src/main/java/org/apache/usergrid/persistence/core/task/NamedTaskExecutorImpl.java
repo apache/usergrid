@@ -1,16 +1,40 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.apache.usergrid.persistence.core.task;
 
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.ForkJoinWorkerThread;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.Nullable;
@@ -36,7 +60,6 @@ public class NamedTaskExecutorImpl implements TaskExecutor {
 
     private final String name;
     private final int poolSize;
-    private final int queueLength;
 
 
     /**
@@ -47,17 +70,25 @@ public class NamedTaskExecutorImpl implements TaskExecutor {
     public NamedTaskExecutorImpl( final String name, final int poolSize, final int queueLength ) {
         Preconditions.checkNotNull( name );
         Preconditions.checkArgument( name.length() > 0, "name must have a length" );
-        Preconditions.checkArgument( poolSize > 0, "poolSize must be > than 0" );
+        Preconditions.checkArgument( poolSize > -1, "poolSize must be > than -1" );
         Preconditions.checkArgument( queueLength > -1, "queueLength must be 0 or more" );
 
         this.name = name;
         this.poolSize = poolSize;
-        this.queueLength = queueLength;
 
-        final BlockingQueue<Runnable> queue =
-                queueLength > 0 ? new ArrayBlockingQueue<Runnable>( queueLength ) : new SynchronousQueue<Runnable>();
+        // The user has chosen to disable asynchronous execution, 
+        // to create an executor service that will reject all requests
+        if ( poolSize == 0 ) {
+            executorService = MoreExecutors.listeningDecorator( new RejectingExecutorService());
+        }
 
-        executorService = MoreExecutors.listeningDecorator( new MaxSizeThreadPool( queue ) );
+        //queue executions as normal
+        else {
+            final BlockingQueue<Runnable> queue = queueLength > 0 
+                ? new ArrayBlockingQueue<Runnable>(queueLength) : new SynchronousQueue<Runnable>();
+
+            executorService = MoreExecutors.listeningDecorator( new MaxSizeThreadPool( queue ) );
+        }
     }
 
 
@@ -69,9 +100,7 @@ public class NamedTaskExecutorImpl implements TaskExecutor {
         try {
             future = executorService.submit( task );
 
-            /**
-             * Log our success or failures for debugging purposes
-             */
+            // Log our success or failures for debugging purposes
             Futures.addCallback( future, new TaskFutureCallBack<V>( task ) );
         }
         catch ( RejectedExecutionException ree ) {
@@ -163,5 +192,95 @@ public class NamedTaskExecutorImpl implements TaskExecutor {
             throw new RejectedExecutionException( "Unable to run task, queue full" );
         }
 
+    }
+
+
+    /**
+     * Executor implementation that simply rejects all incoming tasks
+     */
+    private static final class RejectingExecutorService implements ExecutorService{
+
+        @Override
+        public void shutdown() {
+
+        }
+
+
+        @Override
+        public List<Runnable> shutdownNow() {
+            return Collections.EMPTY_LIST;
+        }
+
+
+        @Override
+        public boolean isShutdown() {
+            return false;
+        }
+
+
+        @Override
+        public boolean isTerminated() {
+            return false;
+        }
+
+
+        @Override
+        public boolean awaitTermination( final long timeout, final TimeUnit unit ) 
+            throws InterruptedException {
+            return false;
+        }
+
+
+        @Override
+        public <T> Future<T> submit( final Callable<T> task ) {
+            throw new RejectedExecutionException("No Asynchronous tasks allowed");
+        }
+
+
+        @Override
+        public <T> Future<T> submit( final Runnable task, final T result ) {
+            throw new RejectedExecutionException("No Asynchronous tasks allowed");
+        }
+
+
+        @Override
+        public Future<?> submit( final Runnable task ) {
+            throw new RejectedExecutionException("No Asynchronous tasks allowed");
+        }
+
+
+        @Override
+        public <T> List<Future<T>> invokeAll( final Collection<? extends Callable<T>> tasks )
+                throws InterruptedException {
+            throw new RejectedExecutionException("No Asynchronous tasks allowed");
+        }
+
+
+        @Override
+        public <T> List<Future<T>> invokeAll( final Collection<? extends Callable<T>> tasks, 
+                final long timeout, final TimeUnit unit ) throws InterruptedException {
+
+            throw new RejectedExecutionException("No Asynchronous tasks allowed");
+        }
+
+
+        @Override
+        public <T> T invokeAny( final Collection<? extends Callable<T>> tasks )
+            throws InterruptedException, ExecutionException {
+            throw new RejectedExecutionException("No Asynchronous tasks allowed");
+        }
+
+
+        @Override
+        public <T> T invokeAny( final Collection<? extends Callable<T>> tasks, final long timeout, 
+            final TimeUnit unit ) throws InterruptedException, ExecutionException, TimeoutException {
+            throw new RejectedExecutionException("No Asynchronous tasks allowed");
+        }
+
+
+        @Override
+        public void execute( final Runnable command ) {
+            throw new RejectedExecutionException("No Asynchronous tasks allowed");
+        }
     }
 }

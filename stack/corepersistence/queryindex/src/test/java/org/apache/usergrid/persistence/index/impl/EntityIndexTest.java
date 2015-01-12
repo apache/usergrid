@@ -25,6 +25,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.usergrid.persistence.index.*;
+import org.apache.usergrid.persistence.index.query.CandidateResult;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -37,11 +39,6 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.core.util.Health;
-import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.EntityIndexBatch;
-import org.apache.usergrid.persistence.index.EntityIndexFactory;
-import org.apache.usergrid.persistence.index.IndexScope;
-import org.apache.usergrid.persistence.index.SearchTypes;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
 import org.apache.usergrid.persistence.index.query.Query;
@@ -76,25 +73,107 @@ public class EntityIndexTest extends BaseIT {
 
     @Test
     public void testIndex() throws IOException {
-
-        final int MAX_ENTITIES = 100;
-
         Id appId = new SimpleId( "application" );
 
         ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
 
-        IndexScope indexScope = new IndexScopeImpl( appId, "things" );
-
-        final String entityType = "thing";
-
-
-        final SearchTypes searchTypes = SearchTypes.fromTypes( entityType );
-
-
         EntityIndex entityIndex = eif.createEntityIndex( applicationScope );
         entityIndex.initializeIndex();
 
-        InputStream is = this.getClass().getResourceAsStream( "/sample-large.json" );
+        final String entityType = "thing";
+        IndexScope indexScope = new IndexScopeImpl( appId, "things" );
+        final SearchTypes searchTypes = SearchTypes.fromTypes( entityType );
+
+        insertJsonBlob(entityIndex, entityType, indexScope, "/sample-large.json",101,0);
+
+        entityIndex.refresh();
+
+        testQueries( indexScope, searchTypes,  entityIndex );
+    }
+
+    @Test
+    public void testMultipleIndexInitializations(){
+        Id appId = new SimpleId( "application" );
+
+        ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
+
+        EntityIndex entityIndex = eif.createEntityIndex( applicationScope );
+        entityIndex.initializeIndex();
+        for(int i=0;i<10;i++) {
+            entityIndex.initializeIndex();
+        }
+
+    }
+
+    @Test
+    public void testAddMultipleIndexes() throws IOException {
+        Id appId = new SimpleId( "application" );
+
+        ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
+
+        AliasedEntityIndex entityIndex =(AliasedEntityIndex) eif.createEntityIndex( applicationScope );
+        entityIndex.initializeIndex();
+
+        final String entityType = "thing";
+        IndexScope indexScope = new IndexScopeImpl( appId, "things" );
+        final SearchTypes searchTypes = SearchTypes.fromTypes( entityType );
+
+        insertJsonBlob(entityIndex, entityType, indexScope, "/sample-large.json",101,0);
+
+        entityIndex.refresh();
+
+        testQueries( indexScope, searchTypes,  entityIndex );
+
+        entityIndex.addIndex("v2", 1,0);
+
+        insertJsonBlob(entityIndex, entityType, indexScope, "/sample-large.json",101,100);
+
+        entityIndex.refresh();
+
+        //Hilda Youn
+        testQuery(indexScope, searchTypes, entityIndex, "name = 'Hilda Young'", 1 );
+
+        testQuery(indexScope, searchTypes, entityIndex, "name = 'Lowe Kelley'", 1 );
+    }
+
+    @Test
+    public void testDeleteByQueryWithAlias() throws IOException {
+        Id appId = new SimpleId( "application" );
+
+        ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
+
+        AliasedEntityIndex entityIndex =(AliasedEntityIndex) eif.createEntityIndex( applicationScope );
+
+        entityIndex.initializeIndex();
+
+        final String entityType = "thing";
+        IndexScope indexScope = new IndexScopeImpl( appId, "things" );
+        final SearchTypes searchTypes = SearchTypes.fromTypes( entityType );
+
+        insertJsonBlob(entityIndex, entityType, indexScope, "/sample-large.json",1,0);
+
+        entityIndex.refresh();
+
+        entityIndex.addIndex("v2", 1, 0);
+
+        insertJsonBlob(entityIndex, entityType, indexScope, "/sample-large.json", 1, 0);
+
+        entityIndex.refresh();
+        CandidateResults crs = testQuery(indexScope, searchTypes, entityIndex, "name = 'Bowers Oneil'", 2);
+
+        EntityIndexBatch entityIndexBatch = entityIndex.createBatch();
+        entityIndexBatch.deindex(indexScope, crs.get(0));
+        entityIndexBatch.deindex(indexScope, crs.get(1));
+        entityIndexBatch.executeAndRefresh();
+        entityIndex.refresh();
+
+        //Hilda Youn
+        testQuery(indexScope, searchTypes, entityIndex, "name = 'Bowers Oneil'", 0);
+
+    }
+
+    private void insertJsonBlob(EntityIndex entityIndex, String entityType, IndexScope indexScope, String filePath,final int max,final int startIndex) throws IOException {
+        InputStream is = this.getClass().getResourceAsStream( filePath );
         ObjectMapper mapper = new ObjectMapper();
         List<Object> sampleJson = mapper.readValue( is, new TypeReference<List<Object>>() {} );
 
@@ -104,13 +183,19 @@ public class EntityIndexTest extends BaseIT {
 
         final EntityIndexBatch batch = entityIndex.createBatch();
 
+        if(startIndex > 0){
+            for(int i =0; i<startIndex;i++){
+                sampleJson.remove(0);
+            }
+        }
+
         for ( Object o : sampleJson ) {
 
             Map<String, Object> item = ( Map<String, Object> ) o;
 
             Entity entity = new Entity( entityType );
-            entity = EntityIndexMapUtils.fromMap( entity, item );
-            EntityUtils.setVersion( entity, UUIDGenerator.newTimeUUID() );
+            entity = EntityIndexMapUtils.fromMap(entity, item);
+            EntityUtils.setVersion(entity, UUIDGenerator.newTimeUUID());
 
             batch.index( indexScope, entity );
 
@@ -120,7 +205,7 @@ public class EntityIndexTest extends BaseIT {
 
 
 
-            if ( count++ > MAX_ENTITIES ) {
+            if ( ++count > max ) {
                 break;
             }
         }
@@ -129,11 +214,6 @@ public class EntityIndexTest extends BaseIT {
         timer.stop();
         log.info( "Total time to index {} entries {}ms, average {}ms/entry",
                 new Object[] { count, timer.getTime(), timer.getTime() / count } );
-
-        entityIndex.refresh();
-
-
-        testQueries( indexScope, searchTypes,  entityIndex );
     }
 
 
@@ -165,8 +245,9 @@ public class EntityIndexTest extends BaseIT {
                 Query.fromQL( "name contains 'Ferrari*'" ) );
         assertEquals( 1, candidateResults.size() );
 
-        entityIndex.createBatch().deindex( indexScope, entity ).execute();
-
+        EntityIndexBatch batch = entityIndex.createBatch();
+        batch.deindex(indexScope, entity).execute();
+        batch.executeAndRefresh();
         entityIndex.refresh();
 
         candidateResults = entityIndex.search( indexScope, SearchTypes.fromTypes(entity.getId().getType()), Query.fromQL( "name contains 'Ferrari*'" ) );
@@ -174,7 +255,7 @@ public class EntityIndexTest extends BaseIT {
     }
 
 
-    private void testQuery(final IndexScope scope, final SearchTypes searchTypes, final EntityIndex entityIndex, final String queryString, final int num ) {
+    private CandidateResults testQuery(final IndexScope scope, final SearchTypes searchTypes, final EntityIndex entityIndex, final String queryString, final int num ) {
 
         StopWatch timer = new StopWatch();
         timer.start();
@@ -185,6 +266,7 @@ public class EntityIndexTest extends BaseIT {
 
         assertEquals( num, candidateResults.size() );
         log.debug( "Query time {}ms", timer.getTime() );
+        return candidateResults;
     }
 
 

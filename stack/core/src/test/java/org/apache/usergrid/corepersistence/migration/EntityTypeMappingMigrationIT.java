@@ -49,6 +49,7 @@ import rx.functions.Action1;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import org.junit.Ignore;
 
 
 public class EntityTypeMappingMigrationIT extends AbstractCoreIT {
@@ -68,7 +69,8 @@ public class EntityTypeMappingMigrationIT extends AbstractCoreIT {
      * Rule to do the resets we need
      */
     @Rule
-    public MigrationTestRule migrationTestRule = new MigrationTestRule( app, CpSetup.getInjector() ,EntityTypeMappingMigration.class  );
+    public MigrationTestRule migrationTestRule = new MigrationTestRule( 
+            app, CpSetup.getInjector() ,EntityTypeMappingMigration.class  );
 
 
 
@@ -84,6 +86,7 @@ public class EntityTypeMappingMigrationIT extends AbstractCoreIT {
 
 
     @Test
+    @Ignore("Ignored awaiting fix for USERGRID-268")
     public void testIdMapping() throws Throwable {
 
         assertEquals( "version 1 expected", 1, entityTypeMappingMigration.getVersion() );
@@ -111,7 +114,9 @@ public class EntityTypeMappingMigrationIT extends AbstractCoreIT {
         keyspace.truncateColumnFamily( MapSerializationImpl.MAP_ENTRIES );
         keyspace.truncateColumnFamily( MapSerializationImpl.MAP_KEYS );
 
-        app.createApplication( GraphShardVersionMigrationIT.class.getSimpleName()+ UUIDGenerator.newTimeUUID(), "migrationTest" );
+        app.createApplication( 
+                GraphShardVersionMigrationIT.class.getSimpleName()+ UUIDGenerator.newTimeUUID(), 
+                "migrationTest" );
 
 
 
@@ -121,46 +126,46 @@ public class EntityTypeMappingMigrationIT extends AbstractCoreIT {
 
 
         AllEntitiesInSystemObservable.getAllEntitiesInSystem( managerCache, 1000 )
-                                     .doOnNext( new Action1<AllEntitiesInSystemObservable.ApplicationEntityGroup>() {
-                                         @Override
-                                         public void call(
-                                                 final AllEntitiesInSystemObservable.ApplicationEntityGroup entity ) {
-                                             //ensure that each one has a type
+            .doOnNext( new Action1<AllEntitiesInSystemObservable.ApplicationEntityGroup>() {
+                @Override
+                public void call(
+                        final AllEntitiesInSystemObservable.ApplicationEntityGroup entity ) {
+                    //ensure that each one has a type
 
-                                             final EntityManager em = emf.getEntityManager(
-                                                     entity.applicationScope.getApplication().getUuid() );
+                    final EntityManager em = emf.getEntityManager(
+                            entity.applicationScope.getApplication().getUuid() );
 
-                                             for ( final Id id : entity.entityIds ) {
-                                                 try {
-                                                     final Entity returned = em.get( id.getUuid() );
+                    for ( final Id id : entity.entityIds ) {
+                        try {
+                            final Entity returned = em.get( id.getUuid() );
 
-                                                     //we seem to occasionally get phantom edges.  If this is the
-                                                     // case we'll store the type _> uuid mapping, but we won't have
-                                                     // anything to load
+                            //we seem to occasionally get phantom edges.  If this is the
+                            // case we'll store the type _> uuid mapping, but we won't have
+                            // anything to load
 
-                                                     if ( returned != null ) {
-                                                         assertEquals( id.getUuid(), returned.getUuid() );
-                                                         assertEquals( id.getType(), returned.getType() );
-                                                     }
-                                                     else {
-                                                         final String type = managerCache.getMapManager( CpNamingUtils
-                                                                 .getEntityTypeMapScope(
-                                                                         entity.applicationScope.getApplication() ) )
-                                                                                         .getString( id.getUuid()
-                                                                                                       .toString() );
+                            if ( returned != null ) {
+                                assertEquals( id.getUuid(), returned.getUuid() );
+                                assertEquals( id.getType(), returned.getType() );
+                            }
+                            else {
+                                final String type = managerCache.getMapManager( CpNamingUtils
+                                        .getEntityTypeMapScope(
+                                                entity.applicationScope.getApplication() ) )
+                                                                .getString( id.getUuid()
+                                                                            .toString() );
 
-                                                         assertEquals( id.getType(), type );
-                                                     }
-                                                 }
-                                                 catch ( Exception e ) {
-                                                     throw new RuntimeException( "Unable to get entity " + id
-                                                             + " by UUID, migration failed", e );
-                                                 }
+                                assertEquals( id.getType(), type );
+                            }
+                        }
+                        catch ( Exception e ) {
+                            throw new RuntimeException( "Unable to get entity " + id
+                                    + " by UUID, migration failed", e );
+                        }
 
-                                                 allEntities.remove( id );
-                                             }
-                                         }
-                                     } ).toBlocking().lastOrDefault( null );
+                        allEntities.remove( id );
+                    }
+                }
+            } ).toBlocking().lastOrDefault( null );
 
 
         assertEquals( "Every element should have been encountered", 0, allEntities.size() );

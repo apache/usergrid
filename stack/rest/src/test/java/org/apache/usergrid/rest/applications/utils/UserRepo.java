@@ -28,44 +28,46 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ws.rs.core.MediaType;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
+
+import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource2point0.ClientSetup;
+import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.apache.usergrid.utils.UUIDUtils;
 
 
-public enum UserRepo {
-        
+public class UserRepo {
 
-    INSTANCE;
+    private final ClientSetup clientSetup;
+
+    public UserRepo(ClientSetup clientSetup){
+        this.clientSetup =  clientSetup;
+    }
 
     private final Map<String, UUID> loaded = new HashMap<String, UUID>();
 
-
-    public void load( WebResource resource, String accessToken ) throws IOException {
+    public void load(  )  {
         if ( loaded.size() > 0 ) {
             return;
         }
 
         // pause between creation to insure entities are created in order
 
-        createUser( "user1", "user1@apigee.com", "user1", "Jane Smith 1", resource, accessToken );
-        try { Thread.sleep(200); } catch (InterruptedException ex) { }
+        createUser( "user1", "user1@apigee.com", "user1", "Jane Smith 1" );
 
-        createUser( "user2", "user2@apigee.com", "user2", "John Smith 2", resource, accessToken );
-        try { Thread.sleep(200); } catch (InterruptedException ex) { }
+        createUser( "user2", "user2@apigee.com", "user2", "John Smith 2" );
 
-        createUser( "user3", "user3@apigee.com", "user3", "John Smith 3", resource, accessToken );
-        try { Thread.sleep(200); } catch (InterruptedException ex) { }
+        createUser( "user3", "user3@apigee.com", "user3", "John Smith 3"  );
     }
 
 
-    private void createUser( String username, String email, String password, String fullName, WebResource resource,
-                             String accessToken ) throws IOException {
-    
-
-        Map<String, String> payload = hashMap( "email", email ).map( "username", username ).map( "name", fullName )
-                .map( "password", password ).map( "pin", "1234" );
-
-        UUID id = createUser( payload, resource, accessToken );
-
+    private void createUser( String username, String email, String password, String fullName) {
+        Entity entity = new Entity();
+        entity.put( "email", email );
+        entity.put( "username", username );
+        entity.put("name", fullName);
+        entity.put( "password", password );
+        entity.put("pin", "1234");
+        UUID id = createUser( entity );
         loaded.put( username, id );
     }
 
@@ -76,14 +78,11 @@ public enum UserRepo {
 
 
     /** Create a user via the REST API and post it. Return the response */
-    private UUID createUser( Map<String, String> payload, WebResource resource, String access_token ) throws IOException {
+    private UUID createUser( Entity payload )  {
 
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode response = mapper.readTree( resource.path( "/test-organization/test-app/users" ).queryParam( "access_token", access_token )
-                        .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                        .post( String.class, payload ));
+        Entity entity =  clientSetup.getRestClient().org(clientSetup.getOrganizationName()).app(clientSetup.getAppName()).collection("users").post(payload);
 
-        String idString = response.get( "entities" ).get( 0 ).get( "uuid" ).asText();
+        String idString = entity.get("uuid").toString();
 
         return UUIDUtils.tryExtractUUID( idString );
     }

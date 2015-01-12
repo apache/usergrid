@@ -68,51 +68,51 @@ export ACCEPT_COUNT=100
 export NR_OPEN=1048576
 export FILE_MAX=761773
 
+#Number of threads to allow per core
+export NUM_THREAD_PROC=25
+
+#Get the number of processors
+export NUM_PROC=$(nproc)
+
+#Configure the max amount of tomcat threads
+export TOMCAT_THREADS=$((${NUM_PROC} * ${NUM_THREAD_PROC}))
+
 case `(curl http://169.254.169.254/latest/meta-data/instance-type)` in
 'm1.small' )
     # total of 1.7g
     export TOMCAT_RAM=1190m
-    export TOMCAT_THREADS=300
 ;;
 'm1.medium' )
     # total of 3.75g
     export TOMCAT_RAM=2625m
-    export TOMCAT_THREADS=500
 ;;
 'm1.large' )
     # total of 7.5g
     export TOMCAT_RAM=5250m
-    export TOMCAT_THREADS=1000
 ;;
 'm1.xlarge' )
     # total of 15g
     export TOMCAT_RAM=10500m
-    export TOMCAT_THREADS=2000
 ;;
 'm3.large' )
     # total of 7.5g
     export TOMCAT_RAM=5250m
-    export TOMCAT_THREADS=1600
 ;;
 'm3.xlarge' )
     # total of 15g
     export TOMCAT_RAM=10500m
-    export TOMCAT_THREADS=3300
 ;;
 'c3.xlarge' )
     # total of 7.5g
     export TOMCAT_RAM=4096m
-    export TOMCAT_THREADS=1000
 ;;
 'c3.2xlarge' )
     # total of 15g
     export TOMCAT_RAM=10500m
-    export TOMCAT_THREADS=2000
 ;;
 'c3.4xlarge' )
     # total of 30g
     export TOMCAT_RAM=21000m
-    export TOMCAT_THREADS=4000
 esac
 
 

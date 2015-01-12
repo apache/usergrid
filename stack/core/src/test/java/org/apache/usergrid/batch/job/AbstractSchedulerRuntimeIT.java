@@ -17,20 +17,20 @@
 package org.apache.usergrid.batch.job;
 
 
-import com.google.common.util.concurrent.Service.State;
 import java.util.Properties;
-import org.apache.usergrid.batch.SchedulerITSuite;
+
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+
 import org.apache.usergrid.batch.service.JobSchedulerService;
 import org.apache.usergrid.batch.service.SchedulerService;
 import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.cassandra.SchemaManager;
 import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Ignore;
+import com.google.common.util.concurrent.Service.State;
 
 
 /**
@@ -44,8 +44,10 @@ public class AbstractSchedulerRuntimeIT {
     protected static final String RUNLOOP_PROP = "usergrid.scheduler.job.interval";
     protected static final String FAIL_PROP = "usergrid.scheduler.job.maxfail";
 
+
     @ClassRule
-    public static CassandraResource cassandraResource = SchedulerITSuite.cassandraResource;
+    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
+
 
     @ClassRule
     public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();

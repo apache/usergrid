@@ -52,6 +52,10 @@ public class HybridEntityManagerFactory implements EntityManagerFactory, Applica
         }
     }
 
+    public EntityManagerFactory getImplementation() {
+        return factory; 
+    }
+
     @Override
     public String getImpementationDescription() throws Exception {
         return factory.getImpementationDescription();
@@ -195,6 +199,11 @@ public class HybridEntityManagerFactory implements EntityManagerFactory, Applica
     @Override
     public void rebuildCollectionIndex(UUID appId, String collection, ProgressObserver po) {
         factory.rebuildCollectionIndex(appId, collection, po);
+    }
+
+    @Override
+    public void addIndex(UUID appId, String suffix,final int shards,final int replicas) {
+        factory.addIndex(appId,suffix,shards,replicas);
     }
 
     @Override

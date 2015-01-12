@@ -19,10 +19,14 @@
 
 package org.apache.usergrid.persistence.index;
 
+import java.util.UUID;
+
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
 import org.apache.usergrid.persistence.model.entity.Id;
+
+import java.util.Map;
 
 
 /**
@@ -37,9 +41,18 @@ public interface EntityIndex {
     public void initializeIndex();
 
     /**
+     * Create an index and add to alias, will create alias and remove any old index from write alias if alias already exists
+     * @param indexSuffix index name
+     * @param shards
+     * @param replicas
+     */
+    public void addIndex(final String indexSuffix, final int shards, final int replicas);
+
+    /**
      * Create the index batch.
      */
     public EntityIndexBatch createBatch();
+
 
     /**
      * Execute query in Usergrid syntax.
@@ -48,8 +61,24 @@ public interface EntityIndex {
 
     /**
      * Get the candidate results of all versions of the entity for this id.
+     * @param indexScope The scope of the index to search in
+     * @param id The id to search within.
      */
-    public CandidateResults getEntityVersions(final IndexScope indexScope, Id id);
+    public CandidateResults getEntityVersions(final IndexScope indexScope, final Id id);
+
+    /**
+     * Create a delete method that deletes by Id. This will delete all documents from ES with the same entity Id,
+     * effectively removing all versions of an entity from all index scopes
+     * @param entityId The entityId to remove
+     */
+    public void deleteAllVersionsOfEntity(final Id entityId );
+
+    /**
+     * Takes all the previous versions of the current entity and deletes all previous versions
+     * @param id The id to remove
+     * @param version The max version to retain
+     */
+    public void deletePreviousVersions(final Id id, final UUID version);
 
     /**
      * Refresh the index.

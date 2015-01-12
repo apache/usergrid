@@ -64,6 +64,7 @@ import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
+import org.apache.usergrid.persistence.index.AliasedEntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.query.Query;
@@ -698,6 +699,12 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     @Override
     public void rebuildCollectionIndex(UUID appId, String collection, ProgressObserver po ) {
         throw new UnsupportedOperationException( "Not supported yet." );
+    }
+
+    @Override
+    public void addIndex(final UUID applicationId,final String indexSuffix,final int shards,final int replicas){
+        EntityIndex entityIndex = getManagerCache().getEntityIndex(CpNamingUtils.getApplicationScope(applicationId));
+        entityIndex.addIndex(indexSuffix, shards, replicas);
     }
 
     @Override

@@ -20,7 +20,6 @@
 package org.apache.usergrid.persistence.core.astyanax;
 
 
-import com.netflix.astyanax.serializers.ByteBufferSerializer;
 import com.netflix.astyanax.serializers.ByteSerializer;
 import com.netflix.astyanax.serializers.BytesArraySerializer;
 import com.netflix.astyanax.serializers.IntegerSerializer;

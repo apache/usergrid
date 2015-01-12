@@ -7,7 +7,7 @@
  * the License.  You may obtain a copy of the License at
  *
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+*
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,11 +30,12 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.ConcurrentCoreIteratorITSuite;
 import org.apache.usergrid.CoreApplication;
 import org.apache.usergrid.CoreITSetup;
 import org.apache.usergrid.CoreITSetupImpl;
+import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.Results;
 
@@ -48,9 +49,16 @@ public abstract class AbstractIteratingQueryIT {
 
     public static final long WRITE_DELAY = 0; // milliseconds to delay between writes in loop
 
+
     @ClassRule
-    public static CoreITSetup setup = new CoreITSetupImpl( 
-            ConcurrentCoreIteratorITSuite.cassandraResource, ConcurrentCoreIteratorITSuite.elasticSearchResource );
+    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
+
+    @ClassRule
+    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
+
+
+    @ClassRule
+    public static CoreITSetup setup = new CoreITSetupImpl( cassandraResource, elasticSearchResource );
 
     @Rule
     public CoreApplication app = new CoreApplication( setup );

@@ -33,6 +33,14 @@ public class LocationField extends AbstractField<Location> {
     }
 
 
+    /**
+     * Required for Jackson, DO NOT DELETE
+     */
+    public LocationField() {
+        //required  do not delete
+        super();
+    }
+
 
     @Override
     public FieldTypeName getTypeName() {

@@ -19,7 +19,6 @@
 package org.apache.usergrid.persistence.core.astyanax;
 
 
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Preconditions;
