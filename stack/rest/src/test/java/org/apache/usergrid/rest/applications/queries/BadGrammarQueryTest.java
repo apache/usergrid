@@ -206,7 +206,7 @@ public class BadGrammarQueryTest extends QueryTestBase {
         generateTestEntities(numOfEntities, collectionName);
 
 
-        //Issue an invalid query
+        //Issue a query with the limit appended
         String query = "select * where limit = 5";
         QueryParameters params = new QueryParameters().setQuery(query);
         Collection collection = this.app().collection(collectionName).get(params);
