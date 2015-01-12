@@ -18,7 +18,7 @@ package org.apache.usergrid.rest.applications.queries;
 
 
 import com.sun.jersey.api.client.UniformInterfaceException;
-import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource2point0.model.Collection;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
 import org.junit.Test;
@@ -30,36 +30,187 @@ import static org.junit.Assert.fail;
 
 
 /**
- * Test for an exception with incorrect query grammar
- * 1. Insert an entity
- * 2. Issue an invalid query
- * 3. Check for an exception
+ * Test for exceptions resulting from invalid query syntax
  */
-public class BadGrammarQueryTest extends AbstractRestIT {
+public class BadGrammarQueryTest extends QueryTestBase {
 
-  @Test
-  public void catchBadQueryGrammar() throws IOException {
+    /**
+     * We should get an exception if the clause contains
+     * an invalid operator.
+     * (eg. "name != 'go'" instead of "NOT name = 'go'")
+     * @throws IOException
+     */
+    @Test
+    public void catchBadQueryGrammar() throws IOException {
 
-    //1. Insert an entity
-    Entity actor = new Entity();
-    actor.put("displayName", "Erin");
-    Entity props = new Entity();
-    props.put("actor", actor);
-    props.put("content", "bragh");
+        int numOfEntities = 1;
+        String collectionName = "things";
+        //create our test entities
+        generateTestEntities(numOfEntities, collectionName);
 
-    this.app().collection("things").post(props);
-    refreshIndex();
+        //Issue an invalid query
+        String query = "select * where name != 'go'";
+        try {
 
-    //2. Issue an invalid query
-    String query = "select * where name != 'go'";
-    try {
-
-      QueryParameters params = new QueryParameters().setQuery(query);
-      this.app().collection("things").get(params);
-      fail("This should throw an exception");
-    } catch (UniformInterfaceException uie) {
-      //3. Check for an exception
-      assertEquals(400, uie.getResponse().getStatus());
+            QueryParameters params = new QueryParameters().setQuery(query);
+            this.app().collection(collectionName).get(params);
+            fail("This should throw an exception");
+        } catch (UniformInterfaceException uie) {
+            //Check for an exception
+            assertEquals(400, uie.getResponse().getStatus());
+        }
     }
-  }
+
+    /**
+     * We should get an exception if the clause contains
+     * a string that is surrounded by double-quotes
+     * @throws IOException
+     */
+    @Test
+    public void exceptionOnDoubleQuotes() throws IOException {
+
+        int numOfEntities = 1;
+        String collectionName = "things";
+        //create our test entities
+        generateTestEntities(numOfEntities, collectionName);
+
+        //Issue an invalid query
+        String query = "select * where name != \"go\"";
+        try {
+
+            QueryParameters params = new QueryParameters().setQuery(query);
+            this.app().collection(collectionName).get(params);
+            fail("This should throw an exception");
+        } catch (UniformInterfaceException uie) {
+            //Check for an exception
+            assertEquals(400, uie.getResponse().getStatus());
+        }
+    }
+
+    /**
+     * We should get an exception if the clause contains
+     * a string that is not properly quoted
+     * @throws IOException
+     */
+    @Test
+    public void exceptionOnMissingQuotes() throws IOException {
+
+        int numOfEntities = 1;
+        String collectionName = "things";
+        //create our test entities
+        generateTestEntities(numOfEntities, collectionName);
+
+        //Issue an invalid query
+        String query = "select * where name != go";
+        try {
+
+            QueryParameters params = new QueryParameters().setQuery(query);
+            this.app().collection(collectionName).get(params);
+            fail("This should throw an exception");
+        } catch (UniformInterfaceException uie) {
+            //Check for an exception
+            assertEquals(400, uie.getResponse().getStatus());
+        }
+    }
+    /**
+     * We should get an exception if the property name
+     * is missing from the clause
+     * @throws IOException
+     */
+
+    @Test
+    public void exceptionOnMissingProperty() throws IOException {
+
+        int numOfEntities = 1;
+        String collectionName = "things";
+        //create our test entities
+        generateTestEntities(numOfEntities, collectionName);
+
+        //Issue an invalid query
+        String query = "select * where != 'go'";
+        try {
+
+            QueryParameters params = new QueryParameters().setQuery(query);
+            this.app().collection(collectionName).get(params);
+            fail("This should throw an exception");
+        } catch (UniformInterfaceException uie) {
+            //Check for an exception
+            assertEquals(400, uie.getResponse().getStatus());
+        }
+    }
+    /**
+     * We should get an exception if the property value
+     * is missing from the clause
+     * @throws IOException
+     */
+
+    @Test
+    public void exceptionOnMissingPropertyValue() throws IOException {
+
+        int numOfEntities = 1;
+        String collectionName = "things";
+        //create our test entities
+        generateTestEntities(numOfEntities, collectionName);
+
+        //Issue an invalid query
+        String query = "select * where name != ";
+        try {
+
+            QueryParameters params = new QueryParameters().setQuery(query);
+            this.app().collection(collectionName).get(params);
+            fail("This should throw an exception");
+        } catch (UniformInterfaceException uie) {
+            //Check for an exception
+            assertEquals(400, uie.getResponse().getStatus());
+        }
+    }
+
+    /**
+     * We should get an exception if the operator is missing
+     * from the clause
+     * @throws IOException
+     */
+    @Test
+    public void exceptionOnMissingOperator() throws IOException {
+
+        int numOfEntities = 1;
+        String collectionName = "things";
+        //create our test entities
+        generateTestEntities(numOfEntities, collectionName);
+
+        //Issue an invalid query
+        String query = "select * where name 'go' ";
+        try {
+
+            QueryParameters params = new QueryParameters().setQuery(query);
+            this.app().collection(collectionName).get(params);
+            fail("This should throw an exception");
+        } catch (UniformInterfaceException uie) {
+            //Check for an exception
+            assertEquals(400, uie.getResponse().getStatus());
+        }
+    }
+
+    /**
+     * Limit should be sent separately from the query,
+     * else the query will return only entities with
+     * a property named 'limit'
+     * @throws IOException
+     */
+    @Test
+    public void limitInQuery() throws IOException {
+
+        int numOfEntities =1;
+        String collectionName = "things";
+        //create our test entities
+        generateTestEntities(numOfEntities, collectionName);
+
+
+        //Issue an invalid query
+        String query = "select * where limit = 5";
+        QueryParameters params = new QueryParameters().setQuery(query);
+        Collection collection = this.app().collection(collectionName).get(params);
+        assertEquals(0, collection.getNumOfEntities());
+    }
+
 }

@@ -17,7 +17,6 @@
 package org.apache.usergrid.rest.applications.queries;
 
 
-import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.model.Collection;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
@@ -37,50 +36,9 @@ import static org.junit.Assert.*;
  * @author ApigeeCorporation
  * @since 4.0
  */
-public class AndOrQueryTest extends AbstractRestIT {
+public class AndOrQueryTest extends QueryTestBase {
     private static Logger log = LoggerFactory.getLogger(AndOrQueryTest.class);
 
-    /**
-     * Create a number of entities in the specified collection
-     * with properties to make them independently searchable
-     *
-     * @param numberOfEntities
-     * @param collectionName
-     * @return an array of the Entity objects created
-     */
-    private Entity[] generateTestEntities(int numberOfEntities, String collectionName) {
-        Entity[] entities = new Entity[numberOfEntities];
-        Entity props = new Entity();
-        //Insert the desired number of entities
-        for (int i = 0; i < numberOfEntities; i++) {
-            Entity actor = new Entity();
-            actor.put("displayName", String.format("Test User %d", i));
-            actor.put("username", String.format("user%d", i));
-            props.put("actor", actor);
-            //give each entity a unique, numeric ordinal value
-            props.put("ordinal", i);
-            //Set half the entities to have a 'madeup' property of 'true'
-            // and set the other half to 'false'
-            if (i < numberOfEntities / 2) {
-                props.put("madeup", false);
-            } else {
-                props.put("madeup", true);
-            }
-            //Set even-numbered users to have a verb of 'go' and the rest to 'stop'
-            if (i % 2 == 0) {
-                props.put("verb", "go");
-            } else {
-                props.put("verb", "stop");
-            }
-            //create the entity in the desired collection and add it to the return array
-            entities[i] = this.app().collection(collectionName).post(props);
-            log.info(entities[i].entrySet().toString());
-        }
-        //refresh the index so that they are immediately searchable
-        this.refreshIndex();
-
-        return entities;
-    }
 
     /**
      * Test an inclusive AND query to ensure the correct results are returned
@@ -92,7 +50,7 @@ public class AndOrQueryTest extends AbstractRestIT {
         int numOfEntities = 20;
         String collectionName = "activities";
         //create our test entities
-        Entity[] entities = generateTestEntities(numOfEntities, collectionName);
+        generateTestEntities(numOfEntities, collectionName);
         //Query where madeup = true (the last half) and the last quarter of entries
         QueryParameters params = new QueryParameters()
             .setQuery("select * where madeup = true AND ordinal >= " + (numOfEntities - numOfEntities / 4));
@@ -120,7 +78,7 @@ public class AndOrQueryTest extends AbstractRestIT {
         int numOfEntities = 20;
         String collectionName = "activities";
 
-        Entity[] entities = generateTestEntities(numOfEntities, collectionName);
+        generateTestEntities(numOfEntities, collectionName);
 
         //Query where madeup = true (the last half) and NOT the last quarter of entries
         QueryParameters params = new QueryParameters()
@@ -148,7 +106,7 @@ public class AndOrQueryTest extends AbstractRestIT {
         int numOfEntities = 20;
         String collectionName = "activities";
 
-        Entity[] entities = generateTestEntities(numOfEntities, collectionName);
+        generateTestEntities(numOfEntities, collectionName);
 
         //Query where madeup = false (the first half) or the last quarter of entries
         QueryParameters params = new QueryParameters()
@@ -184,7 +142,7 @@ public class AndOrQueryTest extends AbstractRestIT {
         int numOfEntities = 30;
         String collectionName = "activities";
 
-        Entity[] entities = generateTestEntities(numOfEntities, collectionName);
+        generateTestEntities(numOfEntities, collectionName);
 
         //Query where the verb = 'go' (half) OR the last quarter by ordinal, but NOT where verb = 'go' AND the ordinal is in the last quarter
         QueryParameters params = new QueryParameters()
@@ -221,9 +179,8 @@ public class AndOrQueryTest extends AbstractRestIT {
     @Test //USERGRID-900
     public void queriesWithAndPastLimit() throws IOException {
         int numValuesTested = 40;
-        long created = 0;
 
-        Entity[] entities = generateTestEntities(numValuesTested, "activities");
+        generateTestEntities(numValuesTested, "activities");
         //3. Query all entities where "madeup = true"
         String errorQuery = "select * where madeup = true";
         QueryParameters params = new QueryParameters()
@@ -250,7 +207,7 @@ public class AndOrQueryTest extends AbstractRestIT {
     public void negatedQuery() throws IOException {
         int numValuesTested = 20;
 
-        Entity[] entities = generateTestEntities(numValuesTested, "activities");
+        generateTestEntities(numValuesTested, "activities");
         //1. Query all entities where "NOT verb = 'go'"
         String query = "select * where not verb = 'go'";
         //2. Limit the query to half of the number of entities
@@ -276,7 +233,7 @@ public class AndOrQueryTest extends AbstractRestIT {
     public void queryReturnCount() throws Exception {
         int numValuesTested = 20;
 
-        Entity[] entities = generateTestEntities(numValuesTested, "activities");
+        generateTestEntities(numValuesTested, "activities");
         //1. Query for a subset of the entities
         String inCorrectQuery = "select * where ordinal >= " + (numValuesTested / 2) + " order by ordinal asc";
         QueryParameters params = new QueryParameters().setQuery(inCorrectQuery).setLimit(numValuesTested / 2);
@@ -303,7 +260,7 @@ public class AndOrQueryTest extends AbstractRestIT {
         int numOfEntities = 20;
         String collectionName = "imagination";
 
-        Entity[] entities = generateTestEntities(numOfEntities, collectionName);
+        generateTestEntities(numOfEntities, collectionName);
 
         //2. Use AND/OR query to retrieve entities
         String inquisitiveQuery = "select * where Ordinal gte 0 and Ordinal lte  " + (numOfEntities / 2)
@@ -332,7 +289,7 @@ public class AndOrQueryTest extends AbstractRestIT {
         int numOfEntities = 20;
         String collectionName = "imagination";
 
-        Entity[] entities = generateTestEntities(numOfEntities, collectionName);
+        generateTestEntities(numOfEntities, collectionName);
 
         //2. Issue a query
         String inquisitiveQuery = String.format("select * where ordinal >= 0 and ordinal <= %d or WhoHelpedYou = 'Ruff'", numOfEntities);
@@ -359,7 +316,7 @@ public class AndOrQueryTest extends AbstractRestIT {
         int numOfEntities = 10;
         String collectionName = "imagination";
 
-        Entity[] entities = generateTestEntities(numOfEntities, collectionName);
+        generateTestEntities(numOfEntities, collectionName);
 
         //2. Issue a query using alphanumeric operators
         String inquisitiveQuery = "select * where Ordinal gte 0 and Ordinal lte 2000 or WhoHelpedYou eq 'Ruff'";
