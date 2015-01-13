@@ -15,18 +15,19 @@
  */
 package org.apache.usergrid.rest;
 
+import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource2point0.model.Collection;
+import org.apache.usergrid.rest.test.resource2point0.model.Entity;
+
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Slf4jReporter;
-import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import javax.ws.rs.core.MediaType;
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
 import org.junit.After;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -37,18 +38,17 @@ import org.slf4j.LoggerFactory;
 
 
 /**
- * Test creating, sending and paging through Notifications via the REST API. 
+ *
+ * Test creating, sending and paging through Notifications via the REST API.
+ *
  */
 public class NotificationsIT extends AbstractRestIT {
+
+    public NotificationsIT() throws Exception { }
+
     private static final Logger logger = LoggerFactory.getLogger( NotificationsIT.class );
 
     private static final MetricRegistry registry = new MetricRegistry();
-
-    final String org = "test-organization";
-    final String app = "test-app";
-    final String orgapp = org + "/" + app;
-    String token;
-
     private static final long writeDelayMs = 15;
     private static final long readDelayMs = 15;
 
@@ -57,7 +57,7 @@ public class NotificationsIT extends AbstractRestIT {
     @Before
     public void startReporting() {
 
-        reporter = Slf4jReporter.forRegistry( registry ).outputTo( logger )
+        reporter = Slf4jReporter.forRegistry( registry ) //.outputTo( logger )
                 .convertRatesTo( TimeUnit.SECONDS )
                 .convertDurationsTo( TimeUnit.MILLISECONDS ).build();
 
@@ -72,88 +72,81 @@ public class NotificationsIT extends AbstractRestIT {
     }
 
 
+    /**
+     *
+     * Creates notifiers and sends notifications
+     *
+     */
     @Test
     public void testPaging() throws Exception {
 
         int numDevices = 10;
         int numNotifications = 100; // to send to each device
 
-        token = userToken( "ed@anuff.com", "sesame" );
-
         // create notifier
-        Map<String, Object> notifier = new HashMap<String, Object>() {{
-            put("name", "mynotifier");
-            put("provider", "noop");
-        }};
-        JsonNode notifierNode = mapper.readTree(resource().path( orgapp + "/notifier")
-            .queryParam( "access_token", token )
-            .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON )
-            .post(String.class, notifier ) );
-
-        //logger.debug("Notifier is: " + notifierNode.toString());
-        assertEquals( "noop", notifierNode.withArray("entities").get(0).get("provider").asText()); 
-        
-        refreshIndex( org, app );
+        Entity payload = new Entity();
+        String notifierName = "mynotifier";
+        String provider = "noop";
+        payload.put("name", notifierName);
+        payload.put("provider", provider);
+        Entity entity = this.app().collection("notifier").post(payload);
+        assertEquals(entity.get("provider"), provider);
+        this.refreshIndex();
 
         // create devices
         int devicesCount = 0;
         List<String> deviceIds = new ArrayList();
         for (int i=0; i<numDevices; i++) {
-          
+
             final int deviceNum = i;
-            Map<String, Object> device = new HashMap<String, Object>() {{
-                put("name", "device" + deviceNum);
-                put("deviceModel", "iPhone6+");
-                put("deviceOSVersion", "iOS 8");
-                put("devicePlatform", "Apple");
-                put("deviceOSVersion", "8");
-                put("mynotifier.notifier.id", "pushtoken" + deviceNum);
-            }};
+            Entity devicePayload = new Entity();
+            String deviceName = "device" + deviceNum;
+            String deviceModel = "iPhone6+";
+            String deviceOSVersion = "iOS 8";
+            String devicePlatform = "Apple";
+            String deviceOSVersionNum = "8";
 
-            JsonNode deviceNode = mapper.readTree(resource().path( orgapp + "/devices")
-                .queryParam( "access_token", token )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON )
-                .post(String.class, device ) );
+            payload.put("name", deviceName);
+            payload.put("deviceModel", deviceModel);
+            payload.put("deviceModel", deviceModel);
+            payload.put("deviceOSVersion", deviceOSVersion);
+            payload.put("devicePlatform", devicePlatform);
+            payload.put("deviceOSVersion", deviceOSVersionNum);
+            Entity device = this.app().collection("devices").post(payload);
 
-            //logger.debug("Device is: " + deviceNode.toString());
-            assertEquals( "device"+i, deviceNode.withArray("entities").get(0).get("name").asText()); 
-
-            deviceIds.add(deviceNode.withArray("entities").get(0).get("uuid").asText());
+            assertEquals( deviceName, device.get("name"));
+            deviceIds.add(device.getString("uuid"));
             devicesCount++;
         }
+        this.refreshIndex();
 
-        refreshIndex( org, app );
-
+        //
         String postMeterName = getClass().getSimpleName() + ".postNotifications";
-        Meter postMeter = registry.meter( postMeterName );
+        Meter postMeter = registry.meter(postMeterName);
 
-        // send notifications 
+        // send notifications
         int notificationCount = 0;
         List<String> notificationUuids = new ArrayList<String>();
-
+        // send numNotifications to each deviceIds
         for (int i=0; i<numNotifications; i++) {
-
-            // send a notificaton to each device
             for (int j=0; j<deviceIds.size(); j++) {
 
                 final String deviceId = deviceIds.get(j);
-                Map<String, Object> notification = new HashMap<String, Object>() {{
-                    put("payloads", new HashMap<String, Object>() {{
-                        put("mynotifier", "Hello device " + deviceId);
-                    }});
-                }};
 
-                JsonNode notificationNode = mapper.readTree(resource().path( orgapp + "/notifications")
-                    .queryParam( "access_token", token )
-                    .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON )
-                    .post( String.class, notification ) );
+                //'{"payloads":{"androidDev":"fdsafdsa"},"deliver":null}'
+                Entity notifier = new Entity();
+                String message = "Hello device " + deviceId;
+                notifier.put(notifierName, message);
+                Entity payloads = new Entity();
+                payloads.put("payloads", notifier);
+                payloads.put("deliver", null);
+                Entity notification = this.app().collection("devices").uniqueID(deviceId).collection("notifications").post(payloads);
 
                 postMeter.mark();
 
                 Thread.sleep( writeDelayMs );
 
-                //logger.debug("Notification is: " + notificationNode.toString());
-                notificationUuids.add( notificationNode.withArray("entities").get(0).get("uuid").asText());
+                notificationUuids.add( notification.getString("uuid"));
             }
 
             notificationCount++;
@@ -162,16 +155,16 @@ public class NotificationsIT extends AbstractRestIT {
                 logger.debug("Created {} notifications", notificationCount);
             }
         }
+
         registry.remove( postMeterName );
+        this.refreshIndex();
 
-        refreshIndex( org, app );
-
+        // check that all the notifications have been sent and time them
         logger.info("Waiting for all notifications to be sent");
         StopWatch sw = new StopWatch();
         sw.start();
         boolean allSent = false;
         while (!allSent) {
-
             Thread.sleep(100);
             int finished = pageThroughAllNotifications("FINISHED");
             if ( finished == (numDevices * numNotifications) ) {
@@ -179,61 +172,42 @@ public class NotificationsIT extends AbstractRestIT {
             }
         }
         sw.stop();
-        int nc = numDevices * numNotifications; 
+        int nc = numDevices * numNotifications;
         logger.info("Processed {} notifications in {}ms", nc, sw.getTime());
         logger.info("Processing Notifications throughput = {} TPS", ((float)nc) / (sw.getTime()/1000));
-
-        logger.info( "Successfully Paged through {} notifications", 
-            pageThroughAllNotifications("FINISHED"));
+        // logger.info( "Successfully Paged through {} notifications", pageThroughAllNotifications("FINISHED"));
     }
 
 
+    /**
+     *
+     * Helper method to page through and test all the notifications
+     *
+     */
     private int pageThroughAllNotifications( String state ) throws IOException, InterruptedException {
 
-        JsonNode initialNode = mapper.readTree( resource().path(orgapp + "/notifications")
-                .queryParam("ql", "select * where state='" + state + "'")
-                .queryParam("access_token", token)
-                .accept(MediaType.APPLICATION_JSON)
-                .get(String.class));
+        //set up the query parameters and get the first page of data
+        QueryParameters queryParameters = new QueryParameters();
+        queryParameters.addParam("ql", "select * where state='" + state + "'");
+        Collection collection = this.app().collection("notifications").get(queryParameters);
+        int count = collection.getNumOfEntities();
 
-        int count = initialNode.get("count").asInt();
+        // since we have a cursor, we should have gotten the limit, which defaults to 10
+        // or we should get back 0 which indicates no more data
+        assertTrue( count == 10 || count == 0 );
 
-        if (initialNode.get("cursor") != null) {
+        //now loop through the rest of the collection
+        while (collection.hasCursor()) {
 
-            String cursor = initialNode.get("cursor").asText();
-           
-            // since we have a cursor, we should have gotten the limit, which defaults to 10 
-            // or we should get back 0 which indicates no more data
-            assertTrue( count == 10 || count == 0 );
-
-            while (cursor != null) {
-
-                JsonNode anotherNode = mapper.readTree(resource().path(orgapp + "/notifications")
-                        .queryParam("ql", "select * where state='" + state + "'")
-                        .queryParam("access_token", token)
-                        .queryParam("cursor", cursor)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .get(String.class));
-
-                int returnCount = anotherNode.get("count").asInt();
-
-                count += returnCount;
-
-                if (anotherNode.get("cursor") != null) {
-
-                    // since we have a cursor, we should have gotten the limit, which defaults to 10 
-                    // or we should get back 0 which indicates no more data
-                    assertTrue( returnCount == 10 || returnCount == 0 );
-
-                    cursor = anotherNode.get("cursor").asText();
-
-                    Thread.sleep( readDelayMs );
-
-                } else {
-                    cursor = null;
-                }
-            }
+            collection = this.app().collection("notifications").getNextPage(collection, queryParameters, true);
+            int returnCount = collection.getNumOfEntities();
+            count += returnCount;
+            //verify the return count of each response
+            assertTrue( returnCount == 10 || returnCount == 0 );
+            Thread.sleep( readDelayMs );
         }
+
         return count;
     }
+
 }

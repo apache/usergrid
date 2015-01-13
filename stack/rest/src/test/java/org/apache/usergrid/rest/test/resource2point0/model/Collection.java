@@ -77,6 +77,12 @@ public class Collection implements Iterable<Entity>, Iterator<Entity> {
         return cursor;
     }
 
+    public boolean hasCursor() {
+        if ( cursor != null && cursor.length() > 0 ) {
+            return true;
+        }
+        return false;
+    }
 
     @Override
     public Entity next() {
