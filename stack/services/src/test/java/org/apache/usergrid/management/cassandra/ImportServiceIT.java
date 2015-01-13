@@ -50,6 +50,8 @@ import java.util.*;
 
 import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.persistence.index.query.Query.Level;
+import org.apache.usergrid.persistence.index.utils.UUIDUtils;
+
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.*;
@@ -78,11 +80,12 @@ public class ImportServiceIT {
 
     @BeforeClass
     public static void setup() throws Exception {
+        String username = "test"+ UUIDUtils.newTimeUUID();
         //creates sample test application
         LOG.info( "in setup" );
-        adminUser = setup.getMgmtSvc().createAdminUser( "test", "test user", "test@test.com", "test", false, false );
-        organization = setup.getMgmtSvc().createOrganization( "test-organization", adminUser, true );
-        applicationId = setup.getMgmtSvc().createApplication( organization.getUuid(), "intern-app" ).getId();
+        adminUser = setup.getMgmtSvc().createAdminUser( username, username, username+"@test.com", username, false, false );
+        organization = setup.getMgmtSvc().createOrganization( username, adminUser, true );
+        applicationId = setup.getMgmtSvc().createApplication( organization.getUuid(), username+"app" ).getId();
     }
 
     //creates 2nd application for testing import from an organization having multiple applications
