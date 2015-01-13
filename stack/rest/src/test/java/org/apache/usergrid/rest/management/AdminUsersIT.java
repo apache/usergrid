@@ -137,8 +137,6 @@ public class AdminUsersIT extends AbstractRestIT {
     @Test
     public void passwordMismatchErrorAdmin() {
 
-
-
         String username = clientSetup.getUsername();
         String password = clientSetup.getPassword();
 
@@ -149,10 +147,6 @@ public class AdminUsersIT extends AbstractRestIT {
 
         // change the password as admin. The old password isn't required
         management.users().user( username ).password().post( passwordPayload );
-//        JsonNode node = mapper.readTree( resource().path( "/management/users/test/password" ).accept( MediaType.APPLICATION_JSON )
-//                                                   .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, passwordPayload ));
-
-
 
         this.refreshIndex();
 
@@ -171,45 +165,52 @@ public class AdminUsersIT extends AbstractRestIT {
         }
 
     }
-//
-//
-//    /**
-//     * Checks that as a superuser (i.e with a superuser token ) we can change the password of a admin.
-//     * @throws IOException
-//     */
-//    @Test
-//    public void setAdminPasswordAsSysAdmin() throws IOException {
-//
-//        String superToken = superAdminToken();
-//
-//        String newPassword = "foo";
-//
-//        Map<String, String> data = new HashMap<String, String>();
-//        data.put( "newpassword", newPassword );
-//
-//        // change the password as admin. The old password isn't required
+
+
+    /**
+     * Checks that as a superuser (i.e with a superuser token ) we can change the password of a admin.
+     * @throws IOException
+     */
+    @Test
+    public void setAdminPasswordAsSysAdmin() throws IOException {
+
+        String username = clientSetup.getUsername();
+        String password = clientSetup.getPassword();
+
+        String superToken = superAdminToken();
+
+        String newPassword = "foo";
+
+        Map<String, Object> passwordPayload = new HashMap<String, Object>();
+        data.put( "newpassword", newPassword );
+
+
+        // change the password as admin. The old password isn't required
+        management.users().user( username ).password().post( passwordPayload );
+
+
 //        JsonNode node = mapper.readTree( resource().path( "/management/users/test/password" ).queryParam( "access_token", superToken )
 //                                                   .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
 //                                                   .post( String.class, data ));
-//
-//        assertNull( getError( node ) );
-//
-//        refreshIndex("test-organization", "test-app");
-//
-//        // log in with the new password
-//        String token = mgmtToken( "test", newPassword );
-//
-//        assertNotNull( token );
-//
-//        data.put( "newpassword", "test" );
-//
-//        // now change the password back
-//        node = mapper.readTree( resource().path( "/management/users/test/password" ).queryParam( "access_token", superToken )
-//                                          .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-//                                          .post( String.class, data ));
-//
-//        assertNull( getError( node ) );
-//    }
+
+        assertNull( getError( node ) );
+
+        refreshIndex();
+
+        // log in with the new password
+        String token = mgmtToken( "test", newPassword );
+
+        assertNotNull( token );
+
+        data.put( "newpassword", "test" );
+
+        // now change the password back
+        node = mapper.readTree( resource().path( "/management/users/test/password" ).queryParam( "access_token", superToken )
+                                          .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+                                          .post( String.class, data ));
+
+        assertNull( getError( node ) );
+    }
 //
 //    @Test
 //    public void mgmtUserFeed() throws Exception {

@@ -54,7 +54,6 @@ public class UsersResource extends NamedResource {
         return new UserResource( identifier, context, this );
     }
 
-
     public Entity post(Entity userPayload){
         WebResource resource = getResource(true);
 //TODO: need to parse the specific response gotten for admin entities. It is different from regular entities.
