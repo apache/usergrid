@@ -25,6 +25,8 @@ import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.management.ActivationState;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.export.ExportService;
+import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.entities.Export;
 import org.apache.usergrid.persistence.entities.Import;
 import org.apache.usergrid.rest.AbstractContextResource;
@@ -49,6 +51,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+import javax.xml.stream.XMLStreamConstants;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -446,9 +450,11 @@ public class OrganizationResource extends AbstractContextResource {
                                    @QueryParam("callback") @DefaultValue("") String callback ) throws Exception {
         //TODO: fix the below as that method no longer exists.
         List<Entity> entity = null;
+        EntityRef entityRef = new SimpleEntityRef( importEntityUUIDStr );
         try {
-//            entity = smf.getServiceManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID  ).getEntityManager()
-//                    .get(importEntityUUIDStr ,"includes", null, Level.ALL_PROPERTIES).getEntities();
+                entity = smf.getServiceManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID ).getEntityManager()
+                            .getConnectedEntities( entityRef, "includes", null, Level.ALL_PROPERTIES ).getEntities();
+
         }
         catch ( Exception e ) { //this might not be a bad request and needs better error checking
             return Response.status( SC_BAD_REQUEST ).type( JSONPUtils.jsonMediaType( callback ) )
