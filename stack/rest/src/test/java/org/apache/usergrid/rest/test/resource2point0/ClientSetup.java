@@ -42,7 +42,7 @@ public class ClientSetup implements TestRule {
 
     RestClient restClient;
 
-    protected String username, password,orgName, appName;
+    protected String username, password,orgName, appName, superuserToken;
     protected Organization organization;
     protected Application application;
 
@@ -83,7 +83,9 @@ public class ClientSetup implements TestRule {
         String methodName = description.getMethodName();
         String name = testClass + "." + methodName;
 
-        Token test = restClient.management().token().post( new Token("superuser","superpassword") );
+        restClient.superuserSetup();
+        Token superuserResponse = restClient.management().token().post( new Token("superuser","superpassword") );
+        superuserToken=superuserResponse.getAccessToken();
 
         username = "user_"+name + UUIDUtils.newTimeUUID();
         password = username;

@@ -54,6 +54,7 @@ import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.RestClient;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.*;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.ManagementResource;
+import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.apache.usergrid.rest.test.resource2point0.model.Token;
 import org.apache.usergrid.rest.test.resource2point0.model.User;
 import org.apache.usergrid.rest.test.security.TestAdminUser;
@@ -97,81 +98,79 @@ public class AdminUsersIT extends AbstractRestIT {
     /**
      * Test if we can reset an admin's password by using that same admins credentials.
      */
-//    @Test
-//    public void setSelfAdminPasswordAsAdmin() throws IOException {
-//
-//        String username = clientSetup.getUsername();
-//        String password = clientSetup.getPassword();
-//
-//
-//        Map<String, String> passwordPayload = new HashMap<String, String>();
-//        passwordPayload.put( "newpassword", "testPassword" );
-//        passwordPayload.put( "oldpassword", password );
-//
-//        // change the password as admin. The old password isn't required
+    @Test
+    public void setSelfAdminPasswordAsAdmin() throws IOException {
+
+        String username = clientSetup.getUsername();
+        String password = clientSetup.getPassword();
+
+
+        Map<String, Object> passwordPayload = new HashMap<String, Object>();
+        passwordPayload.put( "newpassword", "testPassword" );
+        passwordPayload.put( "oldpassword", password );
+
+        // change the password as admin. The old password isn't required
+        management.users().user( username ).password().post(passwordPayload); //entity( username ).password().post;
+
+        this.refreshIndex();
+
+
+        //assertNull( getError( node ) );
+
+        //Get the token using the new password
+        management.token().post( new Token( username, "testPassword" ) );
+        //this.app().token().post(new Token(username, "testPassword"));
+
+        //Check that we cannot get the token using the old password
+        try {
+            management.token().post( new Token( username, password ) );
+            fail( "We shouldn't be able to get a token using the old password" );
+        }catch(UniformInterfaceException uie) {
+            errorParse( 400,"invalid_grant",uie );
+        }
+    }
+
+
+    /**
+     * Check that we cannot change the password by using an older password
+     */
+    @Test
+    public void passwordMismatchErrorAdmin() {
+
+
+
+        String username = clientSetup.getUsername();
+        String password = clientSetup.getPassword();
+
+
+        Map<String, Object> passwordPayload = new HashMap<String, Object>();
+        passwordPayload.put( "newpassword", "testPassword" );
+        passwordPayload.put( "oldpassword", password );
+
+        // change the password as admin. The old password isn't required
+        management.users().user( username ).password().post( passwordPayload );
 //        JsonNode node = mapper.readTree( resource().path( "/management/users/test/password" ).accept( MediaType.APPLICATION_JSON )
 //                                                   .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, passwordPayload ));
-//
-//
-//
-//        this.refreshIndex();
-//
-//
-//        assertNull( getError( node ) );
-//
-//        //Get the token using the new password
-//        Token tokenPayload = this.app().token().post(new Token(username, "testPassword"));
-//
-//        //Check that we cannot get the token using the old password
-//        try {
-//            this.app().token().post( new Token( username, password ) );
-//            fail( "We shouldn't be able to get a token using the old password" );
-//        }catch(UniformInterfaceException uie) {
-//            errorParse( 500,"BadPeople",uie );
-//        }
-//    }
-//
-//
-//    /**
-//     * Check that we cannot change the password by using an older password
-//     */
-//    @Test
-//    public void passwordMismatchErrorAdmin() {
-//
-//
-//
-//        String username = clientSetup.getUsername();
-//        String password = clientSetup.getPassword();
-//
-//
-//        Map<String, String> passwordPayload = new HashMap<String, String>();
-//        passwordPayload.put( "newpassword", "testPassword" );
-//        passwordPayload.put( "oldpassword", password );
-//
-//        // change the password as admin. The old password isn't required
-//        JsonNode node = mapper.readTree( resource().path( "/management/users/test/password" ).accept( MediaType.APPLICATION_JSON )
-//                                                   .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, passwordPayload ));
-//
-//
-//
-//        this.refreshIndex();
-//
-//
-//        //Get the token using the new password
-//        Token tokenPayload = this.app().token().post(new Token(username, "testPassword"));
-//
-//
-//        // Check that we can't change the password using the old password.
-//        try {
-//            resource().path( "/management/users/test/password" ).accept( MediaType.APPLICATION_JSON )
-//                      .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, passwordPayload );
-//            fail("We shouldn't be able to change the password with the same payload");
-//        }
-//        catch ( UniformInterfaceException uie ) {
-//            errorParse( ClientResponse.Status.BAD_REQUEST.getStatusCode(),ClientResponse.Status.BAD_REQUEST.getReasonPhrase(),uie );
-//        }
-//
-//    }
+
+
+
+        this.refreshIndex();
+
+
+        //Get the token using the new password
+        management.token().post( new Token( username, "testPassword" ) );
+
+
+        // Check that we can't change the password using the old password.
+        try {
+            management.users().user( username ).password().post( passwordPayload );
+            fail("We shouldn't be able to change the password with the same payload");
+        }
+        catch ( UniformInterfaceException uie ) {
+            errorParse( ClientResponse.Status.BAD_REQUEST.getStatusCode(),"auth_invalid_username_or_password",uie );
+        }
+
+    }
 //
 //
 //    /**

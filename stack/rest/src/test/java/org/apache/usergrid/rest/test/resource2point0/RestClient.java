@@ -22,10 +22,12 @@ import org.apache.usergrid.rest.test.resource2point0.endpoints.OrganizationResou
 import org.apache.usergrid.rest.test.resource2point0.endpoints.UrlResource;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 
 import javax.ws.rs.core.MediaType;
 
@@ -97,6 +99,15 @@ public class RestClient implements UrlResource {
                 .queryParam( "org_name", orgname )
                 .queryParam( "app_name",appName )
                 .accept( MediaType.APPLICATION_JSON ).post();
+    }
+
+    public void superuserSetup() {
+        //TODO: change this when we upgrade to new version of jersey
+        HTTPBasicAuthFilter httpBasicAuthFilter = new HTTPBasicAuthFilter( "superuser","superpassword" );
+        client.addFilter( httpBasicAuthFilter );
+
+        this.getResource().path( "system/superuser/setup" )
+            .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON ).get( JsonNode.class );
     }
 
     //todo:fix this method for the client.

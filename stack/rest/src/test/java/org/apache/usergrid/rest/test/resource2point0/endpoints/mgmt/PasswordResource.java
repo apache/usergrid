@@ -14,13 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt;
 
 
+import java.util.Map;
+
 import javax.ws.rs.core.MediaType;
 
-import org.apache.usergrid.rest.test.resource2point0.endpoints.EntityEndpoint;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.NamedResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.UrlResource;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
@@ -31,36 +31,20 @@ import com.sun.jersey.api.client.WebResource;
 
 
 /**
- * Handles calls to the users management endpoint
- * Example: /management/orgs/org_name/users
+ * Relations to the following endpoint
+ * /management/users/"username"/password
+ * Allows admin users to change their passwords
  */
-public class UsersResource extends NamedResource {
-    public UsersResource( final ClientContext context, final UrlResource parent ) {
-        super( "users", context, parent );
+public class PasswordResource extends NamedResource {
+
+    public PasswordResource( final ClientContext context, final UrlResource parent ) {
+        super( "password", context, parent );
     }
 
-
-    /**
-     * Should this be here? this would facilitate calling the entity endpoint as a way to get/put things
-     * @param identifier
-     * @return
-     */
-    //TODO: See if this should be reused here or if we should rename it to something else.
-    public EntityEndpoint entity(String identifier) {
-        return new EntityEndpoint(identifier, context, this);
-    }
-
-    public UserResource user(String identifier) {
-        return new UserResource( identifier, context, this );
-    }
-
-
-    public Entity post(Entity userPayload){
+    public Entity post(Map<String, Object> payload){
         WebResource resource = getResource(true);
-//TODO: need to parse the specific response gotten for admin entities. It is different from regular entities.
-        ApiResponse response = resource.type( MediaType.APPLICATION_JSON_TYPE )
-                .accept( MediaType.APPLICATION_JSON ).post( ApiResponse.class, userPayload);
-        return new Entity(response);
-    }
 
+        return resource.type( MediaType.APPLICATION_JSON_TYPE )
+                                       .accept( MediaType.APPLICATION_JSON ).post( Entity.class, payload );
+    }
 }
