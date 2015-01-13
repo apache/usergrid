@@ -111,11 +111,11 @@
     <org.springframework.version>3.1.2.RELEASE</org.springframework.version>
     <shiro-version>1.2.0</shiro-version>
     <slf4j-version>1.6.1</slf4j-version>
-    <snakeyaml-version>1.6</snakeyaml-version>
+    <snakeyaml-version>1.8</snakeyaml-version>
     <tomcat-version>7.0.52</tomcat-version>
     <antlr.version>3.4</antlr.version>
     <tika.version>1.4</tika.version>
-    <elasticsearch.version>1.2.4</elasticsearch.version>
+    <mockito.version>1.10.8</mockito.version>
 
     <usergrid.it.forkCount>3</usergrid.it.forkCount>
     <usergrid.it.reuseForks>false</usergrid.it.reuseForks>
@@ -171,7 +171,7 @@
     <developer>
       <id>snoopdave</id>
       <name>Dave Johnson</name>
-    </developer> 
+    </developer>
   </developers>
 
 
@@ -208,8 +208,8 @@
     https://issues.apache.org/jira/browse/USERGRID-224
     <module>launcher</module>
     -->
-    <!-- <module>mongo-emulator</module> -->
-    <!--  
+    <module>mongo-emulator</module>
+    <!--
     Re-enable when query-validator updated to work with Core Persistence.
     https://issues.apache.org/jira/browse/USERGRID-221
     <module>query-validator</module>
@@ -355,7 +355,22 @@
             <groupId>org.antlr</groupId>
             <artifactId>antlr-runtime</artifactId>
           </exclusion>
-
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcomponents-client</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcomponents-core</artifactId>
+          </exclusion>
           <exclusion>
             <groupId>jline</groupId>
             <artifactId>jline</artifactId>
@@ -458,10 +473,6 @@
         <artifactId>cassandra-thrift</artifactId>
         <version>${cassandra-version}</version>
         <exclusions>
-          <exclusion>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-          </exclusion>
           <exclusion>
             <groupId>commons-lang</groupId>
             <artifactId>commons-lang</artifactId>
@@ -1249,7 +1260,7 @@
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit-dep</artifactId>
-        <version>4.11</version>
+        <version>4.10</version>
       </dependency>
 
       <dependency>
@@ -1416,16 +1427,10 @@
       </dependency>
 
       <dependency>
-        <groupId>org.elasticsearch</groupId>
-        <artifactId>elasticsearch</artifactId>
-        <version>${elasticsearch.version}</version>
-      </dependency>
-
-      <dependency>
         <groupId>com.relayrides</groupId>
         <artifactId>pushy</artifactId>
         <!-- The sha in the version is the git commit used in this build.  Check out the pushy source, then this commit to build the library locally -->
-        <version>0.4-apigee-63dec68314c97c6e3ef40c88590e1b196d3ec55b</version>
+        <version>0.4</version>
       </dependency>
 
       <dependency>
@@ -1513,6 +1518,7 @@
             <optimize>true</optimize>
             <showDeprecation>true</showDeprecation>
             <debug>true</debug>
+            <!-- uncomment when building for more detailed profiling information <debuglevel>lines,vars,source</debuglevel> -->
             <encoding>UTF-8</encoding>
             <showWarnings>true</showWarnings>
           </configuration>
@@ -1676,13 +1682,13 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-report-plugin</artifactId>
-          <version>2.15</version>
+          <version>2.7</version>
         </plugin>
 
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>2.15</version>
+          <version>2.7</version>
           <configuration>
               <parallel>${usergrid.it.parallel}</parallel>
               <forkCount>${usergrid.it.forkCount}</forkCount>
@@ -1864,12 +1870,19 @@
                     <exclude>**/**QueryFilter.tokens</exclude>
                     <exclude>**/**QueryFilterLexer.java</exclude>
                     <exclude>**/**QueryFilterParser.java</exclude>
-
+                    <exclude>**/**.conf</exclude>
+                    <exclude>**/**.csv</exclude>
+                    <exclude>**/aws.properties</exclude>
+                    <exclude>**/tempExport*</exclude>
+                    <exclude>loadtests/loadtest_setup.sh</exclude>
+                    <exclude>loadtests/gatling/user-files/request-bodies/**</exclude>
                     <!-- other -->
                     <exclude>**/m2/**</exclude>
                     <exclude>**/*.asc</exclude>
                     <exclude>**/dummy.txt</exclude>
                     <exclude>**/cloudbees.xml</exclude>
+                    <exlude>loadtests/gatling/lib/**</exlude>
+                    <exlude>loadtests/gatling/user-files/**</exlude>
 
                 </excludes>
             </configuration>
@@ -1961,13 +1974,13 @@
     </plugins>
   </reporting>
 
-    <repositories>
-        <repository>
-            <id>local-dependencies</id>
-            <name>local-depedendencies</name>
-            <url>file://${project.basedir}/../m2/repository</url>
-        </repository>
-    </repositories>
+    <!--<repositories>-->
+        <!--<repository>-->
+            <!--<id>local-dependencies</id>-->
+            <!--<name>local-depedendencies</name>-->
+            <!--<url>file://${project.basedir}/../m2/repository</url>-->
+        <!--</repository>-->
+    <!--</repositories>-->
 
     <scm>
     	<url>https://git-wip-us.apache.org/repos/asf/incubator-usergrid.git</url>

@@ -19,6 +19,7 @@ package org.apache.usergrid.management.importer;
 
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.batch.job.OnlyOnceJob;
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
@@ -32,7 +33,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.UUID;
-import static org.apache.usergrid.corepersistence.CpEntityManagerFactory.MANAGEMENT_APPLICATION_ID;
 import org.apache.usergrid.persistence.index.query.Query.Level;
 
 
@@ -89,7 +89,7 @@ public class FileImportJob extends OnlyOnceJob {
     public void dead( final JobExecution execution ) throws Exception {
 
         // Get the root entity manager
-        EntityManager rootEm = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+        EntityManager rootEm = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID);
 
         // Mark the sub-job i.e. File Import Job as Failed
         FileImport fileImport = importService.getFileImportEntity(execution);
@@ -98,7 +98,7 @@ public class FileImportJob extends OnlyOnceJob {
         rootEm.update(fileImport);
 
         // If one file Job fails, mark the main import Job also as failed
-        Results ImportJobResults = rootEm.getConnectingEntities( 
+        Results ImportJobResults = rootEm.getConnectingEntities(
                 fileImport, "includes", null, Level.ALL_PROPERTIES);
         List<Entity> importEntity = ImportJobResults.getEntities();
         UUID importId = importEntity.get(0).getUuid();

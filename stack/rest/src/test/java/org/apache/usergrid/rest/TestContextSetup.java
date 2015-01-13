@@ -20,6 +20,8 @@ package org.apache.usergrid.rest;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
+
+import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.test.resource.TestContext;
 import org.apache.usergrid.rest.test.security.TestAdminUser;
 
@@ -28,8 +30,9 @@ import java.io.IOException;
 
 
 /**
- * A self configuring TestContext which sets itself up it implements TestRule. With a @Rule annotation, an instance of
- * this Class as a public member in any test class or abstract test class will auto svcSetup itself before each test.
+ * A self configuring TestContext which sets itself up it implements TestRule. With a @Rule 
+ * annotation, an instance of this Class as a public member in any test class or abstract 
+ * test class will auto svcSetup itself before each test.
  */
 public class TestContextSetup extends TestContext implements TestRule {
 
@@ -69,7 +72,10 @@ public class TestContextSetup extends TestContext implements TestRule {
         String methodName = description.getMethodName();
         String name = testClass + "." + methodName;
 
-        TestAdminUser testAdmin = new TestAdminUser( name, name + "@usergrid.com", name + "@usergrid.com" );
-        withOrg( name ).withApp( methodName ).withUser( testAdmin ).initAll();
+        TestAdminUser testAdmin = new TestAdminUser( name+UUIDUtils.newTimeUUID(),
+                name + "@usergrid.com"+UUIDUtils.newTimeUUID(),
+                name + "@usergrid.com"+UUIDUtils.newTimeUUID() );
+        withOrg( name+ UUIDUtils.newTimeUUID() ).withApp( methodName + UUIDUtils.newTimeUUID() ).withUser(
+                testAdmin ).initAll();
     }
 }

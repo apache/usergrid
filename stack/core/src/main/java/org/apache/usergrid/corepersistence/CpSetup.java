@@ -22,11 +22,13 @@ import com.google.inject.Injector;
 import com.netflix.config.ConfigurationManager;
 import java.util.Properties;
 import java.util.UUID;
-import java.util.logging.Level;
+
 import me.prettyprint.cassandra.service.CassandraHost;
 import me.prettyprint.hector.api.ddl.ComparatorType;
 import static me.prettyprint.hector.api.factory.HFactory.createColumnFamilyDefinition;
 import org.apache.commons.lang.StringUtils;
+
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.mq.cassandra.QueuesCF;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.cassandra.ApplicationCF;
@@ -44,8 +46,8 @@ import static org.apache.usergrid.persistence.cassandra.CassandraService.TOKENS_
 import static org.apache.usergrid.persistence.cassandra.CassandraService.USE_VIRTUAL_KEYSPACES;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.keyspaceForApplication;
 import org.apache.usergrid.persistence.cassandra.Setup;
-import org.apache.usergrid.persistence.core.migration.MigrationException;
-import org.apache.usergrid.persistence.core.migration.MigrationManager;
+import org.apache.usergrid.persistence.core.migration.schema.MigrationException;
+import org.apache.usergrid.persistence.core.migration.schema.MigrationManager;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.exceptions.ApplicationAlreadyExistsException;
 import org.slf4j.Logger;
@@ -59,10 +61,10 @@ public class CpSetup implements Setup {
 
     private static final Logger logger = LoggerFactory.getLogger( CpSetup.class );
 
-    private final org.apache.usergrid.persistence.EntityManagerFactory emf;
-    private final CassandraService cass;
+    private static Injector injector = null;
+    private static EntityManagerFactory emf;
 
-    private GuiceModule gm;
+    private final CassandraService cass;
 
 
     /**
@@ -76,11 +78,9 @@ public class CpSetup implements Setup {
     }
 
 
-    private static Injector injector = null;
-
     public static Injector getInjector() {
         if ( injector == null ) {
-            injector = Guice.createInjector( new GuiceModule() ); 
+            injector = Guice.createInjector( new GuiceModule( emf ) ); 
         }
         return injector;
     }
@@ -126,11 +126,9 @@ public class CpSetup implements Setup {
             cpProps.put("collections.keyspace.strategy.class", 
                     cass.getProperties().get("cassandra.keyspace.strategy"));
 
-            cpProps.put("collections.keyspace.strategy.options", "replication_factor:" +  
+            cpProps.put("collections.keyspace.strategy.options",
                     cass.getProperties().get("cassandra.keyspace.replication"));
 
-            cpProps.put("cassandra.keyspace.strategy.options.replication_factor",
-                    cass.getProperties().get("cassandra.keyspace.replication"));
 
             logger.debug("Set Cassandra properties for Core Persistence: " + cpProps.toString() );
 
@@ -156,6 +154,9 @@ public class CpSetup implements Setup {
 
         setupStaticKeyspace();
 
+        //force the EMF creation of indexes before creating the default applications
+        emf.refreshIndex();
+
         createDefaultApplications();
     }
 
@@ -168,22 +169,20 @@ public class CpSetup implements Setup {
             emf.initializeApplication( DEFAULT_ORGANIZATION,
                     emf.getDefaultAppId(), DEFAULT_APPLICATION, null );
         } catch (ApplicationAlreadyExistsException ex) {
-            logger.warn("Application {}/{} already exists", DEFAULT_ORGANIZATION, DEFAULT_APPLICATION);
+            logger.warn("Application {}/{} already exists", 
+                    DEFAULT_ORGANIZATION, DEFAULT_APPLICATION);
         }
 
         try {
             emf.initializeApplication( DEFAULT_ORGANIZATION,
                     emf.getManagementAppId(), MANAGEMENT_APPLICATION, null );
         } catch (ApplicationAlreadyExistsException ex) {
-            logger.warn("Application {}/{} already exists", DEFAULT_ORGANIZATION, MANAGEMENT_APPLICATION);
+            logger.warn("Application {}/{} already exists", 
+                    DEFAULT_ORGANIZATION, MANAGEMENT_APPLICATION);
         }
     }
 
 
-    /** @return staticly constructed reference to the management application */
-    public static Application getManagementApp() {
-        return SystemDefaults.managementApp;
-    }
 
     
     @Override
@@ -270,7 +269,7 @@ public class CpSetup implements Setup {
     static class SystemDefaults {
 
         private static final Application managementApp = 
-                new Application( CpEntityManagerFactory.MANAGEMENT_APPLICATION_ID);
+                new Application( CpNamingUtils.MANAGEMENT_APPLICATION_ID);
 
 //        private static final Application defaultApp = 
 //                new Application( CpEntityManagerFactory.DEFAULT_APPLICATION_ID );

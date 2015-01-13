@@ -40,8 +40,20 @@ def clusterName  = System.getenv().get("CASSANDRA_CLUSTER_NAME")
 def superUserEmail     = System.getenv().get("SUPER_USER_EMAIL")
 def testAdminUserEmail = System.getenv().get("TEST_ADMIN_USER_EMAIL")
 
+def numEsNodes = Integer.parseInt(System.getenv().get("ES_NUM_SERVERS"))
+//Override number of shards.  Set it to 2x the cluster size
+def esShards = numEsNodes*4;
+
+
+//This gives us 3 copies, which means we'll have a quorum with primary + 1 replica
+def esReplicas = 2;
+
 def cassThreads = System.getenv().get("TOMCAT_THREADS")
 def hystrixThreads = Integer.parseInt(cassThreads) / 100
+
+//if we end in -1, we remove it
+def ec2Region = System.getenv().get("EC2_REGION")
+def cassEc2Region = ec2Region.replace("-1", "")
 
 
 NodeRegistry registry = new NodeRegistry();
@@ -66,7 +78,7 @@ for (item in selectResult) {
 }
 
 // cassandra nodes are also our elasticsearch nodes
-selectResult = registry.searchNode('cassandra')
+selectResult = registry.searchNode('elasticsearch')
 def esnodes = ""
 sep = ""
 for (item in selectResult) {
@@ -80,8 +92,8 @@ def usergridConfig = """
 
 cassandra.url=${cassandras}
 cassandra.cluster=${clusterName}
-cassandra.keyspace.strategy=org.apache.cassandra.locator.SimpleStrategy
-cassandra.keyspace.replication=${replFactor}
+cassandra.keyspace.strategy=org.apache.cassandra.locator.NetworkTopologyStrategy
+cassandra.keyspace.replication=${cassEc2Region}:${replFactor}
 
 cassandra.timeout=5000
 cassandra.connections=${cassThreads}
@@ -92,21 +104,20 @@ elasticsearch.cluster_name=${clusterName}
 elasticsearch.index_prefix=usergrid
 elasticsearch.hosts=${esnodes}
 elasticsearch.port=9300
+elasticsearch.number_shards=${esShards}
+elasticsearch.number_replicas=${esReplicas}
 
 ######################################################
 # Custom mail transport 
 
-mail.transport.protocol=smtps
-mail.smtps.host=smtp.gmail.com
-mail.smtps.port=465
-mail.smtps.auth=true
-mail.smtps.quitwait=false
+mail.transport.protocol=smtp
+mail.smtp.host=localhost
+mail.smtp.port=25
+mail.smtp.auth=false
+mail.smtp.quitwait=false
 
 # TODO: make all usernames and passwords configurable via Cloud Formation parameters.
 
-# CAUTION: THERE IS A PASSWORD HERE!
-mail.smtps.username=usergridtest@gmail.com
-mail.smtps.password=pw123
 
 ######################################################
 # Admin and test user setup
@@ -117,8 +128,10 @@ usergrid.sysadmin.login.password=test
 usergrid.sysadmin.login.email=${superUserEmail}
 
 usergrid.sysadmin.email=${superUserEmail}
-usergrid.sysadmin.approve.users=true
-usergrid.sysadmin.approve.organizations=true
+#We don't want to require user approval so we can quickly create tests
+usergrid.sysadmin.approve.users=false
+#We dont want to require organizations to be approved so we can auto create them
+usergrid.sysadmin.approve.organizations=false
 
 # Base mailer account - default for all outgoing messages
 usergrid.management.mailer=Admin <${superUserEmail}>
@@ -167,6 +180,10 @@ usergrid.user.resetpw.url=${baseUrl}/%s/%s/users/%s/resetpw
 
 
 usergrid.metrics.graphite.host=${graphite}
+
+usergrid.queue.prefix=${stackName}
+usergrid.queue.region=${ec2Region}
+
 """
 
 println usergridConfig 

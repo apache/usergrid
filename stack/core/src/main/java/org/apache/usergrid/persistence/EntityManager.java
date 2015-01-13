@@ -28,6 +28,7 @@ import me.prettyprint.hector.api.mutation.Mutator;
 
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.GeoIndexManager;
+import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.Role;
 import org.apache.usergrid.persistence.index.query.CounterResolution;
@@ -41,7 +42,7 @@ import org.apache.usergrid.persistence.index.query.Query.Level;
  */
 public interface EntityManager {
 
-    public void setApplicationId( UUID applicationId );
+//    public void setApplicationId( UUID applicationId );
 
     public GeoIndexManager getGeoIndexManager();
 
@@ -457,9 +458,6 @@ public interface EntityManager {
     public Results getConnectedEntities( EntityRef entityRef, String connectionType, 
             String connectedEntityType, Level resultsLevel ) throws Exception;
 
-    public Results getConnectedEntities( UUID uuid, String connectionType, 
-            String connectedEntityType, Level resultsLevel ) throws Exception;
-
     /**
      * Gets the entities connecting to this entity, optionally with the specified connection 
      * type and/or entity type.
@@ -581,6 +579,9 @@ public interface EntityManager {
             String entityType, String propertyName, Object propertyValue ) throws Exception;
 
     @Deprecated
+    /**
+     * Get an entity by UUID.  This will return null if the entity is not found
+     */
     public Entity get( UUID id ) throws Exception;
 
     public <A extends Entity> A get( EntityRef entityRef, Class<A> entityClass ) throws Exception;
@@ -699,4 +700,8 @@ public interface EntityManager {
 
     public void reindex( final EntityManagerFactory.ProgressObserver po ) throws Exception;
 
+    /**
+     * Get health status of application's index.
+     */
+    public Health getIndexHealth();
 }

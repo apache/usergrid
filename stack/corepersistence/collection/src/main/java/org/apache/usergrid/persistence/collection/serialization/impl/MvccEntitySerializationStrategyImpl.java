@@ -18,9 +18,7 @@
 package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -36,81 +34,67 @@ import org.apache.cassandra.db.marshal.UUIDType;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntitySet;
-import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
-import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.MvccEntity;
+import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
+import org.apache.usergrid.persistence.collection.exception.DataCorruptionException;
+import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.serialization.EntityRepair;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
+import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.core.astyanax.ColumnNameIterator;
 import org.apache.usergrid.persistence.core.astyanax.ColumnParser;
-import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
-import org.apache.usergrid.persistence.core.migration.Migration;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import com.netflix.astyanax.ColumnListMutation;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.model.Column;
 import com.netflix.astyanax.model.ColumnList;
-import com.netflix.astyanax.model.CompositeBuilder;
-import com.netflix.astyanax.model.CompositeParser;
-import com.netflix.astyanax.model.Composites;
 import com.netflix.astyanax.model.Row;
+import com.netflix.astyanax.model.Rows;
 import com.netflix.astyanax.query.RowQuery;
 import com.netflix.astyanax.serializers.AbstractSerializer;
-import com.netflix.astyanax.serializers.ByteBufferSerializer;
-import com.netflix.astyanax.serializers.BytesArraySerializer;
-import com.netflix.astyanax.serializers.UUIDSerializer;
+
+import rx.Observable;
+import rx.Scheduler;
+import rx.functions.Func1;
+import rx.functions.Func2;
+import rx.schedulers.Schedulers;
 
 
 /**
  * @author tnine
  */
-@Singleton
-public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializationStrategy, Migration {
+public abstract class MvccEntitySerializationStrategyImpl implements MvccEntitySerializationStrategy {
 
     private static final Logger log = LoggerFactory.getLogger( MvccLogEntrySerializationStrategyImpl.class );
-
-    private static final EntitySerializer ENTITY_JSON_SER = new EntitySerializer();
-
-    private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
-
-    private static final ByteBufferSerializer BUFFER_SERIALIZER = ByteBufferSerializer.get();
-
-    private static final BytesArraySerializer BYTES_ARRAY_SERIALIZER = BytesArraySerializer.get();
-
-
-    private static final CollectionScopedRowKeySerializer<Id> ROW_KEY_SER =
-            new CollectionScopedRowKeySerializer<Id>( ID_SER );
-
-    private static final MultiTennantColumnFamily<CollectionScope, Id, UUID> CF_ENTITY_DATA =
-            new MultiTennantColumnFamily<CollectionScope, Id, UUID>( "Entity_Version_Data", ROW_KEY_SER,
-                    UUIDSerializer.get() );
 
 
     protected final Keyspace keyspace;
     protected final SerializationFig serializationFig;
+    protected final CassandraFig cassandraFig;
     protected final EntityRepair repair;
+    private final MultiTennantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID>  columnFamily;
 
 
     @Inject
-    public MvccEntitySerializationStrategyImpl( final Keyspace keyspace, final SerializationFig serializationFig ) {
+    public MvccEntitySerializationStrategyImpl( final Keyspace keyspace, final SerializationFig serializationFig,
+                                                final CassandraFig cassandraFig ) {
         this.keyspace = keyspace;
         this.serializationFig = serializationFig;
+        this.cassandraFig = cassandraFig;
         this.repair = new EntityRepairImpl( this, serializationFig );
+        this.columnFamily = getColumnFamily();
     }
 
 
@@ -125,21 +109,11 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         return doWrite( collectionScope, entityId, new RowOp() {
             @Override
             public void doOp( final ColumnListMutation<UUID> colMutation ) {
-                try {
-                    colMutation.putColumn( colName, ENTITY_JSON_SER
+                    colMutation.putColumn( colName, getEntitySerializer()
                             .toByteBuffer( new EntityWrapper( entity.getStatus(), entity.getEntity() ) ) );
-                }
-                catch ( Exception e ) {
-                    // throw better exception if we can
-                    if ( entity != null || entity.getEntity().get() != null ) {
-                        throw new CollectionRuntimeException( entity, collectionScope, e );
-                    }
-                    throw e;
-                }
             }
         } );
     }
-
 
 
     @Override
@@ -153,65 +127,141 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         Preconditions.checkNotNull( maxVersion, "version is required" );
 
 
-        //didn't put the max in the error message, I don't want to take the string construction hit every time
-        Preconditions.checkArgument( entityIds.size() <=  serializationFig.getMaxLoadSize(), "requested size cannot be over configured maximum");
+        if( entityIds.size() > serializationFig.getMaxLoadSize()){
+            throw new IllegalArgumentException(  "requested load size cannot be over configured maximum of " + serializationFig.getMaxLoadSize() );
+        }
 
 
+        final Id applicationId = collectionScope.getApplication();
+        final Id ownerId = collectionScope.getOwner();
+        final String collectionName = collectionScope.getName();
 
-        final List<ScopedRowKey<CollectionScope, Id>> rowKeys = new ArrayList<>( entityIds.size() );
+
+        final List<ScopedRowKey<CollectionPrefixedKey<Id>>> rowKeys = new ArrayList<>( entityIds.size() );
 
 
         for ( final Id entityId : entityIds ) {
-            rowKeys.add( ScopedRowKey.fromKey( collectionScope, entityId ) );
+            final CollectionPrefixedKey<Id> collectionPrefixedKey =
+                    new CollectionPrefixedKey<>( collectionName, ownerId, entityId );
+
+
+            final ScopedRowKey<CollectionPrefixedKey<Id>> rowKey =
+                    ScopedRowKey.fromKey( applicationId, collectionPrefixedKey );
+
+
+            rowKeys.add( rowKey );
+        }
+
+        /**
+         * Our settings may mean we exceed our maximum thrift buffer size. If we do, we have to make multiple requests, not just one.
+         * Perform the calculations and the appropriate request patterns
+         *
+         */
+
+        final int maxEntityResultSizeInBytes = serializationFig.getMaxEntitySize() * entityIds.size();
+
+        //if we're less than 1, set the number of requests to 1
+        final int numberRequests = Math.max(1, maxEntityResultSizeInBytes / cassandraFig.getThriftBufferSize());
+
+        final int entitiesPerRequest = entityIds.size() / numberRequests;
+
+
+        final Scheduler scheduler;
+
+        //if it's a single request, run it on the same thread
+        if(numberRequests == 1){
+            scheduler = Schedulers.immediate();
+        }
+        //if it's more than 1 request, run them on the I/O scheduler
+        else{
+            scheduler = Schedulers.io();
         }
 
 
-        final Iterator<Row<ScopedRowKey<CollectionScope, Id>, UUID>> latestEntityColumns;
+       final EntitySetImpl entitySetResults =  Observable.from( rowKeys )
+               //buffer our entities per request, then for that buffer, execute the query in parallel (if neccessary)
+                                                         .buffer(entitiesPerRequest )
+                                                         .parallel( new Func1<Observable<List<ScopedRowKey
+                <CollectionPrefixedKey<Id>>>>, Observable<Rows<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID>>>() {
+
+
+            @Override
+            public Observable<Rows<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID>> call(
+                    final Observable<List<ScopedRowKey<CollectionPrefixedKey<Id>>>> listObservable ) {
+
+
+                 //here, we execute our query then emit the items either in parallel, or on the current thread if we have more than 1 request
+                return listObservable.map( new Func1<List<ScopedRowKey<CollectionPrefixedKey<Id>>>,
+                        Rows<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID>>() {
+
+
+                    @Override
+                    public Rows<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> call(
+                            final List<ScopedRowKey<CollectionPrefixedKey<Id>>> scopedRowKeys ) {
+
+                            try {
+                                return keyspace.prepareQuery( columnFamily ).getKeySlice( rowKeys )
+                                                              .withColumnRange( maxVersion, null, false,
+                                                                      1 ).execute().getResult();
+                            }
+                            catch ( ConnectionException e ) {
+                                throw new CollectionRuntimeException( null, collectionScope, "An error occurred connecting to cassandra",
+                                        e );
+                            }
+                    }
+                } );
 
 
 
-        try {
-            latestEntityColumns = keyspace.prepareQuery( CF_ENTITY_DATA ).getKeySlice( rowKeys )
-                                          .withColumnRange( maxVersion, null, false, 1 ).execute().getResult()
-                                          .iterator();
-        } catch ( ConnectionException e ) {
-            throw new CollectionRuntimeException( null, collectionScope, "An error occurred connecting to cassandra",
-                    e );
-        }
-
-
-
-        final EntitySetImpl entitySetResults = new EntitySetImpl( entityIds.size() );
-
-        while ( latestEntityColumns.hasNext() ) {
-            final Row<ScopedRowKey<CollectionScope, Id>, UUID> row = latestEntityColumns.next();
-
-            final ColumnList<UUID> columns = row.getColumns();
-
-            if ( columns.size() == 0 ) {
-                continue;
             }
+        }, scheduler )
 
-            final Id entityId = row.getKey().getKey();
+               //reduce all the output into a single Entity set
+               .reduce( new EntitySetImpl( entityIds.size() ),
+                new Func2<EntitySetImpl, Rows<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID>, EntitySetImpl>() {
+                    @Override
+                    public EntitySetImpl call( final EntitySetImpl entitySet,
+                                               final Rows<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> rows ) {
 
-            final Column<UUID> column = columns.getColumnByIndex( 0 );
+                        final Iterator<Row<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID>> latestEntityColumns = rows.iterator();
 
-            final MvccEntity parsedEntity = new MvccColumnParser( entityId ).parseColumn( column );
+                        while ( latestEntityColumns.hasNext() ) {
+                                   final Row<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> row = latestEntityColumns.next();
 
-            //we *might* need to repair, it's not clear so check before loading into result sets
-            final MvccEntity maybeRepaired = repair.maybeRepair( collectionScope, parsedEntity );
+                                   final ColumnList<UUID> columns = row.getColumns();
 
-            entitySetResults.addEntity( maybeRepaired );
+                                   if ( columns.size() == 0 ) {
+                                       continue;
+                                   }
 
-        }
+                                   final Id entityId = row.getKey().getKey().getSubKey();
+
+                                   final Column<UUID> column = columns.getColumnByIndex( 0 );
+
+                                   final MvccEntity parsedEntity =
+                                           new MvccColumnParser( entityId, getEntitySerializer() ).parseColumn( column );
+
+                                   //we *might* need to repair, it's not clear so check before loading into result sets
+                                   final MvccEntity maybeRepaired = repair.maybeRepair( collectionScope, parsedEntity );
+
+                                entitySet.addEntity( maybeRepaired );
+                               }
+
+
+
+                        return entitySet;
+                    }
+                } ).toBlocking().last();
 
         return entitySetResults;
+
+
     }
 
 
     @Override
-    public Iterator<MvccEntity> load( final CollectionScope collectionScope, final Id entityId, final UUID version,
-                                      final int fetchSize ) {
+    public Iterator<MvccEntity> loadDescendingHistory( final CollectionScope collectionScope, final Id entityId,
+                                                       final UUID version, final int fetchSize ) {
 
         Preconditions.checkNotNull( collectionScope, "collectionScope is required" );
         Preconditions.checkNotNull( entityId, "entity id is required" );
@@ -219,28 +269,53 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         Preconditions.checkArgument( fetchSize > 0, "max Size must be greater than 0" );
 
 
-        RowQuery<ScopedRowKey<CollectionScope, Id>, UUID> query =
-                keyspace.prepareQuery( CF_ENTITY_DATA ).getKey( ScopedRowKey.fromKey( collectionScope, entityId ) )
+        final Id applicationId = collectionScope.getApplication();
+        final Id ownerId = collectionScope.getOwner();
+        final String collectionName = collectionScope.getName();
+
+        final CollectionPrefixedKey<Id> collectionPrefixedKey =
+                new CollectionPrefixedKey<>( collectionName, ownerId, entityId );
+
+
+        final ScopedRowKey<CollectionPrefixedKey<Id>> rowKey =
+                ScopedRowKey.fromKey( applicationId, collectionPrefixedKey );
+
+
+        RowQuery<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> query =
+                keyspace.prepareQuery( columnFamily ).getKey( rowKey )
                         .withColumnRange( version, null, false, fetchSize );
 
-        return new ColumnNameIterator( query, new MvccColumnParser( entityId ), false );
+        return new ColumnNameIterator( query, new MvccColumnParser( entityId, getEntitySerializer() ), false );
     }
 
 
     @Override
-    public Iterator<MvccEntity> loadHistory( final CollectionScope collectionScope, final Id entityId,
-                                             final UUID version, final int fetchSize ) {
+    public Iterator<MvccEntity> loadAscendingHistory( final CollectionScope collectionScope, final Id entityId,
+                                                      final UUID version, final int fetchSize ) {
 
         Preconditions.checkNotNull( collectionScope, "collectionScope is required" );
         Preconditions.checkNotNull( entityId, "entity id is required" );
         Preconditions.checkNotNull( version, "version is required" );
         Preconditions.checkArgument( fetchSize > 0, "max Size must be greater than 0" );
 
-        RowQuery<ScopedRowKey<CollectionScope, Id>, UUID> query =
-                keyspace.prepareQuery( CF_ENTITY_DATA ).getKey( ScopedRowKey.fromKey( collectionScope, entityId ) )
+
+        final Id applicationId = collectionScope.getApplication();
+        final Id ownerId = collectionScope.getOwner();
+        final String collectionName = collectionScope.getName();
+
+        final CollectionPrefixedKey<Id> collectionPrefixedKey =
+                new CollectionPrefixedKey<>( collectionName, ownerId, entityId );
+
+
+        final ScopedRowKey<CollectionPrefixedKey<Id>> rowKey =
+                ScopedRowKey.fromKey( applicationId, collectionPrefixedKey );
+
+
+        RowQuery<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> query =
+                keyspace.prepareQuery( columnFamily ).getKey( rowKey )
                         .withColumnRange( null, version, true, fetchSize );
 
-        return new ColumnNameIterator( query, new MvccColumnParser( entityId ), false );
+        return new ColumnNameIterator( query, new MvccColumnParser( entityId, getEntitySerializer() ), false );
     }
 
 
@@ -255,7 +330,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         return doWrite( collectionScope, entityId, new RowOp() {
             @Override
             public void doOp( final ColumnListMutation<UUID> colMutation ) {
-                colMutation.putColumn( version, ENTITY_JSON_SER
+                colMutation.putColumn( version, getEntitySerializer()
                         .toByteBuffer( new EntityWrapper( MvccEntity.Status.COMPLETE, Optional.<Entity>absent() ) ) );
             }
         } );
@@ -284,7 +359,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         //create the CF entity data.  We want it reversed b/c we want the most recent version at the top of the
         //row for fast seeks
         MultiTennantColumnFamilyDefinition cf =
-                new MultiTennantColumnFamilyDefinition( CF_ENTITY_DATA, BytesType.class.getSimpleName(),
+                new MultiTennantColumnFamilyDefinition( columnFamily, BytesType.class.getSimpleName(),
                         ReversedType.class.getSimpleName() + "(" + UUIDType.class.getSimpleName() + ")",
                         BytesType.class.getSimpleName(), MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
 
@@ -299,7 +374,19 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
     private MutationBatch doWrite( final CollectionScope collectionScope, final Id entityId, final RowOp op ) {
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
-        op.doOp( batch.withRow( CF_ENTITY_DATA, ScopedRowKey.fromKey( collectionScope, entityId ) ) );
+        final Id applicationId = collectionScope.getApplication();
+        final Id ownerId = collectionScope.getOwner();
+        final String collectionName = collectionScope.getName();
+
+        final CollectionPrefixedKey<Id> collectionPrefixedKey =
+                new CollectionPrefixedKey<>( collectionName, ownerId, entityId );
+
+
+        final ScopedRowKey<CollectionPrefixedKey<Id>> rowKey =
+                ScopedRowKey.fromKey( applicationId, collectionPrefixedKey );
+
+
+        op.doOp( batch.withRow( columnFamily, rowKey ) );
 
         return batch;
     }
@@ -320,12 +407,12 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
     /**
      * Simple bean wrapper for state and entity
      */
-    private static class EntityWrapper {
-        private final MvccEntity.Status status;
-        private final Optional<Entity> entity;
+    protected static class EntityWrapper {
+        protected final MvccEntity.Status status;
+        protected final Optional<Entity> entity;
 
 
-        private EntityWrapper( final MvccEntity.Status status, final Optional<Entity> entity ) {
+        protected EntityWrapper( final MvccEntity.Status status, final Optional<Entity> entity ) {
             this.status = status;
             this.entity = entity;
         }
@@ -338,139 +425,52 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
     private static final class MvccColumnParser implements ColumnParser<UUID, MvccEntity> {
 
         private final Id id;
+        private final AbstractSerializer<EntityWrapper> entityJsonSerializer;
 
 
-        private MvccColumnParser( Id id ) {
+        private MvccColumnParser( Id id, final AbstractSerializer<EntityWrapper> entityJsonSerializer ) {
             this.id = id;
+            this.entityJsonSerializer = entityJsonSerializer;
         }
 
 
         @Override
         public MvccEntity parseColumn( Column<UUID> column ) {
 
-            final EntityWrapper deSerialized = column.getValue( ENTITY_JSON_SER );
+            final EntityWrapper deSerialized;
+            final UUID version = column.getName();
+
+            try {
+                deSerialized = column.getValue( entityJsonSerializer );
+            }
+            catch ( DataCorruptionException e ) {
+                log.error(
+                        "DATA CORRUPTION DETECTED when de-serializing entity with Id {} and version {}.  This means the"
+                                + " write was truncated.", id, version, e );
+                //return an empty entity, we can never load this one, and we don't want it to bring the system
+                //to a grinding halt
+                return new MvccEntityImpl( id, version, MvccEntity.Status.DELETED, Optional.<Entity>absent() );
+            }
 
             //Inject the id into it.
             if ( deSerialized.entity.isPresent() ) {
                 EntityUtils.setId( deSerialized.entity.get(), id );
             }
 
-            return new MvccEntityImpl( id, column.getName(), deSerialized.status, deSerialized.entity );
+            return new MvccEntityImpl( id, version, deSerialized.status, deSerialized.entity );
         }
     }
 
 
-    public static class EntitySerializer extends AbstractSerializer<EntityWrapper> {
+    /**
+     * Return the entity serializer for this instance
+     */
+    protected abstract AbstractSerializer<EntityWrapper> getEntitySerializer();
 
-        public static final EntitySerializer INSTANCE = new EntitySerializer();
+    /**
+     * Get the column family to perform operations with
+     * @return
+     */
+    protected abstract MultiTennantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> getColumnFamily();
 
-        public static final SmileFactory f = new SmileFactory();
-
-        public static ObjectMapper mapper;
-
-        private static byte[] STATE_COMPLETE = new byte[] { 0 };
-        private static byte[] STATE_DELETED = new byte[] { 1 };
-        private static byte[] STATE_PARTIAL = new byte[] { 2 };
-
-        private static byte[] VERSION = new byte[] { 0 };
-
-
-        //the marker for when we're passed a "null" value
-        private static final byte[] EMPTY = new byte[] { 0x0 };
-
-
-        public EntitySerializer() {
-            try {
-                mapper = new ObjectMapper( f );
-                //                mapper.enable(SerializationFeature.INDENT_OUTPUT); don't indent output,
-                // causes slowness
-                mapper.enableDefaultTypingAsProperty( ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT, "@class" );
-            }
-            catch ( Exception e ) {
-                throw new RuntimeException( "Error setting up mapper", e );
-            }
-        }
-
-
-        @Override
-        public ByteBuffer toByteBuffer( final EntityWrapper wrapper ) {
-            if ( wrapper == null ) {
-                return null;
-            }
-
-            CompositeBuilder builder = Composites.newCompositeBuilder();
-
-            builder.addBytes( VERSION );
-
-            //mark this version as empty
-            if ( !wrapper.entity.isPresent() ) {
-                //we're empty
-                builder.addBytes( STATE_DELETED );
-
-                return builder.build();
-            }
-
-            //we have an entity
-
-            if ( wrapper.status == MvccEntity.Status.COMPLETE ) {
-                builder.addBytes( STATE_COMPLETE );
-            }
-
-            else {
-                builder.addBytes( STATE_PARTIAL );
-            }
-
-            try {
-                builder.addBytes( mapper.writeValueAsBytes( wrapper.entity.get() ) );
-            }
-            catch ( Exception e ) {
-                throw new RuntimeException( "Unable to serialize entity", e );
-            }
-
-            return builder.build();
-        }
-
-
-        @Override
-        public EntityWrapper fromByteBuffer( final ByteBuffer byteBuffer ) {
-            CompositeParser parser = Composites.newCompositeParser( byteBuffer );
-
-            byte[] version = parser.read( BYTES_ARRAY_SERIALIZER );
-
-            if ( !Arrays.equals( VERSION, version ) ) {
-                throw new UnsupportedOperationException( "A version of type " + version + " is unsupported" );
-            }
-
-            byte[] state = parser.read( BYTES_ARRAY_SERIALIZER );
-
-            // it's been deleted, remove it
-
-            if ( Arrays.equals( STATE_DELETED, state ) ) {
-                return new EntityWrapper( MvccEntity.Status.COMPLETE, Optional.<Entity>absent() );
-            }
-
-            Entity storedEntity = null;
-
-            ByteBuffer jsonBytes = parser.read( BUFFER_SERIALIZER );
-            byte[] array = jsonBytes.array();
-            int start = jsonBytes.arrayOffset();
-            int length = jsonBytes.remaining();
-
-            try {
-                storedEntity = mapper.readValue( array, start, length, Entity.class );
-            }
-            catch ( Exception e ) {
-                throw new RuntimeException( "Unable to read entity data", e );
-            }
-
-            final Optional<Entity> entity = Optional.of( storedEntity );
-
-            if ( Arrays.equals( STATE_COMPLETE, state ) ) {
-                return new EntityWrapper( MvccEntity.Status.COMPLETE, entity );
-            }
-
-            // it's partial by default
-            return new EntityWrapper( MvccEntity.Status.PARTIAL, entity );
-        }
-    }
 }

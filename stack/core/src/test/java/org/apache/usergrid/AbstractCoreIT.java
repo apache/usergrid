@@ -21,6 +21,9 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.apache.usergrid.cassandra.CassandraResource;
+import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.utils.JsonUtils;
 
 
@@ -29,7 +32,14 @@ public abstract class AbstractCoreIT {
     private static final Logger LOG = LoggerFactory.getLogger( AbstractCoreIT.class );
 
     @ClassRule
-    public static CoreITSetup setup = new CoreITSetupImpl( CoreITSuite.cassandraResource, CoreITSuite.elasticSearchResource );
+    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
+
+    @ClassRule
+    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
+
+
+    @ClassRule
+    public static CoreITSetup setup = new CoreITSetupImpl( cassandraResource, elasticSearchResource );
 
     @Rule
     public CoreApplication app = new CoreApplication( setup );

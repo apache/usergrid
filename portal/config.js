@@ -1,4 +1,3 @@
-
 /*
     Licensed to the Apache Software Foundation (ASF) under one
     or more contributor license agreements.  See the NOTICE file
@@ -24,45 +23,91 @@ Usergrid.showNotifcations = true;
 
 
 // used only if hostname does not match a real server name
-Usergrid.overrideUrl = 'http://importtest2.usergrid.com/';
+Usergrid.overrideUrl = 'http://localhost:8080/';
+//Usergrid.overrideUrl = 'https://api.usergrid.com/';
 
 Usergrid.options = {
-  client:{
-    requiresDeveloperKey:false
-   // apiKey:'123456'
+  client: {
+    requiresDeveloperKey: false
+      // apiKey:'123456'
   },
-  showAutoRefresh:true,
-  autoUpdateTimer:61, //seconds
-  menuItems:[
-    {path:'#!/org-overview', active:true,pic:'&#128362;',title:'Org Administration'},
-    {path:'#!/app-overview/summary',pic:'&#59214;',title:'App Overview'},
-    {path:'#!/users',pic:'&#128100;',title:'Users'},
-    {path:'#!/groups',pic:'&#128101;',title:'Groups'},
-    {path:'#!/roles',pic:'&#59170;',title:'Roles'},
-    {path:'#!/data',pic:'&#128248;',title:'Data'},
-    {path:'#!/activities',pic:'&#59194;',title:'Activities'},
-    {path:'#!/push/getStarted',pic:'&#59200;',title:'Push', items:[
-      {path:'#!/push/getStarted',pic:'&#59176;',title:'Get Started'},
-      {path:'#!/push/configuration',pic:'&#9874;',title:'Configure'},
-      {path:'#!/push/history',pic:'&#9991;',title:'History'},
-      {path:'#!/push/sendNotification',pic:'&#59200;',title:'Send'}
-    ]},
-    
+  showAutoRefresh: true,
+  autoUpdateTimer: 61, //seconds
+  menuItems: [{
+      path: '#!/org-overview',
+      active: true,
+      pic: '&#128362;',
+      title: 'Org Administration'
+    }, {
+      path: '#!/app-overview/summary',
+      pic: '&#59214;',
+      title: 'App Overview'
+    }, {
+      path: '#!/users',
+      pic: '&#128100;',
+      title: 'Users'
+    }, {
+      path: '#!/groups',
+      pic: '&#128101;',
+      title: 'Groups'
+    }, {
+      path: '#!/roles',
+      pic: '&#59170;',
+      title: 'Roles'
+    }, {
+      path: '#!/data',
+      pic: '&#128248;',
+      title: 'Data'
+    }, {
+      path: '#!/activities',
+      pic: '&#59194;',
+      title: 'Activities'
+    }, {
+      path: '#!/push/getStarted',
+      pic: '&#59200;',
+      title: 'Push',
+      items: [{
+        path: '#!/push/getStarted',
+        pic: '&#59176;',
+        title: 'Get Started'
+      }, {
+        path: '#!/push/configuration',
+        pic: '&#9874;',
+        title: 'Configure'
+      }, {
+        path: '#!/push/history',
+        pic: '&#9991;',
+        title: 'History'
+      }, {
+        path: '#!/push/sendNotification',
+        pic: '&#59200;',
+        title: 'Send'
+      }]
+    },
 
-    {path:'#!/shell',pic:'&#9000;',title:'Shell'}
+
+    {
+      path: '#!/shell',
+      pic: '&#9000;',
+      title: 'Shell'
+    }
   ]
 };
 
 Usergrid.regex = {
   appNameRegex: new RegExp("^[0-9a-zA-Z.-]{3,25}$"),
   usernameRegex: new RegExp("^[0-9a-zA-Z@\.\_-]{4,25}$"),
-  nameRegex: new RegExp("^([0-9a-zA-Z@#$%^&!?;:.,'\"~*-:+_\[\\](){}/\\ |]{3,60})+$"),
+  nameRegex: new RegExp(
+    "^([0-9a-zA-Z@#$%^&!?;:.,'\"~*-:+_\[\\](){}/\\ |]{3,60})+$"),
   roleNameRegex: new RegExp("^([0-9a-zA-Z./-]{3,25})+$"),
-  emailRegex: new RegExp("^(([0-9a-zA-Z]+[_\+.-]?)+@[0-9a-zA-Z]+[0-9,a-z,A-Z,.,-]*(.){1}[a-zA-Z]{2,4})+$"),
+  emailRegex: new RegExp(
+    "^(([0-9a-zA-Z]+[_\+.-]?)+@[0-9a-zA-Z]+[0-9,a-z,A-Z,.,-]*(.){1}[a-zA-Z]{2,4})+$"
+  ),
   passwordRegex: /(?=^.{8,}$)((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/,
   pathRegex: new RegExp("^/[a-zA-Z0-9\.\*_~-]+(\/[a-zA-Z0-9\.\*_~-]+)*$"),
   titleRegex: new RegExp("[a-zA-Z0-9.!-?]+[\/]?"),
-  urlRegex: new RegExp("^(http?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$"),
+  urlRegex: new RegExp(
+    "^(http?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$"),
   zipRegex: new RegExp("^[0-9]{5}(?:-[0-9]{4})?$"),
   countryRegex: new RegExp("^[A-Za-z ]{3,100}$"),
   stateRegex: new RegExp("^[A-Za-z ]{2,100}$"),

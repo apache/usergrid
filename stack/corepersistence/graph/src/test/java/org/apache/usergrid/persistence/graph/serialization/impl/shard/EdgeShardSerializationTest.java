@@ -22,17 +22,15 @@ package org.apache.usergrid.persistence.graph.serialization.impl.shard;
 
 import java.util.Iterator;
 
-import org.jukito.UseModules;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
-import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
-import org.apache.usergrid.persistence.core.cassandra.ITRunner;
+import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.test.ITRunner;
+import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -52,9 +50,6 @@ import static org.mockito.Mockito.when;
 @RunWith(ITRunner.class)
 @UseModules({ TestGraphModule.class })
 public class EdgeShardSerializationTest {
-
-    @ClassRule
-    public static CassandraRule rule = new CassandraRule();
 
 
     @Inject
@@ -94,9 +89,9 @@ public class EdgeShardSerializationTest {
 
         final Shard shard3 = new Shard( shard2.getShardIndex() * 2, timestamp, false );
 
-        final DirectedEdgeMeta sourceEdgeMeta = DirectedEdgeMeta.fromSourceNodeTargetType(now,  "edgeType", "subType"  );
+        final DirectedEdgeMeta sourceEdgeMeta = DirectedEdgeMeta.fromSourceNodeTargetType( now, "edgeType", "subType" );
 
-        MutationBatch batch = edgeShardSerialization.writeShardMeta( scope, shard1, sourceEdgeMeta  );
+        MutationBatch batch = edgeShardSerialization.writeShardMeta( scope, shard1, sourceEdgeMeta );
 
         batch.mergeShallow( edgeShardSerialization.writeShardMeta( scope, shard2, sourceEdgeMeta ) );
 
@@ -118,11 +113,10 @@ public class EdgeShardSerializationTest {
 
         assertFalse( results.hasNext() );
 
-        final DirectedEdgeMeta targetEdgeMeta = DirectedEdgeMeta.fromTargetNodeSourceType( now,  "edgeType", "subType"  );
+        final DirectedEdgeMeta targetEdgeMeta = DirectedEdgeMeta.fromTargetNodeSourceType( now, "edgeType", "subType" );
 
         //test we get nothing with the other node type
-        results =
-                edgeShardSerialization.getShardMetaData( scope, Optional.<Shard>absent(), targetEdgeMeta );
+        results = edgeShardSerialization.getShardMetaData( scope, Optional.<Shard>absent(), targetEdgeMeta );
 
         assertFalse( results.hasNext() );
 
@@ -155,17 +149,14 @@ public class EdgeShardSerializationTest {
         final Shard shard3 = new Shard( shard2.getShardIndex() * 2, timestamp, false );
 
 
-        final DirectedEdgeMeta sourceEdgeMeta = DirectedEdgeMeta.fromSourceNodeTargetType(now,  "edgeType", "subType"  );
+        final DirectedEdgeMeta sourceEdgeMeta = DirectedEdgeMeta.fromSourceNodeTargetType( now, "edgeType", "subType" );
 
 
-        MutationBatch batch =
-                edgeShardSerialization.writeShardMeta( scope, shard1, sourceEdgeMeta );
+        MutationBatch batch = edgeShardSerialization.writeShardMeta( scope, shard1, sourceEdgeMeta );
 
-        batch.mergeShallow(
-                edgeShardSerialization.writeShardMeta( scope, shard2, sourceEdgeMeta ) );
+        batch.mergeShallow( edgeShardSerialization.writeShardMeta( scope, shard2, sourceEdgeMeta ) );
 
-        batch.mergeShallow(
-                edgeShardSerialization.writeShardMeta( scope, shard3, sourceEdgeMeta ) );
+        batch.mergeShallow( edgeShardSerialization.writeShardMeta( scope, shard3, sourceEdgeMeta ) );
 
         batch.execute();
 
@@ -183,10 +174,9 @@ public class EdgeShardSerializationTest {
 
         //test nothing with other type
 
-        final DirectedEdgeMeta targetEdgeMeta = DirectedEdgeMeta.fromTargetNodeSourceType( now,  "edgeType", "subType"  );
+        final DirectedEdgeMeta targetEdgeMeta = DirectedEdgeMeta.fromTargetNodeSourceType( now, "edgeType", "subType" );
 
-        results =
-                edgeShardSerialization.getShardMetaData( scope, Optional.<Shard>absent(), targetEdgeMeta );
+        results = edgeShardSerialization.getShardMetaData( scope, Optional.<Shard>absent(), targetEdgeMeta );
 
         assertFalse( results.hasNext() );
 
@@ -194,8 +184,7 @@ public class EdgeShardSerializationTest {
         //test paging and size
         edgeShardSerialization.removeShardMeta( scope, shard1, sourceEdgeMeta ).execute();
 
-        results =
-                edgeShardSerialization.getShardMetaData( scope, Optional.<Shard>absent(), sourceEdgeMeta );
+        results = edgeShardSerialization.getShardMetaData( scope, Optional.<Shard>absent(), sourceEdgeMeta );
 
         assertEquals( shard3, results.next() );
 
@@ -208,8 +197,7 @@ public class EdgeShardSerializationTest {
 
         edgeShardSerialization.removeShardMeta( scope, shard3, sourceEdgeMeta ).execute();
 
-        results =
-                edgeShardSerialization.getShardMetaData( scope, Optional.<Shard>absent(), sourceEdgeMeta );
+        results = edgeShardSerialization.getShardMetaData( scope, Optional.<Shard>absent(), sourceEdgeMeta );
 
 
         assertFalse( results.hasNext() );

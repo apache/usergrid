@@ -44,7 +44,6 @@ public class NotifiersServiceIT extends AbstractServiceIT {
     @Before
     public void before() throws Exception {
         ns = (NotificationsService) app.getSm().getService("notifications");
-        MockSuccessfulProviderAdapter.install(ns);
     }
 
     @Test
@@ -76,16 +75,6 @@ public class NotifiersServiceIT extends AbstractServiceIT {
             // ok
         }
 
-        // mock action (based on verified actual behavior) //
-        ns.providerAdapters
-                .put("google",
-                        new org.apache.usergrid.services.notifications.gcm.MockSuccessfulProviderAdapter() {
-                            @Override
-                            public void testConnection(Notifier notifier)
-                                    throws ConnectionException {
-                                throw new ConnectionException("", null);
-                            }
-                        });
 
         app.put("apiKey", "xxx");
 
@@ -99,8 +88,6 @@ public class NotifiersServiceIT extends AbstractServiceIT {
 
     @Test
     public void badAPNsEnvironment() throws Exception {
-
-        MockSuccessfulProviderAdapter.uninstall(ns);
 
         app.clear();
         app.put("provider", "apple");
@@ -141,16 +128,7 @@ public class NotifiersServiceIT extends AbstractServiceIT {
     @Test
     public void badAPNsCertificate() throws Exception {
 
-        // mock error (based on verified actual behavior) //
-        ns.providerAdapters.put("apple", new MockSuccessfulProviderAdapter() {
-            @Override
-            public void testConnection(Notifier notifier)
-                    throws ConnectionException {
-                Exception e = new SocketException(
-                        "Connection closed by remote host");
-                throw new ConnectionException(e.getMessage(), e);
-            }
-        });
+
 
         app.clear();
         app.put("provider", "apple");
@@ -174,15 +152,6 @@ public class NotifiersServiceIT extends AbstractServiceIT {
     @Test
     public void badAPNsPassword() throws Exception {
 
-        // mock error (based on verified actual behavior) //
-        ns.providerAdapters.put("apple", new MockSuccessfulProviderAdapter() {
-            @Override
-            public void testConnection(Notifier notifier)
-                    throws ConnectionException {
-                Exception e = new Exception("invalid ssl config");
-                throw new ConnectionException(e.getMessage(), e);
-            }
-        });
 
         app.clear();
         app.put("provider", "apple");
@@ -232,7 +201,7 @@ public class NotifiersServiceIT extends AbstractServiceIT {
         f.set(Schema.class, originalSeed);
 
         try {
-            app.getEm().get(notifier.getUuid());
+            app.getEntityManager().get(notifier.getUuid());
             fail("Should have failed to retrieve the encrypted entity.");
         } catch (IllegalStateException e) {
             // ok! This should happen.

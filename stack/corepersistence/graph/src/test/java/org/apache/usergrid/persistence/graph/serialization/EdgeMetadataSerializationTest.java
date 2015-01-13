@@ -23,17 +23,13 @@ package org.apache.usergrid.persistence.graph.serialization;
 import java.util.Iterator;
 import java.util.UUID;
 
-import org.jukito.UseModules;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
-import org.apache.usergrid.persistence.core.cassandra.ITRunner;
+import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
-import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
@@ -59,26 +55,23 @@ import static org.mockito.Mockito.when;
 
 
 /**
- *
- *
+ * Made abstract to allow subclasses to perform the wiring required for the functional testing.
  */
-@RunWith(ITRunner.class)
-@UseModules({ TestGraphModule.class })
-public class EdgeMetadataSerializationTest {
+public abstract class EdgeMetadataSerializationTest {
+
+
 
     @Inject
     @Rule
     public MigrationManagerRule migrationManagerRule;
-
-
-    @Inject
-    protected EdgeMetadataSerialization serialization;
 
     @Inject
     protected Keyspace keyspace;
 
 
     protected ApplicationScope scope;
+
+    protected EdgeMetadataSerialization serialization;
 
 
     @Before
@@ -91,6 +84,8 @@ public class EdgeMetadataSerializationTest {
         when( orgId.getUuid() ).thenReturn( UUIDGenerator.newTimeUUID() );
 
         when( scope.getApplication() ).thenReturn( orgId );
+
+        serialization = getSerializationImpl();
     }
 
 
@@ -430,9 +425,9 @@ public class EdgeMetadataSerializationTest {
 
         final Id targetId = edge1.getTargetNode();
 
-        final Edge edge2 = createEdge( createId( "source" ), "edge", targetId, timestamp+1 );
+        final Edge edge2 = createEdge( createId( "source" ), "edge", targetId, timestamp + 1 );
 
-        final Edge edge3 = createEdge( createId( "source2" ), "edge", targetId, timestamp+2 );
+        final Edge edge3 = createEdge( createId( "source2" ), "edge", targetId, timestamp + 2 );
 
         //set writing the edge
         serialization.writeEdge( scope, edge1 ).execute();
@@ -483,14 +478,11 @@ public class EdgeMetadataSerializationTest {
         final StringSerializer STR_SER = StringSerializer.get();
 
 
-
         ColumnFamily<String, String> testCf = new ColumnFamily<String, String>( CF_NAME, STR_SER, STR_SER );
 
-        if(keyspace.describeKeyspace().getColumnFamily( CF_NAME ) == null){
+        if ( keyspace.describeKeyspace().getColumnFamily( CF_NAME ) == null ) {
             keyspace.createColumnFamily( testCf, null );
         }
-
-
 
 
         final String key = "key";
@@ -575,4 +567,7 @@ public class EdgeMetadataSerializationTest {
 
         assertTrue( deleted );
     }
+
+
+    protected abstract EdgeMetadataSerialization getSerializationImpl();
 }

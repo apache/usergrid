@@ -28,6 +28,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.usergrid.persistence.core.guice.ProxyImpl;
 import org.apache.usergrid.persistence.core.hystrix.HystrixCassandra;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -54,7 +55,6 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.netflix.astyanax.MutationBatch;
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import rx.Observable;
 import rx.Observer;
@@ -90,11 +90,13 @@ public class GraphManagerImpl implements GraphManager {
 
 
     @Inject
-    public GraphManagerImpl( final EdgeMetadataSerialization edgeMetadataSerialization,
+    public GraphManagerImpl( @ProxyImpl final EdgeMetadataSerialization edgeMetadataSerialization,
                              final EdgeSerialization storageEdgeSerialization,
-                             final NodeSerialization nodeSerialization, final GraphFig graphFig,
-                             @Assisted final ApplicationScope scope, final EdgeDeleteListener edgeDeleteListener,
-                             final NodeDeleteListener nodeDeleteListener ) {
+                             final NodeSerialization nodeSerialization,
+                             final GraphFig graphFig,
+                             final EdgeDeleteListener edgeDeleteListener,
+                             final NodeDeleteListener nodeDeleteListener,
+                             @Assisted final ApplicationScope scope) {
 
 
         ValidationUtils.validateApplicationScope( scope );
@@ -103,6 +105,7 @@ public class GraphManagerImpl implements GraphManager {
         Preconditions.checkNotNull( nodeSerialization, "nodeSerialization must not be null" );
         Preconditions.checkNotNull( graphFig, "consistencyFig must not be null" );
         Preconditions.checkNotNull( scope, "scope must not be null" );
+        Preconditions.checkNotNull( nodeDeleteListener, "nodeDeleteListener must not be null" );
 
         this.scope = scope;
         this.edgeMetadataSerialization = edgeMetadataSerialization;

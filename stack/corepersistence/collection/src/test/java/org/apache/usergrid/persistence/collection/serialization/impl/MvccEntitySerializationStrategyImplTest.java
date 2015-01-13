@@ -20,35 +20,30 @@
 package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.UUID;
 
-import junit.framework.Assert;
-import org.jukito.UseModules;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-//import org.safehaus.chop.api.IterationChop;
-import org.safehaus.guicyfig.Env;
-import org.safehaus.guicyfig.Option;
-import org.safehaus.guicyfig.Overrides;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
-import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
+import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
-import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
-import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
+import org.apache.usergrid.persistence.collection.util.EntityHelper;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
-import org.apache.usergrid.persistence.core.astyanax.AstyanaxKeyspaceProvider;
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
-import org.apache.usergrid.persistence.core.cassandra.ITRunner;
-import org.apache.usergrid.persistence.core.migration.MigrationManagerFig;
+import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
+import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.model.field.ArrayField;
 import org.apache.usergrid.persistence.model.field.BooleanField;
 import org.apache.usergrid.persistence.model.field.DoubleField;
 import org.apache.usergrid.persistence.model.field.Field;
@@ -62,56 +57,39 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
+import junit.framework.Assert;
+
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertTrue;
-import org.apache.usergrid.persistence.model.field.ArrayField;
 import static org.mockito.Mockito.mock;
 
-
-/** @author tnine */
-//@IterationChop( iterations = 1000, threads = 2 )
-@RunWith( ITRunner.class )
-@UseModules( TestCollectionModule.class )
-public class MvccEntitySerializationStrategyImplTest {
-    /** Our RX I/O threads and this should have the same value */
-    private static final String CONNECTION_COUNT = "20";
+//import org.safehaus.chop.api.IterationChop;
 
 
-    @Inject
-    private MvccEntitySerializationStrategy serializationStrategy;
+/**
+ * Tests for serialization strategy
+ */
+public abstract class MvccEntitySerializationStrategyImplTest {
 
-    @Inject
-    AstyanaxKeyspaceProvider provider;
+
+    protected MvccEntitySerializationStrategy serializationStrategy;
+
 
     @Inject
     @Rule
     public MigrationManagerRule migrationManagerRule;
 
     @Inject
-    @Overrides(
-        name = "unit-test",
-        environments = Env.UNIT,
-        options = {
-            @Option( method = "getHosts", override = "localhost" ),
-            @Option( method = "getConnections", override = CONNECTION_COUNT )
-        }
-    )
     public CassandraFig cassandraFig;
-
-
-    @Inject
-    public SerializationFig serializationFig;
-
-    @Inject
-    public MigrationManagerFig migrationManagerFig;
 
 
     @Before
     public void setup() {
         assertNotNull( cassandraFig );
+        serializationStrategy = getMvccEntitySerializationStrategy();
     }
 
 
@@ -426,7 +404,7 @@ public class MvccEntitySerializationStrategyImplTest {
         //now ask for up to 10 versions from the current version, we should get cleared, v2, v1
         UUID current = UUIDGenerator.newTimeUUID();
 
-        Iterator<MvccEntity> entities = serializationStrategy.load( context, id, current, 3 );
+        Iterator<MvccEntity> entities = serializationStrategy.loadDescendingHistory( context, id, current, 3 );
 
         MvccEntity first = entities.next();
         assertEquals( clearedV3, first);
@@ -446,7 +424,7 @@ public class MvccEntitySerializationStrategyImplTest {
         serializationStrategy.delete( context, id , version1 ).execute();
         serializationStrategy.delete( context, id , version2 ).execute();
 
-        entities = serializationStrategy.load( context, id, current, 3 );
+        entities = serializationStrategy.loadDescendingHistory( context, id, current, 3 );
 
          first = entities.next();
         assertEquals( clearedV3, first );
@@ -456,7 +434,7 @@ public class MvccEntitySerializationStrategyImplTest {
         serializationStrategy.delete( context,  id , version3 ).execute();
 
 
-        entities = serializationStrategy.load( context, id, current, 3 );
+        entities = serializationStrategy.loadDescendingHistory( context, id, current, 3 );
 
         Assert.assertTrue( !entities.hasNext());
     }
@@ -488,7 +466,8 @@ public class MvccEntitySerializationStrategyImplTest {
         MvccEntity savedV2 = new MvccEntityImpl(id, version2, MvccEntity.Status.COMPLETE, Optional.of(entityv2));
         serializationStrategy.write(context, savedV2).execute();
 
-        Iterator<MvccEntity> entities = serializationStrategy.loadHistory(context,id,savedV2.getVersion(),20);
+        Iterator<MvccEntity> entities = serializationStrategy.loadAscendingHistory( context, id, savedV2.getVersion(),
+                20 );
         assertTrue(entities.hasNext());
         assertEquals(saved.getVersion(), entities.next().getVersion());
         assertEquals(savedV2.getVersion(), entities.next().getVersion());
@@ -602,6 +581,8 @@ public class MvccEntitySerializationStrategyImplTest {
     }
 
 
+
+
     @Test(expected = NullPointerException.class)
     public void writeParamsContext() throws ConnectionException {
         serializationStrategy.write( null, mock( MvccEntity.class ) );
@@ -663,7 +644,7 @@ public class MvccEntitySerializationStrategyImplTest {
 
     @Test(expected = NullPointerException.class)
     public void loadListParamContext() throws ConnectionException {
-        serializationStrategy.load( null, new SimpleId( "test" ), UUIDGenerator.newTimeUUID(), 1 );
+        serializationStrategy.loadDescendingHistory( null, new SimpleId( "test" ), UUIDGenerator.newTimeUUID(), 1 );
     }
 
 
@@ -671,8 +652,9 @@ public class MvccEntitySerializationStrategyImplTest {
     public void loadListParamEntityId() throws ConnectionException {
 
         serializationStrategy
-                .load( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), null, UUIDGenerator.newTimeUUID(),
-                        1 );
+                .loadDescendingHistory(
+                        new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), null,
+                        UUIDGenerator.newTimeUUID(), 1 );
     }
 
 
@@ -680,17 +662,26 @@ public class MvccEntitySerializationStrategyImplTest {
     public void loadListParamVersion() throws ConnectionException {
 
         serializationStrategy
-                .load( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), new SimpleId( "test" ), null, 1 );
+                .loadDescendingHistory(
+                        new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" ),
+                        new SimpleId( "test" ), null, 1 );
     }
 
 
     @Test(expected = IllegalArgumentException.class)
     public void loadListParamSize() throws ConnectionException {
 
-        serializationStrategy.load( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), new SimpleId( "test" ),
-                UUIDGenerator.newTimeUUID(), 0 );
+        serializationStrategy.loadDescendingHistory(
+                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" ),
+                new SimpleId( "test" ), UUIDGenerator.newTimeUUID(), 0 );
     }
 
+
+    /**
+     * Get the serialization strategy to test
+     * @return
+     */
+    protected abstract MvccEntitySerializationStrategy getMvccEntitySerializationStrategy();
 
 
 }

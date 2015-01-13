@@ -40,10 +40,11 @@ import static org.junit.Assert.assertEquals;
  */
 public class TestCount {
 
-    private static final Logger log = LoggerFactory.getLogger(TestCount.class);
+    private static final Logger log = LoggerFactory.getLogger( TestCount.class );
+
 
     @Test
-    public void mergeTest(){
+    public void mergeTest() {
 
         final int sizePerObservable = 2000;
 
@@ -62,40 +63,39 @@ public class TestCount {
             }
         } );
 
-       int returned =  Observable.merge(input1, input2).buffer( 1000 ).flatMap(
-               new Func1<List<Integer>, Observable<Integer>>() {
-                   @Override
-                   public Observable<Integer> call( final List<Integer> integers ) {
+        int returned = Observable.merge( input1, input2 ).buffer( 1000 )
+                                 .flatMap( new Func1<List<Integer>, Observable<Integer>>() {
+                                             @Override
+                                             public Observable<Integer> call( final List<Integer> integers ) {
 
-                       //simulates batching a network operation from buffer, then re-emitting the values passed
+                                                 //simulates batching a network operation from buffer,
+                                                 // then re-emitting the values passed
 
-                       try {
-                           Thread.sleep( 100 );
-                       }
-                       catch ( InterruptedException e ) {
-                           throw new RuntimeException( e );
-                       }
-
-
-                       return Observable.from( integers );
-                   }
-               } ).count().defaultIfEmpty( 0 ).toBlocking().last();
+                                                 try {
+                                                     Thread.sleep( 100 );
+                                                 }
+                                                 catch ( InterruptedException e ) {
+                                                     throw new RuntimeException( e );
+                                                 }
 
 
-        assertEquals("Count was correct", sizePerObservable*2*100, returned);
+                                                 return Observable.from( integers );
+                                             }
+                                         } ).count().defaultIfEmpty( 0 ).toBlocking().last();
+
+
+        assertEquals( "Count was correct", sizePerObservable * 2 * 100, returned );
     }
 
 
     /**
      * Get observables from the sets
-     * @param size
-     * @return
      */
-    private Observable<Integer> getObservables( int size ){
+    private Observable<Integer> getObservables( int size ) {
 
-        final List<Integer> values = new ArrayList<Integer>(size);
+        final List<Integer> values = new ArrayList<Integer>( size );
 
-        for(int i = 0; i <size; i ++ ) {
+        for ( int i = 0; i < size; i++ ) {
             values.add( i );
         }
 
@@ -109,11 +109,10 @@ public class TestCount {
 
                 final int size = values.size();
 
-                for(int i = 0; i < size; i ++){
+                for ( int i = 0; i < size; i++ ) {
 
 
-
-                    if(i%1000 == 0){
+                    if ( i % 1000 == 0 ) {
                         //simulate network fetch
                         try {
                             Thread.sleep( 250 );
@@ -126,7 +125,7 @@ public class TestCount {
 
                     final Integer value = values.get( i );
 
-                    log.info( "Emitting {}", value  );
+                    log.info( "Emitting {}", value );
 
 
                     subscriber.onNext( value );
@@ -137,6 +136,5 @@ public class TestCount {
                 //purposefully no error handling here
             }
         } ).subscribeOn( Schedulers.io() );
-
     }
 }

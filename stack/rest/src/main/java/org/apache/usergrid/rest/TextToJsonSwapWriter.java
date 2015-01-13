@@ -33,6 +33,7 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
 import com.sun.jersey.api.json.JSONWithPadding;
+import com.sun.jersey.api.view.Viewable;
 import com.sun.jersey.spi.MessageBodyWorkers;
 
 
@@ -58,8 +59,13 @@ public class TextToJsonSwapWriter implements MessageBodyWriter<JSONWithPadding> 
     public boolean isWriteable( final Class<?> type, final Type genericType, final Annotation[] annotations,
                                 final MediaType mediaType ) {
 
-        //this should only map no media type, or text/html requests with json responses
 
+        // if type is Viewable them we want to return HTML, so no swap needed
+        if ( type.isAssignableFrom(Viewable.class) ) {
+            return false;
+        }
+
+        // this should only map no media type, or text/html requests with json responses
         final boolean mediaTypeCorrect = mediaType == null || MediaType.TEXT_HTML_TYPE.equals( mediaType );
 
         if(!mediaTypeCorrect){

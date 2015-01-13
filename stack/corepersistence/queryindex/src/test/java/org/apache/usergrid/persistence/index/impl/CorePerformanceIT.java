@@ -17,8 +17,7 @@
  */
 package org.apache.usergrid.persistence.index.impl;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
+
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -26,18 +25,26 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import org.junit.ClassRule;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.commons.lang3.math.NumberUtils;
+
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
-import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexScope;
+import org.apache.usergrid.persistence.index.SearchTypes;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
 import org.apache.usergrid.persistence.index.query.EntityResults;
@@ -49,11 +56,9 @@ import org.apache.usergrid.persistence.model.field.DoubleField;
 import org.apache.usergrid.persistence.model.field.LongField;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-import org.junit.ClassRule;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 
 
 
@@ -64,10 +69,7 @@ public class CorePerformanceIT extends BaseIT {
     private static final Logger log = LoggerFactory.getLogger(CorePerformanceIT.class);
 
     @ClassRule
-    public static ElasticSearchRule es = new ElasticSearchRule();
-
-    @ClassRule
-    public static CassandraRule cass = new CassandraRule();
+    public static ElasticSearchResource es = new ElasticSearchResource();
 
     // max entities we will write and read
     static int maxEntities = 10; // TODO: make this configurable when you add Chop 
@@ -127,7 +129,7 @@ public class CorePerformanceIT extends BaseIT {
 
             String appName = "app-" + j + "-" + time;
             Id appId = new SimpleId( appName );
-            IndexScope indexScope = new IndexScopeImpl( appId, "reviews" );
+            IndexScope indexScope = new IndexScopeImpl( appId, "reviews");
             scopes.add( indexScope );
 
             Thread t = new Thread( new DataLoader( applicationScope, indexScope ) );
@@ -178,12 +180,14 @@ public class CorePerformanceIT extends BaseIT {
             Query query = Query.fromQL( "review_score > 0"); // get all reviews;
             query.withLimit( maxEntities < 1000 ? maxEntities : 1000 );
 
-            CandidateResults candidateResults = eci.search(indexScope,  query );
+            final SearchTypes searchType = SearchTypes.fromTypes( "review" );
+
+            CandidateResults candidateResults = eci.search(indexScope, searchType, query );
             int count = candidateResults.size();
 
             while ( candidateResults.hasCursor() && count < maxEntities ) {
                 query.setCursor( candidateResults.getCursor() )   ;
-                candidateResults = eci.search(indexScope,  query );
+                candidateResults = eci.search(indexScope, searchType,  query );
                 count += candidateResults.size();
 
                 //cause retrieval from cassandra
@@ -308,10 +312,6 @@ public class CorePerformanceIT extends BaseIT {
     public void runSelectedQueries(final ApplicationScope scope,  List<IndexScope> indexScopes ) {
 
         for ( IndexScope indexScope : indexScopes ) {
-
-
-            CollectionScope collectionScope = new CollectionScopeImpl(
-                    scope.getApplication(), indexScope.getOwner(), indexScope.getName() );
             EntityIndex eci = ecif.createEntityIndex(scope );
 
             // TODO: come up with more and more complex queries for CorePerformanceIT
@@ -332,8 +332,8 @@ public class CorePerformanceIT extends BaseIT {
 
     public static void query(final IndexScope indexScope, final EntityIndex eci, final String query ) {;
         Query q = Query.fromQL(query) ;
-        CandidateResults candidateResults = eci.search(indexScope,  q );
-        log.info("size = {} returned from query {}", candidateResults.size(), q.getQl() );
+//        CandidateResults candidateResults = eci.search(indexScope,  q );  TODO FIXME
+//        log.info("size = {} returned from query {}", candidateResults.size(), q.getQl() );
     }
 
 }

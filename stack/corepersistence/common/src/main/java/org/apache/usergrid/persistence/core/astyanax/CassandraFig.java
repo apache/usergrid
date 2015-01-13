@@ -37,6 +37,11 @@ public interface CassandraFig extends GuicyFig {
 
     public static final String WRITE_CL = "usergrid.write.cl";
 
+    public static final String SHARD_VALUES = "cassandra.shardvalues";
+
+    public static final String THRIFT_TRANSPORT_SIZE = "cassandra.thrift.transport.frame";
+
+
     @Key( "cassandra.hosts" )
     String getHosts();
 
@@ -80,5 +85,26 @@ public interface CassandraFig extends GuicyFig {
     @Default("CL_QUORUM")
     @Key(WRITE_CL)
     String getWriteCL();
+
+    /**
+     * Return the history of all shard values which are immutable.  For instance, if shard values
+     * are initially set to 20 (the default) then increased to 40, the property should contain the string of
+     * "20, 40" so that we can read historic data.
+     *
+     * @return
+     */
+    @Default("20")
+    @Key(SHARD_VALUES)
+    String getShardValues();
+
+    /**
+     * Get the thrift transport size.  Should be set to what is on the cassandra servers.  As we move to CQL, this will become obsolete
+     * @return
+     */
+    @Key( THRIFT_TRANSPORT_SIZE)
+    @Default( "15728640" )
+    int getThriftBufferSize();
+
+
 
 }

@@ -21,9 +21,13 @@ package org.apache.usergrid.persistence.collection.serialization.impl;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
-import org.apache.usergrid.persistence.core.migration.Migration;
+import org.apache.usergrid.persistence.core.guice.CurrentImpl;
+import org.apache.usergrid.persistence.core.guice.PreviousImpl;
+import org.apache.usergrid.persistence.core.guice.ProxyImpl;
+import org.apache.usergrid.persistence.core.migration.schema.Migration;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Key;
 import com.google.inject.multibindings.Multibinder;
 
 
@@ -37,14 +41,27 @@ public class SerializationModule extends AbstractModule {
 
 
         // bind the serialization strategies
-        bind( MvccEntitySerializationStrategy.class ).to( MvccEntitySerializationStrategyImpl.class );
+
+        //We've migrated this one, so we need to set up the previous, current, and proxy
+        bind( MvccEntitySerializationStrategy.class ).annotatedWith( PreviousImpl.class )
+                                                     .to( MvccEntitySerializationStrategyV1Impl.class );
+        bind( MvccEntitySerializationStrategy.class ).annotatedWith( CurrentImpl.class )
+                                                     .to( MvccEntitySerializationStrategyV2Impl.class );
+        bind( MvccEntitySerializationStrategy.class ).annotatedWith( ProxyImpl.class )
+                                                     .to( MvccEntitySerializationStrategyProxyImpl.class );
+
         bind( MvccLogEntrySerializationStrategy.class ).to( MvccLogEntrySerializationStrategyImpl.class );
         bind( UniqueValueSerializationStrategy.class ).to( UniqueValueSerializationStrategyImpl.class );
 
         //do multibindings for migrations
         Multibinder<Migration> uriBinder = Multibinder.newSetBinder( binder(), Migration.class );
-        uriBinder.addBinding().to( MvccEntitySerializationStrategyImpl.class );
-        uriBinder.addBinding().to( MvccLogEntrySerializationStrategyImpl.class );
-        uriBinder.addBinding().to( UniqueValueSerializationStrategyImpl.class );
+        uriBinder.addBinding().to( Key.get( MvccEntitySerializationStrategy.class, PreviousImpl.class ) );
+        uriBinder.addBinding().to( Key.get( MvccEntitySerializationStrategy.class, CurrentImpl.class ) );
+        uriBinder.addBinding().to( Key.get( MvccLogEntrySerializationStrategy.class ) );
+        uriBinder.addBinding().to( Key.get( UniqueValueSerializationStrategy.class ) );
+
+
+        //bind our settings as an eager singleton so it's checked on startup
+        bind(SettingsValidation.class).asEagerSingleton();
     }
 }

@@ -28,14 +28,18 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
 
+import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
-import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
+import org.apache.usergrid.persistence.core.guice.TestCommonModule;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.test.ITRunner;
+import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
+import com.google.inject.Inject;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
@@ -55,10 +59,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 
+@RunWith( ITRunner.class )
+@UseModules( TestCommonModule.class )
 public class MultiRowColumnIteratorTest {
 
-    @ClassRule
-    public static CassandraRule rule = new CassandraRule();
+    @Inject
+    public CassandraFig cassandraFig;
 
     protected static Keyspace keyspace;
 
@@ -70,8 +76,8 @@ public class MultiRowColumnIteratorTest {
     protected static final boolean TRUE = true;
 
 
-    @BeforeClass
-    public static void setup() throws ConnectionException {
+    @Before
+    public void setup() throws ConnectionException {
 
 
         final CassandraConfig cassandraConfig = new CassandraConfig() {
@@ -85,11 +91,17 @@ public class MultiRowColumnIteratorTest {
             public ConsistencyLevel getWriteCL() {
                 return ConsistencyLevel.CL_QUORUM;
             }
+
+
+            @Override
+            public int[] getShardSettings() {
+                return new int[]{20};
+            }
         };
 
 
         AstyanaxKeyspaceProvider astyanaxKeyspaceProvider =
-                new AstyanaxKeyspaceProvider( rule.getCassandraFig(), cassandraConfig );
+                new AstyanaxKeyspaceProvider( cassandraFig, cassandraConfig );
 
         keyspace = astyanaxKeyspaceProvider.get();
 
@@ -144,6 +156,12 @@ public class MultiRowColumnIteratorTest {
             public void buildRange( final RangeBuilder rangeBuilder ) {
 
             }
+
+
+            @Override
+            public boolean skipFirst( final Long first ) {
+                return false;
+            }
         };
 
 
@@ -183,6 +201,12 @@ public class MultiRowColumnIteratorTest {
             @Override
             public void buildRange( final RangeBuilder rangeBuilder ) {
                 rangeBuilder.setReversed( true );
+            }
+
+
+            @Override
+            public boolean skipFirst( final Long first ) {
+                return false;
             }
         };
 
@@ -252,6 +276,12 @@ public class MultiRowColumnIteratorTest {
             public void buildRange( final RangeBuilder rangeBuilder ) {
 
             }
+
+
+            @Override
+            public boolean skipFirst( final Long first ) {
+                return false;
+            }
         };
 
 
@@ -295,6 +325,12 @@ public class MultiRowColumnIteratorTest {
             @Override
             public void buildRange( final RangeBuilder rangeBuilder ) {
                 rangeBuilder.setReversed( true );
+            }
+
+
+            @Override
+            public boolean skipFirst( final Long first ) {
+                return false;
             }
         };
 
@@ -387,6 +423,12 @@ public class MultiRowColumnIteratorTest {
             public void buildRange( final RangeBuilder rangeBuilder ) {
 
             }
+
+
+            @Override
+            public boolean skipFirst( final Long first ) {
+                return false;
+            }
         };
 
 
@@ -426,6 +468,12 @@ public class MultiRowColumnIteratorTest {
             @Override
             public void buildRange( final RangeBuilder rangeBuilder ) {
                 rangeBuilder.setReversed( true );
+            }
+
+
+            @Override
+            public boolean skipFirst( final Long first ) {
+                return false;
             }
         };
 

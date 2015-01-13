@@ -19,7 +19,8 @@ package org.apache.usergrid.management.importer;
 
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.batch.job.OnlyOnceJob;
-import static org.apache.usergrid.corepersistence.CpEntityManagerFactory.MANAGEMENT_APPLICATION_ID;
+
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.entities.Import;
@@ -81,7 +82,7 @@ public class ImportJob extends OnlyOnceJob {
     public void dead( final JobExecution execution ) throws Exception {
 
         // marks the job as failed as it will not be retried by the scheduler.
-        EntityManager rootEm = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+        EntityManager rootEm = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID);
         Import importUG = importService.getImportEntity(execution);
         importUG.setErrorMessage("The Job has been tried maximum times but still failed");
         importUG.setState(Import.State.FAILED);

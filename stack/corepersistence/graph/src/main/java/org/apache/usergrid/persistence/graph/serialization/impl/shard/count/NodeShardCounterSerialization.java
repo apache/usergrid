@@ -19,7 +19,7 @@
 package org.apache.usergrid.persistence.graph.serialization.impl.shard.count;
 
 
-import org.apache.usergrid.persistence.core.migration.Migration;
+import org.apache.usergrid.persistence.core.migration.schema.Migration;
 
 import com.netflix.astyanax.MutationBatch;
 

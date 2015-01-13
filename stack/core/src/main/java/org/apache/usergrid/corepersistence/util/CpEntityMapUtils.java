@@ -68,7 +68,8 @@ public class CpEntityMapUtils {
         return fromMap( null, map, entityType, topLevel );
     }
 
-    public static Entity fromMap( Entity entity, Map<String, Object> map, String entityType, boolean topLevel ) {
+    public static Entity fromMap( 
+            Entity entity, Map<String, Object> map, String entityType, boolean topLevel ) {
 
         if ( entity == null ) {
             entity = new Entity();
@@ -136,37 +137,61 @@ public class CpEntityMapUtils {
     private static void processMapValue(
             Object value, String fieldName, Entity entity, String entityType) {
 
-        Field field = null;
-
         // is the map really a location element?
-        Map<String, Object> m = (Map<String, Object>)value;
-        if ( m.size() == 2) {
-            Double lat = null;
-            Double lon = null;
-            try {
-                if ( m.get("latitude") != null && m.get("longitude") != null ) {
-                    lat = Double.parseDouble( m.get("latitude").toString() );
-                    lon = Double.parseDouble( m.get("longitude").toString() );
-                    
-                } else if ( m.get("lat") != null && m.get("lon") != null ) {
-                    lat = Double.parseDouble( m.get("lat").toString() );
-                    lon = Double.parseDouble( m.get("lon").toString() );
-                }
-            } catch ( NumberFormatException ignored ) {}
-            
-            if ( lat != null && lon != null ) {
-                field = new LocationField( fieldName, new Location( lat, lon ));
+        if ("location" .equals(fieldName.toString().toLowerCase()) ) {
+
+            // get the object to inspect
+            Map<String, Object> origMap = (Map<String, Object>) value;
+            Map<String, Object> m = new HashMap<String, Object>();
+
+            // Tests expect us to treat "Longitude" the same as "longitude"
+            for ( String key : origMap.keySet() ) {
+                m.put( key.toLowerCase(), origMap.get(key) );
             }
-        }
-        
-        if ( field == null ) {
-            
-            // not a location element, process it as map
-            entity.setField( new EntityObjectField( fieldName,
-                    fromMap( (Map<String, Object>)value, entityType, false ))); // recursion
-            
+
+            // Expect at least two fields in a Location object
+            if (m.size() >= 2) {
+
+                Double lat = null;
+                Double lon = null;
+
+                // check the properties to make sure they are set and are doubles
+                if (m.get("latitude") != null && m.get("longitude") != null) {
+                    try {
+                        lat = Double.parseDouble(m.get("latitude").toString());
+                        lon = Double.parseDouble(m.get("longitude").toString());
+
+                    } catch (NumberFormatException ignored) {
+                        throw new IllegalArgumentException(
+                                "Latitude and longitude must be doubles (e.g. 32.1234).");
+                    }
+                } else if (m.get("lat") != null && m.get("lon") != null) {
+                    try {
+                        lat = Double.parseDouble(m.get("lat").toString());
+                        lon = Double.parseDouble(m.get("lon").toString());
+                    } catch (NumberFormatException ignored) {
+                        throw new IllegalArgumentException(""
+                                + "Latitude and longitude must be doubles (e.g. 32.1234).");
+                    }
+                } else {
+                    throw new IllegalArgumentException("Location properties require two fields - "
+                            + "latitude and longitude, or lat and lon");
+                }
+
+                if (lat != null && lon != null) {
+                    entity.setField( new LocationField(fieldName, new Location(lat, lon)));
+                } else {
+                    throw new IllegalArgumentException( "Unable to parse location field properties "
+                            + "- make sure they conform - lat and lon, and should be doubles.");
+                }
+            } else {
+                throw new IllegalArgumentException("Location properties requires two fields - "
+                        + "latitude and longitude, or lat and lon.");
+            }
         } else {
-            entity.setField( field );
+            // not a location element, process it as map
+            entity.setField(new EntityObjectField(fieldName,
+                    fromMap((Map<String, Object>) value, entityType, false))); // recursion
         }
     }
 
@@ -263,7 +288,7 @@ public class CpEntityMapUtils {
                 // field names lat and lon trigger ElasticSearch geo location 
                 locMap.put("lat", locField.getValue().getLatitude());
                 locMap.put("lon", locField.getValue().getLongitude());
-                 entityMap.put( field.getName(), field.getValue());
+                entityMap.put( field.getName(), field.getValue());
 
             } else if (f instanceof ByteArrayField) {
                     ByteArrayField bf = ( ByteArrayField ) f;

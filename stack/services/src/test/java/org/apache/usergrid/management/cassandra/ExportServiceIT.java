@@ -18,11 +18,34 @@
 package org.apache.usergrid.management.cassandra;
 
 
-import com.google.common.collect.ImmutableSet;
-import com.google.inject.Module;
+import java.io.File;
+import java.io.FileReader;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Properties;
+import java.util.UUID;
+
+import org.jclouds.ContextBuilder;
+import org.jclouds.blobstore.BlobStore;
+import org.jclouds.blobstore.BlobStoreContext;
+import org.jclouds.blobstore.domain.Blob;
+import org.jclouds.http.config.JavaUrlHttpCommandExecutorServiceModule;
+import org.jclouds.logging.log4j.config.Log4JLoggingModule;
+import org.jclouds.netty.config.NettyPayloadModule;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Ignore;
+import org.junit.Rule;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.apache.usergrid.NewOrgAppAdminRule;
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
-import org.apache.usergrid.ServiceITSuite;
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
@@ -38,23 +61,14 @@ import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.entities.JobData;
-import org.jclouds.ContextBuilder;
-import org.jclouds.blobstore.BlobStore;
-import org.jclouds.blobstore.BlobStoreContext;
-import org.jclouds.blobstore.domain.Blob;
-import org.jclouds.http.config.JavaUrlHttpCommandExecutorServiceModule;
-import org.jclouds.logging.log4j.config.Log4JLoggingModule;
-import org.jclouds.netty.config.NettyPayloadModule;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.junit.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 
-import java.io.File;
-import java.io.FileReader;
-import java.util.*;
+import com.google.common.collect.ImmutableSet;
+import com.google.inject.Module;
 
+import static org.apache.usergrid.TestHelper.newUUIDString;
+import static org.apache.usergrid.TestHelper.uniqueApp;
+import static org.apache.usergrid.TestHelper.uniqueOrg;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -63,31 +77,48 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 
+/**
+ *
+ *
+ */
 @Concurrent
 public class ExportServiceIT {
 
     private static final Logger LOG = LoggerFactory.getLogger( ExportServiceIT.class );
 
-    private static CassandraResource cassandraResource = ServiceITSuite.cassandraResource;
+    @ClassRule
+    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
 
-    // app-level data generated only once
-    private static UserInfo adminUser;
-    private static OrganizationInfo organization;
-    private static UUID applicationId;
+    @ClassRule
+    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
+
+
+    @ClassRule
+    public static final ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource, elasticSearchResource );
 
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
-    @ClassRule
-    public static final ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource, ServiceITSuite.elasticSearchResource );
+
+    @Rule
+    public NewOrgAppAdminRule orgAppAdminRule = new NewOrgAppAdminRule( setup );
 
 
-    @BeforeClass
-    public static void setup() throws Exception {
+    // app-level data generated only once
+    private UserInfo adminUser;
+    private OrganizationInfo organization;
+    private UUID applicationId;
+
+
+
+    @Before
+    public void setup() throws Exception {
         LOG.info( "in setup" );
-        adminUser = setup.getMgmtSvc().createAdminUser( "grey", "George Reyes", "george@reyes.com", "test", false, false );
-        organization = setup.getMgmtSvc().createOrganization( "george-organization", adminUser, true );
-        applicationId = setup.getMgmtSvc().createApplication( organization.getUuid(), "george-application" ).getId();
+
+
+        adminUser = orgAppAdminRule.getAdminInfo();
+        organization = orgAppAdminRule.getOrganizationInfo();
+        applicationId = orgAppAdminRule.getApplicationInfo().getId();
 
         setup.getEmf().refreshIndex();
     }
@@ -270,8 +301,9 @@ public class ExportServiceIT {
         catch ( Exception e ) {
             //consumed because this checks to see if the file exists. If it doesn't then don't do anything and carry on.
         }
-        setup.getMgmtSvc()
-             .createOwnerAndOrganization( "noExport", "junkUserName", "junkRealName", "ugExport@usergrid.com",
+
+        //create another org to ensure we don't export it
+        orgAppAdminRule.createOwnerAndOrganization( "noExport"+newUUIDString(), "junkUserName"+newUUIDString(), "junkRealName"+newUUIDString(), newUUIDString()+"ugExport@usergrid.com",
                      "123456789" );
 
         S3Export s3Export = new MockS3ExportImpl("exportOneOrg.json");
@@ -315,9 +347,11 @@ public class ExportServiceIT {
     @Test
     public void testExportOneAppOnCollectionEndpoint() throws Exception {
 
+        final String orgName = uniqueOrg();
+        final String appName = uniqueApp();
+
+
         File f = null;
-        String orgName = "george-organization";
-        String appName = "testAppCollectionTestNotExported";
 
         try {
             f = new File( "exportOneApp.json" );
@@ -586,11 +620,14 @@ public class ExportServiceIT {
         HashMap<String, Object> payload = payloadBuilder();
 
         //creates 100s of organizations with some entities in each one to make sure we don't actually apply it
+        final String uniqueOrg = uniqueOrg();
+        final String uniqueApp = uniqueApp();
+
         OrganizationInfo orgMade = null;
         ApplicationInfo appMade = null;
         for ( int i = 0; i < 10; i++ ) {
-            orgMade = setup.getMgmtSvc().createOrganization( "superboss" + i, adminUser, true );
-            appMade = setup.getMgmtSvc().createApplication( orgMade.getUuid(), "superapp" + i );
+            orgMade = setup.getMgmtSvc().createOrganization(uniqueOrg + i, adminUser, true );
+            appMade = setup.getMgmtSvc().createApplication( orgMade.getUuid(), uniqueApp + i );
 
             EntityManager customMaker = setup.getEmf().getEntityManager( appMade.getId() );
             customMaker.createApplicationCollection( "superappCol" + i );
@@ -953,6 +990,7 @@ public class ExportServiceIT {
         Blob bo = null;
         BlobStore blobStore = null;
 
+        try {
             final Iterable<? extends Module> MODULES = ImmutableSet
                     .of( new JavaUrlHttpCommandExecutorServiceModule(), new Log4JLoggingModule(),
                             new NettyPayloadModule() );
@@ -971,7 +1009,10 @@ public class ExportServiceIT {
             assertEquals( numOfFiles, numWeWant );
 
             bo = blobStore.getBlob( bucketName, s3Export.getFilename() );
-
+        }
+        catch ( Exception e ) {
+            assert ( false );
+        }
 
         assertNotNull( bo );
         blobStore.deleteContainer( bucketName );

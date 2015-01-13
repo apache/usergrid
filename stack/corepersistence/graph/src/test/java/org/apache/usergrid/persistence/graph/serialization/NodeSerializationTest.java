@@ -22,15 +22,15 @@ package org.apache.usergrid.persistence.graph.serialization;
 import java.util.Arrays;
 import java.util.Map;
 
-import org.jukito.UseModules;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
-import org.apache.usergrid.persistence.core.cassandra.ITRunner;
+import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.test.ITRunner;
+import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -113,7 +113,7 @@ public class NodeSerializationTest {
 
         final Id nodeId = createId( "test" );
 
-        Optional<Long>returned = serialization.getMaxVersion( scope, nodeId );
+        Optional<Long> returned = serialization.getMaxVersion( scope, nodeId );
 
         /**
          * Verifies we didnt' get anything back when nothing has been marked
@@ -130,11 +130,11 @@ public class NodeSerializationTest {
 
         final Id nodeId = createId( "test" );
         final long version1 = System.currentTimeMillis();
-        final long version2 = version1+1;
+        final long version2 = version1 + 1;
 
         serialization.mark( scope, nodeId, version2 ).execute();
 
-        Optional<Long>returned = serialization.getMaxVersion( scope, nodeId );
+        Optional<Long> returned = serialization.getMaxVersion( scope, nodeId );
 
         assertEquals( version2, returned.get().longValue() );
 

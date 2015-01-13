@@ -19,6 +19,9 @@ package org.apache.usergrid.rest.test.resource;
 
 import java.util.UUID;
 
+import org.apache.usergrid.rest.test.resource.app.UsersCollection;
+import org.apache.usergrid.rest.test.resource.app.GroupsCollection;
+import org.apache.usergrid.rest.test.resource.app.RolesCollection;
 import org.apache.usergrid.rest.test.resource.app.queue.DevicesCollection;
 
 
@@ -44,6 +47,12 @@ public class Connection extends ValueResource {
     public DevicesCollection devices() {
         return new DevicesCollection( this );
     }
+
+    public UsersCollection users() { return new UsersCollection(this);}
+
+    public GroupsCollection groups() { return new GroupsCollection(this);}
+
+    public RolesCollection roles() { return new RolesCollection(this);}
 
 
     public CustomCollection collection( String name ) {

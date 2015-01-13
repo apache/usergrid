@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.index.impl;/*
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,7 +16,7 @@ package org.apache.usergrid.persistence.index.impl;/*
  * specific language governing permissions and limitations
  * under the License.
  */
-
+package org.apache.usergrid.persistence.index.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -25,7 +25,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.usergrid.persistence.index.*;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -35,9 +37,6 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
-import org.apache.usergrid.persistence.index.EntityIndexBatch;
-import org.apache.usergrid.persistence.index.IndexFig;
-import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.query.CandidateResult;
 import org.apache.usergrid.persistence.index.utils.IndexValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -58,16 +57,21 @@ import org.apache.usergrid.persistence.model.field.UUIDField;
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
 
 import com.google.common.base.Joiner;
+import rx.Observable;
+import rx.functions.Action1;
+import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ANALYZED_STRING_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.BOOLEAN_PREFIX;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ENTITYID_FIELDNAME;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ENTITYID_ID_FIELDNAME;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ENTITY_CONTEXT_FIELDNAME;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.GEO_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.NUMBER_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.STRING_PREFIX;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createCollectionScopeTypeName;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createContextName;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createIndexDocId;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createIndexName;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createContextName;
 
 
 public class EsEntityIndexBatchImpl implements EntityIndexBatch {
@@ -80,7 +84,8 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
     private final boolean refresh;
 
-    private final String indexName;
+    private final IndexIdentifier.IndexAlias alias;
+    private final IndexIdentifier indexIdentifier;
 
     private BulkRequestBuilder bulkRequest;
 
@@ -88,16 +93,20 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
     private int count;
 
+    private final FailureMonitor failureMonitor;
 
-    public EsEntityIndexBatchImpl( 
-            final ApplicationScope applicationScope, 
-            final Client client, 
-            final IndexFig config,
-            final int autoFlushSize ) {
+    private final AliasedEntityIndex entityIndex;
+
+
+    public EsEntityIndexBatchImpl( final ApplicationScope applicationScope, final Client client, 
+            final IndexFig config, final int autoFlushSize, final FailureMonitor failureMonitor, final AliasedEntityIndex entityIndex ) {
 
         this.applicationScope = applicationScope;
         this.client = client;
-        this.indexName = createIndexName( config.getIndexPrefix(), applicationScope );
+        this.failureMonitor = failureMonitor;
+        this.entityIndex = entityIndex;
+        this.indexIdentifier = IndexingUtils.createIndexIdentifier(config, applicationScope);
+        this.alias = indexIdentifier.getAlias();
         this.refresh = config.isForcedRefresh();
         this.autoFlushSize = autoFlushSize;
         initBatch();
@@ -110,36 +119,39 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
         IndexValidationUtils.validateIndexScope( indexScope );
 
-        final String indexType = createCollectionScopeTypeName( indexScope );
+        final String context = createContextName( indexScope );
+        final String entityType = entity.getId().getType();
 
         if ( log.isDebugEnabled() ) {
             log.debug( "Indexing entity {}:{} in scope\n   app {}\n   "
-                + "owner {}\n   name {}\n   type {}", new Object[] {
+                + "owner {}\n   name {}\n   type {} \n scope type {}", new Object[] {
                     entity.getId().getType(), 
                     entity.getId().getUuid(), 
-                    applicationScope.getApplication(), 
+                    applicationScope.getApplication(),
                     indexScope.getOwner(), 
-                    indexScope.getName(), indexType
-            });
+                    indexScope.getName(), 
+                    entityType, 
+                    context
+            } );
         }
 
         ValidationUtils.verifyEntityWrite( entity );
 
-        Map<String, Object> entityAsMap = entityToMap( entity );
+        Map<String, Object> entityAsMap = entityToMap( entity, context );
 
-        // need prefix here becuase we index UUIDs as strings
-        entityAsMap.put( STRING_PREFIX + ENTITYID_FIELDNAME, 
-                entity.getId().getUuid().toString().toLowerCase() );
+        // need prefix here because we index UUIDs as strings
+
 
         // let caller add these fields if needed
         // entityAsMap.put("created", entity.getId().getUuid().timestamp();
         // entityAsMap.put("updated", entity.getVersion().timestamp());
 
-        String indexId = createIndexDocId( entity );
+        String indexId = createIndexDocId( entity, context );
 
-        log.debug( "Indexing entity id {} data {} ", indexId, entityAsMap );
+        log.debug( "Indexing entity documentId {} data {} ", indexId, entityAsMap );
 
-        bulkRequest.add(client.prepareIndex( indexName, indexType, indexId).setSource(entityAsMap));
+        bulkRequest.add( client.prepareIndex(
+                alias.getWriteAlias(), entityType, indexId ).setSource( entityAsMap ) );
 
         maybeFlush();
 
@@ -148,27 +160,53 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
 
     @Override
-    public EntityIndexBatch deindex( final IndexScope indexScope, final Id id, final UUID version ) {
+    public EntityIndexBatch deindex( final IndexScope indexScope, final Id id, final UUID version) {
 
         IndexValidationUtils.validateIndexScope( indexScope );
+        ValidationUtils.verifyIdentity( id );
+        ValidationUtils.verifyVersion( version );
 
-        final String indexType = createCollectionScopeTypeName( indexScope );
+        final String context = createContextName( indexScope );
+        final String entityType = id.getType();
+
+        final String indexId = createIndexDocId( id, version, context );
+
 
         if ( log.isDebugEnabled() ) {
-            log.debug( "De-indexing entity {}:{} in scope\n   app {}\n   owner {}\n   "
-                + "name {} type {}", new Object[] {
+            log.debug( "De-indexing entity {}:{} in scope\n   app {}\n   owner {}\n   " 
+                + "name {} context{}, type {},",
+                new Object[] {
                     id.getType(), 
                     id.getUuid(), 
                     applicationScope.getApplication(), 
                     indexScope.getOwner(),
                     indexScope.getName(), 
-                    indexType
-            } );
+                    context, 
+                    entityType
+                } );
         }
 
-        String indexId = createIndexDocId( id, version );
 
-        bulkRequest.add( client.prepareDelete( indexName, indexType, indexId ).setRefresh(refresh));
+        log.debug( "De-indexing type {} with documentId '{}'" , entityType, indexId);
+        String[] indexes = entityIndex.getIndexes(AliasedEntityIndex.AliasType.Read);
+        //get the default index if no alias exists yet
+        if(indexes == null ||indexes.length == 0){
+            indexes = new String[]{indexIdentifier.getIndex(null)};
+        }
+        //get all indexes then flush everyone
+        Observable.from(indexes)
+               .map(new Func1<String, Object>() {
+                   @Override
+                   public Object call(String index) {
+                       try {
+                           bulkRequest.add(client.prepareDelete(index, entityType, indexId).setRefresh(refresh));
+                       }catch (Exception e){
+                           log.error("failed to deindex",e);
+                           throw e;
+                       }
+                       return index;
+                   }
+               }).toBlocking().last();
 
         log.debug( "Deindexed Entity with index id " + indexId );
 
@@ -192,6 +230,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
     }
 
 
+
     @Override
     public void execute() {
         execute( bulkRequest.setRefresh( refresh ) );
@@ -204,15 +243,27 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
     private void execute( final BulkRequestBuilder request ) {
 
         //nothing to do, we haven't added anthing to the index
-        if(request.numberOfActions() == 0){
+        if ( request.numberOfActions() == 0 ) {
             return;
         }
 
-        final BulkResponse responses = request.execute().actionGet();
+        final BulkResponse responses;
+
+        try {
+            responses = request.execute().actionGet();
+        }
+        catch ( Throwable t ) {
+            log.error( "Unable to communicate with elasticsearch" );
+            failureMonitor.fail( "Unable to execute batch", t );
+            throw t;
+        }
+
+
+        failureMonitor.success();
 
         for ( BulkItemResponse response : responses ) {
             if ( response.isFailed() ) {
-                throw new RuntimeException("Unable to index documents.  Errors are :" 
+                throw new RuntimeException( "Unable to index documents.  Errors are :" 
                         + response.getFailure().getMessage() );
             }
         }
@@ -238,11 +289,31 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
 
     /**
+     * Set the entity as a map with the context
+     *
+     * @param entity The entity
+     * @param context The context this entity appears in
+     */
+    private static Map entityToMap( final Entity entity, final String context ) {
+        final Map entityMap = entityToMap( entity );
+
+        //add the context for filtering later
+        entityMap.put( ENTITY_CONTEXT_FIELDNAME, context );
+
+        //but the fieldname we have to prefix because we use query equality to seek this later.  
+        // TODO see if we can make this more declarative
+        entityMap.put( ENTITYID_ID_FIELDNAME, IndexingUtils.idString(entity.getId()).toLowerCase());
+
+        return entityMap;
+    }
+
+
+    /**
      * Convert Entity to Map and Adding prefixes for types:
      * <pre>
-     * su_ - String unanalyzed field 
-     * sa_ - String analyzed field 
-     * go_ - Location field nu_ - Number field 
+     * su_ - String unanalyzed field
+     * sa_ - String analyzed field
+     * go_ - Location field nu_ - Number field
      * bu_ - Boolean field
      * </pre>
      */
@@ -261,8 +332,6 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
                 if ( !list.isEmpty() ) {
                     if ( list.get( 0 ) instanceof String ) {
-                        Joiner joiner = Joiner.on( " " ).skipNulls();
-                        String joined = joiner.join( list );
                         entityMap.put( ANALYZED_STRING_PREFIX + field.getName().toLowerCase(),
                                 new ArrayList( processCollectionForMap( list ) ) );
                     }
@@ -299,7 +368,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
                 locMap.put( "lon", locField.getValue().getLongitude() );
                 entityMap.put( GEO_PREFIX + field.getName().toLowerCase(), locMap );
             }
-            else if ( f instanceof DoubleField 
+            else if (  f instanceof DoubleField 
                     || f instanceof FloatField 
                     || f instanceof IntegerField
                     || f instanceof LongField ) {
@@ -312,7 +381,8 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
             }
             else if ( f instanceof UUIDField ) {
 
-                entityMap.put( STRING_PREFIX + field.getName().toLowerCase(), field.getValue().toString().toLowerCase() );
+                entityMap.put( STRING_PREFIX + field.getName().toLowerCase(),
+                        field.getValue().toString().toLowerCase() );
             }
             else {
                 entityMap.put( field.getName().toLowerCase(), field.getValue() );
@@ -323,7 +393,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
     }
 
 
-    private static Collection processCollectionForMap( Collection c ) {
+    private static Collection processCollectionForMap( final Collection c ) {
         if ( c.isEmpty() ) {
             return c;
         }

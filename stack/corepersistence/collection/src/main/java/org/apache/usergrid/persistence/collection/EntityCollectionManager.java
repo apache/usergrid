@@ -20,26 +20,21 @@ package org.apache.usergrid.persistence.collection;
 
 
 import java.util.Collection;
-
-import java.util.UUID;
+import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
-
 import org.apache.usergrid.persistence.model.field.Field;
 import rx.Observable;
 
 
 /**
- *
  * The operations for performing changes on an entity
- *
  */
 public interface EntityCollectionManager {
 
     /**
      * Write the entity in the entity collection.  This is an entire entity, it's contents will
      * completely overwrite the previous values, if it exists.
-     *
      * @param entity The entity to update
      */
     public Observable<Entity> write( Entity entity );
@@ -48,7 +43,7 @@ public interface EntityCollectionManager {
     /**
      * MarkCommit the entity and remove it's indexes with the given entity id
      */
-    public Observable<Void> delete( Id entityId );
+    public Observable<Id> delete( Id entityId );
 
     /**
      * Load the entity with the given entity Id
@@ -62,25 +57,25 @@ public interface EntityCollectionManager {
 
     /**
      * Gets the Id for a field
-     * @param field
      * @return most likely a single Id, watch for onerror events
      */
     public Observable<Id> getIdField(final Field field);
 
     /**
      * Load all the entityIds into the observable entity set
-     * @param entityIds
-     * @return
      */
     public Observable<EntitySet> load(Collection<Id> entityIds);
 
-
     /**
      * Takes the change and reloads an entity with all changes applied in this entity applied.
-     * The resulting entity from calling load will be the previous version of this entity + the entity
-     * in this object applied to it.
-     * @param entity
-     * @return
+     * The resulting entity from calling load will be the previous version of this entity plus 
+     * the entity in this object applied to it.
      */
     public Observable<Entity> update ( Entity entity );
+
+    /** 
+     * Returns health of entity data store.
+     */
+    public Health getHealth();
+
 }

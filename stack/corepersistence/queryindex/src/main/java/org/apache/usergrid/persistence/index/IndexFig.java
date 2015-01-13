@@ -37,11 +37,23 @@ public interface IndexFig extends GuicyFig {
 
     public static final String ELASTICSEARCH_INDEX_PREFIX = "elasticsearch.index_prefix";
 
+    public static final String ELASTICSEARCH_ALIAS_POSTFIX = "elasticsearch.alias_postfix";
+
     public static final String ELASTICSEARCH_STARTUP = "elasticsearch.startup";
+
+    public static final String ELASTICSEARCH_NUMBER_OF_SHARDS = "elasticsearch.number_shards";
+
+    public static final String ELASTICSEARCH_NUMBER_OF_REPLICAS = "elasticsearch.number_replicas";
 
     public static final String QUERY_CURSOR_TIMEOUT_MINUTES = "elasticsearch.cursor_timeout.minutes";
 
     public static final String ELASTICSEARCH_FORCE_REFRESH = "elasticsearch.force_refresh";
+
+
+    /**
+     * the number of times we can fail before we refresh the client
+     */
+    public static final String ELASTICSEARCH_FAIL_REFRESH = "elasticsearch.fail_refresh";
 
     public static final String QUERY_LIMIT_DEFAULT = "index.query.limit.default";
     
@@ -60,6 +72,10 @@ public interface IndexFig extends GuicyFig {
     @Default( "usergrid" ) // no underbars allowed
     @Key( ELASTICSEARCH_INDEX_PREFIX )
     String getIndexPrefix();
+
+    @Default( "alias" ) // no underbars allowed
+    @Key( ELASTICSEARCH_ALIAS_POSTFIX )
+    String getAliasPostfix();
     
     @Default( "1" ) // TODO: does this timeout get extended on each query?
     @Key( QUERY_CURSOR_TIMEOUT_MINUTES )
@@ -82,4 +98,19 @@ public interface IndexFig extends GuicyFig {
     @Default("default")
     @Key( ELASTICSEARCH_NODENAME )
     public String getNodeName();
+
+    @Default("6")
+    @Key( ELASTICSEARCH_NUMBER_OF_SHARDS )
+    public int getNumberOfShards();
+
+    @Default("1")
+    @Key( ELASTICSEARCH_NUMBER_OF_REPLICAS )
+    public int getNumberOfReplicas();
+
+    @Default( "20" )
+    @Key( ELASTICSEARCH_FAIL_REFRESH )
+    int getFailRefreshCount();
+
+    @Default("2")
+    int getIndexCacheMaxWorkers();
 }

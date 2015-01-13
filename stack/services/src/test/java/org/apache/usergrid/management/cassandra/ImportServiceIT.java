@@ -22,7 +22,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
-import org.apache.usergrid.ServiceITSuite;
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
@@ -48,6 +47,8 @@ import org.junit.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.*;
+
+import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.persistence.index.query.Query.Level;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
@@ -61,7 +62,7 @@ public class ImportServiceIT {
 
     private static final Logger LOG = LoggerFactory.getLogger(ImportServiceIT.class);
 
-    private static CassandraResource cassandraResource = ServiceITSuite.cassandraResource;
+    private static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
 
     // app-level data generated only once
     private static UserInfo adminUser;
@@ -72,7 +73,7 @@ public class ImportServiceIT {
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @ClassRule
-    public static final ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource, ServiceITSuite.elasticSearchResource );
+    public static final ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource, new ElasticSearchResource() );
 
 
     @BeforeClass
@@ -102,12 +103,12 @@ public class ImportServiceIT {
         }
 
         //create connection
-        emTest.createConnection( new SimpleEntityRef( "testobject",  entityTest[0].getUuid()), 
-                                 "related", 
+        emTest.createConnection( new SimpleEntityRef( "testobject",  entityTest[0].getUuid()),
+                                 "related",
                                  new SimpleEntityRef( "testobject",  entityTest[1].getUuid()));
 
-        emTest.createConnection( new SimpleEntityRef( "testobject",  entityTest[1].getUuid()), 
-                                 "related", 
+        emTest.createConnection( new SimpleEntityRef( "testobject",  entityTest[1].getUuid()),
+                                 "related",
                                  new SimpleEntityRef( "testobject",  entityTest[0].getUuid()));
     }
 
@@ -132,9 +133,9 @@ public class ImportServiceIT {
         }
 
         //creates test connections between first 2 users
-        em.createConnection( new SimpleEntityRef( "user",  entity[0].getUuid()), 
+        em.createConnection( new SimpleEntityRef( "user",  entity[0].getUuid()),
                 "related", new SimpleEntityRef( "user",  entity[1].getUuid()));
-        em.createConnection( new SimpleEntityRef( "user",  entity[1].getUuid()), 
+        em.createConnection( new SimpleEntityRef( "user",  entity[1].getUuid()),
                 "related", new SimpleEntityRef( "user",  entity[0].getUuid()));
 
         //Export the collection which needs to be tested for import
@@ -243,9 +244,9 @@ public class ImportServiceIT {
             entity[i] = em.create( "custom", userProperties );
         }
         //creates connections
-        em.createConnection( new SimpleEntityRef( "custom",  entity[0].getUuid() ), 
+        em.createConnection( new SimpleEntityRef( "custom",  entity[0].getUuid() ),
                 "related", new SimpleEntityRef( "custom",  entity[1].getUuid() ) );
-        em.createConnection( new SimpleEntityRef( "custom",  entity[1].getUuid() ), 
+        em.createConnection( new SimpleEntityRef( "custom",  entity[1].getUuid() ),
                 "related", new SimpleEntityRef( "custom",  entity[0].getUuid() ) );
 
 

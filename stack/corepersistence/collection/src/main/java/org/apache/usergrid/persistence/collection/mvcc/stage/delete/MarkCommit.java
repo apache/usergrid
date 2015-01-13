@@ -19,8 +19,6 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.delete;
 
 
-import java.util.Iterator;
-import java.util.List;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -36,13 +34,9 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
-import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
-import org.apache.usergrid.persistence.collection.serialization.impl.UniqueValueImpl;
-import org.apache.usergrid.persistence.core.rx.ObservableIterator;
-import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.core.guice.ProxyImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
-import org.apache.usergrid.persistence.model.field.Field;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -51,7 +45,6 @@ import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
-import rx.Observable;
 import rx.functions.Action1;
 
 
@@ -72,7 +65,7 @@ public class MarkCommit implements Action1<CollectionIoEvent<MvccEntity>> {
 
     @Inject
     public MarkCommit( final MvccLogEntrySerializationStrategy logStrat,
-                       final MvccEntitySerializationStrategy entityStrat,
+                       @ProxyImpl final MvccEntitySerializationStrategy entityStrat,
                        final UniqueValueSerializationStrategy uniqueValueStrat, final SerializationFig serializationFig,
                        final Keyspace keyspace ) {
 
@@ -119,69 +112,70 @@ public class MarkCommit implements Action1<CollectionIoEvent<MvccEntity>> {
         catch ( ConnectionException e ) {
             throw new RuntimeException( "Unable to mark entry as deleted" );
         }
-
-
-        //TODO Refactor this logic into a a class that can be invoked from anywhere
-        //load every entity we have history of
-        Observable<List<MvccEntity>> deleteFieldsObservable =
-                Observable.create( new ObservableIterator<MvccEntity>( "deleteColumns" ) {
-                    @Override
-                    protected Iterator<MvccEntity> getIterator() {
-                        Iterator<MvccEntity> entities =
-                                entityStrat.load( collectionScope, entityId, entity.getVersion(), 100 );
-
-                        return entities;
-                    }
-                } )       //buffer them for efficiency
-                          .buffer( serializationFig.getBufferSize() ).doOnNext(
-
-                        new Action1<List<MvccEntity>>() {
-                            @Override
-                            public void call( final List<MvccEntity> mvccEntities ) {
-
-
-                                final MutationBatch batch = keyspace.prepareMutationBatch();
-
-                                for ( MvccEntity mvccEntity : mvccEntities ) {
-                                    if ( !mvccEntity.getEntity().isPresent() ) {
-                                        continue;
-                                    }
-
-                                    final UUID entityVersion = mvccEntity.getVersion();
-
-                                    final Entity entity = mvccEntity.getEntity().get();
-
-                                    //remove all unique fields from the index
-                                    for ( final Field field : entity.getFields() ) {
-
-                                        if(!field.isUnique()){
-                                            continue;
-                                        }
-
-                                        final UniqueValue unique = new UniqueValueImpl( field, entityId, entityVersion );
-
-                                        final MutationBatch deleteMutation = uniqueValueStrat.delete(collectionScope,  unique );
-
-                                        batch.mergeShallow( deleteMutation );
-                                    }
-                                }
-
-                                try {
-                                    batch.execute();
-                                }
-                                catch ( ConnectionException e1 ) {
-                                    throw new RuntimeException( "Unable to execute " +
-                                            "unique value " +
-                                            "delete", e1 );
-                                }
-                            }
-                        }
-
-
-                                                                       );
-
-        final int removedCount = deleteFieldsObservable.count().toBlocking().last();
-
-        LOG.debug("Removed unique values for {} entities of entity {}", removedCount, entityId );
     }
 }
+
+//
+//
+//        //TODO Refactor this logic into a a class that can be invoked from anywhere
+//        //load every entity we have history of
+//        Observable<List<MvccEntity>> deleteFieldsObservable =
+//                Observable.create( new ObservableIterator<MvccEntity>( "deleteColumns" ) {
+//                    @Override
+//                    protected Iterator<MvccEntity> getIterator() {
+//                        Iterator<MvccEntity> entities =
+//                                entityStrat.load( collectionScope, entityId, entity.getVersion(), 100 );
+//
+//                        return entities;
+//                    }
+//                } )       //buffer them for efficiency
+//                          .buffer( serializationFig.getBufferSize() ).doOnNext(
+//
+//                        new Action1<List<MvccEntity>>() {
+//                            @Override
+//                            public void call( final List<MvccEntity> mvccEntities ) {
+//
+//
+//                                final MutationBatch batch = keyspace.prepareMutationBatch();
+//
+//                                for ( MvccEntity mvccEntity : mvccEntities ) {
+//                                    if ( !mvccEntity.getEntity().isPresent() ) {
+//                                        continue;
+//                                    }
+//
+//                                    final UUID entityVersion = mvccEntity.getVersion();
+//
+//                                    final Entity entity = mvccEntity.getEntity().get();
+//
+//                                    //remove all unique fields from the index
+//                                    for ( final Field field : entity.getFields() ) {
+//
+//                                        if(!field.isUnique()){
+//                                            continue;
+//                                        }
+//
+//                                        final UniqueValue unique = new UniqueValueImpl( field, entityId, entityVersion );
+//
+//                                        final MutationBatch deleteMutation = uniqueValueStrat.delete(collectionScope,  unique );
+//
+//                                        batch.mergeShallow( deleteMutation );
+//                                    }
+//                                }
+//
+//                                try {
+//                                    batch.execute();
+//                                }
+//                                catch ( ConnectionException e1 ) {
+//                                    throw new RuntimeException( "Unable to execute " +
+//                                            "unique value " +
+//                                            "delete", e1 );
+//                                }
+//                            }
+//                        }
+//
+//
+//                                                                       );
+//
+//        final int removedCount = deleteFieldsObservable.count().toBlocking().last();
+//
+//        LOG.debug("Removed unique values for {} entities of entity {}", removedCount, entityId );

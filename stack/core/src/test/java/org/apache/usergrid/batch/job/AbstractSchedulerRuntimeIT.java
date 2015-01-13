@@ -17,17 +17,20 @@
 package org.apache.usergrid.batch.job;
 
 
-import com.google.common.util.concurrent.Service.State;
 import java.util.Properties;
-import org.apache.usergrid.ElasticSearchResource;
-import org.apache.usergrid.batch.SchedulerITSuite;
+
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+
 import org.apache.usergrid.batch.service.JobSchedulerService;
 import org.apache.usergrid.batch.service.SchedulerService;
 import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.cassandra.SchemaManager;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
+import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
+
+import com.google.common.util.concurrent.Service.State;
 
 
 /**
@@ -41,8 +44,13 @@ public class AbstractSchedulerRuntimeIT {
     protected static final String RUNLOOP_PROP = "usergrid.scheduler.job.interval";
     protected static final String FAIL_PROP = "usergrid.scheduler.job.maxfail";
 
-    public static CassandraResource cassandraResource = SchedulerITSuite.cassandraResource;
-    public static ElasticSearchResource elasticSearchResource = ElasticSearchResource.instance;
+
+    @ClassRule
+    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
+
+
+    @ClassRule
+    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
 
 
     private TestJobListener listener = new TestJobListener();
@@ -57,7 +65,7 @@ public class AbstractSchedulerRuntimeIT {
     @BeforeClass
     public static void beforeClass() throws Throwable {
 
-        elasticSearchResource.before();
+//        elasticSearchResource.before();
 
         SchemaManager sm = cassandraResource.getBean("coreManager", SchemaManager.class);
         sm.create();
@@ -66,7 +74,7 @@ public class AbstractSchedulerRuntimeIT {
 
     @AfterClass
     public static void afterClass() throws Throwable {
-        elasticSearchResource.after();
+//        elasticSearchResource.after();
     }
 
     

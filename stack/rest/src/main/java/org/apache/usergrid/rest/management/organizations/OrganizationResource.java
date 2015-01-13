@@ -20,6 +20,8 @@ package org.apache.usergrid.rest.management.organizations;
 import com.sun.jersey.api.json.JSONWithPadding;
 import com.sun.jersey.api.view.Viewable;
 import org.apache.amber.oauth2.common.exception.OAuthSystemException;
+
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.management.ActivationState;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.export.ExportService;
@@ -54,7 +56,6 @@ import java.util.UUID;
 
 import static javax.servlet.http.HttpServletResponse.*;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.apache.usergrid.corepersistence.CpEntityManagerFactory.MANAGEMENT_APPLICATION_ID;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.index.query.Query.Level;
 
@@ -422,7 +423,7 @@ public class OrganizationResource extends AbstractContextResource {
 
         Import entity;
         try {
-            entity = smf.getServiceManager( MANAGEMENT_APPLICATION_ID ).getEntityManager()
+            entity = smf.getServiceManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID ).getEntityManager()
                     .get( importEntityUUIDStr, Import.class );
         }
         catch ( Exception e ) { //this might not be a bad request and needs better error checking
@@ -443,11 +444,11 @@ public class OrganizationResource extends AbstractContextResource {
     @Path("import/{importEntity: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}/includes")
     public Response importFileGetJson( @Context UriInfo ui, @PathParam("importEntity") UUID importEntityUUIDStr,
                                    @QueryParam("callback") @DefaultValue("") String callback ) throws Exception {
-
-        List<Entity> entity;
+        //TODO: fix the below as that method no longer exists.
+        List<Entity> entity = null;
         try {
-            entity = smf.getServiceManager( MANAGEMENT_APPLICATION_ID ).getEntityManager()
-                    .getConnectedEntities(importEntityUUIDStr ,"includes", null, Level.ALL_PROPERTIES).getEntities();
+//            entity = smf.getServiceManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID  ).getEntityManager()
+//                    .get(importEntityUUIDStr ,"includes", null, Level.ALL_PROPERTIES).getEntities();
         }
         catch ( Exception e ) { //this might not be a bad request and needs better error checking
             return Response.status( SC_BAD_REQUEST ).type( JSONPUtils.jsonMediaType( callback ) )

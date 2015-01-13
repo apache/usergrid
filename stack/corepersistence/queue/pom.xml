@@ -62,15 +62,6 @@
       <scope>test</scope>
     </dependency>
 
-
-    <dependency>
-      <groupId>org.jukito</groupId>
-      <artifactId>jukito</artifactId>
-      <version>${jukito.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-
     <dependency>
       <groupId>org.apache.usergrid</groupId>
       <artifactId>collection</artifactId>
@@ -82,7 +73,13 @@
     <dependency>
       <groupId>com.amazonaws</groupId>
       <artifactId>aws-java-sdk</artifactId>
-      <version>1.8.11</version>
+      <version>${aws.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <version>4.2</version>
     </dependency>
 
 

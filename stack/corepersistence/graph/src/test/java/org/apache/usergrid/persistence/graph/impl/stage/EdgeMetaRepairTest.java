@@ -24,15 +24,16 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.jukito.UseModules;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
-import org.apache.usergrid.persistence.core.cassandra.ITRunner;
+import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
+import org.apache.usergrid.persistence.core.guice.ProxyImpl;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.test.ITRunner;
+import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
@@ -75,6 +76,7 @@ public class EdgeMetaRepairTest {
     protected EdgeSerialization storageEdgeSerialization;
 
     @Inject
+    @ProxyImpl
     protected EdgeMetadataSerialization edgeMetadataSerialization;
 
     @Inject

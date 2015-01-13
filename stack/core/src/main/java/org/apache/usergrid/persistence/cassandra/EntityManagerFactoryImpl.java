@@ -67,6 +67,7 @@ import static org.apache.usergrid.persistence.cassandra.CassandraService.PROPERT
 import static org.apache.usergrid.persistence.cassandra.CassandraService.RETRY_COUNT;
 import static org.apache.usergrid.utils.ConversionUtils.uuid;
 import static org.apache.usergrid.persistence.cassandra.Serializers.*;
+import org.apache.usergrid.persistence.core.util.Health;
 
 
 /**
@@ -391,6 +392,12 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
     }
 
 
+    @Override
+    public long performEntityCount() {
+        throw new UnsupportedOperationException("Not supported in v1");
+    }
+
+
     public void setCounterUtils( CounterUtils counterUtils ) {
         this.counterUtils = counterUtils;
     }
@@ -434,8 +441,43 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
         throw new UnsupportedOperationException("Not supported."); 
     }
 
+
+    @Override
+    public void migrateData() throws Exception {
+
+    }
+
+
+    @Override
+    public String getMigrateDataStatus() {
+        throw new UnsupportedOperationException("Not supported in v1");
+    }
+
+
+    @Override
+    public int getMigrateDataVersion() {
+        throw new UnsupportedOperationException("Not supported in v1");
+    }
+
+
+    @Override
+    public void setMigrationVersion( final int version ) {
+        throw new UnsupportedOperationException("Not supported in v1");
+    }
+
+
     @Override
     public void rebuildCollectionIndex(UUID appId, String collection, ProgressObserver po) {
         throw new UnsupportedOperationException("Not supported."); 
+    }
+
+    @Override
+    public void addIndex(UUID appId, String suffix,final int shards,final int replicas) {
+        throw new UnsupportedOperationException("Not supported in v1");
+    }
+
+    @Override
+    public Health getEntityStoreHealth() {
+        throw new UnsupportedOperationException("Not supported yet."); 
     }
 }

@@ -7,7 +7,7 @@
  * the License.  You may obtain a copy of the License at
  *
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+*
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,11 +30,12 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.ConcurrentCoreIteratorITSuite;
 import org.apache.usergrid.CoreApplication;
 import org.apache.usergrid.CoreITSetup;
 import org.apache.usergrid.CoreITSetupImpl;
+import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.Results;
 
@@ -48,9 +49,16 @@ public abstract class AbstractIteratingQueryIT {
 
     public static final long WRITE_DELAY = 0; // milliseconds to delay between writes in loop
 
+
     @ClassRule
-    public static CoreITSetup setup = new CoreITSetupImpl( 
-            ConcurrentCoreIteratorITSuite.cassandraResource, ConcurrentCoreIteratorITSuite.elasticSearchResource );
+    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
+
+    @ClassRule
+    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
+
+
+    @ClassRule
+    public static CoreITSetup setup = new CoreITSetupImpl( cassandraResource, elasticSearchResource );
 
     @Rule
     public CoreApplication app = new CoreApplication( setup );
@@ -901,7 +909,7 @@ public abstract class AbstractIteratingQueryIT {
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        app.getEm().refreshIndex();
+        app.getEntityManager().refreshIndex();
 
         Query query = new Query();
         query.setLimit( 100 );
@@ -1002,7 +1010,7 @@ public abstract class AbstractIteratingQueryIT {
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        app.getEm().refreshIndex();
+        app.getEntityManager().refreshIndex();
 
         Query query = Query.fromQL( "select * order by boolean desc, index asc" );
         query.setLimit( queryLimit );
@@ -1108,7 +1116,7 @@ public abstract class AbstractIteratingQueryIT {
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        app.getEm().refreshIndex();
+        app.getEntityManager().refreshIndex();
 
         Query query =
                 Query.fromQL( "select * where intersect = true OR intersect2 = true order by created, intersect desc" );
@@ -1253,7 +1261,7 @@ public abstract class AbstractIteratingQueryIT {
         @Override
         public Entity writeEntity( Map<String, Object> entity ) throws Exception {
 
-            Entity e = app.getEm().create( "test", entity );
+            Entity e = app.getEntityManager().create( "test", entity );
 
             if ( WRITE_DELAY > 0 ) {
                 Thread.sleep( WRITE_DELAY );
@@ -1265,8 +1273,8 @@ public abstract class AbstractIteratingQueryIT {
 
         @Override
         public Results getResults( Query query ) throws Exception {
-            app.getEm().refreshIndex();
-            return app.getEm().searchCollection( app.getEm().getApplicationRef(), "tests", query );
+            app.getEntityManager().refreshIndex();
+            return app.getEntityManager().searchCollection( app.getEntityManager().getApplicationRef(), "tests", query );
         }
     }
 
@@ -1289,7 +1297,7 @@ public abstract class AbstractIteratingQueryIT {
         public void doSetup() throws Exception {
             Map<String, Object> data = new HashMap<String, Object>();
             data.put( "name", "rootentity" );
-            rootEntity = app.getEm().create( "root", data );
+            rootEntity = app.getEntityManager().create( "root", data );
         }
 
 
@@ -1298,7 +1306,7 @@ public abstract class AbstractIteratingQueryIT {
 
             // write to the collection
             Entity created = super.writeEntity( entity );
-            app.getEm().createConnection( rootEntity, CONNECTION, created );
+            app.getEntityManager().createConnection( rootEntity, CONNECTION, created );
 
             if ( WRITE_DELAY > 0 ) {
                 Thread.sleep( WRITE_DELAY );
@@ -1318,11 +1326,11 @@ public abstract class AbstractIteratingQueryIT {
         @Override
         public Results getResults( Query query ) throws Exception {
 
-            app.getEm().refreshIndex();
+            app.getEntityManager().refreshIndex();
             query.setConnectionType( CONNECTION );
             query.setEntityType( "test" );
 
-            return app.getEm().searchConnectedEntities( rootEntity, query );
+            return app.getEntityManager().searchConnectedEntities( rootEntity, query );
         }
     }
 }

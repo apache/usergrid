@@ -17,7 +17,6 @@
 package org.apache.usergrid.rest;
 
 
-import org.apache.usergrid.ElasticSearchResource;
 import java.net.URI;
 import java.util.Properties;
 
@@ -31,6 +30,8 @@ import org.apache.usergrid.management.ApplicationCreator;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import static org.apache.usergrid.persistence.index.impl.EsProvider.LOCAL_ES_PORT_PROPNAME;
+
+import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.security.providers.SignInProviderFactory;
 import org.apache.usergrid.security.tokens.TokenService;
 import org.apache.usergrid.services.ServiceManagerFactory;
@@ -54,7 +55,7 @@ public class ITSetup extends ExternalResource {
     private SignInProviderFactory providerFactory;
     private Properties properties;
 
-    private boolean setupCalled = false;
+//    private boolean setupCalled = false;
     private boolean ready = false;
     private URI uri;
 
@@ -77,7 +78,9 @@ public class ITSetup extends ExternalResource {
         tomcatResource = TomcatResource.instance;
         tomcatResource.setWebAppsPath( "src/main/webapp" );
 
-        elasticSearchResource = ElasticSearchResource.instance;
+//        elasticSearchResource = new ElasticSearchResource().startEs();
+
+        elasticSearchResource = new ElasticSearchResource();
 
     }
 
@@ -93,19 +96,18 @@ public class ITSetup extends ExternalResource {
         synchronized ( cassandraResource ) {
             super.before();
 
-            elasticSearchResource.before();
 
             emf =                cassandraResource.getBean( EntityManagerFactory.class );
             smf =                cassandraResource.getBean( ServiceManagerFactory.class );
             tokenService =       cassandraResource.getBean( TokenService.class );
             providerFactory =    cassandraResource.getBean( SignInProviderFactory.class );
             applicationCreator = cassandraResource.getBean( ApplicationCreator.class );
-            managementService =  cassandraResource.getBean( ManagementService.class );
+//            managementService =  cassandraResource.getBean( ManagementService.class );
 
-            if ( !setupCalled ) {
-                managementService.setup();
-                setupCalled = true;
-            }
+//            if ( !setupCalled ) {
+//                managementService.setup();
+//                setupCalled = true;
+//            }
 
             String esStartup = properties.getProperty("elasticsearch.startup");
             if ( "embedded".equals(esStartup)) {
@@ -133,7 +135,7 @@ public class ITSetup extends ExternalResource {
     protected void after() {
         emf.flushEntityManagerCaches();
         tomcatResource.after();
-        elasticSearchResource.after();
+//        elasticSearchResource.after();
     }
 
 

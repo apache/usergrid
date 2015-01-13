@@ -18,8 +18,8 @@
 */
 var bower = require('./bower.json');
 
-var distPath = 'dist/'+bower.name,
-  coveragePath = 'dist-cov/'+bower.name,
+var distPath = 'dist/' + bower.name,
+  coveragePath = 'dist-cov/' + bower.name,
   libsFile = 'js/generated/usergrid-libs.min.js',
   devFile = 'js/generated/usergrid-dev.js',
   mainFile = 'js/generated/usergrid.min.js',
@@ -28,7 +28,8 @@ var distPath = 'dist/'+bower.name,
   coverageFile = 'test/coverage/instrument/js/usergrid-coverage.min.js',
 
   distName = bower.name,
-  licenseHeader =' /**\n \
+  licenseHeader =
+  ' /**\n \
  Licensed to the Apache Software Foundation (ASF) under one\n \
  or more contributor license agreements.  See the NOTICE file\n \
  distributed with this work for additional information \n \
@@ -46,8 +47,10 @@ var distPath = 'dist/'+bower.name,
  specific language governing permissions and limitations\n \
  under the License.\n \
  */\n';
-console.warn('to run e2e tests you need to have a running instance of webdriver, 1) npm install protractor -g -> 2) webdriver-manager start --standalone');
-module.exports = function (grunt) {
+console.warn(
+  'to run e2e tests you need to have a running instance of webdriver, 1) npm install protractor -g -> 2) webdriver-manager start --standalone'
+);
+module.exports = function(grunt) {
 
 
   // Project configuration.
@@ -56,20 +59,22 @@ module.exports = function (grunt) {
 
     uglify: {
       options: {
-        banner: licenseHeader + '\n /*! <%= pkg.name %>@<%= pkg.version %>  */\n'
+        banner: licenseHeader +
+          '\n /*! <%= pkg.name %>@<%= pkg.version %>  */\n'
       },
-      'usergrid-libs':{
+      'usergrid-libs': {
         options: {
           mangle: false,
-          compress: {warnings:false},
+          compress: {
+            warnings: false
+          },
           beautify: false
         },
-        files:{
-          'js/generated/usergrid-libs.min.js':[
+        files: {
+          'js/generated/usergrid-libs.min.js': [
             'js/libs/jquery/jquery-1.9.1.min.js',
             'js/libs/jquery/jquery-migrate-1.1.1.min.js',
             'js/libs/jquery/jquery.sparkline.min.js',
-            'js/libs/Highcharts-2.3.5/js/highcharts.js',
             'js/libs/angular-1.2.5/angular.min.js',
             'js/libs/angular-1.2.5/angular-route.min.js',
             'js/libs/angular-1.2.5/angular-resource.min.js',
@@ -110,20 +115,22 @@ module.exports = function (grunt) {
         },
         files: {
           'test/coverage/instrument/js/usergrid-coverage.min.js': [
-            coverageDir+'js/app.js',
-            coverageDir+'js/**/*.js',
+            coverageDir + 'js/app.js',
+            coverageDir + 'js/**/*.js',
             'js/generated-templates/templates.js',
-            '!'+coverageDir+'js/config.js',
-            '!'+coverageDir+'js/libs/**/*.js',
-            '!'+coverageDir+'js/generated/*.js',
-            '!'+coverageDir+'js/usergrid-coverage.min.js'
+            '!' + coverageDir + 'js/config.js',
+            '!' + coverageDir + 'js/libs/**/*.js',
+            '!' + coverageDir + 'js/generated/*.js',
+            '!' + coverageDir + 'js/usergrid-coverage.min.js'
           ]
         }
       },
       'usergrid-coverage-min': {
         options: {
           mangle: false,
-          compress: {warnings:false},
+          compress: {
+            warnings: false
+          },
           beautify: false
         },
         files: {
@@ -135,7 +142,9 @@ module.exports = function (grunt) {
       'usergrid': {
         options: {
           mangle: false,
-          compress: {warnings:false},
+          compress: {
+            warnings: false
+          },
           beautify: false
         },
         files: {
@@ -151,10 +160,12 @@ module.exports = function (grunt) {
         options: {
           base: 'js/'
         },
-        src: ['js/**/*.html','!**/index*'],
+        src: ['js/**/*.html', '!**/index*'],
         dest: templateFile,
-        options:  {
-          url:    function(url) { return url.replace('js/', ''); }
+        options: {
+          url: function(url) {
+            return url.replace('js/', '');
+          }
         }
       }
     },
@@ -188,8 +199,8 @@ module.exports = function (grunt) {
         options: {
           target: 'http://localhost:3000/index-debug.html', // target url to open
           open: 'http://localhost:3000/index-debug.html',
-          hostname:'*',
-          livereload:true,
+          hostname: '*',
+          livereload: true,
           port: 3000,
           base: ''
         }
@@ -239,13 +250,13 @@ module.exports = function (grunt) {
         keepAlive: true, // If false, the grunt process stops when the test fails.
         noColor: false, // If true, protractor will not use colors in its output.
         args: {
-          baseUrl:'http://localhost:3005/'
+          baseUrl: 'http://localhost:3005/'
         }
       },
       phantom: {
         options: {
           args: {
-            baseUrl:'http://localhost:3005/',
+            baseUrl: 'http://localhost:3005/',
             // Arguments passed to the command
             'browser': 'phantomjs'
           }
@@ -254,7 +265,7 @@ module.exports = function (grunt) {
       chrome: {
         options: {
           args: {
-            baseUrl:'http://localhost:3006/?noHelp=true',
+            baseUrl: 'http://localhost:3006/?noHelp=true',
             // Arguments passed to the command
             'browser': 'chrome'
           }
@@ -263,73 +274,103 @@ module.exports = function (grunt) {
       firefox: {
         options: {
           args: {
-            baseUrl:'http://localhost:3007/',
+            baseUrl: 'http://localhost:3007/',
             // Arguments passed to the command
             'browser': 'firefox'
           }
         }
       }
     },
-    copy:{
-      coverage:{
-        files:[
-          {
-            src:['js/*.min.js','js/libs/**','sdk/**','js/charts/*.json','css/**','img/**','js/libs/**','config.js','bower_components/**'],
-            dest:coveragePath,
-            expand:true
-          },
-          {
-            src:['js/*.min.js'],
-            dest:coveragePath,
-            cwd: coverageDir,
-            expand:true
-          }
-        ]
+    copy: {
+      coverage: {
+        files: [{
+          src: ['js/*.min.js', 'js/libs/**', 'sdk/**',
+            'js/charts/*.json', 'css/**', 'img/**', 'js/libs/**',
+            'config.js', 'bower_components/**'
+          ],
+          dest: coveragePath,
+          expand: true
+        }, {
+          src: ['js/*.min.js'],
+          dest: coveragePath,
+          cwd: coverageDir,
+          expand: true
+        }]
       },
-      main:{
-        files:[
+      main: {
+        files: [
           // includes files within path
-          {expand: true, src: ['*.html','config.js', '*.ico', 'helpJson.json'], dest: distPath, filter: 'isFile'},
-          {expand: true, src: ['sdk/**','css/**','img/**','js/charts/*.json'], dest: distPath},
-          {expand: true, src: ['js/generated/**','js/libs/**','css/**','img/**','bower_components/**'], dest: distPath}
+          {
+            expand: true,
+            src: ['*.html', 'config.js', '*.ico', 'helpJson.json'],
+            dest: distPath,
+            filter: 'isFile'
+          }, {
+            expand: true,
+            src: ['sdk/**', 'css/**', 'img/**', 'js/charts/*.json'],
+            dest: distPath
+          }, {
+            expand: true,
+            src: ['js/generated/**', 'js/libs/**', 'css/**', 'img/**',
+              'bower_components/**'
+            ],
+            dest: distPath
+          }
 
         ]
       }
     },
     clean: {
-        build: ['dist/','dist-cov/','test/','js/generated/','js/*.min.js',templateFile,'index.html','index-debug.html'],
-        coverage: ['reports/']
+      build: ['dist/', 'dist-cov/', 'test/', 'js/generated/',
+        'js/*.min.js', templateFile, 'index.html', 'index-debug.html'
+      ],
+      coverage: ['reports/']
     },
     dom_munger: {
       main: {
         options: {
-          update: {selector:'#main-script',attribute:'src',value:mainFile}
+          update: {
+            selector: '#main-script',
+            attribute: 'src',
+            value: mainFile
+          }
 
         },
-        src: 'index-template.html',  //update the dist/index.html (the src index.html is copied there)
-        dest: 'index.html'  //update the dist/index.html (the src index.html is copied there)
+        src: 'index-template.html', //update the dist/index.html (the src index.html is copied there)
+        dest: 'index.html' //update the dist/index.html (the src index.html is copied there)
 
       },
       dev: {
         options: {
-          update: {selector:'#main-script',attribute:'src',value:devFile}
+          update: {
+            selector: '#main-script',
+            attribute: 'src',
+            value: devFile
+          }
         },
-        src: 'index-template.html',  //update the dist/index.html (the src index.html is copied there)
-        dest: 'index-debug.html'  //update the dist/index.html (the src index.html is copied there)
+        src: 'index-template.html', //update the dist/index.html (the src index.html is copied there)
+        dest: 'index-debug.html' //update the dist/index.html (the src index.html is copied there)
       },
       coverage: {
         options: {
-          update: {selector:'#main-script',attribute:'src',value:'js/usergrid-coverage.min.js'}
+          update: {
+            selector: '#main-script',
+            attribute: 'src',
+            value: 'js/usergrid-coverage.min.js'
+          }
         },
-        src: 'index-template.html',  //update the dist/index.html (the src index.html is copied there)
-        dest: coveragePath+'/index.html'  //update the dist/index.html (the src index.html is copied there)
+        src: 'index-template.html', //update the dist/index.html (the src index.html is copied there)
+        dest: coveragePath + '/index.html' //update the dist/index.html (the src index.html is copied there)
       }
     },
     bower: {
       install: {
-        options:{
-          cleanup:false,
-          copy:false
+        options: {
+          cleanup: false,
+          copy: false,
+          bowerOptions: {
+            forceLatest: true
+          }
         }
       }
     },
@@ -371,17 +412,28 @@ module.exports = function (grunt) {
   grunt.registerTask('validate', ['jshint', 'complexity']);
   grunt.registerTask('report', ['build', 'coverage']);
 
-  grunt.registerTask('build', ['clean:build','bower:install','ngtemplates', 'uglify','cssmin','dom_munger','karma:unit','copy']);
-  grunt.registerTask('build-dev', [ 'build']);
-  grunt.registerTask('build-coverage', [ 'ngtemplates','instrument','uglify:usergrid-coverage','uglify:usergrid-coverage-min', 'cssmin','dom_munger', 'copy:coverage']);
+  grunt.registerTask('build', ['clean:build', 'bower:install', 'ngtemplates',
+    'uglify', 'cssmin', 'dom_munger', 'karma:unit', 'copy'
+  ]);
+  grunt.registerTask('build-dev', ['build']);
+  grunt.registerTask('build-coverage', ['ngtemplates', 'instrument',
+    'uglify:usergrid-coverage', 'uglify:usergrid-coverage-min', 'cssmin',
+    'dom_munger', 'copy:coverage'
+  ]);
 
   grunt.registerTask('default', ['build']);
 
-  grunt.registerTask('e2e', ['connect:e2e-phantom','protractor:phantom']);
-  grunt.registerTask('e2e-chrome', ['connect:e2e-chrome','protractor:chrome']);
-  grunt.registerTask('e2e-coverage', ['clean:coverage', 'connect:e2e-coverage','protractor:coverage']);
-  grunt.registerTask('e2e-coverage-chrome', ['clean:coverage', 'connect:e2e-coverage-chrome','protractor:chrome', 'makeReport']);
-  grunt.registerTask('e2e-firefox', ['connect:e2e-firefox','protractor:firefox']);
-  grunt.registerTask('no-monitoring', ['build','clean:perf','karma:unit']);
+  grunt.registerTask('e2e', ['connect:e2e-phantom', 'protractor:phantom']);
+  grunt.registerTask('e2e-chrome', ['connect:e2e-chrome', 'protractor:chrome']);
+  grunt.registerTask('e2e-coverage', ['clean:coverage',
+    'connect:e2e-coverage', 'protractor:coverage'
+  ]);
+  grunt.registerTask('e2e-coverage-chrome', ['clean:coverage',
+    'connect:e2e-coverage-chrome', 'protractor:chrome', 'makeReport'
+  ]);
+  grunt.registerTask('e2e-firefox', ['connect:e2e-firefox',
+    'protractor:firefox'
+  ]);
+  grunt.registerTask('no-monitoring', ['build', 'clean:perf', 'karma:unit']);
 
 };

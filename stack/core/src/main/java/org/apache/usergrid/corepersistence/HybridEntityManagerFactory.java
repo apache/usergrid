@@ -23,6 +23,7 @@ import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.CounterUtils;
 import org.apache.usergrid.persistence.cassandra.EntityManagerFactoryImpl;
+import org.apache.usergrid.persistence.core.util.Health;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -44,11 +45,15 @@ public class HybridEntityManagerFactory implements EntityManagerFactory, Applica
         boolean useCP = cass.getPropertiesMap().get("usergrid.persistence").equals("CP");
         if ( useCP ) {
             logger.info("HybridEntityManagerFactory: configured for New Core Persistence engine");
-            factory = new CpEntityManagerFactory(cass, counterUtils, skipAggCounters );
+            factory = new CpEntityManagerFactory(cass, counterUtils );
         } else {
             logger.info("HybridEntityManagerFactory: configured for Classic Usergrid persistence");
             factory = new EntityManagerFactoryImpl( cass, counterUtils, skipAggCounters );
         }
+    }
+
+    public EntityManagerFactory getImplementation() {
+        return factory; 
     }
 
     @Override
@@ -139,6 +144,13 @@ public class HybridEntityManagerFactory implements EntityManagerFactory, Applica
         factory.setApplicationContext(ac);
     }
 
+
+    @Override
+    public long performEntityCount() {
+        return factory.performEntityCount();
+    }
+
+
     @Override
     public void flushEntityManagerCaches() {
         factory.flushEntityManagerCaches();
@@ -159,8 +171,43 @@ public class HybridEntityManagerFactory implements EntityManagerFactory, Applica
         factory.rebuildApplicationIndexes(appId, po);
     }
 
+
+    @Override
+    public void migrateData() throws Exception {
+        factory.migrateData();
+    }
+
+
+    @Override
+    public String getMigrateDataStatus() {
+        return factory.getMigrateDataStatus();
+    }
+
+
+    @Override
+    public int getMigrateDataVersion() {
+        return factory.getMigrateDataVersion();
+    }
+
+
+    @Override
+    public void setMigrationVersion( final int version ) {
+        factory.setMigrationVersion( version );
+    }
+
+
     @Override
     public void rebuildCollectionIndex(UUID appId, String collection, ProgressObserver po) {
         factory.rebuildCollectionIndex(appId, collection, po);
+    }
+
+    @Override
+    public void addIndex(UUID appId, String suffix,final int shards,final int replicas) {
+        factory.addIndex(appId,suffix,shards,replicas);
+    }
+
+    @Override
+    public Health getEntityStoreHealth() {
+        return factory.getEntityStoreHealth();
     }
 }

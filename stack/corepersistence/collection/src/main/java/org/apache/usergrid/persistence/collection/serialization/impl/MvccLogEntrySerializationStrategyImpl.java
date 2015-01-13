@@ -48,7 +48,7 @@ import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
-import org.apache.usergrid.persistence.core.migration.Migration;
+import org.apache.usergrid.persistence.core.migration.schema.Migration;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Preconditions;
@@ -71,7 +71,7 @@ import com.netflix.astyanax.serializers.UUIDSerializer;
  * @author tnine
  */
 @Singleton
-public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerializationStrategy, Migration {
+public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerializationStrategy {
 
     private static final Logger LOG = LoggerFactory.getLogger( MvccLogEntrySerializationStrategyImpl.class );
 
@@ -82,8 +82,8 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
     private static final CollectionScopedRowKeySerializer<Id> ROW_KEY_SER =
             new CollectionScopedRowKeySerializer<Id>( ID_SER );
 
-    private static final MultiTennantColumnFamily<CollectionScope, Id, UUID> CF_ENTITY_LOG =
-            new MultiTennantColumnFamily<CollectionScope, Id, UUID>( "Entity_Log", ROW_KEY_SER, UUIDSerializer.get() );
+    private static final MultiTennantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> CF_ENTITY_LOG =
+            new MultiTennantColumnFamily<>( "Entity_Log", ROW_KEY_SER, UUIDSerializer.get() );
 
 
     protected final Keyspace keyspace;
@@ -139,15 +139,28 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
                 "requested size cannot be over configured maximum" );
 
 
-        final List<ScopedRowKey<CollectionScope, Id>> rowKeys = new ArrayList<>( entityIds.size() );
+        final Id applicationId = collectionScope.getApplication();
+        final Id ownerId = collectionScope.getOwner();
+        final String collectionName = collectionScope.getName();
+
+
+        final List<ScopedRowKey<CollectionPrefixedKey<Id>>> rowKeys = new ArrayList<>( entityIds.size() );
 
 
         for ( final Id entityId : entityIds ) {
-            rowKeys.add( ScopedRowKey.fromKey( collectionScope, entityId ) );
+            final CollectionPrefixedKey<Id> collectionPrefixedKey =
+                    new CollectionPrefixedKey<>( collectionName, ownerId, entityId );
+
+
+            final ScopedRowKey<CollectionPrefixedKey<Id>> rowKey =
+                    ScopedRowKey.fromKey( applicationId, collectionPrefixedKey );
+
+
+            rowKeys.add( rowKey );
         }
 
 
-        final Iterator<Row<ScopedRowKey<CollectionScope, Id>, UUID>> latestEntityColumns;
+        final Iterator<Row<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID>> latestEntityColumns;
 
 
         try {
@@ -164,7 +177,7 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
         final VersionSetImpl versionResults = new VersionSetImpl( entityIds.size() );
 
         while ( latestEntityColumns.hasNext() ) {
-            final Row<ScopedRowKey<CollectionScope, Id>, UUID> row = latestEntityColumns.next();
+            final Row<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> row = latestEntityColumns.next();
 
             final ColumnList<UUID> columns = row.getColumns();
 
@@ -173,7 +186,7 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
             }
 
 
-            final Id entityId = row.getKey().getKey();
+            final Id entityId = row.getKey().getKey().getSubKey();
 
             final Column<UUID> column = columns.getColumnByIndex( 0 );
 
@@ -202,9 +215,23 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
         Preconditions.checkArgument( maxSize > 0, "max Size must be greater than 0" );
 
 
-        ColumnList<UUID> columns = null;
+        ColumnList<UUID> columns;
         try {
-            columns = keyspace.prepareQuery( CF_ENTITY_LOG ).getKey( ScopedRowKey.fromKey( collectionScope, entityId ) )
+
+            final Id applicationId = collectionScope.getApplication();
+            final Id ownerId = collectionScope.getOwner();
+            final String collectionName = collectionScope.getName();
+
+
+            final CollectionPrefixedKey<Id> collectionPrefixedKey =
+                    new CollectionPrefixedKey<>( collectionName, ownerId, entityId );
+
+
+            final ScopedRowKey<CollectionPrefixedKey<Id>> rowKey =
+                    ScopedRowKey.fromKey( applicationId, collectionPrefixedKey );
+
+
+            columns = keyspace.prepareQuery( CF_ENTITY_LOG ).getKey( rowKey )
                               .withColumnRange( version, null, false, maxSize ).execute().getResult();
         }
         catch ( ConnectionException e ) {
@@ -270,9 +297,9 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
     /**
      * Do the column update or delete for the given column and row key
      *
-     * @param context We need to use this when getting the keyspace
+     * @param collectionScope We need to use this when getting the keyspace
      */
-    private MutationBatch doWrite( CollectionScope context, Id entityId, UUID version, RowOp op ) {
+    private MutationBatch doWrite( CollectionScope collectionScope, Id entityId, UUID version, RowOp op ) {
 
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
@@ -280,7 +307,20 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
         LOG.debug( "Writing version with timestamp '{}'", timestamp );
 
-        op.doOp( batch.withRow( CF_ENTITY_LOG, ScopedRowKey.fromKey( context, entityId ) ) );
+        final Id applicationId = collectionScope.getApplication();
+        final Id ownerId = collectionScope.getOwner();
+        final String collectionName = collectionScope.getName();
+
+
+        final CollectionPrefixedKey<Id> collectionPrefixedKey =
+                new CollectionPrefixedKey<>( collectionName, ownerId, entityId );
+
+
+        final ScopedRowKey<CollectionPrefixedKey<Id>> rowKey =
+                ScopedRowKey.fromKey( applicationId, collectionPrefixedKey );
+
+
+        op.doOp( batch.withRow( CF_ENTITY_LOG, rowKey ) );
 
         return batch;
     }

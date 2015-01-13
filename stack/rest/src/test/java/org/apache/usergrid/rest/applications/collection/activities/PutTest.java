@@ -21,11 +21,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.usergrid.rest.AbstractRestIT;
-import org.apache.usergrid.rest.TestContextSetup;
-import org.apache.usergrid.rest.test.resource.CustomCollection;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.assertEquals;
+
+import org.apache.usergrid.rest.test.resource.CollectionResource;
+import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.CollectionEndpoint;
+import org.apache.usergrid.rest.test.resource2point0.model.Collection;
+import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -38,13 +41,11 @@ import org.slf4j.LoggerFactory;
 public class PutTest extends AbstractRestIT {
     private static final Logger log= LoggerFactory.getLogger( PutTest.class );
     
-    @Rule
-    public TestContextSetup context = new TestContextSetup( this );
 
     @Test //USERGRID-545
     public void putMassUpdateTest() throws IOException {
 
-        CustomCollection activities = context.collection( "activities" );
+        CollectionEndpoint activities = this.app().collection("activities");
 
         Map actor = hashMap( "displayName", "Erin" );
         Map newActor = hashMap( "displayName", "Bob" );
@@ -57,24 +58,24 @@ public class PutTest extends AbstractRestIT {
 
         for ( int i = 0; i < 5; i++ ) {
             props.put( "ordinal", i );
-            JsonNode activity = activities.create( props );
+            Entity activity = activities.post(new Entity(props));
         }
 
-        refreshIndex(context.getOrgName(), context.getAppName());
+        refreshIndex();
 
         String query = "select * ";
 
-        JsonNode node = activities.withQuery( query ).get();
-        String uuid = node.get( "entities" ).get( 0 ).get( "uuid" ).textValue();
+        Collection collection = activities.get();
+        String uuid = collection.getResponse().getEntities().get( 0 ).getUuid().toString();
         StringBuilder buf = new StringBuilder( uuid );
-
-        activities.addToUrlEnd( buf );
+        buf.append( "/" );
+        buf.append( buf );
         props.put( "actor", newActor );
-        node = activities.put( props );
+        Entity activity = activities.post(new Entity(props));
 
-        refreshIndex(context.getOrgName(), context.getAppName());
+        refreshIndex();
 
-        node = activities.withQuery( query ).get();
-        assertEquals( 6, node.get( "entities" ).size() );
+        collection = activities.get(  );
+        assertEquals( 6, collection.getResponse().getEntities().size() );
     }
 }

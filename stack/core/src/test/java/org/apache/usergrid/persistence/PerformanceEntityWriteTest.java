@@ -147,7 +147,7 @@ public class PerformanceEntityWriteTest extends AbstractCoreIT {
         addToCollectionEntity.put( "key2", 2000 );
         addToCollectionEntity.put( "key3", "Some value" );
 
-        final List<EntityRef> owners = Arrays.asList( ( EntityRef ) owner1, ( EntityRef ) owner2 );
+        final List<EntityRef> owners = Arrays.<EntityRef>asList( owner1, owner2 );
 
         int i = 0;
 

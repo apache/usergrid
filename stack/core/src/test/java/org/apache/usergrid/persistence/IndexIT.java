@@ -21,30 +21,31 @@ import java.nio.ByteBuffer;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
-import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
-import me.prettyprint.hector.api.Keyspace;
-import static me.prettyprint.hector.api.factory.HFactory.createMutator;
-import me.prettyprint.hector.api.mutation.Mutator;
+
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.apache.commons.lang3.RandomStringUtils;
+
 import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.CoreITSuite;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.IndexUpdate;
 import org.apache.usergrid.persistence.cassandra.IndexUpdate.IndexEntry;
 import org.apache.usergrid.persistence.cassandra.RelationManagerImpl;
-import org.apache.usergrid.persistence.hector.CountingMutator;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
-import static org.junit.Assert.assertEquals;
 
+import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
+import me.prettyprint.hector.api.Keyspace;
+import me.prettyprint.hector.api.mutation.Mutator;
+
+import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 @Concurrent()
@@ -62,7 +63,7 @@ public class IndexIT extends AbstractCoreIT {
     public void testCollectionOrdering() throws Exception {
         LOG.info( "testCollectionOrdering" );
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testCollectionOrdering" );
+        UUID applicationId = setup.createApplication( "testOrganization", "testCollectionOrdering" + RandomStringUtils.randomAlphabetic(20)  );
         assertNotNull( applicationId );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
@@ -135,7 +136,7 @@ public class IndexIT extends AbstractCoreIT {
     public void testCollectionFilters() throws Exception {
         LOG.info( "testCollectionFilters" );
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testCollectionFilters" );
+        UUID applicationId = setup.createApplication( "testOrganization", "testCollectionFilters" + RandomStringUtils.randomAlphabetic(20)  );
         assertNotNull( applicationId );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
@@ -261,7 +262,7 @@ public class IndexIT extends AbstractCoreIT {
     public void testSecondarySorts() throws Exception {
         LOG.info( "testSecondarySorts" );
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testSecondarySorts" );
+        UUID applicationId = setup.createApplication( "testOrganization", "testSecondarySorts" + RandomStringUtils.randomAlphabetic(20)  );
         assertNotNull( applicationId );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
@@ -295,7 +296,7 @@ public class IndexIT extends AbstractCoreIT {
     @Test
     public void testPropertyUpdateWithConnection() throws Exception {
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testPropertyUpdateWithConnection" );
+        UUID applicationId = setup.createApplication( "testOrganization", "testPropertyUpdateWithConnection" + RandomStringUtils.randomAlphabetic(20)  );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
@@ -370,7 +371,7 @@ public class IndexIT extends AbstractCoreIT {
     public void testPropertyUpdateWithConnectionEntityIndexEntryAudit() throws Exception {
 
         UUID applicationId =
-                setup.createApplication( "testOrganization", "testPropertyUpdateWithConnectionEntityIndexEntryAudit" );
+                setup.createApplication( "testOrganization", "testPropertyUpdateWithConnectionEntityIndexEntryAudit" + RandomStringUtils.randomAlphabetic(20)  );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
@@ -447,7 +448,7 @@ public class IndexIT extends AbstractCoreIT {
 
             RelationManagerImpl impl = (RelationManagerImpl)rm;
 
-            CassandraService cass = CoreITSuite.cassandraResource.getBean( CassandraService.class );
+            CassandraService cass = cassandraResource.getBean( CassandraService.class );
 
             ByteBufferSerializer buf = ByteBufferSerializer.get();
 

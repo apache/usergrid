@@ -43,7 +43,7 @@ public class DuplicateNameIT extends AbstractRestIT {
     @Test
     public void duplicateNamePrevention() {
 
-        CustomCollection things = context.application().collection( "things" );
+        CustomCollection things = context.application().customCollection( "things" );
 
         Map<String, String> entity = MapUtils.hashMap( "name", "enzo" );
 
@@ -55,7 +55,7 @@ public class DuplicateNameIT extends AbstractRestIT {
 
         refreshIndex( context.getAppUuid() );
 
-        Injector injector = Guice.createInjector( new TestGuiceModule() ); 
+        Injector injector = Guice.createInjector( new TestGuiceModule( null ) ); 
         SerializationFig sfig = injector.getInstance( SerializationFig.class );
 
         // wait for any temporary unique value records to timeout

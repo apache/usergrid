@@ -17,6 +17,7 @@
 package org.apache.usergrid.rest;
 
 
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -38,12 +39,16 @@ import org.springframework.stereotype.Component;
 
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.apache.usergrid.persistence.EntityManagerFactory.ProgressObserver;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
+import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
 
+import com.clearspring.analytics.util.Preconditions;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.sun.jersey.api.json.JSONWithPadding;
-import org.apache.usergrid.persistence.EntityManagerFactory.ProgressObserver;
 
 
 @Path( "/system" )
@@ -67,7 +72,7 @@ public class SystemResource extends AbstractContextResource {
     @GET
     @Path( "database/setup" )
     public JSONWithPadding getSetup( @Context UriInfo ui,
-                             @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+                                     @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
 
         ApiResponse response = createApiResponse();
@@ -91,7 +96,7 @@ public class SystemResource extends AbstractContextResource {
     @GET
     @Path( "superuser/setup" )
     public JSONWithPadding getSetupSuperuser( @Context UriInfo ui,
-                             @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+                                              @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
 
         ApiResponse response = createApiResponse();
@@ -111,156 +116,11 @@ public class SystemResource extends AbstractContextResource {
         return new JSONWithPadding( response, callback );
     }
 
-
-    @RequireSystemAccess
-    @PUT
-    @Path( "index/rebuild" )
-    public JSONWithPadding rebuildIndexes( @Context UriInfo ui,
-                             @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
-            throws Exception {
-
-        ApiResponse response = createApiResponse();
-        response.setAction( "rebuild indexes" );
-
-
-        final ProgressObserver po = new ProgressObserver() {
-            @Override
-            public void onProgress( EntityRef s, EntityRef t, String etype ) {
-                logger.info( "Indexing from {}:{} to {}:{} edgeType {}", new Object[] {
-                        s.getType(), s.getUuid(), t.getType(), t.getUuid(), etype
-                } );
-            }
-        };
-
-
-        final Thread rebuild = new Thread() {
-
-            @Override
-            public void run() {
-                logger.info( "Rebuilding all indexes" );
-
-                try {
-                    emf.rebuildInternalIndexes( po );
-                    emf.refreshIndex();
-
-                    emf.rebuildAllIndexes( po );
-                }
-                catch ( Exception e ) {
-                    logger.error( "Unable to rebuild indexes", e );
-                }
-            }
-        };
-
-        rebuild.setName( "Index rebuild all usergrid" );
-        rebuild.setDaemon( true );
-        rebuild.start();
-
-
-        response.setSuccess();
-
-        return new JSONWithPadding( response, callback );
+    @Path( "migrate" )
+    public MigrateResource migrate(){
+        return getSubResource( MigrateResource.class );
     }
 
-
-    @RequireSystemAccess
-    @PUT
-    @Path( "index/rebuild/" + RootResource.APPLICATION_ID_PATH )
-    public JSONWithPadding rebuildIndexes( 
-                @Context UriInfo ui, 
-                @PathParam( "applicationId" ) String applicationIdStr,
-                @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
-
-            throws Exception {
-
-        final UUID appId = UUIDUtils.tryExtractUUID( applicationIdStr );
-        ApiResponse response = createApiResponse();
-        response.setAction( "rebuild indexes" );
-
-
-        final ProgressObserver po = new ProgressObserver() {
-            @Override
-            public void onProgress( EntityRef s, EntityRef t, String etype ) {
-                logger.info( "Indexing from {}:{} to {}:{} edgeType {}", new Object[] {
-                        s.getType(), s.getUuid(), t.getType(), t.getUuid(), etype
-                } );
-            }
-        };
-
-
-        final EntityManager em = emf.getEntityManager( appId );
-
-        final Set<String> collectionNames = em.getApplicationCollections();
-
-        final Thread rebuild = new Thread() {
-
-            @Override
-            public void run() {
-                for ( String collectionName : collectionNames )
-
-
-                {
-                    rebuildCollection( appId, collectionName );
-                }
-            }
-        };
-
-        rebuild.setName( String.format( "Index rebuild for app %s", appId ) );
-        rebuild.setDaemon( true );
-        rebuild.start();
-
-        response.setSuccess();
-
-        return new JSONWithPadding( response, callback );
-    }
-
-
-    @RequireSystemAccess
-    @PUT
-    @Path( "index/rebuild/" + RootResource.APPLICATION_ID_PATH + "/{collectionName}" )
-    public JSONWithPadding rebuildIndexes( 
-                @Context UriInfo ui,
-                @PathParam( "applicationId" ) final String applicationIdStr,
-                @PathParam( "collectionName" ) final String collectionName,
-                @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
-            throws Exception {
-
-        final UUID appId = UUIDUtils.tryExtractUUID( applicationIdStr );
-        ApiResponse response = createApiResponse();
-        response.setAction( "rebuild indexes" );
-
-        final Thread rebuild = new Thread() {
-
-            public void run() {
-
-                rebuildCollection( appId, collectionName );
-            }
-        };
-
-        rebuild.setName( String.format( 
-                "Index rebuild for app %s and collection %s", appId, collectionName ) );
-        rebuild.setDaemon( true );
-        rebuild.start();
-
-        response.setSuccess();
-
-        return new JSONWithPadding( response, callback );
-    }
-
-
-    private void rebuildCollection( final UUID applicationId, final String collectionName ) {
-        EntityManagerFactory.ProgressObserver po = new EntityManagerFactory.ProgressObserver() {
-            @Override
-            public void onProgress( EntityRef s, EntityRef t, String etype ) {
-                logger.info( "Indexing from {}:{} to {}:{} edgeType {}", new Object[] {
-                        s.getType(), s.getUuid(), t.getType(), t.getUuid(), etype
-                } );
-            }
-        };
-
-
-        logger.info( "Reindexing for app id: {} and collection {}", applicationId, collectionName );
-
-        emf.rebuildCollectionIndex( applicationId, collectionName, po );
-        emf.refreshIndex();
-    }
+    @Path( "index" )
+    public IndexResource index() { return getSubResource(IndexResource.class); }
 }

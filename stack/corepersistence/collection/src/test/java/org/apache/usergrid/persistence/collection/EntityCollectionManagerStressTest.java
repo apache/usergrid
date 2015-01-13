@@ -21,8 +21,7 @@ package org.apache.usergrid.persistence.collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.jukito.UseModules;
-import org.junit.ClassRule;
+import org.apache.usergrid.persistence.core.test.UseModules;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -32,11 +31,10 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.commons.lang3.time.StopWatch;
 
-import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
+import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
-import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
-import org.apache.usergrid.persistence.core.cassandra.ITRunner;
+import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;

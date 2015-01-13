@@ -21,13 +21,24 @@ package org.apache.usergrid.persistence.collection.guice;
 
 
 import org.apache.usergrid.persistence.core.guice.CommonModule;
+import org.apache.usergrid.persistence.core.guice.MaxMigrationModule;
+import org.apache.usergrid.persistence.core.guice.TestModule;
 
 
 public class TestCollectionModule extends TestModule {
 
     @Override
     protected void configure() {
+        /**
+         * Runtime modules
+         */
         install( new CommonModule() );
-        install(new CollectionModule());
+        install( new CollectionModule() );
+
+        /**
+         * Test modules
+         */
+        install(new MaxMigrationModule());
+
     }
 }

@@ -19,16 +19,13 @@ package org.apache.usergrid.persistence.index.query;
 
 import java.util.Iterator;
 import java.util.List;
-
-
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
 /**
- * Internal results class, should not be returned as results to a user.  Only returns candidate entity results
- *
+ * Internal results class, should not be returned as results to a user.  
+ * Only returns candidate entity results
  */
 public class CandidateResults implements Iterable<CandidateResult> {
 
@@ -66,8 +63,7 @@ public class CandidateResults implements Iterable<CandidateResult> {
         return query;
     }
 
-
-
+    
     public int size() {
         return candidates.size();
     }

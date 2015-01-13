@@ -48,7 +48,7 @@ public class AllInConnectionNoTypeIT extends AbstractIteratingQueryIT {
             query.setConnectionType( CONNECTION );
             // don't set it on purpose
             query.setEntityType( null );
-            return app.getEm().searchConnectedEntities( rootEntity, query );
+            return app.getEntityManager().searchConnectedEntities( rootEntity, query );
         }
     }
 }

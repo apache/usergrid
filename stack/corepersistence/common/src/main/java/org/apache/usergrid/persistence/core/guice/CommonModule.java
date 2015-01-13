@@ -27,17 +27,24 @@ import org.apache.usergrid.persistence.core.astyanax.CassandraConfigImpl;
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.core.consistency.TimeService;
 import org.apache.usergrid.persistence.core.consistency.TimeServiceImpl;
-import org.apache.usergrid.persistence.core.migration.MigrationManager;
-import org.apache.usergrid.persistence.core.migration.MigrationManagerFig;
-import org.apache.usergrid.persistence.core.migration.MigrationManagerImpl;
+import org.apache.usergrid.persistence.core.migration.data.DataMigration;
+import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
+import org.apache.usergrid.persistence.core.migration.data.DataMigrationManagerImpl;
+import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerialization;
+import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerializationImpl;
+import org.apache.usergrid.persistence.core.migration.schema.Migration;
+import org.apache.usergrid.persistence.core.migration.schema.MigrationManager;
+import org.apache.usergrid.persistence.core.migration.schema.MigrationManagerFig;
+import org.apache.usergrid.persistence.core.migration.schema.MigrationManagerImpl;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Key;
+import com.google.inject.multibindings.Multibinder;
 import com.netflix.astyanax.Keyspace;
 
 
 /**
  * Simple module for configuring our core services.  Cassandra etc
- *
  */
 public class CommonModule extends AbstractModule {
 
@@ -45,24 +52,42 @@ public class CommonModule extends AbstractModule {
     @Override
     protected void configure() {
         //noinspection unchecked
-        install( new GuicyFigModule(
-                MigrationManagerFig.class,
-                CassandraFig.class) );
+        install( new GuicyFigModule( MigrationManagerFig.class, CassandraFig.class ) );
 
-             // bind our keyspace to the AstyanaxKeyspaceProvider
+        // bind our keyspace to the AstyanaxKeyspaceProvider
         bind( Keyspace.class ).toProvider( AstyanaxKeyspaceProvider.class ).asEagerSingleton();
 
         // bind our migration manager
         bind( MigrationManager.class ).to( MigrationManagerImpl.class );
 
+
+
+        //do multibindings for migrations
+        Multibinder<Migration> migrationBinding = Multibinder.newSetBinder( binder(), Migration.class );
+        migrationBinding.addBinding().to( Key.get( MigrationInfoSerialization.class ) );
+
+
         bind( TimeService.class ).to( TimeServiceImpl.class );
 
         bind( CassandraConfig.class ).to( CassandraConfigImpl.class );
 
+
+        /**
+         * Data migration beans
+         */
+        bind( MigrationInfoSerialization.class ).to( MigrationInfoSerializationImpl.class );
+
+        bind( DataMigrationManager.class ).to( DataMigrationManagerImpl.class );
+
+
+
+        //do multibindings for migrations
+        Multibinder<DataMigration> dataMigrationMultibinder = Multibinder.newSetBinder( binder(), DataMigration.class );
+//        dataMigrationMultibinder.addBinding();
+//        dataMigrationManagerMultibinder.addBinding().to( DataMigrationManagerImpl.class );
+//        migrationBinding.addBinding().to( Key.get( MigrationInfoSerialization.class ) );
+
     }
-
-
-
 
 
 }

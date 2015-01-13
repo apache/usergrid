@@ -19,7 +19,6 @@
 package org.apache.usergrid.persistence.graph.serialization.impl.shard.count;
 
 
-import org.jukito.UseModules;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -28,10 +27,10 @@ import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
-import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
-import org.apache.usergrid.persistence.core.cassandra.ITRunner;
+import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.test.ITRunner;
+import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
@@ -55,9 +54,6 @@ import static org.mockito.Mockito.when;
 public class NodeShardCounterSerializationTest {
 
     private static final Logger log = LoggerFactory.getLogger( NodeShardCounterSerializationTest.class );
-
-    @ClassRule
-    public static CassandraRule rule = new CassandraRule();
 
 
     @Inject
@@ -98,11 +94,11 @@ public class NodeShardCounterSerializationTest {
 
         final Id id = createId( "test" );
 
-        ShardKey key1 = new ShardKey( scope, new Shard(0, 0, false), DirectedEdgeMeta.fromSourceNode( id, "type1"  ) );
+        ShardKey key1 = new ShardKey( scope, new Shard( 0, 0, false ), DirectedEdgeMeta.fromSourceNode( id, "type1" ) );
 
-        ShardKey key2 = new ShardKey( scope, new Shard(0, 0, false), DirectedEdgeMeta.fromSourceNode( id, "type2"  ) );
+        ShardKey key2 = new ShardKey( scope, new Shard( 0, 0, false ), DirectedEdgeMeta.fromSourceNode( id, "type2" ) );
 
-        ShardKey key3 = new ShardKey( scope, new Shard(1, 0, false), DirectedEdgeMeta.fromSourceNode( id, "type1"  ) );
+        ShardKey key3 = new ShardKey( scope, new Shard( 1, 0, false ), DirectedEdgeMeta.fromSourceNode( id, "type1" ) );
 
 
         Counter counter = new Counter();

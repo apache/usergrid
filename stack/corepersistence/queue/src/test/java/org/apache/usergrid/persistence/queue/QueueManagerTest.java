@@ -19,36 +19,42 @@
 
 package org.apache.usergrid.persistence.queue;
 
-import com.amazonaws.services.glacier.TreeHashGenerator;
-import org.apache.usergrid.persistence.collection.util.InvalidEntityGenerator;
-import org.apache.usergrid.persistence.queue.guice.TestQueueModule;
-import org.apache.usergrid.persistence.queue.impl.QueueScopeImpl;
-import org.jukito.UseModules;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import org.apache.usergrid.persistence.core.cassandra.ITRunner;
-import org.apache.usergrid.persistence.model.entity.SimpleId;
-
-import com.google.inject.Inject;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
-import static org.junit.Assert.*;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import org.apache.usergrid.persistence.core.test.ITRunner;
+import org.apache.usergrid.persistence.core.test.UseModules;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.queue.guice.TestQueueModule;
+import org.apache.usergrid.persistence.queue.impl.QueueScopeFactoryImpl;
+import org.apache.usergrid.persistence.queue.impl.QueueScopeImpl;
+
+import com.google.inject.Inject;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 @RunWith( ITRunner.class )
 @UseModules( { TestQueueModule.class } )
 public class QueueManagerTest {
 
-
+    @Inject
+    protected QueueFig queueFig;
     @Inject
     protected QueueManagerFactory qmf;
+
+    @Inject
+    protected QueueScopeFactory queueScopeFactory;
 
     protected QueueScope scope;
     private QueueManager qm;
@@ -58,6 +64,16 @@ public class QueueManagerTest {
     public void mockApp() {
         this.scope = new QueueScopeImpl( new SimpleId( "application" ), "testQueue" );
         qm = qmf.getQueueManager(scope);
+        queueScopeFactory = new QueueScopeFactoryImpl(queueFig);
+    }
+
+    @Test
+    public void scopeFactory(){
+        UUID uuid = UUID.randomUUID();
+        String key = "test";
+        QueueScope scope =queueScopeFactory.getScope(uuid,key);
+        assertEquals(key,scope.getName());
+        assertEquals(scope.getApplication().getUuid(),uuid);
     }
 
     @Ignore("need aws creds")
@@ -96,5 +112,6 @@ public class QueueManagerTest {
         assertTrue(messageList.size() <= 0);
 
     }
+
 
 }

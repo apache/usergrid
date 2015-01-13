@@ -26,15 +26,13 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
-import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
+import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphFig;
@@ -72,13 +70,10 @@ import static org.mockito.Mockito.when;
  *
  *
  */
+
 public abstract class EdgeSerializationTest {
 
     private static final Logger log = LoggerFactory.getLogger( EdgeSerializationTest.class );
-
-    @ClassRule
-    public static CassandraRule rule = new CassandraRule();
-
 
     @Inject
     @Rule
@@ -172,7 +167,7 @@ public abstract class EdgeSerializationTest {
     @Test
     public void testPaging() throws ConnectionException {
 
-        final MarkedEdge edge1 = createEdge( "source", "edge", "target", 0);
+        final MarkedEdge edge1 = createEdge( "source", "edge", "target", 0 );
 
         final Id sourceId = edge1.getSourceNode();
         final Id targetId = edge1.getTargetNode();
@@ -188,10 +183,6 @@ public abstract class EdgeSerializationTest {
         long now = System.currentTimeMillis();
 
         //get our edges out by name
-
-
-
-
 
 
         Iterator<MarkedEdge> results =
@@ -232,7 +223,7 @@ public abstract class EdgeSerializationTest {
         final Id targetId = edgev1.getTargetNode();
 
 
-        final MarkedEdge edgev2 = createEdge( sourceId, "edge1", targetId, timestamp+1 );
+        final MarkedEdge edgev2 = createEdge( sourceId, "edge1", targetId, timestamp + 1 );
 
         //we shouldn't get this one back
         final MarkedEdge diffTarget = createEdge( sourceId, "edge1", createId( "newTarget" ) );
@@ -242,7 +233,6 @@ public abstract class EdgeSerializationTest {
 
         //create edge type 2 to ensure we don't get it in results
         final MarkedEdge edgeType2V1 = createEdge( sourceId, "edge2", targetId );
-
 
 
         serialization.writeEdge( scope, edgev1, UUIDGenerator.newTimeUUID() ).execute();
@@ -339,7 +329,7 @@ public abstract class EdgeSerializationTest {
         final Id targetId1 = edge1.getTargetNode();
 
 
-        final MarkedEdge edge2 = createEdge( sourceId, "edge", createId( "target" ), timestamp+1 );
+        final MarkedEdge edge2 = createEdge( sourceId, "edge", createId( "target" ), timestamp + 1 );
 
         final Id targetId2 = edge2.getTargetNode();
 
@@ -376,7 +366,9 @@ public abstract class EdgeSerializationTest {
 
         results = serialization.getEdgesToTargetBySourceType( scope,
                 createSearchByEdgeAndId( targetId1, "edge", now, sourceId.getType(), edge2 ) );
-        assertFalse( results.hasNext() );
+        assertTrue( results.hasNext() );
+        assertEquals(edge1, results.next());
+        assertFalse(results.hasNext());
 
 
         results = serialization.getEdgesToTargetBySourceType( scope,
@@ -402,8 +394,8 @@ public abstract class EdgeSerializationTest {
 
         final Id targetId2 = edge2.getTargetNode();
 
-        serialization.writeEdge( scope, edge1,  UUIDGenerator.newTimeUUID() ).execute();
-        serialization.writeEdge( scope, edge2,  UUIDGenerator.newTimeUUID() ).execute();
+        serialization.writeEdge( scope, edge1, UUIDGenerator.newTimeUUID() ).execute();
+        serialization.writeEdge( scope, edge2, UUIDGenerator.newTimeUUID() ).execute();
 
 
         long now = System.currentTimeMillis();
@@ -506,13 +498,13 @@ public abstract class EdgeSerializationTest {
         final Id targetId1 = edge1.getTargetNode();
 
 
-        final MarkedEdge edge2 = createEdge( sourceId, "edge", createId( "target" ), timestamp+1 );
+        final MarkedEdge edge2 = createEdge( sourceId, "edge", createId( "target" ), timestamp + 1 );
 
         final Id targetId2 = edge2.getTargetNode();
 
 
-        serialization.writeEdge( scope, edge1,  UUIDGenerator.newTimeUUID() ).execute();
-        serialization.writeEdge( scope, edge2,  UUIDGenerator.newTimeUUID() ).execute();
+        serialization.writeEdge( scope, edge1, UUIDGenerator.newTimeUUID() ).execute();
+        serialization.writeEdge( scope, edge2, UUIDGenerator.newTimeUUID() ).execute();
 
 
         long now = System.currentTimeMillis();
@@ -668,7 +660,7 @@ public abstract class EdgeSerializationTest {
         Set<Edge> edges = new HashSet<Edge>( size );
 
 
-       long timestamp = 0;
+        long timestamp = 0;
 
         for ( int i = 0; i < size; i++ ) {
             final MarkedEdge edge = createEdge( sourceId, type, createId( "target" ), timestamp );
@@ -719,7 +711,8 @@ public abstract class EdgeSerializationTest {
 
             batch.mergeShallow( serialization.writeEdge( scope, edge, UUIDGenerator.newTimeUUID() ) );
 
-            //increment timestamp (not done inline on purpose) If we do System.currentMillis we get the same edge on fast systems
+            //increment timestamp (not done inline on purpose) If we do System.currentMillis we get the same edge on
+            // fast systems
             timestamp++;
         }
 
@@ -727,8 +720,8 @@ public abstract class EdgeSerializationTest {
         batch.execute();
 
 
-        Iterator<MarkedEdge> results =
-                serialization.getEdgeVersions( scope, createGetByEdge( sourceId, edgeType, targetId, timestamp, null ) );
+        Iterator<MarkedEdge> results = serialization
+                .getEdgeVersions( scope, createGetByEdge( sourceId, edgeType, targetId, timestamp, null ) );
 
         verify( results, writeCount );
 
@@ -879,8 +872,8 @@ public abstract class EdgeSerializationTest {
         assertFalse( results.hasNext() );
 
 
-        Iterator<MarkedEdge> versions = serialization
-                .getEdgeVersions( scope, createGetByEdge( edge1.getSourceNode(), "edge", edge1.getTargetNode(), now, null ) );
+        Iterator<MarkedEdge> versions = serialization.getEdgeVersions( scope,
+                createGetByEdge( edge1.getSourceNode(), "edge", edge1.getTargetNode(), now, null ) );
 
 
         assertEquals( edge1, versions.next() );
@@ -896,8 +889,8 @@ public abstract class EdgeSerializationTest {
         assertFalse( results.hasNext() );
 
 
-        versions = serialization
-                .getEdgeVersions( scope, createGetByEdge( edge1.getSourceNode(), "edge", edge1.getTargetNode(), now, null ) );
+        versions = serialization.getEdgeVersions( scope,
+                createGetByEdge( edge1.getSourceNode(), "edge", edge1.getTargetNode(), now, null ) );
 
 
         assertEquals( edge1, versions.next() );
@@ -914,8 +907,8 @@ public abstract class EdgeSerializationTest {
 
         assertFalse( results.hasNext() );
 
-        versions = serialization
-                .getEdgeVersions( scope, createGetByEdge( edge1.getSourceNode(), "edge", edge1.getTargetNode(), now, null ) );
+        versions = serialization.getEdgeVersions( scope,
+                createGetByEdge( edge1.getSourceNode(), "edge", edge1.getTargetNode(), now, null ) );
 
 
         assertFalse( versions.hasNext() );
@@ -929,8 +922,8 @@ public abstract class EdgeSerializationTest {
         assertFalse( results.hasNext() );
 
 
-        versions = serialization
-                .getEdgeVersions( scope, createGetByEdge( edge1.getSourceNode(), "edge", edge1.getTargetNode(), now, null ) );
+        versions = serialization.getEdgeVersions( scope,
+                createGetByEdge( edge1.getSourceNode(), "edge", edge1.getTargetNode(), now, null ) );
 
 
         assertEquals( edge1, versions.next() );

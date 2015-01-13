@@ -22,14 +22,17 @@ import java.util.Map;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
+
+import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.CollectionEndpoint;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.EntityEndpoint;
+import org.apache.usergrid.rest.test.resource2point0.model.Entity;
+import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.rest.AbstractRestIT;
-import org.apache.usergrid.rest.TestContextSetup;
-import org.apache.usergrid.rest.test.resource.CustomCollection;
 
 import static org.junit.Assert.assertEquals;
 
@@ -43,45 +46,42 @@ import static org.junit.Assert.assertEquals;
 public class RetrieveUsersTest extends AbstractRestIT {
     private static final Logger log = LoggerFactory.getLogger( RetrieveUsersTest.class );
 
-    @Rule
-    public TestContextSetup context = new TestContextSetup( this );
 
 
     @Test // USERGRID-1222
     public void queryForUsername() throws IOException {
-        CustomCollection users = context.collection( "users" );
+        CollectionEndpoint users =this.app().collection( "users" );
 
-        Map props = new HashMap();
+        Entity props = new Entity();
 
         props.put( "username", "Alica" );
-        users.create( props );
+        users.post(props);
 
         props.put( "username", "Bob" );
-        users.create( props );
+        users.post(props);
 
-        refreshIndex(context.getOrgName(), context.getAppName());
+        refreshIndex();
 
         String query = "select *";
         String incorrectQuery = "select * where username = 'Alica'";
 
-        assertEquals( users.entityValue( query, "username", 0 ), users.entityValue( incorrectQuery, "username", 0 ) );
+        assertEquals( users.get(new QueryParameters().setQuery( query) ).next().get( "username").toString(), users.get(new QueryParameters().setQuery( incorrectQuery)).next().get( "username").toString() );
     }
 
 
     @Test // USERGRID-1727
     public void userEntityDictionaryHasRoles() throws IOException {
-        CustomCollection users = context.collection( "users" );
+        CollectionEndpoint users = this.app().collection("users");
 
-        Map props = new HashMap();
+        Entity props = new Entity();
         props.put( "username", "Nina" );
 
-        JsonNode response = users.create( props );
-        refreshIndex(context.getOrgName(), context.getAppName());
+        Entity entity = users.post(props);
+        refreshIndex();
 
-        JsonNode entity = response.get( "entities" ).get( 0 );
-        JsonNode metadata = entity.get( "metadata" );
-        JsonNode sets = metadata.get( "sets" );
-        JsonNode rolenames = sets.get( "rolenames" );
-        Assert.assertTrue( "rolenames URL ends with /roles", rolenames.asText().endsWith( "/roles" ) );
+        Map<String,Object> metadata = (Map)entity.get( "metadata" );
+        Map<String,Object> sets = (Map)metadata.get( "sets" );
+        Map<String,Object> rolenames =(Map) sets.get( "rolenames" );
+        Assert.assertTrue( "rolenames URL ends with /roles", rolenames.toString().endsWith( "/roles" ) );
     }
 }

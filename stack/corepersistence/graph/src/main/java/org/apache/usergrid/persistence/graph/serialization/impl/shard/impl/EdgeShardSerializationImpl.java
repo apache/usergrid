@@ -32,7 +32,7 @@ import org.apache.usergrid.persistence.core.astyanax.ColumnParser;
 import org.apache.usergrid.persistence.core.astyanax.ColumnTypes;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
-import org.apache.usergrid.persistence.core.astyanax.OrganizationScopedRowKeySerializer;
+import org.apache.usergrid.persistence.core.astyanax.ScopedRowKeySerializer;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
@@ -61,9 +61,9 @@ public class EdgeShardSerializationImpl implements EdgeShardSerialization {
     /**
      * Edge shards
      */
-    private static final MultiTennantColumnFamily<ApplicationScope, DirectedEdgeMeta, Long> EDGE_SHARDS =
+    private static final MultiTennantColumnFamily<ScopedRowKey<DirectedEdgeMeta>, Long> EDGE_SHARDS =
             new MultiTennantColumnFamily<>( "Edge_Shards",
-                    new OrganizationScopedRowKeySerializer<>( EdgeShardRowKeySerializer.INSTANCE ), LongSerializer.get() );
+                    new ScopedRowKeySerializer<>( EdgeShardRowKeySerializer.INSTANCE ), LongSerializer.get() );
 
 
     private static final ShardColumnParser COLUMN_PARSER = new ShardColumnParser();
@@ -96,7 +96,7 @@ public class EdgeShardSerializationImpl implements EdgeShardSerialization {
         Preconditions.checkArgument( shard.getShardIndex() > -1, "shardid must be greater than -1" );
         Preconditions.checkArgument( shard.getCreatedTime() > -1, "createdTime must be greater than -1" );
 
-        final ScopedRowKey rowKey = ScopedRowKey.fromKey( scope, metaData );
+        final ScopedRowKey rowKey = ScopedRowKey.fromKey( scope.getApplication(), metaData );
 
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
@@ -130,10 +130,10 @@ public class EdgeShardSerializationImpl implements EdgeShardSerialization {
         }
 
 
-        final ScopedRowKey rowKey = ScopedRowKey.fromKey( scope, metaData );
+        final ScopedRowKey rowKey = ScopedRowKey.fromKey( scope.getApplication(), metaData );
 
 
-        final RowQuery<ScopedRowKey<ApplicationScope, DirectedEdgeMeta>, Long> query =
+        final RowQuery<ScopedRowKey<DirectedEdgeMeta>, Long> query =
                 keyspace.prepareQuery( EDGE_SHARDS ).setConsistencyLevel( cassandraConfig.getReadCL() ).getKey( rowKey )
                         .autoPaginate( true ).withColumnRange( rangeBuilder.build() );
 
@@ -152,7 +152,7 @@ public class EdgeShardSerializationImpl implements EdgeShardSerialization {
 
 
 
-        final ScopedRowKey rowKey = ScopedRowKey.fromKey( scope, metaData );
+        final ScopedRowKey rowKey = ScopedRowKey.fromKey( scope.getApplication(), metaData );
 
         final MutationBatch batch = keyspace.prepareMutationBatch();
 

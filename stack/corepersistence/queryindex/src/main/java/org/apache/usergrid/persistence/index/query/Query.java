@@ -43,6 +43,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.persistence.index.exceptions.IndexException;
 import org.apache.usergrid.persistence.index.exceptions.QueryParseException;
 import org.apache.usergrid.persistence.index.impl.EsQueryVistor;
+import org.apache.usergrid.persistence.index.impl.IndexingUtils;
 import org.apache.usergrid.persistence.index.query.tree.AndOperand;
 import org.apache.usergrid.persistence.index.query.tree.ContainsOperand;
 import org.apache.usergrid.persistence.index.query.tree.CpQueryFilterLexer;
@@ -90,7 +91,7 @@ public class Query {
     private Map<String, String> selectAssignments = new LinkedHashMap<String, String>();
     private boolean mergeSelectResults = false;
     private Level level = Level.ALL_PROPERTIES;
-    private String connection;
+    private String connectionType;
     private List<String> permissions;
     private boolean reversed;
     private boolean reversedSet = false;
@@ -115,15 +116,16 @@ public class Query {
     public Query( Query q ) {
         if ( q != null ) {
             type = q.type;
-            sortPredicates = q.sortPredicates != null ? new ArrayList<SortPredicate>( q.sortPredicates ) : null;
+            sortPredicates = q.sortPredicates != null 
+                    ? new ArrayList<SortPredicate>( q.sortPredicates ) : null;
             startResult = q.startResult;
             cursor = q.cursor;
             limit = q.limit;
-            selectAssignments =
-                    q.selectAssignments != null ? new LinkedHashMap<String, String>( q.selectAssignments ) : null;
+            selectAssignments = q.selectAssignments != null 
+                    ? new LinkedHashMap<String, String>( q.selectAssignments ) : null;
             mergeSelectResults = q.mergeSelectResults;
             //level = q.level;
-            connection = q.connection;
+            connectionType = q.connectionType;
             permissions = q.permissions != null ? new ArrayList<String>( q.permissions ) : null;
             reversed = q.reversed;
             reversedSet = q.reversedSet;
@@ -132,32 +134,55 @@ public class Query {
             resolution = q.resolution;
             pad = q.pad;
             rootOperand = q.rootOperand;
-            identifiers = q.identifiers != null ? new ArrayList<Identifier>( q.identifiers ) : null;
-            counterFilters =
-                    q.counterFilters != null ? new ArrayList<CounterFilterPredicate>( q.counterFilters ) : null;
+            identifiers = q.identifiers != null 
+                    ? new ArrayList<Identifier>( q.identifiers ) : null;
+            counterFilters = q.counterFilters != null 
+                    ? new ArrayList<CounterFilterPredicate>( q.counterFilters ) : null;
             collection = q.collection;
         }
     }
 
 
-    public QueryBuilder createQueryBuilder() {
+    public QueryBuilder createQueryBuilder( final String context ) {
+
 
         QueryBuilder queryBuilder = null;
 
+
+        //we have a root operand.  Translate our AST into an ES search
         if ( getRootOperand() != null ) {
+            // In the case of geo only queries, this will return null into the query builder.  
+            // Once we start using tiles, we won't need this check any longer, since a geo query 
+            // will return a tile query + post filter
             QueryVisitor v = new EsQueryVistor();
+
             try {
                 getRootOperand().visit( v );
-
-            } catch ( IndexException ex ) {
+            }
+            catch ( IndexException ex ) {
                 throw new RuntimeException( "Error building ElasticSearch query", ex );
             }
-            queryBuilder = v.getQueryBuilder();
-        } 
 
-		if ( queryBuilder == null ) {
-            queryBuilder = QueryBuilders.matchAllQuery();
-		}
+
+            queryBuilder = v.getQueryBuilder();
+        }
+
+
+         // Add our filter for context to our query for fast execution.  
+         // Fast because it utilizes bitsets internally. See this post for more detail.
+         // http://www.elasticsearch.org/blog/all-about-elasticsearch-filter-bitsets/
+
+        // TODO evaluate performance when it's an all query.  
+        // Do we need to put the context term first for performance?
+        if ( queryBuilder != null ) {
+            queryBuilder = QueryBuilders.boolQuery().must( queryBuilder ).must( QueryBuilders
+                    .termQuery( IndexingUtils.ENTITY_CONTEXT_FIELDNAME, context ) );
+        }
+
+        //nothing was specified ensure we specify the context in the search
+        else {
+            queryBuilder = QueryBuilders.termQuery( IndexingUtils.ENTITY_CONTEXT_FIELDNAME, context );
+        }
 
         return queryBuilder;
     }
@@ -253,7 +278,8 @@ public class Query {
     }
 
 
-    public static Query fromQueryParams( Map<String, List<String>> params ) throws QueryParseException {
+    public static Query fromQueryParams( Map<String, List<String>> params ) 
+            throws QueryParseException {
         Query q = null;
         CounterResolution resolution = null;
         List<Identifier> identifiers = null;
@@ -262,7 +288,7 @@ public class Query {
         String ql = QueryUtils.queryStrFrom( params );
         String type = ListUtils.first( params.get( "type" ) );
         Boolean reversed = ListUtils.firstBoolean( params.get( "reversed" ) );
-        String connection = ListUtils.first( params.get( "connection" ) );
+        String connection = ListUtils.first( params.get( "connectionType" ) );
         UUID start = ListUtils.firstUuid( params.get( "start" ) );
         String cursor = ListUtils.first( params.get( "cursor" ) );
         Integer limit = ListUtils.firstInteger( params.get( "limit" ) );
@@ -542,17 +568,6 @@ public class Query {
         this.type = type;
     }
 
-
-    public String getConnectionType() {
-        return connection;
-    }
-
-
-    public void setConnectionType( String connection ) {
-        this.connection = connection;
-    }
-
-
     public List<String> getPermissions() {
         return permissions;
     }
@@ -621,8 +636,8 @@ public class Query {
 
         for ( SortPredicate s : sortPredicates ) {
             if ( s.getPropertyName().equals( sort.getPropertyName() ) ) {
-                throw new QueryParseException(
-                        String.format( "Attempted to set sort order for %s more than once", s.getPropertyName() ) );
+                throw new QueryParseException( String.format( 
+                    "Attempted to set sort order for %s more than once", s.getPropertyName() ) );
             }
         }
         sortPredicates.add( sort );
@@ -890,11 +905,12 @@ public class Query {
 
     public void setLimit( int limit ) {
 
-        //      TODO tnine.  After users have had time to change their query limits,
+        // TODO tnine.  After users have had time to change their query limits,
         // this needs to be uncommented and enforced.
-        //        if(limit > MAX_LIMIT){
-        //          throw new IllegalArgumentException(String.format("Query limit must be <= to %d", MAX_LIMIT));
-        //        }
+        //    if(limit > MAX_LIMIT){
+        //        throw new IllegalArgumentException(
+        //            String.format("Query limit must be <= to %d", MAX_LIMIT));
+        //    }
 
         if ( limit > MAX_LIMIT ) {
             limit = MAX_LIMIT;
@@ -1094,7 +1110,9 @@ public class Query {
         private final Query.SortDirection direction;
 
 
-        public SortPredicate(@JsonProperty("propertyName")  String propertyName, @JsonProperty("direction")  Query.SortDirection direction ) {
+        public SortPredicate(@JsonProperty("propertyName")  String propertyName, 
+                @JsonProperty("direction")  Query.SortDirection direction ) {
+
             if ( propertyName == null ) {
                 throw new NullPointerException( "Property name was null" );
             }
@@ -1232,7 +1250,7 @@ public class Query {
                 }
             }
 
-            if ( ( user == null ) && ( group == null ) && ( category == null ) && ( name == null ) ) {
+            if ( ( user == null ) && ( group == null ) && ( category == null ) && ( name == null)) {
                 return null;
             }
 
@@ -1350,18 +1368,29 @@ public class Query {
     }
 
 
-    public void setQl( String ql ) {
+    public Query setQl( String ql ) {
         this.ql = ql;
+        return this;
     }
 
 
-    public List<Identifier> getIdentifiers() {
-        return identifiers;
+    /**
+     * Get the connection type
+     * @return
+     */
+    public String getConnectionType() {
+        return connectionType;
     }
 
 
-    public String getConnection() {
-        return connection;
+    /**
+     * Set the connection type
+     * @param connection
+     * @return
+     */
+    public Query setConnectionType( final String connection ) {
+        this.connectionType = connection;
+        return this;
     }
 
 

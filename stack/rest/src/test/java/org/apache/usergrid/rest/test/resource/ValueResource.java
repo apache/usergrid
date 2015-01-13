@@ -94,6 +94,7 @@ public abstract class ValueResource extends NamedResource {
 
 
     /** post to the entity set */
+    //TODO: fix error reporting
     protected JsonNode postInternal( Map<String, ?> entity ) throws IOException {
 
         return mapper.readTree( jsonMedia( withParams( withToken( resource() ) ) ).post( String.class, entity ));
@@ -218,6 +219,7 @@ public abstract class ValueResource extends NamedResource {
     }
 
 
+    //TODO: make query a chaining command, not just an immediate get.
     public JsonNode query( String query, String addition, String numAddition ) throws IOException {
         return getInternal( query, addition, numAddition );
     }

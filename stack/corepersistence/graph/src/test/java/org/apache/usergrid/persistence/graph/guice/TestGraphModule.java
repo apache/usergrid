@@ -19,8 +19,9 @@
 package org.apache.usergrid.persistence.graph.guice;
 
 
-import org.apache.usergrid.persistence.collection.guice.TestModule;
 import org.apache.usergrid.persistence.core.guice.CommonModule;
+import org.apache.usergrid.persistence.core.guice.MaxMigrationModule;
+import org.apache.usergrid.persistence.core.guice.TestModule;
 
 
 /**
@@ -30,7 +31,17 @@ public class TestGraphModule extends TestModule {
 
     @Override
     protected void configure() {
+        /**
+         * Runtime modules
+         */
         install( new CommonModule());
         install( new GraphModule() );
+
+
+        /**
+         * Test modules
+         */
+        install(new MaxMigrationModule());
+
     }
 }

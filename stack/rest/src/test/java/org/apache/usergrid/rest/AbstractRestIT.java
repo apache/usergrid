@@ -104,17 +104,17 @@ public abstract class AbstractRestIT extends JerseyTest {
     @Before
     public void acquireToken() throws Exception {
 
-        setupUsers();
-
-        refreshIndex("test-organization", "test-app");
-
-        LOG.info( "acquiring token" );
-        access_token = userToken( "ed@anuff.com", "sesame" );
-        LOG.info( "with token: {}", access_token );
-
-        loginClient();
-
-        refreshIndex("test-organization", "test-app");
+//        setupUsers();
+//
+//        refreshIndex("test-organization", "test-app");
+//
+//        LOG.info( "acquiring token" );
+//        access_token = userToken( "ed@anuff.com", "sesame" );
+//        LOG.info( "with token: {}", access_token );
+//
+//        loginClient();
+//
+//        refreshIndex("test-organization", "test-app");
     }
 
 
@@ -276,7 +276,7 @@ public abstract class AbstractRestIT extends JerseyTest {
 
     /** Get the super user's access token */
     protected String superAdminToken() {
-        return mgmtToken( "superuser", "superpassword" );
+        return mgmtToken( "superuser", "test" );
     }
 
 
@@ -411,7 +411,7 @@ public abstract class AbstractRestIT extends JerseyTest {
     }
 
 
-    public void refreshIndex( UUID appId ) {
+    protected void refreshIndex( UUID appId ) {
 
         LOG.debug("Refreshing index for appId {}", appId );
 
@@ -430,7 +430,8 @@ public abstract class AbstractRestIT extends JerseyTest {
         LOG.debug("Refreshed index for appId {}", appId );
     }
 
-
+    //TODO: move refresh index into context so that we automatically refresh the indexs without needing to call
+    //different values of context.
     public void refreshIndex( String orgName, String appName ) {
 
         LOG.debug("Refreshing index for app {}/{}", orgName, appName );

@@ -35,6 +35,7 @@ import org.apache.usergrid.persistence.Results;
 import static junit.framework.Assert.assertNotNull;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.SimpleEntityRef;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 
 public class CoreApplication implements Application, TestRule {
@@ -144,25 +145,31 @@ public class CoreApplication implements Application, TestRule {
     }
 
 
-    protected void before( Description description ) throws Exception {
-        orgName = description.getClassName();
-        appName = description.getMethodName();
+    /**
+     * Create an application with the given app name and org name
+     * @param orgName
+     * @param appName
+     */
+    public void createApplication(final String orgName, final String appName) throws Exception {
+        this.orgName = orgName;
+        this.appName = appName;
         id = setup.createApplication( orgName, appName );
         assertNotNull( id );
 
         em = setup.getEmf().getEntityManager( id );
-        em.createIndex();
         assertNotNull( em );
 
         LOG.info( "Created new application {} in organization {}", appName, orgName );
 
-
     }
 
+    protected void before( Description description ) throws Exception {
+        final String orgName = description.getClassName()+ UUIDGenerator.newTimeUUID();
+        final String appName = description.getMethodName();
 
-    public EntityManager getEm() {
-        return em;
+        createApplication( orgName, appName  );
     }
+
 
 
     public QueueManager getQm() {

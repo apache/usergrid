@@ -18,6 +18,8 @@
 #  directory of this distribution.
 #
 
+
+
 echo "${HOSTNAME}" > /etc/hostname
 echo "127.0.0.1 ${HOSTNAME}" >> /etc/hosts
 hostname `cat /etc/hostname`
@@ -29,8 +31,6 @@ dpkg-reconfigure -f noninteractive tzdata
 . /etc/profile.d/aws-credentials.sh
 . /etc/profile.d/usergrid-env.sh
 
-cd /usr/share/usergrid/init_instance
-./create_raid0.sh
 
 # Install the easy stuff
 PKGS="ntp unzip groovy tomcat7 curl"
@@ -49,8 +49,17 @@ cp /usr/share/aws-java-sdk-*/lib/* /home/ubuntu/.groovy/lib
 rm /home/ubuntu/.groovy/lib/stax*
 ln -s /home/ubuntu/.groovy /root/.groovy
 
+# tag last so we can see in the console so that we know what's running
+cd /usr/share/usergrid/scripts
+groovy tag_instance.groovy -BUILD-IN-PROGRESS
+
 cd /usr/share/usergrid/init_instance
 ./install_oraclejdk.sh
+
+sudo apt-get -y --force-yes install docker.io
+
+#Install graphite
+sudo docker run -d --name graphite -p 80:80 -p 2003:2003 -p 8125:8125/udp hopsoft/graphite-statsd
 
 cd /usr/share/usergrid/scripts
 groovy registry_register.groovy graphite

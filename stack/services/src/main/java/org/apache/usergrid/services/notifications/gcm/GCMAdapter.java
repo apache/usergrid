@@ -16,9 +16,11 @@
  */
 package org.apache.usergrid.services.notifications.gcm;
 
+import com.clearspring.analytics.hash.MurmurHash;
 import com.google.android.gcm.server.*;
 import org.apache.usergrid.persistence.entities.Notification;
 import org.apache.usergrid.persistence.entities.Notifier;
+import org.apache.usergrid.services.notifications.InactiveDeviceManager;
 import org.mortbay.util.ajax.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,17 +35,26 @@ import org.apache.usergrid.services.notifications.TaskTracker;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class GCMAdapter implements ProviderAdapter {
 
     private static final Logger LOG = LoggerFactory.getLogger(GCMAdapter.class);
     private static final int SEND_RETRIES = 3;
     private static int BATCH_SIZE = 1000;
+    private final Notifier notifier;
+    private EntityManager entityManager;
 
-    private Map<Notifier, Batch> notifierBatches = new HashMap<Notifier, Batch>();
+    private ConcurrentHashMap<Long,Batch> batches;
 
+    public GCMAdapter(EntityManager entityManager,Notifier notifier){
+        this.notifier = notifier;
+        this.entityManager = entityManager;
+        batches = new ConcurrentHashMap<>();
+    }
     @Override
-    public void testConnection(Notifier notifier) throws ConnectionException {
+    public void testConnection() throws ConnectionException {
         Sender sender = new Sender(notifier.getApiKey());
         Message message = new Message.Builder().build();
         try {
@@ -55,8 +66,7 @@ public class GCMAdapter implements ProviderAdapter {
     }
 
     @Override
-    public void sendNotification(String providerId, Notifier notifier,
-            Object payload, Notification notification, TaskTracker tracker)
+    public void sendNotification(String providerId, Object payload, Notification notification, TaskTracker tracker)
             throws Exception {
         Map<String,Object> map = (Map<String, Object>) payload;
         final String expiresKey = "time_to_live";
@@ -65,36 +75,40 @@ public class GCMAdapter implements ProviderAdapter {
             expireSeconds = expireSeconds <= 2419200 ? expireSeconds : 2419200; //send the max gcm value documented here http://developer.android.com/google/gcm/adv.html#ttl
             map.put(expiresKey, expireSeconds);
         }
-        Batch batch = getBatch(notifier, map);
+        Batch batch = getBatch( map);
         batch.add(providerId, tracker);
     }
 
-    synchronized private Batch getBatch(Notifier notifier,
-            Map<String, Object> payload) {
-        Batch batch = notifierBatches.get(notifier);
-        if (batch == null && payload != null) {
-            batch = new Batch(notifier, payload);
-            notifierBatches.put(notifier, batch);
-        }
-        return batch;
-    }
-
-    @Override
-    synchronized public void doneSendingNotifications() throws Exception {
-        for (Batch batch : notifierBatches.values()) {
-            batch.send();
+    private Batch getBatch( Map<String, Object> payload) {
+        synchronized (this) {
+            long hash = MurmurHash.hash64(payload);
+            Batch batch = batches.get(hash);
+            if (batch == null && payload != null) {
+                batch = new Batch(notifier, payload);
+                batches.put(hash, batch);
+            }
+            return batch;
         }
     }
 
     @Override
-    public Map<String, Date> getInactiveDevices(Notifier notifier,
-            EntityManager em) throws Exception {
-        Batch batch = getBatch(notifier, null);
-        Map<String,Date> map = null;
+    public void doneSendingNotifications() throws Exception {
+        synchronized (this) {
+            for (Batch batch : batches.values()) {
+                batch.send();
+            }
+        }
+    }
+
+    @Override
+    public void removeInactiveDevices( ) throws Exception {
+        Batch batch = getBatch( null);
         if(batch != null) {
-            map = batch.getAndClearInactiveDevices();
+            Map<String,Date> map = batch.getAndClearInactiveDevices();
+            InactiveDeviceManager deviceManager = new InactiveDeviceManager(notifier,entityManager);
+            deviceManager.removeInactiveDevices(map);
         }
-        return map;
+
     }
 
     @Override
@@ -123,6 +137,24 @@ public class GCMAdapter implements ProviderAdapter {
         }
     }
 
+    @Override
+    public void stop() {
+        try {
+            synchronized (this) {
+                for (Batch batch : batches.values()) {
+                    batch.send();
+                }
+            }
+        }catch (Exception e){
+            LOG.error("error while trying to send on stop",e);
+        }
+    }
+
+    @Override
+    public Notifier getNotifier() {
+        return notifier;
+    }
+
     private class Batch {
         private Notifier notifier;
         private Map payload;
@@ -130,7 +162,7 @@ public class GCMAdapter implements ProviderAdapter {
         private List<TaskTracker> trackers;
         private Map<String, Date> inactiveDevices = new HashMap<String, Date>();
 
-        Batch(Notifier notifier, Map<String, Object> payload) {
+        Batch(Notifier notifier, Map<String,Object> payload) {
             this.notifier = notifier;
             this.payload = payload;
             this.ids = new ArrayList<String>();
@@ -143,12 +175,18 @@ public class GCMAdapter implements ProviderAdapter {
             return map;
         }
 
-        synchronized void add(String id, TaskTracker tracker) throws Exception {
-            ids.add(id);
-            trackers.add(tracker);
+        void add(String id, TaskTracker tracker) throws Exception {
+            synchronized (this) {
+                if(!ids.contains(id)) { //dedupe to a device
+                    ids.add(id);
+                    trackers.add(tracker);
+                    if (ids.size() == BATCH_SIZE) {
+                        send();
+                    }
+                }else{
+                    tracker.completed();
+                }
 
-            if (ids.size() == BATCH_SIZE) {
-                send();
             }
         }
 
@@ -158,33 +196,35 @@ public class GCMAdapter implements ProviderAdapter {
         // anything that JSONValue can handle is fine.
         // (What is necessary here is that the Map needs to have a nested
         // structure.)
-        synchronized void send() throws Exception {
-            if (ids.size() == 0)
-                return;
-            Sender sender = new Sender(notifier.getApiKey());
-            Message.Builder builder = new Message.Builder();
-            builder.setData(payload);
-            Message message = builder.build();
+        void send() throws Exception {
+            synchronized (this) {
+                if (ids.size() == 0)
+                    return;
+                Sender sender = new Sender(notifier.getApiKey());
+                Message.Builder builder = new Message.Builder();
+                builder.setData(payload);
+                Message message = builder.build();
 
-            MulticastResult multicastResult = sender.send(message, ids, SEND_RETRIES);
-            LOG.debug("sendNotification result: {}", multicastResult);
+                MulticastResult multicastResult = sender.send(message, ids, SEND_RETRIES);
+                LOG.debug("sendNotification result: {}", multicastResult);
 
-            for (int i = 0; i < multicastResult.getResults().size(); i++) {
-                Result result = multicastResult.getResults().get(i);
+                for (int i = 0; i < multicastResult.getResults().size(); i++) {
+                    Result result = multicastResult.getResults().get(i);
 
-                if (result.getMessageId() != null) {
-                    String canonicalRegId = result.getCanonicalRegistrationId();
-                    trackers.get(i).completed(canonicalRegId);
-                } else {
-                    String error = result.getErrorCodeName();
-                    trackers.get(i).failed(error, error);
-                    if (Constants.ERROR_NOT_REGISTERED.equals(error) || Constants.ERROR_INVALID_REGISTRATION.equals(error)) {
-                        inactiveDevices.put(ids.get(i), new Date());
+                    if (result.getMessageId() != null) {
+                        String canonicalRegId = result.getCanonicalRegistrationId();
+                        trackers.get(i).completed(canonicalRegId);
+                    } else {
+                        String error = result.getErrorCodeName();
+                        trackers.get(i).failed(error, error);
+                        if (Constants.ERROR_NOT_REGISTERED.equals(error) || Constants.ERROR_INVALID_REGISTRATION.equals(error)) {
+                            inactiveDevices.put(ids.get(i), new Date());
+                        }
                     }
                 }
+                this.ids.clear();
+                this.trackers.clear();
             }
-            this.ids.clear();
-            this.trackers.clear();
         }
     }
 }

@@ -19,7 +19,6 @@
 package org.apache.usergrid.persistence.core.astyanax;
 
 
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 
 import com.netflix.astyanax.Serializer;
 import com.netflix.astyanax.model.ColumnFamily;
@@ -30,17 +29,17 @@ import com.netflix.astyanax.model.ColumnFamily;
  *
  * @author tnine
  */
-public class MultiTennantColumnFamily<S extends ApplicationScope, K, V>
-    extends ColumnFamily<ScopedRowKey<S, K>, V> {
+public class MultiTennantColumnFamily<R extends ScopedRowKey<?>, V >
+    extends ColumnFamily<R, V> {
 
-    public MultiTennantColumnFamily( final String columnFamilyName, final Serializer<ScopedRowKey<S, K>> keySerializer,
+    public MultiTennantColumnFamily( final String columnFamilyName, final Serializer<R> keySerializer,
                                      final Serializer<V> columnSerializer ) {
 
         super( columnFamilyName, keySerializer, columnSerializer );
     }
 
 
-    public MultiTennantColumnFamily( final String columnFamilyName, final Serializer<ScopedRowKey<S, K>> keySerializer,
+    public MultiTennantColumnFamily( final String columnFamilyName, final Serializer<R> keySerializer,
                                      final Serializer<V> columnSerializer, final Serializer<?> defaultValueSerializer ) {
 
         super( columnFamilyName, keySerializer, columnSerializer, defaultValueSerializer );

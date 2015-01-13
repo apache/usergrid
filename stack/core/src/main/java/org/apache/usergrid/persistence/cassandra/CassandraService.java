@@ -37,6 +37,7 @@ import org.apache.usergrid.persistence.IndexBucketLocator.IndexType;
 import org.apache.usergrid.persistence.cassandra.index.IndexBucketScanner;
 import org.apache.usergrid.persistence.cassandra.index.IndexScanner;
 import org.apache.usergrid.persistence.hector.CountingMutator;
+import org.apache.usergrid.utils.MapUtils;
 
 import me.prettyprint.cassandra.connection.HConnectionManager;
 import me.prettyprint.cassandra.model.ConfigurableConsistencyLevel;
@@ -309,6 +310,8 @@ public class CassandraService {
 
             //default read repair chance to 0.1
             cfDef.setReadRepairChance( 0.1d );
+            cfDef.setCompactionStrategy( "LeveledCompactionStrategy" );
+            cfDef.setCompactionStrategyOptions( new MapUtils.HashMapBuilder().map("sstable_size_in_mb", "512"  ) );
 
             cluster.addColumnFamily( cfDef, true );
             logger.info( "Created column family {} in keyspace {}", cfDef.getName(), keyspace );

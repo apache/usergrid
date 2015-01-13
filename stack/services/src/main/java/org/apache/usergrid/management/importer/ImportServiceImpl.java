@@ -19,6 +19,7 @@ package org.apache.usergrid.management.importer;
 
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.batch.service.SchedulerService;
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.management.OrganizationInfo;
@@ -43,7 +44,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
-import static org.apache.usergrid.corepersistence.CpEntityManagerFactory.MANAGEMENT_APPLICATION_ID;
 import org.apache.usergrid.persistence.index.query.Query.Level;
 
 
@@ -89,7 +89,7 @@ public class ImportServiceImpl implements ImportService {
 
         EntityManager rootEm = null;
         try {
-            rootEm = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+            rootEm = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID);
             Set<String> collections = rootEm.getApplicationCollections();
             if (!collections.contains("imports")) {
                 rootEm.createApplicationCollection("imports");
@@ -142,7 +142,7 @@ public class ImportServiceImpl implements ImportService {
         EntityManager rootEm = null;
 
         try {
-            rootEm = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+            rootEm = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
         } catch (Exception e) {
             logger.error("application doesn't exist within the current context");
             return null;
@@ -201,7 +201,7 @@ public class ImportServiceImpl implements ImportService {
             return "UUID passed in cannot be null";
         }
 
-        EntityManager rootEm = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+        EntityManager rootEm = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
 
         //retrieve the import entity.
         Import importUG = rootEm.get(uuid, Import.class);
@@ -228,7 +228,7 @@ public class ImportServiceImpl implements ImportService {
             return "UUID passed in cannot be null";
         }
 
-        EntityManager rootEm = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+        EntityManager rootEm = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
 
         //retrieve the import entity.
         Import importUG = rootEm.get(uuid, Import.class);
@@ -250,7 +250,7 @@ public class ImportServiceImpl implements ImportService {
     public Import getImportEntity(final JobExecution jobExecution) throws Exception {
 
         UUID importId = (UUID) jobExecution.getJobData().getProperty(IMPORT_ID);
-        EntityManager importManager = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+        EntityManager importManager = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
 
         return importManager.get(importId, Import.class);
     }
@@ -266,7 +266,7 @@ public class ImportServiceImpl implements ImportService {
     public FileImport getFileImportEntity(final JobExecution jobExecution) throws Exception {
 
         UUID fileImportId = (UUID) jobExecution.getJobData().getProperty(FILE_IMPORT_ID);
-        EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+        EntityManager em = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
 
         return em.get(fileImportId, FileImport.class);
     }
@@ -329,7 +329,7 @@ public class ImportServiceImpl implements ImportService {
         //get the entity manager for the application, and the entity that this Import corresponds to.
         UUID importId = (UUID) jobExecution.getJobData().getProperty(IMPORT_ID);
 
-        EntityManager rooteEm = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+        EntityManager rooteEm = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
         Import importUG = rooteEm.get(importId, Import.class);
 
         //update the entity state to show that the job has officially started.
@@ -523,7 +523,7 @@ public class ImportServiceImpl implements ImportService {
     public ArrayList<File> fileTransfer(Import importUG, String appFileName, Map<String, Object> config,
                                         S3Import s3Import, int type) throws Exception {
 
-        EntityManager rootEm = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+        EntityManager rootEm = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
         ArrayList<File> files = new ArrayList<File>();
 
         try {
@@ -549,7 +549,7 @@ public class ImportServiceImpl implements ImportService {
 
         File file = new File(jobExecution.getJobData().getProperty("File").toString());
 
-        EntityManager rootEm = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+        EntityManager rootEm = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
         rootEm.update(fileImport);
 
         boolean completed = fileImport.getCompleted();
@@ -778,7 +778,7 @@ public class ImportServiceImpl implements ImportService {
         // Creates entities
         @Override
         public void doWrite(EntityManager em, JobExecution jobExecution, FileImport fileImport) {
-            EntityManager rootEm = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+            EntityManager rootEm = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
 
             try {
                 em.create(entityUuid, entityType, properties);
@@ -807,7 +807,7 @@ public class ImportServiceImpl implements ImportService {
         // creates connections between entities
         @Override
         public void doWrite(EntityManager em, JobExecution jobExecution, FileImport fileImport) {
-            EntityManager rootEm = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+            EntityManager rootEm = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
 
             try {
                 em.createConnection(ownerEntityRef, connectionType, entryRef);
@@ -836,7 +836,7 @@ public class ImportServiceImpl implements ImportService {
         // adds map to the dictionary
         @Override
         public void doWrite(EntityManager em, JobExecution jobExecution, FileImport fileImport) {
-            EntityManager rootEm = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+            EntityManager rootEm = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
             try {
                 em.addMapToDictionary(ownerEntityRef, dictionaryName, dictionary);
             } catch (Exception e) {

@@ -39,24 +39,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 
-public class AbstractServiceNotificationIT extends AbstractServiceIT {
+public abstract class AbstractServiceNotificationIT extends AbstractServiceIT {
     private NotificationsService ns;
-    @Autowired
-    private ServiceManagerFactory smf;
-
-    @Autowired
-    private EntityManagerFactory emf;
-    @Rule
-    public TestName name = new TestName();
-
-    @BeforeClass
-    public static void beforeClass() {
-    }
-
-    @Before
-    public void before() throws Exception {
-
-    }
 
     protected NotificationsService getNotificationService(){
         ns = (NotificationsService) app.getSm().getService("notifications");
@@ -68,8 +52,8 @@ public class AbstractServiceNotificationIT extends AbstractServiceIT {
         long timeout = System.currentTimeMillis() + 60000;
         while (System.currentTimeMillis() < timeout) {
             Thread.sleep(200);
-            app.getEm().refreshIndex();
-            notification = app.getEm().get(notification.getUuid(), Notification.class);
+            app.getEntityManager().refreshIndex();
+            notification = app.getEntityManager().get(notification.getUuid(), Notification.class);
             if (notification.getFinished() != null) {
                 return notification;
             }
@@ -84,10 +68,10 @@ public class AbstractServiceNotificationIT extends AbstractServiceIT {
         query.setCollection("receipts");
         query.setLimit(100);
         PathQuery<Receipt> pathQuery = new PathQuery<Receipt>(
-                new SimpleEntityRef(app.getEm().getApplicationRef()),
+                new SimpleEntityRef(app.getEntityManager().getApplicationRef()),
                 query
         );
-        Iterator<Receipt> it = pathQuery.iterator(app.getEm());
+        Iterator<Receipt> it = pathQuery.iterator(app.getEntityManager());
         List<EntityRef> list =new ArrayList<EntityRef>();//get all
         while(it.hasNext()){
             Receipt receipt =it.next();
@@ -101,7 +85,7 @@ public class AbstractServiceNotificationIT extends AbstractServiceIT {
     protected void checkReceipts(Notification notification, int expected)
             throws Exception {
         List<EntityRef> receipts = getNotificationReceipts(notification);
-        long timeout = System.currentTimeMillis() + 60000;
+        long timeout = System.currentTimeMillis() + 10000;
         while (System.currentTimeMillis() < timeout) {
             Thread.sleep(200);
             receipts =getNotificationReceipts(notification);
@@ -111,7 +95,7 @@ public class AbstractServiceNotificationIT extends AbstractServiceIT {
         }
         assertEquals(expected, receipts.size());
         for (EntityRef receipt : receipts) {
-            Receipt r = app.getEm().get(receipt, Receipt.class);
+            Receipt r = app.getEntityManager().get(receipt, Receipt.class);
             assertNotNull(r.getSent());
             assertNotNull(r.getPayload());
             assertNotNull(r.getNotifierId());
@@ -122,10 +106,10 @@ public class AbstractServiceNotificationIT extends AbstractServiceIT {
 
     protected void checkStatistics(Notification notification, long sent,  long errors) throws Exception{
         Map<String, Long> statistics = null;
-        long timeout = System.currentTimeMillis() + 60000;
+        long timeout = System.currentTimeMillis() + 10000;
         while (System.currentTimeMillis() < timeout) {
             Thread.sleep(200);
-            statistics = app.getEm().get(notification.getUuid(), Notification.class).getStatistics();
+            statistics = app.getEntityManager().get(notification.getUuid(), Notification.class).getStatistics();
             if (statistics.get("sent")==sent && statistics.get("errors")==errors) {
                 break;
             }
