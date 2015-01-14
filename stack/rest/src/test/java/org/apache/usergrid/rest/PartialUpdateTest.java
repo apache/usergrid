@@ -77,8 +77,6 @@ public class PartialUpdateTest extends AbstractRestIT {
             try {
                 // PUT the updates to the user and ensure they were saved
                 userNode = this.app().collection("users").entity(userNode).put(updateProps);
-                assertNotNull(userNode);
-
             } catch (UniformInterfaceException uie) {
                 fail("Update failed due to: " + uie.getResponse().getEntity(String.class));
             }
@@ -112,23 +110,24 @@ public class PartialUpdateTest extends AbstractRestIT {
                 Double.parseDouble(((Map<String, Object>) userNode.get("location")).get("longitude").toString()), 0);
         }
 
-        // Update bart's employer without specifying any required fields
+        // Update bart's employer without specifying the full entity
         // (this time with username specified in URL)
         Entity updateProps = new Entity();
         updateProps.put("employer", "ACME Corporation");
 
-        for (int i = 1; i < 10; i++) {
-            try {
-                userNode = this.app().collection("users").entity((String) props.get("username")).put(updateProps);
+        try { //  PUT /users/fred   put /users/uuid
+            userNode = this.app().collection("users").entity(props.getString("username")).put(updateProps);
 
-            } catch (UniformInterfaceException uie) {
-                fail("Update failed due to: " + uie.getResponse().getEntity(String.class));
-            }
-            refreshIndex();
-
-            userNode = this.app().collection("users").entity(userNode).get();
-            assertNotNull(userNode);
-            assertEquals("ACME Corporation", userNode.get("employer").toString());
+        } catch (UniformInterfaceException uie) {
+            fail("Update failed due to: " + uie.getResponse().getEntity(String.class));
         }
+        refreshIndex();
+
+        userNode = this.app().collection("users").entity(userNode).get();
+        assertNotNull(userNode);
+        //Test that the updated property is returned
+        assertEquals(updateProps.get("employer"), userNode.get("employer").toString());
+        //Test that the original properties are still there
+        assertEquals(props.get("username").toString(), userNode.get("username").toString());
     }
 }
