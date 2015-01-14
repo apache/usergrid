@@ -75,7 +75,7 @@ public class BadGrammarQueryTest extends QueryTestBase {
         generateTestEntities(numOfEntities, collectionName);
 
         //Issue an invalid query
-        String query = "select * where name != \"go\"";
+        String query = "select * where NOT name = \"go\"";
         try {
 
             QueryParameters params = new QueryParameters().setQuery(query);
@@ -112,12 +112,12 @@ public class BadGrammarQueryTest extends QueryTestBase {
             assertEquals(400, uie.getResponse().getStatus());
         }
     }
+
     /**
      * We should get an exception if the property name
      * is missing from the clause
      * @throws IOException
      */
-
     @Test
     public void exceptionOnMissingProperty() throws IOException {
 
@@ -138,12 +138,12 @@ public class BadGrammarQueryTest extends QueryTestBase {
             assertEquals(400, uie.getResponse().getStatus());
         }
     }
+
     /**
      * We should get an exception if the property value
      * is missing from the clause
      * @throws IOException
      */
-
     @Test
     public void exceptionOnMissingPropertyValue() throws IOException {
 

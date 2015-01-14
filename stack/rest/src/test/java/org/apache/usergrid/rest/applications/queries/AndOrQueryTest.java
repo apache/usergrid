@@ -33,7 +33,6 @@ import static org.junit.Assert.*;
 /**
  * // TODO: Document this
  *
- * @author ApigeeCorporation
  * @since 4.0
  */
 public class AndOrQueryTest extends QueryTestBase {
@@ -49,20 +48,22 @@ public class AndOrQueryTest extends QueryTestBase {
     public void queryAndInclusive() throws IOException {
         int numOfEntities = 20;
         String collectionName = "activities";
-        //create our test entities
+        // create our test entities
         generateTestEntities(numOfEntities, collectionName);
-        //Query where madeup = true (the last half) and the last quarter of entries
+        // Query where madeup = true (the last half) and the last quarter of entries
         QueryParameters params = new QueryParameters()
             .setQuery("select * where madeup = true AND ordinal >= " + (numOfEntities - numOfEntities / 4));
         Collection activities = this.app().collection("activities").get(params);
-        //results should have madeup = true and ordinal 15-19
+        // results should have madeup = true and ordinal 15-19
         assertEquals(numOfEntities / 4, activities.getResponse().getEntityCount());
+        // loop though entities that were returned, and test against the ordinals and values we are
+        // expecting, starting with the last entity and decrementing
         int index = 19;
         while (activities.hasNext()) {
             Entity activity = activities.next();
-            //ensure the 'madeup' property is set to true
+            // ensure the 'madeup' property is set to true
             assertTrue(Boolean.parseBoolean(activity.get("madeup").toString()));
-            //make sure the correct ordinal properties are returned
+            // make sure the correct ordinal properties are returned
             assertEquals(index--, Long.parseLong(activity.get("ordinal").toString()));
         }
 
@@ -86,6 +87,8 @@ public class AndOrQueryTest extends QueryTestBase {
         Collection activities = this.app().collection("activities").get(params);
         //results should have madeup = true and ordinal 10-14
         assertEquals(numOfEntities / 4, activities.getResponse().getEntityCount());
+        // loop though entities that were returned, and test against the ordinals and values we are
+        // expecting, starting with the last expected entity and decrementing
         int index = 14;
         while (activities.hasNext()) {
             Entity activity = activities.next();
@@ -116,19 +119,26 @@ public class AndOrQueryTest extends QueryTestBase {
         int index = numOfEntities - 1;
         int count = 0;
         int returnSize = activities.getResponse().getEntityCount();
+        //loop through the returned results
         for (int i = 0; i < returnSize; i++, index--) {
             count++;
             Entity activity = activities.getResponse().getEntities().get(i);
             log.info(String.valueOf(activity.get("ordinal")) + " " + String.valueOf(activity.get("madeup")));
+            //if the entity is in the first half, the property "madeup" should be false
             if (index < numOfEntities / 2) {
                 assertFalse(Boolean.parseBoolean(String.valueOf(activity.get("madeup"))));
-            } else if (index >= (numOfEntities - numOfEntities / 4)) {
+            }
+            //else if the entity is in the second half, the property "madeup" should be true
+            else if (index >= (numOfEntities - numOfEntities / 4)) {
                 assertTrue(Boolean.parseBoolean(String.valueOf(activity.get("madeup"))));
             }
+            //test to ensure that the ordinal is in the first half (where "madeup = false")
+            //OR that the ordinal is in the last quarter of the entity list (where "ordinal >=  (numOfEntities - numOfEntities / 4))")
             long ordinal = Long.parseLong(String.valueOf(activity.get("ordinal")));
             assertTrue(ordinal < (numOfEntities / 2) || ordinal >= (numOfEntities - numOfEntities / 4));
         }
-        //results should have madeup = false or ordinal 15-19
+        //results should have madeup = false or ordinal 0-9,15-19
+        //A total of 15 entities should be returned
         assertEquals(3 * numOfEntities / 4, count);
     }
 
@@ -158,13 +168,17 @@ public class AndOrQueryTest extends QueryTestBase {
             Entity activity = activities.getResponse().getEntities().get(i);
             long ordinal = Long.parseLong(String.valueOf(activity.get("ordinal")));
             log.info(ordinal + " " + String.valueOf(activity.get("verb")));
+            //if the entity is in the first three quarters, the property "verb" should be "go"
             if (ordinal < (numOfEntities - numOfEntities / 4)) {
                 assertEquals("go", String.valueOf(activity.get("verb")));
-            } else if (ordinal >= (numOfEntities - numOfEntities / 4)) {
+            }
+            //if the entity is in the last quarter, the property "verb" should be "stop"
+            else if (ordinal >= (numOfEntities - numOfEntities / 4)) {
                 assertEquals("stop", String.valueOf(activity.get("verb")));
             }
         }
         //results should be even ordinals in the first 3 quarters and odd ordinals from the last quarter
+        //Should return 1 more than half the number of entities
         assertEquals(1 + numOfEntities / 2, count);
     }
 
@@ -176,7 +190,7 @@ public class AndOrQueryTest extends QueryTestBase {
      *
      * @throws IOException
      */
-    @Test //USERGRID-900
+    @Test
     public void queryWithAndPastLimit() throws IOException {
         int numValuesTested = 40;
 
@@ -203,7 +217,7 @@ public class AndOrQueryTest extends QueryTestBase {
      *
      * @throws IOException
      */
-    @Test //USERGRID-1475
+    @Test
     public void queryNegated() throws IOException {
         int numValuesTested = 20;
 
@@ -229,7 +243,7 @@ public class AndOrQueryTest extends QueryTestBase {
      *
      * @throws Exception
      */
-    @Test //USERGRID-1615
+    @Test
     public void queryReturnCount() throws Exception {
         int numValuesTested = 20;
 

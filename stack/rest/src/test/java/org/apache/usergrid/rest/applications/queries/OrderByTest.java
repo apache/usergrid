@@ -82,11 +82,13 @@ public class OrderByTest extends QueryTestBase {
             .setLimit(numOfEntities);
         Collection activities = this.app().collection("activities").get(params);
         assertEquals(numOfEntities, activities.getResponse().getEntityCount());
+        //Since the sort order is descending, start at the last entity we created
         int index = numOfEntities - 1;
         //results should be sorted by ordinal
         while (activities.hasNext()) {
             Entity activity = activities.next();
             //make sure the correct ordinal properties are returned
+            //decrement the index to get the next entity in reverse order
             assertEquals(index--, Long.parseLong(activity.get("ordinal").toString()));
         }
     }
@@ -110,6 +112,8 @@ public class OrderByTest extends QueryTestBase {
         assertEquals(numOfEntities, activities.getResponse().getEntityCount());
         int index = 0;
         //results should be sorted false, then true
+        //The first half of entities returned should have "madeup = false"
+        //The second half of entities returned should have "madeup = true"
         while (activities.hasNext()) {
             Entity activity = activities.next();
             if (index++ < numOfEntities / 2) {
@@ -142,6 +146,8 @@ public class OrderByTest extends QueryTestBase {
         while (activities.hasNext()) {
             Entity activity = activities.next();
             //make sure the booleans are ordered correctly
+            //The first half of entities returned should have "madeup = true"
+            //The second half of entities returned should have "madeup = false"
             if (index++ < numOfEntities / 2) {
                 assertEquals("true", activity.get("madeup").toString());
             } else {
@@ -161,7 +167,7 @@ public class OrderByTest extends QueryTestBase {
         String collectionName = "activities";
         //create our test entities
         generateTestEntities(numOfEntities, collectionName);
-
+        //Sort by the "verb" property to test alphabetical sorting of string properties
         QueryParameters params = new QueryParameters()
             .setQuery("select * order by verb asc")
             .setLimit(numOfEntities);
@@ -171,6 +177,8 @@ public class OrderByTest extends QueryTestBase {
         //results should be sorted "go", then "stop"
         while (activities.hasNext()) {
             Entity activity = activities.next();
+            //The first half of entities returned should have "verb = 'go'"
+            //The second half of entities returned should have "verb = 'stop'"
             if (index++ < numOfEntities / 2) {
                 assertEquals("go", activity.get("verb").toString());
             } else {
@@ -191,6 +199,7 @@ public class OrderByTest extends QueryTestBase {
         //create our test entities
         generateTestEntities(numOfEntities, collectionName);
 
+        //Sort by the "verb" property, DESC to test reverse alphabetical sorting of string properties
         QueryParameters params = new QueryParameters()
             .setQuery("select * order by verb desc")
             .setLimit(numOfEntities);
@@ -200,6 +209,8 @@ public class OrderByTest extends QueryTestBase {
         //results should be sorted "stop", then "go"
         while (activities.hasNext()) {
             Entity activity = activities.next();
+            //The first half of entities returned should have "verb = 'stop'"
+            //The second half of entities returned should have "verb = 'go'"
             if (index++ < numOfEntities / 2) {
                 assertEquals("stop", activity.get("verb").toString());
             } else {
@@ -221,7 +232,6 @@ public class OrderByTest extends QueryTestBase {
      * @throws IOException
      */
     @Test
-    // USERGRID-1400
     public void orderByShouldNotAffectResults() throws IOException {
 
         long created = 0;
@@ -270,7 +280,6 @@ public class OrderByTest extends QueryTestBase {
      * @throws IOException
      */
     @Test
-    // USERGRID-1520
     public void orderByComesBeforeLimitResult() throws IOException {
 
         Entity actor = new Entity();
@@ -304,7 +313,6 @@ public class OrderByTest extends QueryTestBase {
      * @throws IOException
      */
     @Test
-    // USERGRID-1521
     public void orderByReturnCorrectResults() throws IOException {
 
         int size = 20;
