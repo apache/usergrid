@@ -62,7 +62,7 @@ public class OrganizationsIT extends AbstractRestIT {
         //User property to see if owner properties exist when created.
         Map<String, Object> userProperties = new HashMap<String, Object>();
         userProperties.put( "company", "Apigee" );
-
+        
         //Create organization
         Organization organization = createOrgPayload( "createOrgAndOwner", userProperties );
 

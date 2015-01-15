@@ -115,9 +115,9 @@ public class ImportServiceIT {
                                  new SimpleEntityRef( "testobject",  entityTest[0].getUuid()));
     }
 
-    @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
+  //  @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
     // test case to check if a collection file is imported correctly
-    //@Test
+    @Test
     public void testIntegrationImportCollection() throws Exception {
 
         // creates 5 entities in user collection
@@ -182,7 +182,8 @@ public class ImportServiceIT {
         //import the collection and wait till import job finishes
         importService.doImport(jobExecution);
         while ( !importService.getState( importUUID ).equals( "FINISHED" ) ) {
-            ;
+          //  System.out.println("Current state is " + importService.getState( importUUID ));
+           // wait( 1000 );
         }
         try {
 

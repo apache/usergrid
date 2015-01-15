@@ -179,6 +179,7 @@ public class ImportServiceImpl implements ImportService {
 
         long soonestPossible = System.currentTimeMillis() + 250; //sch grace period
 
+        //TODO: Tear this part out and set the new job to be taken in here
         //schedule file import job
         sch.createJob(FILE_IMPORT_JOB_NAME, soonestPossible, jobData);
 
@@ -396,7 +397,7 @@ public class ImportServiceImpl implements ImportService {
 
             // schedule each file as a separate job
             for (File eachfile : files) {
-
+                //TODO: replace the method inside here so that it uses sqs instead of internal q
                 UUID jobID = scheduleFile(eachfile.getPath(), importUG);
                 Map<String, Object> fileJobID = new HashMap<String, Object>();
                 fileJobID.put("FileName", eachfile.getName());
