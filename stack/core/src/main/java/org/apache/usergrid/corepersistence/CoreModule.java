@@ -42,15 +42,15 @@ import org.slf4j.LoggerFactory;
 /**
  * Guice Module that encapsulates Core Persistence.
  */
-public class GuiceModule extends AbstractModule {
+public class CoreModule extends AbstractModule {
 
-    private static final Logger logger = LoggerFactory.getLogger(GuiceModule.class);
+    private static final Logger logger = LoggerFactory.getLogger(CoreModule.class);
 
     private EntityManagerFactory emf;
 
     public static final String EVENTS_DISABLED = "corepersistence.events.disabled";
 
-    GuiceModule( EntityManagerFactory emf ) {
+    public CoreModule( EntityManagerFactory emf ) {
         this.emf = emf;
     }
 
@@ -70,17 +70,17 @@ public class GuiceModule extends AbstractModule {
 
         bind(ManagerCache.class).to( CpManagerCache.class );
 
-        Multibinder<DataMigration> dataMigrationMultibinder = 
+        Multibinder<DataMigration> dataMigrationMultibinder =
                 Multibinder.newSetBinder( binder(), DataMigration.class );
         dataMigrationMultibinder.addBinding().to( EntityTypeMappingMigration.class );
         dataMigrationMultibinder.addBinding().to( GraphShardVersionMigration.class );
         dataMigrationMultibinder.addBinding().to( EntityDataMigration.class );
 
-        Multibinder<EntityDeleted> entityBinder = 
+        Multibinder<EntityDeleted> entityBinder =
             Multibinder.newSetBinder(binder(), EntityDeleted.class);
         entityBinder.addBinding().to(EntityDeletedHandler.class);
 
-        Multibinder<EntityVersionDeleted> versionBinder = 
+        Multibinder<EntityVersionDeleted> versionBinder =
             Multibinder.newSetBinder(binder(), EntityVersionDeleted.class);
         versionBinder.addBinding().to(EntityVersionDeletedHandler.class);
 

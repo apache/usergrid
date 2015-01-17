@@ -80,7 +80,7 @@ public class CpSetup implements Setup {
 
     public static Injector getInjector() {
         if ( injector == null ) {
-            injector = Guice.createInjector( new GuiceModule( emf ) ); 
+            injector = Guice.createInjector( new CoreModule( emf ) );
         }
         return injector;
     }
@@ -116,14 +116,14 @@ public class CpSetup implements Setup {
             cpProps.put("cassandra.port", hosts[0].getPort());
             cpProps.put("cassandra.cluster_name", cass.getProperties().get("cassandra.cluster"));
 
-            String cassRemoteString = (String)cass.getProperties().get("cassandra.use_remote"); 
+            String cassRemoteString = (String)cass.getProperties().get("cassandra.use_remote");
             if ( cassRemoteString != null && cassRemoteString.equals("false")) {
                 cpProps.put("cassandra.embedded", "true");
             } else {
                 cpProps.put("cassandra.embedded", "false");
             }
 
-            cpProps.put("collections.keyspace.strategy.class", 
+            cpProps.put("collections.keyspace.strategy.class",
                     cass.getProperties().get("cassandra.keyspace.strategy"));
 
             cpProps.put("collections.keyspace.strategy.options",
@@ -169,7 +169,7 @@ public class CpSetup implements Setup {
             emf.initializeApplication( DEFAULT_ORGANIZATION,
                     emf.getDefaultAppId(), DEFAULT_APPLICATION, null );
         } catch (ApplicationAlreadyExistsException ex) {
-            logger.warn("Application {}/{} already exists", 
+            logger.warn("Application {}/{} already exists",
                     DEFAULT_ORGANIZATION, DEFAULT_APPLICATION);
         }
 
@@ -177,35 +177,35 @@ public class CpSetup implements Setup {
             emf.initializeApplication( DEFAULT_ORGANIZATION,
                     emf.getManagementAppId(), MANAGEMENT_APPLICATION, null );
         } catch (ApplicationAlreadyExistsException ex) {
-            logger.warn("Application {}/{} already exists", 
+            logger.warn("Application {}/{} already exists",
                     DEFAULT_ORGANIZATION, MANAGEMENT_APPLICATION);
         }
     }
 
 
 
-    
+
     @Override
     public void setupSystemKeyspace() throws Exception {
 
         logger.info( "Initialize system keyspace" );
 
-        cass.createColumnFamily( SYSTEM_KEYSPACE, createColumnFamilyDefinition( 
+        cass.createColumnFamily( SYSTEM_KEYSPACE, createColumnFamilyDefinition(
                 SYSTEM_KEYSPACE, APPLICATIONS_CF, ComparatorType.BYTESTYPE ) );
 
-        cass.createColumnFamily( SYSTEM_KEYSPACE, createColumnFamilyDefinition( 
+        cass.createColumnFamily( SYSTEM_KEYSPACE, createColumnFamilyDefinition(
                 SYSTEM_KEYSPACE, PROPERTIES_CF, ComparatorType.BYTESTYPE ) );
 
-        cass.createColumnFamily( SYSTEM_KEYSPACE, createColumnFamilyDefinition( 
+        cass.createColumnFamily( SYSTEM_KEYSPACE, createColumnFamilyDefinition(
                 SYSTEM_KEYSPACE, TOKENS_CF, ComparatorType.BYTESTYPE ) );
 
-        cass.createColumnFamily( SYSTEM_KEYSPACE, createColumnFamilyDefinition( 
+        cass.createColumnFamily( SYSTEM_KEYSPACE, createColumnFamilyDefinition(
                 SYSTEM_KEYSPACE, PRINCIPAL_TOKEN_CF, ComparatorType.UUIDTYPE ) );
 
         logger.info( "System keyspace initialized" );
     }
 
-    
+
     /**
      * Initialize application keyspace.
      *
@@ -215,7 +215,7 @@ public class CpSetup implements Setup {
      * @throws Exception the exception
      */
 
-    public void setupApplicationKeyspace( 
+    public void setupApplicationKeyspace(
             final UUID applicationId, String applicationName ) throws Exception {
 
         // Need this legacy stuff for queues
@@ -224,17 +224,17 @@ public class CpSetup implements Setup {
 
             String app_keyspace = keyspaceForApplication( applicationId );
 
-            logger.info( "Creating application keyspace " + app_keyspace 
+            logger.info( "Creating application keyspace " + app_keyspace
                     + " for " + applicationName + " application" );
 
-            cass.createColumnFamily( app_keyspace, 
-                createColumnFamilyDefinition( 
+            cass.createColumnFamily( app_keyspace,
+                createColumnFamilyDefinition(
                     SYSTEM_KEYSPACE, APPLICATIONS_CF, ComparatorType.BYTESTYPE ) );
 
-            cass.createColumnFamilies( app_keyspace, 
+            cass.createColumnFamilies( app_keyspace,
                 getCfDefs( ApplicationCF.class, app_keyspace ) );
 
-            cass.createColumnFamilies( app_keyspace, 
+            cass.createColumnFamilies( app_keyspace,
                 getCfDefs( QueuesCF.class, app_keyspace ) );
         }
     }
@@ -268,10 +268,10 @@ public class CpSetup implements Setup {
 
     static class SystemDefaults {
 
-        private static final Application managementApp = 
+        private static final Application managementApp =
                 new Application( CpNamingUtils.MANAGEMENT_APPLICATION_ID);
 
-//        private static final Application defaultApp = 
+//        private static final Application defaultApp =
 //                new Application( CpEntityManagerFactory.DEFAULT_APPLICATION_ID );
 
         static {

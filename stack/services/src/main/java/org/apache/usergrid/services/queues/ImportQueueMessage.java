@@ -17,24 +17,20 @@
 package org.apache.usergrid.services.queues;
 
 
-import java.util.List;
-
-import org.apache.usergrid.persistence.queue.QueueMessage;
+import java.io.Serializable;
 
 
 /**
- * The queue processor that type casts the queue messages and does the work reovling around import queue messages.
+ * Deserializes the Import Message that gets stored in the returned QueueMessage and
+ * gets the message back. Currently based on ApplicationQueueMessage
  */
-public class ImportQueueProcessor implements QueueProcessor {
-
+public class ImportQueueMessage implements Serializable {
     /**
-     * Does the work that is mentioned by the queue messages. Takes the body of the message and decodes back into
-     * useful information. Then starts the importing process.
-     * @param messages
+     * Import specific identifiers here
      */
-    @Override
-    public void execute( final List<QueueMessage> messages ) {
-        //(ImportMessage)messages.get(0).getBody();
-        //do work see: ApplicationsQueueMessage for a sample
+
+    public ImportQueueMessage(){
     }
+
+
 }

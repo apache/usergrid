@@ -43,7 +43,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Listens to the SQS queue and polls it for more queue messages. Then hands the queue messages off to the
  * QueueProcessorFactory
  */
-public class QueueListener  {
+public abstract class QueueListener  {
     public  final int MESSAGE_TRANSACTION_TIMEOUT =  25 * 1000;
     private final QueueManagerFactory queueManagerFactory;
     private final QueueScopeFactory queueScopeFactory;
@@ -86,9 +86,10 @@ public class QueueListener  {
      * @param props
      */
     public QueueListener(ServiceManagerFactory smf, EntityManagerFactory emf, MetricsFactory metricsService, Properties props){
+        //TODO: change current injectors to use service module instead of CpSetup
         this.queueManagerFactory = CpSetup.getInjector().getInstance(QueueManagerFactory.class);
         this.smf = smf;
-        this.emf = emf;
+        this.emf = CpSetup.getInjector().getInstance( EntityManagerFactory.class ); //emf;
         this.metricsService = metricsService;
         this.properties = props;
         this.queueScopeFactory = CpSetup.getInjector().getInstance(QueueScopeFactory.class);
@@ -98,7 +99,7 @@ public class QueueListener  {
 
     /**
      * Start the queueListener. Initializes queue settings before starting the queue.
-     */
+     */ //TODO: make use guice. Currently on spring.  Needs to run and finish for main thread.
     @PostConstruct
     public void start(){
         boolean shouldRun = new Boolean(properties.getProperty("usergrid.queues.listener.run", "true"));
@@ -112,7 +113,7 @@ public class QueueListener  {
                 sleepWhenNoneFound = new Long(properties.getProperty("usergrid.queues.listener.sleep.after", ""+DEFAULT_SLEEP)).longValue();
                 batchSize = new Integer(properties.getProperty("usergrid.queues.listener.batchSize", (""+batchSize)));
                 consecutiveCallsToRemoveDevices = new Integer(properties.getProperty("usergrid.queues.inactive.interval", ""+200));
-                queueName = "central_queue";
+                queueName = getQueueName();
 
                 int maxThreads = new Integer(properties.getProperty("usergrid.queues.listener.maxThreads", ""+MAX_THREADS));
 
@@ -174,27 +175,18 @@ public class QueueListener  {
 
                 Timer.Context timerContext = timer.time();
                 //Get the messages out of the queue.
-                List<QueueMessage> messages = queueManager.getMessages(getBatchSize(), MESSAGE_TRANSACTION_TIMEOUT, 5000, QueueProcessor.class);
+                //TODO: a model class to get generic queueMessages out of the queueManager. Ask Shawn what should go here.
+                List<QueueMessage> messages = queueManager.getMessages(getBatchSize(), MESSAGE_TRANSACTION_TIMEOUT, 5000, ImportQueueListener.class);
                 LOG.info("retrieved batch of {} messages from queue {} ", messages.size(),queueName);
 
                 if (messages.size() > 0) {
-                    HashMap<UUID, List<QueueMessage>> messageMap = new HashMap<>(messages.size());
-                    //group messages into hash map by app id
-                    for (QueueMessage message : messages) {
-                      //Get processor from factory
-                    }
+
                     long now = System.currentTimeMillis();
-                    Observable merge = null;
-                    //send each set of app ids together
-                    //
-                    //Merges applicationId's
-                    for (Map.Entry<UUID, List<QueueMessage>> entry : messageMap.entrySet()) {
-                        UUID applicationId = entry.getKey();
-                        //turn into observables and execute
-                    }
-                    if(merge!=null) {
-                        merge.toBlocking().lastOrDefault(null);
-                    }
+                    //TODO: make sure this has a way to determine which QueueListener needs to be used
+                    // ideally this is done by checking which type the messages have then
+                    // asking for a onMessage call.
+                    onMessage( messages );
+
                     queueManager.commitMessages(messages);
 
                     meter.mark(messages.size());
@@ -249,5 +241,12 @@ public class QueueListener  {
     public int getBatchSize(){return batchSize;}
 
 
+    /**
+     * This will be the method that does the job dependant execution.
+     * @param messages
+     */
+    public abstract void onMessage(List<QueueMessage> messages);
+
+    public abstract String getQueueName();
 
 }
