@@ -20,12 +20,8 @@
 package org.apache.usergrid.lock;
 
 
-import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.nio.channels.FileChannel;
-import java.nio.channels.FileLock;
-import java.nio.channels.OverlappingFileLockException;
+import java.net.ServerSocket;
 
 
 /**
@@ -34,15 +30,15 @@ import java.nio.channels.OverlappingFileLockException;
  */
 public class MultiProcessLocalLock {
 
-    private final String fileName;
-    private FileLock lock;
+    private final int socketNumber;
+    private ServerSocket lock;
 
 
     /**
      * The filename to use as the lock
      */
-    public MultiProcessLocalLock( final String fileName ) {
-        this.fileName = fileName;
+    public MultiProcessLocalLock( final int socketNumber ) {
+        this.socketNumber = socketNumber;
     }
 
 
@@ -57,26 +53,16 @@ public class MultiProcessLocalLock {
             throw new IllegalStateException( "You already have a lock, you cannot get a lock again" );
         }
 
-        File file = new File( fileName );
-
-        if ( !file.exists() ) {
-            file.getParentFile().mkdirs();
-            file.createNewFile();
-        }
-
-        // get a file channel
-        FileChannel fileChannel = new RandomAccessFile( file, "rw" ).getChannel();
-
         try {
-            lock = fileChannel.tryLock();
+            lock = new ServerSocket( socketNumber );
         }
-        //we don't have the lock, ignore
-        catch(OverlappingFileLockException ofle){
+        catch ( IOException ioe ) {
+            //swallow, we didn't get the lock
             return false;
         }
 
 
-        return hasLock();
+        return true;
     }
 
 
@@ -89,7 +75,7 @@ public class MultiProcessLocalLock {
         }
 
 
-        lock.release();
+        lock.close();
 
         lock = null;
     }
@@ -97,22 +83,25 @@ public class MultiProcessLocalLock {
 
     /**
      * Return true if this instance has the lock
-     * @return
      */
-    public boolean hasLock(){
+    public boolean hasLock() {
         return lock != null;
     }
 
-    /**
-     * Releases the lock if we have it, otherwise is a no-op
-     * @return
-     */
-    public void maybeReleaseLock() throws IOException {
 
-        if(lock == null){
-            return;
+    /**
+     * Releases the lock if we have it, otherwise is a no-op.
+     *
+     * @return true if we had the lock and released it.  False if we didn't have the lock
+     */
+    public boolean maybeReleaseLock() throws IOException {
+
+        if ( lock == null ) {
+            return false;
         }
 
         releaseLock();
+
+        return true;
     }
 }

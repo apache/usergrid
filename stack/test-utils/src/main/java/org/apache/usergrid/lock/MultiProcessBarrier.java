@@ -20,26 +20,29 @@
 package org.apache.usergrid.lock;
 
 
-import java.io.File;
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.concurrent.TimeoutException;
 
 
 /**
- * A barrier between processes and threads. Everyone will await until proceed has been invoked by a single
- * thread.  Other threads will proceed after wait time.
+ * A barrier between processes and threads. Everyone will await until proceed has been invoked by a single thread.
+ * Other threads will proceed after wait time.
  */
 public class MultiProcessBarrier {
 
     /**
      * The sleep time to wait before checking.
      */
-    private static final long SLEEP_TIME = 100;
-    public final File barrierFile;
+    private static final int SLEEP_TIME = 100;
+    public final int barrierPort;
+    public ServerSocket serverSocket;
 
 
-    public MultiProcessBarrier( final String barrierFileName ) {
-        this.barrierFile = new File( barrierFileName );
+    public MultiProcessBarrier( final int barrierPort ) {
+        this.barrierPort = barrierPort;
     }
 
 
@@ -47,31 +50,46 @@ public class MultiProcessBarrier {
      * Notify the other processes they can proceed.
      */
     public void proceed() throws IOException {
-        barrierFile.mkdirs();
-        barrierFile.createNewFile();
+        serverSocket = new ServerSocket( barrierPort );
     }
 
 
     /**
      * Await the specified file.  If it exists, it will proceed
-     * @param timeout
-     * @throws InterruptedException
-     * @throws TimeoutException
      */
-    public void await(final long timeout) throws InterruptedException, TimeoutException {
+    public void await( final long timeout ) throws InterruptedException, TimeoutException {
 
         final long stopTime = System.currentTimeMillis() + timeout;
 
-        while(System.currentTimeMillis() < stopTime){
+        while ( System.currentTimeMillis() < stopTime ) {
 
-            //barrier is done break
-            if(barrierFile.exists()){
+
+            try {
+                Socket client = new Socket();
+                client.connect( new InetSocketAddress( "127.0.0.1", barrierPort ), SLEEP_TIME );
+                //if we get here we're good, the client can connect and close
+                client.close();
+
+                finalize();
+
                 return;
             }
-
-            Thread.sleep( SLEEP_TIME );
+            catch ( IOException e ) {
+                //not open swallow and retry
+            }
+            catch ( Throwable throwable ) {
+                throw new RuntimeException( "Something unexpected happened", throwable );
+            }
         }
 
         throw new TimeoutException( "Timeout out after " + timeout + " milliseconds waiting for the file" );
+    }
+
+
+    @Override
+    protected void finalize() throws Throwable {
+        if ( serverSocket != null && !serverSocket.isClosed() ) {
+            serverSocket.close();
+        }
     }
 }

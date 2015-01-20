@@ -34,6 +34,8 @@ import static org.junit.Assert.*;
  */
 public class MultiProcessLocalLockTest {
 
+    public static final int LOCK_PORT = Integer.parseInt( System.getProperty( "test.lock.port", "10101") );
+
     /**
      * Create and verify the single lock
      * @throws IOException
@@ -43,7 +45,7 @@ public class MultiProcessLocalLockTest {
 
         final String lockName = newFileName();
 
-        MultiProcessLocalLock lock = new MultiProcessLocalLock( lockName);
+        MultiProcessLocalLock lock = new MultiProcessLocalLock( LOCK_PORT);
 
         assertTrue(lock.tryLock());
 
@@ -62,7 +64,7 @@ public class MultiProcessLocalLockTest {
 
           final String lockName = newFileName();
 
-          MultiProcessLocalLock lock1 = new MultiProcessLocalLock( lockName );
+          MultiProcessLocalLock lock1 = new MultiProcessLocalLock( LOCK_PORT );
 
           assertTrue( lock1.tryLock() );
 
@@ -70,16 +72,23 @@ public class MultiProcessLocalLockTest {
 
 
           //get lock 2, should fail
-          MultiProcessLocalLock lock2 = new MultiProcessLocalLock( lockName );
+          MultiProcessLocalLock lock2 = new MultiProcessLocalLock( LOCK_PORT );
 
           assertFalse(lock2.tryLock());
 
           assertFalse(lock2.hasLock());
 
 
-
           //release lock1
-          lock1.maybeReleaseLock();
+          boolean lock1release = lock1.maybeReleaseLock();
+
+          assertTrue( "lock released", lock1release );
+
+          boolean lock2release = lock2.maybeReleaseLock();
+
+          assertFalse( "lock released", lock2release );
+
+
 
 
           //should succeed
@@ -91,7 +100,13 @@ public class MultiProcessLocalLockTest {
 
           assertFalse(lock1.hasLock());
 
-          lock2.maybeReleaseLock();
+          lock1release = lock1.maybeReleaseLock();
+
+          assertFalse( "lock released", lock1release );
+
+          lock2release = lock2.maybeReleaseLock();
+
+          assertTrue( "lock released", lock2release );
 
       }
 

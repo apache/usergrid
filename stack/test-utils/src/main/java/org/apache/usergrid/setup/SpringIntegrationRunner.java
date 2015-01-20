@@ -20,15 +20,9 @@
 package org.apache.usergrid.setup;
 
 
-import org.junit.ClassRule;
 import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.Statement;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import org.apache.usergrid.cassandra.CassandraResource;
-import org.apache.usergrid.cassandra.SpringResource;
-import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 
 
 /**
@@ -37,10 +31,7 @@ import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 public class SpringIntegrationRunner extends BlockJUnit4ClassRunner {
 
 
-
-    private static boolean initialized;
-
-
+    private static SystemSetup setup;
 
 
     /**
@@ -54,37 +45,23 @@ public class SpringIntegrationRunner extends BlockJUnit4ClassRunner {
     @Override
     protected Statement withBeforeClasses( final Statement statement ) {
 
-        if(!initialized){
-            runSetup();
-        }
-
-
-        final Statement toReturn =  super.withBeforeClasses( statement );
-
-        return toReturn;
-
+        singletonSetup();
+        return super.withBeforeClasses( statement );
     }
 
 
-    /**
-     * Run the setup once per JVM
-     */
-    public static synchronized void runSetup() {
+    private static synchronized void singletonSetup() {
 
-        if(initialized){
+        if ( setup != null ) {
             return;
         }
 
+        setup = new SystemSetup();
         try {
-            new SystemSetup().maybeInitialize();
+            setup.maybeInitialize();
         }
         catch ( Exception e ) {
-            throw new RuntimeException( "Unable to initialize the system", e );
+            throw new RuntimeException( "Unable to start subsystem" );
         }
-
-
-        initialized = true;
-
-
     }
 }

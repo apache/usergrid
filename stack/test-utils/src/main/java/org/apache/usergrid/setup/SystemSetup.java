@@ -37,15 +37,15 @@ import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
  */
 public class SystemSetup {
 
-    private static final String TEMP_FILE_PATH = "target/surefirelocks";
-    public static final String LOCK_NAME = TEMP_FILE_PATH + "/lock";
-    public static final String START_BARRIER_NAME = TEMP_FILE_PATH + "/start_barrier";
+
+    public static final int LOCK_PORT = Integer.parseInt( System.getProperty( "test.lock.port", "10101") );
+    public static final int START_BARRIER_PORT =  Integer.parseInt( System.getProperty( "test.barrier.port", "10102") );
 
 
     public static final long ONE_MINUTE = 60000;
 
-    final MultiProcessLocalLock lock = new MultiProcessLocalLock( LOCK_NAME );
-    final MultiProcessBarrier barrier = new MultiProcessBarrier( START_BARRIER_NAME );
+    final MultiProcessLocalLock lock = new MultiProcessLocalLock( LOCK_PORT );
+    final MultiProcessBarrier barrier = new MultiProcessBarrier( START_BARRIER_PORT );
 
 
     /**
@@ -65,6 +65,7 @@ public class SystemSetup {
 
             SpringResource.getInstance().migrate();
 
+
             //signal to other processes we've migrated, and they can proceed
             barrier.proceed();
         }
@@ -72,24 +73,7 @@ public class SystemSetup {
 
         barrier.await( ONE_MINUTE );
 
-        //it doesn't matter who finishes first.  We need to remove the resources so we start correctly next time.
-        //not ideal, but a clean will solve this issue too
-        if ( lock.hasLock() ) {
-
-            //add a shutdown hook so we clean up after ourselves.  Kinda fugly, but works since we can't clean on start
-            Runtime.getRuntime().addShutdownHook( new Thread() {
-
-                public void run() {
-
-                    System.out.println( "Shutdown Hook is running !" );
-                    deleteFile( LOCK_NAME );
-                    deleteFile( START_BARRIER_NAME );
-                }
-            } );
-
-
-            lock.releaseLock();
-        }
+        lock.maybeReleaseLock();
     }
 
 
