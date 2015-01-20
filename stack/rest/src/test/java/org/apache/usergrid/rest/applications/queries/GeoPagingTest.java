@@ -198,7 +198,7 @@ public class GeoPagingTest extends AbstractRestIT {
       // 3. Test that the entities were returned in the order expected
       for (int i = 0; i < 3; i++) {
         // shouldn't start at 10 since you're excluding it above in the query, it should return 9,8,7
-        LinkedHashMap<String, Object> entity = (LinkedHashMap<String, Object>) entities.get(i);
+        Entity entity = (Entity)entities.get(i);
         Entity savedEntity = saved[7 + i];
         assertEquals(savedEntity.get("uuid"), entity.get("uuid"));
       }
