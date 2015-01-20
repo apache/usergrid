@@ -37,15 +37,15 @@ import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
  */
 public class SystemSetup {
 
+    private static final String TEMP_FILE_PATH = "target/surefirelocks/start_barrier-" + System.getProperty( "test.barrier.timestamp", "default" );
 
     public static final int LOCK_PORT = Integer.parseInt( System.getProperty( "test.lock.port", "10101") );
-    public static final int START_BARRIER_PORT =  Integer.parseInt( System.getProperty( "test.barrier.port", "10102") );
 
 
     public static final long ONE_MINUTE = 60000;
 
     final MultiProcessLocalLock lock = new MultiProcessLocalLock( LOCK_PORT );
-    final MultiProcessBarrier barrier = new MultiProcessBarrier( START_BARRIER_PORT );
+    final MultiProcessBarrier barrier = new MultiProcessBarrier( TEMP_FILE_PATH );
 
 
     /**

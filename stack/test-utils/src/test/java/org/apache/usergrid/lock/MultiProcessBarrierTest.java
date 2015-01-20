@@ -43,15 +43,11 @@ import static org.junit.Assert.fail;
 public class MultiProcessBarrierTest {
 
 
-    public static final int START_BARRIER_PORT =  Integer.parseInt( System.getProperty( "test.barrier.port", "10102") );
-
-
-
     @Test
     public void singleBarrierTest() throws IOException, InterruptedException, TimeoutException {
         final String file = newFileName();
 
-        final MultiProcessBarrier barrier = new MultiProcessBarrier( START_BARRIER_PORT );
+        final MultiProcessBarrier barrier = new MultiProcessBarrier( file );
 
 
         try {
@@ -84,7 +80,7 @@ public class MultiProcessBarrierTest {
 
         //now create the barrier and execute it
 
-        MultiProcessBarrier barrier = new MultiProcessBarrier( START_BARRIER_PORT );
+        MultiProcessBarrier barrier = new MultiProcessBarrier( file );
         barrier.proceed();
 
         assertTrue( "other barriers proceeded", latch.await( 1000, TimeUnit.MILLISECONDS ) );
@@ -124,7 +120,7 @@ public class MultiProcessBarrierTest {
         @Override
         public void run() {
 
-            MultiProcessBarrier barrier = new MultiProcessBarrier( START_BARRIER_PORT );
+            MultiProcessBarrier barrier = new MultiProcessBarrier( fileName );
 
 
             try {
