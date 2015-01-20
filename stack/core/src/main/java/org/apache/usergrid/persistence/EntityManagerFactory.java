@@ -40,7 +40,7 @@ public interface EntityManagerFactory {
      *
      * @throws Exception the exception
      */
-    public abstract String getImpementationDescription() throws Exception;
+    public abstract String getImplementationDescription() throws Exception;
 
     /**
      * Gets the entity manager.
@@ -73,8 +73,15 @@ public interface EntityManagerFactory {
      *
      * @throws Exception the exception
      */
-    public abstract UUID createApplication( 
+    public abstract UUID createApplication(
             String organizationName, String name, Map<String, Object> properties ) throws Exception;
+
+    /**
+     * Delete Application.
+     *
+     * @param applicationId UUID of Application to be deleted.
+     */
+    public abstract void deleteApplication( UUID applicationId ) throws Exception;
 
     public abstract UUID importApplication( String organization, UUID applicationId, String name,
                                             Map<String, Object> properties ) throws Exception;
