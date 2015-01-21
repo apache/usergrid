@@ -134,7 +134,7 @@ git tag -s "${current_version}" -m "usergrid-${current_version} release." $curre
 
 if [[ $publish == 1 ]]; then
   git push origin $current_version
-  git push origin --tags
+  #git push origin --tags
 fi
 
 dist_name="apache-usergrid-${current_version}-incubating"
