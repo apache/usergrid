@@ -17,39 +17,22 @@
 package org.apache.usergrid.persistence.cassandra;
 
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.commons.lang3.RandomStringUtils;
-
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.SimpleEntityRef;
+import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.cassandra.util.TraceTag;
 import org.apache.usergrid.persistence.cassandra.util.TraceTagManager;
 import org.apache.usergrid.persistence.cassandra.util.TraceTagReporter;
 import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
+import org.junit.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import java.util.*;
+
+import static org.junit.Assert.*;
 
 
 @Concurrent()
@@ -107,8 +90,43 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
     }
 
 
-    public void testRebuildIndexes() throws Exception {
+    @Test
+    public void testDeleteApplication() throws Exception {
 
+        String rand = RandomStringUtils.randomAlphabetic(20);
+
+        // create an application with a collection and an entity
+
+        UUID applicationId = setup.createApplication( "test-org-" + rand, "test-app-" + rand );
+
+        EntityManager em = setup.getEmf().getEntityManager( applicationId );
+
+        Map<String, Object> properties1 = new LinkedHashMap<String, Object>();
+        properties1.put( "Name", "12 Angry Men" );
+        properties1.put( "Year", 1957 );
+        Entity film1 = em.create("film", properties1);
+
+        Map<String, Object> properties2 = new LinkedHashMap<String, Object>();
+        properties2.put( "Name", "Reservoir Dogs" );
+        properties2.put( "Year", 1992 );
+        Entity film2 = em.create( "film", properties2 );
+
+        em.refreshIndex();
+
+        // delete the application
+
+        setup.getEmf().deleteApplication( applicationId );
+
+        // attempt to get entities in application's collections in various ways should all fail
+
+        assertNull( setup.getEmf().lookupApplication("test-app-" + rand) );
+
+        Map<String, UUID> appMap = setup.getEmf().getApplications();
+        for ( String appName : appMap.keySet() ) {
+            UUID appId = appMap.get( appName );
+            assertNotEquals( appId, applicationId );
+            assertNotEquals( appName, "test-app-" + rand );
+        }
 
     }
 
@@ -119,7 +137,8 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
         traceTagManager.attach( traceTag );
         logger.info( "EntityDaoTest.testCreateAndGet" );
 
-        UUID applicationId = createApplication( "EntityManagerFactoryImplIT", "testCreateAndGet" + RandomStringUtils.randomAlphabetic(20)  );
+        UUID applicationId = createApplication( "EntityManagerFactoryImplIT", "testCreateAndGet"
+                + RandomStringUtils.randomAlphabetic(20)  );
         logger.info( "Application id " + applicationId );
 
         EntityManager em = emf.getEntityManager( applicationId );

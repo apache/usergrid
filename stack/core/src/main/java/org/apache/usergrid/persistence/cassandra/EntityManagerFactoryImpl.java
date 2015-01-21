@@ -119,10 +119,10 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
     /*
      * (non-Javadoc)
      * 
-     * @see org.apache.usergrid.core.Datastore#getImpementationDescription()
+     * @see org.apache.usergrid.core.Datastore#getImplementationDescription()
      */
     @Override
-    public String getImpementationDescription() {
+    public String getImplementationDescription() {
         return IMPLEMENTATION_DESCRIPTION;
     }
 
@@ -216,6 +216,13 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
         initializeApplication( organizationName, applicationId, appName, properties );
 
         return applicationId;
+    }
+
+    
+    @Override
+    public void deleteApplication(UUID applicationId) throws Exception {
+        // TODO implement deleteApplication in Usergrid 1 code base (master branch?)
+        throw new UnsupportedOperationException("Not supported."); 
     }
 
 

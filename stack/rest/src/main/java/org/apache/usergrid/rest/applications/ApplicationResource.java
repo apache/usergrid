@@ -38,6 +38,13 @@ import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
+import org.apache.usergrid.rest.ApiResponse;
+import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
+import org.apache.usergrid.services.ServiceAction;
+import org.apache.usergrid.services.ServiceResults;
+import org.apache.usergrid.services.assets.data.AssetUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -495,15 +502,28 @@ public class ApplicationResource extends ServiceResource {
 
 
     @DELETE
-    @RequireApplicationAccess
+    @RequireOrganizationAccess
     @Override
-    public JSONWithPadding executeDelete( @Context UriInfo ui,
-                                          @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception {
+    public JSONWithPadding executeDelete(  @Context UriInfo ui,
+        @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
+        
+        if ( applicationId == null ) {
+            throw new IllegalArgumentException("Application ID not specified in request");
+        }
+        
+        ApplicationInfo app = management.getApplicationInfo( applicationId );
+        if ( app == null ) {
+            throw new EntityNotFoundException("Application ID " + applicationId + " not found");
+        }
+        
+        emf.deleteApplication( applicationId );
 
-        logger.debug( "ApplicationResource.executeDelete" );
+        ApiResponse response = createApiResponse();
+        response.setAction( "delete" );
+        response.setApplication( services.getApplication() );
+        response.setParams( ui.getQueryParameters() );
 
-        throw new NotImplementedException( "Application delete is not allowed yet" );
+        return new JSONWithPadding( response, callback );
     }
 
 
