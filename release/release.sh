@@ -133,7 +133,7 @@ git commit -m "Updating .usergridversion to ${current_version}."
 git tag -s "${current_version}" -m "usergrid-${current_version} release." $current_version
 
 if [[ $publish == 1 ]]; then
-  git push origin $current_version
+  #git push origin $current_version
   #git push origin --tags
 fi
 
