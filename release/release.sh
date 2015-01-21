@@ -169,7 +169,7 @@ shasum ${dist_name}.tar.gz > ${dist_name}.tar.gz.sha
 
 if [[ $publish == 1 ]]; then
   # Commit the release
-  svn add usergrid-*
+  svn add .
   svn ci -m "usergrid-${current_version} release"
 
   # Finally delete all release candidate branches
