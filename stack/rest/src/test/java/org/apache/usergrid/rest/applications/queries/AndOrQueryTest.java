@@ -17,188 +17,332 @@
 package org.apache.usergrid.rest.applications.queries;
 
 
-import java.util.HashMap;
-import java.util.Map;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import java.io.IOException;
-import org.apache.commons.lang.RandomStringUtils;
-import org.junit.Ignore;
-import org.junit.Rule;
+import org.apache.usergrid.rest.test.resource2point0.model.Collection;
+import org.apache.usergrid.rest.test.resource2point0.model.Entity;
+import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
 import org.junit.Test;
-import org.apache.usergrid.rest.AbstractRestIT;
-import org.apache.usergrid.rest.TestContextSetup;
-import org.apache.usergrid.rest.test.resource.CustomCollection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import static org.junit.Assert.assertEquals;
-import static org.apache.usergrid.utils.MapUtils.hashMap;
+import java.io.IOException;
+import java.util.List;
+
+import static org.junit.Assert.*;
 
 
 /**
  * // TODO: Document this
  *
- * @author ApigeeCorporation
  * @since 4.0
  */
-public class AndOrQueryTest extends AbstractRestIT {
-
-    @Rule
-    public TestContextSetup context = new TestContextSetup( this );
+public class AndOrQueryTest extends QueryTestBase {
+    private static Logger log = LoggerFactory.getLogger(AndOrQueryTest.class);
 
 
-    @Test //USERGRID-900
-    public void queriesWithAndPastLimit() throws IOException {
-
-        CustomCollection activities = context.customCollection( "activities" );
-
-        long created = 0;
-        Map actor = hashMap( "displayName", "Erin" );
-        Map props = new HashMap();
-
-        props.put( "actor", actor );
-        props.put( "verb", "go" );
-        props.put( "content", "bragh" );
-
-
-        for ( int i = 0; i < 2000; i++ ) {
-            if ( i < 1000 ) {
-                props.put( "madeup", false );
-            }
-            else {
-                props.put( "madeup", true );
-            }
-
-            props.put( "ordinal", i );
-            JsonNode activity = activities.create( props );
-            if ( i == 0 ) {
-                created = activity.findValue( "created" ).longValue();
-            }
+    /**
+     * Test an inclusive AND query to ensure the correct results are returned
+     *
+     * @throws IOException
+     */
+    @Test
+    public void queryAndInclusive() throws IOException {
+        int numOfEntities = 20;
+        String collectionName = "activities";
+        // create our test entities
+        generateTestEntities(numOfEntities, collectionName);
+        // Query where madeup = true (the last half) and the last quarter of entries
+        QueryParameters params = new QueryParameters()
+            .setQuery("select * where madeup = true AND ordinal >= " + (numOfEntities - numOfEntities / 4));
+        Collection activities = this.app().collection("activities").get(params);
+        // results should have madeup = true and ordinal 15-19
+        assertEquals(numOfEntities / 4, activities.getResponse().getEntityCount());
+        // loop though entities that were returned, and test against the ordinals and values we are
+        // expecting, starting with the last entity and decrementing
+        int index = 19;
+        while (activities.hasNext()) {
+            Entity activity = activities.next();
+            // ensure the 'madeup' property is set to true
+            assertTrue(Boolean.parseBoolean(activity.get("madeup").toString()));
+            // make sure the correct ordinal properties are returned
+            assertEquals(index--, Long.parseLong(activity.get("ordinal").toString()));
         }
 
-        this.refreshIndex( context.getAppUuid() );
-
-        String errorQuery = "select * where created >= " + created + "AND madeup = true";
-        JsonNode incorrectNode = activities.withQuery( errorQuery ).get();
-
-        assertEquals( 10, incorrectNode.get( "entities" ).size() );
     }
 
+    /**
+     * Test an exclusive AND query to ensure the correct results are returned
+     *
+     * @throws IOException
+     */
+    @Test
+    public void queryAndExclusive() throws IOException {
+        int numOfEntities = 20;
+        String collectionName = "activities";
 
-    @Test //USERGRID-1475
-    public void displayFullQueriesInLimit() throws IOException {
+        generateTestEntities(numOfEntities, collectionName);
 
-        CustomCollection activities = context.customCollection( "activities" );
-
-        Map actor = hashMap( "displayName", "Erin" );
-        Map props = new HashMap();
-        props.put( "actor", actor );
-        props.put( "content", "bragh" );
-
-        for ( int i = 0; i < 20; i++ ) {
-
-            if ( i < 10 ) {
-                props.put( "verb", "go" );
-            }
-            else {
-                props.put( "verb", "stop" );
-            }
-
-            props.put( "ordinal", i );
-            JsonNode activity = activities.create( props );
-        }
-
-        this.refreshIndex( context.getAppUuid() );
-
-        String query = "select * where not verb = 'go'";
-        JsonNode incorrectNode = activities.query( query, "limit", Integer.toString( 10 ) );
-
-        assertEquals( 10, incorrectNode.get( "entities" ).size() );
-
-        for ( int i = 0; i < 10; i++ ) {
-            assertEquals( 19 - i, incorrectNode.get( "entities" ).get( i ).get( "ordinal" ).intValue() );
-            assertEquals( "stop", incorrectNode.get( "entities" ).get( i ).get( "verb" ).textValue() );
+        //Query where madeup = true (the last half) and NOT the last quarter of entries
+        QueryParameters params = new QueryParameters()
+            .setQuery("select * where madeup = true AND NOT ordinal >= " + (numOfEntities - numOfEntities / 4));
+        Collection activities = this.app().collection("activities").get(params);
+        //results should have madeup = true and ordinal 10-14
+        assertEquals(numOfEntities / 4, activities.getResponse().getEntityCount());
+        // loop though entities that were returned, and test against the ordinals and values we are
+        // expecting, starting with the last expected entity and decrementing
+        int index = 14;
+        while (activities.hasNext()) {
+            Entity activity = activities.next();
+            //ensure the 'madeup' property is set to true
+            assertTrue(Boolean.parseBoolean(activity.get("madeup").toString()));
+            //make sure the correct ordinal properties are returned
+            assertEquals(index--, Long.parseLong(activity.get("ordinal").toString()));
         }
     }
 
+    /**
+     * Test an inclusive OR query to ensure the correct results are returned
+     *
+     * @throws IOException
+     */
+    @Test
+    public void queryOrInclusive() throws IOException {
+        int numOfEntities = 20;
+        String collectionName = "activities";
 
-    @Test //USERGRID-1615
-    public void queryReturnCount() throws Exception {
+        generateTestEntities(numOfEntities, collectionName);
 
-        CustomCollection activities = context.customCollection( "activities" );
+        //Query where madeup = false (the first half) or the last quarter of entries
+        QueryParameters params = new QueryParameters()
+            .setQuery("select * where madeup = false OR ordinal >= " + (numOfEntities - numOfEntities / 4))
+            .setLimit((numOfEntities));
+        Collection activities = this.app().collection("activities").get(params);
+        int index = numOfEntities - 1;
+        int count = 0;
+        int returnSize = activities.getResponse().getEntityCount();
+        //loop through the returned results
+        for (int i = 0; i < returnSize; i++, index--) {
+            count++;
+            Entity activity = activities.getResponse().getEntities().get(i);
+            log.info(String.valueOf(activity.get("ordinal")) + " " + String.valueOf(activity.get("madeup")));
+            //if the entity is in the first half, the property "madeup" should be false
+            if (index < numOfEntities / 2) {
+                assertFalse(Boolean.parseBoolean(String.valueOf(activity.get("madeup"))));
+            }
+            //else if the entity is in the second half, the property "madeup" should be true
+            else if (index >= (numOfEntities - numOfEntities / 4)) {
+                assertTrue(Boolean.parseBoolean(String.valueOf(activity.get("madeup"))));
+            }
+            //test to ensure that the ordinal is in the first half (where "madeup = false")
+            //OR that the ordinal is in the last quarter of the entity list (where "ordinal >=  (numOfEntities - numOfEntities / 4))")
+            long ordinal = Long.parseLong(String.valueOf(activity.get("ordinal")));
+            assertTrue(ordinal < (numOfEntities / 2) || ordinal >= (numOfEntities - numOfEntities / 4));
+        }
+        //results should have madeup = false or ordinal 0-9,15-19
+        //A total of 15 entities should be returned
+        assertEquals(3 * numOfEntities / 4, count);
+    }
 
-        Map actor = hashMap( "displayName", "Erin" );
-        Map props = new HashMap();
+    /**
+     * Test an exclusive OR query to ensure the correct results are returned
+     *
+     * @throws IOException
+     */
+    @Test
+    public void queryOrExclusive() throws IOException {
+        int numOfEntities = 30;
+        String collectionName = "activities";
 
+        generateTestEntities(numOfEntities, collectionName);
+
+        //Query where the verb = 'go' (half) OR the last quarter by ordinal, but NOT where verb = 'go' AND the ordinal is in the last quarter
+        QueryParameters params = new QueryParameters()
+            .setQuery("select * where (verb = 'go' OR ordinal >= " + (numOfEntities - numOfEntities / 4) + ") AND NOT (verb = 'go' AND ordinal >= " + (numOfEntities - numOfEntities / 4) + ")")
+            .setLimit((numOfEntities));
+        Collection activities = this.app().collection("activities").get(params);
+
+        int index = numOfEntities - 1;
+        int count = 0;
+        int returnSize = activities.getResponse().getEntityCount();
+        for (int i = 0; i < returnSize; i++, index--) {
+            count++;
+            Entity activity = activities.getResponse().getEntities().get(i);
+            long ordinal = Long.parseLong(String.valueOf(activity.get("ordinal")));
+            log.info(ordinal + " " + String.valueOf(activity.get("verb")));
+            //if the entity is in the first three quarters, the property "verb" should be "go"
+            if (ordinal < (numOfEntities - numOfEntities / 4)) {
+                assertEquals("go", String.valueOf(activity.get("verb")));
+            }
+            //if the entity is in the last quarter, the property "verb" should be "stop"
+            else if (ordinal >= (numOfEntities - numOfEntities / 4)) {
+                assertEquals("stop", String.valueOf(activity.get("verb")));
+            }
+        }
+        //results should be even ordinals in the first 3 quarters and odd ordinals from the last quarter
+        //Should return 1 more than half the number of entities
+        assertEquals(1 + numOfEntities / 2, count);
+    }
+
+    /**
+     * Ensure limit is respected in queries
+     * 1. Query all entities where "madeup = true"
+     * 2. Limit the query to half of the number of entities
+     * 3. Ensure the correct entities are returned
+     *
+     * @throws IOException
+     */
+    @Test
+    public void queryWithAndPastLimit() throws IOException {
+        int numValuesTested = 40;
+
+        generateTestEntities(numValuesTested, "activities");
+        //3. Query all entities where "madeup = true"
+        String errorQuery = "select * where madeup = true";
+        QueryParameters params = new QueryParameters()
+            .setQuery(errorQuery)
+            .setLimit(numValuesTested / 2);//4. Limit the query to half of the number of entities
+        Collection activities = this.app().collection("activities").get(params);
+        //5. Ensure the correct entities are returned
+        assertEquals(numValuesTested / 2, activities.getResponse().getEntityCount());
+        while (activities.hasNext()) {
+            assertTrue(Boolean.parseBoolean(activities.next().get("madeup").toString()));
+        }
+    }
+
+
+    /**
+     * Test negated query
+     * 1. Query all entities where "NOT verb = 'go'"
+     * 2. Limit the query to half of the number of entities
+     * 3. Ensure the returned entities have "verb = 'stop'"
+     *
+     * @throws IOException
+     */
+    @Test
+    public void queryNegated() throws IOException {
         int numValuesTested = 20;
 
+        generateTestEntities(numValuesTested, "activities");
+        //1. Query all entities where "NOT verb = 'go'"
+        String query = "select * where not verb = 'go'";
+        //2. Limit the query to half of the number of entities
+        QueryParameters params = new QueryParameters().setQuery(query).setLimit(numValuesTested / 2);
+        Collection activities = this.app().collection("activities").get(params);
+        //3. Ensure the returned entities have "verb = 'stop'"
+        assertEquals(numValuesTested / 2, activities.getResponse().getEntityCount());
+        while (activities.hasNext()) {
+            assertEquals("stop", activities.next().get("verb").toString());
+        }
 
-        props.put( "actor", actor );
-        props.put( "verb", "go" );
-        props.put( "content", "bragh" );
 
-        JsonNode[] correctValues = activities.createEntitiesWithOrdinal( props, numValuesTested );
-
-        this.refreshIndex( context.getAppUuid() );
-
-        String inCorrectQuery = "select * where verb = 'go' and ordinal >= 10 ";
-
-        activities.verificationOfQueryResults( correctValues, true, inCorrectQuery );
     }
 
+    /**
+     * Ensure queries return a subset of entities in the correct order
+     * 1. Query for a subset of the entities
+     * 2. Validate that the correct entities are returned
+     *
+     * @throws Exception
+     */
+    @Test
+    public void queryReturnCount() throws Exception {
+        int numValuesTested = 20;
 
-    @Test //Check to make sure that asc works
+        generateTestEntities(numValuesTested, "activities");
+        //1. Query for a subset of the entities
+        String inCorrectQuery = "select * where ordinal >= " + (numValuesTested / 2) + " order by ordinal asc";
+        QueryParameters params = new QueryParameters().setQuery(inCorrectQuery).setLimit(numValuesTested / 2);
+        Collection activities = this.app().collection("activities").get(params);
+        //2. Validate that the correct entities are returned
+        assertEquals(numValuesTested / 2, activities.getResponse().getEntityCount());
+
+        List<Entity> entitiesReturned = activities.getResponse().getEntities();
+        for (int i = 0; i < numValuesTested / 2; i++) {
+            assertEquals(numValuesTested / 2 + i, Integer.parseInt(entitiesReturned.get(i).get("ordinal").toString()));
+        }
+
+    }
+
+    /**
+     * Validate sort order with AND/OR query
+     * 1. Use AND/OR query to retrieve entities
+     * 2. Verify the order of results
+     *
+     * @throws Exception
+     */
+    @Test
     public void queryCheckAsc() throws Exception {
+        int numOfEntities = 20;
+        String collectionName = "imagination";
 
-        CustomCollection madeupStuff = context.customCollection(
-                "imagination" + RandomStringUtils.randomAlphabetic( 5 ) );
-        Map character = hashMap( "WhoHelpedYou", "Ruff" );
+        generateTestEntities(numOfEntities, collectionName);
 
-        JsonNode[] correctValues;
-        correctValues = madeupStuff.createEntitiesWithOrdinal( character, 10 );
+        //2. Use AND/OR query to retrieve entities
+        String inquisitiveQuery = "select * where Ordinal gte 0 and Ordinal lte  " + (numOfEntities / 2)
+            + " or WhoHelpedYou eq 'Ruff' ORDER BY Ordinal asc";
+        QueryParameters params = new QueryParameters().setQuery(inquisitiveQuery).setLimit(numOfEntities / 2);
+        Collection activities = this.app().collection(collectionName).get(params);
 
-        this.refreshIndex( context.getAppUuid() );
-
-        String inquisitiveQuery = "select * where Ordinal gte 0 and Ordinal lte 10 "
-                + "or WhoHelpedYou eq 'Ruff' ORDER BY Ordinal asc";
-
-        int totalEntitiesContained = madeupStuff.verificationOfQueryResults( correctValues, false, inquisitiveQuery );
-
-        assertEquals( 10, totalEntitiesContained );
+        //3. Verify the order of results
+        assertEquals(numOfEntities / 2, activities.getResponse().getEntityCount());
+        List<Entity> entitiesReturned = activities.getResponse().getEntities();
+        for (int i = 0; i < numOfEntities / 2; i++) {
+            assertEquals(i, Integer.parseInt(entitiesReturned.get(i).get("ordinal").toString()));
+        }
     }
 
 
-    @Ignore("Test to make sure all 1000 exist with a regular query")
+    /**
+     * Test a standard query
+     * 1. Issue a query
+     * 2. validate that a full page of (10) entities is returned
+     *
+     * @throws Exception
+     */
+    @Test
     public void queryReturnCheck() throws Exception {
-        CustomCollection madeupStuff = context.customCollection( "imagination" );
-        Map character = hashMap( "WhoHelpedYou", "Ruff" );
+        int numOfEntities = 20;
+        String collectionName = "imagination";
 
-        int numOfEntities = 1000;
+        generateTestEntities(numOfEntities, collectionName);
 
-        JsonNode[] correctValues = madeupStuff.createEntitiesWithOrdinal( character, numOfEntities );
+        //2. Issue a query
+        String inquisitiveQuery = String.format("select * where ordinal >= 0 and ordinal <= %d or WhoHelpedYou = 'Ruff'", numOfEntities);
+        QueryParameters params = new QueryParameters().setQuery(inquisitiveQuery);
+        Collection activities = this.app().collection(collectionName).get(params);
 
-        this.refreshIndex( context.getAppUuid() );
-
-        String inquisitiveQuery = "select * where Ordinal >= 0 and Ordinal <= 2000 or WhoHelpedYou = 'Ruff'";
-
-        int totalEntitiesContained = madeupStuff.verificationOfQueryResults( correctValues, true, inquisitiveQuery );
-
-        assertEquals( numOfEntities, totalEntitiesContained );
+        //3. validate that a full page of (10) entities is returned
+        assertEquals(10, activities.getResponse().getEntityCount());
+        List<Entity> entitiesReturned = activities.getResponse().getEntities();
+        for (int i = 0; i < 10; i++) {
+            assertEquals(i, Integer.parseInt(entitiesReturned.get(i).get("ordinal").toString()));
+        }
     }
 
+    /**
+     * Test a standard query using alphanumeric operators
+     * 1. Issue a query using alphanumeric operators
+     * 2. validate that a full page of (10) entities is returned
+     *
+     * @throws Exception
+     */
+    @Test
+    public void queryReturnCheckWithShortHand() throws Exception {
+        int numOfEntities = 10;
+        String collectionName = "imagination";
 
-    @Ignore
-    public void queryReturnCheckWithShortHand() throws IOException {
-        CustomCollection madeupStuff = context.customCollection( "imagination" );
-        Map character = hashMap( "WhoHelpedYou", "Ruff" );
+        generateTestEntities(numOfEntities, collectionName);
 
-        madeupStuff.createEntitiesWithOrdinal( character, 1000 );
-
-        this.refreshIndex( context.getAppUuid() );
-
+        //2. Issue a query using alphanumeric operators
         String inquisitiveQuery = "select * where Ordinal gte 0 and Ordinal lte 2000 or WhoHelpedYou eq 'Ruff'";
+        QueryParameters params = new QueryParameters().setQuery(inquisitiveQuery);
+        Collection activities = this.app().collection(collectionName).get(params);
 
-        int totalEntitiesContained = madeupStuff.countEntities( inquisitiveQuery );
-
-        assertEquals( 1000, totalEntitiesContained );
+        //3. validate that a full page of (10) entities is returned
+        assertEquals(10, activities.getResponse().getEntityCount());
+        List<Entity> entitiesReturned = activities.getResponse().getEntities();
+        for (int i = 0; i < 10; i++) {
+            assertEquals(i, Integer.parseInt(entitiesReturned.get(i).get("ordinal").toString()));
+        }
     }
+
 }

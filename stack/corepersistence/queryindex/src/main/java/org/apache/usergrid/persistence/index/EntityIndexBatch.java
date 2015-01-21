@@ -56,9 +56,10 @@ public interface EntityIndexBatch {
      */
     public EntityIndexBatch deindex(final IndexScope scope, final Id id, final UUID version);
 
-    /**
-     * Execute the batch
-     */
+
+        /**
+         * Execute the batch
+         */
     public void execute();
 
     /**

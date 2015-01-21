@@ -348,8 +348,8 @@ public class CpEntityManager implements EntityManager {
      */
     @Metered( group = "core", name = "EntityManager_create" )
     @TraceParticipant
-    public <A extends Entity> A create( String entityType, Class<A> entityClass, Map<String, Object> properties,
-                                        UUID importId ) throws Exception {
+    public <A extends Entity> A create( String entityType, Class<A> entityClass, 
+            Map<String, Object> properties, UUID importId ) throws Exception {
 
         UUID timestampUuid = importId != null ? importId : UUIDUtils.newTimeUUID();
 
@@ -388,10 +388,10 @@ public class CpEntityManager implements EntityManager {
         if ( cpEntity == null ) {
             if ( logger.isDebugEnabled() ) {
                 logger.debug( "FAILED to load entity {}:{} from scope\n   app {}\n   owner {}\n   name {}",
-                        new Object[] {
-                                id.getType(), id.getUuid(), collectionScope.getApplication(),
-                                collectionScope.getOwner(), collectionScope.getName()
-                        } );
+                    new Object[] {
+                            id.getType(), id.getUuid(), collectionScope.getApplication(),
+                            collectionScope.getOwner(), collectionScope.getName()
+                    } );
             }
             return null;
         }
@@ -457,7 +457,8 @@ public class CpEntityManager implements EntityManager {
         Id id = new SimpleId( entityId, type );
 
 
-        CollectionScope collectionScope = getCollectionScopeNameFromEntityType(applicationScope.getApplication(),  type);
+        CollectionScope collectionScope = getCollectionScopeNameFromEntityType(
+                applicationScope.getApplication(),  type);
 
 
         //        if ( !UUIDUtils.isTimeBased( id.getUuid() ) ) {
@@ -518,16 +519,21 @@ public class CpEntityManager implements EntityManager {
 
         // first, update entity index in its own collection scope
 
-        CollectionScope collectionScope = getCollectionScopeNameFromEntityType(applicationScope.getApplication(),  entity.getType());
+        CollectionScope collectionScope = getCollectionScopeNameFromEntityType(
+                applicationScope.getApplication(),  entity.getType());
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
 
         Id entityId = new SimpleId( entity.getUuid(), entity.getType() );
 
         if ( logger.isDebugEnabled() ) {
-            logger.debug( "Updating entity {}:{} from scope\n   app {}\n   owner {}\n   name {}", new Object[] {
-                            entityId.getType(), entityId.getUuid(), collectionScope.getApplication(),
-                            collectionScope.getOwner(), collectionScope.getName()
-                    } );
+            logger.debug( "Updating entity {}:{} from scope\n   app {}\n   owner {}\n   name {}", 
+                new Object[] {
+                    entityId.getType(), 
+                    entityId.getUuid(), 
+                    collectionScope.getApplication(),
+                    collectionScope.getOwner(), 
+                    collectionScope.getName()
+                } );
         }
 
         //        if ( !UUIDUtils.isTimeBased( entityId.getUuid() ) ) {
@@ -600,50 +606,6 @@ public class CpEntityManager implements EntityManager {
                 load( new EntityScope( collectionScope, entityId ) );
 
         if ( entity != null ) {
-
-            // first, delete entity in every collection and connection scope in which it is indexed 
-
-            RelationManager rm = getRelationManager( entityRef );
-            Map<String, Map<UUID, Set<String>>> owners = rm.getOwners();
-
-            logger.debug( "Deleting indexes of all {} collections owning the entity", owners.keySet().size() );
-
-            final EntityIndex ei = managerCache.getEntityIndex( getApplicationScope() );
-
-            final EntityIndexBatch batch = ei.createBatch();
-
-
-            for ( String ownerType : owners.keySet() ) {
-                Map<UUID, Set<String>> collectionsByUuid = owners.get( ownerType );
-
-                for ( UUID uuid : collectionsByUuid.keySet() ) {
-                    Set<String> collectionNames = collectionsByUuid.get( uuid );
-                    for ( String coll : collectionNames ) {
-
-                        IndexScope indexScope = new IndexScopeImpl( new SimpleId( uuid, ownerType ),
-                                CpNamingUtils.getCollectionScopeNameFromCollectionName( coll ) );
-
-
-                        batch.index( indexScope, entity );
-                    }
-                }
-            }
-
-
-            // deindex from default index scope
-            IndexScope defaultIndexScope = new IndexScopeImpl( getApplicationScope().getApplication(),
-                    getCollectionScopeNameFromEntityType( entityRef.getType() ) );
-
-            batch.deindex( defaultIndexScope, entity );
-
-            //            TODO REMOVE INDEX CODE
-            //            IndexScope allTypesIndexScope = new IndexScopeImpl(
-            //                getApplicationScope().getApplication(),
-            //                    CpNamingUtils.ALL_TYPES, entityType );
-            //
-            //            batch.deindex( allTypesIndexScope,  entity );
-
-            batch.execute();
 
             decrementEntityCollection( Schema.defaultCollectionName( entityId.getType() ) );
 
@@ -859,9 +821,8 @@ public class CpEntityManager implements EntityManager {
     }
 
 
-    private Iterable<EntityRef> getEntityRefsForUniqueProperty( String collName, String propName, String alias )
-            throws Exception {
-
+    private Iterable<EntityRef> getEntityRefsForUniqueProperty( 
+            String collName, String propName, String alias ) throws Exception {
 
         final Id id = getIdForUniqueEntityField( collName, propName, alias );
 
@@ -893,15 +854,17 @@ public class CpEntityManager implements EntityManager {
                 get( entityRef ).getType();
             }
             catch ( Exception e ) {
-                logger.error( "Unable to load entity " + entityRef.getType() + ":" + entityRef.getUuid(), e );
+                logger.error( "Unable to load entity " + entityRef.getType() 
+                        + ":" + entityRef.getUuid(), e );
             }
             if ( entityRef == null ) {
-                throw new EntityNotFoundException( "Entity " + entityId.toString() + " cannot be verified" );
+                throw new EntityNotFoundException( 
+                        "Entity " + entityId.toString() + " cannot be verified" );
             }
             if ( ( entityType != null ) && !entityType.equalsIgnoreCase( entityRef.getType() ) ) {
                 throw new UnexpectedEntityTypeException(
-                        "Entity " + entityId + " is not the expected type, expected " + entityType + ", found "
-                                + entityRef.getType() );
+                        "Entity " + entityId + " is not the expected type, expected " 
+                                + entityType + ", found " + entityRef.getType() );
             }
         }
         return entityRef;
@@ -917,7 +880,8 @@ public class CpEntityManager implements EntityManager {
 
 
     @Override
-    public List<Entity> getPartialEntities( Collection<UUID> ids, Collection<String> properties ) throws Exception {
+    public List<Entity> getPartialEntities( 
+            Collection<UUID> ids, Collection<String> properties ) throws Exception {
         throw new UnsupportedOperationException( "Not supported yet." );
     }
 
@@ -931,15 +895,16 @@ public class CpEntityManager implements EntityManager {
 
 
     @Override
-    public void setProperty( EntityRef entityRef, String propertyName, Object propertyValue ) throws Exception {
+    public void setProperty( 
+            EntityRef entityRef, String propertyName, Object propertyValue ) throws Exception {
 
         setProperty( entityRef, propertyName, propertyValue, false );
     }
 
 
     @Override
-    public void setProperty( EntityRef entityRef, String propertyName, Object propertyValue, boolean override )
-            throws Exception {
+    public void setProperty( EntityRef entityRef, String propertyName, Object propertyValue, 
+            boolean override ) throws Exception { 
 
         if ( ( propertyValue instanceof String ) && ( ( String ) propertyValue ).equals( "" ) ) {
             propertyValue = null;
@@ -947,8 +912,8 @@ public class CpEntityManager implements EntityManager {
 
         Entity entity = get( entityRef );
 
-        propertyValue =
-                Schema.getDefaultSchema().validateEntityPropertyValue( entity.getType(), propertyName, propertyValue );
+        propertyValue = Schema.getDefaultSchema().validateEntityPropertyValue( 
+                entity.getType(), propertyName, propertyValue );
 
         entity.setProperty( propertyName, propertyValue );
         entity.setProperty( PROPERTY_MODIFIED, UUIDUtils.getTimestampInMillis( UUIDUtils.newTimeUUID() ) );
@@ -1003,7 +968,9 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public void deleteProperty( EntityRef entityRef, String propertyName ) throws Exception {
-        CollectionScope collectionScope =  getCollectionScopeNameFromEntityType(getApplicationScope().getApplication(), entityRef.getType());
+
+        CollectionScope collectionScope =  getCollectionScopeNameFromEntityType(
+                getApplicationScope().getApplication(), entityRef.getType());
 
         IndexScope defaultIndexScope = new IndexScopeImpl( getApplicationScope().getApplication(),
                 getCollectionScopeNameFromEntityType( entityRef.getType() ) );
@@ -1050,15 +1017,16 @@ public class CpEntityManager implements EntityManager {
 
 
     @Override
-    public void addToDictionary( EntityRef entityRef, String dictionaryName, Object elementValue ) throws Exception {
+    public void addToDictionary( EntityRef entityRef, String dictionaryName, 
+            Object elementValue ) throws Exception {
 
         addToDictionary( entityRef, dictionaryName, elementValue, null );
     }
 
 
     @Override
-    public void addToDictionary( EntityRef entityRef, String dictionaryName, Object elementName, Object elementValue )
-            throws Exception {
+    public void addToDictionary( EntityRef entityRef, String dictionaryName, Object elementName, 
+            Object elementValue ) throws Exception {
 
         if ( elementName == null ) {
             return;
@@ -1998,10 +1966,10 @@ public class CpEntityManager implements EntityManager {
 
         for ( Query.CounterFilterPredicate filter : filters ) {
             CounterUtils.AggregateCounterSelection selection =
-                    new CounterUtils.AggregateCounterSelection( filter.getName(),
-                            getUuid( getUserByIdentifier( filter.getUser() ) ),
-                            getUuid( getGroupByIdentifier( filter.getGroup() ) ),
-                            org.apache.usergrid.mq.Queue.getQueueId( filter.getQueue() ), filter.getCategory() );
+                new CounterUtils.AggregateCounterSelection( filter.getName(),
+                    getUuid( getUserByIdentifier( filter.getUser() ) ),
+                    getUuid( getGroupByIdentifier( filter.getGroup() ) ),
+                    org.apache.usergrid.mq.Queue.getQueueId( filter.getQueue() ), filter.getCategory() );
             selections.put( selection.getRow( resolution ), selection );
         }
 
@@ -2529,7 +2497,7 @@ public class CpEntityManager implements EntityManager {
                     cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion()
             } );
 
-            cpEntity = ecm.write( cpEntity ).toBlocking().last();
+             cpEntity = ecm .write( cpEntity ).toBlocking().last();
 
             logger.debug( "Wrote {}:{} version {}", new Object[] {
                     cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion()

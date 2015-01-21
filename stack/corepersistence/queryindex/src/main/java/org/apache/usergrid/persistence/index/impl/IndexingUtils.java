@@ -43,14 +43,16 @@ public class IndexingUtils {
     // These are not allowed in document type names: _ . , | #
     public static final String SEPARATOR = "__";
 
-    /**
-     * Reserved UG fields.
-     */
+    
+    //
+    // Reserved UG fields.
+    //
 
     public static final String ENTITY_CONTEXT_FIELDNAME = "ug_context";
 
     public static final String ENTITYID_ID_FIELDNAME = "ug_entityId";
 
+    public static final String ENTITY_VERSION_FIELDNAME = "ug_entityVersion";
 
 
     /**
@@ -156,66 +158,75 @@ public class IndexingUtils {
                         // we need most specific mappings first since it's a stop on match algorithm
 
                         .startObject()
-                        .startObject("context_template")
-                            .field("match", IndexingUtils.ENTITYID_ID_FIELDNAME)
-                                 .field("match_mapping_type", "string")
-                                        .startObject("mapping").field( "type", "string" )
-                                             .field("index", "not_analyzed")
-                                        .endObject()
-                                 .endObject()
-                             .endObject()
 
-                        .startObject()
-                        .startObject("context_template")
-                            .field("match", IndexingUtils.ENTITY_CONTEXT_FIELDNAME)
-                            .field("match_mapping_type", "string")
-                                .startObject("mapping").field( "type", "string" )
-                                    .field("index", "not_analyzed").endObject()
+                            .startObject( "entity_id_template" )
+                                .field( "match", IndexingUtils.ENTITYID_ID_FIELDNAME )
+                                    .field( "match_mapping_type", "string" )
+                                            .startObject( "mapping" ).field( "type", "string" )
+                                                .field( "index", "not_analyzed" )
+                                            .endObject()
+                                    .endObject()
                                 .endObject()
-                         .endObject()
 
-                        // any string with field name that starts with sa_ gets analyzed
+                            .startObject()
+                            .startObject( "entity_context_template" )
+                                .field( "match", IndexingUtils.ENTITY_CONTEXT_FIELDNAME )
+                                .field( "match_mapping_type", "string" )
+                                    .startObject( "mapping" )
+                                        .field( "type", "string" )
+                                        .field( "index", "not_analyzed" ).endObject()
+                                    .endObject()
+                            .endObject()
+
+                            .startObject()
+                            .startObject( "entity_version_template" )
+                                .field( "match", IndexingUtils.ENTITY_VERSION_FIELDNAME )
+                                        .field( "match_mapping_type", "string" )
+                                            .startObject( "mapping" ).field( "type", "long" )
+                                            .endObject()
+                                        .endObject()
+                                    .endObject()
+
+                            // any string with field name that starts with sa_ gets analyzed
+                            .startObject()
+                                .startObject( "template_1" )
+                                    .field( "match", ANALYZED_STRING_PREFIX + "*" )
+                                    .field( "match_mapping_type", "string" ).startObject( "mapping" )
+                                    .field( "type", "string" )
+                                    .field( "index", "analyzed" )
+                                .endObject()
+                            .endObject()
+
+                        .endObject()
+
+                        // all other strings are not analyzed
                         .startObject()
-
-                            .startObject( "template_1" )
-                                .field( "match", ANALYZED_STRING_PREFIX + "*" )
-                                .field( "match_mapping_type", "string" ).startObject( "mapping" )
-                                .field( "type", "string" )
-                                .field( "index", "analyzed" )
+                            .startObject( "template_2" )
+                                //todo, should be string prefix, remove 2 field mapping
+                                .field( "match", "*" )
+                                .field( "match_mapping_type", "string" )
+                                .startObject( "mapping" )
+                                    .field( "type", "string" )
+                                        .field( "index", "not_analyzed" )
+                                .endObject()
                             .endObject()
                         .endObject()
-                    .endObject()
-
-                    // all other strings are not analyzed
-                    .startObject()
-                        .startObject( "template_2" )
-                            //todo, should be string prefix, remove 2 field mapping
-                            .field( "match", "*" )
-                            .field( "match_mapping_type", "string" )
-                            .startObject( "mapping" )
-                                .field( "type", "string" )
-                                    .field( "index", "not_analyzed" )
-
-                            .endObject()
-                        .endObject()
-                    .endObject()
 
                         // fields names starting with go_ get geo-indexed
                         .startObject()
-                            .startObject("template_3")
-                                .field("match", GEO_PREFIX + "location")
-                                .startObject("mapping")
-                                    .field("type", "geo_point")
-
-                                .endObject()
+                            .startObject( "template_3" )
+                                .field( "match", GEO_PREFIX + "location" )
+                                    .startObject( "mapping" )
+                                        .field( "type", "geo_point" )
+                                    .endObject()
+                            .endObject()
                         .endObject()
-                    .endObject()
 
-                .endArray()
+                    .endArray()
 
-            .endObject()
+                .endObject()
 
-        .endObject();
+            .endObject();
 
         return builder;
     }

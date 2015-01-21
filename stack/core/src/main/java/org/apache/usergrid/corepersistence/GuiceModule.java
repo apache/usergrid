@@ -13,9 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.usergrid.corepersistence;
-
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
@@ -23,6 +21,13 @@ import com.google.inject.multibindings.Multibinder;
 import org.apache.usergrid.corepersistence.migration.EntityDataMigration;
 import org.apache.usergrid.corepersistence.migration.EntityTypeMappingMigration;
 import org.apache.usergrid.corepersistence.migration.GraphShardVersionMigration;
+import org.apache.usergrid.corepersistence.events.EntityDeletedHandler;
+import org.apache.usergrid.corepersistence.events.EntityVersionCreatedHandler;
+import org.apache.usergrid.corepersistence.events.EntityVersionDeletedHandler;
+import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.apache.usergrid.persistence.collection.event.EntityDeleted;
+import org.apache.usergrid.persistence.collection.event.EntityVersionCreated;
+import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
 import org.apache.usergrid.persistence.collection.guice.CollectionModule;
 import org.apache.usergrid.persistence.core.guice.CommonModule;
 import org.apache.usergrid.persistence.core.migration.data.DataMigration;
@@ -38,9 +43,24 @@ import org.slf4j.LoggerFactory;
  * Guice Module that encapsulates Core Persistence.
  */
 public class GuiceModule  extends AbstractModule {
+    private static final Logger log = LoggerFactory.getLogger( GuiceModule.class );
+
+    private static final Logger logger = LoggerFactory.getLogger(GuiceModule.class);
+
+    private EntityManagerFactory emf;
+
+    public static final String EVENTS_DISABLED = "corepersistence.events.disabled";
+
+    GuiceModule( EntityManagerFactory emf ) {
+        this.emf = emf;
+    }
 
     @Override
     protected void configure() {
+
+        if ( emf != null ) {
+            bind( EntityManagerFactory.class ).toInstance( emf );
+        }
 
         install(new CommonModule());
         install(new CollectionModule());
@@ -49,14 +69,25 @@ public class GuiceModule  extends AbstractModule {
         install(new MapModule());
         install(new QueueModule());
 
-        bind(CpEntityDeleteListener.class).asEagerSingleton();
-        bind(CpEntityIndexDeleteListener.class).asEagerSingleton();
         bind(ManagerCache.class).to( CpManagerCache.class );
 
-        Multibinder<DataMigration> dataMigrationMultibinder = Multibinder.newSetBinder( binder(), DataMigration.class );
+        Multibinder<DataMigration> dataMigrationMultibinder =
+                Multibinder.newSetBinder( binder(), DataMigration.class );
         dataMigrationMultibinder.addBinding().to( EntityTypeMappingMigration.class );
         dataMigrationMultibinder.addBinding().to( GraphShardVersionMigration.class );
         dataMigrationMultibinder.addBinding().to( EntityDataMigration.class );
+
+        Multibinder<EntityDeleted> entityBinder =
+            Multibinder.newSetBinder(binder(), EntityDeleted.class);
+        entityBinder.addBinding().to(EntityDeletedHandler.class);
+
+        Multibinder<EntityVersionDeleted> versionBinder =
+            Multibinder.newSetBinder(binder(), EntityVersionDeleted.class);
+        versionBinder.addBinding().to(EntityVersionDeletedHandler.class);
+
+        Multibinder<EntityVersionCreated> versionCreatedMultibinder =
+            Multibinder.newSetBinder( binder(), EntityVersionCreated.class );
+        versionCreatedMultibinder.addBinding().to(EntityVersionCreatedHandler.class);
 
 
     }

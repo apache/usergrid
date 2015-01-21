@@ -1,0 +1,42 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+[*]
+# Unix-style newlines with a newline ending every file
+end_of_line = lf
+# New line at the end of every file
+insert_final_newline = true
+# set default character set to utf-8
+charset = utf-8
+# Trim trailing whitespace from the end of lines
+trim_trailing_whitespace = true
+# Use spaces instead of tabs
+indent_style = space
+# Indent new lines with 4 spaces
+indent_size = 4
+# Lines that are a continuation of the previous line get an extra 4 spaces
+continuation_indent_size = 4
+# Set the maximum line length to 120
+max_line_length = 120
+
+# java
+[*.java]
+# Do not move curly braces to the next line
+curly_bracket_next_line = false
+# Add a space before and after brackets "[],{},()"
+spaces_around_brackets = both
+# Add a space on either side of an operator
+spaces_around_operators = true

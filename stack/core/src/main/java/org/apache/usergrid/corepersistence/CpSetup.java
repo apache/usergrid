@@ -63,13 +63,9 @@ public class CpSetup implements Setup {
     private static final Logger logger = LoggerFactory.getLogger( CpSetup.class );
 
     private static Injector injector = null;
+    private static EntityManagerFactory emf;
 
-
-    private final org.apache.usergrid.persistence.EntityManagerFactory emf;
     private final CassandraService cass;
-
-
-
 
 
     /**
@@ -83,11 +79,9 @@ public class CpSetup implements Setup {
     }
 
 
-
-
     public static Injector getInjector() {
         if ( injector == null ) {
-            injector = Guice.createInjector( new GuiceModule() ); 
+            injector = Guice.createInjector( new GuiceModule( emf ) ); 
         }
         return injector;
     }
@@ -176,14 +170,16 @@ public class CpSetup implements Setup {
             emf.initializeApplication( DEFAULT_ORGANIZATION,
                     emf.getDefaultAppId(), DEFAULT_APPLICATION, null );
         } catch (ApplicationAlreadyExistsException ex) {
-            logger.warn("Application {}/{} already exists", DEFAULT_ORGANIZATION, DEFAULT_APPLICATION);
+            logger.warn("Application {}/{} already exists", 
+                    DEFAULT_ORGANIZATION, DEFAULT_APPLICATION);
         }
 
         try {
             emf.initializeApplication( DEFAULT_ORGANIZATION,
                     emf.getManagementAppId(), MANAGEMENT_APPLICATION, null );
         } catch (ApplicationAlreadyExistsException ex) {
-            logger.warn("Application {}/{} already exists", DEFAULT_ORGANIZATION, MANAGEMENT_APPLICATION);
+            logger.warn("Application {}/{} already exists", 
+                    DEFAULT_ORGANIZATION, MANAGEMENT_APPLICATION);
         }
     }
 

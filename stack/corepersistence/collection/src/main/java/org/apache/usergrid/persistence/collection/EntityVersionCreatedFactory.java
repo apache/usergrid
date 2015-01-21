@@ -16,15 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.corepersistence;
-
-import com.google.inject.AbstractModule;
+package org.apache.usergrid.persistence.collection;
 
 
-public class TestGuiceModule extends AbstractModule {
+import java.util.UUID;
 
-    @Override
-    protected void configure() {
-        install( new GuiceModule() );
-    }
+import org.apache.usergrid.persistence.collection.impl.EntityVersionCreatedTask;
+import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
+
+public interface EntityVersionCreatedFactory {
+    public EntityVersionCreatedTask getTask( final CollectionScope scope, final Entity entity);
+
 }

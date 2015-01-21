@@ -247,6 +247,8 @@ public class ManagementResource extends AbstractContextResource {
             }
 
             if ( user == null ) {
+                //TODO: this could be fixed to return the reason why a user is null. In some cases the USER is not found
+                //so a 404 would be more appropriate etc...
                 OAuthResponse response =
                         OAuthResponse.errorResponse( SC_BAD_REQUEST ).setError( OAuthError.TokenResponse.INVALID_GRANT )
                                      .setErrorDescription( errorDescription ).buildJSONMessage();

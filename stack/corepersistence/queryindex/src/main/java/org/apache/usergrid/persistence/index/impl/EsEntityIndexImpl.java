@@ -18,14 +18,39 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.apache.usergrid.persistence.index.*;
-import org.apache.usergrid.persistence.index.utils.StringUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.util.Health;
+import org.apache.usergrid.persistence.core.util.ValidationUtils;
+import org.apache.usergrid.persistence.index.AliasedEntityIndex;
+import org.apache.usergrid.persistence.index.AliasedEntityIndex.AliasType;
+import org.apache.usergrid.persistence.index.EntityIndexBatch;
+import org.apache.usergrid.persistence.index.IndexFig;
+import org.apache.usergrid.persistence.index.IndexIdentifier;
+import org.apache.usergrid.persistence.index.IndexScope;
+import org.apache.usergrid.persistence.index.SearchTypes;
+import org.apache.usergrid.persistence.index.exceptions.IndexException;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.BOOLEAN_PREFIX;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ENTITYID_ID_FIELDNAME;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ENTITY_VERSION_FIELDNAME;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.NUMBER_PREFIX;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.SPLITTER;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.STRING_PREFIX;
+import org.apache.usergrid.persistence.index.query.CandidateResult;
+import org.apache.usergrid.persistence.index.query.CandidateResults;
+import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+import org.elasticsearch.action.ShardOperationFailedException;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.cluster.tasks.PendingClusterTasksRequest;
@@ -33,6 +58,8 @@ import org.elasticsearch.action.admin.cluster.tasks.PendingClusterTasksResponse;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
 import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateResponse;
+import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
+import org.elasticsearch.action.deletebyquery.IndexDeleteByQueryResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequestBuilder;
@@ -42,9 +69,12 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.index.query.FilterBuilder;
+import org.elasticsearch.index.query.FilterBuilders;
+import org.elasticsearch.index.query.FilteredQueryBuilder;
 import org.elasticsearch.index.query.MatchAllQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.elasticsearch.indices.IndexMissingException;
 import org.elasticsearch.search.SearchHit;
@@ -54,29 +84,8 @@ import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.core.util.Health;
-import org.apache.usergrid.persistence.core.util.ValidationUtils;
-import org.apache.usergrid.persistence.index.exceptions.IndexException;
-import org.apache.usergrid.persistence.index.query.CandidateResult;
-import org.apache.usergrid.persistence.index.query.CandidateResults;
-import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.model.entity.Id;
-import org.apache.usergrid.persistence.model.entity.SimpleId;
-import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-import com.google.inject.assistedinject.Assisted;
 import rx.Observable;
 import rx.functions.Func1;
-import rx.schedulers.Schedulers;
-
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.BOOLEAN_PREFIX;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.NUMBER_PREFIX;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.SPLITTER;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.STRING_PREFIX;
 
 
 /**
@@ -227,7 +236,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
         // to receive documents. Occasionally we see errors.
         // See this post: http://s.apache.org/index-missing-exception
 
-        logger.info( "Refreshing Created new Index Name [{}]", alias);
+        logger.debug( "Testing new index name [{}]", alias);
 
         final RetryOperation retryOperation = new RetryOperation() {
             @Override
@@ -247,7 +256,6 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
                 logger.info( "Successfully deleted all documents in index {} and type {}", 
                         alias, VERIFY_TYPE );
-
 
                 return true;
             }
@@ -272,7 +280,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
                 .setTemplate(config.getIndexPrefix() + "*").addMapping( "_default_", xcb )
                 .execute().actionGet();
 
-        if(!pitr.isAcknowledged()){
+        if ( !pitr.isAcknowledged() ) {
             throw new IndexException( "Unable to create default mappings" );
         }
     }
@@ -350,14 +358,11 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
             }
 
 
-
             if ( logger.isDebugEnabled() ) {
                 logger.debug( "Searching index {}\n  scope{} \n type {}\n   query {} ", 
                         new Object[] { this.alias, context, entityTypes, srb
                 } );
-
             }
-
 
             try {
                 searchResponse = srb.execute().actionGet();
@@ -436,9 +441,6 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
     public void refresh() {
 
-
-        logger.info( "Refreshing Created new Index Name [{}]", alias);
-
         final RetryOperation retryOperation = new RetryOperation() {
             @Override
             public boolean doOp() {
@@ -457,7 +459,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
                     return true;
                 }
                 catch ( IndexMissingException e ) {
-                    logger.error( "Unable to refresh index after create. Waiting before sleeping.", e );
+                    logger.error( "Unable to refresh index. Waiting before sleeping.", e );
                     throw e;
                 }
             }
@@ -490,13 +492,10 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
         final QueryBuilder queryBuilder = 
                 QueryBuilders.termQuery( IndexingUtils.ENTITY_CONTEXT_FIELDNAME, context );
 
-
         final SearchRequestBuilder srb = esProvider.getClient().prepareSearch( alias.getReadAlias() )
                 .setTypes(searchTypes.getTypeNames())
                 .setScroll(cursorTimeout + "m")
                 .setQuery(queryBuilder);
-
-
 
         final SearchResponse searchResponse;
         try {
@@ -515,12 +514,79 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     }
 
 
+    @Override
+    public void deleteAllVersionsOfEntity( Id entityId ) {
+
+        String idString = IndexingUtils.idString( entityId ).toLowerCase(); 
+
+        final TermQueryBuilder tqb = QueryBuilders.termQuery( ENTITYID_ID_FIELDNAME, idString );
+
+        final DeleteByQueryResponse response = esProvider.getClient()
+            .prepareDeleteByQuery( alias.getWriteAlias() ).setQuery( tqb ).execute().actionGet();
+
+
+        logger.debug( "Deleted entity {}:{} from all index scopes with response status = {}",
+            new Object[] { entityId.getType(), entityId.getUuid(), response.status().toString() });
+
+       checkDeleteByQueryResponse( tqb, response );
+
+    }
+
+
+    @Override
+    public void deletePreviousVersions( final Id entityId, final UUID version ) {
+
+        String idString = IndexingUtils.idString( entityId ).toLowerCase(); 
+
+        final FilteredQueryBuilder fqb = QueryBuilders.filteredQuery(
+            QueryBuilders.termQuery( ENTITYID_ID_FIELDNAME, idString ),
+            FilterBuilders.rangeFilter( ENTITY_VERSION_FIELDNAME ).lt( version.timestamp() ) 
+        );
+
+        final DeleteByQueryResponse response = esProvider.getClient()
+            .prepareDeleteByQuery( alias.getWriteAlias() ).setQuery( fqb ).execute().actionGet();
+
+        //error message needs to be retooled so that it describes the entity more throughly
+        logger.debug( "Deleted entity {}:{} with version {} from all "
+                + "index scopes with response status = {}",
+            new Object[] { entityId.getType(), entityId.getUuid(), version,  response.status().toString() } );
+
+        checkDeleteByQueryResponse( fqb, response );
+    }
+
+
+    /**
+     * Validate the response doesn't contain errors, if it does, fail fast at the first error we encounter
+     */
+    private void checkDeleteByQueryResponse( 
+            final QueryBuilder query, final DeleteByQueryResponse response ) {
+
+        for ( IndexDeleteByQueryResponse indexDeleteByQueryResponse : response ) {
+            final ShardOperationFailedException[] failures = indexDeleteByQueryResponse.getFailures();
+
+            for ( ShardOperationFailedException failedException : failures ) {
+                throw new IndexException( String.format("Unable to delete by query %s.  "
+                        + "Failed with code %d and reason %s on shard %s in index %s",
+                    query.toString(), 
+                    failedException.status(), 
+                    failedException.reason(), 
+                    failedException.shardId(),
+                    failedException.index() ) );
+            }
+
+        }
+    }
+
+
     /**
      * For testing only.
      */
     public void deleteIndex() {
         AdminClient adminClient = esProvider.getClient().admin();
-        DeleteIndexResponse response = adminClient.indices().prepareDelete( indexIdentifier.getIndex(null) ).get();
+
+        DeleteIndexResponse response = adminClient.indices()
+                .prepareDelete( indexIdentifier.getIndex(null) ).get();
+
         if ( response.isAcknowledged() ) {
             logger.info( "Deleted index: " + alias);
         }
