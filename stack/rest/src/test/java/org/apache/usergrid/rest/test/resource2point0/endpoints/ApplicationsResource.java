@@ -17,9 +17,9 @@
 package org.apache.usergrid.rest.test.resource2point0.endpoints;
 
 
-import org.apache.usergrid.rest.test.resource.app.Collection;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Application;
+import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.apache.usergrid.rest.test.resource2point0.model.Token;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
@@ -28,11 +28,9 @@ import javax.ws.rs.core.MediaType;
 
 /**
  * Holds the information required for building and chaining application objects to collections.
- * Should also contain the GET,PUT,POST,DELETE methods of functioning in here.
- * This class also holds how we're currently interaction with collections.
  * app("applications").post();
  */
-public class ApplicationsResource extends CollectionEndpoint {
+public class ApplicationsResource extends NamedResource {
 
     public ApplicationsResource(final String name, final ClientContext context, final UrlResource parent) {
         super( name, context, parent );
@@ -44,5 +42,20 @@ public class ApplicationsResource extends CollectionEndpoint {
 
     public TokenResource token(){return new TokenResource(context,this);}
 
+    /**
+     * @method used to delete applications
+     * @param application (name or uuid)
+     */
+    public ApiResponse delete(String application) {
+        return getResource(true).type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
+            .delete(ApiResponse.class, application);
+    }
 
+    /**
+     * @method used to get an application entity
+     */
+    public ApiResponse get() {
+        return getResource(true).type(MediaType.APPLICATION_JSON_TYPE).accept( MediaType.APPLICATION_JSON )
+            .delete(ApiResponse.class);
+    }
 }
