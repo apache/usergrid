@@ -21,9 +21,11 @@
 package org.apache.usergrid.services.notifications.wns;
 
 import ar.com.fernandospr.wns.WnsService;
-import ar.com.fernandospr.wns.exceptions.WnsException;
+import ar.com.fernandospr.wns.model.WnsBadge;
 import ar.com.fernandospr.wns.model.WnsToast;
+import ar.com.fernandospr.wns.model.builders.WnsBadgeBuilder;
 import ar.com.fernandospr.wns.model.builders.WnsToastBuilder;
+import com.sun.jersey.api.client.ClientHandlerException;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.entities.Notification;
 import org.apache.usergrid.persistence.entities.Notifier;
@@ -31,11 +33,11 @@ import org.apache.usergrid.services.ServicePayload;
 import org.apache.usergrid.services.notifications.ConnectionException;
 import org.apache.usergrid.services.notifications.ProviderAdapter;
 import org.apache.usergrid.services.notifications.TaskTracker;
-import org.mortbay.util.ajax.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -59,17 +61,34 @@ public class WNSAdapter implements ProviderAdapter {
     public void testConnection() throws ConnectionException {
         WnsToast toast = new WnsToastBuilder().bindingTemplateToastText01("test").build();
         try{
-            service.pushToast("ms-app://s-1-15-2-2411381248-444863693-3819932088-4077691928-1194867744-112853457-373132695",toast);
-        }catch (Exception e){
-            LOG.error(e.toString());
+            //this fails every time due to jax error which is ok
+            service.pushToast("s-1-15-2-2411381248-444863693-3819932088-4077691928-1194867744-112853457-373132695",toast);
+        }catch (ClientHandlerException e){
+            LOG.info("Windows Phone notifier added: "+e.toString());
         }
     }
 
     @Override
     public void sendNotification(String providerId, Object payload, Notification notification, TaskTracker tracker) throws Exception {
         try {
-            WnsToast toast = new WnsToastBuilder().bindingTemplateToastText01(payload.toString()).build();
-            service.pushToast(providerId, toast);
+            List<TranslatedNotification> translatedNotifications = ( List<TranslatedNotification>) payload;
+            for(TranslatedNotification translatedNotification : translatedNotifications) {
+                switch (translatedNotification.getType()) {
+                    case "toast":
+                        WnsToast toast = new WnsToastBuilder().bindingTemplateToastText01(translatedNotification.getMessage().toString()).build();
+                        service.pushToast(providerId, toast);
+                        break;
+                    case "badge":
+                        WnsBadge badge;
+                        if (translatedNotification.getMessage() instanceof Integer) {
+                            badge = new WnsBadgeBuilder().value((Integer) translatedNotification.getMessage()).build();
+                        } else {
+                            badge = new WnsBadgeBuilder().value(translatedNotification.getMessage().toString()).build();
+                        }
+                        service.pushBadge(providerId, badge);
+                        break;
+                }
+            }
             tracker.completed();
         } catch (Exception e) {
             tracker.failed(0,e.toString());
@@ -89,17 +108,28 @@ public class WNSAdapter implements ProviderAdapter {
 
     @Override
     public Object translatePayload(Object payload) throws Exception {
-        String toast = "";
+        //TODO: allow for badges and toasts at same time
+        List<TranslatedNotification> translatedNotifications = new ArrayList<>();
         if (payload instanceof Map) {
-            toast = ((Map<String, Object>) payload).get("toast").toString();
+            //{payloads:{winphone:{toast:"mymessage",badge:1}}}
+            Map<String, Object> map = (Map<String, Object>) payload;
+            if (map.containsKey("toast")) {
+                translatedNotifications.add(new TranslatedNotification(map.get("toast").toString(), "toast"));
+            }
+            if (map.containsKey("badge")) {
+                translatedNotifications.add(new TranslatedNotification(map.get("badge"), "badge"));
+            }
+
         } else {
+            //{payloads:{winphone:"mymessage"}}
+            //make it a toast if its just a string
             if (payload instanceof String) {
-                toast = (String) payload;
+                translatedNotifications.add(new TranslatedNotification( (String) payload,"toast"));
             }else{
                 throw new IllegalArgumentException("format is messed up");
             }
         }
-        return toast;
+        return translatedNotifications;
     }
 
     @Override
@@ -127,5 +157,6 @@ public class WNSAdapter implements ProviderAdapter {
     public Notifier getNotifier() {
         return notifier;
     }
+
 
 }

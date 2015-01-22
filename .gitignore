@@ -84,3 +84,4 @@ portal/js/templates.js
 /stack/core/src/main/java/org/apache/usergrid/persistence/query/tree/QueryFilterParser.java
 !/stack/corepersistence/common/src/test/resources/usergrid-UNIT.properties
 *.iml
+sdks/dotnet/samples/notifications/packages/*

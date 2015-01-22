@@ -1,7 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<packages>
-  <!--
-    /*
+/*
  *
  *  * Licensed to the Apache Software Foundation (ASF) under one or more
  *  *  contributor license agreements.  The ASF licenses this file to You
@@ -20,6 +17,34 @@
  *  * directory of this distribution.
  *
  */
-    -->
-  <package id="Newtonsoft.Json" version="6.0.8" targetFramework="wpa81" />
-</packages>
+
+package org.apache.usergrid.services.notifications.wns;
+
+import org.apache.usergrid.persistence.model.entity.Entity;
+
+import java.io.Serializable;
+import java.util.HashMap;
+
+/**
+ * Classy class class.
+ */
+public class TranslatedNotification extends HashMap implements Serializable {
+
+    public TranslatedNotification() {
+        super();
+    }
+
+    public TranslatedNotification(Object message, String type) {
+        super();
+        this.put("message",message);
+        this.put("type" , type);
+    }
+
+    public Object getMessage() {
+        return get("message");
+    }
+
+    public String getType() {
+        return get("type").toString();
+    }
+}

@@ -165,7 +165,7 @@
         <br>
         A Notifier allows App Services to connect to and deliver a message to a communication provider such as
         Windows Notifications Service (WNS). Copy and paste your API key to create a bridge between your app
-        and GCM for push notifications on Android devices..
+        and WNS for push notifications on windows devices..
         <br><br>
 
         For more help: see our <a href="#!/getting-started/setup" class="notifications-links">getting started page</a> page.
@@ -189,10 +189,12 @@
             </div>
 
             <div class="control-group">
-              <strong>API Key </strong>
+              <strong>Secret </strong>
               <div  >
                 <input ng-model="notifier.winNotifierAPISecret" id="win-secret-value" required type="text" class="span6" autocomplete="off" ug-validate/>
               </div>
+              <br/>
+              Secret will not be returned in other api calls for security reasons.
             </div>
 
             <div class="control-group">

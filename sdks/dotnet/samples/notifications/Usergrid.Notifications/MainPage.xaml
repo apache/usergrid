@@ -7,14 +7,32 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-
+  <!--
+    /*
+ *
+ *  * Licensed to the Apache Software Foundation (ASF) under one or more
+ *  *  contributor license agreements.  The ASF licenses this file to You
+ *  * under the Apache License, Version 2.0 (the "License"); you may not
+ *  * use this file except in compliance with the License.
+ *  * You may obtain a copy of the License at
+ *  *
+ *  *     http://www.apache.org/licenses/LICENSE-2.0
+ *  *
+ *  * Unless required by applicable law or agreed to in writing, software
+ *  * distributed under the License is distributed on an "AS IS" BASIS,
+ *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  * See the License for the specific language governing permissions and
+ *  * limitations under the License.  For additional information regarding
+ *  * copyright in this work, please see the NOTICE file in the top level
+ *  * directory of this distribution.
+ *
+ */
+    -->
     <Grid>
-        <TextBox x:Name="pushText" HorizontalAlignment="Left" Margin="75,46,0,0" TextWrapping="Wrap" Text="Push Text" VerticalAlignment="Top" Width="261" TextChanged="pushText_TextChanged"/>
-        <Button  Content="Send" HorizontalAlignment="Left" Margin="146,121,0,0" VerticalAlignment="Top" Click="Button_Click"/>
-        <TextBox x:Name="NotifierName" HorizontalAlignment="Left" Margin="75,210,0,0" TextWrapping="Wrap" Text="Notifier Name" VerticalAlignment="Top" Width="261"/>
-        <TextBox x:Name="Api_Key" HorizontalAlignment="Left" Margin="75,276,0,0" TextWrapping="Wrap" Text="Sid" VerticalAlignment="Top" Width="261"/>
-        <TextBox x:Name="Sid" HorizontalAlignment="Left" Margin="75,348,0,0" TextWrapping="Wrap" Text="Api Key" VerticalAlignment="Top" Width="261"/>
-        <Button x:Name="AddNotifierButton" Content="Add Notifier" HorizontalAlignment="Left" Margin="146,405,0,0" VerticalAlignment="Top" Click="AddNotifierButton_Click"/>
+        <TextBox x:Name="pushText" HorizontalAlignment="Left" Margin="46,10,0,0" TextWrapping="Wrap" Text="Push Text" VerticalAlignment="Top" Width="261" TextChanged="pushText_TextChanged"/>
+        <Button x:Name="SendToast"  Content="Toast" HorizontalAlignment="Left" Margin="114,88,0,0" VerticalAlignment="Top" Click="Button_Click" Width="39"/>
+        <Button x:Name="Badge" Content="Badge" HorizontalAlignment="Left" Margin="114,157,0,0" VerticalAlignment="Top" Click="Badge_Click"/>
+        <TextBlock x:Name="Result" HorizontalAlignment="Left" Margin="46,295,0,0" TextWrapping="Wrap" Text="Did it work? " VerticalAlignment="Top" Height="49" Width="261" FontSize="25" SelectionChanged="Result_SelectionChanged"/>
 
     </Grid>
 </Page>

@@ -1,18 +1,27 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using Windows.Networking.PushNotifications;
-using Windows.Storage;
+﻿/*
+ *
+ *  * Licensed to the Apache Software Foundation (ASF) under one or more
+ *  *  contributor license agreements.  The ASF licenses this file to You
+ *  * under the Apache License, Version 2.0 (the "License"); you may not
+ *  * use this file except in compliance with the License.
+ *  * You may obtain a copy of the License at
+ *  *
+ *  *     http://www.apache.org/licenses/LICENSE-2.0
+ *  *
+ *  * Unless required by applicable law or agreed to in writing, software
+ *  * distributed under the License is distributed on an "AS IS" BASIS,
+ *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  * See the License for the specific language governing permissions and
+ *  * limitations under the License.  For additional information regarding
+ *  * copyright in this work, please see the NOTICE file in the top level
+ *  * directory of this distribution.
+ *
+ */
+using System;
+using System.Threading.Tasks;
+using Usergrid.Notifications.Client;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=391641
@@ -24,33 +33,38 @@ namespace Usergrid.Notifications
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        private Usergrid usergrid;
+        private IUsergridClient usergrid;
         private string serverUrl;
         private string org;
         private string app;
         private string notifier;
-        private string apiKey;
-        private string secret;
-        private Guid deviceId;
+        private string user;
+        private string password;
         public MainPage()
         {
             this.InitializeComponent();
-            var myIp = "10.0.1.20";
-            serverUrl = "http://" + myIp + ":8080";
+            //TODO: change me to your server
+            serverUrl = "http://10.0.1.20:8080";
+            //TODO: change me to your org
             org = "mobile";
+            //TODO: change me to your app
             app = "sandbox";
+            //TODO: change me to your notifier name
             notifier = "winphone";
+            //TODO: change me to your user
+            user = "superuser";
+            //TODO: change me to your password
+            password = "test";
             this.NavigationCacheMode = NavigationCacheMode.Required;
-            this.setup();
+            this.setup().ContinueWith(t => {
+                LastException = t.Exception;
+            });
         }
 
-        private async void setup()
+        private async Task setup()
         {
-            usergrid = new Usergrid(serverUrl, org, app);
-            await this.usergrid.Authenticate("superuser", "test", true);
-            await usergrid.Push.RegisterDevice(notifier);
-           
-            
+            usergrid = new Client.Usergrid(serverUrl, org, app, notifier);
+            await usergrid.Authenticate(user, password, true);
         }
 
         /// <summary>
@@ -68,22 +82,46 @@ namespace Usergrid.Notifications
             // If you are using the NavigationHelper provided by some templates,
             // this event is handled for you.
         }
-
-        private async void Button_Click(object sender, RoutedEventArgs e)
-        {
-
-            var message = this.pushText.Text;
-            await usergrid.Push.SendNotification(deviceId,message);
-        }
-
+         
         private void pushText_TextChanged(object sender, TextChangedEventArgs e)
         {
 
         }
 
-        private async void AddNotifierButton_Click(object sender, RoutedEventArgs e)
+        private async void Button_Click(object sender, RoutedEventArgs e)
         {
-            await usergrid.Push.AddNotifier(NotifierName.Text,Sid.Text,Api_Key.Text);
+            Result.Text = "Sending....";
+
+            var message = this.pushText.Text;
+            if (await usergrid.Push.SendToast(message))
+            {
+                Result.Text = "It did! :)";
+            }
+            else
+            {
+                Result.Text = "It did not! :(";
+            }
         }
+
+        private async void Badge_Click(object sender, RoutedEventArgs e)
+        {
+            Result.Text = "Sending....";
+
+            if (await usergrid.Push.SendBadge<int>(new Random().Next(1,100)))
+            {
+                Result.Text = "It did! :)";
+            }
+            else
+            {
+                Result.Text = "It did not! :(";
+            }
+        }
+
+        private void Result_SelectionChanged(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        public AggregateException LastException { get; set; }
     }
 }
