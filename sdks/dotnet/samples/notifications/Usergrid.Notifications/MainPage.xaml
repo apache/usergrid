@@ -1,0 +1,20 @@
+﻿<Page
+    x:Class="Usergrid.Notifications.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Usergrid.Notifications"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid>
+        <TextBox x:Name="pushText" HorizontalAlignment="Left" Margin="75,46,0,0" TextWrapping="Wrap" Text="Push Text" VerticalAlignment="Top" Width="261" TextChanged="pushText_TextChanged"/>
+        <Button  Content="Send" HorizontalAlignment="Left" Margin="146,121,0,0" VerticalAlignment="Top" Click="Button_Click"/>
+        <TextBox x:Name="NotifierName" HorizontalAlignment="Left" Margin="75,210,0,0" TextWrapping="Wrap" Text="Notifier Name" VerticalAlignment="Top" Width="261"/>
+        <TextBox x:Name="Api_Key" HorizontalAlignment="Left" Margin="75,276,0,0" TextWrapping="Wrap" Text="Sid" VerticalAlignment="Top" Width="261"/>
+        <TextBox x:Name="Sid" HorizontalAlignment="Left" Margin="75,348,0,0" TextWrapping="Wrap" Text="Api Key" VerticalAlignment="Top" Width="261"/>
+        <Button x:Name="AddNotifierButton" Content="Add Notifier" HorizontalAlignment="Left" Margin="146,405,0,0" VerticalAlignment="Top" Click="AddNotifierButton_Click"/>
+
+    </Grid>
+</Page>
