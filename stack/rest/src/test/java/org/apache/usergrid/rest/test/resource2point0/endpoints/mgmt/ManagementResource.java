@@ -41,4 +41,9 @@ public class ManagementResource extends NamedResource {
     public UsersResource users() {
         return new UsersResource( context, this );
     }
+
+    public EntityEndpoint get(final String identifier){
+        return new EntityEndpoint(identifier, context, this);
+    }
+
 }
