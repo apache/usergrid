@@ -21,29 +21,13 @@ package org.apache.usergrid.persistence.index.impl;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
-import org.apache.usergrid.persistence.index.AliasedEntityIndex;
-import org.apache.usergrid.persistence.index.AliasedEntityIndex.AliasType;
-import org.apache.usergrid.persistence.index.EntityIndexBatch;
-import org.apache.usergrid.persistence.index.IndexFig;
-import org.apache.usergrid.persistence.index.IndexIdentifier;
-import org.apache.usergrid.persistence.index.IndexScope;
-import org.apache.usergrid.persistence.index.SearchTypes;
+import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.persistence.index.exceptions.IndexException;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.BOOLEAN_PREFIX;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ENTITYID_ID_FIELDNAME;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ENTITY_VERSION_FIELDNAME;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.NUMBER_PREFIX;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.SPLITTER;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.STRING_PREFIX;
 import org.apache.usergrid.persistence.index.query.CandidateResult;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
 import org.apache.usergrid.persistence.index.query.Query;
@@ -68,13 +52,7 @@ import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
-import org.elasticsearch.index.query.FilterBuilder;
-import org.elasticsearch.index.query.FilterBuilders;
-import org.elasticsearch.index.query.FilteredQueryBuilder;
-import org.elasticsearch.index.query.MatchAllQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.TermQueryBuilder;
+import org.elasticsearch.index.query.*;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.elasticsearch.indices.IndexMissingException;
 import org.elasticsearch.search.SearchHit;
@@ -86,6 +64,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
 import rx.functions.Func1;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.*;
 
 
 /**
@@ -197,23 +183,25 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
             String[] indexNames = getIndexes(AliasType.Write);
 
-            for(String currentIndex : indexNames){
+            for (String currentIndex : indexNames){
                 isAck = adminClient.indices().prepareAliases().removeAlias(currentIndex,
                         alias.getWriteAlias()).execute().actionGet().isAcknowledged();
 
-                logger.info("Removed Index Name [{}] from Alias=[{}] ACK=[{}]",currentIndex, alias, isAck);
+                logger.info("Removed Index Name [{}] from Alias=[{}] ACK=[{}]", currentIndex, alias, isAck);
             }
 
-            //add read alias
+            // add read alias
             isAck = adminClient.indices().prepareAliases().addAlias(
                     indexName, alias.getReadAlias()).execute().actionGet().isAcknowledged();
-            logger.info("Created new read Alias Name [{}] ACK=[{}]", alias, isAck);
-
-            //add write alias
+            logger.info("Created new read Alias Name [{}] ACK=[{}]", alias.getReadAlias(), isAck);
+            
+            // add write alias
             isAck = adminClient.indices().prepareAliases().addAlias(
                     indexName, alias.getWriteAlias()).execute().actionGet().isAcknowledged();
-            logger.info("Created new write Alias Name [{}] ACK=[{}]", alias, isAck);
+            logger.info("Created new write Alias Name [{}] ACK=[{}]", alias.getWriteAlias(), isAck);
+            
             aliasCache.invalidate(alias);
+            
         } catch (Exception e) {
             logger.warn("Failed to create alias ", e);
         }
@@ -236,7 +224,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
         // to receive documents. Occasionally we see errors.
         // See this post: http://s.apache.org/index-missing-exception
 
-        logger.debug( "Testing new index name [{}]", alias);
+        logger.debug( "Testing new index name: read {} write {}", alias.getReadAlias(), alias.getWriteAlias());
 
         final RetryOperation retryOperation = new RetryOperation() {
             @Override
@@ -244,18 +232,19 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
                 final String tempId = UUIDGenerator.newTimeUUID().toString();
 
                 esProvider.getClient().prepareIndex( alias.getWriteAlias(), VERIFY_TYPE, tempId )
-                        .setSource(DEFAULT_PAYLOAD).get();
+                     .setSource(DEFAULT_PAYLOAD).get();
 
                 logger.info( "Successfully created new document with docId {} "
-                        + "in index {} and type {}", tempId, alias, VERIFY_TYPE );
+                     + "in index read {} write {} and type {}", 
+                        tempId, alias.getReadAlias(), alias.getWriteAlias(), VERIFY_TYPE );
 
                 // delete all types, this way if we miss one it will get cleaned up
-                esProvider.getClient().prepareDeleteByQuery( alias.getWriteAlias() )
-                        .setTypes(VERIFY_TYPE) 
+                esProvider.getClient().prepareDeleteByQuery( alias.getWriteAlias())
+                        .setTypes(VERIFY_TYPE)
                         .setQuery(MATCH_ALL_QUERY_BUILDER).get();
 
-                logger.info( "Successfully deleted all documents in index {} and type {}", 
-                        alias, VERIFY_TYPE );
+                logger.info( "Successfully deleted all documents in index {} read {} write {} and type {}",
+                        alias.getReadAlias(), alias.getWriteAlias(), VERIFY_TYPE );
 
                 return true;
             }
@@ -359,16 +348,15 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
 
             if ( logger.isDebugEnabled() ) {
-                logger.debug( "Searching index {}\n  scope{} \n type {}\n   query {} ", 
-                        new Object[] { this.alias, context, entityTypes, srb
-                } );
+                logger.debug( "Searching index (read alias): {}\n  scope: {} \n type: {}\n   query: {} ",
+                    this.alias.getReadAlias(), context, entityTypes, srb );
             }
 
             try {
                 searchResponse = srb.execute().actionGet();
             }
             catch ( Throwable t ) {
-                logger.error( "Unable to communicate with elasticsearch", t );
+                logger.error( "Unable to communicate with Elasticsearch", t );
                 failureMonitor.fail( "Unable to execute batch", t );
                 throw t;
             }
@@ -445,17 +433,14 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
             @Override
             public boolean doOp() {
                 try {
-                    String[]  indexes = getIndexes(AliasType.Read);
-                    Observable.from(indexes).map(new Func1<String, String>() {
-                        @Override
-                        public String call(String index) {
-                            esProvider.getClient().admin().indices().prepareRefresh( index ).execute().actionGet();
-                            return index;
-                        }
-                    }).toBlocking().last();
-
-                    logger.debug( "Refreshed index: " + alias);
-
+                    String[] indexes = ArrayUtils.addAll( getIndexes(AliasType.Write), getIndexes(AliasType.Write) );
+                    if ( indexes.length == 0 ) {
+                        logger.debug( "Not refreshing indexes, none found for app {}", 
+                                applicationScope.getApplication().getUuid() );
+                        return true;
+                    }
+                    esProvider.getClient().admin().indices().prepareRefresh( indexes ).execute().actionGet();
+                    logger.debug("Refreshed indexes: {}", StringUtils.join(indexes, ", "));
                     return true;
                 }
                 catch ( IndexMissingException e ) {
@@ -466,8 +451,6 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
         };
 
         doInRetry( retryOperation );
-
-        logger.debug( "Refreshed index: " + alias);
     }
 
 
@@ -517,7 +500,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     @Override
     public void deleteAllVersionsOfEntity( Id entityId ) {
 
-        String idString = IndexingUtils.idString( entityId ).toLowerCase(); 
+        String idString = IndexingUtils.idString(entityId).toLowerCase();
 
         final TermQueryBuilder tqb = QueryBuilders.termQuery( ENTITYID_ID_FIELDNAME, idString );
 
@@ -526,7 +509,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
 
         logger.debug( "Deleted entity {}:{} from all index scopes with response status = {}",
-            new Object[] { entityId.getType(), entityId.getUuid(), response.status().toString() });
+            entityId.getType(), entityId.getUuid(), response.status().toString());
 
        checkDeleteByQueryResponse( tqb, response );
 
@@ -539,8 +522,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
         String idString = IndexingUtils.idString( entityId ).toLowerCase(); 
 
         final FilteredQueryBuilder fqb = QueryBuilders.filteredQuery(
-            QueryBuilders.termQuery( ENTITYID_ID_FIELDNAME, idString ),
-            FilterBuilders.rangeFilter( ENTITY_VERSION_FIELDNAME ).lt( version.timestamp() ) 
+                QueryBuilders.termQuery(ENTITYID_ID_FIELDNAME, idString),
+                FilterBuilders.rangeFilter(ENTITY_VERSION_FIELDNAME).lt(version.timestamp())
         );
 
         final DeleteByQueryResponse response = esProvider.getClient()
@@ -549,7 +532,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
         //error message needs to be retooled so that it describes the entity more throughly
         logger.debug( "Deleted entity {}:{} with version {} from all "
                 + "index scopes with response status = {}",
-            new Object[] { entityId.getType(), entityId.getUuid(), version,  response.status().toString() } );
+            entityId.getType(), entityId.getUuid(), version,  response.status().toString()  );
 
         checkDeleteByQueryResponse( fqb, response );
     }
@@ -565,10 +548,10 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
             final ShardOperationFailedException[] failures = indexDeleteByQueryResponse.getFailures();
 
             for ( ShardOperationFailedException failedException : failures ) {
-                throw new IndexException( String.format("Unable to delete by query %s.  "
+                throw new IndexException( String.format("Unable to delete by query %s. "
                         + "Failed with code %d and reason %s on shard %s in index %s",
                     query.toString(), 
-                    failedException.status(), 
+                    failedException.status().getStatus(),
                     failedException.reason(), 
                     failedException.shardId(),
                     failedException.index() ) );
@@ -579,7 +562,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
 
     /**
-     * For testing only.
+     * Completely delete an index.
      */
     public void deleteIndex() {
         AdminClient adminClient = esProvider.getClient().admin();
@@ -588,10 +571,10 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
                 .prepareDelete( indexIdentifier.getIndex(null) ).get();
 
         if ( response.isAcknowledged() ) {
-            logger.info( "Deleted index: " + alias);
+            logger.info( "Deleted index: read {} write {}", alias.getReadAlias(), alias.getWriteAlias());
         }
         else {
-            logger.info( "Failed to delete index " + alias);
+            logger.info( "Failed to delete index: read {} write {}", alias.getReadAlias(), alias.getWriteAlias());
         }
     }
 

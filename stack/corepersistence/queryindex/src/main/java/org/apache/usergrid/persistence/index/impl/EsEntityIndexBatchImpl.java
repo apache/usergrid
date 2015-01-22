@@ -123,16 +123,10 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         final String entityType = entity.getId().getType();
 
         if ( log.isDebugEnabled() ) {
-            log.debug( "Indexing entity {}:{} in scope\n   app {}\n   "
-                + "owner {}\n   name {}\n   type {} \n scope type {}", new Object[] {
-                    entity.getId().getType(), 
-                    entity.getId().getUuid(), 
-                    applicationScope.getApplication(),
-                    indexScope.getOwner(), 
-                    indexScope.getName(), 
-                    entityType, 
-                    context
-            } );
+            log.debug( "Indexing entity {}:{}\n   alias: {}\n" +
+                       "   app: {}\n   scope owner: {}\n   scope name: {}\n   context: {}",
+                entity.getId().getType(), entity.getId().getUuid(), alias.getWriteAlias(),
+                    applicationScope.getApplication(), indexScope.getOwner(), indexScope.getName(), context );
         }
 
         ValidationUtils.verifyEntityWrite( entity );
