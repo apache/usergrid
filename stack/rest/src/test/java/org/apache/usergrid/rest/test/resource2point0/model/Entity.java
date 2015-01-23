@@ -198,6 +198,11 @@ public class Entity implements Serializable, Map<String,Object> {
         return this;
     }
 
+    public Entity withProp(final String key, final Object value){
+        put(key,value);
+        return this;
+    }
+
     public ApiResponse getResponse(){
         return response;
     }

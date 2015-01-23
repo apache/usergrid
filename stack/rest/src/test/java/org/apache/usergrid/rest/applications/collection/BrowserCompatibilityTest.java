@@ -35,10 +35,8 @@ import static org.junit.Assert.assertEquals;
 public class BrowserCompatibilityTest extends AbstractRestIT {
 
 
-    /***
-     *
+    /**
      * Test to check chrome type accept headers
-     *
      */
     @Test
     public void testChromeHtmlTypes() throws Exception {
@@ -46,43 +44,36 @@ public class BrowserCompatibilityTest extends AbstractRestIT {
     }
 
 
-    /***
-     *
+    /**
      * Test to check firefox type accept headers
-     *
      */
     @Test
     public void testFireFoxHtmlTypes() throws Exception {
         testBrowserAccept( "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" );
     }
 
-
-    /***
-     *
+    /**
      * Test to check safari type accept headers
-     *
      */
     @Test
     public void testSafariTypes() throws Exception {
         testBrowserAccept( "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" );
     }
 
-
-    /***
-     *
+    /**
      * Helper method to run browser accept header tests
-     *
      */
     private void testBrowserAccept( String acceptHeader ) throws IOException {
 
         //make anew entity and verify that it is accurate
         String name = "thing1";
-        Entity payload = new Entity().chainPut("name", name);
+        Entity payload = new Entity();
+        payload.put("name", name);
         Entity entity = this.app().collection("things").post(payload);
         assertEquals(entity.get("name"), name);
         String uuid = entity.getAsString("uuid");
         this.refreshIndex();
-        
+
         //now get this new entity with "text/html" in the accept header
         Entity returnedEntity = this.app().collection("things").withAcceptHeader(acceptHeader).entity(entity).get();
         String returnedUUID = returnedEntity.getAsString("uuid");
