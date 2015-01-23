@@ -57,8 +57,8 @@ public class HybridEntityManagerFactory implements EntityManagerFactory, Applica
     }
 
     @Override
-    public String getImpementationDescription() throws Exception {
-        return factory.getImpementationDescription();
+    public String getImplementationDescription() throws Exception {
+        return factory.getImplementationDescription();
     }
 
     @Override
@@ -75,6 +75,11 @@ public class HybridEntityManagerFactory implements EntityManagerFactory, Applica
     public UUID createApplication(String organizationName, String name, 
             Map<String, Object> properties) throws Exception {
         return factory.createApplication(organizationName, name, properties);
+    }
+
+    @Override
+    public void deleteApplication(UUID applicationId) throws Exception {
+        factory.deleteApplication( applicationId );
     }
 
     @Override
