@@ -103,10 +103,15 @@ public class IndexRebuild extends ToolBase {
         logger.info( "Starting index rebuild" );
 
         EntityManagerFactory.ProgressObserver po = new EntityManagerFactory.ProgressObserver() {
+            
             @Override
-            public void onProgress(EntityRef s, EntityRef t, String etype) {
-                logger.info("Indexing from {}:{} to {}:{} edgeType {}", new Object[] {
-                    s.getType(), s.getUuid(), t.getType(), t.getUuid(), etype });
+            public void onProgress(EntityRef entity) {
+                logger.info("Indexing entity {}:{}", entity.getType(), entity.getUuid());
+            }
+
+            @Override
+            public long getWriteDelayTime() {
+                return 100;
             }
         };
 
