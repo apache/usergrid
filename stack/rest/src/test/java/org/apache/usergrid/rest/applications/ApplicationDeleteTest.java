@@ -53,6 +53,8 @@ public class ApplicationDeleteTest  extends AbstractRestIT {
         assertEquals(entity2.get("name"), name2);
         this.refreshIndex();
 
+        Thread.sleep(1000);
+
         // test that we can query those entities
         Collection collection = this.app().collection("things").get();
         assertEquals(2, collection.getNumOfEntities());
@@ -62,11 +64,8 @@ public class ApplicationDeleteTest  extends AbstractRestIT {
         String retAppName = String.valueOf(appResponse.getProperties().get("applicationName")).toLowerCase();
         assertEquals(clientSetup.getAppName().toLowerCase() , retAppName);
 
-        String uuid = String.valueOf(appResponse.getProperties().get("application"));
-
         // delete the application
-        QueryParameters parameters = new QueryParameters();
-        this.app().collection(uuid).delete(parameters);
+        this.app().delete();
 
         //try to get the application entity
         try {
@@ -80,7 +79,7 @@ public class ApplicationDeleteTest  extends AbstractRestIT {
 
         // test that we cannot delete the application a second time
         try {
-            this.app().delete(clientSetup.getAppName());
+            this.app().delete();
             fail("should not be able to delete app after it has been deleted");
         } catch (UniformInterfaceException e) {
             //verify the correct error was returned
