@@ -30,7 +30,7 @@ import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
 import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
-import org.apache.usergrid.cassandra.Concurrent;
+
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.persistence.entities.Application;
@@ -43,7 +43,7 @@ import static junit.framework.Assert.assertNotNull;
 
 /** @author zznate */
 @Ignore("Experimental Ping Indentiyy test")
-@Concurrent()
+
 public class PingIdentityProviderIT {
     private static UserInfo adminUser;
     private static OrganizationInfo organization;

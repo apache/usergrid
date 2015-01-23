@@ -27,7 +27,7 @@ import org.apache.usergrid.rest.test.resource2point0.model.*;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.apache.usergrid.cassandra.Concurrent;
+
 
 import org.apache.usergrid.utils.MapUtils;
 
@@ -41,7 +41,7 @@ import static org.junit.Assert.fail;
 /**
  * Take in tests that handle owner permissions relating to a specific user.
  */
-@Concurrent()
+
 public class OwnershipResourceIT extends AbstractRestIT {
 
     private CollectionEndpoint usersResource;

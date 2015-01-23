@@ -25,11 +25,11 @@ import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
 import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
-import org.apache.usergrid.cassandra.Concurrent;
+
 import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 
 
-@Concurrent()
+
 public abstract class AbstractServiceIT {
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();

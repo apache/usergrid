@@ -30,7 +30,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import org.apache.usergrid.cassandra.Concurrent;
+
 import org.apache.usergrid.mq.QueuePosition;
 import org.apache.usergrid.rest.TestContextSetup;
 import org.apache.usergrid.rest.test.resource.app.queue.Queue;
@@ -44,7 +44,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 
-@Concurrent()
+
 public class QueueResourceShortIT extends AbstractQueueResourceIT {
 
     @Rule

@@ -33,7 +33,7 @@ import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
 import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
-import org.apache.usergrid.cassandra.Concurrent;
+
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
@@ -43,7 +43,7 @@ import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 import static org.junit.Assert.assertFalse;
 
 
-@Concurrent()
+
 public class RoleIT {
     private static final Logger LOG = LoggerFactory.getLogger( RoleIT.class );
 

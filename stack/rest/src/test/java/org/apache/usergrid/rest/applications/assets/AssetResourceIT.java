@@ -32,7 +32,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.cassandra.Concurrent;
+
 import org.apache.usergrid.rest.applications.utils.UserRepo;
 import org.apache.usergrid.services.assets.data.AssetUtils;
 
@@ -45,7 +45,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 
 
-@Concurrent()
+
 public class AssetResourceIT extends AbstractRestIT {
 
     private String access_token;

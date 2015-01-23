@@ -19,7 +19,7 @@ package org.apache.usergrid.services;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.apache.usergrid.cassandra.Concurrent;
+
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
@@ -33,7 +33,7 @@ import static org.junit.Assert.assertNull;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 
 
-@Concurrent()
+
 public class CollectionServiceIT extends AbstractServiceIT {
     public static final String CST_TEST_GROUP = "cst-test-group";
 

@@ -49,7 +49,7 @@ import org.apache.usergrid.ServiceITSetupImpl;
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
-import org.apache.usergrid.cassandra.Concurrent;
+
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
@@ -81,7 +81,6 @@ import static org.mockito.Mockito.when;
  *
  *
  */
-@Concurrent
 public class ExportServiceIT {
 
     private static final Logger LOG = LoggerFactory.getLogger( ExportServiceIT.class );

@@ -26,7 +26,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.cassandra.Concurrent;
+
 import org.apache.usergrid.utils.UUIDUtils;
 
 import static org.junit.Assert.assertEquals;
@@ -34,7 +34,7 @@ import static org.junit.Assert.assertTrue;
 
 
 /** @author tnine */
-@Concurrent()
+
 public class ActivityResourceIT extends AbstractRestIT {
     private static Logger log = LoggerFactory.getLogger( ActivityResourceIT.class );
 

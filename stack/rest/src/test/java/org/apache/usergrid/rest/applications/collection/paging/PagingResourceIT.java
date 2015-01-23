@@ -26,7 +26,7 @@ import java.util.Map;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import org.apache.usergrid.cassandra.Concurrent;
+
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Collection;
@@ -41,7 +41,7 @@ import static org.junit.Assert.assertNull;
 /**
  * Tests paging with respect to entities. Also tests cursors and queries with respect to paging.
  */
-@Concurrent()
+
 public class PagingResourceIT extends AbstractRestIT {
 
     /**

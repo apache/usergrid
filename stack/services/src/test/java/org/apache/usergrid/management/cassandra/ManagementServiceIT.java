@@ -35,7 +35,7 @@ import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
 import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
-import org.apache.usergrid.cassandra.Concurrent;
+
 import org.apache.usergrid.count.SimpleBatcher;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
@@ -68,7 +68,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author zznate
  */
-@Concurrent()
+
 public class ManagementServiceIT {
     private static final Logger LOG = LoggerFactory.getLogger( ManagementServiceIT.class );
 
