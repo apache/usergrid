@@ -198,7 +198,7 @@ public class ImportServiceImpl implements ImportService {
     @Override
     public String getState(UUID uuid) throws Exception {
         if (uuid == null) {
-            logger.error("UUID passed in cannot be null.");
+            logger.error("getState(): UUID passed in cannot be null.");
             return "UUID passed in cannot be null";
         }
 
@@ -208,7 +208,7 @@ public class ImportServiceImpl implements ImportService {
         Import importUG = rootEm.get(uuid, Import.class);
 
         if (importUG == null) {
-            logger.error("no entity with that uuid was found");
+            logger.error("getState(): no entity with that uuid was found");
             return "No Such Element found";
         }
         return importUG.getState().toString();
@@ -225,7 +225,7 @@ public class ImportServiceImpl implements ImportService {
         //get application entity manager
 
         if (uuid == null) {
-            logger.error("UUID passed in cannot be null.");
+            logger.error("getErrorMessage(): UUID passed in cannot be null.");
             return "UUID passed in cannot be null";
         }
 
@@ -235,7 +235,7 @@ public class ImportServiceImpl implements ImportService {
         Import importUG = rootEm.get(uuid, Import.class);
 
         if (importUG == null) {
-            logger.error("no entity with that uuid was found");
+            logger.error("getErrorMessage(): no entity with that uuid was found");
             return "No Such Element found";
         }
         return importUG.getErrorMessage().toString();
@@ -323,7 +323,7 @@ public class ImportServiceImpl implements ImportService {
         S3Import s3Import = null;
 
         if (config == null) {
-            logger.error("Import Information passed through is null");
+            logger.error("doImport(): Import Information passed through is null");
             return;
         }
 
@@ -345,7 +345,7 @@ public class ImportServiceImpl implements ImportService {
                 s3Import = new S3ImportImpl();
             }
         } catch (Exception e) {
-            logger.error("S3Import doesn't exist");
+            logger.error("doImport(): S3Import doesn't exist");
             importUG.setErrorMessage(e.getMessage());
             importUG.setState(Import.State.FAILED);
             rooteEm.update(importUG);
@@ -355,7 +355,7 @@ public class ImportServiceImpl implements ImportService {
         try {
 
             if (config.get("organizationId") == null) {
-                logger.error("No organization could be found");
+                logger.error("doImport(): No organization could be found");
                 importUG.setErrorMessage("No organization could be found");
                 importUG.setState(Import.State.FAILED);
                 rooteEm.update(importUG);
@@ -431,7 +431,7 @@ public class ImportServiceImpl implements ImportService {
         // prepares the prefix path for the files to be imported depending on the endpoint being hit
         String appFileName = prepareInputFileName("application", application.getName(), collectionName);
 
-        files = fileTransfer(importUG, appFileName, config, s3Import, 0);
+        files = copyFileFromS3(importUG, appFileName, config, s3Import, 0);
 
     }
 
@@ -453,7 +453,7 @@ public class ImportServiceImpl implements ImportService {
         // prepares the prefix path for the files to be imported depending on the endpoint being hit
         String appFileName = prepareInputFileName("application", application.getName(), null);
 
-        files = fileTransfer(importUG, appFileName, config, s3Import, 1);
+        files = copyFileFromS3(importUG, appFileName, config, s3Import, 1);
 
     }
 
@@ -475,7 +475,7 @@ public class ImportServiceImpl implements ImportService {
         // prepares the prefix path for the files to be imported depending on the endpoint being hit
         appFileName = prepareInputFileName("organization", organizationInfo.getName(), null);
 
-        files = fileTransfer(importUG, appFileName, config, s3Import, 2);
+        files = copyFileFromS3(importUG, appFileName, config, s3Import, 2);
 
     }
 
@@ -501,7 +501,8 @@ public class ImportServiceImpl implements ImportService {
 
             if (CollectionName != null) {
 
-                // in case of type application and collection import --> the file name will be "<org_name>/<app_name>.<collection_name>."
+                // in case of type application and collection import --> 
+                // the file name will be "<org_name>/<app_name>.<collection_name>."
                 str.append(CollectionName);
                 str.append(".");
 
@@ -521,8 +522,8 @@ public class ImportServiceImpl implements ImportService {
      * @param type        it indicates the type of import. 0 - Collection , 1 - Application and 2 - Organization
      * @return
      */
-    public ArrayList<File> fileTransfer(Import importUG, String appFileName, Map<String, Object> config,
-                                        S3Import s3Import, int type) throws Exception {
+    public ArrayList<File> copyFileFromS3(Import importUG, String appFileName, Map<String, Object> config,
+                                          S3Import s3Import, int type) throws Exception {
 
         EntityManager rootEm = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
         ArrayList<File> files = new ArrayList<File>();
@@ -530,6 +531,7 @@ public class ImportServiceImpl implements ImportService {
         try {
             files = s3Import.copyFromS3(config, appFileName, type);
         } catch (Exception e) {
+            logger.debug("Error copying from S3, saving error message in Import entity and continuing", e);
             importUG.setErrorMessage(e.getMessage());
             importUG.setState(Import.State.FAILED);
             rootEm.update(importUG);
@@ -543,7 +545,7 @@ public class ImportServiceImpl implements ImportService {
      * @throws Exception
      */
     @Override
-    public void FileParser(JobExecution jobExecution) throws Exception {
+    public void parseFileToEntities(JobExecution jobExecution) throws Exception {
 
         // add properties to the import entity
         FileImport fileImport = getFileImportEntity(jobExecution);
