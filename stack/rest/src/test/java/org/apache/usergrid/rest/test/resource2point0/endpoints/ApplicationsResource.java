@@ -32,34 +32,30 @@ import javax.ws.rs.core.MediaType;
  */
 public class ApplicationsResource extends NamedResource {
 
-    public ApplicationsResource(final String name, final ClientContext context, final UrlResource parent) {
+
+    public ApplicationsResource( final String name, final ClientContext context, final UrlResource parent ) {
         super( name, context, parent );
     }
+
 
     public CollectionEndpoint collection(String name) {
         return new CollectionEndpoint(name,context,this);
     }
 
-    public TokenResource token(){return new TokenResource(context,this);}
+
+    public TokenResource token() {
+        return new TokenResource( context, this );
+    }
 
 
     /**
      * Delete this application.
      */
-    public void delete() {
-
-        getResource(true).delete();
-
-        // There is a bug in Java or in Jersey Client that causes a problem if you expect DELETE
-        // to return or accept data. The original code below caused:
-        //    "java.net.ProtocolException: HTTP method / DELETE doesn't support output"
-        // See also:
-        // http://stackoverflow.com/questions/12670169/not-able-to-invoke-an-delete-web-service-in-rest-jersey
-        //
-        // return getResource(true)
-        //    .type( MediaType.APPLICATION_JSON_TYPE )
-        //    .accept( MediaType.APPLICATION_JSON )
-        //    .delete(ApiResponse.class, application);
+    public ApiResponse delete() {
+        return getResource(true)
+            .type( MediaType.APPLICATION_JSON_TYPE )
+            .accept( MediaType.APPLICATION_JSON )
+            .delete( ApiResponse.class );
     }
 
 
@@ -70,6 +66,6 @@ public class ApplicationsResource extends NamedResource {
         return getResource(true)
             .type(MediaType.APPLICATION_JSON_TYPE)
             .accept( MediaType.APPLICATION_JSON )
-            .delete(ApiResponse.class);
+            .get(ApiResponse.class);
     }
 }

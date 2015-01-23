@@ -344,7 +344,7 @@ public class ServiceResource extends AbstractContextResource {
      * Necessary to work around inexplicable problems with EntityHolder.
      * See above.
      */
-    public JSONWithPadding executePostWithObject( @Context UriInfo ui, Object json, 
+    public JSONWithPadding executePostWithObject( @Context UriInfo ui, Object json,
             @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 
         LOG.debug( "ServiceResource.executePostWithMap" );
@@ -389,7 +389,7 @@ public class ServiceResource extends AbstractContextResource {
     @POST
     @RequireApplicationAccess
     @Consumes(MediaType.APPLICATION_JSON)
-    public JSONWithPadding executePost( @Context UriInfo ui, String body, 
+    public JSONWithPadding executePost( @Context UriInfo ui, String body,
             @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 
         LOG.debug( "ServiceResource.executePost: body = " + body );

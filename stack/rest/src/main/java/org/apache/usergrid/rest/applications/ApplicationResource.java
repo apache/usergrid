@@ -328,9 +328,9 @@ public class ApplicationResource extends ServiceResource {
     @POST
     @Path("token")
     @Consumes(APPLICATION_JSON)
-    public Response getAccessTokenPostJson( @Context UriInfo ui, 
-            @HeaderParam("Authorization") String authorization, 
-            Map<String, Object> json, 
+    public Response getAccessTokenPostJson( @Context UriInfo ui,
+            @HeaderParam("Authorization") String authorization,
+            Map<String, Object> json,
             @QueryParam("callback") @DefaultValue("") String callback ) throws Exception {
 
         String grant_type = ( String ) json.get( "grant_type" );
@@ -352,7 +352,7 @@ public class ApplicationResource extends ServiceResource {
             }
         }
 
-        return getAccessToken( ui, authorization, grant_type, username, password, pin, client_id, 
+        return getAccessToken( ui, authorization, grant_type, username, password, pin, client_id,
                 client_secret, code, ttl, redirect_uri, callback );
     }
 
@@ -384,7 +384,7 @@ public class ApplicationResource extends ServiceResource {
     @Path("credentials")
     @RequireApplicationAccess
     @Produces(MediaType.APPLICATION_JSON)
-    public JSONWithPadding generateKeys( @Context UriInfo ui, 
+    public JSONWithPadding generateKeys( @Context UriInfo ui,
         @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 
         logger.debug( "AuthResource.keys" );
@@ -393,7 +393,7 @@ public class ApplicationResource extends ServiceResource {
             throw new UnauthorizedException();
         }
 
-        ClientCredentialsInfo kp = new ClientCredentialsInfo( 
+        ClientCredentialsInfo kp = new ClientCredentialsInfo(
             management.getClientIdForApplication( services.getApplicationId() ),
             management.newClientSecretForApplication( services.getApplicationId() ) );
 
@@ -405,12 +405,12 @@ public class ApplicationResource extends ServiceResource {
 
     @GET
     @Path("authorize")
-    public Viewable showAuthorizeForm( 
-            @Context UriInfo ui, 
+    public Viewable showAuthorizeForm(
+            @Context UriInfo ui,
             @QueryParam("response_type") String response_type,
             @QueryParam("client_id") String client_id,
             @QueryParam("redirect_uri") String redirect_uri,
-            @QueryParam("scope") String scope, 
+            @QueryParam("scope") String scope,
             @QueryParam("state") String state ) {
 
         try {
@@ -443,7 +443,7 @@ public class ApplicationResource extends ServiceResource {
     @POST
     @Path("authorize")
     @Produces(MediaType.TEXT_HTML)
-    public Response handleAuthorizeForm( @Context UriInfo ui, 
+    public Response handleAuthorizeForm( @Context UriInfo ui,
             @FormParam("response_type") String response_type,
             @FormParam("client_id") String client_id,
             @FormParam("redirect_uri") String redirect_uri,
@@ -506,22 +506,27 @@ public class ApplicationResource extends ServiceResource {
     @Override
     public JSONWithPadding executeDelete(  @Context UriInfo ui,
         @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
-        
+
         if ( applicationId == null ) {
             throw new IllegalArgumentException("Application ID not specified in request");
         }
-        
+
         ApplicationInfo app = management.getApplicationInfo( applicationId );
         if ( app == null ) {
             throw new EntityNotFoundException("Application ID " + applicationId + " not found");
         }
-        
-        emf.deleteApplication( applicationId );
+
+        emf.deleteApplication(applicationId);
+
+        LOG.debug( "ApplicationResource.delete() deleted appId = {} appName = {}",
+            applicationId, app.getName() );
 
         ApiResponse response = createApiResponse();
         response.setAction( "delete" );
         response.setApplication( services.getApplication() );
         response.setParams( ui.getQueryParameters() );
+
+        LOG.debug( "ApplicationResource.delete() sending response ");
 
         return new JSONWithPadding( response, callback );
     }

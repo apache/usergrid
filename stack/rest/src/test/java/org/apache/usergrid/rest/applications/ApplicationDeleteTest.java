@@ -51,9 +51,8 @@ public class ApplicationDeleteTest  extends AbstractRestIT {
 
         assertEquals(entity1.get("name"), name1);
         assertEquals(entity2.get("name"), name2);
-        this.refreshIndex();
 
-        Thread.sleep(1000);
+        this.refreshIndex();
 
         // test that we can query those entities
         Collection collection = this.app().collection("things").get();
@@ -65,7 +64,11 @@ public class ApplicationDeleteTest  extends AbstractRestIT {
         assertEquals(clientSetup.getAppName().toLowerCase() , retAppName);
 
         // delete the application
-        this.app().delete();
+        try {
+            this.app().delete();
+        } catch ( UniformInterfaceException e ) {
+            fail("Delete call threw exception status = " + e.getResponse().getStatus());
+        }
 
         //try to get the application entity
         try {
