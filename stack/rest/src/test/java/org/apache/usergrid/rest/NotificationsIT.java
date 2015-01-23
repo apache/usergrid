@@ -57,7 +57,7 @@ public class NotificationsIT extends AbstractRestIT {
     @Before
     public void startReporting() {
 
-        reporter = Slf4jReporter.forRegistry( registry ) //.outputTo( logger )
+        reporter = Slf4jReporter.forRegistry( registry ).outputTo( logger )
                 .convertRatesTo( TimeUnit.SECONDS )
                 .convertDurationsTo( TimeUnit.MILLISECONDS ).build();
 
@@ -164,18 +164,21 @@ public class NotificationsIT extends AbstractRestIT {
         StopWatch sw = new StopWatch();
         sw.start();
         boolean allSent = false;
+        int i = 0;
+        int maxRetries = 1000;
         while (!allSent) {
+            i++;
             Thread.sleep(100);
             int finished = pageThroughAllNotifications("FINISHED");
             if ( finished == (numDevices * numNotifications) ) {
                 allSent = true;
             }
+            if (i > maxRetries) { break; }
         }
         sw.stop();
         int nc = numDevices * numNotifications;
         logger.info("Processed {} notifications in {}ms", nc, sw.getTime());
         logger.info("Processing Notifications throughput = {} TPS", ((float)nc) / (sw.getTime()/1000));
-        // logger.info( "Successfully Paged through {} notifications", pageThroughAllNotifications("FINISHED"));
     }
 
 
