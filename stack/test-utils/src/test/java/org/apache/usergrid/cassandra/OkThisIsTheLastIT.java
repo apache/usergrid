@@ -23,8 +23,6 @@ import org.junit.rules.TestName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
-@Concurrent()
 public class OkThisIsTheLastIT {
     public static final Logger logger = LoggerFactory.getLogger( SpringResource.class );
 

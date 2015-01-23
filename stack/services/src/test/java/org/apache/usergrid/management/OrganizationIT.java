@@ -52,15 +52,9 @@ public class OrganizationIT {
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
-    @ClassRule
-    public static SpringResource springResource = SpringResource.getInstance();
 
     @ClassRule
-    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
-
-
-    @ClassRule
-    public static ServiceITSetup setup = new ServiceITSetupImpl( springResource, elasticSearchResource );
+    public static ServiceITSetup setup = new ServiceITSetupImpl();
 
     @Rule
     public NewOrgAppAdminRule newOrgAppAdminRule = new NewOrgAppAdminRule( setup );

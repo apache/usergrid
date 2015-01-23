@@ -24,7 +24,7 @@ import java.util.UUID;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.cassandra.Concurrent;
+
 import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.utils.JsonUtils;
@@ -33,7 +33,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 
-@Concurrent()
+
 public class EntityTest {
     private static final Logger logger = LoggerFactory.getLogger( EntityTest.class );
 

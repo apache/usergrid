@@ -44,17 +44,11 @@ import static org.junit.Assert.assertTrue;
 /** @author zznate */
 @Concurrent()
 public class ApplicationCreatorIT {
-    @ClassRule
-    public static SpringResource springResource = SpringResource.getInstance();
-
-    @ClassRule
-    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
-
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @Rule
-    public ServiceITSetup setup = new ServiceITSetupImpl( springResource, elasticSearchResource );
+    public ServiceITSetup setup = new ServiceITSetupImpl();
 
 
     @Test

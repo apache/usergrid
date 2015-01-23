@@ -48,8 +48,7 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
     private ExportService exportService;
 
 
-    public ServiceITSetupImpl( SpringResource springResource, ElasticSearchResource elasticSearchResource ) {
-        super( springResource, elasticSearchResource );
+    public ServiceITSetupImpl(  ) {
     }
 
 
@@ -61,13 +60,13 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
 
     protected void before( Description description ) throws Throwable {
         super.before( description );
-        managementService = springResource.getBean( ManagementService.class );
-        applicationCreator = springResource.getBean( ApplicationCreator.class );
-        tokenService = springResource.getBean( TokenService.class );
-        providerFactory = springResource.getBean( SignInProviderFactory.class );
-        properties = springResource.getBean( PropertiesFactoryBean.class ).getObject();
-        smf = springResource.getBean( ServiceManagerFactory.class );
-        exportService = springResource.getBean( ExportService.class );
+        managementService =  SpringResource.getInstance().getBean( ManagementService.class );
+        applicationCreator =  SpringResource.getInstance().getBean( ApplicationCreator.class );
+        tokenService =  SpringResource.getInstance().getBean( TokenService.class );
+        providerFactory =  SpringResource.getInstance().getBean( SignInProviderFactory.class );
+        properties =  SpringResource.getInstance().getBean( PropertiesFactoryBean.class ).getObject();
+        smf =  SpringResource.getInstance().getBean( ServiceManagerFactory.class );
+        exportService =  SpringResource.getInstance().getBean( ExportService.class );
 
         LOG.info( "Test setup complete..." );
     }
@@ -93,7 +92,7 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
 
     @Override
     public CassandraService getCassSvc() {
-        return springResource.getBean( CassandraService.class );
+        return  SpringResource.getInstance().getBean( CassandraService.class );
     }
 
 
@@ -108,7 +107,7 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
 
     public ServiceManagerFactory getSmf() {
         if ( smf == null ) {
-            smf = springResource.getBean( ServiceManagerFactory.class );
+            smf =  SpringResource.getInstance().getBean( ServiceManagerFactory.class );
         }
 
         return smf;

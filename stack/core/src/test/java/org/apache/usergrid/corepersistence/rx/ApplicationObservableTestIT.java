@@ -27,18 +27,17 @@ import java.util.UUID;
 import org.junit.Test;
 
 import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.corepersistence.CpSetup;
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.corepersistence.ManagerCache;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
-import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.entities.Application;
-import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.model.entity.Id;
+
+import com.google.inject.Injector;
 
 import rx.Observable;
 import rx.functions.Action1;
 
-import static junit.framework.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
 
 
@@ -64,7 +63,7 @@ public class ApplicationObservableTestIT extends AbstractCoreIT {
 
         //this is hacky, but our context integration b/t guice and spring is a mess.  We need to clean this up when we
         //clean up our wiring
-        ManagerCache managerCache = CpSetup.getInjector().getInstance( ManagerCache.class );
+        ManagerCache managerCache = SpringResource.getInstance().getBean( Injector.class ).getInstance( ManagerCache.class );
 
         Observable<Id> appObservable = ApplicationObservable.getAllApplicationIds( managerCache );
 

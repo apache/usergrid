@@ -35,7 +35,6 @@ import org.apache.commons.lang3.RandomStringUtils;
 
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.cassandra.SpringResource;
-import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
@@ -52,7 +51,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 
-@Concurrent()
+
 public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
     @SuppressWarnings("PointlessBooleanExpression")

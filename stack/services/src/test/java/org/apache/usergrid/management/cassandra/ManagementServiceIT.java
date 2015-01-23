@@ -73,15 +73,8 @@ public class ManagementServiceIT {
     private static final Logger LOG = LoggerFactory.getLogger( ManagementServiceIT.class );
 
 
-    @ClassRule
-    public static SpringResource springResource = SpringResource.getInstance();
-
-
-    @ClassRule
-    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
-
-    @ClassRule
-    public static final ServiceITSetup setup = new ServiceITSetupImpl( springResource, elasticSearchResource );
+     @ClassRule
+    public static final ServiceITSetup setup = new ServiceITSetupImpl();
 
 
     @Rule
@@ -151,7 +144,7 @@ public class ManagementServiceIT {
 
     @Test
     public void testCountAdminUserAction() throws Exception {
-        SimpleBatcher batcher = springResource.getBean( SimpleBatcher.class );
+        SimpleBatcher batcher = SpringResource.getInstance().getBean( SimpleBatcher.class );
 
         batcher.setBlockingSubmit( true );
         batcher.setBatchSize( 1 );

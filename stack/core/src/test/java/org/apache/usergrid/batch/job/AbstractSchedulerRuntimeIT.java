@@ -26,16 +26,19 @@ import org.junit.ClassRule;
 
 import org.apache.usergrid.batch.service.JobSchedulerService;
 import org.apache.usergrid.batch.service.SchedulerService;
-import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.cassandra.SchemaManager;
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 
 import com.google.common.util.concurrent.Service.State;
+
+import net.jcip.annotations.NotThreadSafe;
 
 
 /**
  * Class to test job runtimes
  */
+@NotThreadSafe
 public class AbstractSchedulerRuntimeIT {
 
     protected static final int DEFAULT_COUNT = 10;
@@ -77,7 +80,7 @@ public class AbstractSchedulerRuntimeIT {
 //        elasticSearchResource.after();
     }
 
-    
+
     @Before
     @SuppressWarnings( "all" )
     public void setup() {

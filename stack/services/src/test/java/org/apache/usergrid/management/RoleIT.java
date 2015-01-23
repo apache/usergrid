@@ -47,18 +47,11 @@ import static org.junit.Assert.assertFalse;
 public class RoleIT {
     private static final Logger LOG = LoggerFactory.getLogger( RoleIT.class );
 
-    @ClassRule
-    public static SpringResource springResource = SpringResource.getInstance();
-
-    @ClassRule
-    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
-
-
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @ClassRule
-    public static ServiceITSetup setup = new ServiceITSetupImpl( springResource, elasticSearchResource );
+    public static ServiceITSetup setup = new ServiceITSetupImpl( );
 
 
     @Test

@@ -25,27 +25,26 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import me.prettyprint.cassandra.model.ConfigurableConsistencyLevel;
-import me.prettyprint.hector.api.ConsistencyLevelPolicy;
-import me.prettyprint.hector.api.HConsistencyLevel;
-
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.locking.Lock;
 import org.apache.usergrid.locking.LockManager;
 import org.apache.usergrid.locking.exception.UGLockException;
+
+import me.prettyprint.cassandra.model.ConfigurableConsistencyLevel;
+import me.prettyprint.hector.api.ConsistencyLevelPolicy;
+import me.prettyprint.hector.api.HConsistencyLevel;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 
-@Concurrent()
 public class HectorLockManagerIT extends AbstractCoreIT {
     private static final Logger LOG = LoggerFactory.getLogger( HectorLockManagerIT.class );
 

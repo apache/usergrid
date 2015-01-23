@@ -34,7 +34,6 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.Application;
 import org.apache.usergrid.CoreApplication;
-import org.apache.usergrid.cassandra.Concurrent;
 
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
@@ -43,7 +42,7 @@ import com.codahale.metrics.Slf4jReporter;
 
 //@RunWith(JukitoRunner.class)
 //@UseModules({ GuiceModule.class })
-@Concurrent()
+
 @Ignore("Kills embedded cassandra")
 public class PerformanceEntityWriteTest extends AbstractCoreIT {
     private static final Logger LOG = LoggerFactory.getLogger( PerformanceEntityWriteTest.class );

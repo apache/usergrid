@@ -31,7 +31,6 @@ import org.slf4j.LoggerFactory;
 import org.apache.commons.lang3.RandomStringUtils;
 
 import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.persistence.entities.Event;
 import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.entities.User;
@@ -41,17 +40,19 @@ import org.apache.usergrid.utils.ImmediateCounterRule;
 import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
 
+import net.jcip.annotations.NotThreadSafe;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 
-@Concurrent()
+@NotThreadSafe
 public class CounterIT extends AbstractCoreIT {
 
     private static final Logger LOG = LoggerFactory.getLogger( CounterIT.class );
 
     @Rule
-    public ImmediateCounterRule counterRule = new ImmediateCounterRule( springResource );
+    public ImmediateCounterRule counterRule = new ImmediateCounterRule( );
 
     long ts = System.currentTimeMillis() - ( 24 * 60 * 60 * 1000 );
 
@@ -67,8 +68,9 @@ public class CounterIT extends AbstractCoreIT {
 
         LOG.info( "CounterIT.testIncrementAndDecrement" );
 
-        UUID applicationId = setup.createApplication( 
-            "testOrganization", "testCountersIandD" + RandomStringUtils.randomAlphabetic(20)  );
+
+
+        UUID applicationId =  app.getId();
         assertNotNull( applicationId );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
@@ -99,8 +101,7 @@ public class CounterIT extends AbstractCoreIT {
     public void testCounters() throws Exception {
         LOG.info( "CounterIT.testCounters" );
 
-        UUID applicationId = setup.createApplication( 
-                "testOrganization", "testCounters" + RandomStringUtils.randomAlphabetic(20)  );
+        UUID applicationId = app.getId();
         assertNotNull( applicationId );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
@@ -139,7 +140,7 @@ public class CounterIT extends AbstractCoreIT {
                 System.currentTimeMillis(), true );
         LOG.info( JsonUtils.mapToJsonString( r.getCounters() ) );
 
-        r = em.getAggregateCounters( user1, null, null, "visits", CounterResolution.ALL, ts, 
+        r = em.getAggregateCounters( user1, null, null, "visits", CounterResolution.ALL, ts,
                 System.currentTimeMillis(),
                 false );
         LOG.info( JsonUtils.mapToJsonString( r.getCounters() ) );
@@ -205,7 +206,7 @@ public class CounterIT extends AbstractCoreIT {
             originalAdminLoginsCount = counts.get( "admin.logins" );
         }
 
-        String randomSuffix = RandomStringUtils.randomAlphabetic(20); 
+        String randomSuffix = RandomStringUtils.randomAlphabetic(20);
         String orgName = "testCounter" + randomSuffix;
         String appName = "testEntityCounters" + randomSuffix;
 
@@ -214,7 +215,7 @@ public class CounterIT extends AbstractCoreIT {
         organizationEntity.setProperty( "name", orgName );
         organizationEntity = em.create( organizationEntity );
 
-        UUID applicationId = setup.getEmf().createApplication( orgName, appName  ); 
+        UUID applicationId = setup.getEmf().createApplication( orgName, appName  );
 
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
         properties.put( "name", orgName + "/" + appName );
@@ -248,16 +249,16 @@ public class CounterIT extends AbstractCoreIT {
         // how to "count" a login to a specific application?
         // when org is provided, why is it returning 8? Is it 4 with one 'event'?
 
-        Results r = em.getAggregateCounters( null, null, null, "admin.logins", 
+        Results r = em.getAggregateCounters( null, null, null, "admin.logins",
                 CounterResolution.ALL, ts, System.currentTimeMillis(), false );
 
         LOG.info( JsonUtils.mapToJsonString( r.getCounters() ) );
-        assertEquals( 1, 
+        assertEquals( 1,
             r.getCounters().get( 0 ).getValues().get( 0 ).getValue()  - originalAdminLoginsCount );
 
         r = em.getAggregateCounters( query );
         LOG.info( JsonUtils.mapToJsonString( r.getCounters() ) );
-        assertEquals( 1, 
+        assertEquals( 1,
             r.getCounters().get( 0 ).getValues().get( 0 ).getValue() - originalCount );
     }
 }

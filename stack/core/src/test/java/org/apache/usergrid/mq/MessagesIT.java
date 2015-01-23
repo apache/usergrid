@@ -26,7 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.utils.ImmediateCounterRule;
 import org.apache.usergrid.utils.JsonUtils;
 
@@ -36,12 +35,11 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 
-@Concurrent()
 public class MessagesIT extends AbstractCoreIT {
     private static final Logger LOG = LoggerFactory.getLogger( MessagesIT.class );
 
     @Rule
-    public ImmediateCounterRule counterRule = new ImmediateCounterRule( springResource );
+    public ImmediateCounterRule counterRule = new ImmediateCounterRule( );
 
     public MessagesIT() {
         super();

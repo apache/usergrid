@@ -31,7 +31,7 @@
     <aop:config proxy-target-class="true"/>
 
 
-	
+
 	<bean id="propertyPlaceholderConfigurer"
 		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
 		<property name="properties" ref="properties" />
@@ -40,7 +40,7 @@
 		</property>
 	</bean>
 
-	
+
 	<!-- The Time Resolution used for the cluster -->
 	<bean id="microsecondsTimeResolution" class="me.prettyprint.cassandra.service.clock.MicrosecondsClockResolution" />
   <bean id="traceTagManager" class="org.apache.usergrid.persistence.cassandra.util.TraceTagManager"/>
@@ -54,7 +54,7 @@
 		<constructor-arg value="${cassandra.url}" />
         <!-- set the pool size if it's available.  If not go with 50 -->
         <property name="maxActive" value="${cassandra.connections:50}"/>
-        <property name="clockResolution" ref="microsecondsTimeResolution" />
+        <!--<property name="clockResolution" ref="microsecondsTimeResolution" />-->
         <property name="opTimer" ref="taggedOpTimer"/>
         <property name="loadBalancingPolicy" ref="loadBalancingPolicy"/>
 	</bean>
@@ -69,21 +69,21 @@
 
     <bean id="loadBalancingPolicy" class="me.prettyprint.cassandra.connection.DynamicLoadBalancingPolicy"/>
 
-	<!--  locking for a single node -->	
-<!--	<bean name="lockManager" 
+	<!--  locking for a single node -->
+<!--	<bean name="lockManager"
         class="org.apache.usergrid.locking.singlenode.SingleNodeLockManagerImpl" />-->
-	
+
 	<!--  hector based locks -->
-	<!-- Note that if this is deployed in a production cluster, the RF on the keyspace 
-    MUST be updated to use an odd number for it's replication Factor.  Even numbers can 
+	<!-- Note that if this is deployed in a production cluster, the RF on the keyspace
+    MUST be updated to use an odd number for it's replication Factor.  Even numbers can
     potentially case the locks to fail, via "split brain" when read at QUORUM on lock verification-->
-	
+
 	<bean name="lockManager" class="org.apache.usergrid.locking.cassandra.HectorLockManagerImpl" >
 		<property name="cluster" ref="cassandraCluster"/>
 		<property name="keyspaceName" value="${cassandra.lock.keyspace}"/>
 		<property name="consistencyLevelPolicy" ref="consistencyLevelPolicy"/>
 	</bean>
-	
+
 	<!--  zookeeper locks -->
 	<!--
 	<bean name="lockManager" class="org.apache.usergrid.locking.zookeeper.ZooKeeperLockManagerImpl" >
@@ -91,7 +91,14 @@
 		<property name="sessionTimeout" value="2000"/>
 		<property name="maxAttempts" value="10"/>
 	</bean>  -->
-	
+
+
+    <bean id="injector"
+   		class="org.apache.usergrid.corepersistence.GuiceFactory">
+   		<constructor-arg ref="cassandraService" />
+        <constructor-arg ref="properties" />
+   	</bean>
+
 	<bean id="cassandraService"
 		class="org.apache.usergrid.persistence.cassandra.CassandraService" init-method="init" destroy-method="destroy">
 		<constructor-arg ref="properties" />
@@ -100,17 +107,17 @@
 		<constructor-arg ref="lockManager" />
 		<property name="consistencyLevelPolicy" ref="consistencyLevelPolicy"/>
 	</bean>
-	
+
 	<bean name="consistencyLevelPolicy" class="me.prettyprint.cassandra.model.ConfigurableConsistencyLevel">
         <property name="defaultReadConsistencyLevel" value="${cassandra.readcl}"/>
         <property name="defaultWriteConsistencyLevel" value="${cassandra.writecl}"/>
     </bean>
-	
+
     <bean id="entityManagerFactory"
-		class="org.apache.usergrid.corepersistence.HybridEntityManagerFactory" scope="singleton">
+		class="org.apache.usergrid.corepersistence.CpEntityManagerFactory" scope="singleton">
 		<constructor-arg ref="cassandraService" />
         <constructor-arg ref="counterUtils"/>
-        <constructor-arg value="${usergrid.counter.skipAggregate}"/>
+        <constructor-arg ref="injector"/>
     </bean>
 
     <bean id="queueManagerFactory"
@@ -148,12 +155,12 @@
         <constructor-arg ref="cassandraCluster"/>
         <constructor-arg ref="properties"/>
     </bean>
-    
-        
+
+
    <bean id="indexBucketLocator" class="org.apache.usergrid.persistence.cassandra.SimpleIndexBucketLocatorImpl">
     	<constructor-arg value="${usergrid.index.defaultbucketsize}"/>
     </bean>
-    
+
     <bean id="mailUtils" class="org.apache.usergrid.utils.MailUtils" />
 
     <bean id="traceTagAspect" class="org.apache.usergrid.persistence.cassandra.util.TraceTagAspect"/>
@@ -169,7 +176,7 @@
            method="applyTrace"/>
       </aop:aspect>
     </aop:config>
-   
+
     <!-- ============================================================== -->
     <!-- Scheduler Settings from removed Scheduler Module's app context -->
     <!-- ============================================================== -->

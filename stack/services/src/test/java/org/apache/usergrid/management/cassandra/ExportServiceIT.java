@@ -86,15 +86,9 @@ public class ExportServiceIT {
 
     private static final Logger LOG = LoggerFactory.getLogger( ExportServiceIT.class );
 
-    @ClassRule
-    public static SpringResource springResource = SpringResource.getInstance();
 
     @ClassRule
-    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
-
-
-    @ClassRule
-    public static final ServiceITSetup setup = new ServiceITSetupImpl( springResource, elasticSearchResource );
+    public static final ServiceITSetup setup = new ServiceITSetupImpl(  );
 
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
@@ -163,11 +157,11 @@ public class ExportServiceIT {
             entity[i] = em.create( "users", userProperties );
         }
         //creates connections
-        em.createConnection( 
-                em.get( new SimpleEntityRef( "user", entity[0].getUuid()) ), "Vibrations", 
+        em.createConnection(
+                em.get( new SimpleEntityRef( "user", entity[0].getUuid()) ), "Vibrations",
                 em.get( new SimpleEntityRef( "user", entity[1].getUuid()) ) );
-        em.createConnection( 
-                em.get( new SimpleEntityRef( "user", entity[1].getUuid()) ), "Vibrations", 
+        em.createConnection(
+                em.get( new SimpleEntityRef( "user", entity[1].getUuid()) ), "Vibrations",
                 em.get( new SimpleEntityRef( "user", entity[0].getUuid()) ) );
 
         UUID exportUUID = exportService.schedule( payload );
@@ -243,11 +237,11 @@ public class ExportServiceIT {
         }
         em.refreshIndex();
         //creates connections
-        em.createConnection( 
-                em.get( new SimpleEntityRef( "user", entity[0].getUuid())), "Vibrations", 
+        em.createConnection(
+                em.get( new SimpleEntityRef( "user", entity[0].getUuid())), "Vibrations",
                 em.get( new SimpleEntityRef( "user", entity[1].getUuid())) );
-        em.createConnection( 
-                em.get( new SimpleEntityRef( "user", entity[1].getUuid())), "Vibrations", 
+        em.createConnection(
+                em.get( new SimpleEntityRef( "user", entity[1].getUuid())), "Vibrations",
                 em.get( new SimpleEntityRef( "user", entity[0].getUuid())) );
 
         UUID exportUUID = exportService.schedule( payload );

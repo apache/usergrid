@@ -26,8 +26,8 @@ import java.util.UUID;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.index.query.Query.Level;
 
@@ -36,8 +36,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-
-@Concurrent()
 public class EntityConnectionsIT extends AbstractCoreIT {
     private static final Logger LOG = LoggerFactory.getLogger( EntityConnectionsIT.class );
 
@@ -177,7 +175,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
     }
 
 
-    public Map<String, Map<String, List<UUID>>> testEntityConnections( 
+    public Map<String, Map<String, List<UUID>>> testEntityConnections(
         UUID applicationId, UUID entityId, String connectionType,  String entityType, int expectedCount ) throws Exception {
 
         LOG.info( "----------------------------------------------------" );
@@ -189,22 +187,22 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         Results results = em.getConnectedEntities( en, connectionType, null, Level.REFS );
 
         LOG.info( "----------------------------------------------------" );
-        assertEquals( "Expected " + expectedCount + " connections", 
+        assertEquals( "Expected " + expectedCount + " connections",
                 expectedCount, results.getConnections().size() );
         // return connections;
         return null;
     }
 
 
-    public List<UUID> testApplicationCollections( 
+    public List<UUID> testApplicationCollections(
             UUID applicationId, String collectionName, int expectedCount ) throws Exception {
 
-        return testEntityCollections( 
+        return testEntityCollections(
             applicationId, applicationId, "application", collectionName, expectedCount );
     }
 
 
-    public List<UUID> testEntityCollections( UUID applicationId, UUID entityId, String entityType, 
+    public List<UUID> testEntityCollections( UUID applicationId, UUID entityId, String entityType,
             String collectionName, int expectedCount ) throws Exception {
 
         LOG.info( "----------------------------------------------------" );
@@ -292,7 +290,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         assertFalse( em.isConnectionMember( secondUserEntity, "likes", fourpeaks ) );
     }
 
-    
+
     @Test
     public void testGetConnectingEntities() throws Exception {
 
@@ -319,19 +317,19 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         em.refreshIndex();
 
 //        // search for "likes" edges from fred
-//        assertEquals( 1, 
+//        assertEquals( 1,
 //            em.getConnectedEntities( fredEntity, "likes", null, Level.IDS ).size());
 //
 //        // search for any type of edges from fred
-//        assertEquals( 1, 
+//        assertEquals( 1,
 //            em.getConnectedEntities( fredEntity, null, null, Level.IDS ).size());
 
         // search for "likes" edges to wilman from any type of object
         Results res = em.getConnectingEntities( wilmaEntity, "likes", null, Level.ALL_PROPERTIES);
-        assertEquals( 1, res.size() ); 
+        assertEquals( 1, res.size() );
         assertEquals( "user", res.getEntity().getType() ); // fred is a user
 
-        // search for "likes" edges to wilman from user type object 
+        // search for "likes" edges to wilman from user type object
         res = em.getConnectingEntities( wilmaEntity, "likes", "user", Level.ALL_PROPERTIES);
         assertEquals( 1, res.size() );
         assertEquals( "user", res.getEntity().getType() );

@@ -19,6 +19,8 @@ package org.apache.usergrid.services.notifications;
 import com.codahale.metrics.*;
 import com.codahale.metrics.Timer;
 import com.google.common.cache.*;
+import com.google.inject.Injector;
+
 import org.apache.usergrid.corepersistence.CpSetup;
 import org.apache.usergrid.metrics.MetricsFactory;
 
@@ -73,12 +75,12 @@ public class QueueListener  {
     private int consecutiveCallsToRemoveDevices;
 
     public QueueListener(ServiceManagerFactory smf, EntityManagerFactory emf, MetricsFactory metricsService, Properties props){
-        this.queueManagerFactory = CpSetup.getInjector().getInstance(QueueManagerFactory.class);
+        this.queueManagerFactory = smf.getApplicationContext().getBean( Injector.class ).getInstance(QueueManagerFactory.class);
         this.smf = smf;
         this.emf = emf;
         this.metricsService = metricsService;
         this.properties = props;
-        this.queueScopeFactory = CpSetup.getInjector().getInstance(QueueScopeFactory.class);
+        this.queueScopeFactory = smf.getApplicationContext().getBean( Injector.class ).getInstance(QueueScopeFactory.class);
 
     }
 

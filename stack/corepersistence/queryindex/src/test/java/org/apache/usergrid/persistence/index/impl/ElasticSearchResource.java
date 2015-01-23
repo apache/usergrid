@@ -27,6 +27,11 @@ import org.safehaus.guicyfig.EnvironResource;
 import org.apache.usergrid.persistence.index.IndexFig;
 
 
+/**
+ * Sets elasticsearch variables into the environment
+ *
+ * TODO make static
+ */
 public class ElasticSearchResource extends EnvironResource {
 
 

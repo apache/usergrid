@@ -26,19 +26,20 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
+import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
+
 
 /**
  * A singleton resource for spring that is used during testing.  This will intialize spring, and then hold on to the
  * spring context within this singleton
  */
-public class SpringResource extends EnvironResource {
+public class SpringResource {
     public static final Logger LOG = LoggerFactory.getLogger( SpringResource.class );
 
     private static SpringResource instance;
 
 
     private ConfigurableApplicationContext applicationContext;
-    private SchemaManager schemaManager;
 
 
     /**
@@ -91,23 +92,6 @@ public class SpringResource extends EnvironResource {
     }
 
 
-    /**
-     * Creates the schema and performs any migration
-     */
-    public void migrate() {
-        //           if ( !applicationContext.isActive() ) {
-        //               LOG.info( "Restarting context..." );
-        //               applicationContext.refresh();
-        //           }
-
-
-        LOG.info( "The SchemaManager is not specified - using the default SchemaManager impl" );
-        this.schemaManager = applicationContext.getBean( SchemaManager.class );
-
-        schemaManager.create();
-        schemaManager.populateBaseData();
-    }
-
 
     /**
      * Start our spring context.  Only invoke this if it is not set
@@ -117,9 +101,21 @@ public class SpringResource extends EnvironResource {
         LOG.info( "-------------------------------------------------------------------" );
         LOG.info( "Initializing Spring" );
         LOG.info( "-------------------------------------------------------------------" );
-        String[] locations = { "usergrid-test-context.xml" };
-        applicationContext = new ClassPathXmlApplicationContext( locations );
-        //        applicationContext.refresh();
+
+
+
+
+        //wire up cassandra and elasticsearch before we start spring, otherwise this won't work
+        new CassandraResource().start();
+
+        new ElasticSearchResource().start();
+
+        final String[] locations = { "usergrid-test-context.xml" };
+
+        this.applicationContext = new ClassPathXmlApplicationContext( locations );
+
+
+//        applicationContext.refresh();
 
     }
 

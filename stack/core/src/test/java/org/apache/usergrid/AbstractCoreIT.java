@@ -19,38 +19,22 @@ package org.apache.usergrid;
 
 import org.junit.ClassRule;
 import org.junit.Rule;
-import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.cassandra.SpringResource;
-import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
-import org.apache.usergrid.setup.SpringIntegrationRunner;
 import org.apache.usergrid.utils.JsonUtils;
 
 
-@RunWith( SpringIntegrationRunner.class )
 public abstract class AbstractCoreIT {
 
     private static final Logger LOG = LoggerFactory.getLogger( AbstractCoreIT.class );
 
     @ClassRule
-    public static SpringResource springResource = SpringResource.getInstance();
-
-    @ClassRule
-    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
-
-
-    @ClassRule
-    public static CoreITSetup setup = new CoreITSetupImpl( springResource, elasticSearchResource );
+    public static CoreITSetup setup = new CoreITSetupImpl( );
 
     @Rule
     public CoreApplication app = new CoreApplication( setup );
 
-
-    public void dump( Object obj ) {
-        dump( "Object", obj );
-    }
 
 
     public void dump( String name, Object obj ) {

@@ -23,15 +23,16 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.junit.Test;
+
 import org.apache.usergrid.utils.UUIDUtils;
 
 import me.prettyprint.cassandra.serializers.UUIDSerializer;
 
+import static org.apache.usergrid.persistence.query.ir.result.IteratorHelper.uuidColumn;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.apache.usergrid.persistence.query.ir.result.IteratorHelper.uuidColumn;
 
 
 /**

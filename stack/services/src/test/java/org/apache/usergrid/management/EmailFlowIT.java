@@ -92,17 +92,12 @@ import static org.junit.Assert.assertTrue;
 public class EmailFlowIT {
     private static final Logger LOG = LoggerFactory.getLogger( EmailFlowIT.class );
 
-    @ClassRule
-    public static SpringResource springResource = SpringResource.getInstance();
-
-    @ClassRule
-    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
 
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @ClassRule
-    public static ServiceITSetup setup = new ServiceITSetupImpl( springResource, elasticSearchResource );
+    public static ServiceITSetup setup = new ServiceITSetupImpl( );
 
     @Rule
     public TestName name = new TestName();

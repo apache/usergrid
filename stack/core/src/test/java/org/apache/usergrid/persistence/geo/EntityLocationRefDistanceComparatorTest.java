@@ -20,6 +20,7 @@ package org.apache.usergrid.persistence.geo;
 import java.util.UUID;
 
 import org.junit.Test;
+
 import org.apache.usergrid.persistence.geo.model.Point;
 import org.apache.usergrid.utils.UUIDUtils;
 

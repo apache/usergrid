@@ -31,6 +31,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Create the resource that sets the cassandra properties
+ *
+ * TODO move from instance to static
  */
 public class CassandraResource extends EnvironResource {
 
@@ -41,11 +43,8 @@ public class CassandraResource extends EnvironResource {
 
     public static final int DEFAULT_RPC_PORT = 9160;
 
-       public static final int DEFAULT_STORAGE_PORT = 7000;
-       public static final int DEFAULT_SSL_STORAGE_PORT = 7001;
-       public static final int DEFAULT_NATIVE_TRANSPORT_PORT = 9042;
-       public static final String NATIVE_TRANSPORT_PORT_KEY = "native_transport_port";
-       public static final String RPC_PORT_KEY = "rpc_port";
+
+    public static final String RPC_PORT_KEY = "rpc_port";
 
     private static final Object lock = new Object();
 

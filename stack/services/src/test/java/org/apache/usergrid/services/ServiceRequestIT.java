@@ -45,17 +45,12 @@ public class ServiceRequestIT {
 
     private static final Logger logger = LoggerFactory.getLogger( ServiceRequestIT.class );
 
-    @ClassRule
-    public static SpringResource springResource = SpringResource.getInstance();
-
-    @ClassRule
-    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
 
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @Rule
-    public ServiceITSetup setup = new ServiceITSetupImpl( springResource, elasticSearchResource );
+    public ServiceITSetup setup = new ServiceITSetupImpl( );
 
 
     @Test

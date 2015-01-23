@@ -16,41 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-package org.apache.usergrid.utils;
-
-
-import org.junit.rules.ExternalResource;
-
-import org.apache.usergrid.cassandra.SpringResource;
-import org.apache.usergrid.count.SimpleBatcher;
+package org.apache.usergrid.persistence.exceptions;
 
 
 /**
- * Rule  that sets the batch counters to flush immediately, then returns the state to it's expected state afterwards
+ * Thrown when an organization already exists
  */
-public class ImmediateCounterRule extends ExternalResource {
+public class OrganizationAlreadyExistsException extends PersistenceException {
 
-    private final SimpleBatcher batcher;
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
+    final String organizationName;
 
 
-    public ImmediateCounterRule( ) {
-        batcher = SpringResource.getInstance().getBean( SimpleBatcher.class );
+    public OrganizationAlreadyExistsException( String organizationName ) {
+        super( "Organization " + organizationName + " already exists" );
+        this.organizationName = organizationName;
     }
 
 
-    @Override
-    protected void before() throws Throwable {
-        batcher.setBlockingSubmit( true );
-        batcher.setBatchSize( 1 );
-        super.before();
-    }
-
-
-    @Override
-    protected void after() {
-        batcher.setBlockingSubmit( false );
-        batcher.setBatchSize( 10000 );
-        super.after();
+    public String getOrganizationName() {
+        return organizationName;
     }
 }

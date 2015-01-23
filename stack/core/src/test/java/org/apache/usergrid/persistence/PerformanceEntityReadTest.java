@@ -17,9 +17,11 @@
 package org.apache.usergrid.persistence;
 
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
@@ -37,14 +39,11 @@ import org.apache.usergrid.CoreApplication;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Slf4jReporter;
-import java.util.ArrayList;
-import java.util.UUID;
-import org.apache.usergrid.cassandra.Concurrent;
 
 
 //@RunWith(JukitoRunner.class)
 //@UseModules({ GuiceModule.class })
-@Concurrent()
+
 @Ignore("Kills embedded cassandra")
 public class PerformanceEntityReadTest extends AbstractCoreIT {
     private static final Logger logger = LoggerFactory.getLogger(PerformanceEntityReadTest.class );
@@ -83,7 +82,7 @@ public class PerformanceEntityReadTest extends AbstractCoreIT {
 
     @Test
     public void simpleReadUUID() throws Exception {
-            
+
         logger.info("Starting simpleReadUUID()");
 
         final EntityManager em = app.getEntityManager();
@@ -105,7 +104,7 @@ public class PerformanceEntityReadTest extends AbstractCoreIT {
             uuids.add( created.getUuid() );
 
             i++;
-            
+
             if ( i % 1000 == 0 ) {
                 logger.debug("simpleReadUUID() Created {} entities",i );
             }
@@ -121,7 +120,7 @@ public class PerformanceEntityReadTest extends AbstractCoreIT {
             meter.mark();
             Thread.sleep( readDelayMs );
         }
-        
+
         registry.remove( meterName );
         logger.info("Finished simpleReadUUID()");
     }
@@ -166,7 +165,7 @@ public class PerformanceEntityReadTest extends AbstractCoreIT {
             meter.mark();
             Thread.sleep( readDelayMs );
         }
-        
+
         registry.remove( meterName );
         logger.info("Finished simpleReadEntityRef()");
     }

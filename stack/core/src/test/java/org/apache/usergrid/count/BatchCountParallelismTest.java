@@ -17,8 +17,6 @@
 package org.apache.usergrid.count;
 
 
-import static org.junit.Assert.assertEquals;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -34,13 +32,16 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.count.common.Count;
+
+import static org.junit.Assert.assertEquals;
 
 
 /** @author zznate */
 @net.jcip.annotations.NotThreadSafe
 public class BatchCountParallelismTest {
-	
+
 	private static final Logger LOG = LoggerFactory.getLogger( BatchCountParallelismTest.class );
     private ExecutorService exec = Executors.newFixedThreadPool( 24 );
     private SimpleBatcher batcher;

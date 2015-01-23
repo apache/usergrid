@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.commons.lang3.RandomStringUtils;
 
 import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.cassandra.Concurrent;
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.IndexUpdate;
 import org.apache.usergrid.persistence.cassandra.IndexUpdate.IndexEntry;
@@ -48,13 +48,13 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 
-@Concurrent()
+
 public class IndexIT extends AbstractCoreIT {
     private static final Logger LOG = LoggerFactory.getLogger( IndexIT.class );
 
     public static final String[] alphabet = {
-        "Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf", "Hotel", "India", 
-        "Juliet", "Kilo", "Lima", "Mike", "November", "Oscar", "Papa", "Quebec", "Romeo", "Sierra", 
+        "Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf", "Hotel", "India",
+        "Juliet", "Kilo", "Lima", "Mike", "November", "Oscar", "Papa", "Quebec", "Romeo", "Sierra",
         "Tango", "Uniform", "Victor", "Whiskey", "X-ray", "Yankee", "Zulu"
     };
 
@@ -448,14 +448,14 @@ public class IndexIT extends AbstractCoreIT {
 
             RelationManagerImpl impl = (RelationManagerImpl)rm;
 
-            CassandraService cass = springResource.getBean( CassandraService.class );
+            CassandraService cass = SpringResource.getInstance().getBean( CassandraService.class );
 
             ByteBufferSerializer buf = ByteBufferSerializer.get();
 
             Keyspace ko = cass.getApplicationKeyspace( applicationId );
             Mutator<ByteBuffer> m = createMutator( ko, buf );
 
-            IndexUpdate update = impl.batchStartIndexUpdate( m, entity1Ref, 
+            IndexUpdate update = impl.batchStartIndexUpdate( m, entity1Ref,
                     "status", "ignore", UUIDUtils.newTimeUUID(), false, false, true, false );
 
             int count = 0;

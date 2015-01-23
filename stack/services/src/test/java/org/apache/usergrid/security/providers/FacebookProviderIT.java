@@ -52,22 +52,16 @@ public class FacebookProviderIT {
     private static SignInProviderFactory providerFactory;
     private static UUID applicationId;
 
-    @ClassRule
-    public static SpringResource springResource = SpringResource.getInstance();
-
-    @ClassRule
-    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
-
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @ClassRule
-    public static ServiceITSetup setup = new ServiceITSetupImpl( springResource, elasticSearchResource );
+    public static ServiceITSetup setup = new ServiceITSetupImpl( );
 
 
     @BeforeClass
     public static void setup() throws Exception {
-        providerFactory = springResource.getBean( SignInProviderFactory.class );
+        providerFactory =  SpringResource.getInstance().getBean( SignInProviderFactory.class );
         UserInfo adminUser = setup.getMgmtSvc()
                                   .createAdminUser( uniqueUsername(), "Facebook User", "user"+newUUIDString()+"@facebook.com", "test", false,
                                           false );

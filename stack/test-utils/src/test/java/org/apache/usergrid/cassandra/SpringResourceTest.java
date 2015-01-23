@@ -26,7 +26,6 @@ import static junit.framework.TestCase.assertSame;
 
 
 /** This tests the CassandraResource. */
-@Concurrent()
 public class SpringResourceTest {
     public static final Logger LOG = LoggerFactory.getLogger( SpringResourceTest.class );
 

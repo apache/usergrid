@@ -26,7 +26,6 @@ import org.junit.Test;
 import org.apache.commons.lang.StringUtils;
 
 import org.apache.usergrid.cassandra.SpringResource;
-import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.utils.MapUtils;
 
 import static org.junit.Assert.assertEquals;
@@ -34,7 +33,6 @@ import static org.junit.Assert.assertTrue;
 
 
 /** @author zznate */
-@Concurrent
 public class UsergridSystemMonitorIT {
 
     @ClassRule

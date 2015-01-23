@@ -34,14 +34,9 @@ public abstract class AbstractServiceIT {
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
-    @ClassRule
-    public static SpringResource springResource = SpringResource.getInstance();
-
-    @ClassRule
-    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
 
     @Rule
-    public ServiceITSetup setup = new ServiceITSetupImpl( springResource, elasticSearchResource );
+    public ServiceITSetup setup = new ServiceITSetupImpl(  );
 
     @Rule
     public ServiceApplication app = new ServiceApplication( setup );
