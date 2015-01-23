@@ -29,8 +29,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
 import org.junit.After;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -81,7 +80,7 @@ public class NotificationsIT extends AbstractRestIT {
     public void testPaging() throws Exception {
 
         int numDevices = 10;
-        int numNotifications = 100; // to send to each device
+        int numNotifications = 50; // to send to each device
 
         // create notifier
         Entity payload = new Entity();
@@ -165,7 +164,7 @@ public class NotificationsIT extends AbstractRestIT {
         sw.start();
         boolean allSent = false;
         int i = 0;
-        int maxRetries = 1000;
+        int maxRetries = 10;
         while (!allSent) {
             i++;
             Thread.sleep(100);
@@ -173,7 +172,10 @@ public class NotificationsIT extends AbstractRestIT {
             if ( finished == (numDevices * numNotifications) ) {
                 allSent = true;
             }
-            if (i > maxRetries) { break; }
+            if (i > maxRetries) {
+                fail("could not page through all notificaitons in a reasonable amount of time.");
+                break;
+            }
         }
         sw.stop();
         int nc = numDevices * numNotifications;
