@@ -87,6 +87,7 @@ public class WNSAdapter implements ProviderAdapter {
                         }
                         service.pushBadge(providerId, badge);
                         break;
+                    default : throw new IllegalArgumentException(translatedNotification.getType()+" does not match a valid notification type.");
                 }
             }
             tracker.completed();
