@@ -100,8 +100,6 @@ public class AdminEmailEncodingIT extends AbstractRestIT {
         String unique = UUID.randomUUID().toString();
         String org = "org_getTokenDash" + unique;
         String app = "app_getTokenDash" + unique;
-        org = org.toLowerCase();
-        app = app.toLowerCase();
 
         //Username and password
         String username = "testuser" + unique;
@@ -125,13 +123,15 @@ public class AdminEmailEncodingIT extends AbstractRestIT {
         //Create an application within the organization
         clientSetup.getRestClient().management().orgs().organization(organization.getName()).app().post(new Application(app));
 
-        //retrieve the new management user by username and ensure the email address matches the input
+        //retrieve the new management user by username and ensure the username and email address matches the input
         Entity me = clientSetup.getRestClient().management().users().entity(username).get();
         assertEquals(email, me.get("email"));
+        assertEquals(username, me.get("username"));
 
-        //retrieve the new management user by email and ensure the email address matches the input
+        //retrieve the new management user by email and ensure the username and email address matches the input
         me = clientSetup.getRestClient().management().users().entity(email).get();
         assertEquals(email, me.get("email"));
+        assertEquals(username, me.get("username"));
 
     }
 }
