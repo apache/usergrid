@@ -33,6 +33,7 @@ import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.security.providers.SignInProviderFactory;
 import org.apache.usergrid.security.tokens.TokenService;
 import org.apache.usergrid.services.ServiceManagerFactory;
+import org.apache.usergrid.setup.ConcurrentProcessSingleton;
 
 
 /** A {@link org.junit.rules.TestRule} that sets up services. */
@@ -60,13 +61,13 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
 
     protected void before( Description description ) throws Throwable {
         super.before( description );
-        managementService =  SpringResource.getInstance().getBean( ManagementService.class );
-        applicationCreator =  SpringResource.getInstance().getBean( ApplicationCreator.class );
-        tokenService =  SpringResource.getInstance().getBean( TokenService.class );
-        providerFactory =  SpringResource.getInstance().getBean( SignInProviderFactory.class );
-        properties =  SpringResource.getInstance().getBean( PropertiesFactoryBean.class ).getObject();
-        smf =  SpringResource.getInstance().getBean( ServiceManagerFactory.class );
-        exportService =  SpringResource.getInstance().getBean( ExportService.class );
+        managementService =  ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( ManagementService.class );
+        applicationCreator =  ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( ApplicationCreator.class );
+        tokenService =  ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( TokenService.class );
+        providerFactory =  ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( SignInProviderFactory.class );
+        properties =  ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( PropertiesFactoryBean.class ).getObject();
+        smf =  ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( ServiceManagerFactory.class );
+        exportService =  ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( ExportService.class );
 
         LOG.info( "Test setup complete..." );
     }
@@ -92,7 +93,7 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
 
     @Override
     public CassandraService getCassSvc() {
-        return  SpringResource.getInstance().getBean( CassandraService.class );
+        return  ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( CassandraService.class );
     }
 
 
@@ -107,7 +108,7 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
 
     public ServiceManagerFactory getSmf() {
         if ( smf == null ) {
-            smf =  SpringResource.getInstance().getBean( ServiceManagerFactory.class );
+            smf =  ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( ServiceManagerFactory.class );
         }
 
         return smf;

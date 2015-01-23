@@ -56,8 +56,8 @@ public class TokenServiceIT {
 
     static Logger log = LoggerFactory.getLogger( TokenServiceIT.class );
 
-    // app-level data generated only once
-    private static UserInfo adminUser;
+    // app-level data generated only once per test
+    private UserInfo adminUser;
 
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();

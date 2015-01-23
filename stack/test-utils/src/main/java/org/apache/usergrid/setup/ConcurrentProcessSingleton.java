@@ -73,20 +73,26 @@ public class ConcurrentProcessSingleton {
     private void startSystem() {
         try {
 
+            logger.info( "Trying to get a lock to setup system" );
             //we have a lock, so init the system
             if ( lock.tryLock() ) {
 
+                logger.info( "Lock acquired, setting up system" );
 
                 final SchemaManager schemaManager = SpringResource.getInstance().getBean( SchemaManager.class );
 
 
                 //maybe delete existing column families and indexes
                 if ( CLEAN_STORAGE ) {
+                    logger.info("Destroying current database");
                     schemaManager.destroy();
                 }
 
                 //create our schema
+                logger.info("Creating database");
                 schemaManager.create();
+
+                logger.info("Populating database");
                 schemaManager.populateBaseData();
 
 
@@ -95,7 +101,9 @@ public class ConcurrentProcessSingleton {
             }
 
 
+            logger.info( "Waiting for setup to complete" );
             barrier.await( ONE_MINUTE );
+            logger.info( "Setup to complete" );
 
             lock.maybeReleaseLock();
         }

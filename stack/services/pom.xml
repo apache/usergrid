@@ -88,10 +88,11 @@
                 <storage-config>${basedir}/src/test/conf</storage-config>
                 <target.directory>${project.build.directory}</target.directory>
               </systemPropertyVariables>
-              <parallel>classes</parallel>
-              <forkCount>${services.it.forkCount}</forkCount>
-              <reuseForks>${services.it.reuseForks}</reuseForks>
-              <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}</argLine>
+                <parallel>methods</parallel>
+               <forkCount>${usergrid.it.forkCount}</forkCount>
+               <threadCount>${usergrid.it.threads}</threadCount>
+               <reuseForks>true</reuseForks>
+              <argLine>-Dtest.barrier.timestamp=${maven.build.timestamp} -Dtest.clean.storage=true -Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}</argLine>
               <includes>
                 <include>**/*IT.java</include>
                 <include>**/*Test.java</include>
@@ -280,7 +281,7 @@
       <!-- Testing and Logging Dependencies -->
     <dependency>
       <!--
-      Do not remove this slf4j-api dependency remove even though pulled 
+      Do not remove this slf4j-api dependency remove even though pulled
       in transitively. If not present IntelliJ IDEA wigs out.
       -->
       <groupId>org.slf4j</groupId>

@@ -50,6 +50,8 @@ import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 
+import net.jcip.annotations.NotThreadSafe;
+
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.usergrid.TestHelper.uniqueApp;
 import static org.apache.usergrid.TestHelper.uniqueEmail;
@@ -89,6 +91,7 @@ import static org.junit.Assert.assertTrue;
  * <p/>
  * Hence there can be race conditions between test methods in this class.
  */
+@NotThreadSafe
 public class EmailFlowIT {
     private static final Logger LOG = LoggerFactory.getLogger( EmailFlowIT.class );
 
