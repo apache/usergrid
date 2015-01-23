@@ -20,6 +20,7 @@ package org.apache.usergrid.management.cassandra;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
 import org.apache.usergrid.batch.JobExecution;
@@ -343,7 +344,7 @@ public class ImportServiceIT {
         }
     }
 
-    @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
+    // @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
     // test case to check if all applications file for an organization are imported correctly
     //@Test
     public void testIntegrationImportOrganization() throws Exception {
@@ -652,6 +653,17 @@ public class ImportServiceIT {
 
     /*Creates fake payload for testing purposes.*/
     public HashMap<String, Object> payloadBuilder() {
+
+        if ( StringUtils.isEmpty(System.getProperty( "secretKey" ) ) ) {
+            throw new IllegalArgumentException("secretKey not specified");
+        }
+        if ( StringUtils.isEmpty(System.getProperty( "accessKey" ) ) ) {
+            throw new IllegalArgumentException("accessKey not specified");
+        }
+        if ( StringUtils.isEmpty(System.getProperty( "bucketName" ) ) ) {
+            throw new IllegalArgumentException("bucketName not specified");
+        }
+        
         HashMap<String, Object> payload = new HashMap<String, Object>();
         Map<String, Object> properties = new HashMap<String, Object>();
         Map<String, Object> storage_info = new HashMap<String, Object>();
