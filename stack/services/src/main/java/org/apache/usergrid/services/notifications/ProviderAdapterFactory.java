@@ -20,6 +20,7 @@
 
 package org.apache.usergrid.services.notifications;
 
+import com.sun.javafx.tools.ant.Application;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.entities.Notifier;
 import org.apache.usergrid.services.notifications.apns.APNsAdapter;
@@ -40,6 +41,9 @@ public class ProviderAdapterFactory {
            case "google" : adapter = new GCMAdapter(entityManager ,notifier); break;
            case "windows" : adapter = new WNSAdapter(entityManager ,notifier); break;
            case "noop" : adapter = new TestAdapter(notifier); break;
+           default: throw new IllegalArgumentException(notifier.getProvider()
+               + " did not match any known adapter, valid arguments are apple,google,windows" //ignore noop its internal
+           );
        }
        return adapter;
 
