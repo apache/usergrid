@@ -44,6 +44,7 @@ import org.apache.usergrid.persistence.cassandra.util.TraceTag;
 import org.apache.usergrid.persistence.cassandra.util.TraceTagManager;
 import org.apache.usergrid.persistence.cassandra.util.TraceTagReporter;
 import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
+import org.apache.usergrid.setup.ConcurrentProcessSingleton;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -60,15 +61,9 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
     private static final Logger logger = LoggerFactory.getLogger( EntityManagerFactoryImplIT.class );
 
 
-    @ClassRule
-    public static SpringResource springResource = SpringResource.getInstance();
-
-    @ClassRule
-    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
-
 
     public EntityManagerFactoryImplIT() {
-        emf = springResource.getBean( EntityManagerFactory.class );
+        emf = ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( EntityManagerFactory.class );
     }
 
 
@@ -99,10 +94,10 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
     @Before
     public void initTracing() {
-        traceTagManager = springResource.getBean(
-                "traceTagManager", TraceTagManager.class );
-        traceTagReporter = springResource.getBean(
-                "traceTagReporter", TraceTagReporter.class );
+        traceTagManager = ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( "traceTagManager",
+            TraceTagManager.class );
+        traceTagReporter = ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( "traceTagReporter",
+            TraceTagReporter.class );
     }
 
 

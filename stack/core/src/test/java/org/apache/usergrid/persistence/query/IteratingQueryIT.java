@@ -407,7 +407,7 @@ public class IteratingQueryIT {
 
     protected void singleOrderByComplexIntersection( IoHelper io ) throws Exception {
 
-        int size = 2000;
+        int size = 200;
         int queryLimit = Query.MAX_LIMIT;
 
         // the number of entities that should be written including an intersection
@@ -731,7 +731,7 @@ public class IteratingQueryIT {
 
         int size = 200;
         int queryLimit = 100;
-        int startValue = 400;
+        int startValue = 100;
 
         long start = System.currentTimeMillis();
 
@@ -792,8 +792,8 @@ public class IteratingQueryIT {
         io.doSetup();
 
         int size = 200;
-        int queryLimit = 100;
-        int startValue = 400;
+        int queryLimit = 50;
+        int startValue = 100;
 
         long start = System.currentTimeMillis();
 
@@ -977,8 +977,8 @@ public class IteratingQueryIT {
 
         int size = 200;
         int queryLimit = 100;
-        int startValue = 100;
-        int endValue = 400;
+        int startValue = 50;
+        int endValue = 150;
 
         long start = System.currentTimeMillis();
 
@@ -1040,8 +1040,8 @@ public class IteratingQueryIT {
 
         int size = 200;
         int queryLimit = 100;
-        int startValue = 100;
-        int endValue = 400;
+        int startValue = 50;
+        int endValue = 150;
 
         long start = System.currentTimeMillis();
 

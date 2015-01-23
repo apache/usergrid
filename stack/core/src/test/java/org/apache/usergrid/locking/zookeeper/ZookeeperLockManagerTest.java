@@ -37,10 +37,13 @@ import org.apache.usergrid.locking.Lock;
 import org.apache.usergrid.locking.LockManager;
 import org.apache.usergrid.locking.exception.UGLockException;
 
+import net.jcip.annotations.NotThreadSafe;
+
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 
+@NotThreadSafe
 public class ZookeeperLockManagerTest extends AbstractZooKeeperTest {
 
     private static final Logger logger = LoggerFactory.getLogger( ZookeeperLockManagerTest.class );
