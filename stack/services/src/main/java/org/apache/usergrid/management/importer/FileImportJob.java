@@ -66,7 +66,7 @@ public class FileImportJob extends OnlyOnceJob {
         jobExecution.heartbeat();
 
         // call the File Parser for the file set in job execution
-        importService.FileParser( jobExecution );
+        importService.parseFileToEntities(jobExecution);
 
         logger.error("File Import Service completed job");
     }
