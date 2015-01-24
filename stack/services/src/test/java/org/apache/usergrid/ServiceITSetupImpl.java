@@ -23,17 +23,16 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.config.PropertiesFactoryBean;
-import org.apache.usergrid.cassandra.SpringResource;
+
+import org.apache.shiro.SecurityUtils;
+
 import org.apache.usergrid.management.ApplicationCreator;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.management.export.ExportService;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
-import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.security.providers.SignInProviderFactory;
 import org.apache.usergrid.security.tokens.TokenService;
 import org.apache.usergrid.services.ServiceManagerFactory;
-import org.apache.usergrid.setup.ConcurrentProcessSingleton;
 
 
 /** A {@link org.junit.rules.TestRule} that sets up services. */
@@ -49,7 +48,18 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
     private ExportService exportService;
 
 
-    public ServiceITSetupImpl(  ) {
+    public ServiceITSetupImpl() {
+        super();
+        managementService = springResource.getBean( ManagementService.class );
+        applicationCreator = springResource.getBean( ApplicationCreator.class );
+        tokenService = springResource.getBean( TokenService.class );
+        providerFactory = springResource.getBean( SignInProviderFactory.class );
+        properties = springResource.getBean( "properties", Properties.class );
+        smf = springResource.getBean( ServiceManagerFactory.class );
+        exportService = springResource.getBean( ExportService.class );
+
+        //set our security manager for shiro
+        SecurityUtils.setSecurityManager(springResource.getBean( org.apache.shiro.mgt.SecurityManager.class ));
     }
 
 
@@ -60,16 +70,7 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
 
 
     protected void before( Description description ) throws Throwable {
-        super.before( description );
-        managementService =  ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( ManagementService.class );
-        applicationCreator =  ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( ApplicationCreator.class );
-        tokenService =  ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( TokenService.class );
-        providerFactory =  ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( SignInProviderFactory.class );
-        properties =  ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( PropertiesFactoryBean.class ).getObject();
-        smf =  ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( ServiceManagerFactory.class );
-        exportService =  ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( ExportService.class );
 
-        LOG.info( "Test setup complete..." );
     }
 
 
@@ -93,7 +94,7 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
 
     @Override
     public CassandraService getCassSvc() {
-        return  ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( CassandraService.class );
+        return  springResource.getBean( CassandraService.class );
     }
 
 
@@ -108,7 +109,7 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
 
     public ServiceManagerFactory getSmf() {
         if ( smf == null ) {
-            smf =  ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( ServiceManagerFactory.class );
+            smf =  springResource.getBean( ServiceManagerFactory.class );
         }
 
         return smf;

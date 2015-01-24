@@ -66,7 +66,9 @@ public class OrganizationIT {
                 setup.getMgmtSvc().createAdminUser( uniqueUsername(), "Ed Anuff", uniqueEmail(), "test", false, false );
         assertNotNull( user );
 
-        OrganizationInfo organization = setup.getMgmtSvc().createOrganization( uniqueOrg(), user, false );
+        final String orgName =  uniqueOrg();
+
+        OrganizationInfo organization = setup.getMgmtSvc().createOrganization( orgName, user, false );
         assertNotNull( organization );
 
         setup.getEmf().getEntityManager( setup.getSmf().getManagementAppId() ).refreshIndex();
@@ -88,7 +90,7 @@ public class OrganizationIT {
 
         OrganizationInfo organization2 = setup.getMgmtSvc().getOrganizationForApplication( applicationId );
         assertNotNull( organization2 );
-        assertEquals( "wrong organization name", "OrganizationIT", organization2.getName() );
+        assertEquals( "wrong organization name", orgName, organization2.getName() );
 
         boolean verified = setup.getMgmtSvc().verifyAdminUserPassword( user.getUuid(), "test" );
         assertTrue( verified );

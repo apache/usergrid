@@ -84,11 +84,15 @@ public class QueueListener  {
 
     }
 
-    @PostConstruct
-    public void start(){
-        boolean shouldRun = new Boolean(properties.getProperty("usergrid.notifications.listener.run", "true"));
 
-        if(shouldRun) {
+    /**
+     * Start the service and begin consuming messages
+     */
+    public void start(){
+        //TODO refactor this into a central component that will start/stop services
+//        boolean shouldRun = new Boolean(properties.getProperty("usergrid.notifications.listener.run", "false"));
+
+
             LOG.info("QueueListener: starting.");
             int threadCount = 0;
 
@@ -125,9 +129,9 @@ public class QueueListener  {
                 LOG.error("QueueListener: failed to start:", e);
             }
             LOG.info("QueueListener: done starting.");
-        }else{
-            LOG.info("QueueListener: never started due to config value usergrid.notifications.listener.run.");
-        }
+//        }else{
+//            LOG.info("QueueListener: never started due to config value usergrid.notifications.listener.run.");
+//        }
 
     }
 

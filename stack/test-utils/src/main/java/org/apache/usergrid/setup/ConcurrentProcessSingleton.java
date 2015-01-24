@@ -66,6 +66,7 @@ public class ConcurrentProcessSingleton {
 
 
     public SpringResource getSpringResource() {
+        assert springResource != null;
         return springResource;
     }
 

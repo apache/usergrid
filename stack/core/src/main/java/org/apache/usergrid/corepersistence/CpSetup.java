@@ -27,6 +27,7 @@ import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.cassandra.ApplicationCF;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.Setup;
+import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
 import org.apache.usergrid.persistence.core.migration.schema.MigrationException;
 import org.apache.usergrid.persistence.core.migration.schema.MigrationManager;
 import org.apache.usergrid.persistence.exceptions.ApplicationAlreadyExistsException;
@@ -95,6 +96,7 @@ public class CpSetup implements Setup {
         //force the EMF creation of indexes before creating the default applications
         emf.refreshIndex();
 
+        injector.getInstance( DataMigrationManager.class ).migrate();
 
         logger.info( "Setting up default applications" );
 

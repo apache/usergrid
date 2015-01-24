@@ -44,7 +44,6 @@ public class CoreITSetupImpl implements CoreITSetup {
     protected QueueManagerFactory qmf;
     protected IndexBucketLocator indexBucketLocator;
     protected CassandraService cassandraService;
-    protected boolean enabled = false;
 
     protected SpringResource springResource;
 
@@ -52,24 +51,10 @@ public class CoreITSetupImpl implements CoreITSetup {
     public CoreITSetupImpl( ) {
         springResource = ConcurrentProcessSingleton.getInstance().getSpringResource();
 
-        if ( !enabled ) {
-                   cassandraService = springResource.getBean( CassandraService.class );
-                   emf = springResource.getBean( EntityManagerFactory.class );
-                   qmf = springResource.getBean( QueueManagerFactory.class );
-                   indexBucketLocator = springResource.getBean( IndexBucketLocator.class );
-
-
-                   //run the migration
-                   try {
-                       springResource.getBean( Injector.class ).getInstance( DataMigrationManager.class ).migrate();
-                   }
-                   catch ( MigrationException e ) {
-                       throw new RuntimeException( "Unable to run migration", e );
-                   }
-
-                   enabled = true;
-
-               }
+        cassandraService = springResource.getBean( CassandraService.class );
+        emf = springResource.getBean( EntityManagerFactory.class );
+        qmf = springResource.getBean( QueueManagerFactory.class );
+        indexBucketLocator = springResource.getBean( IndexBucketLocator.class );
 
     }
 

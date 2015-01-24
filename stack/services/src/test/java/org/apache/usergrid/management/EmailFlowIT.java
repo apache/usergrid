@@ -262,11 +262,11 @@ public class EmailFlowIT {
 
         final String orgName = uniqueOrg();
         final String appName = uniqueApp();
-        final String userName = uniqueUsername();
-        final String email = uniqueEmail();
-        final String passwd = "testpassword";
+        final String adminUserName = uniqueUsername();
+        final String adminEmail = uniqueEmail();
+        final String adminPasswd = "testpassword";
 
-        OrganizationOwnerInfo orgOwner = createOwnerAndOrganization( orgName, appName, userName, email, passwd, false, false );
+        OrganizationOwnerInfo orgOwner = createOwnerAndOrganization( orgName, appName, adminUserName, adminEmail, adminPasswd, false, false );
         assertNotNull( orgOwner );
 
         ApplicationInfo app = setup.getMgmtSvc().createApplication( orgOwner.getOrganization().getUuid(), appName );
@@ -277,20 +277,20 @@ public class EmailFlowIT {
         final String appUserUsername = uniqueUsername();
         final String appUserEmail = uniqueEmail();
 
-        User user = setupAppUser( app.getId(), appUserUsername, appUserEmail, false );
+        User appUser = setupAppUser( app.getId(), appUserUsername, appUserEmail, false );
 
-        String subject = "Request For User Account Activation " + email;
+        String subject = "Request For User Account Activation " + appUserEmail;
         String activation_url = String.format( setup.get( PROPERTIES_USER_ACTIVATION_URL ), orgName, appName,
-                user.getUuid().toString() );
+            appUser.getUuid().toString() );
 
         setup.getEmf().refreshIndex();
 
         // Activation
-        setup.getMgmtSvc().startAppUserActivationFlow( app.getId(), user );
+        setup.getMgmtSvc().startAppUserActivationFlow( app.getId(), appUser );
 
-        List<Message> inbox = Mailbox.get( email );
+        List<Message> inbox = Mailbox.get( adminEmail );
         assertFalse( inbox.isEmpty() );
-        MockImapClient client = new MockImapClient( "usergrid.com", userName, "somepassword" );
+        MockImapClient client = new MockImapClient( "usergrid.com", adminUserName, "somepassword" );
         client.processMail();
 
         // subject ok
@@ -306,15 +306,15 @@ public class EmailFlowIT {
         String token = getTokenFromMessage( activation );
         LOG.info( token );
         ActivationState activeState =
-                setup.getMgmtSvc().handleActivationTokenForAppUser( app.getId(), user.getUuid(), token );
+                setup.getMgmtSvc().handleActivationTokenForAppUser( app.getId(), appUser.getUuid(), token );
         assertEquals( ActivationState.ACTIVATED, activeState );
 
         subject = "Password Reset";
         String reset_url =
-                String.format( setup.get( PROPERTIES_USER_RESETPW_URL ), orgName, appName, user.getUuid().toString() );
+                String.format( setup.get( PROPERTIES_USER_RESETPW_URL ), orgName, appName, appUser.getUuid().toString() );
 
         // reset_pwd
-        setup.getMgmtSvc().startAppUserPasswordResetFlow( app.getId(), user );
+        setup.getMgmtSvc().startAppUserPasswordResetFlow( app.getId(), appUser );
 
         inbox = Mailbox.get( appUserEmail );
         assertFalse( inbox.isEmpty() );
@@ -333,11 +333,11 @@ public class EmailFlowIT {
         // token ok
         token = getTokenFromMessage( reset );
         LOG.info( token );
-        assertTrue( setup.getMgmtSvc().checkPasswordResetTokenForAppUser( app.getId(), user.getUuid(), token ) );
+        assertTrue( setup.getMgmtSvc().checkPasswordResetTokenForAppUser( app.getId(), appUser.getUuid(), token ) );
 
         // ensure revoke works
         setup.getMgmtSvc().revokeAccessTokenForAppUser( token );
-        assertFalse( setup.getMgmtSvc().checkPasswordResetTokenForAppUser( app.getId(), user.getUuid(), token ) );
+        assertFalse( setup.getMgmtSvc().checkPasswordResetTokenForAppUser( app.getId(), appUser.getUuid(), token ) );
     }
 
 

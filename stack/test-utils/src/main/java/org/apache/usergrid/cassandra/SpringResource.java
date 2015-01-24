@@ -48,7 +48,21 @@ public class SpringResource {
      */
     private SpringResource() {
         LOG.info( "Creating CassandraResource using {} for the ClassLoader.",
-                Thread.currentThread().getContextClassLoader() );
+            Thread.currentThread().getContextClassLoader() );
+
+        LOG.info( "-------------------------------------------------------------------" );
+        LOG.info( "Initializing Spring" );
+        LOG.info( "-------------------------------------------------------------------" );
+
+
+        //wire up cassandra and elasticsearch before we start spring, otherwise this won't work
+        new CassandraResource().start();
+
+        new ElasticSearchResource().start();
+
+        final String[] locations = { "usergrid-test-context.xml" };
+
+        this.applicationContext = new ClassPathXmlApplicationContext( locations );
     }
 
 
@@ -59,7 +73,6 @@ public class SpringResource {
     public static synchronized SpringResource getInstance() {
         if ( instance == null ) {
             instance = new SpringResource();
-            instance.startSpringInternal();
         }
 
         return instance;
@@ -92,32 +105,6 @@ public class SpringResource {
     }
 
 
-
-    /**
-     * Start our spring context.  Only invoke this if it is not set
-     */
-    private void startSpringInternal() {
-
-        LOG.info( "-------------------------------------------------------------------" );
-        LOG.info( "Initializing Spring" );
-        LOG.info( "-------------------------------------------------------------------" );
-
-
-
-
-        //wire up cassandra and elasticsearch before we start spring, otherwise this won't work
-        new CassandraResource().start();
-
-        new ElasticSearchResource().start();
-
-        final String[] locations = { "usergrid-test-context.xml" };
-
-        this.applicationContext = new ClassPathXmlApplicationContext( locations );
-
-
-//        applicationContext.refresh();
-
-    }
 
 
 }

@@ -24,6 +24,7 @@ import org.junit.rules.ExternalResource;
 
 import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.count.SimpleBatcher;
+import org.apache.usergrid.setup.ConcurrentProcessSingleton;
 
 
 /**
@@ -35,7 +36,7 @@ public class ImmediateCounterRule extends ExternalResource {
 
 
     public ImmediateCounterRule( ) {
-        batcher = SpringResource.getInstance().getBean( SimpleBatcher.class );
+        batcher = ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( SimpleBatcher.class );
     }
 
 

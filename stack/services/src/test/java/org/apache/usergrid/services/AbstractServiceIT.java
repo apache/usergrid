@@ -31,6 +31,7 @@ import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 
 
 public abstract class AbstractServiceIT {
+
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
