@@ -34,6 +34,13 @@ public class Notifier extends TypedEntity {
 
     public static final String ENTITY_TYPE = "notifier";
 
+    public Notifier() {
+    }
+
+    public Notifier(UUID id) {
+        uuid = id;
+    }
+
     @EntityProperty(aliasProperty = true, unique = true, basic = true)
     protected String name;
 
@@ -51,16 +58,30 @@ public class Notifier extends TypedEntity {
     @EntityProperty(indexed = false, includedInExport = false, encrypted = true)
     protected String certificatePassword;
 
-    // Google GCM
+    // Google GCM and Windows WNS
     @EntityProperty(indexed = false, includedInExport = false, encrypted = true)
     protected String apiKey;
-    private javax.net.ssl.SSLContext SSLContext;
 
-    public Notifier() {
+    //Windows WNS sid
+    @EntityProperty(indexed = false, includedInExport = false, encrypted = true)
+    protected String sid;
+
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    public String getSid() {
+        return sid;
     }
 
-    public Notifier(UUID id) {
-        uuid = id;
+    public void setSid(String sid) {  this.sid = sid; }
+
+    //Windows WNS logging
+    @EntityProperty(indexed = false, includedInExport = false, encrypted = true)
+    protected boolean logging = true;
+
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    public boolean getLogging() {  return logging;  }
+
+    public void setLogging(boolean logging) {
+        this.logging = logging;
     }
 
     @Override

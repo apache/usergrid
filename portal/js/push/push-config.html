@@ -159,6 +159,56 @@
 
     </pane>
 
+    <pane heading="Windows">
+      <div style="margin-top: 10px;">
+        <span class="title">Windows Notifications Service</span>
+        <br>
+        A Notifier allows App Services to connect to and deliver a message to a communication provider such as
+        Windows Notifications Service (WNS). Copy and paste your API key to create a bridge between your app
+        and WNS for push notifications on windows devices..
+        <br><br>
+
+        For more help: see our <a href="#!/getting-started/setup" class="notifications-links">getting started page</a> page.
+
+        <form id="winNotifierForm" name="winNotifierForm" ng-submit="createWinNotifier()" class="form-horizontal" novalidate>
+          <fieldset>
+            <div class="control-group">
+              <strong>Name this notifier </strong>
+              <div  >
+                <input ng-model="notifier.winNotifierName" id="win-notifier-name" required ug-validate type="text" class="span6" autocomplete="off" placeholder="ex: winDev"/>
+                <br>
+                The notifier name is used as the key for push data.  Give this a name that describes the API key being uploaded.
+              </div>
+            </div>
+
+            <div class="control-group">
+              <strong>WNS Sid </strong>
+              <div  >
+                <input ng-model="notifier.winNotifierSid" id="win-sid-value" required type="text" class="span6" autocomplete="off" ug-validate/>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <strong>Secret </strong>
+              <div  >
+                <input ng-model="notifier.winNotifierAPISecret" id="win-secret-value" required type="text" class="span6" autocomplete="off" ug-validate/>
+              </div>
+              <br/>
+              Secret will not be returned in other api calls for security reasons.
+            </div>
+
+            <div class="control-group">
+              <strong>Logging </strong>
+              <div  >
+                <input type="checkbox" title="Yes" ng-model="notifier.winNotifierLogging" name="win-logging-value" checked /> Logging Enabled &nbsp;
+              </div>
+            </div>
+
+            <input type="submit" href="" class="btn btn-primary" ng-disabled="!winNotifierForm.$valid"  value="Create Notifier"/>
+          </fieldset>
+        </form>
+      </div>
+    </pane>
 
   </tabs>
 
