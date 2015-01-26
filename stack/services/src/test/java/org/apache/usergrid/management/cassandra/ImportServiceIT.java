@@ -19,11 +19,13 @@ package org.apache.usergrid.management.cassandra;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.Service;
 import com.google.inject.Module;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
 import org.apache.usergrid.batch.JobExecution;
+import org.apache.usergrid.batch.service.JobSchedulerService;
 import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
 import org.apache.usergrid.cassandra.Concurrent;
@@ -37,6 +39,9 @@ import org.apache.usergrid.management.importer.S3Import;
 import org.apache.usergrid.management.importer.S3ImportImpl;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.entities.JobData;
+import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
+import org.apache.usergrid.persistence.index.query.Query.Level;
+import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.jclouds.ContextBuilder;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.BlobStoreContext;
@@ -49,9 +54,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.*;
 
-import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
-import org.apache.usergrid.persistence.index.query.Query.Level;
-import org.apache.usergrid.persistence.index.utils.UUIDUtils;
+import java.util.UUID;
 
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
@@ -63,7 +66,8 @@ import static org.mockito.Mockito.when;
 @Concurrent
 public class ImportServiceIT {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ImportServiceIT.class);
+    private static final Logger logger = LoggerFactory.getLogger(ImportServiceIT.class);
+
 
     private static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
 
@@ -82,11 +86,30 @@ public class ImportServiceIT {
     @BeforeClass
     public static void setup() throws Exception {
         String username = "test"+ UUIDUtils.newTimeUUID();
+
+        // start the scheduler after we're all set up
+        JobSchedulerService jobScheduler = cassandraResource.getBean( JobSchedulerService.class );
+        //jobScheduler.setJobListener( listener );
+        if ( jobScheduler.state() != Service.State.RUNNING ) {
+            jobScheduler.startAndWait();
+        }
+
         //creates sample test application
-        LOG.info( "in setup" );
         adminUser = setup.getMgmtSvc().createAdminUser( username, username, username+"@test.com", username, false, false );
         organization = setup.getMgmtSvc().createOrganization( username, adminUser, true );
         applicationId = setup.getMgmtSvc().createApplication( organization.getUuid(), username+"app" ).getId();
+    }
+
+    @Before
+    public void before() {
+
+        logger.info("NOTE: ImportServiceIT tests will not run unless secretKey, accessKey and bucketName " +
+            "are specified as system properties. You can do this in your Maven settings.xml file.");
+
+        Assume.assumeTrue(
+               StringUtils.isEmpty(System.getProperty("secretKey"))
+            && StringUtils.isEmpty(System.getProperty("accessKey"))
+            && StringUtils.isEmpty(System.getProperty("bucketName")));
     }
 
     //creates 2nd application for testing import from an organization having multiple applications
@@ -116,7 +139,6 @@ public class ImportServiceIT {
                                  new SimpleEntityRef( "testobject",  entityTest[0].getUuid()));
     }
 
-  //  @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
     // test case to check if a collection file is imported correctly
     @Test
     public void testIntegrationImportCollection() throws Exception {
@@ -230,7 +252,6 @@ public class ImportServiceIT {
         }
     }
 
-    @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
     // test case to check if application is imported correctly
     //@Test
     public void testIntegrationImportApplication() throws Exception {
@@ -344,7 +365,6 @@ public class ImportServiceIT {
         }
     }
 
-    // @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
     // test case to check if all applications file for an organization are imported correctly
     //@Test
     public void testIntegrationImportOrganization() throws Exception {
@@ -537,8 +557,7 @@ public class ImportServiceIT {
     /**
      * Test to the doImport method with null organziation ID
      */
-    @Ignore
-    //@Test
+    @Test
     public void testDoImportWithNullOrganizationID() throws Exception {
         // import
         S3Import s3Import = new S3ImportImpl();
@@ -559,11 +578,10 @@ public class ImportServiceIT {
         assertEquals(importService.getState(importUUID),"FAILED");
     }
 
-    @Ignore
     /**
      * Test to the doImport method with fake organization ID
      */
-    //@Test
+    @Test
     public void testDoImportWithFakeOrganizationID() throws Exception {
 
         UUID fakeOrgId = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
@@ -591,8 +609,7 @@ public class ImportServiceIT {
     /**
      * Test to the doImport method with fake application ID
      */
-    @Ignore
-    //@Test
+    @Test
     public void testDoImportWithFakeApplicationID() throws Exception {
 
         UUID fakeappId = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
@@ -622,8 +639,7 @@ public class ImportServiceIT {
     /**
      * Test to the doImport Collection method with fake application ID
      */
-    //@Test
-    @Ignore
+    @Test
     public void testDoImportCollectionWithFakeApplicationID() throws Exception {
 
         UUID fakeappId = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
@@ -654,16 +670,7 @@ public class ImportServiceIT {
     /*Creates fake payload for testing purposes.*/
     public HashMap<String, Object> payloadBuilder() {
 
-        if ( StringUtils.isEmpty(System.getProperty( "secretKey" ) ) ) {
-            throw new IllegalArgumentException("secretKey not specified");
-        }
-        if ( StringUtils.isEmpty(System.getProperty( "accessKey" ) ) ) {
-            throw new IllegalArgumentException("accessKey not specified");
-        }
-        if ( StringUtils.isEmpty(System.getProperty( "bucketName" ) ) ) {
-            throw new IllegalArgumentException("bucketName not specified");
-        }
-        
+
         HashMap<String, Object> payload = new HashMap<String, Object>();
         Map<String, Object> properties = new HashMap<String, Object>();
         Map<String, Object> storage_info = new HashMap<String, Object>();
