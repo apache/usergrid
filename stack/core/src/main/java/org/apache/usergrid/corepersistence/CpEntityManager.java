@@ -1313,7 +1313,8 @@ public class CpEntityManager implements EntityManager {
     public Results getCollection( UUID entityId, String collectionName, Query query, Level resultsLevel )
             throws Exception {
 
-        throw new UnsupportedOperationException( "Cannot get entity by UUID alone" );
+        return getRelationManager( get( entityId ))
+                .getCollection ( collectionName, query, resultsLevel );
     }
 
 
