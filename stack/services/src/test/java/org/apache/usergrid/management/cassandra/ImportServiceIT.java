@@ -103,14 +103,18 @@ public class ImportServiceIT {
     @Before
     public void before() {
 
-        logger.info("NOTE: ImportServiceIT tests will not run unless secretKey, accessKey and bucketName " +
-            "are specified as system properties. You can do this in your Maven settings.xml file.");
+        boolean configured =
+                   !StringUtils.isEmpty(System.getProperty("secretKey"))
+                && !StringUtils.isEmpty(System.getProperty("accessKey"))
+                && !StringUtils.isEmpty(System.getProperty("bucketName"));
 
-        Assume.assumeTrue(
-               StringUtils.isEmpty(System.getProperty("secretKey"))
-            && StringUtils.isEmpty(System.getProperty("accessKey"))
-            && StringUtils.isEmpty(System.getProperty("bucketName")));
-    }
+        if ( !configured ) {
+            logger.warn("Skipping test because accessKey, secretKey and bucketName not " +
+                "specified as system properties, e.g. in your Maven settings.xml file.");
+        }
+
+        Assume.assumeTrue( configured );
+   }
 
     //creates 2nd application for testing import from an organization having multiple applications
     void createAndSetup2ndApplication() throws Exception {
@@ -603,7 +607,7 @@ public class ImportServiceIT {
 
         //import the all application files for the organization and wait for the import to finish
         importService.doImport(jobExecution);
-        assertEquals(importService.getState(importUUID),"FAILED");
+        assertEquals("FAILED", importService.getState(importUUID));
     }
 
     /**
@@ -633,7 +637,7 @@ public class ImportServiceIT {
 
         //import the application files for the organization and wait for the import to finish
         importService.doImport(jobExecution);
-        assertEquals(importService.getState(importUUID),"FAILED");
+        assertEquals("FAILED", importService.getState(importUUID));
     }
 
     /**

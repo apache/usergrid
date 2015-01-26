@@ -373,12 +373,13 @@ public class ImportServiceImpl implements ImportService {
 
         } catch (OrganizationNotFoundException e) {
             importUG.setErrorMessage(e.getMessage());
-            importUG.setState(Import.State.FINISHED);
+            importUG.setState(Import.State.FAILED);
             rooteEm.update(importUG);
             return;
+
         } catch (ApplicationNotFoundException e) {
             importUG.setErrorMessage(e.getMessage());
-            importUG.setState(Import.State.FINISHED);
+            importUG.setState(Import.State.FAILED);
             rooteEm.update(importUG);
             return;
         }
@@ -501,7 +502,7 @@ public class ImportServiceImpl implements ImportService {
 
             if (CollectionName != null) {
 
-                // in case of type application and collection import --> 
+                // in case of type application and collection import -->
                 // the file name will be "<org_name>/<app_name>.<collection_name>."
                 str.append(CollectionName);
                 str.append(".");
