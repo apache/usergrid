@@ -143,7 +143,7 @@ public class SQSQueueManagerImpl implements QueueManager {
                 LOG.error("failed to deserialize message", e);
                 throw new RuntimeException(e);
             }
-            QueueMessage queueMessage = new QueueMessage(message.getMessageId(),message.getReceiptHandle(),body);
+            QueueMessage queueMessage = new QueueMessage(message.getMessageId(),message.getReceiptHandle(),body,message.getAttributes().get( "type" ));
             queueMessages.add(queueMessage);
         }
         return queueMessages;
@@ -163,7 +163,8 @@ public class SQSQueueManagerImpl implements QueueManager {
         for(Object body : bodies){
             SendMessageBatchRequestEntry entry = new SendMessageBatchRequestEntry();
             entry.setId(UUID.randomUUID().toString());
-            entry.setMessageBody(toString(body));
+            entry.setMessageBody( toString( body ) );
+            entry.addMessageAttributesEntry( "type",new MessageAttributeValue().withStringValue( "mytype" ) );
             entries.add(entry);
         }
         request.setEntries(entries);

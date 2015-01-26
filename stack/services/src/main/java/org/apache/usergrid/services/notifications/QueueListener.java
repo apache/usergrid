@@ -38,6 +38,8 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+
+
 public class QueueListener  {
     public  final int MESSAGE_TRANSACTION_TIMEOUT =  25 * 1000;
     private final QueueManagerFactory queueManagerFactory;
@@ -159,9 +161,12 @@ public class QueueListener  {
                     HashMap<UUID, List<QueueMessage>> messageMap = new HashMap<>(messages.size());
                     //group messages into hash map by app id
                     for (QueueMessage message : messages) {
+                        //TODO: stop copying around this area as it gets notification specific.
                         ApplicationQueueMessage queueMessage = (ApplicationQueueMessage) message.getBody();
                         UUID applicationId = queueMessage.getApplicationId();
+                        //Groups queue messages by application Id, ( they are all probably going to the same place )
                         if (!messageMap.containsKey(applicationId)) {
+                            //For each app id it sends the set.
                             List<QueueMessage> applicationQueueMessages = new ArrayList<QueueMessage>();
                             applicationQueueMessages.add(message);
                             messageMap.put(applicationId, applicationQueueMessages);

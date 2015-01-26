@@ -47,7 +47,7 @@ public interface ImportService {
      * @param jobExecution
      * @throws Exception
      */
-    void FileParser(JobExecution jobExecution) throws Exception;
+    void parseFileToEntities(JobExecution jobExecution) throws Exception;
 
     /**
      * Get the state for the Job with UUID

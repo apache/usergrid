@@ -28,8 +28,7 @@ AppServices.Controllers.controller('PushConfigCtrl', ['ug', '$scope', '$rootScop
   $scope.notifier.notifierCertPassword = '';
   $scope.notifier.androidNotifierName = '';
   $scope.notifier.androidNotifierAPIKey = '';
-
-
+    $scope.notifier.winNotifierLogging = true;
 
   $scope.notifiersCollection = {};
 
@@ -52,19 +51,24 @@ AppServices.Controllers.controller('PushConfigCtrl', ['ug', '$scope', '$rootScop
     $scope.applyScope();
   });
 
-
-  $rootScope.createAppleNotifier = function() {
+  $scope.createAppleNotifier = function() {
     //$scope.appleNotifierCert - this comes from the directive below
     ug.createAppleNotifier($scope.appleNotifierCert, $scope.notifier.appleNotifierName, $scope.notifier.appleEnvironment, $scope.notifier.appleCertPassword);
     $scope.notifier = {};
     $scope.clearNotificationFile();
     //angular.element("#ios-cert")[0].value = ""; // this is bad
-  }
+  };
 
-  $rootScope.createAndroidNotifier = function() {
+  $scope.createAndroidNotifier = function() {
     ug.createAndroidNotifier($scope.notifier.androidNotifierName, $scope.notifier.androidNotifierAPIKey);
     $scope.notifier = {};
-  }
+  };
+
+    $scope.createWinNotifier = function(){
+        $scope.notifier.winNotifierLogging =  $scope.notifier.winNotifierLogging || false;
+        ug.createWinNotifier($scope.notifier.winNotifierName,$scope.notifier.winNotifierSid, $scope.notifier.winNotifierAPISecret, $scope.notifier.winNotifierLogging);
+        $scope.notifier = {};
+    };
 
   $scope.$on('notifier-update', function(event) {
     ug.getNotifiers();

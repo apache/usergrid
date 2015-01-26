@@ -24,7 +24,7 @@ import org.apache.usergrid.persistence.model.entity.Id;
 
 import java.util.UUID;
 import org.apache.usergrid.corepersistence.CpEntityManagerFactory;
-import static org.apache.usergrid.corepersistence.GuiceModule.EVENTS_DISABLED;
+import static org.apache.usergrid.corepersistence.CoreModule.EVENTS_DISABLED;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.slf4j.Logger;
@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 
 
 /**
- * Delete all Query Index indexes associated with an Entity that has just been deleted. 
+ * Delete all Query Index indexes associated with an Entity that has just been deleted.
  */
 public class EntityDeletedHandler implements EntityDeleted {
     private static final Logger logger = LoggerFactory.getLogger(EntityDeletedHandler.class );
@@ -44,7 +44,7 @@ public class EntityDeletedHandler implements EntityDeleted {
     @Override
     public void deleted(CollectionScope scope, Id entityId, UUID version) {
 
-        // This check is for testing purposes and for a test that to be able to dynamically turn 
+        // This check is for testing purposes and for a test that to be able to dynamically turn
         // off and on delete previous versions so that it can test clean-up on read.
         if ( System.getProperty( EVENTS_DISABLED, "false" ).equals( "true" )) {
             return;
@@ -52,12 +52,12 @@ public class EntityDeletedHandler implements EntityDeleted {
 
         logger.debug("Handling deleted event for entity {}:{} v {} "
                 + "scope\n   name: {}\n   owner: {}\n   app: {}",
-            new Object[] { 
-                entityId.getType(), 
-                entityId.getUuid(), 
+            new Object[] {
+                entityId.getType(),
+                entityId.getUuid(),
                 version,
-                scope.getName(), 
-                scope.getOwner(), 
+                scope.getName(),
+                scope.getOwner(),
                 scope.getApplication()});
 
         CpEntityManagerFactory cpemf = (CpEntityManagerFactory)emf;

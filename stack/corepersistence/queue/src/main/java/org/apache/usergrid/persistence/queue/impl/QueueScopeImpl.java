@@ -27,13 +27,10 @@ public class QueueScopeImpl implements QueueScope {
     private final Id owner;
     private final String name;
 
-
     public QueueScopeImpl( final Id owner, final String name ) {
         this.owner = owner;
         this.name = name;
     }
-
-
 
     @Override
     public Id getApplication() {
@@ -45,7 +42,6 @@ public class QueueScopeImpl implements QueueScope {
     public String getName() {
         return name;
     }
-
 
     @Override
     public boolean equals( final Object o ) {
