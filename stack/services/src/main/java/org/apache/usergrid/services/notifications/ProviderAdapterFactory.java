@@ -20,14 +20,12 @@
 
 package org.apache.usergrid.services.notifications;
 
-import com.sun.javafx.tools.ant.Application;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.entities.Notifier;
 import org.apache.usergrid.services.notifications.apns.APNsAdapter;
 import org.apache.usergrid.services.notifications.gcm.GCMAdapter;
 import org.apache.usergrid.services.notifications.wns.WNSAdapter;
 
-import java.util.HashMap;
 
 /**
  * Get valid provideradapters
