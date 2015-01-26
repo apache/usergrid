@@ -74,10 +74,17 @@ public class OrganizationResource extends NamedResource {
                         organization );
 
     }
-    
+
     public ApplicationResource app(){
         return new ApplicationResource(  context ,this );
     }
 
+    public ApplicationResource apps(String appName){
+        return new ApplicationResource(  appName, context ,this );
+    }
+
+    public ApplicationResource addToPath( String pathPart ) {
+        return new ApplicationResource( pathPart, context, this );
+    }
 
 }
