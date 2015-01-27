@@ -228,11 +228,10 @@
                 <configuration>
                     <container>
                         <containerId>tomcat7x</containerId>
-                        <!-- Type == Installed means that you want to deploy to a container that's installed on your computer -->
+                        <!-- Run the latest version of to tomcat 7 -->
                         <zipUrlInstaller>
                             <url>http://mirror.tcpdiag.net/apache/tomcat/tomcat-7/v7.0.57/bin/apache-tomcat-7.0.57.zip</url>
                         </zipUrlInstaller>
-
 
                     </container>
                     <configuration>
@@ -243,11 +242,14 @@
                               </configfile>
                             </configfiles>
                         <!--If you're getting port conflicts, override the ports here-->
-                        <!--<properties>-->
+                        <properties>
+                            <cargo.jvmargs>-Xmx1G -Xms500m -server -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8000</cargo.jvmargs>
                             <!--<cargo.rmi.port>10200</cargo.rmi.port>-->
                             <!--<cargo.servlet.port>${cargo.servlet.port}</cargo.servlet.port>-->
                             <!--<cargo.tomcat.ajp.port>10201</cargo.tomcat.ajp.port>-->
-                        <!--</properties>-->
+                        </properties>
+
+
                     </configuration>
 
                     <deployables>
