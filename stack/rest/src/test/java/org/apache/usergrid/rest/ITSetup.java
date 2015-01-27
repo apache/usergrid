@@ -22,185 +22,96 @@ import java.util.Properties;
 
 import javax.ws.rs.core.UriBuilder;
 
-import org.junit.rules.ExternalResource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.management.ApplicationCreator;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.persistence.EntityManagerFactory;
-import static org.apache.usergrid.persistence.index.impl.EsProvider.LOCAL_ES_PORT_PROPNAME;
-
-import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.security.providers.SignInProviderFactory;
 import org.apache.usergrid.security.tokens.TokenService;
 import org.apache.usergrid.services.ServiceManagerFactory;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.apache.usergrid.setup.ConcurrentProcessSingleton;
 
 
 /** A {@link org.junit.rules.TestRule} that sets up services. */
-public class ITSetup extends ExternalResource {
-
-    private static final Logger LOG = LoggerFactory.getLogger( ITSetup.class );
-    private final ElasticSearchResource elasticSearchResource;
-    private final CassandraResource cassandraResource;
-    private final SpringResource springResource;
-    private final TomcatResource tomcatResource;
+public class ITSetup  {
 
     private ServiceManagerFactory smf;
-    private ManagementService managementService;
     private EntityManagerFactory emf;
     private ApplicationCreator applicationCreator;
     private TokenService tokenService;
     private SignInProviderFactory providerFactory;
     private Properties properties;
+    private ManagementService managementService;
 
-//    private boolean setupCalled = false;
-    private boolean ready = false;
     private URI uri;
 
+    private SpringResource springResource;
 
-    public ITSetup( SpringResource springResource ) {
 
-        try {
-            String[] locations = { "usergrid-properties-context.xml" };
-            ConfigurableApplicationContext appContext =
-                    new ClassPathXmlApplicationContext( locations );
+    public ITSetup( ) {
 
-            properties = (Properties)appContext.getBean("properties");
+        this.springResource = ConcurrentProcessSingleton.getInstance().getSpringResource();
 
-        } catch (Exception ex) {
-            throw new RuntimeException("Error getting properties", ex);
-        }
 
-        this.springResource = springResource;
 
-        tomcatResource = TomcatResource.instance;
-        tomcatResource.setWebAppsPath( "src/main/webapp" );
+        emf =                springResource.getBean( EntityManagerFactory.class );
+        smf =                springResource.getBean( ServiceManagerFactory.class );
+        tokenService =       springResource.getBean( TokenService.class );
+        providerFactory =    springResource.getBean( SignInProviderFactory.class );
+        applicationCreator = springResource.getBean( ApplicationCreator.class );
+        managementService =  springResource.getBean( ManagementService.class );
 
-//        elasticSearchResource = new ElasticSearchResource().startEs();
 
-        elasticSearchResource = new ElasticSearchResource();
-        cassandraResource = new CassandraResource();
+        // Initialize Jersey Client
+        //TODO, make this port a resource that's filtered by maven build for the port number
+        uri = UriBuilder.fromUri("http://localhost/").port( 8080 ).build();
+
 
     }
 
-
-    public ITSetup( SpringResource springResource, String webAppsPath ) {
-        this( springResource );
-        tomcatResource.setWebAppsPath(webAppsPath);
-    }
-
-
-    @Override
-    protected void before() throws Throwable {
-        synchronized ( springResource ) {
-            super.before();
-
-
-            emf =                springResource.getBean( EntityManagerFactory.class );
-            smf =                springResource.getBean( ServiceManagerFactory.class );
-            tokenService =       springResource.getBean( TokenService.class );
-            providerFactory =    springResource.getBean( SignInProviderFactory.class );
-            applicationCreator = springResource.getBean( ApplicationCreator.class );
-//            managementService =  cassandraResource.getBean( ManagementService.class );
-
-//            if ( !setupCalled ) {
-//                managementService.setup();
-//                setupCalled = true;
-//            }
-
-            tomcatResource.setCassandraPort( cassandraResource.getPort() );
-            tomcatResource.setElasticSearchPort( elasticSearchResource.getPort() );
-
-
-            tomcatResource.before();
-
-            // Initialize Jersey Client
-            uri = UriBuilder.fromUri("http://localhost/").port( tomcatResource.getPort() ).build();
-
-            ready = true;
-            LOG.info( "Test setup complete..." );
-        }
-    }
-
-
-    @Override
-    protected void after() {
-        emf.flushEntityManagerCaches();
-        tomcatResource.after();
-//        elasticSearchResource.after();
-    }
-
-
-    public void protect() {
-        if ( ready ) {
-            return;
-        }
-
-        try {
-            LOG.warn( "Calls made to access members without being ready ... initializing..." );
-            before();
-        }
-        catch ( Throwable t ) {
-            throw new RuntimeException( "Failed on before()", t );
-        }
-    }
 
 
     public int getTomcatPort() {
-        protect();
-        return tomcatResource.getPort();
+        return 8080;
     }
 
 
     public ManagementService getMgmtSvc() {
-        protect();
         return managementService;
     }
 
 
     public EntityManagerFactory getEmf() {
-        protect();
         return emf;
     }
 
 
     public ServiceManagerFactory getSmf() {
-        protect();
         return smf;
     }
 
 
     public ApplicationCreator getAppCreator() {
-        protect();
         return applicationCreator;
     }
 
 
     public TokenService getTokenSvc() {
-        protect();
         return tokenService;
     }
 
 
     public Properties getProps() {
-        protect();
         return properties;
     }
 
 
     public SignInProviderFactory getProviderFactory() {
-        protect();
         return providerFactory;
     }
 
 
     public URI getBaseURI() {
-        protect();
         return uri;
     }
 }

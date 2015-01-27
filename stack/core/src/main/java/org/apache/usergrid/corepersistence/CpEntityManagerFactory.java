@@ -424,7 +424,11 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     @Override
     public void setup() throws Exception {
-        getSetup().init();
+        final Setup setup = getSetup();
+        setup.init();
+        setup.setupSystemKeyspace();
+        setup.setupStaticKeyspace();
+        setup.createDefaultApplications();
     }
 
 

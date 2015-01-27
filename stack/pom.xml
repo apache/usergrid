@@ -32,99 +32,102 @@
   <description>Parent module for the Apache Usergrid Project</description>
   <packaging>pom</packaging>
 
-  <properties>
-    <!-- =================================================================== -->
-    <!-- Properties: Deployment Setting Defaults                             -->
-    <!-- =================================================================== -->
-    <!-- NOTE: override from the CLI or settings.xml                 -->
-    <!-- NOTE: add server credentials config via settings            -->
-    <!-- NOTE: <settings>                                            -->
-    <!-- NOTE:   <servers>                                           -->
-    <!-- NOTE:     <server>                                          -->
-    <!-- NOTE:       <id>usergrid.releases</id>                      -->
-    <!-- NOTE:       <username>akarasulu</username>                  -->
-    <!-- NOTE:       <password>*********</password>                  -->
-    <!-- NOTE:     </server>                                         -->
-    <!-- NOTE:     <server>                                          -->
-    <!-- NOTE:       <id>usergrid.snapshots</id>                     -->
-    <!-- NOTE:       <username>akarasulu</username>                  -->
-    <!-- NOTE:       <password>*********</password>                  -->
-    <!-- NOTE:     </server>                                         -->
-    <!-- NOTE:   </servers>                                          -->
-    <!-- NOTE:                                                       -->
-    <!-- NOTE:   <profiles>                                          -->
-    <!-- NOTE:     <profile>                                         -->
-    <!-- NOTE:       <id>deployment</id>                             -->
-    <!-- NOTE:       <properties>                                    -->
-    <!-- NOTE:         <release.repository.url>                      -->
-    <!-- NOTE:           https://to/your/custom/releases/repository  -->
-    <!-- NOTE:         </release.repository.url>                     -->
-    <!-- NOTE:         <snapshot.repository.url>                     -->
-    <!-- NOTE:           https://to/your/custom/snapshots/repository -->
-    <!-- NOTE:         </shapshot.repository.url>                    -->
-    <!-- NOTE:       </properties>                                   -->
-    <!-- NOTE:     </profile>                                        -->
-    <!-- NOTE:   </profiles>                                         -->
-    <!-- NOTE:                                                       -->
-    <!-- NOTE:   <activeProfiles>                                    -->
-    <!-- NOTE:     <activeProfile>deployment</activeProfile>         -->
-    <!-- NOTE:   </activeProfiles>                                   -->
-    <!-- NOTE: </settings>                                           -->
+    <properties>
+      <!-- =================================================================== -->
+      <!-- Properties: Deployment Setting Defaults                             -->
+      <!-- =================================================================== -->
+      <!-- NOTE: override from the CLI or settings.xml                 -->
+      <!-- NOTE: add server credentials config via settings            -->
+      <!-- NOTE: <settings>                                            -->
+      <!-- NOTE:   <servers>                                           -->
+      <!-- NOTE:     <server>                                          -->
+      <!-- NOTE:       <id>usergrid.releases</id>                      -->
+      <!-- NOTE:       <username>akarasulu</username>                  -->
+      <!-- NOTE:       <password>*********</password>                  -->
+      <!-- NOTE:     </server>                                         -->
+      <!-- NOTE:     <server>                                          -->
+      <!-- NOTE:       <id>usergrid.snapshots</id>                     -->
+      <!-- NOTE:       <username>akarasulu</username>                  -->
+      <!-- NOTE:       <password>*********</password>                  -->
+      <!-- NOTE:     </server>                                         -->
+      <!-- NOTE:   </servers>                                          -->
+      <!-- NOTE:                                                       -->
+      <!-- NOTE:   <profiles>                                          -->
+      <!-- NOTE:     <profile>                                         -->
+      <!-- NOTE:       <id>deployment</id>                             -->
+      <!-- NOTE:       <properties>                                    -->
+      <!-- NOTE:         <release.repository.url>                      -->
+      <!-- NOTE:           https://to/your/custom/releases/repository  -->
+      <!-- NOTE:         </release.repository.url>                     -->
+      <!-- NOTE:         <snapshot.repository.url>                     -->
+      <!-- NOTE:           https://to/your/custom/snapshots/repository -->
+      <!-- NOTE:         </shapshot.repository.url>                    -->
+      <!-- NOTE:       </properties>                                   -->
+      <!-- NOTE:     </profile>                                        -->
+      <!-- NOTE:   </profiles>                                         -->
+      <!-- NOTE:                                                       -->
+      <!-- NOTE:   <activeProfiles>                                    -->
+      <!-- NOTE:     <activeProfile>deployment</activeProfile>         -->
+      <!-- NOTE:   </activeProfiles>                                   -->
+      <!-- NOTE: </settings>                                           -->
 
-    <snapshot.repository.url>
-      https://repository.apache.org/content/repositories/snapshots
-    </snapshot.repository.url>
-    <release.repository.url>
-      https://repository.apache.org/service/local/staging/deploy/maven2
-    </release.repository.url>
+      <snapshot.repository.url>
+        https://repository.apache.org/content/repositories/snapshots
+      </snapshot.repository.url>
+      <release.repository.url>
+        https://repository.apache.org/service/local/staging/deploy/maven2
+      </release.repository.url>
 
-    <!-- =================================================================== -->
-    <!-- Properties: General Settings -->
-    <!-- =================================================================== -->
+      <!-- =================================================================== -->
+      <!-- Properties: General Settings -->
+      <!-- =================================================================== -->
 
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-    <!-- you can override these via MAVEN_OPTS -->
-    <ug.heapmax>4096m</ug.heapmax>
-    <ug.heapmin>2048m</ug.heapmin>
-	  <ug.argline>-Djava.awt.headless=true</ug.argline>
+      <!-- you can override these via MAVEN_OPTS -->
+      <ug.heapmax>4096m</ug.heapmax>
+      <ug.heapmin>2048m</ug.heapmin>
+  	  <ug.argline>-Djava.awt.headless=true</ug.argline>
 
-    <usergrid-custom-spring-properties>classpath:/usergrid-deployment.properties</usergrid-custom-spring-properties>
-    <usergrid-custom-spring-test-properties>classpath:/usergrid-custom-test.properties</usergrid-custom-spring-test-properties>
+      <usergrid-custom-spring-properties>classpath:/usergrid-deployment.properties</usergrid-custom-spring-properties>
+      <usergrid-custom-spring-test-properties>classpath:/usergrid-custom-test.properties</usergrid-custom-spring-test-properties>
 
-    <!-- =================================================================== -->
-    <!-- Properties: Dependency Settings -->
-    <!-- =================================================================== -->
+      <!-- =================================================================== -->
+      <!-- Properties: Dependency Settings -->
+      <!-- =================================================================== -->
 
-    <amber-version>0.22-incubating</amber-version>
-    <cassandra-version>1.2.18</cassandra-version>
-    <hector-om-version>3.0-03</hector-om-version>
-    <hector-version>1.1-4</hector-version>
-    <hector-test-version>1.1-4</hector-test-version>
-    <jackson-version>1.9.9</jackson-version>
-    <jackson-2-version>2.3.3</jackson-2-version>
-    <jclouds.version>1.6.2-incubating</jclouds.version>
-    <jersey-version>1.18.1</jersey-version>
-    <junit-version>4.12</junit-version>
-    <log4j-version>1.2.16</log4j-version>
-    <metrics-version>2.1.2</metrics-version>
-    <org.springframework.version>3.1.2.RELEASE</org.springframework.version>
-    <shiro-version>1.2.3</shiro-version>
-    <slf4j-version>1.6.1</slf4j-version>
-    <snakeyaml-version>1.8</snakeyaml-version>
-    <tomcat-version>7.0.52</tomcat-version>
-    <antlr.version>3.4</antlr.version>
-    <tika.version>1.4</tika.version>
-    <mockito.version>1.10.8</mockito.version>
+      <amber-version>0.22-incubating</amber-version>
+      <cassandra-version>1.2.18</cassandra-version>
+      <hector-om-version>3.0-03</hector-om-version>
+      <hector-version>1.1-4</hector-version>
+      <hector-test-version>1.1-4</hector-test-version>
+      <jackson-version>1.9.9</jackson-version>
+      <jackson-2-version>2.3.3</jackson-2-version>
+      <jclouds.version>1.6.2-incubating</jclouds.version>
+      <jersey-version>1.18.1</jersey-version>
+      <junit-version>4.12</junit-version>
+      <log4j-version>1.2.16</log4j-version>
+      <metrics-version>2.1.2</metrics-version>
+      <org.springframework.version>3.1.2.RELEASE</org.springframework.version>
+      <shiro-version>1.2.3</shiro-version>
+      <slf4j-version>1.6.1</slf4j-version>
+      <snakeyaml-version>1.8</snakeyaml-version>
+      <tomcat-version>7.0.52</tomcat-version>
+      <antlr.version>3.4</antlr.version>
+      <tika.version>1.4</tika.version>
+      <mockito.version>1.10.8</mockito.version>
 
-    <!-- only use half the cores on the machine for testing -->
-    <usergrid.it.forkCount>.5C</usergrid.it.forkCount>
-    <usergrid.it.threads>4</usergrid.it.threads>
+      <!-- only use half the cores on the machine for testing -->
+        <usergrid.it.parallel>methods</usergrid.it.parallel>
+        <usergrid.it.reuseForks>true</usergrid.it.reuseForks>
+      <usergrid.it.forkCount>.5C</usergrid.it.forkCount>
+      <usergrid.it.threads>4</usergrid.it.threads>
 
-    <metrics.version>3.0.0</metrics.version>
-    <rx.version>0.19.6</rx.version>
-      <surefire.plugin.version>2.18.1</surefire.plugin.version>
-  </properties>
+
+      <metrics.version>3.0.0</metrics.version>
+      <rx.version>0.19.6</rx.version>
+        <surefire.plugin.version>2.18.1</surefire.plugin.version>
+    </properties>
 
   <licenses>
     <license>
@@ -1453,107 +1456,80 @@
   </dependencies>
 
   <build>
-    <pluginManagement>
-      <plugins>
-
-
-        <!--
-                <plugin>
-                  <groupId>com.structure101.java</groupId>
-                  <artifactId>maven-structure101-plugin</artifactId>
-                  <version>1.1</version>
-                </plugin>
-        -->
-
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.2</version>
-          <configuration>
-            <source>1.7</source>
-            <target>1.7</target>
-            <optimize>true</optimize>
-            <showDeprecation>true</showDeprecation>
-            <debug>true</debug>
-            <!-- uncomment when building for more detailed profiling information <debuglevel>lines,vars,source</debuglevel> -->
-            <encoding>UTF-8</encoding>
-            <showWarnings>true</showWarnings>
-          </configuration>
-        </plugin>
-
-
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-jar-plugin</artifactId>
-          <version>2.5</version>
-          <executions>
-            <execution>
-              <id>test-jar-execution</id>
-              <phase>package</phase>
-              <goals>
-                <goal>test-jar</goal>
-              </goals>
-              <configuration>
-              </configuration>
-            </execution>
-          </executions>
-        </plugin>
-
-          <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-surefire-plugin</artifactId>
-              <version>${surefire.plugin.version}</version>
-              <configuration>
-                  <parallel>${usergrid.it.parallel}</parallel>
-                  <forkCount>${usergrid.it.forkCount}</forkCount>
-                  <reuseForks>${usergrid.it.reuseForks}</reuseForks>
-                  <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin}  -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}
-                  </argLine>
-              </configuration>
-
-              <!-- TODO, we may need an exclusion.  Appears to be a classloader bug
-              http://stackoverflow.com/questions/27225140/intermittent-noclassdeffounderror-when-running-a-maven-surefire-build-in-jenkins
-              -->
-              <dependencies>
-                  <dependency>
-                      <groupId>org.apache.maven.surefire</groupId>
-                      <artifactId>surefire-junit4</artifactId>
-                      <version>${surefire.plugin.version}</version>
-                  </dependency>
-              </dependencies>
-          </plugin>
-
-
-        <plugin>
-          <groupId>org.codehaus.mojo.jspc</groupId>
-          <artifactId>jspc-maven-plugin</artifactId>
-          <version>2.0-alpha-3</version>
-          <configuration>
-            <includeInProject>false</includeInProject>
-            <webFragmentFile>${project.build.directory}/web-fragment.xml.txt</webFragmentFile>
-          </configuration>
-          <executions>
-            <execution>
-              <id>jspc</id>
-              <goals>
-                <goal>compile</goal>
-              </goals>
-            </execution>
-          </executions>
-          <dependencies>
-            <dependency>
-              <groupId>org.codehaus.mojo.jspc</groupId>
-              <artifactId>jspc-compiler-tomcat6</artifactId>
-              <version>2.0-alpha-3</version>
-            </dependency>
-          </dependencies>
-        </plugin>
-      </plugins>
-    </pluginManagement>
 
     <plugins>
+
+
+                <!--
+                        <plugin>
+                          <groupId>com.structure101.java</groupId>
+                          <artifactId>maven-structure101-plugin</artifactId>
+                          <version>1.1</version>
+                        </plugin>
+                -->
+
+
+                <plugin>
+                  <groupId>org.apache.maven.plugins</groupId>
+                  <artifactId>maven-compiler-plugin</artifactId>
+                  <version>3.2</version>
+                  <configuration>
+                    <source>1.7</source>
+                    <target>1.7</target>
+                    <optimize>true</optimize>
+                    <showDeprecation>true</showDeprecation>
+                    <debug>true</debug>
+                    <!-- uncomment when building for more detailed profiling information <debuglevel>lines,vars,source</debuglevel> -->
+                    <encoding>UTF-8</encoding>
+                    <showWarnings>true</showWarnings>
+                  </configuration>
+                </plugin>
+
+
+
+                <plugin>
+                  <groupId>org.apache.maven.plugins</groupId>
+                  <artifactId>maven-jar-plugin</artifactId>
+                  <version>2.5</version>
+                  <executions>
+                    <execution>
+                      <id>test-jar-execution</id>
+                      <phase>package</phase>
+                      <goals>
+                        <goal>test-jar</goal>
+                      </goals>
+                      <configuration>
+                      </configuration>
+                    </execution>
+                  </executions>
+                </plugin>
+
+                  <plugin>
+                      <groupId>org.apache.maven.plugins</groupId>
+                      <artifactId>maven-surefire-plugin</artifactId>
+                      <version>${surefire.plugin.version}</version>
+                      <configuration>
+                          <parallel>${usergrid.it.parallel}</parallel>
+                          <forkCount>${usergrid.it.forkCount}</forkCount>
+                          <reuseForks>${usergrid.it.reuseForks}</reuseForks>
+                          <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin}  -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}
+                          </argLine>
+                      </configuration>
+
+                      <!-- TODO, we may need an exclusion.  Appears to be a classloader bug
+                      http://stackoverflow.com/questions/27225140/intermittent-noclassdeffounderror-when-running-a-maven-surefire-build-in-jenkins
+                      -->
+                      <dependencies>
+                          <dependency>
+                              <groupId>org.apache.maven.surefire</groupId>
+                              <artifactId>surefire-junit47</artifactId>
+                              <version>${surefire.plugin.version}</version>
+                          </dependency>
+                      </dependencies>
+                  </plugin>
+
+
+
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>sonar-maven-plugin</artifactId>
@@ -1679,10 +1655,6 @@
 
   <reporting>
     <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-      </plugin>
 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

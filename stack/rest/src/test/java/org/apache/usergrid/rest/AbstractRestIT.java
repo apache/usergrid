@@ -71,8 +71,7 @@ public abstract class AbstractRestIT extends JerseyTest {
 
     protected static final AppDescriptor descriptor;
 
-    @ClassRule
-    public static ITSetup setup = new ITSetup( RestITSuite.springResource );
+    public static ITSetup setup = new ITSetup(  );
 
     //private static final URI baseURI = setup.getBaseURI();
 

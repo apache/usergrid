@@ -31,77 +31,9 @@
 
     <!-- Override these properties in an active profile within your settings.xml -->
     <properties>
-        <!-- If you got the resources, max parallelism = 6 forks -->
-        <rest.it.forkCount>2</rest.it.forkCount>
-        <rest.it.reuseForks>false</rest.it.reuseForks>
-        <rest.it.parallel>suites</rest.it.parallel>
-        <rest.it.threadCount>2</rest.it.threadCount>
+       <cargo.servlet.port>8081</cargo.servlet.port>
     </properties>
 
-    <profiles>
-
-        <profile>
-            <id>default</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-
-                            <systemPropertyVariables>
-                                <storage-config>${basedir}/src/test/conf</storage-config>
-                                <target.directory>${project.build.directory}</target.directory>
-                            </systemPropertyVariables>
-
-                            <forkCount>${rest.it.forkCount}</forkCount>
-                            <reuseForks>${rest.it.reuseForks}</reuseForks>
-
-                            <parallel>${rest.it.parallel}</parallel>
-                            <threadCount>${rest.it.threadCount}</threadCount>
-
-                            <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar -Djava.util.logging.config.file=src/test/resources/logging.properties ${ug.argline}</argLine>
-
-                            <additionalClasspathElements>
-                                <additionalClasspathElement>./target/classes/jsp/WEB_002dINF/jsp</additionalClasspathElement>
-                            </additionalClasspathElements>
-
-                            <includes>
-<!--                                <include>**/RestTestSuite.java</include>
-                                <include>**/RestITSuite.java</include>-->
-                                <include>**/*IT.java</include>
-                                <include>**/*Test.java</include>
-                            </includes>
-                            <excludes>
-<!--                                <exclude>**/*Concurrent*Suite.java</exclude>
-                                <exclude>**/ActivityResourceIT.java</exclude>
-                                <exclude>**/AdminEmailEncodingIT.java</exclude>
-                                <exclude>**/ApplicationRequestCounterIT.java</exclude>
-                                <exclude>**/AssetResourceIT.java</exclude>
-                                <exclude>**/BasicIT.java</exclude>
-                                <exclude>**/CollectionsResourceIT.java</exclude>
-                                <exclude>**/ContentTypeResourceIT.java</exclude>
-                                <exclude>**/DevicesResourceIT.java</exclude>
-                                <exclude>**/EventsResourceIT.java</exclude>
-                                <exclude>**/GroupResourceIT.java</exclude>
-                                <exclude>**/OrganizationResourceIT.java</exclude>
-                                <exclude>**/OrganizationsResourceIT.java</exclude>
-                                <exclude>**/OwnershipResourceIT.java</exclude>
-                                <exclude>**/PagingResourceIT.java</exclude>
-                                <exclude>**/PermissionsResourceIT.java</exclude>
-                                <exclude>**/UserResourceIT.java</exclude>
-                                <exclude>**/UsersOrganizationsResourceIT.java</exclude>-->
-                            </excludes>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-
-    </profiles>
 
     <build>
         <finalName>ROOT</finalName>
@@ -128,21 +60,45 @@
         </testResources>
 
         <plugins>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
+                <version>${surefire.plugin.version}</version>
                 <configuration>
-        			<parallel>${rest.it.parallel}</parallel>
-                    <forkCount>${rest.it.forkCount}</forkCount>
-                    <reuseForks>${rest.it.reuseForks}</reuseForks>
-                    <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}</argLine>
+                    <systemPropertyVariables>
+                        <storage-config>${basedir}/src/test/conf</storage-config>
+                        <target.directory>${project.build.directory}</target.directory>
+                    </systemPropertyVariables>
+                    <parallel>methods</parallel>
+                    <forkCount>${usergrid.it.forkCount}</forkCount>
+                    <threadCount>${usergrid.it.threads}</threadCount>
+                    <reuseForks>true</reuseForks>
+                    <argLine>-Dtest.barrier.timestamp=${maven.build.timestamp} -Dtest.clean.storage=true
+                        -Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8
+                        -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar
+                        ${ug.argline}
+                    </argLine>
+                    <includes>
+                        <include>**/*IT.java</include>
+                        <include>**/*Test.java</include>
+                    </includes>
+
                 </configuration>
+
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.maven.surefire</groupId>
+                        <artifactId>surefire-junit47</artifactId>
+                        <version>${surefire.plugin.version}</version>
+                    </dependency>
+                </dependencies>
             </plugin>
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
-                <version>2.3</version>
+                <version>2.6</version>
             </plugin>
 
             <plugin>
@@ -173,7 +129,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>2.3.2</version>
                 <configuration>
                     <finalName>${project.artifactId}-${project.version}</finalName>
                 </configuration>
@@ -208,10 +163,72 @@
             </plugin>
 
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-install-plugin</artifactId>
-                <version>2.5.1</version>
+                <groupId>org.codehaus.cargo</groupId>
+                <artifactId>cargo-maven2-plugin</artifactId>
+                <version>1.4.12</version>
+                <executions>
+                   <execution>
+                     <id>start-container</id>
+                     <phase>pre-integration-test</phase>
+                     <goals>
+                       <goal>start</goal>
+                     </goals>
+                   </execution>
+                   <execution>
+                     <id>stop-container</id>
+                     <phase>post-integration-test</phase>
+                     <goals>
+                       <goal>stop</goal>
+                     </goals>
+                   </execution>
+                 </executions>
+
+                <configuration>
+                    <container>
+                        <containerId>tomcat7x</containerId>
+                        <!-- Type == Installed means that you want to deploy to a container that's installed on your computer -->
+                        <zipUrlInstaller>
+                            <url>http://mirror.tcpdiag.net/apache/tomcat/tomcat-7/v7.0.57/bin/apache-tomcat-7.0.57.zip</url>
+                        </zipUrlInstaller>
+
+
+                    </container>
+                    <configuration>
+                        <configfiles>
+                              <configfile>
+                                <file>${project.basedir}/target/test-classes/usergrid-deployment.properties</file>
+                                <todir>lib</todir>
+                              </configfile>
+                            </configfiles>
+                        <!--If you're getting port conflicts, override the ports here-->
+                        <!--<properties>-->
+                            <!--<cargo.rmi.port>10200</cargo.rmi.port>-->
+                            <!--<cargo.servlet.port>${cargo.servlet.port}</cargo.servlet.port>-->
+                            <!--<cargo.tomcat.ajp.port>10201</cargo.tomcat.ajp.port>-->
+                        <!--</properties>-->
+                    </configuration>
+
+                    <deployables>
+                        <!-- This deployable specifies the webapp you want to deploy -->
+                        <deployable>
+                            <groupId>${project.groupId}</groupId>
+                            <artifactId>${project.artifactId}</artifactId>
+                            <type>war</type>
+                        </deployable>
+
+                    </deployables>
+
+
+
+
+                    <!--<configFiles>-->
+                          <!--<configfile>-->
+                            <!--<file>${project.basedir}/src/main/config/jetty-env.xml</file>-->
+                            <!--<todir>webapps/datasource-war/WEB-INF</todir>-->
+                          <!--</configfile>-->
+                </configuration>
             </plugin>
+
 
         </plugins>
     </build>
