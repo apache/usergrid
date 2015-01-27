@@ -61,7 +61,7 @@ public class ApplicationResource extends NamedResource {
 
     public Entity get() {
         ApiResponse response = getResource(true).type(MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
-            .post(ApiResponse.class);
+            .get(ApiResponse.class);
 
         return new Entity(response);
     }

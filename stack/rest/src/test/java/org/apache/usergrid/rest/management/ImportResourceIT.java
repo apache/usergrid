@@ -36,6 +36,7 @@ import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 
@@ -52,9 +53,12 @@ public class ImportResourceIT extends AbstractRestIT {
         String app = clientSetup.getAppName();
         Entity payload = payloadBuilder();
         ///management/orgs/orgname/apps/appname/collection/users/import
-        Entity entity = this.management().orgs().organization(org).apps(app).addToPath("collection").addToPath("users").addToPath("import").post(payload);
+        //Entity entity = this.management().orgs().organization(org).apps(app).addToPath("collection").addToPath("users").addToPath("import").post(payload);
+        Entity entity = this.management().orgs().organization( org ).app().addToPath( app ).addToPath( "collection" ).addToPath( "users" ).addToPath( "import" ).post( payload );
 
-        assertEquals("", entity.getString("Import Entity"));
+        assertNotNull( entity );
+        assertNotNull( entity.getString( "Import Entity" ));
+
     }
 
 
@@ -66,9 +70,10 @@ public class ImportResourceIT extends AbstractRestIT {
         String app = clientSetup.getAppName();
         Entity payload = payloadBuilder();
         ///management/orgs/orgname/apps/appname/import
-        Entity entity = this.management().orgs().organization(org).apps(app).addToPath("import").post(payload);
+        Entity entity = this.management().orgs().organization(org).app().addToPath( app ).addToPath("import").post(payload);
 
-        assertEquals("", entity.getString("Import Entity"));
+        assertNotNull( entity );
+        assertNotNull( entity.getString( "Import Entity" ) );
 
 
     }
@@ -83,7 +88,8 @@ public class ImportResourceIT extends AbstractRestIT {
         ///management/orgs/orgname/import
         Entity entity = this.management().orgs().organization(org).addToPath("import").post(payload);
 
-        assertEquals("", entity.getString("Import Entity"));
+        assertNotNull( entity );
+        assertNotNull( entity.getString( "Import Entity" ) );
 
     }
 
@@ -96,9 +102,10 @@ public class ImportResourceIT extends AbstractRestIT {
         ///management/orgs/orgname/import
         Entity entity = this.management().orgs().organization(org).addToPath("import").post(payload);
 
-        assertEquals("", entity.getString("Import Entity"));
+        assertNotNull( entity );
+        assertNotNull( entity.getString( "Import Entity" ) );
 
-        String uuid = entity.getString("uuid");
+        String uuid = entity.getString("Import Entity");
         uuid = uuid.replaceAll( "\"", "" );
 
         entity = this.management().orgs().organization(org).addToPath("import").addToPath(uuid).get();
@@ -115,13 +122,14 @@ public class ImportResourceIT extends AbstractRestIT {
         String app = clientSetup.getAppName();
         Entity payload = payloadBuilder();
         ///management/orgs/orgname/apps/appname/import
-        Entity entity = this.management().orgs().organization(org).apps(app).addToPath("import").post(payload);
+        Entity entity = this.management().orgs().organization( org ).app().addToPath( app ).addToPath("import").post(payload);
 
-        assertEquals("", entity.getString("Import Entity"));
+        assertNotNull( entity );
+        assertNotNull( entity.getString( "Import Entity" ) );
 
         String uuid = entity.getString("uuid");
         uuid = uuid.replaceAll( "\"", "" );
-        entity = this.management().orgs().organization(org).apps(app).addToPath("import").addToPath(uuid).get();
+        entity = this.management().orgs().organization( org ).app().addToPath( app ).addToPath("import").addToPath(uuid).get();
 
 
         assertEquals( "SCHEDULED", entity.getString( "state" ) );//TODO: do tests for other states in service tier
@@ -135,14 +143,14 @@ public class ImportResourceIT extends AbstractRestIT {
         String app = clientSetup.getAppName();
         Entity payload = payloadBuilder();
         ///management/orgs/orgname/apps/appname/import
-        Entity entity = this.management().orgs().organization(org).apps(app).addToPath("collection")
+        Entity entity = this.management().orgs().organization( org ).app().addToPath( app ).addToPath("collection")
             .addToPath("users").addToPath("import").post(payload);
 
         assertEquals("", entity.getString("Import Entity"));
 
         String uuid = entity.getString("uuid");
         uuid = uuid.replaceAll( "\"", "" );
-        entity = this.management().orgs().organization(org).apps(app).addToPath("collection")
+        entity = this.management().orgs().organization(org).app().addToPath( app ).addToPath("collection")
             .addToPath("users").addToPath("import").addToPath(uuid).get();
 
 
