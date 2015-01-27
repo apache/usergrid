@@ -121,7 +121,7 @@
         <usergrid.it.parallel>methods</usergrid.it.parallel>
         <usergrid.it.reuseForks>true</usergrid.it.reuseForks>
       <usergrid.it.forkCount>.5C</usergrid.it.forkCount>
-      <usergrid.it.threads>4</usergrid.it.threads>
+      <usergrid.it.threads>2</usergrid.it.threads>
 
 
       <metrics.version>3.0.0</metrics.version>

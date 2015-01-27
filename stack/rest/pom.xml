@@ -66,23 +66,24 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${surefire.plugin.version}</version>
                 <configuration>
-                    <systemPropertyVariables>
-                        <storage-config>${basedir}/src/test/conf</storage-config>
-                        <target.directory>${project.build.directory}</target.directory>
-                    </systemPropertyVariables>
-                    <parallel>methods</parallel>
-                    <forkCount>${usergrid.it.forkCount}</forkCount>
-                    <threadCount>${usergrid.it.threads}</threadCount>
-                    <reuseForks>true</reuseForks>
-                    <argLine>-Dtest.barrier.timestamp=${maven.build.timestamp} -Dtest.clean.storage=true
-                        -Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8
-                        -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar
-                        ${ug.argline}
-                    </argLine>
-                    <includes>
-                        <include>**/*IT.java</include>
-                        <include>**/*Test.java</include>
-                    </includes>
+                    <skipTests>true</skipTests>
+                    <!--<systemPropertyVariables>-->
+                        <!--<storage-config>${basedir}/src/test/conf</storage-config>-->
+                        <!--<target.directory>${project.build.directory}</target.directory>-->
+                    <!--</systemPropertyVariables>-->
+                    <!--<parallel>methods</parallel>-->
+                    <!--<forkCount>${usergrid.it.forkCount}</forkCount>-->
+                    <!--<threadCount>${usergrid.it.threads}</threadCount>-->
+                    <!--<reuseForks>true</reuseForks>-->
+                    <!--<argLine>-Dtest.barrier.timestamp=${maven.build.timestamp} -Dtest.clean.storage=true-->
+                        <!---Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8-->
+                        <!---javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar-->
+                        <!--${ug.argline}-->
+                    <!--</argLine>-->
+                    <!--<includes>-->
+                        <!--<include>**/*IT.java</include>-->
+                        <!--<include>**/*Test.java</include>-->
+                    <!--</includes>-->
 
                 </configuration>
 
@@ -93,6 +94,47 @@
                         <version>${surefire.plugin.version}</version>
                     </dependency>
                 </dependencies>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>${surefire.plugin.version}</version>
+                <configuration>
+                    <includes>
+                        <include>**/*IT.java</include>
+                        <include>**/*Test.java</include>
+                    </includes>
+
+                    <systemPropertyVariables>
+                        <storage-config>${basedir}/src/test/conf</storage-config>
+                        <target.directory>${project.build.directory}</target.directory>
+                    </systemPropertyVariables>
+                    <parallel>methods</parallel>
+                    <forkCount>${usergrid.it.forkCount}</forkCount>
+                    <threadCount>${usergrid.it.threads}</threadCount>
+                    <reuseForks>true</reuseForks>
+                    <argLine>-Dtest.barrier.timestamp=${maven.build.timestamp} -Dtest.clean.storage=true -Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}</argLine>
+                </configuration>
+                <dependencies>
+                   <dependency>
+                       <groupId>org.apache.maven.surefire</groupId>
+                       <artifactId>surefire-junit47</artifactId>
+                       <version>${surefire.plugin.version}</version>
+                   </dependency>
+               </dependencies>
+
+                <!-- run the integration tests then verify the results -->
+                <executions>
+                    <execution>
+                        <id>failsafe-integration-tests</id>
+                        <phase>integration-test</phase>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
 
             <plugin>
