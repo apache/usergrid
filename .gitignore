@@ -1,6 +1,8 @@
 .DS_Store
 .AppleDouble
 .LSOverride
+stack/core/src/main/java/org/apache/usergrid/persistence/query/tree/QueryFilterParser.java
+stack/core/src/main/java/org/apache/usergrid/persistence/query/tree/QueryFilterLexer.java
 
 target
 
@@ -39,6 +41,8 @@ stack/corepersistence/graph/nbactions.xml
 stack/corepersistence/model/nbactions.xml
 stack/corepersistence/nbactions.xml
 stack/corepersistence/queryindex/nbactions.xml
+stack/corepersistence/queryindex/src/main/java/org/apache/usergrid/persistence/query/tree/QueryFilterLexer.java
+stack/corepersistence/queryindex/src/main/java/org/apache/usergrid/persistence/query/tree/QueryFilterParser.java
 /stack/corepersistence/perftest2/src/main/resources/finefoods.txt
 /stack/corepersistence/perftest1/src/main/resources/finefoods.txt
 /stack/corepersistence/perftest2/nbactions.xml
@@ -76,6 +80,8 @@ portal/js/templates.js
 /release/target/
 
 /portal/seleniumLog.txt
+/stack/core/src/main/java/org/apache/usergrid/persistence/query/tree/QueryFilterLexer.java
+/stack/core/src/main/java/org/apache/usergrid/persistence/query/tree/QueryFilterParser.java
 !/stack/corepersistence/common/src/test/resources/usergrid-UNIT.properties
 *.iml
 sdks/dotnet/samples/notifications/packages/*
