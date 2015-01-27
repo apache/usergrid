@@ -26,10 +26,13 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.UUID;
 
+
 /**
- * Performs all functions related to importing
+ * Performs all functions related to importing.
  */
 public interface ImportService {
+
+    enum ImportType { COLLECTION, APPLICATION, ORGANIZATION }
 
     /**
      * Schedules the import to execute

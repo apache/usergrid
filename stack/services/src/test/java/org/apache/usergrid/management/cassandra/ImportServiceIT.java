@@ -63,7 +63,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 
-@Concurrent
+//@Concurrent
 public class ImportServiceIT {
 
     private static final Logger logger = LoggerFactory.getLogger(ImportServiceIT.class);
@@ -80,7 +80,8 @@ public class ImportServiceIT {
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @ClassRule
-    public static final ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource, new ElasticSearchResource() );
+    public static final ServiceITSetup setup =
+        new ServiceITSetupImpl( cassandraResource, new ElasticSearchResource() );
 
 
     @BeforeClass
@@ -89,13 +90,13 @@ public class ImportServiceIT {
 
         // start the scheduler after we're all set up
         JobSchedulerService jobScheduler = cassandraResource.getBean( JobSchedulerService.class );
-        //jobScheduler.setJobListener( listener );
         if ( jobScheduler.state() != Service.State.RUNNING ) {
             jobScheduler.startAndWait();
         }
 
         //creates sample test application
-        adminUser = setup.getMgmtSvc().createAdminUser( username, username, username+"@test.com", username, false, false );
+        adminUser = setup.getMgmtSvc().createAdminUser(
+            username, username, username+"@test.com", username, false, false );
         organization = setup.getMgmtSvc().createOrganization( username, adminUser, true );
         applicationId = setup.getMgmtSvc().createApplication( organization.getUuid(), username+"app" ).getId();
     }
@@ -145,7 +146,7 @@ public class ImportServiceIT {
 
     // test case to check if a collection file is imported correctly
     @Test
-    public void testIntegrationImportCollection() throws Exception {
+    public void testImportCollection() throws Exception {
 
         // creates 5 entities in user collection
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
@@ -154,7 +155,7 @@ public class ImportServiceIT {
         Map<String, Object> userProperties = null;
 
         Entity entity[] = new Entity[10];
-        //creates entities
+        //creates some user entities
         for ( int i = 0; i < 10; i++ ) {
             userProperties = new LinkedHashMap<String, Object>();
             userProperties.put( "username", "user" + i );
@@ -257,51 +258,50 @@ public class ImportServiceIT {
     }
 
     // test case to check if application is imported correctly
-    //@Test
-    public void testIntegrationImportApplication() throws Exception {
+    @Test
+    public void testImportApplication() throws Exception {
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
-        //intialize user object to be posted
-        Map<String, Object> userProperties = null;
-
-        Entity entity[] = new Entity[5];
-        //creates entities for a custom collection "custom" entities
+        // Create five user entities (we already have one admin user)
+        List<Entity> entities = new ArrayList<>();
         for ( int i = 0; i < 5; i++ ) {
-            userProperties = new LinkedHashMap<String, Object>();
+            Map<String, Object> userProperties =  new LinkedHashMap<>();
             userProperties.put( "parameter1", "user" + i );
             userProperties.put( "parameter2", "user" + i + "@test.com" );
-            entity[i] = em.create( "custom", userProperties );
+            entities.add( em.create( "custom", userProperties ) );
         }
-        //creates connections
-        em.createConnection( new SimpleEntityRef( "custom",  entity[0].getUuid() ),
-                "related", new SimpleEntityRef( "custom",  entity[1].getUuid() ) );
-        em.createConnection( new SimpleEntityRef( "custom",  entity[1].getUuid() ),
-                "related", new SimpleEntityRef( "custom",  entity[0].getUuid() ) );
+        // Creates connections
+        em.createConnection( new SimpleEntityRef( "custom",  entities.get(0).getUuid() ),
+                  "related", new SimpleEntityRef( "custom",  entities.get(1).getUuid() ) );
+        em.createConnection( new SimpleEntityRef( "custom",  entities.get(1).getUuid() ),
+                  "related", new SimpleEntityRef( "custom",  entities.get(0).getUuid() ) );
 
+        logger.debug("\n\nExport the application\n\n");
 
-        //Export the application which needs to be tested for import
+        // Export the application which needs to be tested for import
         ExportService exportService = setup.getExportService();
         S3Export s3Export = new S3ExportImpl();
         HashMap<String, Object> payload = payloadBuilder();
-
         payload.put( "organizationId",  organization.getUuid());
         payload.put( "applicationId", applicationId );
 
-        // schedule the export job
+        // Schedule the export job
         UUID exportUUID = exportService.schedule( payload );
 
-        //create and initialize jobData returned in JobExecution.
+        // Create and initialize jobData returned in JobExecution.
         JobData jobData = jobExportDataCreator(payload, exportUUID, s3Export);
 
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
 
-        //export the application and wait for the export job to finish
+        // Export the application and wait for the export job to finish
         exportService.doExport( jobExecution );
         while ( !exportService.getState( exportUUID ).equals( "FINISHED" ) ) {
-            ;
+           // wait...
         }
+
+        logger.debug("\n\nImport the application\n\n");
 
         // import
         S3Import s3Import = new S3ImportImpl();
@@ -319,21 +319,28 @@ public class ImportServiceIT {
         // import the application file and wait for it to finish
         importService.doImport(jobExecution);
         while ( !importService.getState( importUUID ).equals( "FINISHED" ) ) {
-            ;
+           // wait...
         }
+
+        logger.debug("\n\nVerify Import\n\n");
 
         try {
             //checks if temp import files are created i.e. downloaded from S3
             assertThat(importService.getEphemeralFile().size(), is(not(0)));
 
             Set<String> collections = em.getApplicationCollections();
-            Iterator<String> collectionsItr = collections.iterator();
+
             // check if all collections in the application are updated
-            while (collectionsItr.hasNext()) {
-                String collectionName = collectionsItr.next();
+            for (String collectionName : collections) {
+                logger.debug("Checking collection {}", collectionName);
+
                 Results collection = em.getCollection(applicationId, collectionName, null, Level.ALL_PROPERTIES);
-                List<Entity> entities = collection.getEntities();
-                for (Entity eachEntity : entities) {
+
+                for (Entity eachEntity : collection.getEntities() ) {
+
+                    logger.debug("Checking entity {} {}:{}",
+                        new Object[] { eachEntity.getName(), eachEntity.getType(), eachEntity.getUuid()} );
+
                     //check for dictionaries --> checking permissions in the dictionaries
                     EntityRef er;
                     Map<Object, Object> dictionaries;
@@ -343,20 +350,21 @@ public class ImportServiceIT {
                         if (eachEntity.getName().equalsIgnoreCase("admin")) {
                             er = eachEntity;
                             dictionaries = em.getDictionaryAsMap(er, "permissions");
-                            assertThat(dictionaries.size(), is(0));
+                            assertThat(dictionaries.size(), is(not(0))); // admin has permission
                         } else {
                             er = eachEntity;
                             dictionaries = em.getDictionaryAsMap(er, "permissions");
-                            assertThat(dictionaries.size(), is(not(0)));
+                            assertThat(dictionaries.size(), is(0)); // other roles do not
                         }
                     }
                 }
+
                 if (collectionName.equals("customs")) {
                     // check if connections are created for only the 1st 2 entities in the custom collection
                     Results r;
                     List<ConnectionRef> connections;
                     for (int i = 0; i < 2; i++) {
-                        r = em.getConnectedEntities(entities.get(i), "related", null,Level.IDS);
+                        r = em.getConnectedEntities(entities.get(i), "related", null, Level.IDS);
                         connections = r.getConnections();
                         assertNotNull(connections);
                     }
@@ -370,10 +378,10 @@ public class ImportServiceIT {
     }
 
     // test case to check if all applications file for an organization are imported correctly
-    //@Test
-    public void testIntegrationImportOrganization() throws Exception {
+    @Test
+    public void testImportOrganization() throws Exception {
 
-        // //creates 5 entities in usertests collection
+        // creates 5 entities in usertests collection
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
         //intialize user object to be posted
@@ -444,8 +452,11 @@ public class ImportServiceIT {
             assertThat(importService.getEphemeralFile().size(), is(not(0)));
 
             //get all applications for an organization
-            BiMap<UUID, String> applications = setup.getMgmtSvc().getApplicationsForOrganization(organization.getUuid());
+            BiMap<UUID, String> applications =
+                setup.getMgmtSvc().getApplicationsForOrganization(organization.getUuid());
+
             for (BiMap.Entry<UUID, String> app : applications.entrySet()) {
+
                 //check if all collections-entities are updated - created and modified should be different
                 UUID appID = app.getKey();
                 em = setup.getEmf().getEntityManager(appID);

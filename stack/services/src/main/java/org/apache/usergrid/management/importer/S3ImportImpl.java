@@ -50,13 +50,15 @@ public class S3ImportImpl implements S3Import {
     private int i=0;
 
     /**
-     * Downloads the files from s3 into temp local files
+     * Downloads the files from s3 into temp local files.
+     *
      * @param importInfo the information entered by the user required to perform import from S3
      * @param filename the filename generated based on the request URI
-     * @param type  it indicates the type of import. 0 - Collection , 1 - Application and 2 - Organization
+     * @param type  it indicates the type of import
      * @return It returns an ArrayList of files i.e. the files downloaded from s3
      */
-    public ArrayList<File> copyFromS3( final Map<String,Object> importInfo, String filename , int type) {
+    public ArrayList<File> copyFromS3(
+        final Map<String,Object> importInfo, String filename , ImportService.ImportType type ) {
 
         Map<String,Object> properties = ( Map<String, Object> ) importInfo.get( "properties" );
 
@@ -70,47 +72,51 @@ public class S3ImportImpl implements S3Import {
         overrides.setProperty( "s3" + ".identity", accessId );
         overrides.setProperty( "s3" + ".credential", secretKey );
 
-        final Iterable<? extends Module> MODULES = ImmutableSet
-                .of(new JavaUrlHttpCommandExecutorServiceModule(), new Log4JLoggingModule(),
-                        new NettyPayloadModule());
+        final Iterable<? extends Module> MODULES = ImmutableSet.of(
+            new JavaUrlHttpCommandExecutorServiceModule(),
+            new Log4JLoggingModule(),
+            new NettyPayloadModule());
 
-        BlobStoreContext context =
-                ContextBuilder.newBuilder("s3").credentials( accessId, secretKey ).modules( MODULES )
-                        .overrides( overrides ).buildView( BlobStoreContext.class );
+        BlobStoreContext context = ContextBuilder.newBuilder("s3")
+            .credentials(accessId, secretKey)
+            .modules(MODULES)
+            .overrides(overrides)
+            .buildView(BlobStoreContext.class);
 
         try{
 
             blobStore = context.getBlobStore();
 
             // gets all the files in the bucket recursively
-            PageSet<? extends StorageMetadata> pageSet = blobStore.list(bucketName, new ListContainerOptions().recursive());
+            PageSet<? extends StorageMetadata> pageSet =
+                blobStore.list(bucketName, new ListContainerOptions().recursive());
 
             Iterator itr = pageSet.iterator();
 
-            while(itr.hasNext())
-            {
+            while(itr.hasNext()) {
+
                 String fname = ((MutableBlobMetadata)itr.next()).getName();
                 switch(type) {
-                    // check if file is a collection file and is in format <org_name>/<app_name>.<collection_name>.[0-9]+.json
-                    case 0:
-                        if(fname.contains(filename))
-                        {
+
+                    // collection file in format <org_name>/<app_name>.<collection_name>.[0-9]+.json
+                    case COLLECTION:
+                        if(fname.contains(filename)) {
                             copyFile(bucketName,fname);
                             i++;
                         }
                         break;
-                    // check if file is an application file and is in format <org_name>/<app_name>.[0-9]+.json
-                    case 1:
-                        if(fname.matches(filename+"[0-9]+\\.json"))
-                        {
+
+                    // application file in format <org_name>/<app_name>.[0-9]+.json
+                    case APPLICATION:
+                        if(fname.matches(filename+"[0-9]+\\.json")) {
                             copyFile(bucketName,fname);
                             i++;
                         }
                         break;
-                    // check if file is an application file and is in format <org_name>/[-a-zA-Z0-9]+.[0-9]+.json
-                    case 2:
-                        if(fname.matches(filename+"[-a-zA-Z0-9]+\\.[0-9]+\\.json"))
-                        {
+
+                    // is an application file in format <org_name>/[-a-zA-Z0-9]+.[0-9]+.json
+                    case ORGANIZATION:
+                        if(fname.matches(filename+"[-a-zA-Z0-9]+\\.[0-9]+\\.json")) {
                             copyFile(bucketName,fname);
                             i++;
                         }
@@ -123,8 +129,10 @@ public class S3ImportImpl implements S3Import {
         return files;
     }
 
+
     /**
-     * Copy the file from s3 into a temp local file
+     * Copy the file from s3 into a temp local file.
+     *
      * @param bucketName the S3 bucket name from where files need to be imported
      * @param fname the filename by which the temp file should be created
      * @throws IOException

@@ -17,15 +17,17 @@
 
 package org.apache.usergrid.management.importer;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Map;
-import java.io.File;
+
 
 /**
- * Created by ApigeeCorporation on 7/8/14.
+ * Plug-able S3Import interface.
  */
-
-// interface for S3ImportImpl
 public interface S3Import {
-    ArrayList<File> copyFromS3(Map<String, Object> exportInfo, String filename, int type);
+
+    ArrayList<File> copyFromS3(
+        Map<String, Object> exportInfo, String filename, ImportService.ImportType type);
+
 }

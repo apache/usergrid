@@ -59,7 +59,8 @@ public class ImportJob extends OnlyOnceJob {
         // heartbeat to indicate job has started
         jobExecution.heartbeat();
 
-        // call the doImport method from import service which schedules the sub-jobs i.e. parsing of files to FileImport Job
+        // call the doImport method from import service which
+        // schedules the sub-jobs i.e. parsing of files to FileImport Job
         importService.doImport( jobExecution );
 
         logger.error("Import Service completed job");
@@ -75,8 +76,10 @@ public class ImportJob extends OnlyOnceJob {
         this.importService = importService;
     }
 
-    /*
-    This method is called when the job is retried maximum times by the scheduler but still fails. Thus the scheduler marks it as DEAD.
+    
+    /**
+     * This method is called when the job is retried maximum times by the
+     * scheduler but still fails. Thus the scheduler marks it as DEAD.
      */
     @Override
     public void dead( final JobExecution execution ) throws Exception {

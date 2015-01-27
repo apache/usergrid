@@ -54,7 +54,7 @@ public class FileImportJob extends OnlyOnceJob {
 
     @Override
     protected void doJob(JobExecution jobExecution) throws Exception {
-        logger.info( "execute FileImportJob {}", jobExecution );
+        logger.info( "execute FileImportJob {}", jobExecution.toString() );
 
         JobData jobData = jobExecution.getJobData();
         if ( jobData == null ) {

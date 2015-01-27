@@ -17,6 +17,7 @@
 
 package org.apache.usergrid.management.cassandra;
 
+import org.apache.usergrid.management.importer.ImportService;
 import org.apache.usergrid.management.importer.S3Import;
 
 import java.io.File;
@@ -32,15 +33,8 @@ public class MockS3ImportImpl implements S3Import{
     }
 
     @Override
-    public ArrayList<File> copyFromS3(final Map<String,Object> exportInfo, String filename , int type) {
-
-//        File verfiedData = new File( this.filename );
-//        try {
-//            //FileUtils.copyFile(filename, verfiedData);
-//        }
-//        catch ( IOException e ) {
-//            e.printStackTrace();
-//        }
+    public ArrayList<File> copyFromS3(
+        final Map<String,Object> exportInfo, String filename , ImportService.ImportType type ) {
         return new ArrayList<File>();
     }
 
