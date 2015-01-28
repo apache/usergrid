@@ -44,7 +44,7 @@ namespace Usergrid.Notifications
         {
             this.InitializeComponent();
             //TODO: change me to your server
-            serverUrl = "https://apigee-internal-prod.mars.apigee.net";
+            serverUrl = "https://usergrid-push.example.com";
             //TODO: change me to your org
             org = "ugvalidate";
             //TODO: change me to your app
