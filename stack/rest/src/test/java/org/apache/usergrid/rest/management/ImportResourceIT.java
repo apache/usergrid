@@ -101,14 +101,13 @@ public class ImportResourceIT extends AbstractRestIT {
         Entity payload = payloadBuilder();
         ///management/orgs/orgname/import
         Entity entity = this.management().orgs().organization(org).addToPath("import").post(payload);
+        String importEntity = entity.getString( "Import Entity" );
+
 
         assertNotNull( entity );
-        assertNotNull( entity.getString( "Import Entity" ) );
+        assertNotNull( importEntity );
 
-        String uuid = entity.getString("Import Entity");
-        uuid = uuid.replaceAll( "\"", "" );
-
-        entity = this.management().orgs().organization(org).addToPath("import").addToPath(uuid).get();
+        entity = this.management().orgs().organization(org).addToPath("import").addToPath(importEntity).get();
 
         assertEquals( "SCHEDULED", entity.getString( "state" ) );//TODO: do tests for other states in service tier
 
@@ -123,14 +122,12 @@ public class ImportResourceIT extends AbstractRestIT {
         Entity payload = payloadBuilder();
         ///management/orgs/orgname/apps/appname/import
         Entity entity = this.management().orgs().organization( org ).app().addToPath( app ).addToPath("import").post(payload);
+        String importEntity = entity.getString( "Import Entity" );
 
         assertNotNull( entity );
-        assertNotNull( entity.getString( "Import Entity" ) );
+        assertNotNull( importEntity );
 
-        String uuid = entity.getString("uuid");
-        uuid = uuid.replaceAll( "\"", "" );
-        entity = this.management().orgs().organization( org ).app().addToPath( app ).addToPath("import").addToPath(uuid).get();
-
+        entity = this.management().orgs().organization( org ).addToPath("import").addToPath(importEntity).get();
 
         assertEquals( "SCHEDULED", entity.getString( "state" ) );//TODO: do tests for other states in service tier
     }
@@ -146,13 +143,12 @@ public class ImportResourceIT extends AbstractRestIT {
         Entity entity = this.management().orgs().organization( org ).app().addToPath( app ).addToPath("collection")
             .addToPath("users").addToPath("import").post(payload);
 
-        assertEquals("", entity.getString("Import Entity"));
+        String importEntity = entity.getString( "Import Entity" );
 
-        String uuid = entity.getString("uuid");
-        uuid = uuid.replaceAll( "\"", "" );
-        entity = this.management().orgs().organization(org).app().addToPath( app ).addToPath("collection")
-            .addToPath("users").addToPath("import").addToPath(uuid).get();
+        assertNotNull( entity );
+        assertNotNull( importEntity );
 
+        entity = this.management().orgs().organization(org).addToPath("import").addToPath(importEntity).get();
 
         assertEquals( "SCHEDULED", entity.getString( "state" ) );//TODO: do tests for other states in service tier
 
@@ -172,10 +168,13 @@ public class ImportResourceIT extends AbstractRestIT {
         String app = clientSetup.getAppName();
         Entity payload = payloadBuilder();
         ///management/orgs/orgname/apps/appname/import
-        Entity entity = this.management().orgs().organization(org).apps(app).addToPath("collection")
+        Entity entity = this.management().orgs().organization(org).app().addToPath( app ).addToPath("collection")
             .addToPath("users").addToPath("import").post(payload);
 
-        assertEquals("", entity.getString("Import Entity"));
+        String importEntity = entity.getString( "Import Entity" );
+
+        assertNotNull( entity );
+        assertNotNull( importEntity );
 
         //create a new org/app
         String newOrgName = "org"+UUIDUtils.newTimeUUID();
@@ -212,6 +211,7 @@ public class ImportResourceIT extends AbstractRestIT {
      * Verify that import job can only be read with authorized token
      *
      */
+
     @Test
     public void importPostToAppWithValidButUnauthorizedToken() throws Exception {
         //it should also post to an org app that doesn't belong to the token
