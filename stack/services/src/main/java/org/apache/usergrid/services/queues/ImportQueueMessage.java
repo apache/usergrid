@@ -18,6 +18,7 @@ package org.apache.usergrid.services.queues;
 
 
 import java.io.Serializable;
+import java.util.UUID;
 
 
 /**
@@ -29,8 +30,22 @@ public class ImportQueueMessage implements Serializable {
      * Import specific identifiers here
      */
 
+    private UUID importId;
+
     public ImportQueueMessage(){
     }
 
+    public ImportQueueMessage(UUID importId){
+        this.importId = importId;
+    }
 
+
+    public UUID getImportId() {
+        return importId;
+    }
+
+
+    public void setImportId( final UUID importId ) {
+        this.importId = importId;
+    }
 }

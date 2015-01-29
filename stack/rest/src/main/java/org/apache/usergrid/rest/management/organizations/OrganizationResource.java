@@ -25,6 +25,7 @@ import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.management.ActivationState;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.export.ExportService;
+import org.apache.usergrid.management.importer.ImportService;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.entities.Export;
@@ -77,7 +78,7 @@ public class OrganizationResource extends AbstractContextResource {
     protected ExportService exportService;
 
     @Autowired
-    protected ExportService importService;
+    protected ImportService importService; //ExportService importService;
 
     OrganizationInfo organization;
 
@@ -435,7 +436,8 @@ public class OrganizationResource extends AbstractContextResource {
         }
 
         if ( entity == null ) {
-            return Response.status( SC_BAD_REQUEST ).build();
+            return Response.status( SC_NOT_FOUND ).type( JSONPUtils.jsonMediaType( callback ) )
+                           .entity( ServiceResource.wrapWithCallback( "Import Job not found", callback ) ).build();
         }
 
         return Response.status( SC_OK ).entity( entity).build();

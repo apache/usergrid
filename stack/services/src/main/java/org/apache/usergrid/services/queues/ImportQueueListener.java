@@ -62,9 +62,10 @@ public class ImportQueueListener extends QueueListener {
          */
         for (QueueMessage message : messages) {
             ImportQueueMessage queueMessage = ( ImportQueueMessage ) message.getBody();
+
+
             /**
-             * Do work here that will help determine what import messages are being passed through
-             * to s3.
+             * Do work here that will help determine what import messages are being passed from s3
              */
         }
 

@@ -116,6 +116,10 @@ public class AbstractRestIT extends JerseyTest {
 
     }
 
+    protected ManagementResource management(){
+        return clientSetup.restClient.management();
+    }
+
     protected ClientContext context(){
         return this.clientSetup.getRestClient().getContext();
     }
