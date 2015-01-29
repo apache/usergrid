@@ -69,12 +69,6 @@ public interface ImportService {
     String getErrorMessage(UUID uuid) throws Exception;
 
     /**
-     * Returns all the temp files downloaded from s3
-     * @return the list of downloaded files from S3.
-     */
-    ArrayList<File> getEphemeralFile();
-
-    /**
      * @param jobExecution
      * @return FileImportEntity
      * @throws Exception

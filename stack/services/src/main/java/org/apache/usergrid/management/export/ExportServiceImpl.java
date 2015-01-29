@@ -509,8 +509,8 @@ public class ExportServiceImpl implements ExportService {
             jg.writeFieldName( connectionType );
             jg.writeStartArray();
 
-            Results results = em.getConnectedEntities( 
-                new SimpleEntityRef(entity.getType(), entity.getUuid()), 
+            Results results = em.getConnectedEntities(
+                new SimpleEntityRef(entity.getType(), entity.getUuid()),
                 connectionType, null, Level.IDS );
 
             List<ConnectionRef> connections = results.getConnections();
@@ -540,7 +540,7 @@ public class ExportServiceImpl implements ExportService {
      *
      * @return the file name concatenated with the type and the name of the collection
      */
-    protected String prepareOutputFileName( String type, String name, String CollectionName ) {
+    public String prepareOutputFileName( String type, String name, String CollectionName ) {
         StringBuilder str = new StringBuilder();
         str.append( name );
         str.append( "." );

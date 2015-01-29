@@ -15,10 +15,10 @@
  * limitations under the License.
  */
 
-package org.apache.usergrid.management.cassandra;
+package org.apache.usergrid.management.importer;
 
-import org.apache.usergrid.management.importer.ImportService;
-import org.apache.usergrid.management.importer.S3Import;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -26,16 +26,13 @@ import java.util.Map;
 
 
 public class MockS3ImportImpl implements S3Import{
-    private final String filename;
-
-    public MockS3ImportImpl (String filename) {
-        this.filename = filename;
-    }
+    private static final Logger logger = LoggerFactory.getLogger(MockS3ImportImpl.class);
 
     @Override
     public ArrayList<File> copyFromS3(
         final Map<String,Object> exportInfo, String filename , ImportService.ImportType type ) {
-        return new ArrayList<File>();
+        logger.info("Copying from S3 file {} with import type {}", filename, type.toString());
+        return new ArrayList<>();
     }
 
 }

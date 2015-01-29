@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.management.cassandra;
+package org.apache.usergrid.management.export;
 
 
 import java.io.File;
@@ -23,34 +23,34 @@ import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 
-import org.apache.usergrid.management.export.S3Export;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
- * Streams / reads the information written from the export service to a file named "test.json"
+ * Streams/reads the information written from the export service to a file named "test.json"
  */
 public class MockS3ExportImpl implements S3Export {
+    private static final Logger logger = LoggerFactory.getLogger( MockS3ExportImpl.class );
+
     private final String filename;
+
 
     public MockS3ExportImpl (String filename) {
         this.filename = filename;
     }
 
+    
     @Override
-    public void copyToS3( File ephemeral, final Map<String,Object> exportInfo, String filename ) {
+    public void copyToS3( File ephemeral, final Map<String,Object> exportInfo, String ignoredFileName ) {
 
-        File verfiedData = new File( this.filename );
+        File verifiedData = new File( filename );
         try {
-            FileUtils.copyFile(ephemeral,verfiedData);
+            FileUtils.copyFile(ephemeral, verifiedData);
+            logger.info("Copied file {} to {}", filename, ephemeral.getAbsolutePath());
         }
         catch ( IOException e ) {
             e.printStackTrace();
         }
     }
-
-    @Override
-    public String getFilename () {
-        return filename;
-    }
-
 }

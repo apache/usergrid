@@ -24,6 +24,7 @@ import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.persistence.*;
+import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.FileImport;
 import org.apache.usergrid.persistence.entities.Import;
 import org.apache.usergrid.persistence.entities.JobData;
@@ -43,7 +44,7 @@ import rx.schedulers.Schedulers;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
+
 import org.apache.usergrid.persistence.index.query.Query.Level;
 
 
@@ -58,7 +59,6 @@ public class ImportServiceImpl implements ImportService {
 
     //injected the Entity Manager Factory
     protected EntityManagerFactory emf;
-    private ArrayList<File> files;
 
     //dependency injection
     private SchedulerService sch;
@@ -66,8 +66,6 @@ public class ImportServiceImpl implements ImportService {
     //inject Management Service to access Organization Data
     private ManagementService managementService;
     private JsonFactory jsonFactory = new JsonFactory();
-
-    private int entityCount = 0;
 
     /**
      * This schedules the main import Job
@@ -134,7 +132,7 @@ public class ImportServiceImpl implements ImportService {
      * @return it returns the UUID of the scheduled job
      * @throws Exception
      */
-    public UUID scheduleFile(String file, EntityRef importRef) throws Exception {
+    public UUID scheduleFile( Map<String, Object> config, String file, EntityRef importRef) throws Exception {
 
         logger.debug("scheduleFile() for import {}:{} file {}",
             new Object[] { importRef.getType(), importRef.getType(), file});
@@ -174,8 +172,9 @@ public class ImportServiceImpl implements ImportService {
 
         //set data to be transferred to the FileImport Job
         JobData jobData = new JobData();
-        jobData.setProperty("File", file);
-        jobData.setProperty(FILE_IMPORT_ID, fileImport.getUuid());
+        jobData.setProperty( "File", file);
+        jobData.setProperty( FILE_IMPORT_ID, fileImport.getUuid());
+        jobData.addProperties( config );
 
         long soonestPossible = System.currentTimeMillis() + 250; //sch grace period
 
@@ -238,7 +237,7 @@ public class ImportServiceImpl implements ImportService {
             logger.error("getErrorMessage(): no entity with that uuid was found");
             return "No Such Element found";
         }
-        return importUG.getErrorMessage().toString();
+        return importUG.getErrorMessage();
     }
 
     /**
@@ -275,10 +274,10 @@ public class ImportServiceImpl implements ImportService {
     /**
      * This returns the temporary files downloaded form s3
      */
-    @Override
-    public ArrayList<File> getEphemeralFile() {
-        return files;
-    }
+//    @Override
+//    public ArrayList<File> getEphemeralFile() {
+//        return files;
+//    }
 
     public SchedulerService getSch() {
         return sch;
@@ -310,13 +309,15 @@ public class ImportServiceImpl implements ImportService {
         this.managementService = managementService;
     }
 
+
     /**
      * This method gets the files from s3 and also creates sub-jobs for each file i.e. File Import Jobs
      * @param jobExecution the job created by the scheduler with all the required config data
-     * @throws Exception
      */
     @Override
     public void doImport(JobExecution jobExecution) throws Exception {
+
+        logger.debug("doImport()");
 
         Map<String, Object> config = (Map<String, Object>) jobExecution.getJobData().getProperty("importInfo");
         Object s3PlaceHolder = jobExecution.getJobData().getProperty("s3Import");
@@ -352,6 +353,10 @@ public class ImportServiceImpl implements ImportService {
             return;
         }
 
+        logger.debug("doImport(): updated state");
+
+        final List<File> files;
+
         try {
 
             if (config.get("organizationId") == null) {
@@ -361,27 +366,35 @@ public class ImportServiceImpl implements ImportService {
                 rooteEm.update(importUG);
                 return;
 
-            } else if (config.get("applicationId") == null) {
-                //import All the applications from an organization
-                importApplicationsFromOrg((UUID) config.get("organizationId"), config, jobExecution, s3Import);
-
-            } else if (config.get("collectionName") == null) {
-                //imports an Application from a single organization
-                importApplicationFromOrg( (UUID) config.get("organizationId"), (UUID) config.get("applicationId"),
-                    config, jobExecution, s3Import);
-
             } else {
-                //imports a single collection from an app org combo
-                importCollectionFromOrgApp((UUID) config.get("applicationId"), config, jobExecution, s3Import);
+
+
+                if (config.get("applicationId") == null) {
+
+                    throw new UnsupportedOperationException("Import applications not supported");
+
+                    // import All the applications from an organization
+                    //importApplicationsFromOrg(
+                        //(UUID) config.get("organizationId"), config, jobExecution, s3Import);
+
+                } else if (config.get("collectionName") == null) {
+
+                    throw new UnsupportedOperationException("Import application not supported");
+
+                    // imports an Application from a single organization
+                    //importApplicationFromOrg( (UUID) config.get("organizationId"),
+                        // (UUID) config.get("applicationId"), config, jobExecution, s3Import);
+
+                } else {
+
+                    // imports a single collection from an app org combo
+                    files = importCollectionFromOrgApp(
+                        (UUID)config.get("organizationId"), (UUID)config.get("applicationId"),
+                        config, jobExecution, s3Import);
+                }
             }
 
-        } catch (OrganizationNotFoundException e) {
-            importUG.setErrorMessage(e.getMessage());
-            importUG.setState(Import.State.FAILED);
-            rooteEm.update(importUG);
-            return;
-
-        } catch (ApplicationNotFoundException e) {
+        } catch (OrganizationNotFoundException | ApplicationNotFoundException e) {
             importUG.setErrorMessage(e.getMessage());
             importUG.setState(Import.State.FAILED);
             rooteEm.update(importUG);
@@ -389,7 +402,6 @@ public class ImportServiceImpl implements ImportService {
         }
 
         if (files.size() == 0) {
-
             importUG.setState(Import.State.FINISHED);
             importUG.setErrorMessage("no files found in the bucket with the relevant context");
             rooteEm.update(importUG);
@@ -401,11 +413,14 @@ public class ImportServiceImpl implements ImportService {
             ArrayList<Map<String, Object>> value = new ArrayList<Map<String, Object>>();
 
             // schedule each file as a separate job
-            for (File eachfile : files) {
+            for (File file : files) {
+
                 // TODO SQS: replace the method inside here so that it uses sqs instead of internal q
-                UUID jobID = scheduleFile(eachfile.getPath(), importUG);
+
+                UUID jobID = scheduleFile( config, file.getPath(), importUG);
+
                 Map<String, Object> fileJobID = new HashMap<String, Object>();
-                fileJobID.put("FileName", eachfile.getName());
+                fileJobID.put("FileName", file.getName());
                 fileJobID.put("JobID", jobID.toString());
                 value.add(fileJobID);
             }
@@ -414,111 +429,103 @@ public class ImportServiceImpl implements ImportService {
             importUG.addProperties(fileMetadata);
             rooteEm.update(importUG);
         }
-        return;
     }
+
 
     /**
      * Imports a specific collection from an org-app combo.
      */
-    private void importCollectionFromOrgApp(UUID applicationUUID, final Map<String, Object> config,
-                                            final JobExecution jobExecution, S3Import s3Import) throws Exception {
+    private List<File> importCollectionFromOrgApp(
+        UUID organizationUUID, UUID applicationUUID, final Map<String, Object> config,
+        final JobExecution jobExecution, S3Import s3Import) throws Exception {
+
+        logger.debug("importCollectionFromOrgApp()");
 
         //retrieves import entity
         Import importUG = getImportEntity(jobExecution);
+
         ApplicationInfo application = managementService.getApplicationInfo(applicationUUID);
-
         if (application == null) {
             throw new ApplicationNotFoundException("Application Not Found");
         }
-
-        String collectionName = config.get("collectionName").toString();
-
-        // prepares the prefix path for the files to be imported depending on the endpoint being hit
-        String appFileName = prepareInputFileName("application", application.getName(), collectionName);
-
-        files = copyFileFromS3(importUG, appFileName, config, s3Import, ImportType.COLLECTION);
-
-    }
-
-    /**
-     * Imports a specific applications from an organization
-     */
-    private void importApplicationFromOrg(UUID organizationUUID, UUID applicationId, final Map<String, Object> config,
-                                          final JobExecution jobExecution, S3Import s3Import) throws Exception {
-
-        //retrieves import entity
-        Import importUG = getImportEntity(jobExecution);
-
-        ApplicationInfo application = managementService.getApplicationInfo(applicationId);
-
-        if (application == null) {
-            throw new ApplicationNotFoundException("Application Not Found");
-        }
-
-        // prepares the prefix path for the files to be imported depending on the endpoint being hit
-        String appFileName = prepareInputFileName("application", application.getName(), null);
-
-        files = copyFileFromS3(importUG, appFileName, config, s3Import, ImportType.APPLICATION);
-
-    }
-
-    /**
-     * Imports All Applications from an Organization
-     */
-    private void importApplicationsFromOrg(UUID organizationUUID, final Map<String, Object> config,
-                                           final JobExecution jobExecution, S3Import s3Import) throws Exception {
-
-        // retrieves import entity
-        Import importUG = getImportEntity(jobExecution);
-        String appFileName = null;
 
         OrganizationInfo organizationInfo = managementService.getOrganizationByUuid(organizationUUID);
         if (organizationInfo == null) {
             throw new OrganizationNotFoundException("Organization Not Found");
         }
 
-        // prepares the prefix path for the files to be imported depending on the endpoint being hit
-        appFileName = prepareInputFileName("organization", organizationInfo.getName(), null);
+        String collectionName = config.get("collectionName").toString();
 
-        files = copyFileFromS3(importUG, appFileName, config, s3Import, ImportType.ORGANIZATION);
+        String appFileName = prepareCollectionInputFileName(
+            organizationInfo.getName(), application.getName(), collectionName );
+
+       return copyFileFromS3(importUG, appFileName, config, s3Import, ImportType.COLLECTION);
 
     }
 
     /**
-     * prepares the prefix path for the files to be imported depending on the endpoint being hit
-     * @param type just a label such us: organization, application.
-     * @return the file name concatenated with the type and the name of the collection
+     * Imports a specific applications from an organization
      */
-    protected String prepareInputFileName(String type, String name, String CollectionName) {
-        StringBuilder str = new StringBuilder();
+    private List<File> importApplicationFromOrg(
+        UUID organizationUUID, UUID applicationId, final Map<String, Object> config,
+        final JobExecution jobExecution, S3Import s3Import) throws Exception {
 
-        // in case of type organization --> the file name will be "<org_name>/"
-        if (type.equals("organization")) {
+        //retrieves import entity
+        Import importUG = getImportEntity(jobExecution);
 
-            str.append(name);
-            str.append("/");
-
-        } else if (type.equals("application")) {
-
-            // in case of type application --> the file name will be "<org_name>/<app_name>."
-            str.append(name);
-            str.append(".");
-
-            if (CollectionName != null) {
-
-                // in case of type application and collection import -->
-                // the file name will be "<org_name>/<app_name>.<collection_name>."
-                str.append(CollectionName);
-                str.append(".");
-
-            }
+        ApplicationInfo application = managementService.getApplicationInfo(applicationId);
+        if (application == null) {
+            throw new ApplicationNotFoundException("Application Not Found");
         }
 
-        String inputFileName = str.toString();
+        OrganizationInfo organizationInfo = managementService.getOrganizationByUuid(organizationUUID);
+        if (organizationInfo == null) {
+            throw new OrganizationNotFoundException("Organization Not Found");
+        }
 
-        return inputFileName;
+        String appFileName = prepareApplicationInputFileName(
+            organizationInfo.getName(), application.getName());
+
+        return copyFileFromS3(importUG, appFileName, config, s3Import, ImportType.APPLICATION);
+
     }
 
+    /**
+     * Imports All Applications from an Organization
+     */
+    private List<File> importApplicationsFromOrg(
+        UUID organizationUUID, final Map<String, Object> config,
+        final JobExecution jobExecution, S3Import s3Import) throws Exception {
+
+        // retrieves import entity
+        Import importUG = getImportEntity(jobExecution);
+
+        OrganizationInfo organizationInfo = managementService.getOrganizationByUuid(organizationUUID);
+        if (organizationInfo == null) {
+            throw new OrganizationNotFoundException("Organization Not Found");
+        }
+
+        // prepares the prefix path for the files to be import depending on the endpoint being hit
+        String appFileName = prepareOrganizationInputFileName( organizationInfo.getName());
+
+        return copyFileFromS3(importUG, appFileName, config, s3Import, ImportType.ORGANIZATION);
+
+    }
+
+
+    protected String prepareCollectionInputFileName(String orgName, String appName, String collectionName ) {
+        return orgName + "/" + appName + "." + collectionName + ".";
+    }
+
+
+    protected String prepareApplicationInputFileName(String orgName, String appName ) {
+        return orgName + "/" + appName + ".";
+    }
+
+
+    protected String prepareOrganizationInputFileName(String orgName ) {
+        return orgName + "/";
+    }
 
 
     /**
@@ -533,17 +540,18 @@ public class ImportServiceImpl implements ImportService {
         Map<String, Object> config, S3Import s3Import, ImportType type) throws Exception {
 
         EntityManager rootEm = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
-        ArrayList<File> files = new ArrayList<File>();
+        ArrayList<File> copyFiles = new ArrayList<>();
 
         try {
-            files = s3Import.copyFromS3(config, appFileName, type);
+            copyFiles = s3Import.copyFromS3(config, appFileName, type);
+
         } catch (Exception e) {
             logger.debug("Error copying from S3, continuing...", e);
             importUG.setErrorMessage(e.getMessage());
             importUG.setState(Import.State.FAILED);
             rootEm.update(importUG);
         }
-        return files;
+        return copyFiles;
     }
 
 
@@ -555,13 +563,16 @@ public class ImportServiceImpl implements ImportService {
     @Override
     public void parseFileToEntities(JobExecution jobExecution) throws Exception {
 
+        logger.debug("parseFileToEntities() for job {} status {}",
+            jobExecution.getJobName(), jobExecution.getStatus().toString());
+
         // add properties to the import entity
         FileImport fileImport = getFileImportEntity(jobExecution);
 
         File file = new File(jobExecution.getJobData().getProperty("File").toString());
 
-        EntityManager rootEm = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
-        rootEm.update(fileImport);
+        EntityManager emManagementApp = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+        emManagementApp.update(fileImport);
 
         boolean completed = fileImport.getCompleted();
 
@@ -569,20 +580,24 @@ public class ImportServiceImpl implements ImportService {
         if (!completed) {
 
             // validates the JSON structure
-            if (isValidJSON(file, rootEm, fileImport)) {
+            if (isValidJSON(file, emManagementApp, fileImport)) {
 
                 // mark the File import job as started
                 fileImport.setState(FileImport.State.STARTED);
-                rootEm.update(fileImport);
+                emManagementApp.update(fileImport);
 
-                // gets the application anme from the filename
-                String applicationName = file.getPath().split("\\.")[0];
+                // Get target application ID from the job data (NOT from the filename)
+                UUID targetAppId = (UUID)jobExecution.getJobData().getProperty("applicationId");
 
-                ApplicationInfo application = managementService.getApplicationInfo(applicationName);
+                if ( emManagementApp.get( targetAppId ) == null ) {
+                    throw new IllegalArgumentException("Application does not exist: " + targetAppId.toString());
+                }
+                EntityManager targetEm = emf.getEntityManager( targetAppId );
+                logger.debug("   importing into app {} file {}", targetAppId.toString(), file.getAbsolutePath());
 
                 JsonParser jp = getJsonParserForFile(file);
 
-                // incase of resume, retrieve the last updated UUID for this file
+                // in case of resume, retrieve the last updated UUID for this file
                 String lastUpdatedUUID = fileImport.getLastUpdatedUUID();
 
                 // this handles partially completed files by updating entities from the point of failure
@@ -594,7 +609,8 @@ public class ImportServiceImpl implements ImportService {
                     }
 
                     // skip the last one and start from the next one
-                    while (!(jp.getCurrentToken() == JsonToken.END_OBJECT && jp.nextToken() == JsonToken.START_OBJECT)) {
+                    while (!(jp.getCurrentToken() == JsonToken.END_OBJECT
+                            && jp.nextToken() == JsonToken.START_OBJECT)) {
                         jp.nextToken();
                     }
                 }
@@ -604,46 +620,45 @@ public class ImportServiceImpl implements ImportService {
                     jp.nextToken();
                 }
 
-                // get entity manager for the application
-                EntityManager em = emf.getEntityManager(application.getId());
-
                 while (jp.nextToken() != JsonToken.END_ARRAY) {
-                    // import the entities in this file
-                    importEntityStuff(jp, em, rootEm, fileImport, jobExecution);
+                    importEntitiesFromFile(jp, targetEm, emManagementApp, fileImport, jobExecution);
                 }
                 jp.close();
 
                 // Updates the state of file import job
-                if (!fileImport.getState().equals("FAILED")) {
+                if (!fileImport.getState().toString().equals("FAILED")) {
 
                     // mark file as completed
                     fileImport.setCompleted(true);
                     fileImport.setState(FileImport.State.FINISHED);
-                    rootEm.update(fileImport);
+                    emManagementApp.update(fileImport);
 
-                    //check other files status and mark the status of import Job as Finished if all others are finished
-                    Results ImportJobResults = rootEm.getConnectingEntities(fileImport, "includes", null, Level.ALL_PROPERTIES);
+                    // check other files status and mark the status of
+                    // import Job as Finished if all others are finished
+                    Results ImportJobResults = emManagementApp.getConnectingEntities(
+                        fileImport, "includes", null, Level.ALL_PROPERTIES);
+
                     List<Entity> importEntity = ImportJobResults.getEntities();
                     UUID importId = importEntity.get(0).getUuid();
-                    Import importUG = rootEm.get(importId, Import.class);
+                    Import importUG = emManagementApp.get(importId, Import.class);
 
-                    Results entities = rootEm.getConnectedEntities( importUG, "includes", null, Level.ALL_PROPERTIES);
+                    Results entities = emManagementApp.getConnectedEntities( importUG, "includes", null, Level.ALL_PROPERTIES);
                     List<Entity> importFile = entities.getEntities();
 
                     int count = 0;
                     for (Entity eachEntity : importFile) {
-                        FileImport fi = rootEm.get(eachEntity.getUuid(), FileImport.class);
+                        FileImport fi = emManagementApp.get(eachEntity.getUuid(), FileImport.class);
                         if (fi.getState().toString().equals("FINISHED")) {
                             count++;
                         } else if (fi.getState().toString().equals("FAILED")) {
                             importUG.setState(Import.State.FAILED);
-                            rootEm.update(importUG);
+                            emManagementApp.update(importUG);
                             break;
                         }
                     }
                     if (count == importFile.size()) {
                         importUG.setState(Import.State.FINISHED);
-                        rootEm.update(importUG);
+                        emManagementApp.update(importUG);
                     }
                 }
             }
@@ -699,9 +714,12 @@ public class ImportServiceImpl implements ImportService {
      * @param fileImport the file import entity
      * @param jobExecution  execution details for the import jbo
      */
-    private void importEntityStuff(final JsonParser jp, final EntityManager em,
-        final EntityManager rootEm, final FileImport fileImport, final JobExecution jobExecution)
-        throws Exception {
+    private void importEntitiesFromFile(
+        final JsonParser jp,
+        final EntityManager em,
+        final EntityManager rootEm,
+        final FileImport fileImport,
+        final JobExecution jobExecution) throws Exception {
 
         final JsonParserObservable subscribe = new JsonParserObservable(jp, em, rootEm, fileImport);
 
@@ -715,8 +733,8 @@ public class ImportServiceImpl implements ImportService {
             }
         };
 
-        final AtomicLong entityCounter = new AtomicLong();
-        final AtomicLong eventCounter = new AtomicLong();
+//        final AtomicLong entityCounter = new AtomicLong();
+//        final AtomicLong eventCounter = new AtomicLong();
 
         // This is boilerplate glue code. We have to follow this for the parallel operation.
         // In the "call" method we want to simply return the input observable + the chain of
@@ -744,8 +762,11 @@ public class ImportServiceImpl implements ImportService {
 //                             final long value = entityCounter.incrementAndGet();
 //                             if (value % 2000 == 0) {
 //                                 try {
-//                                     logger.error("UUID = " +((EntityEvent) writeEvent).getEntityUuid().toString() + " value = " + value +"");
-//                                     fileImport.setLastUpdatedUUID(((EntityEvent) writeEvent).getEntityUuid().toString());
+//                                     logger.error("UUID = {} value = {}",
+//                                         ((EntityEvent) writeEvent).getEntityUuid().toString(),
+//                                          value );
+//                                     fileImport.setLastUpdatedUUID(
+//                                          ((EntityEvent) writeEvent).getEntityUuid().toString());
 //                                     //checkpoint the UUID here.
 //                                     rootEm.update(fileImport);
 //                                 } catch(Exception ex) {}
@@ -791,13 +812,19 @@ public class ImportServiceImpl implements ImportService {
             EntityManager rootEm = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
 
             try {
-                logger.debug("Writing imported entity {}:{}", entityType, entityUuid );
+                logger.debug("Writing imported entity {}:{} into app {}",
+                    new Object[] { entityType, entityUuid, em.getApplication().getUuid() });
+
                 em.create(entityUuid, entityType, properties);
 
             } catch (Exception e) {
+                logger.error("Error writing entity", e);
+
                 fileImport.setErrorMessage(e.getMessage());
+
                 try {
                     rootEm.update(fileImport);
+
                 } catch (Exception ex) {
 
                     // TODO should we abort at this point?

@@ -434,7 +434,10 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
             @Override
             public boolean doOp() {
                 try {
-                    String[] indexes = ArrayUtils.addAll( getIndexes(AliasType.Write), getIndexes(AliasType.Write) );
+                    String[] indexes = ArrayUtils.addAll(
+                        getIndexes(AliasType.Read),
+                        getIndexes(AliasType.Write) );
+
                     if ( indexes.length == 0 ) {
                         logger.debug( "Not refreshing indexes, none found for app {}",
                                 applicationScope.getApplication().getUuid() );
