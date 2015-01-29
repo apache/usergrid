@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.graph.serialization.EdgesObservable;
 import org.junit.Test;
 
 import org.apache.usergrid.AbstractCoreIT;
@@ -60,6 +61,7 @@ public class EdgesFromSourceObservableIT extends AbstractCoreIT {
     @Test
     public void testEntities() throws Exception {
 
+        EdgesObservable edgesToTargetObservable = CpSetup.getInjector().getInstance(EdgesObservable.class);
         final EntityManager em = app.getEntityManager();
         final Application createdApplication = em.getApplication();
 
@@ -96,7 +98,7 @@ public class EdgesFromSourceObservableIT extends AbstractCoreIT {
 
         final GraphManager gm = managerCache.getGraphManager( scope );
 
-        EdgesToTargetObservable.getEdgesToTarget( gm, target ).doOnNext( new Action1<Edge>() {
+        edgesToTargetObservable.edgesToTarget( gm, target ).doOnNext( new Action1<Edge>() {
             @Override
             public void call( final Edge edge ) {
                 final String edgeType = edge.getType();

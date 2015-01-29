@@ -24,6 +24,9 @@ import java.io.IOException;
 
 import com.google.inject.AbstractModule;
 import com.netflix.config.ConfigurationManager;
+import org.apache.usergrid.persistence.core.rx.AllEntitiesInSystemObservable;
+import org.apache.usergrid.persistence.core.scope.ApplicationEntityGroup;
+import rx.Observable;
 
 
 public abstract class TestModule extends AbstractModule {
@@ -34,11 +37,10 @@ public abstract class TestModule extends AbstractModule {
        * bootstrap more than once per JVM
        * --------------------------------------------------------------------
        */
-
         try {
             //load up the properties
-            ConfigurationManager.getDeploymentContext().setDeploymentEnvironment( "UNIT" );
-            ConfigurationManager.loadCascadedPropertiesFromResources( "usergrid" );
+            ConfigurationManager.getDeploymentContext().setDeploymentEnvironment("UNIT");
+            ConfigurationManager.loadCascadedPropertiesFromResources("usergrid");
 
         }
         catch ( IOException e ) {

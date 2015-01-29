@@ -17,16 +17,19 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.rx;
+package org.apache.usergrid.corepersistence.rx.impl;
 
 
 import java.util.Arrays;
 import java.util.UUID;
 
+import com.google.inject.Inject;
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.core.rx.ApplicationObservable;
+import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.corepersistence.ManagerCache;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
@@ -49,19 +52,25 @@ import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getApplicat
 /**
  * An observable that will emit all application stored in the system.
  */
-public class ApplicationObservable {
+public class ApplicationObservableImpl implements ApplicationObservable {
 
-    private static final Logger logger = LoggerFactory.getLogger( ApplicationObservable.class );
+    private static final Logger logger = LoggerFactory.getLogger( ApplicationObservableImpl.class );
+    private final EntityCollectionManagerFactory entityCollectionManagerFactory;
+    private final GraphManagerFactory graphManagerFactory;
 
-    /**
-     * Get all applicationIds as an observable
-     */
-    public static Observable<Id> getAllApplicationIds( final ManagerCache managerCache ) {
+    @Inject
+    public ApplicationObservableImpl(EntityCollectionManagerFactory entityCollectionManagerFactory, GraphManagerFactory graphManagerFactory){
+
+        this.entityCollectionManagerFactory = entityCollectionManagerFactory;
+        this.graphManagerFactory = graphManagerFactory;
+    }
+
+
+    @Override
+    public Observable<Id> getAllApplicationIds() {
 
         //emit our 3 hard coded applications that are used the manage the system first.
         //this way consumers can perform whatever work they need to on the root system first
-
-
         final Observable<Id> systemIds = Observable.from( Arrays
                 .asList( generateApplicationId( CpNamingUtils.DEFAULT_APPLICATION_ID ),
                         generateApplicationId( CpNamingUtils.MANAGEMENT_APPLICATION_ID ),
@@ -75,10 +84,10 @@ public class ApplicationObservable {
                         CpNamingUtils.getCollectionScopeNameFromCollectionName( CpNamingUtils.APPINFOS ) );
 
         final EntityCollectionManager collectionManager =
-                managerCache.getEntityCollectionManager( appInfoCollectionScope );
+                entityCollectionManagerFactory.createCollectionManager( appInfoCollectionScope );
 
 
-        final GraphManager gm = managerCache.getGraphManager( appScope );
+        final GraphManager gm = graphManagerFactory.createEdgeManager(appScope);
 
 
         String edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( CpNamingUtils.APPINFOS );

@@ -27,26 +27,27 @@ import java.util.Collections;
 import java.util.Iterator;
 
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
-import org.apache.usergrid.persistence.core.guice.CurrentImpl;
-import org.apache.usergrid.persistence.core.guice.PreviousImpl;
+import org.apache.usergrid.persistence.core.guice.V1Impl;
+import org.apache.usergrid.persistence.core.guice.V2Impl;
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.graph.Edge;
-import org.apache.usergrid.persistence.graph.SearchEdgeType;
-import org.apache.usergrid.persistence.graph.SearchIdType;
+import org.apache.usergrid.persistence.graph.*;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
+import org.apache.usergrid.persistence.graph.serialization.EdgeMigrationStrategy;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 @Singleton
-public class EdgeMetadataSerializationProxyImpl implements EdgeMetadataSerialization {
+public class EdgeMetadataSerializationProxyImpl implements EdgeMetadataSerialization, EdgeMigrationStrategy {
 
-    public static final int MIGRATION_VERSION = 2;
+    private static final Logger logger = LoggerFactory.getLogger(EdgeMetadataSerializationProxyImpl.class);
 
     private final DataMigrationManager dataMigrationManager;
     private final Keyspace keyspace;
@@ -58,9 +59,9 @@ public class EdgeMetadataSerializationProxyImpl implements EdgeMetadataSerializa
      * Handles routing data to the right implementation, based on the current system migration version
      */
     @Inject
-    public EdgeMetadataSerializationProxyImpl( final DataMigrationManager dataMigrationManager, final Keyspace keyspace,
-                                               @PreviousImpl final EdgeMetadataSerialization previous,
-                                               @CurrentImpl final EdgeMetadataSerialization current ) {
+    public EdgeMetadataSerializationProxyImpl(final DataMigrationManager dataMigrationManager, final Keyspace keyspace,
+                                              @V1Impl final EdgeMetadataSerialization previous,
+                                              @V2Impl final EdgeMetadataSerialization current) {
         this.dataMigrationManager = dataMigrationManager;
         this.keyspace = keyspace;
         this.previous = previous;
@@ -271,6 +272,17 @@ public class EdgeMetadataSerializationProxyImpl implements EdgeMetadataSerializa
      * Return true if we're on an old version
      */
     private boolean isOldVersion() {
-        return dataMigrationManager.getCurrentVersion() < MIGRATION_VERSION;
+        return dataMigrationManager.getCurrentVersion() < getVersion();
     }
+
+    @Override
+    public MigrationRelationship<EdgeMetadataSerialization> getMigration() {
+        return new MigrationRelationship<>(previous,current);
+    }
+
+    @Override
+    public int getVersion() {
+        return MIGRATION_VERSION;
+    }
+
 }

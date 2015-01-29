@@ -18,12 +18,12 @@
 package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
-import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
+import org.apache.usergrid.persistence.collection.mvcc.MvccEntityMigrationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
-import org.apache.usergrid.persistence.core.guice.CurrentImpl;
-import org.apache.usergrid.persistence.core.guice.PreviousImpl;
-import org.apache.usergrid.persistence.core.guice.ProxyImpl;
+import org.apache.usergrid.persistence.core.guice.*;
+import org.apache.usergrid.persistence.core.migration.data.DataMigration;
 import org.apache.usergrid.persistence.core.migration.schema.Migration;
 
 import com.google.inject.AbstractModule;
@@ -43,20 +43,32 @@ public class SerializationModule extends AbstractModule {
         // bind the serialization strategies
 
         //We've migrated this one, so we need to set up the previous, current, and proxy
-        bind( MvccEntitySerializationStrategy.class ).annotatedWith( PreviousImpl.class )
+        bind( MvccEntitySerializationStrategy.class ).annotatedWith( V1Impl.class )
                                                      .to( MvccEntitySerializationStrategyV1Impl.class );
-        bind( MvccEntitySerializationStrategy.class ).annotatedWith( CurrentImpl.class )
-                                                     .to( MvccEntitySerializationStrategyV2Impl.class );
-        bind( MvccEntitySerializationStrategy.class ).annotatedWith( ProxyImpl.class )
-                                                     .to( MvccEntitySerializationStrategyProxyImpl.class );
+        bind( MvccEntitySerializationStrategy.class ).annotatedWith( V2Impl.class )
+                                                     .to(MvccEntitySerializationStrategyV2Impl.class);
+        bind( MvccEntitySerializationStrategy.class ).annotatedWith( V3Impl.class )
+                                                     .to(MvccEntitySerializationStrategyV3Impl.class);
+
+        bind(MvccEntitySerializationStrategy.class).annotatedWith( V1ProxyImpl.class )
+                                                     .to(MvccEntitySerializationStrategyProxyV1Impl.class);
+        bind(MvccEntitySerializationStrategy.class ).annotatedWith( ProxyImpl.class )
+                                                     .to(MvccEntitySerializationStrategyProxyV2Impl.class);
+
+        Multibinder<DataMigration> dataMigrationMultibinder =
+            Multibinder.newSetBinder( binder(), DataMigration.class );
+        dataMigrationMultibinder.addBinding().to( MvccEntityDataMigrationImpl.class );
+
+        bind( MvccEntityMigrationStrategy.class ).to(MvccEntitySerializationStrategyProxyV2Impl.class);
 
         bind( MvccLogEntrySerializationStrategy.class ).to( MvccLogEntrySerializationStrategyImpl.class );
         bind( UniqueValueSerializationStrategy.class ).to( UniqueValueSerializationStrategyImpl.class );
 
         //do multibindings for migrations
         Multibinder<Migration> uriBinder = Multibinder.newSetBinder( binder(), Migration.class );
-        uriBinder.addBinding().to( Key.get( MvccEntitySerializationStrategy.class, PreviousImpl.class ) );
-        uriBinder.addBinding().to( Key.get( MvccEntitySerializationStrategy.class, CurrentImpl.class ) );
+        uriBinder.addBinding().to( Key.get( MvccEntitySerializationStrategy.class, V1Impl.class ) );
+        uriBinder.addBinding().to( Key.get( MvccEntitySerializationStrategy.class, V2Impl.class ) );
+        uriBinder.addBinding().to( Key.get( MvccEntitySerializationStrategy.class, V3Impl.class ) );
         uriBinder.addBinding().to( Key.get( MvccLogEntrySerializationStrategy.class ) );
         uriBinder.addBinding().to( Key.get( UniqueValueSerializationStrategy.class ) );
 

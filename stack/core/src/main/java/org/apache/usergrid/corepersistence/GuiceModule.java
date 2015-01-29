@@ -18,12 +18,12 @@ package org.apache.usergrid.corepersistence;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
 
-import org.apache.usergrid.corepersistence.migration.EntityDataMigration;
 import org.apache.usergrid.corepersistence.migration.EntityTypeMappingMigration;
-import org.apache.usergrid.corepersistence.migration.GraphShardVersionMigration;
 import org.apache.usergrid.corepersistence.events.EntityDeletedHandler;
 import org.apache.usergrid.corepersistence.events.EntityVersionCreatedHandler;
 import org.apache.usergrid.corepersistence.events.EntityVersionDeletedHandler;
+import org.apache.usergrid.corepersistence.rx.impl.AllEntitiesInSystemObservableImpl;
+import org.apache.usergrid.corepersistence.rx.impl.ApplicationObservableImpl;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.collection.event.EntityDeleted;
 import org.apache.usergrid.persistence.collection.event.EntityVersionCreated;
@@ -31,6 +31,8 @@ import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
 import org.apache.usergrid.persistence.collection.guice.CollectionModule;
 import org.apache.usergrid.persistence.core.guice.CommonModule;
 import org.apache.usergrid.persistence.core.migration.data.DataMigration;
+import org.apache.usergrid.persistence.core.rx.AllEntitiesInSystemObservable;
+import org.apache.usergrid.persistence.core.rx.ApplicationObservable;
 import org.apache.usergrid.persistence.graph.guice.GraphModule;
 import org.apache.usergrid.persistence.index.guice.IndexModule;
 import org.apache.usergrid.persistence.map.guice.MapModule;
@@ -69,18 +71,19 @@ public class GuiceModule extends AbstractModule {
         install(new QueueModule());
 
         bind(ManagerCache.class).to( CpManagerCache.class );
+        bind(AllEntitiesInSystemObservable.class).to( AllEntitiesInSystemObservableImpl.class );
+        bind(ApplicationObservable.class).to( ApplicationObservableImpl.class );
 
-        Multibinder<DataMigration> dataMigrationMultibinder = 
+
+        Multibinder<DataMigration> dataMigrationMultibinder =
                 Multibinder.newSetBinder( binder(), DataMigration.class );
         dataMigrationMultibinder.addBinding().to( EntityTypeMappingMigration.class );
-        dataMigrationMultibinder.addBinding().to( GraphShardVersionMigration.class );
-        dataMigrationMultibinder.addBinding().to( EntityDataMigration.class );
 
-        Multibinder<EntityDeleted> entityBinder = 
+        Multibinder<EntityDeleted> entityBinder =
             Multibinder.newSetBinder(binder(), EntityDeleted.class);
         entityBinder.addBinding().to(EntityDeletedHandler.class);
 
-        Multibinder<EntityVersionDeleted> versionBinder = 
+        Multibinder<EntityVersionDeleted> versionBinder =
             Multibinder.newSetBinder(binder(), EntityVersionDeleted.class);
         versionBinder.addBinding().to(EntityVersionDeletedHandler.class);
 

@@ -27,4 +27,6 @@ public interface MapManagerFactory {
      * Get the map manager
      */
     public MapManager createMapManager( final MapScope scope );
+
+    void invalidate();
 }

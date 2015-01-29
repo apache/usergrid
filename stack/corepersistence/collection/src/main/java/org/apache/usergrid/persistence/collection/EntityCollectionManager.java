@@ -20,6 +20,8 @@ package org.apache.usergrid.persistence.collection;
 
 
 import java.util.Collection;
+
+import org.apache.usergrid.persistence.core.CPManager;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -30,7 +32,7 @@ import rx.Observable;
 /**
  * The operations for performing changes on an entity
  */
-public interface EntityCollectionManager {
+public interface EntityCollectionManager extends CPManager {
 
     /**
      * Write the entity in the entity collection.  This is an entire entity, it's contents will
@@ -68,12 +70,12 @@ public interface EntityCollectionManager {
 
     /**
      * Takes the change and reloads an entity with all changes applied in this entity applied.
-     * The resulting entity from calling load will be the previous version of this entity plus 
+     * The resulting entity from calling load will be the previous version of this entity plus
      * the entity in this object applied to it.
      */
     public Observable<Entity> update ( Entity entity );
 
-    /** 
+    /**
      * Returns health of entity data store.
      */
     public Health getHealth();

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.collection.mvcc;
+package org.apache.usergrid.persistence.collection.serialization;
 
 
 import java.util.Collection;
@@ -41,62 +41,61 @@ public interface MvccEntitySerializationStrategy extends Migration {
      * Serialize the entity to the data store with the given collection context
      *
      * @param entity The entity to persist
-     *
      * @return The MutationBatch operations for this update
      */
-    public MutationBatch write( CollectionScope context, MvccEntity entity );
-
+    public MutationBatch write(CollectionScope context, MvccEntity entity);
 
 
     /**
      * Load the entities into the entitySet from the specified Ids.  Loads versions <= the maxVersion
+     *
      * @param scope
      * @param entityIds
      * @return
      */
-    public EntitySet load( CollectionScope scope, Collection<Id> entityIds, UUID maxVersion);
+    public EntitySet load(CollectionScope scope, Collection<Id> entityIds, UUID maxVersion);
 
     /**
      * Load a list, from highest to lowest of the entity with versions <= version up to maxSize elements
      *
-     * @param context The context to persist the entity into
-     * @param entityId The entity id to load
-     * @param version The max version to seek from.  I.E a stored version <= this argument
+     * @param context   The context to persist the entity into
+     * @param entityId  The entity id to load
+     * @param version   The max version to seek from.  I.E a stored version <= this argument
      * @param fetchSize The fetch size to return for each trip to cassandra.
-     *
      * @return An iterator of entities ordered from max(UUID)=> min(UUID).  The return value should be null
-     *         safe and return an empty list when there are no matches
+     * safe and return an empty list when there are no matches
      */
-    public Iterator<MvccEntity> loadDescendingHistory( CollectionScope context, Id entityId, UUID version,
-                                                       int fetchSize );
+    public Iterator<MvccEntity> loadDescendingHistory(CollectionScope context, Id entityId, UUID version,
+                                                      int fetchSize);
 
     /**
      * Load a historical list of entities, from lowest to highest entity with versions < version up to maxSize elements
      *
-     * @param context The context to persist the entity into
-     * @param entityId The entity id to load
-     * @param version The max version to seek to.  I.E a stored version < this argument
+     * @param context   The context to persist the entity into
+     * @param entityId  The entity id to load
+     * @param version   The max version to seek to.  I.E a stored version < this argument
      * @param fetchSize The fetch size to return for each trip to cassandra.
      * @return An iterator of entities ordered from min(UUID)=> max(UUID).  The return value should be null
-     *         safe and return an empty list when there are no matches
+     * safe and return an empty list when there are no matches
      */
-    public Iterator<MvccEntity> loadAscendingHistory( CollectionScope context, Id entityId, UUID version,
-                                                      int fetchSize );
+    public Iterator<MvccEntity> loadAscendingHistory(CollectionScope context, Id entityId, UUID version,
+                                                     int fetchSize);
 
     /**
      * Mark this  this version as deleted from the persistence store, but keep the version to mark that is has been cleared This
      * can be used in a mark+sweep system.  The entity with the given version will exist in the context, but no data
      * will be stored
      */
-    public MutationBatch mark( CollectionScope context, Id entityId, UUID version );
+    public MutationBatch mark(CollectionScope context, Id entityId, UUID version);
 
 
     /**
      * Delete the entity from the context with the given entityId and version
      *
-     * @param context The context that contains the entity
+     * @param context  The context that contains the entity
      * @param entityId The entity id to delete
-     * @param version The version to delete
+     * @param version  The version to delete
      */
-    public MutationBatch delete( CollectionScope context, Id entityId, UUID version );
+    public MutationBatch delete(CollectionScope context, Id entityId, UUID version);
+
 }

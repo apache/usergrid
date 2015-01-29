@@ -18,6 +18,8 @@
 package org.apache.usergrid.persistence.map;
 
 
+import org.apache.usergrid.persistence.core.CPManager;
+
 import java.util.UUID;
 
 
@@ -25,7 +27,7 @@ import java.util.UUID;
 /**
  * Generator of a map manager instance
  */
-public interface MapManager {
+public interface MapManager extends CPManager {
 
 
     /**

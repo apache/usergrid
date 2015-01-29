@@ -23,20 +23,24 @@ package org.apache.usergrid.corepersistence.migration;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.corepersistence.ManagerCache;
-import org.apache.usergrid.corepersistence.rx.AllEntitiesInSystemObservable;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.persistence.core.scope.ApplicationEntityGroup;
 import org.apache.usergrid.persistence.core.migration.data.DataMigration;
+import org.apache.usergrid.persistence.core.rx.AllEntitiesInSystemObservable;
+import org.apache.usergrid.persistence.core.scope.EntityIdScope;
 import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.inject.Inject;
 
+import rx.Observable;
+import rx.Scheduler;
 import rx.functions.Action1;
+import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 
 /**
@@ -45,44 +49,40 @@ import rx.functions.Action1;
 public class EntityTypeMappingMigration implements DataMigration {
 
     private final ManagerCache managerCache;
-
+    private final AllEntitiesInSystemObservable allEntitiesInSystemObservable;
 
 
     @Inject
-    public EntityTypeMappingMigration( final ManagerCache managerCache) {
+    public EntityTypeMappingMigration( final ManagerCache managerCache, final AllEntitiesInSystemObservable allEntitiesInSystemObservable) {
        this.managerCache = managerCache;
+        this.allEntitiesInSystemObservable = allEntitiesInSystemObservable;
     }
 
 
     @Override
-    public void migrate( final ProgressObserver observer ) throws Throwable {
+    public Observable migrate(final ApplicationEntityGroup applicationEntityGroup, final ProgressObserver observer) throws Throwable {
 
         final AtomicLong atomicLong = new AtomicLong();
 
-        AllEntitiesInSystemObservable.getAllEntitiesInSystem(managerCache, 1000 )
-                                     .doOnNext( new Action1<AllEntitiesInSystemObservable.ApplicationEntityGroup>() {
+        final MapScope ms = CpNamingUtils.getEntityTypeMapScope(applicationEntityGroup.applicationScope.getApplication());
 
+        final MapManager mapManager = managerCache.getMapManager(ms);
+        return Observable.from(applicationEntityGroup.entityIds)
+            .subscribeOn(Schedulers.io())
+            .map(new Func1<EntityIdScope, Long>() {
+                @Override
+                public Long call(EntityIdScope idScope) {
+                    final UUID entityUuid = idScope.getId().getUuid();
+                    final String entityType = idScope.getId().getType();
 
-                                         @Override
-                                         public void call( final AllEntitiesInSystemObservable.ApplicationEntityGroup applicationEntityGroup ) {
+                    mapManager.putString(entityUuid.toString(), entityType);
 
-                                             final MapScope ms = CpNamingUtils.getEntityTypeMapScope( applicationEntityGroup.applicationScope.getApplication() );
-
-
-                                             final MapManager mapManager = managerCache.getMapManager( ms );
-
-                                             for(Id entityId: applicationEntityGroup.entityIds) {
-                                                 final UUID entityUuid = entityId.getUuid();
-                                                 final String entityType = entityId.getType();
-
-                                                 mapManager.putString( entityUuid.toString(), entityType );
-
-                                                 if ( atomicLong.incrementAndGet() % 100 == 0 ) {
-                                                     updateStatus( atomicLong, observer );
-                                                 }
-                                             }
-                                         }
-                                     } ).toBlocking().lastOrDefault( null );
+                    if (atomicLong.incrementAndGet() % 100 == 0) {
+                        updateStatus(atomicLong, observer);
+                    }
+                    return atomicLong.get();
+                }
+            });
     }
 
 

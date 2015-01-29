@@ -24,21 +24,19 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.core.rx.ApplicationObservable;
 import org.junit.Test;
 
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.corepersistence.CpSetup;
 import org.apache.usergrid.corepersistence.ManagerCache;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
-import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.entities.Application;
-import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import rx.Observable;
 import rx.functions.Action1;
 
-import static junit.framework.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
 
 
@@ -52,6 +50,7 @@ public class ApplicationObservableTestIT extends AbstractCoreIT {
 
         final Application createdApplication = app.getEntityManager().getApplication();
 
+        ApplicationObservable applicationObservable = CpSetup.getInjector().getInstance(ApplicationObservable.class);
 
         //now our get all apps we expect.  There may be more, but we don't care about those.
         final Set<UUID> applicationIds = new HashSet<UUID>() {{
@@ -66,7 +65,7 @@ public class ApplicationObservableTestIT extends AbstractCoreIT {
         //clean up our wiring
         ManagerCache managerCache = CpSetup.getInjector().getInstance( ManagerCache.class );
 
-        Observable<Id> appObservable = ApplicationObservable.getAllApplicationIds( managerCache );
+        Observable<Id> appObservable = applicationObservable.getAllApplicationIds();
 
         appObservable.doOnNext( new Action1<Id>() {
             @Override

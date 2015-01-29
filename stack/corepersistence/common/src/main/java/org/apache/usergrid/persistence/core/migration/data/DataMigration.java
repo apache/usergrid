@@ -19,6 +19,9 @@
 package org.apache.usergrid.persistence.core.migration.data;
 
 
+import org.apache.usergrid.persistence.core.scope.ApplicationEntityGroup;
+import rx.Observable;
+
 /**
  * An interface for updating data.  Has 2 basic functions. First it will perform the migration and update the status
  * object.
@@ -45,7 +48,7 @@ public interface DataMigration {
      * @param observer
      * @throws Throwable
      */
-    public void migrate(final ProgressObserver observer) throws Throwable;
+    public Observable migrate(final ApplicationEntityGroup applicationEntityGroup,final ProgressObserver observer) throws Throwable;
 
     /**
      * Get the version of this migration.  It must be unique.

@@ -19,6 +19,7 @@ package org.apache.usergrid.persistence.collection.guice;
 
 
 
+import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerFactoryImpl;
 import org.safehaus.guicyfig.GuicyFigModule;
 
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
@@ -81,10 +82,7 @@ public class CollectionModule extends AbstractModule {
         Multibinder.newSetBinder( binder(), EntityDeleted.class );
 
         // create a guice factor for getting our collection manager
-        install( new FactoryModuleBuilder()
-            .implement( EntityCollectionManager.class, EntityCollectionManagerImpl.class )
-            .implement( EntityCollectionManagerSync.class, EntityCollectionManagerSyncImpl.class )
-            .build( EntityCollectionManagerFactory.class ) );
+       bind(EntityCollectionManagerFactory.class).to(EntityCollectionManagerFactoryImpl.class);
 
         bind( UniqueValueSerializationStrategy.class ).to( UniqueValueSerializationStrategyImpl.class );
         bind( ChangeLogGenerator.class).to( ChangeLogGeneratorImpl.class);
@@ -116,7 +114,7 @@ public class CollectionModule extends AbstractModule {
     @Provides
     @CollectionTaskExecutor
     public TaskExecutor collectionTaskExecutor(final SerializationFig serializationFig){
-        return new NamedTaskExecutorImpl( "collectiontasks", 
+        return new NamedTaskExecutorImpl( "collectiontasks",
                 serializationFig.getTaskPoolThreadSize(), serializationFig.getTaskPoolQueueSize() );
     }
 

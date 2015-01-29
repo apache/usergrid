@@ -24,6 +24,13 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.apache.usergrid.persistence.collection.mvcc.MvccEntityMigrationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.impl.MvccEntityDataMigrationImpl;
+import org.apache.usergrid.persistence.collection.serialization.impl.MvccEntitySerializationStrategyProxyV2Impl;
+import org.apache.usergrid.persistence.core.migration.data.DataMigration;
+import org.apache.usergrid.persistence.core.rx.AllEntitiesInSystemObservable;
+import org.apache.usergrid.persistence.core.scope.ApplicationEntityGroup;
+import org.apache.usergrid.persistence.core.scope.EntityIdScope;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -31,8 +38,6 @@ import org.junit.Test;
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.corepersistence.CpSetup;
 import org.apache.usergrid.corepersistence.EntityWriteHelper;
-import org.apache.usergrid.corepersistence.ManagerCache;
-import org.apache.usergrid.corepersistence.rx.AllEntitiesInSystemObservable;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
@@ -40,9 +45,7 @@ import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.MvccEntity;
-import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
-import org.apache.usergrid.persistence.core.guice.CurrentImpl;
-import org.apache.usergrid.persistence.core.guice.PreviousImpl;
+import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationManagerImpl;
 import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerialization;
@@ -66,8 +69,7 @@ public class EntityDataMigrationIT extends AbstractCoreIT {
     private Injector injector;
 
 
-    private EntityDataMigration entityDataMigration;
-    private ManagerCache managerCache;
+    private DataMigration entityDataMigration;
     private DataMigrationManager dataMigrationManager;
     private MigrationInfoSerialization migrationInfoSerialization;
     private MvccEntitySerializationStrategy v1Strategy;
@@ -80,19 +82,21 @@ public class EntityDataMigrationIT extends AbstractCoreIT {
      * Rule to do the resets we need
      */
     @Rule
-    public MigrationTestRule migrationTestRule = 
-            new MigrationTestRule( app, CpSetup.getInjector() ,EntityDataMigration.class  );
+    public MigrationTestRule migrationTestRule =
+            new MigrationTestRule( app, CpSetup.getInjector() ,MvccEntityDataMigrationImpl.class  );
+    private AllEntitiesInSystemObservable allEntitiesInSystemObservable;
 
     @Before
     public void setup() {
         emf = setup.getEmf();
         injector = CpSetup.getInjector();
-        entityDataMigration = injector.getInstance( EntityDataMigration.class );
-        managerCache = injector.getInstance( ManagerCache.class );
+        entityDataMigration = injector.getInstance( MvccEntityDataMigrationImpl.class );
         dataMigrationManager = injector.getInstance( DataMigrationManager.class );
         migrationInfoSerialization = injector.getInstance( MigrationInfoSerialization.class );
-        v1Strategy = injector.getInstance( Key.get(MvccEntitySerializationStrategy.class, PreviousImpl.class) );
-        v2Strategy = injector.getInstance( Key.get(MvccEntitySerializationStrategy.class, CurrentImpl.class) );
+        MvccEntityMigrationStrategy strategy = injector.getInstance(Key.get(MvccEntityMigrationStrategy.class));
+        allEntitiesInSystemObservable = injector.getInstance(AllEntitiesInSystemObservable.class);
+        v1Strategy = strategy.getMigration().from();
+        v2Strategy = strategy.getMigration().to();
     }
 
 
@@ -131,22 +135,22 @@ public class EntityDataMigrationIT extends AbstractCoreIT {
         //read everything in previous version format and put it into our types.  Assumes we're
         //using a test system, and it's not a huge amount of data, otherwise we'll overflow.
 
-        AllEntitiesInSystemObservable.getAllEntitiesInSystem( managerCache, 1000 )
-            .doOnNext( new Action1<AllEntitiesInSystemObservable.ApplicationEntityGroup>() {
+        allEntitiesInSystemObservable.getAllEntitiesInSystem(  1000)
+            .doOnNext( new Action1<ApplicationEntityGroup>() {
                 @Override
                 public void call(
-                        final AllEntitiesInSystemObservable.ApplicationEntityGroup entity ) {
+                        final ApplicationEntityGroup entity ) {
 
                     //add all versions from history to our comparison
-                    for ( final Id id : entity.entityIds ) {
+                    for ( final EntityIdScope id : entity.entityIds ) {
 
                         CollectionScope scope = CpNamingUtils
                                 .getCollectionScopeNameFromEntityType(
-                                        entity.applicationScope.getApplication(),
-                                        id.getType() );
+                                    entity.applicationScope.getApplication(),
+                                    id.getId().getType());
 
                         final Iterator<MvccEntity> versions = v1Strategy
-                                .loadDescendingHistory( scope, id, UUIDGenerator.newTimeUUID(),
+                                .loadDescendingHistory( scope, id.getId(), UUIDGenerator.newTimeUUID(),
                                         100 );
 
                         while ( versions.hasNext() ) {
@@ -157,7 +161,7 @@ public class EntityDataMigrationIT extends AbstractCoreIT {
 
                             createdEntityIds.remove( mvccEntity.getId() );
 
-                            entityIds.add( id );
+                            entityIds.add( id.getId() );
                         }
                     }
                 }
@@ -167,7 +171,18 @@ public class EntityDataMigrationIT extends AbstractCoreIT {
         assertTrue( "Saved new entities", savedEntities.size() > 0 );
 
         //perform the migration
-        entityDataMigration.migrate( progressObserver );
+        allEntitiesInSystemObservable.getAllEntitiesInSystem(  1000)
+            .doOnNext(new Action1<ApplicationEntityGroup>() {
+                @Override
+                public void call(ApplicationEntityGroup applicationEntityGroup) {
+                   try {
+                       entityDataMigration.migrate(applicationEntityGroup, progressObserver).toBlocking().last();
+                   }catch (Throwable e){
+                       throw new RuntimeException(e);
+                   }
+                }
+            }).toBlocking().last();
+
 
         assertFalse( "Progress observer should not have failed", progressObserver.getFailed() );
         assertTrue( "Progress observer should have update messages", progressObserver.getUpdates().size() > 0 );
@@ -183,22 +198,21 @@ public class EntityDataMigrationIT extends AbstractCoreIT {
 
 
         //now visit all entities in the system again, load them from v2, and ensure they're the same
-        AllEntitiesInSystemObservable.getAllEntitiesInSystem( managerCache, 1000 )
-            .doOnNext( new Action1<AllEntitiesInSystemObservable.ApplicationEntityGroup>() {
+        allEntitiesInSystemObservable.getAllEntitiesInSystem( 1000)
+            .doOnNext( new Action1<ApplicationEntityGroup>() {
                 @Override
                 public void call(
-                        final AllEntitiesInSystemObservable
-                                .ApplicationEntityGroup entity ) {
+                        final ApplicationEntityGroup entity ) {
                     //add all versions from history to our comparison
-                    for ( final Id id : entity.entityIds ) {
+                    for ( final EntityIdScope id : entity.entityIds ) {
 
                         CollectionScope scope = CpNamingUtils
                                 .getCollectionScopeNameFromEntityType(
-                                        entity.applicationScope.getApplication(),
-                                        id.getType() );
+                                    entity.applicationScope.getApplication(),
+                                    id.getId().getType());
 
                         final Iterator<MvccEntity> versions = v2Strategy
-                                .loadDescendingHistory( scope, id,
+                                .loadDescendingHistory( scope, id.getId(),
                                         UUIDGenerator.newTimeUUID(), 100 );
 
                         while ( versions.hasNext() ) {
@@ -218,27 +232,26 @@ public class EntityDataMigrationIT extends AbstractCoreIT {
         assertEquals( "All entities migrated", 0, savedEntities.size() );
 
 
-        //now visit all entities in the system again, and load them from the EM, 
+        //now visit all entities in the system again, and load them from the EM,
         // ensure we see everything we did in the v1 traversal
-        AllEntitiesInSystemObservable.getAllEntitiesInSystem( managerCache, 1000 )
-            .doOnNext( new Action1<AllEntitiesInSystemObservable.ApplicationEntityGroup>() {
+        allEntitiesInSystemObservable.getAllEntitiesInSystem( 1000)
+            .doOnNext( new Action1<ApplicationEntityGroup>() {
                 @Override
                 public void call(
-                        final AllEntitiesInSystemObservable
-                                .ApplicationEntityGroup entity ) {
+                        final ApplicationEntityGroup entity ) {
 
-                    final EntityManager em = emf.getEntityManager( 
+                    final EntityManager em = emf.getEntityManager(
                             entity.applicationScope.getApplication().getUuid() );
 
                     //add all versions from history to our comparison
-                    for ( final Id id : entity.entityIds ) {
+                    for ( final EntityIdScope id : entity.entityIds ) {
 
 
                         try {
-                            final Entity emEntity = em.get( SimpleEntityRef.fromId( id ) );
+                            final Entity emEntity = em.get( SimpleEntityRef.fromId( id.getId() ) );
 
                             if(emEntity != null){
-                                entityIds.remove( id );
+                                entityIds.remove( id.getId() );
                             }
                         }
                         catch ( Exception e ) {

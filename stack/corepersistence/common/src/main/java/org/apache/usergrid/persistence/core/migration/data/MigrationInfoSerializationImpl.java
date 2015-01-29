@@ -22,7 +22,11 @@ package org.apache.usergrid.persistence.core.migration.data;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import org.apache.cassandra.db.marshal.BytesType;
 import org.apache.cassandra.db.marshal.UTF8Type;
 
@@ -45,6 +49,17 @@ import com.netflix.astyanax.serializers.StringSerializer;
 @Singleton
 public class MigrationInfoSerializationImpl implements MigrationInfoSerialization {
 
+    /**
+     * Cache to cache versions temporarily
+     */
+    private final LoadingCache<String, Integer> versionCache = CacheBuilder.newBuilder()
+        //cache the local value for 1 minute
+        .expireAfterWrite(1, TimeUnit.MINUTES).build( new CacheLoader<String, Integer>() {
+            @Override
+            public Integer load( final String key ) throws Exception {
+                return getVersion();
+            }
+        } );
 
     /**
      * Just a hard coded scope since we need it
@@ -118,6 +133,8 @@ public class MigrationInfoSerializationImpl implements MigrationInfoSerializatio
         catch ( ConnectionException e ) {
             throw new DataMigrationException( "Unable to save status", e );
         }
+
+        versionCache.invalidateAll();
     }
 
 
@@ -162,6 +179,20 @@ public class MigrationInfoSerializationImpl implements MigrationInfoSerializatio
         catch ( ConnectionException e ) {
             throw new DataMigrationException( "Unable to retrieve status", e );
         }
+    }
+
+    @Override
+    public int getCurrentVersion() {
+        try {
+            return versionCache.get("currentversion");
+        }catch (Exception ee){
+            throw new RuntimeException(ee);
+        }
+    }
+
+    @Override
+    public void invalidate() {
+        versionCache.invalidateAll();
     }
 
 

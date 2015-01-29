@@ -20,13 +20,16 @@ package org.apache.usergrid.persistence.queue.guice;
 
 import org.apache.usergrid.persistence.core.guice.TestModule;
 import org.apache.usergrid.persistence.core.guice.CommonModule;
-
+import org.apache.usergrid.persistence.core.rx.AllEntitiesInSystemObservable;
+import org.apache.usergrid.persistence.core.rx.AllEntitiesInSystemTestObservable;
 
 
 public class TestQueueModule extends TestModule {
 
     @Override
     protected void configure() {
+        bind(AllEntitiesInSystemObservable.class).to(AllEntitiesInSystemTestObservable.class);
+
         install( new CommonModule());
         install( new QueueModule() );
     }

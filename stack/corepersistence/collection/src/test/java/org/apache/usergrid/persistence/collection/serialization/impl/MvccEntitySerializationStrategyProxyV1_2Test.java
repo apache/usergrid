@@ -20,16 +20,13 @@
 package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
-import java.util.Iterator;
-
+import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
+import org.apache.usergrid.persistence.core.guice.V2Impl;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 
-import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
-import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
-import org.apache.usergrid.persistence.core.guice.PreviousImpl;
 import org.apache.usergrid.persistence.core.guice.ProxyImpl;
 import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerialization;
 import org.apache.usergrid.persistence.core.test.ITRunner;
@@ -45,7 +42,7 @@ import static org.junit.Assert.assertTrue;
 
 @RunWith( ITRunner.class )
 @UseModules( TestCollectionModule.class )
-public class MvccEntitySerializationStrategyProxyV1Test extends MvccEntitySerializationStrategyImplTest {
+public class MvccEntitySerializationStrategyProxyV1_2Test extends MvccEntitySerializationStrategyImplTest {
 
     @Inject
     @ProxyImpl
@@ -71,7 +68,7 @@ public class MvccEntitySerializationStrategyProxyV1Test extends MvccEntitySerial
         existingVersion = migrationInfoSerialization.getVersion();
 
         //set our version to 0 so it uses both impls of the proxy
-        migrationInfoSerialization.setVersion( MvccEntitySerializationStrategyProxyImpl.MIGRATION_VERSION-1 );
+        migrationInfoSerialization.setVersion( V2Impl.MIGRATION_VERSION-1 );
     }
 
 

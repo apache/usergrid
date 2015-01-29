@@ -35,7 +35,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.lang.StringUtils;
 
-import org.apache.usergrid.corepersistence.rx.AllEntitiesInSystemObservable;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.AbstractEntity;
 import org.apache.usergrid.persistence.Entity;
@@ -54,6 +53,7 @@ import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
+import org.apache.usergrid.persistence.core.rx.AllEntitiesInSystemObservable;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.util.Health;
@@ -61,14 +61,10 @@ import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.exceptions.ApplicationAlreadyExistsException;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
-import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
-import org.apache.usergrid.persistence.index.AliasedEntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.map.MapManagerFactory;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.utils.UUIDUtils;
@@ -110,8 +106,10 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             }
         });
 
-
     private ManagerCache managerCache;
+
+    private AllEntitiesInSystemObservable allEntitiesInSystemObservable;
+
     private DataMigrationManager dataMigrationManager;
 
     CassandraService cass;
@@ -159,6 +157,12 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             dataMigrationManager = injector.getInstance( DataMigrationManager.class );
         }
         return managerCache;
+    }
+
+    private AllEntitiesInSystemObservable getAllEntitiesObservable(){
+        if(allEntitiesInSystemObservable==null)
+            allEntitiesInSystemObservable = CpSetup.getInjector().getInstance(AllEntitiesInSystemObservable.class);
+        return allEntitiesInSystemObservable;
     }
 
 
@@ -426,8 +430,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             if ( e == null ) {
                 logger.warn("Applicaion {} in index but not found in collections", targetId );
                 continue;
-            } 
-            
+            }
+
             appMap.put(
                 (String)e.getField( PROPERTY_NAME ).getValue(),
                 (UUID)e.getField( "applicationUuid" ).getValue());
@@ -576,7 +580,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     public long performEntityCount() {
         //TODO, this really needs to be a task that writes this data somewhere since this will get
         //progressively slower as the system expands
-        return AllEntitiesInSystemObservable.getAllEntitiesInSystem( managerCache, 1000 ).longCount().toBlocking().last();
+        return getAllEntitiesObservable().getAllEntitiesInSystem(1000).longCount().toBlocking().last();
     }
 
 
@@ -688,10 +692,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         //explicitly invoke create index, we don't know if it exists or not in ES during a rebuild.
         em.createIndex();
+        em.reindex(po);
+        
         Application app = em.getApplication();
-
-        em.reindex( po );
-
         logger.info("\n\nRebuilt index for application {} id {}\n", app.getName(), appId );
     }
 

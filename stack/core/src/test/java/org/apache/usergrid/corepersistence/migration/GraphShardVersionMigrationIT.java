@@ -23,6 +23,12 @@ package org.apache.usergrid.corepersistence.migration;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.usergrid.persistence.core.migration.data.DataMigration;
+import org.apache.usergrid.persistence.core.rx.AllEntitiesInSystemObservable;
+import org.apache.usergrid.persistence.core.scope.ApplicationEntityGroup;
+import org.apache.usergrid.persistence.core.scope.EntityIdScope;
+import org.apache.usergrid.persistence.graph.serialization.impl.EdgeDataMigrationImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.EdgeMetadataSerializationProxyImpl;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -31,7 +37,7 @@ import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.corepersistence.CpSetup;
 import org.apache.usergrid.corepersistence.EntityWriteHelper;
 import org.apache.usergrid.corepersistence.ManagerCache;
-import org.apache.usergrid.corepersistence.rx.AllEntitiesInSystemObservable;
+import org.apache.usergrid.corepersistence.rx.impl.AllEntitiesInSystemObservableImpl;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationManagerImpl;
@@ -55,7 +61,7 @@ import org.junit.Ignore;
 public class GraphShardVersionMigrationIT extends AbstractCoreIT {
 
     private Injector injector;
-    private GraphShardVersionMigration graphShardVersionMigration;
+    private DataMigration graphShardVersionMigration;
     private ManagerCache managerCache;
     private DataMigrationManager dataMigrationManager;
     private MigrationInfoSerialization migrationInfoSerialization;
@@ -65,18 +71,18 @@ public class GraphShardVersionMigrationIT extends AbstractCoreIT {
      * Rule to do the resets we need
      */
     @Rule
-    public MigrationTestRule migrationTestRule = new MigrationTestRule( app, CpSetup.getInjector() ,GraphShardVersionMigration.class  );
-
+    public MigrationTestRule migrationTestRule = new MigrationTestRule( app, CpSetup.getInjector() ,EdgeDataMigrationImpl.class  );
+    private AllEntitiesInSystemObservable allEntitiesInSystemObservable;
 
 
     @Before
     public void setup() {
         injector = CpSetup.getInjector();
-        graphShardVersionMigration = injector.getInstance( GraphShardVersionMigration.class );
+        graphShardVersionMigration = injector.getInstance( EdgeDataMigrationImpl.class );
         managerCache = injector.getInstance( ManagerCache.class );
         dataMigrationManager = injector.getInstance( DataMigrationManager.class );
         migrationInfoSerialization = injector.getInstance( MigrationInfoSerialization.class );
-
+        allEntitiesInSystemObservable = injector.getInstance(AllEntitiesInSystemObservable.class);
     }
 
 
@@ -114,47 +120,58 @@ public class GraphShardVersionMigrationIT extends AbstractCoreIT {
 
         //read everything in previous version format and put it into our types.
 
-        AllEntitiesInSystemObservable.getAllEntitiesInSystem( managerCache, 1000 )
-                                     .doOnNext( new Action1<AllEntitiesInSystemObservable.ApplicationEntityGroup>() {
+        allEntitiesInSystemObservable.getAllEntitiesInSystem( 1000)
+                                     .doOnNext( new Action1<ApplicationEntityGroup>() {
                                          @Override
                                          public void call(
-                                                 final AllEntitiesInSystemObservable.ApplicationEntityGroup entity ) {
+                                                 final ApplicationEntityGroup entity ) {
 
                                              final GraphManager gm =
                                                      managerCache.getGraphManager( entity.applicationScope );
 
-                                             for ( final Id id : entity.entityIds ) {
+                                             for ( final EntityIdScope idScope : entity.entityIds ) {
                                                  /**
                                                   * Get our edge types from the source
                                                   */
-                                                 gm.getEdgeTypesFromSource( new SimpleSearchEdgeType( id, null, null ) )
-                                                   .doOnNext( new Action1<String>() {
+                                                 gm.getEdgeTypesFromSource( new SimpleSearchEdgeType(idScope.getId(), null, null ) )
+                                                   .doOnNext(new Action1<String>() {
                                                        @Override
-                                                       public void call( final String s ) {
-                                                           sourceTypes.put( id, s );
+                                                       public void call(final String s) {
+                                                           sourceTypes.put(idScope.getId(), s);
                                                        }
-                                                   } ).toBlocking().lastOrDefault( null );
+                                                   }).toBlocking().lastOrDefault( null );
 
 
                                                  /**
                                                   * Get the edge types to the target
                                                   */
-                                                 gm.getEdgeTypesToTarget( new SimpleSearchEdgeType( id, null, null ) )
+                                                 gm.getEdgeTypesToTarget( new SimpleSearchEdgeType( idScope.getId(), null, null ) )
                                                    .doOnNext( new Action1<String>() {
                                                        @Override
                                                        public void call( final String s ) {
-                                                           targetTypes.put( id, s );
+                                                           targetTypes.put( idScope.getId(), s );
                                                        }
                                                    } ).toBlocking().lastOrDefault( null );
 
-                                                 allEntities.remove( id );
+                                                 allEntities.remove( idScope.getId() );
                                              }
                                          }
                                      } ).toBlocking().lastOrDefault( null );
 
 
         //perform the migration
-        graphShardVersionMigration.migrate( progressObserver );
+        allEntitiesInSystemObservable.getAllEntitiesInSystem( 1000)
+            .doOnNext( new Action1<ApplicationEntityGroup>() {
+                @Override
+                public void call(
+                    final ApplicationEntityGroup entity) {
+                    try {
+                        graphShardVersionMigration.migrate(entity, progressObserver).toBlocking().last();
+                    }catch (Throwable e){
+                        throw new RuntimeException(e);
+                    }
+                }
+            }).toBlocking().last();
 
         assertEquals( "Newly saved entities encounterd", 0, allEntities.size() );
         assertFalse( "Progress observer should not have failed", progressObserver.getFailed() );
@@ -171,26 +188,25 @@ public class GraphShardVersionMigrationIT extends AbstractCoreIT {
 
 
         //now visit all nodes in the system and remove their types from the multi maps, it should be empty at the end
-        AllEntitiesInSystemObservable.getAllEntitiesInSystem( managerCache, 1000 )
-                                     .doOnNext( new Action1<AllEntitiesInSystemObservable.ApplicationEntityGroup>() {
+        allEntitiesInSystemObservable.getAllEntitiesInSystem( 1000)
+                                     .doOnNext( new Action1<ApplicationEntityGroup>() {
                                                     @Override
                                                     public void call(
-                                                            final AllEntitiesInSystemObservable
-                                                                    .ApplicationEntityGroup entity ) {
+                                                            final ApplicationEntityGroup entity ) {
 
                                                         final GraphManager gm =
                                                                 managerCache.getGraphManager( entity.applicationScope );
 
-                                                        for ( final Id id : entity.entityIds ) {
+                                                        for ( final EntityIdScope idScope : entity.entityIds ) {
                                                             /**
                                                              * Get our edge types from the source
                                                              */
                                                             gm.getEdgeTypesFromSource(
-                                                                    new SimpleSearchEdgeType( id, null, null ) )
+                                                                    new SimpleSearchEdgeType( idScope.getId(), null, null ) )
                                                               .doOnNext( new Action1<String>() {
                                                                   @Override
                                                                   public void call( final String s ) {
-                                                                      sourceTypes.remove( id, s );
+                                                                      sourceTypes.remove( idScope.getId(), s );
                                                                   }
                                                               } ).toBlocking().lastOrDefault( null );
 
@@ -199,11 +215,11 @@ public class GraphShardVersionMigrationIT extends AbstractCoreIT {
                                                              * Get the edge types to the target
                                                              */
                                                             gm.getEdgeTypesToTarget(
-                                                                    new SimpleSearchEdgeType( id, null, null ) )
+                                                                    new SimpleSearchEdgeType( idScope.getId(), null, null ) )
                                                               .doOnNext( new Action1<String>() {
                                                                   @Override
                                                                   public void call( final String s ) {
-                                                                      targetTypes.remove( id, s );
+                                                                      targetTypes.remove( idScope.getId(), s );
                                                                   }
                                                               } ).toBlocking().lastOrDefault( null );
                                                         }

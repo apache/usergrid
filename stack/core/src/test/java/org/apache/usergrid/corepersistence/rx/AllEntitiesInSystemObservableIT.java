@@ -23,6 +23,12 @@ package org.apache.usergrid.corepersistence.rx;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.usergrid.corepersistence.rx.impl.AllEntitiesInSystemObservableImpl;
+import org.apache.usergrid.persistence.core.rx.AllEntitiesInSystemObservable;
+import org.apache.usergrid.persistence.core.rx.ApplicationObservable;
+import org.apache.usergrid.persistence.core.scope.ApplicationEntityGroup;
+import org.apache.usergrid.persistence.core.scope.EntityIdScope;
+import org.apache.usergrid.persistence.graph.serialization.TargetIdObservable;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,6 +60,9 @@ public class AllEntitiesInSystemObservableIT extends AbstractCoreIT {
 
     @Test
     public void testEntities() throws Exception {
+
+        AllEntitiesInSystemObservable allEntitiesInSystemObservableImpl = CpSetup.getInjector().getInstance(AllEntitiesInSystemObservable.class);
+        TargetIdObservable targetIdObservable = CpSetup.getInjector().getInstance(TargetIdObservable.class);
 
         final EntityManager em = app.getEntityManager();
 
@@ -92,9 +101,9 @@ public class AllEntitiesInSystemObservableIT extends AbstractCoreIT {
 
         final GraphManager gm = managerCache.getGraphManager( scope );
 
-        AllEntitiesInSystemObservable.getAllEntitiesInSystem( managerCache, 1000 ).doOnNext( new Action1<AllEntitiesInSystemObservable.ApplicationEntityGroup>() {
+        allEntitiesInSystemObservableImpl.getAllEntitiesInSystem( 1000).doOnNext( new Action1<ApplicationEntityGroup>() {
             @Override
-            public void call( final AllEntitiesInSystemObservable.ApplicationEntityGroup entity ) {
+            public void call( final ApplicationEntityGroup entity ) {
 
                 assertNotNull(entity);
                 assertNotNull(entity.applicationScope);
@@ -105,14 +114,14 @@ public class AllEntitiesInSystemObservableIT extends AbstractCoreIT {
                     return;
                 }
 
-                for(Id id: entity.entityIds) {
+                for(EntityIdScope idScope: entity.entityIds) {
 
                     //we should only emit each node once
-                    if ( id.getType().equals( type1 ) ) {
-                        assertTrue( "Element should be present on removal", type1Identities.remove( id ) );
+                    if ( idScope.getId().getType().equals( type1 ) ) {
+                        assertTrue( "Element should be present on removal", type1Identities.remove(idScope.getId() ) );
                     }
-                    else if ( id.getType().equals( type2 ) ) {
-                        assertTrue( "Element should be present on removal", type2Identities.remove( id ) );
+                    else if ( idScope.getId().getType().equals( type2 ) ) {
+                        assertTrue( "Element should be present on removal", type2Identities.remove(idScope.getId() ) );
                     }
                 }
             }
@@ -125,7 +134,7 @@ public class AllEntitiesInSystemObservableIT extends AbstractCoreIT {
 
         //test connections
 
-        TargetIdObservable.getTargetNodes( gm, source ).doOnNext( new Action1<Id>() {
+        targetIdObservable.getTargetNodes( gm, source ).doOnNext( new Action1<Id>() {
             @Override
             public void call( final Id target ) {
 

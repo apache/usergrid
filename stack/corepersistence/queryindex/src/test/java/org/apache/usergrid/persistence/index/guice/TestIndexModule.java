@@ -22,12 +22,16 @@ package org.apache.usergrid.persistence.index.guice;
 import org.apache.usergrid.persistence.collection.guice.CollectionModule;
 import org.apache.usergrid.persistence.core.guice.TestModule;
 import org.apache.usergrid.persistence.core.guice.CommonModule;
+import org.apache.usergrid.persistence.core.rx.AllEntitiesInSystemObservable;
+import org.apache.usergrid.persistence.core.rx.AllEntitiesInSystemTestObservable;
 
 
 public class TestIndexModule extends TestModule {
 
     @Override
     protected void configure() {
+        bind(AllEntitiesInSystemObservable.class).to(AllEntitiesInSystemTestObservable.class);
+
         install( new CommonModule());
 
         // configure collections and our core astyanax framework

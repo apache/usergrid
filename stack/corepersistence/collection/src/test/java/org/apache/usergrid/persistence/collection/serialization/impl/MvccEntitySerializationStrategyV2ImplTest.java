@@ -20,15 +20,11 @@
 package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
-import java.util.Iterator;
-
+import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.junit.runner.RunWith;
 
-import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
-import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
-import org.apache.usergrid.persistence.collection.util.EntityHelper;
-import org.apache.usergrid.persistence.core.guice.CurrentImpl;
+import org.apache.usergrid.persistence.core.guice.V2Impl;
 import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
 
@@ -42,7 +38,7 @@ import static org.junit.Assert.assertTrue;
 public class MvccEntitySerializationStrategyV2ImplTest extends MvccEntitySerializationStrategyV2Test {
 
     @Inject
-    @CurrentImpl
+    @V2Impl
     private MvccEntitySerializationStrategy serializationStrategy;
 
 

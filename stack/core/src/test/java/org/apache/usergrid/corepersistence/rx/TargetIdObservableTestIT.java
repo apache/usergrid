@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.graph.serialization.TargetIdObservable;
 import org.junit.Test;
 
 import org.apache.usergrid.AbstractCoreIT;
@@ -58,6 +59,8 @@ public class TargetIdObservableTestIT extends AbstractCoreIT {
 
     @Test
     public void testEntities() throws Exception {
+
+        TargetIdObservable targetIdObservable = CpSetup.getInjector().getInstance(TargetIdObservable.class);
 
         final EntityManager em = app.getEntityManager();
 
@@ -93,7 +96,7 @@ public class TargetIdObservableTestIT extends AbstractCoreIT {
 
         final GraphManager gm = managerCache.getGraphManager( scope );
 
-        TargetIdObservable.getTargetNodes( gm, applicationId ).doOnNext( new Action1<Id>() {
+        targetIdObservable.getTargetNodes( gm, applicationId ).doOnNext( new Action1<Id>() {
             @Override
             public void call( final Id target ) {
 
@@ -116,7 +119,7 @@ public class TargetIdObservableTestIT extends AbstractCoreIT {
 
         //test connections
 
-        TargetIdObservable.getTargetNodes( gm, source ).doOnNext( new Action1<Id>() {
+        targetIdObservable.getTargetNodes( gm, source ).doOnNext( new Action1<Id>() {
             @Override
             public void call( final Id target ) {
 
