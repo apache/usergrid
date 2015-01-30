@@ -17,6 +17,7 @@
 
 package org.apache.usergrid.management.importer;
 
+import com.amazonaws.SDKGlobalConfiguration;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
 import org.jclouds.ContextBuilder;
@@ -63,8 +64,9 @@ public class S3ImportImpl implements S3Import {
         Map<String, Object> storage_info = (Map<String, Object>) properties.get("storage_info");
 
         String bucketName = (String) storage_info.get("bucket_location");
-        String accessId = (String) storage_info.get("s3_access_id");
-        String secretKey = (String) storage_info.get("s3_key");
+        //TODO: have this support the alternate configurations as well
+        String accessId = (String) storage_info.get( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR);
+        String secretKey = (String) storage_info.get(SDKGlobalConfiguration.SECRET_KEY_ENV_VAR);
 
         Properties overrides = new Properties();
         overrides.setProperty("s3" + ".identity", accessId);

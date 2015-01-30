@@ -222,6 +222,8 @@ public class ImportServiceImpl implements ImportService {
         ImportQueueMessage message = new ImportQueueMessage( fileImport.getUuid(), file );
         qm.sendMessage( message );
 
+
+
         //update state of the job to Scheduled
         fileImport.setState(FileImport.State.SCHEDULED);
         rootEm.update(fileImport);
