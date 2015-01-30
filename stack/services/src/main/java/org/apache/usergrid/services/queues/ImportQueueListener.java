@@ -37,6 +37,8 @@ public class ImportQueueListener extends QueueListener {
     /**
      * Initializes the QueueListener. Need to wire the factories up in guice.
      */
+
+    public static String QUEUE_NAME = "import_v1";
     //TODO: someway to tell the base class what the queuename is. The scope would be different.
 
     @Inject
@@ -74,7 +76,7 @@ public class ImportQueueListener extends QueueListener {
     //TODO: make this set from the properties file. Due to having a shared amazon account.
     @Override
     public String getQueueName() {
-        return "import_v1";
+        return queueName;
     }
 
 }

@@ -18,31 +18,48 @@
  *
  */
 
-package org.apache.usergrid.persistence.queue.impl;
+package org.apache.usergrid.services.queues;
 
-import com.google.inject.Inject;
-import org.apache.usergrid.persistence.model.entity.SimpleId;
-import org.apache.usergrid.persistence.queue.QueueFig;
-import org.apache.usergrid.persistence.queue.QueueScope;
-import org.apache.usergrid.persistence.queue.QueueScopeFactory;
 
-import java.util.UUID;
+import java.io.IOException;
+import java.util.List;
+
+import org.apache.usergrid.persistence.queue.QueueManager;
+import org.apache.usergrid.persistence.queue.QueueMessage;
+
 
 /**
- * Returns scope for queues.
+ * Manages the queueManager implementation for Import
  */
-public class QueueScopeFactoryImpl implements QueueScopeFactory {
+public class ImportQueueManager implements QueueManager {
 
-    private QueueFig fig;
-
-    @Inject
-    public QueueScopeFactoryImpl(QueueFig fig){
-        this.fig = fig;
+    @Override
+    public List<QueueMessage> getMessages( final int limit, final int transactionTimeout, final int waitTime,
+                                           final Class klass ) {
+        return null;
     }
 
-    //applicationId is always ManagementApplicationId so not really needed here.
+
     @Override
-    public QueueScope getScope(UUID applicationId, String queueName) {
-        return new QueueScopeImpl(new SimpleId(applicationId, fig.getPrefix()), queueName);
+    public void commitMessage( final QueueMessage queueMessage ) {
+
+    }
+
+
+    @Override
+    public void commitMessages( final List<QueueMessage> queueMessages ) {
+
+    }
+
+
+    @Override
+    public void sendMessages( final List bodies ) throws IOException {
+
+    }
+
+
+    @Override
+    public void sendMessage( final Object body ) throws IOException {
+
     }
 }

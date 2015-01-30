@@ -19,6 +19,7 @@ package org.apache.usergrid.management.importer;
 
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.batch.service.SchedulerService;
+import org.apache.usergrid.corepersistence.CpSetup;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.ManagementService;
@@ -28,6 +29,8 @@ import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.FileImport;
 import org.apache.usergrid.persistence.entities.Import;
 import org.apache.usergrid.persistence.entities.JobData;
+
+import org.aspectj.lang.annotation.Before;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.JsonParser;
@@ -45,7 +48,17 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
+import javax.annotation.PostConstruct;
+
+
 import org.apache.usergrid.persistence.index.query.Query.Level;
+import org.apache.usergrid.persistence.queue.QueueManager;
+import org.apache.usergrid.persistence.queue.QueueManagerFactory;
+import org.apache.usergrid.persistence.queue.QueueScope;
+import org.apache.usergrid.persistence.queue.QueueScopeFactory;
+import org.apache.usergrid.services.ServiceManagerFactory;
+import org.apache.usergrid.services.queues.ImportQueueListener;
+import org.apache.usergrid.services.queues.ImportQueueMessage;
 
 
 public class ImportServiceImpl implements ImportService {
@@ -63,9 +76,30 @@ public class ImportServiceImpl implements ImportService {
     //dependency injection
     private SchedulerService sch;
 
+    private ServiceManagerFactory smf;
+
+    //Dependency injection through spring
+    private QueueManager qm;
+
+    private QueueManagerFactory queueManagerFactory;
+
+
     //inject Management Service to access Organization Data
     private ManagementService managementService;
     private JsonFactory jsonFactory = new JsonFactory();
+
+    @PostConstruct
+    public void init(){
+        //TODO: move this to a before or initialization method.
+
+        //TODO: made queueName clearly defined.
+        String name = ImportQueueListener.QUEUE_NAME;
+        QueueScopeFactory queueScopeFactory = CpSetup.getInjector().getInstance(QueueScopeFactory.class);
+        QueueScope queueScope = queueScopeFactory.getScope(smf.getManagementAppId(), name);
+        queueManagerFactory = CpSetup.getInjector().getInstance(QueueManagerFactory.class);
+        qm = queueManagerFactory.getQueueManager(queueScope);
+
+    }
 
     /**
      * This schedules the main import Job
@@ -117,6 +151,7 @@ public class ImportServiceImpl implements ImportService {
 
         // schedule import job
         sch.createJob(IMPORT_JOB_NAME, soonestPossible, jobData);
+
 
         // update state for import job to created
         importUG.setState(Import.State.SCHEDULED);
@@ -181,6 +216,9 @@ public class ImportServiceImpl implements ImportService {
         // TODO SQS: Tear this part out and set the new job to be taken in here
         // schedule file import job
         sch.createJob(FILE_IMPORT_JOB_NAME, soonestPossible, jobData);
+        //probably how it should work
+        ImportQueueMessage message = new ImportQueueMessage( fileImport.getUuid(), file );
+        qm.sendMessage( message );
 
         //update state of the job to Scheduled
         fileImport.setState(FileImport.State.SCHEDULED);

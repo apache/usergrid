@@ -227,57 +227,6 @@ public class SQSQueueManagerImpl implements QueueManager {
         return mapper.writeValueAsString(o);
     }
 
-
-
-
-    public class UsergridAwsCredentialsProvider implements AWSCredentialsProvider {
-
-        private AWSCredentials creds;
-
-        public  UsergridAwsCredentialsProvider(){
-            init();
-        }
-
-        private void init() {
-            creds = new AWSCredentials() {
-                @Override
-                public String getAWSAccessKeyId() {
-                    String accessKey = System.getProperty(SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR);
-                    if(StringUtils.isEmpty(accessKey)){
-                        accessKey = System.getProperty(SDKGlobalConfiguration.ALTERNATE_ACCESS_KEY_ENV_VAR);
-                    }
-                    return StringUtils.trim(accessKey);
-                }
-
-                @Override
-                public String getAWSSecretKey() {
-                    String secret = System.getProperty(SDKGlobalConfiguration.SECRET_KEY_ENV_VAR);
-                    if(StringUtils.isEmpty(secret)){
-                        secret = System.getProperty(SDKGlobalConfiguration.ALTERNATE_SECRET_KEY_ENV_VAR);
-                    }
-                    return StringUtils.trim(secret);
-                }
-            };
-            if(StringUtils.isEmpty(creds.getAWSAccessKeyId())){
-                throw new AmazonClientException("could not get aws access key from system properties");
-            }
-            if(StringUtils.isEmpty(creds.getAWSSecretKey())){
-                throw new AmazonClientException("could not get aws secret key from system properties");
-            }
-        }
-
-        @Override
-        public AWSCredentials getCredentials() {
-            return creds;
-        }
-
-
-        @Override
-        public void refresh() {
-            init();
-        }
-    }
-
     public class SqsLoader {
         private final String key;
         private final AmazonSQSClient client;
