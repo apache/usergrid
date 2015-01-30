@@ -46,7 +46,7 @@ public class ExportJob extends OnlyOnceJob {
 
     @Override
     public void doJob( JobExecution jobExecution ) throws Exception {
-        logger.info( "execute ExportJob {}", jobExecution );
+        logger.info( "execute ExportJob {}", jobExecution.getJobId().toString() );
 
         JobData jobData = jobExecution.getJobData();
         if ( jobData == null ) {

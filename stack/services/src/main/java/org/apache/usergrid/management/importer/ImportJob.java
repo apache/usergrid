@@ -42,13 +42,13 @@ public class ImportJob extends OnlyOnceJob {
     @Autowired
     ImportService importService;
 
-    public ImportJob() {
+    public ImportJob(){
         logger.info( "ImportJob created " + this );
     }
 
     @Override
     protected void doJob(JobExecution jobExecution) throws Exception {
-        logger.info( "execute ImportJob {}", jobExecution );
+        logger.info( "execute ImportJob {}", jobExecution.getJobId().toString() );
 
         JobData jobData = jobExecution.getJobData();
         if ( jobData == null ) {
@@ -76,7 +76,7 @@ public class ImportJob extends OnlyOnceJob {
         this.importService = importService;
     }
 
-    
+
     /**
      * This method is called when the job is retried maximum times by the
      * scheduler but still fails. Thus the scheduler marks it as DEAD.

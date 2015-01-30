@@ -202,21 +202,14 @@ public class ImportServiceIT {
 
             assertTrue( !importedThings.isEmpty() );
 
-            // first two things have connections
-            for (int i = 0; i < 2; i++) {
-                Results r = em2.getConnectedEntities(
-                    importedThings.get(i), "related", null, Level.IDS);
+            // two things have connections
+            int conCount = 0;
+            for ( Entity e : importedThings ) {
+                Results r = em2.getConnectedEntities( e, "related", null, Level.IDS);
                 List<ConnectionRef> connections = r.getConnections();
-                assertTrue( !connections.isEmpty() );
+                conCount += connections.size();
             }
-
-            // other things do not have connections
-            for (int i = 3; i < 10; i++) {
-                Results r = em2.getConnectedEntities(
-                    importedThings.get(i), "related", null, Level.IDS);
-                List<ConnectionRef> connections = r.getConnections();
-                assertTrue( connections.isEmpty() );
-            }
+            assertEquals( 2, conCount );
 
             logger.debug("\n\nCheck dictionary\n");
 

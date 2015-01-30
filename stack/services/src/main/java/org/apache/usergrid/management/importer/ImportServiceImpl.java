@@ -861,9 +861,16 @@ public class ImportServiceImpl implements ImportService {
                 if ( entityRef.getType() == null ) {
                     entityRef = em.get(ownerEntityRef.getUuid());
                 }
+
+                logger.debug("Creating connection from {}:{} to {}:{}",
+                    new Object[] {
+                        ownerEntityRef.getType(), ownerEntityRef.getUuid(),
+                        entityRef.getType(), entityRef.getUuid() });
+
                 em.createConnection(ownerEntityRef, connectionType, entityRef);
 
             } catch (Exception e) {
+                logger.error("Error writing connection", e);
                 fileImport.setErrorMessage(e.getMessage());
                 try {
                     rootEm.update(fileImport);
@@ -895,11 +902,19 @@ public class ImportServiceImpl implements ImportService {
         public void doWrite(EntityManager em, JobExecution jobExecution, FileImport fileImport) {
             EntityManager rootEm = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
             try {
+                
+                logger.debug("Adding map to {}:{} dictionary {}",
+                    new Object[] {ownerEntityRef.getType(), ownerEntityRef.getType(), dictionaryName });
+
                 em.addMapToDictionary(ownerEntityRef, dictionaryName, dictionary);
+
             } catch (Exception e) {
+                logger.error("Error writing dictionary", e);
                 fileImport.setErrorMessage(e.getMessage());
                 try {
+
                     rootEm.update(fileImport);
+
                 } catch (Exception ex) {
 
                     // TODO should we abort at this point?
@@ -925,19 +940,36 @@ public class ImportServiceImpl implements ImportService {
             this.fileImport = fileImport;
         }
 
+
         @Override
         public void call(final Subscriber<? super WriteEvent> subscriber) {
 
-            WriteEvent entityWrapper = null;
-            EntityRef ownerEntityRef = null;
-            String entityUuid = "";
-            String entityType = "";
+            // have to do this in two passes so that entities are created before connections
+
+            // first entities
+            process( subscriber, true );
+
+            // next connections and dictionaries
+            process( subscriber, false);
+        }
+
+
+        private void process(final Subscriber<? super WriteEvent> subscriber, boolean entities ) {
+
+            logger.debug("process(): entities = " + entities );
+
+            EntityRef lastEntitySeenRef = null;
+
             try {
+
                 while (!subscriber.isUnsubscribed() && jp.nextToken() != JsonToken.END_OBJECT) {
+
                     String collectionName = jp.getCurrentName();
 
+                    logger.debug("Processing currentName: " + jp.getCurrentName());
+
                     // create the  wrapper for connections
-                    if ( collectionName != null && collectionName.equals("connections")) {
+                    if (collectionName != null && collectionName.equals("connections")) {
 
                         jp.nextToken(); // START_OBJECT
                         while (jp.nextToken() != JsonToken.END_OBJECT) {
@@ -947,49 +979,59 @@ public class ImportServiceImpl implements ImportService {
                             while (jp.nextToken() != JsonToken.END_ARRAY) {
                                 String entryId = jp.getText();
 
-                                EntityRef entryRef = new SimpleEntityRef(UUID.fromString(entryId));
-                                entityWrapper = new ConnectionEvent(ownerEntityRef, connectionType, entryRef);
-
-                                // Creates a new subscriber to the observer with the given connection wrapper
-                                subscriber.onNext(entityWrapper);
+                                if ( !entities ) {
+                                    EntityRef entryRef = new SimpleEntityRef(UUID.fromString(entryId));
+                                    WriteEvent entityWrapper = new ConnectionEvent(lastEntitySeenRef, connectionType, entryRef);
+                                    subscriber.onNext(entityWrapper);
+                                }
                             }
                         }
 
                     }
                     // create the  wrapper for dictionaries
-                    else if ( collectionName != null && collectionName.equals("dictionaries")) {
+                    else if (collectionName != null && collectionName.equals("dictionaries")) {
 
                         jp.nextToken(); // START_OBJECT
                         while (jp.nextToken() != JsonToken.END_OBJECT) {
 
                             String dictionaryName = jp.getCurrentName();
-
                             jp.nextToken();
-
                             Map<String, Object> dictionary = jp.readValueAs(HashMap.class);
-                            entityWrapper = new DictionaryEvent(ownerEntityRef, dictionaryName, dictionary);
 
-                            // Creates a new subscriber to the observer with the given dictionary wrapper
-                            subscriber.onNext(entityWrapper);
+                            if ( !entities ) {
+                                WriteEvent entityWrapper = new DictionaryEvent(
+                                    lastEntitySeenRef, dictionaryName, dictionary);
+                                subscriber.onNext(entityWrapper);
+                            }
                         }
                         subscriber.onCompleted();
 
                     } else {
 
                         // Regular collections
+
                         jp.nextToken(); // START_OBJECT
 
-                        Map<String, Object> properties = new HashMap<String, Object>();
                         JsonToken token = jp.nextToken();
 
+                        Map<String, Object> properties = new HashMap<>();
+
+                        String entityUuid = null;
+                        String entityType = null;
+
                         while (token != JsonToken.END_OBJECT) {
+
                             if (token == JsonToken.VALUE_STRING || token == JsonToken.VALUE_NUMBER_INT) {
+
                                 String key = jp.getCurrentName();
+                                logger.debug("   currentName: " + jp.getText());
+
                                 if (key.equals("uuid")) {
                                     entityUuid = jp.getText();
 
                                 } else if (key.equals("type")) {
                                     entityType = jp.getText();
+
                                 } else if (key.length() != 0 && jp.getText().length() != 0) {
                                     String value = jp.getText();
                                     properties.put(key, value);
@@ -998,24 +1040,29 @@ public class ImportServiceImpl implements ImportService {
                             token = jp.nextToken();
                         }
 
-                        ownerEntityRef = new SimpleEntityRef(entityType, UUID.fromString(entityUuid));
-                        entityWrapper = new EntityEvent(UUID.fromString(entityUuid), entityType, properties);
+                        if ( entities ) {
+                            WriteEvent entityWrapper = new EntityEvent(
+                                UUID.fromString(entityUuid), entityType, properties);
+                            subscriber.onNext(entityWrapper);
+                        }
 
-                        // Creates a new subscriber to the observer with the given dictionary wrapper
-                        subscriber.onNext(entityWrapper);
-
+                        // don't save it, but do keep track of last entity seen
+                        lastEntitySeenRef = new SimpleEntityRef( entityType, UUID.fromString(entityUuid) );
                     }
                 }
+
             } catch (Exception e) {
                 // skip illegal entity UUID and go to next one
                 fileImport.setErrorMessage(e.getMessage());
                 try {
                     rootEm.update(fileImport);
                 } catch (Exception ex) {
+                    logger.error("Error updating file import record", ex);
                 }
                 subscriber.onError(e);
             }
         }
+
     }
 }
 
