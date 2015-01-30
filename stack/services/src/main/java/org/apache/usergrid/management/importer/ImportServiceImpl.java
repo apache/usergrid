@@ -93,9 +93,11 @@ public class ImportServiceImpl implements ImportService {
         //TODO: move this to a before or initialization method.
 
         //TODO: made queueName clearly defined.
+        //smf = getApplicationContext().getBean(ServiceManagerFactory.class);
+
         String name = ImportQueueListener.QUEUE_NAME;
         QueueScopeFactory queueScopeFactory = CpSetup.getInjector().getInstance(QueueScopeFactory.class);
-        QueueScope queueScope = queueScopeFactory.getScope(smf.getManagementAppId(), name);
+        QueueScope queueScope = queueScopeFactory.getScope(CpNamingUtils.MANAGEMENT_APPLICATION_ID, name);
         queueManagerFactory = CpSetup.getInjector().getInstance(QueueManagerFactory.class);
         qm = queueManagerFactory.getQueueManager(queueScope);
 

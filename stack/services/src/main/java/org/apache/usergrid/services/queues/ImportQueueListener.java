@@ -76,7 +76,7 @@ public class ImportQueueListener extends QueueListener {
     //TODO: make this set from the properties file. Due to having a shared amazon account.
     @Override
     public String getQueueName() {
-        return queueName;
+        return QUEUE_NAME;
     }
 
 }
