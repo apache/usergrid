@@ -377,7 +377,6 @@ public class CpRelationManager implements RelationManager {
 
         // loop through all types of edge to target
 
-
         final EntityIndex ei = managerCache.getEntityIndex( applicationScope );
 
         final EntityIndexBatch entityIndexBatch = ei.createBatch();
@@ -387,6 +386,7 @@ public class CpRelationManager implements RelationManager {
 
                 // for each edge type, emit all the edges of that type
                 .flatMap( new Func1<String, Observable<Edge>>() {
+
                     @Override
                     public Observable<Edge> call( final String etype ) {
                         return gm.loadEdgesToTarget( new SimpleSearchByEdgeType(
@@ -397,11 +397,12 @@ public class CpRelationManager implements RelationManager {
 
                 //for each edge we receive index and add to the batch
                 .doOnNext( new Action1<Edge>() {
+
                     @Override
                     public void call( final Edge edge ) {
 
-                        EntityRef sourceEntity =
-                                new SimpleEntityRef( edge.getSourceNode().getType(), edge.getSourceNode().getUuid() );
+                        EntityRef sourceEntity = new SimpleEntityRef( 
+                                edge.getSourceNode().getType(), edge.getSourceNode().getUuid() );
 
                         // reindex the entity in the source entity's collection or connection index
 
@@ -410,7 +411,7 @@ public class CpRelationManager implements RelationManager {
 
                             String collName = CpNamingUtils.getCollectionName( edge.getType() );
                             indexScope = new IndexScopeImpl( 
-                                new SimpleId( sourceEntity.getUuid(), sourceEntity.getType()),
+                                new SimpleId( sourceEntity.getUuid(), sourceEntity.getType() ), 
                                 CpNamingUtils.getCollectionScopeNameFromCollectionName( collName ));
                         }
                         else {
@@ -423,14 +424,6 @@ public class CpRelationManager implements RelationManager {
 
                         entityIndexBatch.index( indexScope, cpEntity );
 
-                        // reindex the entity in the source entity's all-types index
-
-                        //TODO REMOVE INDEX CODE
-                        //                        indexScope = new IndexScopeImpl( new SimpleId(
-                        //                            sourceEntity.getUuid(), sourceEntity.getType() ), CpNamingUtils
-                        // .ALL_TYPES, entityType );
-                        //
-                        //                        entityIndexBatch.index( indexScope, cpEntity );
                     }
                 } ).count().toBlocking().lastOrDefault( 0 );
 

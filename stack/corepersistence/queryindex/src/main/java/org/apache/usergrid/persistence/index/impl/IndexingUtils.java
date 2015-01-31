@@ -145,7 +145,7 @@ public class IndexingUtils {
      * @throws java.io.IOException On JSON generation error.
      */
     public static XContentBuilder createDoubleStringIndexMapping(
-            XContentBuilder builder, String type ) throws IOException {
+            XContentBuilder builder, String type, IndexFig config ) throws IOException {
 
         builder = builder
 
@@ -153,73 +153,106 @@ public class IndexingUtils {
 
                 .startObject( type )
 
-                    .startArray("dynamic_templates")
+                    // don't store source object in ES 
+                    .field("_source") 
+                        .startObject()
+                            .field("_source")
+                                .startObject()
+                                    .field("enabled", config.getStoreStource())
+                                .endObject()
+                        .endObject()
+
+                    .startArray( "dynamic_templates" )
 
                         // we need most specific mappings first since it's a stop on match algorithm
 
-                        .startObject()
+                        .startObject() // array item
 
                             .startObject( "entity_id_template" )
                                 .field( "match", IndexingUtils.ENTITYID_ID_FIELDNAME )
-                                    .field( "match_mapping_type", "string" )
-                                            .startObject( "mapping" ).field( "type", "string" )
-                                                .field( "index", "not_analyzed" )
-                                            .endObject()
-                                    .endObject()
+                                .field( "match_mapping_type", "string" )
+                                .startObject( "mapping" )
+                                    .field( "type", "string" )
+                                    .field( "index", "not_analyzed" )
                                 .endObject()
+                                .field("store", config.getStoreFields() )
+                            .endObject()
+                
+                        .endObject()
 
-                            .startObject()
+                        .startObject() // array item
+
                             .startObject( "entity_context_template" )
                                 .field( "match", IndexingUtils.ENTITY_CONTEXT_FIELDNAME )
                                 .field( "match_mapping_type", "string" )
-                                    .startObject( "mapping" )
-                                        .field( "type", "string" )
-                                        .field( "index", "not_analyzed" ).endObject()
-                                    .endObject()
+                                .startObject( "mapping" )
+                                    .field( "type", "string" )
+                                    .field( "index", "not_analyzed" )
+                                .endObject()
+                                .field("store", config.getStoreFields())
                             .endObject()
 
-                            .startObject()
+                        .endObject()
+
+                        .startObject()  // array item
+
                             .startObject( "entity_version_template" )
                                 .field( "match", IndexingUtils.ENTITY_VERSION_FIELDNAME )
-                                        .field( "match_mapping_type", "string" )
-                                            .startObject( "mapping" ).field( "type", "long" )
-                                            .endObject()
-                                        .endObject()
-                                    .endObject()
+                                .field( "match_mapping_type", "string" )
+                                .startObject( "mapping" )
+                                    .field( "type", "long" )
+                                .endObject()
+                                .field("store", config.getStoreFields())
+                            .endObject()
 
-                            // any string with field name that starts with sa_ gets analyzed
-                            .startObject()
-                                .startObject( "template_1" )
-                                    .field( "match", ANALYZED_STRING_PREFIX + "*" )
-                                    .field( "match_mapping_type", "string" ).startObject( "mapping" )
+                        .endObject()
+
+                        // fields names starting with go_ get geo-indexed
+
+                        .startObject() // array item
+
+                            .startObject( "geo_template" )
+                                .field( "match", GEO_PREFIX + "location" )
+                                    .startObject( "mapping" )
+                                        .field( "type", "geo_point" )
+                                    .endObject()
+                                .field("store", config.getStoreFields())
+                            .endObject()
+
+                        .endObject()
+
+                        // any string with field name that starts with sa_ gets analyzed
+
+                        .startObject() // array item
+
+                            .startObject( "string_analyzed_template" )
+                                .field( "match", ANALYZED_STRING_PREFIX + "*" )
+                                .field( "match_mapping_type", "string" )
+                                .startObject( "mapping")
                                     .field( "type", "string" )
                                     .field( "index", "analyzed" )
                                 .endObject()
+                                .field("store", config.getStoreFields())
+
                             .endObject()
 
                         .endObject()
 
                         // all other strings are not analyzed
-                        .startObject()
-                            .startObject( "template_2" )
-                                //todo, should be string prefix, remove 2 field mapping
+
+                        .startObject() // array item
+
+                            .startObject( "string_unanalyzed_template" )
+                                // TODO, should be string prefix, remove 2 field mapping
                                 .field( "match", "*" )
                                 .field( "match_mapping_type", "string" )
                                 .startObject( "mapping" )
                                     .field( "type", "string" )
-                                        .field( "index", "not_analyzed" )
+                                    .field( "index", "not_analyzed" )
                                 .endObject()
+                                .field("store", config.getStoreFields())
                             .endObject()
-                        .endObject()
 
-                        // fields names starting with go_ get geo-indexed
-                        .startObject()
-                            .startObject( "template_3" )
-                                .field( "match", GEO_PREFIX + "location" )
-                                    .startObject( "mapping" )
-                                        .field( "type", "geo_point" )
-                                    .endObject()
-                            .endObject()
                         .endObject()
 
                     .endArray()
@@ -230,7 +263,5 @@ public class IndexingUtils {
 
         return builder;
     }
-
-
 
 }

@@ -26,7 +26,6 @@ import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
 import org.apache.usergrid.persistence.model.entity.Id;
 
-import java.util.Map;
 
 
 /**
@@ -47,6 +46,11 @@ public interface EntityIndex {
      * @param replicas
      */
     public void addIndex(final String indexSuffix, final int shards, final int replicas);
+
+    /**
+     * Update mappings for this index.
+     */
+    public void updateMappings();
 
     /**
      * Create the index batch.

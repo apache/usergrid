@@ -49,10 +49,11 @@ public interface IndexFig extends GuicyFig {
 
     public static final String ELASTICSEARCH_FORCE_REFRESH = "elasticsearch.force_refresh";
 
+    public static final String ELASTICSEARCH_STORE_SOURCE = "elasticsearch.store_source";
 
-    /**
-     * the number of times we can fail before we refresh the client
-     */
+    public static final String ELASTICSEARCH_STORE_FIELDS = "elasticsearch.store_fields";
+
+    /** The number of times we can fail before we refresh the client */
     public static final String ELASTICSEARCH_FAIL_REFRESH = "elasticsearch.fail_refresh";
 
     public static final String QUERY_LIMIT_DEFAULT = "index.query.limit.default";
@@ -113,4 +114,11 @@ public interface IndexFig extends GuicyFig {
 
     @Default("2")
     int getIndexCacheMaxWorkers();
+    @Default( "false" )
+    @Key( ELASTICSEARCH_STORE_SOURCE )
+    boolean getStoreStource();
+
+    @Default( "false" )
+    @Key( ELASTICSEARCH_STORE_FIELDS )
+    boolean getStoreFields();
 }

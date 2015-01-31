@@ -83,6 +83,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
     private static final AtomicBoolean mappingsCreated = new AtomicBoolean( false );
 
+    public static final int MIGRATION_VERSION = 4;
     private final IndexIdentifier.IndexAlias alias;
     private final IndexIdentifier indexIdentifier;
 
@@ -213,6 +214,21 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     }
 
 
+    @Override
+    public void updateMappings() {
+        try {
+            // index may not exist yet, that's fine
+            initializeIndex();
+
+            // create mappings does a PUT, that works for updating mappings
+            createMappings();
+
+        } catch (IOException e) {
+            throw new RuntimeException( "Unable to update mappings", e );
+        }
+    }
+
+
     /**
      * Tests writing a document to a new index to ensure it's working correctly. See this post:
      * http://s.apache.org/index-missing-exception
@@ -260,8 +276,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
      */
     private void createMappings() throws IOException {
 
-        XContentBuilder xcb = IndexingUtils.createDoubleStringIndexMapping(
-                XContentFactory.jsonBuilder(), "_default_");
+        XContentBuilder xcb = IndexingUtils.createDoubleStringIndexMapping( 
+                XContentFactory.jsonBuilder(), "_default_", config );
 
         PutIndexTemplateResponse pitr = esProvider.getClient().admin().indices()
                 .preparePutTemplate("usergrid_template")

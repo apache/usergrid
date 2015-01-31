@@ -62,9 +62,7 @@ import org.junit.Ignore;
 
 public class EntityDataMigrationIT extends AbstractCoreIT {
 
-
     private Injector injector;
-
 
     private EntityDataMigration entityDataMigration;
     private ManagerCache managerCache;
@@ -75,13 +73,13 @@ public class EntityDataMigrationIT extends AbstractCoreIT {
     private EntityManagerFactory emf;
 
 
-
     /**
      * Rule to do the resets we need
      */
     @Rule
     public MigrationTestRule migrationTestRule = 
             new MigrationTestRule( app, CpSetup.getInjector() ,EntityDataMigration.class  );
+
 
     @Before
     public void setup() {
@@ -178,8 +176,8 @@ public class EntityDataMigrationIT extends AbstractCoreIT {
         migrationInfoSerialization.setVersion( entityDataMigration.getVersion() );
         dataMigrationManager.invalidate();
 
-        assertEquals( "New version saved, and we should get new implementation", entityDataMigration.getVersion(),
-                dataMigrationManager.getCurrentVersion() );
+        assertEquals( "New version saved, and we should get new implementation", 
+                entityDataMigration.getVersion(), dataMigrationManager.getCurrentVersion() );
 
 
         //now visit all entities in the system again, load them from v2, and ensure they're the same
@@ -187,8 +185,8 @@ public class EntityDataMigrationIT extends AbstractCoreIT {
             .doOnNext( new Action1<AllEntitiesInSystemObservable.ApplicationEntityGroup>() {
                 @Override
                 public void call(
-                        final AllEntitiesInSystemObservable
-                                .ApplicationEntityGroup entity ) {
+                        final AllEntitiesInSystemObservable.ApplicationEntityGroup entity ) {
+
                     //add all versions from history to our comparison
                     for ( final Id id : entity.entityIds ) {
 
@@ -218,7 +216,7 @@ public class EntityDataMigrationIT extends AbstractCoreIT {
         assertEquals( "All entities migrated", 0, savedEntities.size() );
 
 
-        //now visit all entities in the system again, and load them from the EM, 
+        // now visit all entities in the system again, and load them from the EM, 
         // ensure we see everything we did in the v1 traversal
         AllEntitiesInSystemObservable.getAllEntitiesInSystem( managerCache, 1000 )
             .doOnNext( new Action1<AllEntitiesInSystemObservable.ApplicationEntityGroup>() {

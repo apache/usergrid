@@ -43,7 +43,7 @@ import com.netflix.astyanax.MutationBatch;
 
 /**
  * Version 3 implementation of entity serialization. This will proxy writes and reads so that during
- * migration data goes to both sources and is read from the old source. After the ugprade completes,
+ * migration data goes to both sources and is read from the old source. After the upgrade completes,
  * it will be available from the new source
  */
 @Singleton

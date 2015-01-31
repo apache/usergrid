@@ -19,72 +19,62 @@
 
 package org.apache.usergrid.corepersistence.migration;
 
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 import org.apache.usergrid.corepersistence.ManagerCache;
-import org.apache.usergrid.corepersistence.rx.AllEntitiesInSystemObservable;
-import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.core.migration.data.DataMigration;
-import org.apache.usergrid.persistence.map.MapManager;
-import org.apache.usergrid.persistence.map.MapScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 import com.google.inject.Inject;
+import org.apache.usergrid.corepersistence.rx.ApplicationObservable;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
+import org.apache.usergrid.persistence.index.EntityIndex;
 import rx.functions.Action1;
 
 
 /**
- * Migration to ensure that our entity id is written into our map data.
+ * Migration applies the current Query Index mappings to every Query Index, 
+ * and thus every Application in the system. 
  */
-public class EntityTypeMappingMigration implements DataMigration {
-
+public class ApplyQueryIndexMappingsMigration implements DataMigration {
+    
     private final ManagerCache managerCache;
 
 
     @Inject
-    public EntityTypeMappingMigration( final ManagerCache managerCache) {
+    public ApplyQueryIndexMappingsMigration( final ManagerCache managerCache) {
        this.managerCache = managerCache;
     }
 
 
     @Override
     public void migrate( final ProgressObserver observer ) throws Throwable {
-
+        
         final AtomicLong atomicLong = new AtomicLong();
 
-        AllEntitiesInSystemObservable.getAllEntitiesInSystem(managerCache, 1000 )
-            .doOnNext( new Action1<AllEntitiesInSystemObservable.ApplicationEntityGroup>() {
+        ApplicationObservable.getAllApplicationIds( managerCache )
+            .doOnNext( new Action1<Id>() {
 
                 @Override
-                public void call( final AllEntitiesInSystemObservable.ApplicationEntityGroup aeg ) {
+                public void call( final Id appId ) {
+                    EntityIndex ei = managerCache.getEntityIndex(new ApplicationScopeImpl( appId ));
+                    ei.updateMappings();
 
-                    final MapScope ms = CpNamingUtils.getEntityTypeMapScope(
-                            aeg.applicationScope.getApplication() );
-
-                    final MapManager mapManager = managerCache.getMapManager( ms );
-
-                    for(Id entityId: aeg.entityIds) {
-                        final UUID entityUuid = entityId.getUuid();
-                        final String entityType = entityId.getType();
-
-                        mapManager.putString( entityUuid.toString(), entityType );
-
-                        // only update status every 1000 entities, there are probably a lot
-                        if ( atomicLong.incrementAndGet() % 1000 == 0 ) {
-                            updateStatus( atomicLong, observer );
-                        }
+                    // update status every 10 applications, there are probably not that many
+                    if ( atomicLong.incrementAndGet() % 10 == 0 ) {
+                        updateStatus( atomicLong, observer );
                     }
                 }
+
             } ).toBlocking().lastOrDefault( null );
     }
 
 
     private void updateStatus( final AtomicLong counter, final ProgressObserver observer ) {
-        observer.update( getVersion(), String.format( "Updated %d entities", counter.get() ) );
+        observer.update( getVersion(), String.format( "Updated %d index mappings", counter.get()));
     }
 
 
     @Override
     public int getVersion() {
-        return Versions.VERSION_1;
+        return Versions.VERSION_4;
     }
 }
