@@ -20,6 +20,7 @@ package org.apache.usergrid.management.importer;
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.persistence.entities.FileImport;
 import org.apache.usergrid.persistence.entities.Import;
+import org.apache.usergrid.services.queues.ImportQueueMessage;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -50,7 +51,7 @@ public interface ImportService {
      * @param jobExecution
      * @throws Exception
      */
-    void parseFileToEntities(JobExecution jobExecution) throws Exception;
+    void parseFileToEntities(ImportQueueMessage importQueueMessage) throws Exception;
 
     /**
      * Get the state for the Job with UUID
@@ -73,7 +74,7 @@ public interface ImportService {
      * @return FileImportEntity
      * @throws Exception
      */
-    FileImport getFileImportEntity(final JobExecution jobExecution) throws Exception;
+    FileImport getFileImportEntity(final ImportQueueMessage importQueueMessage) throws Exception;
 
     /**
      * @param jobExecution

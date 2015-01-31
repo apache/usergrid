@@ -66,7 +66,7 @@ public class FileImportJob extends OnlyOnceJob {
         jobExecution.heartbeat();
 
         // call the File Parser for the file set in job execution
-        importService.parseFileToEntities(jobExecution);
+        //importService.parseFileToEntities(jobExecution);
 
         logger.error("File Import Service completed job");
     }
@@ -92,7 +92,7 @@ public class FileImportJob extends OnlyOnceJob {
         EntityManager rootEm = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID);
 
         // Mark the sub-job i.e. File Import Job as Failed
-        FileImport fileImport = importService.getFileImportEntity(execution);
+        FileImport fileImport = null;//importService.getFileImportEntity(execution);
         fileImport.setErrorMessage("The Job has been tried maximum times but still failed");
         fileImport.setState(FileImport.State.FAILED);
         rootEm.update(fileImport);

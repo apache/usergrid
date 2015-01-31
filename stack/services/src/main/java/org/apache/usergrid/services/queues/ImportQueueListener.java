@@ -20,6 +20,12 @@ package org.apache.usergrid.services.queues;
 import java.util.List;
 import java.util.Properties;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import org.apache.usergrid.management.importer.ImportService;
+import org.apache.usergrid.management.importer.ImportServiceImpl;
 import org.apache.usergrid.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.queue.QueueMessage;
@@ -37,6 +43,10 @@ public class ImportQueueListener extends QueueListener {
     /**
      * Initializes the QueueListener. Need to wire the factories up in guice.
      */
+    private static final Logger logger = LoggerFactory.getLogger( ImportQueueListener.class );
+
+    @Autowired
+    ImportService importService;
 
     public static String QUEUE_NAME = "import_v1";
     //TODO: someway to tell the base class what the queuename is. The scope would be different.
@@ -54,7 +64,7 @@ public class ImportQueueListener extends QueueListener {
      * @param messages
      */
     @Override
-    public void onMessage( final List<QueueMessage> messages ) {
+    public void onMessage( final List<QueueMessage> messages ) throws Exception {
         /**
          * Much like in the original queueListener , we need to translate the Messages that we get
          * back from the QueueMessage into something like an Import message. The way that a
@@ -62,13 +72,12 @@ public class ImportQueueListener extends QueueListener {
          * of the message and typecast it into a model called ApplicationQueueMessage.  Then it does
          * work on the message.
          */
+        logger.debug("Doing work in onMessage in ImportQueueListener");
         for (QueueMessage message : messages) {
             ImportQueueMessage queueMessage = ( ImportQueueMessage ) message.getBody();
 
+            importService.parseFileToEntities( queueMessage );
 
-            /**
-             * Do work here that will help determine what import messages are being passed from s3
-             */
         }
 
     }
