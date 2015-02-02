@@ -224,6 +224,7 @@ public class ApplicationResource extends AbstractContextResource {
                                     @QueryParam("callback") @DefaultValue("") String callback )
             throws OAuthSystemException {
 
+        UsergridAwsCredentials uac = new UsergridAwsCredentials();
 
         UUID jobUUID = null;
         Map<String, String> uuidRet = new HashMap<String, String>();
@@ -246,17 +247,12 @@ public class ApplicationResource extends AbstractContextResource {
 
 
             String bucketName = ( String ) storage_info.get( "bucket_location" );
-            String accessId = ( String ) storage_info.get( "s3_access_id" );
-            String secretKey = ( String ) storage_info.get( "s3_key" );
+
+            uac.getAWSAccessKeyIdJson( storage_info );
+            uac.getAWSSecretKeyJson( storage_info );
 
             if(bucketName == null) {
                 throw new NullPointerException( "Could not find field 'bucketName'" );
-            }
-            if(accessId == null) {
-                throw new NullPointerException( "Could not find field 's3_access_id'" );
-            }
-            if(secretKey == null) {
-                throw new NullPointerException( "Could not find field 's3_key'" );
             }
 
             json.put("organizationId", organization.getUuid());
@@ -291,6 +287,7 @@ public class ApplicationResource extends AbstractContextResource {
             @QueryParam("callback") @DefaultValue("") String callback )
             throws OAuthSystemException {
 
+        UsergridAwsCredentials uac = new UsergridAwsCredentials();
         UUID jobUUID = null;
         String colExport = collection_name;
         Map<String, String> uuidRet = new HashMap<String, String>();
@@ -312,20 +309,16 @@ public class ApplicationResource extends AbstractContextResource {
                 throw new NullPointerException( "Could not find field 'storage_info'" );
             }
 
-
             String bucketName = ( String ) storage_info.get( "bucket_location" );
-            String accessId = ( String ) storage_info.get( "s3_access_id" );
-            String secretKey = ( String ) storage_info.get( "s3_key" );
+
+            //check to make sure that access key and secret key are there.
+            uac.getAWSAccessKeyIdJson( storage_info );
+            uac.getAWSSecretKeyJson( storage_info );
 
             if(bucketName == null) {
                 throw new NullPointerException( "Could not find field 'bucketName'" );
             }
-            if(accessId == null) {
-                throw new NullPointerException( "Could not find field 's3_access_id'" );
-            }
-            if(secretKey == null) {
-                throw new NullPointerException( "Could not find field 's3_key'" );
-            }
+
             json.put( "organizationId",organization.getUuid() );
             json.put( "applicationId", applicationId);
             json.put( "collectionName", colExport);

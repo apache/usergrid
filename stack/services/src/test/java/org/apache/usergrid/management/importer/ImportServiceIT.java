@@ -160,8 +160,10 @@ public class ImportServiceIT {
             put( "properties", new HashMap<String, Object>() {{
                  put( "storage_provider", "s3" );
                  put( "storage_info", new HashMap<String, Object>() {{
-                    put( "s3_key", System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR ) );
-                    put( "s3_access_id", System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR ) );
+                     put( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR,
+                         System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR ) );
+                     put( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR,
+                         System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR ) );
                     put( "bucket_location", System.getProperty( "bucketName" ) );
                 }});
             }});
@@ -709,9 +711,12 @@ public class ImportServiceIT {
         HashMap<String, Object> payload = new HashMap<String, Object>();
         Map<String, Object> properties = new HashMap<String, Object>();
         Map<String, Object> storage_info = new HashMap<String, Object>();
-        storage_info.put( "s3_key", System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR ) );
-        storage_info.put( "s3_access_id", System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR ) );
         storage_info.put( "bucket_location", System.getProperty( "bucketName" ) );
+
+        storage_info.put( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR,
+            System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR ) );
+        storage_info.put( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR,
+            System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR ) );
 
         properties.put( "storage_provider", "s3" );
         properties.put( "storage_info", storage_info );

@@ -30,6 +30,7 @@ import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.entities.Export;
 import org.apache.usergrid.persistence.entities.Import;
+import org.apache.usergrid.persistence.queue.impl.UsergridAwsCredentials;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.applications.ServiceResource;
@@ -284,6 +285,8 @@ public class OrganizationResource extends AbstractContextResource {
 
         logger.debug( "executePostJson" );
 
+        UsergridAwsCredentials uac = new UsergridAwsCredentials();
+
         UUID jobUUID = null;
         Map<String, String> uuidRet = new HashMap<String, String>();
 
@@ -305,18 +308,13 @@ public class OrganizationResource extends AbstractContextResource {
 
 
             String bucketName = ( String ) storage_info.get( "bucket_location" );
-            String accessId = ( String ) storage_info.get( "s3_access_id" );
-            String secretKey = ( String ) storage_info.get( "s3_key" );
+            uac.getAWSAccessKeyIdJson( storage_info );
+            uac.getAWSSecretKeyJson( storage_info );
 
             if(bucketName == null) {
                 throw new NullPointerException( "Could not find field 'bucketName'" );
             }
-            if(accessId == null) {
-                throw new NullPointerException( "Could not find field 's3_access_id'" );
-            }
-            if(secretKey == null) {
-                throw new NullPointerException( "Could not find field 's3_key'" );
-            }
+
 
             json.put( "organizationId",organization.getUuid());
 
@@ -367,6 +365,7 @@ public class OrganizationResource extends AbstractContextResource {
                                     @QueryParam("callback") @DefaultValue("") String callback )
             throws OAuthSystemException {
 
+        UsergridAwsCredentials uac = new UsergridAwsCredentials();
         UUID jobUUID = null;
         Map<String, String> uuidRet = new HashMap<String, String>();
 
@@ -388,17 +387,12 @@ public class OrganizationResource extends AbstractContextResource {
 
 
             String bucketName = ( String ) storage_info.get( "bucket_location" );
-            String accessId = ( String ) storage_info.get( "s3_access_id" );
-            String secretKey = ( String ) storage_info.get( "s3_key" );
+
+            uac.getAWSAccessKeyIdJson( storage_info );
+            uac.getAWSSecretKeyJson( storage_info );
 
             if(bucketName == null) {
                 throw new NullPointerException( "Could not find field 'bucketName'" );
-            }
-            if(accessId == null) {
-                throw new NullPointerException( "Could not find field 's3_access_id'" );
-            }
-            if(secretKey == null) {
-                throw new NullPointerException( "Could not find field 's3_key'" );
             }
 
             json.put( "organizationId",organization.getUuid());

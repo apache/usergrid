@@ -91,7 +91,7 @@ public class ExportServiceImpl implements ExportService {
         try {
             em = emf.getEntityManager( emf.getManagementAppId() );
             Set<String> collections = em.getApplicationCollections();
-            //Set<String> collections = em.getE
+
             if ( !collections.contains( "exports" ) ) {
                 em.createApplicationCollection( "exports" );
             }

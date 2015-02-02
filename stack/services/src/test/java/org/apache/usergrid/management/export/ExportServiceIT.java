@@ -55,6 +55,7 @@ import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.entities.JobData;
 import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 
+import com.amazonaws.SDKGlobalConfiguration;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
 
@@ -116,8 +117,8 @@ public class ExportServiceIT {
     public void before() {
 
         boolean configured =
-               !StringUtils.isEmpty(System.getProperty("secretKey"))
-            && !StringUtils.isEmpty(System.getProperty("accessKey"))
+               !StringUtils.isEmpty(System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR ))
+            && !StringUtils.isEmpty(System.getProperty(SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR ))
             && !StringUtils.isEmpty(System.getProperty("bucketName"));
 
         if ( !configured ) {
@@ -805,8 +806,8 @@ public class ExportServiceIT {
         }
 
         String bucketName = System.getProperty( "bucketName" );
-        String accessId = System.getProperty( "accessKey" );
-        String secretKey = System.getProperty( "secretKey" );
+        String accessId = System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR );
+        String secretKey = System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR );
 
         Properties overrides = new Properties();
         overrides.setProperty( "s3" + ".identity", accessId );
@@ -897,8 +898,8 @@ public class ExportServiceIT {
         Thread.sleep( 3000 );
 
         String bucketName = System.getProperty( "bucketName" );
-        String accessId = System.getProperty( "accessKey" );
-        String secretKey = System.getProperty( "secretKey" );
+        String accessId = System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR );
+        String secretKey = System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR );
 
         Properties overrides = new Properties();
         overrides.setProperty( "s3" + ".identity", accessId );
@@ -1007,8 +1008,8 @@ public class ExportServiceIT {
         }
 
         String bucketName = System.getProperty( "bucketName" );
-        String accessId = System.getProperty( "accessKey" );
-        String secretKey = System.getProperty( "secretKey" );
+        String accessId = System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR );
+        String secretKey = System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR );
 
         Properties overrides = new Properties();
         overrides.setProperty( "s3" + ".identity", accessId );
@@ -1066,8 +1067,10 @@ public class ExportServiceIT {
         HashMap<String, Object> payload = new HashMap<String, Object>();
         Map<String, Object> properties = new HashMap<String, Object>();
         Map<String, Object> storage_info = new HashMap<String, Object>();
-        storage_info.put( "s3_key", System.getProperty( "secretKey" ) );
-        storage_info.put( "s3_access_id", System.getProperty( "accessKey" ) );
+        storage_info.put( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR,
+            System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR ) );
+        storage_info.put( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR,
+            System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR ) );
         storage_info.put( "bucket_location", System.getProperty( "bucketName" ) );
 
         properties.put( "storage_provider", "s3" );
