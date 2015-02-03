@@ -175,10 +175,10 @@ public class ImportServiceIT {
             Thread.sleep(100);
         }
 
-        logger.debug("\n\nImport\n");
-
         final UUID appId2 = setup.getMgmtSvc().createApplication( organization.getUuid(), "noobapp" ).getId();
         final EntityManager em2 = setup.getEmf().getEntityManager(appId2);
+
+        logger.debug("\n\nImport into new app {}\n", appId2 );
 
         ImportService importService = setup.getImportService();
         UUID importUUID = importService.schedule( new HashMap<String, Object>() {{
@@ -246,11 +246,6 @@ public class ImportServiceIT {
                     assertThat(dictionaries1.size(), is(not(0)));
                     assertThat(dictionaries2.size(), is(not(0)));
                 }
-            }
-
-            // all things should have been updated
-            for ( Entity e : importedThings ) {
-                assertTrue(e.getModified() > thingsMap.get(e.getUuid()).getModified());
             }
 
         }
