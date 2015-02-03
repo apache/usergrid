@@ -30,22 +30,50 @@ public class ImportQueueMessage implements Serializable {
      * Import specific identifiers here
      */
 
-    private UUID importId;
+    //Needed to see what import job the Queue Message is a part of
+    private UUID fileId;
+
+    //Needed to determine what file we are working on importing
+    private String fileName;
+
+    private UUID applicationId;
+
 
     public ImportQueueMessage(){
     }
 
-    public ImportQueueMessage(UUID importId){
-        this.importId = importId;
+    public ImportQueueMessage(UUID fileId, UUID applicationId ,String fileName){
+        this.fileId = fileId;
+        this.applicationId = applicationId;
+        this.fileName = fileName;
     }
 
 
-    public UUID getImportId() {
-        return importId;
+    public UUID getApplicationId() {
+        return applicationId;
     }
 
 
-    public void setImportId( final UUID importId ) {
-        this.importId = importId;
+    public void setApplicationId( final UUID applicationId ) {
+        this.applicationId = applicationId;
+    }
+
+
+    public UUID getFileId() {
+        return fileId;
+    }
+
+
+    public void setFileId( final UUID fileId ) {
+        this.fileId = fileId;
+    }
+
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public void setFileName( final String fileName ) {
+        this.fileName = fileName;
     }
 }

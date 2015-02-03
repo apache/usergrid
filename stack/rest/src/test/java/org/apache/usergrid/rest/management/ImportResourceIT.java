@@ -17,6 +17,7 @@
 
 package org.apache.usergrid.rest.management;
 
+import com.amazonaws.SDKGlobalConfiguration;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
 
@@ -27,6 +28,8 @@ import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.usergrid.rest.test.resource2point0.model.Organization;
 import org.apache.usergrid.rest.test.resource2point0.model.Token;
+
+import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.ws.rs.core.MediaType;
@@ -60,8 +63,7 @@ public class ImportResourceIT extends AbstractRestIT {
 
     }
 
-
-
+    @Ignore("Test isn't currently supported")
     @Test
     public void importApplicationUUIDRetTest() throws Exception {
 
@@ -77,7 +79,7 @@ public class ImportResourceIT extends AbstractRestIT {
 
     }
 
-
+    @Ignore("Test isn't currently supported")
     @Test
     public void importOrganizationUUIDRetTest() throws Exception {
 
@@ -92,6 +94,7 @@ public class ImportResourceIT extends AbstractRestIT {
 
     }
 
+    @Ignore("Test isn't currently supported")
     @Test
     public void importGetOrganizationJobStatTest() throws Exception {
 
@@ -113,6 +116,7 @@ public class ImportResourceIT extends AbstractRestIT {
     }
 
 
+    @Ignore("Test isn't currently supported")
     @Test
     public void importGetApplicationJobStatTest() throws Exception {
 
@@ -601,8 +605,8 @@ public class ImportResourceIT extends AbstractRestIT {
         Entity storage_info = new Entity();
         //TODO: always put dummy values here and ignore this test.
         //TODO: add a ret for when s3 values are invalid.
-        storage_info.put( "s3_key", "insert key here" );
-        storage_info.put( "s3_access_id", "insert access id here" );
+        storage_info.put( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR, "insert key here" );
+        storage_info.put( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR, "insert access id here" );
         storage_info.put( "bucket_location", "insert bucket name here" );
         properties.put( "storage_provider", "s3" );
         properties.put( "storage_info", storage_info );

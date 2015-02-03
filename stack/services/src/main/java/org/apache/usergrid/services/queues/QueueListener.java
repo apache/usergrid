@@ -176,7 +176,7 @@ public abstract class QueueListener  {
                 Timer.Context timerContext = timer.time();
                 //Get the messages out of the queue.
                 //TODO: a model class to get generic queueMessages out of the queueManager. Ask Shawn what should go here.
-                List<QueueMessage> messages = queueManager.getMessages(getBatchSize(), MESSAGE_TRANSACTION_TIMEOUT, 5000, ImportQueueListener.class);
+                List<QueueMessage> messages = queueManager.getMessages(getBatchSize(), MESSAGE_TRANSACTION_TIMEOUT, 5000, ImportQueueMessage.class);
                 LOG.info("retrieved batch of {} messages from queue {} ", messages.size(),queueName);
 
                 if (messages.size() > 0) {
@@ -245,7 +245,7 @@ public abstract class QueueListener  {
      * This will be the method that does the job dependant execution.
      * @param messages
      */
-    public abstract void onMessage(List<QueueMessage> messages);
+    public abstract void onMessage(List<QueueMessage> messages) throws Exception;
 
     public abstract String getQueueName();
 

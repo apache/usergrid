@@ -19,6 +19,7 @@ package org.apache.usergrid.management.importer;
 
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.batch.service.SchedulerService;
+import org.apache.usergrid.corepersistence.CpSetup;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.ManagementService;
@@ -27,6 +28,7 @@ import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.entities.FileImport;
 import org.apache.usergrid.persistence.entities.Import;
 import org.apache.usergrid.persistence.entities.JobData;
+
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.JsonParser;
@@ -44,7 +46,17 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
+import javax.annotation.PostConstruct;
+
+
 import org.apache.usergrid.persistence.index.query.Query.Level;
+import org.apache.usergrid.persistence.queue.QueueManager;
+import org.apache.usergrid.persistence.queue.QueueManagerFactory;
+import org.apache.usergrid.persistence.queue.QueueScope;
+import org.apache.usergrid.persistence.queue.QueueScopeFactory;
+import org.apache.usergrid.services.ServiceManagerFactory;
+import org.apache.usergrid.services.queues.ImportQueueListener;
+import org.apache.usergrid.services.queues.ImportQueueMessage;
 
 
 public class ImportServiceImpl implements ImportService {
@@ -62,16 +74,38 @@ public class ImportServiceImpl implements ImportService {
     //dependency injection
     private SchedulerService sch;
 
+    private ServiceManagerFactory smf;
+
+    //Dependency injection through spring
+    private QueueManager qm;
+
+    private QueueManagerFactory queueManagerFactory;
+
     //inject Management Service to access Organization Data
     private ManagementService managementService;
     private JsonFactory jsonFactory = new JsonFactory();
+
+
+    @PostConstruct
+    public void init(){
+
+        //TODO: move this to a before or initialization method.
+
+        //TODO: made queueName clearly defined.
+        //smf = getApplicationContext().getBean(ServiceManagerFactory.class);
+
+        String name = ImportQueueListener.QUEUE_NAME;
+        QueueScopeFactory queueScopeFactory = CpSetup.getInjector().getInstance(QueueScopeFactory.class);
+        QueueScope queueScope = queueScopeFactory.getScope(CpNamingUtils.MANAGEMENT_APPLICATION_ID, name);
+        queueManagerFactory = CpSetup.getInjector().getInstance(QueueManagerFactory.class);
+        qm = queueManagerFactory.getQueueManager(queueScope);
+    }
 
     /**
      * This schedules the main import Job
      *
      * @param config configuration of the job to be scheduled
      * @return it returns the UUID of the scheduled job
-     * @throws Exception
      */
     @Override
     public UUID schedule(Map<String, Object> config) throws Exception {
@@ -116,6 +150,7 @@ public class ImportServiceImpl implements ImportService {
 
         // schedule import job
         sch.createJob(IMPORT_JOB_NAME, soonestPossible, jobData);
+
 
         // update state for import job to created
         importUG.setState(Import.State.SCHEDULED);
@@ -179,7 +214,13 @@ public class ImportServiceImpl implements ImportService {
 
         // TODO SQS: Tear this part out and set the new job to be taken in here
         // schedule file import job
-        sch.createJob(FILE_IMPORT_JOB_NAME, soonestPossible, jobData);
+        //sch.createJob(FILE_IMPORT_JOB_NAME, soonestPossible, jobData);
+        //probably how it should work
+        ImportQueueMessage message = new ImportQueueMessage( fileImport.getUuid(),
+            (UUID) config.get( "applicationId" ) ,file );
+        qm.sendMessage( message );
+
+
 
         //update state of the job to Scheduled
         fileImport.setState(FileImport.State.SCHEDULED);
@@ -258,27 +299,32 @@ public class ImportServiceImpl implements ImportService {
 
     /**
      * Returns the File Import Entity that stores all meta-data for the particular sub File import Job
-     *
-     * @param jobExecution the file import job details
      * @return File Import Entity
-     * @throws Exception
+     */
+    @Override
+    public FileImport getFileImportEntity(final ImportQueueMessage queueMessage) throws Exception {
+
+        EntityManager em = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+
+        return em.get(queueMessage.getFileId(), FileImport.class);
+    }
+
+
+    /**
+     * Returns the File Import Entity that stores all meta-data for the particular sub File import Job
+     * @return File Import Entity
      */
     @Override
     public FileImport getFileImportEntity(final JobExecution jobExecution) throws Exception {
 
         UUID fileImportId = (UUID) jobExecution.getJobData().getProperty(FILE_IMPORT_ID);
+
         EntityManager em = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
 
         return em.get(fileImportId, FileImport.class);
     }
 
-    /**
-     * This returns the temporary files downloaded form s3
-     */
-//    @Override
-//    public ArrayList<File> getEphemeralFile() {
-//        return files;
-//    }
+
     public SchedulerService getSch() {
         return sch;
     }
@@ -557,21 +603,33 @@ public class ImportServiceImpl implements ImportService {
     }
 
 
-    /**
-     * The loops through each temp file and parses it to store the entities from the json back into usergrid
-     *
-     * @throws Exception
-     */
     @Override
+    // TODO: ImportService should not have to know about ImportQueueMessage
+    public void parseFileToEntities(ImportQueueMessage queueMessage) throws Exception {
+
+        FileImport fileImport = getFileImportEntity(queueMessage);
+        File file = new File(queueMessage.getFileName());
+        UUID targetAppId = queueMessage.getApplicationId();
+
+        parseFileToEntities( fileImport, file, targetAppId );
+    }
+
+
+    @Override
+    // TODO: ImportService should not have to know about JobExecution
     public void parseFileToEntities(JobExecution jobExecution) throws Exception {
 
-        logger.debug("parseFileToEntities() for job {} status {}",
-            jobExecution.getJobName(), jobExecution.getStatus().toString());
-
-        // add properties to the import entity
         FileImport fileImport = getFileImportEntity(jobExecution);
-
         File file = new File(jobExecution.getJobData().getProperty("File").toString());
+        UUID targetAppId = (UUID) jobExecution.getJobData().getProperty("applicationId");
+
+        parseFileToEntities( fileImport, file, targetAppId );
+    }
+
+
+    public void parseFileToEntities( FileImport fileImport, File file, UUID targetAppId ) throws Exception {
+
+        logger.debug("parseFileToEntities() for file {} ", file.getAbsolutePath());
 
         EntityManager emManagementApp = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
         emManagementApp.update(fileImport);
@@ -588,16 +646,13 @@ public class ImportServiceImpl implements ImportService {
                 fileImport.setState(FileImport.State.STARTED);
                 emManagementApp.update(fileImport);
 
-                // Get target application ID from the job data (NOT from the filename)
-                UUID targetAppId = (UUID) jobExecution.getJobData().getProperty("applicationId");
-
                 if (emManagementApp.get(targetAppId) == null) {
                     throw new IllegalArgumentException("Application does not exist: " + targetAppId.toString());
                 }
                 EntityManager targetEm = emf.getEntityManager(targetAppId);
                 logger.debug("   importing into app {} file {}", targetAppId.toString(), file.getAbsolutePath());
 
-                importEntitiesFromFile(file, targetEm, emManagementApp, fileImport, jobExecution);
+                importEntitiesFromFile(file, targetEm, emManagementApp, fileImport );
 
                 // TODO: fix the resume on error feature
 
@@ -714,18 +769,16 @@ public class ImportServiceImpl implements ImportService {
     /**
      * Imports the entity's connecting references (collections, connections and dictionaries)
      *
-     * @param jp           JsonParser pointing to the beginning of the object.
+     * @param file         The file to be imported
      * @param em           Entity Manager for the application being imported
      * @param rootEm       Entity manager for the root applicaition
-     * @param fileImport   the file import entity
-     * @param jobExecution execution details for the import jbo
+     * @param fileImport   The file import entity
      */
     private void importEntitiesFromFile(
         final File file,
         final EntityManager em,
         final EntityManager rootEm,
-        final FileImport fileImport,
-        final JobExecution jobExecution) throws Exception {
+        final FileImport fileImport) throws Exception {
 
 
         // first we do entities
@@ -738,10 +791,11 @@ public class ImportServiceImpl implements ImportService {
         final Observable<WriteEvent> entityEventObservable = Observable.create(jsonObservableEntities);
 
         // function to execute for each write event
+        //TODO: job execution no longer needed due to having queueMessage.
         final Action1<WriteEvent> doWork = new Action1<WriteEvent>() {
             @Override
             public void call(WriteEvent writeEvent) {
-                writeEvent.doWrite(em, jobExecution, fileImport);
+                writeEvent.doWrite(em,fileImport);
             }
         };
 
@@ -812,7 +866,7 @@ public class ImportServiceImpl implements ImportService {
 
             }
         }, Schedulers.io()).toBlocking().last();
-        
+
         jp.close();
 
         logger.debug("\n\nWrote others\n");
@@ -820,7 +874,7 @@ public class ImportServiceImpl implements ImportService {
 
 
     private interface WriteEvent {
-        public void doWrite(EntityManager em, JobExecution jobExecution, FileImport fileImport);
+        public void doWrite(EntityManager em, FileImport fileImport);
     }
 
 
@@ -841,7 +895,7 @@ public class ImportServiceImpl implements ImportService {
 
         // Creates entities
         @Override
-        public void doWrite(EntityManager em, JobExecution jobExecution, FileImport fileImport) {
+        public void doWrite(EntityManager em, FileImport fileImport) {
             EntityManager rootEm = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
 
             try {
@@ -883,7 +937,7 @@ public class ImportServiceImpl implements ImportService {
 
         // creates connections between entities
         @Override
-        public void doWrite(EntityManager em, JobExecution jobExecution, FileImport fileImport) {
+        public void doWrite(EntityManager em, FileImport fileImport) {
             EntityManager rootEm = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
 
             try {
@@ -932,7 +986,7 @@ public class ImportServiceImpl implements ImportService {
 
         // adds map to the dictionary
         @Override
-        public void doWrite(EntityManager em, JobExecution jobExecution, FileImport fileImport) {
+        public void doWrite(EntityManager em, FileImport fileImport) {
             EntityManager rootEm = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
             try {
 

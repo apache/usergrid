@@ -89,19 +89,28 @@
 
   <bean id="exportJob" class="org.apache.usergrid.management.export.ExportJob" />
 
-  <!--<bean id="notificationsQueueListener" class="org.apache.usergrid.services.notifications.QueueListener"-->
-        <!--scope="singleton">-->
-    <!--<constructor-arg name="emf" ref="entityManagerFactory" />-->
-    <!--<constructor-arg name="metricsService" ref="metricsFactory" />-->
-    <!--<constructor-arg name="props" ref="properties" />-->
-    <!--<constructor-arg name="smf" ref="serviceManagerFactory" />-->
-  <!--</bean>-->
+  <bean id="notificationsQueueListener" class="org.apache.usergrid.services.notifications.QueueListener"
+        scope="singleton">
+    <constructor-arg name="emf" ref="entityManagerFactory" />
+    <constructor-arg name="metricsService" ref="metricsFactory" />
+    <constructor-arg name="props" ref="properties" />
+    <constructor-arg name="smf" ref="serviceManagerFactory" />
+  </bean>
 
   <bean id="importService" class="org.apache.usergrid.management.importer.ImportServiceImpl" >
     <property name="managementService" ref="managementService"/>
     <property name="emf" ref="entityManagerFactory"/>
     <property name="sch" ref="schedulerService"/>
   </bean>
+
+    <bean id="importQueueListener" class="org.apache.usergrid.services.queues.ImportQueueListener"
+          scope="singleton">
+        <constructor-arg name="emf" ref="entityManagerFactory" />
+        <constructor-arg name="metricsService" ref="metricsFactory" />
+        <constructor-arg name="smf" ref="serviceManagerFactory" />
+        <constructor-arg name="props" ref="properties" />
+
+    </bean>
 
   <bean id="importJob" class="org.apache.usergrid.management.importer.ImportJob" />
   <bean id="fileImportJob" class="org.apache.usergrid.management.importer.FileImportJob" />

@@ -17,6 +17,7 @@
 
 package org.apache.usergrid.management.importer;
 
+import com.amazonaws.SDKGlobalConfiguration;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Service;
@@ -38,6 +39,8 @@ import org.apache.usergrid.persistence.entities.JobData;
 import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.persistence.index.query.Query.Level;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
+import org.apache.usergrid.services.notifications.QueueListener;
+
 import org.jclouds.ContextBuilder;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.BlobStoreContext;
@@ -72,6 +75,9 @@ public class ImportServiceIT {
     private static OrganizationInfo organization;
     private static UUID applicationId;
 
+    QueueListener listener;
+
+
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
@@ -97,12 +103,13 @@ public class ImportServiceIT {
         applicationId = setup.getMgmtSvc().createApplication( organization.getUuid(), username+"app" ).getId();
     }
 
+
     @Before
     public void before() {
 
         boolean configured =
-                   !StringUtils.isEmpty(System.getProperty("secretKey"))
-                && !StringUtils.isEmpty(System.getProperty("accessKey"))
+                   !StringUtils.isEmpty(System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR))
+                && !StringUtils.isEmpty(System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR))
                 && !StringUtils.isEmpty(System.getProperty("bucketName"));
 
         if ( !configured ) {
@@ -154,8 +161,10 @@ public class ImportServiceIT {
             put( "properties", new HashMap<String, Object>() {{
                  put( "storage_provider", "s3" );
                  put( "storage_info", new HashMap<String, Object>() {{
-                    put( "s3_key", System.getProperty( "secretKey" ) );
-                    put( "s3_access_id", System.getProperty( "accessKey" ) );
+                     put( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR,
+                         System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR ) );
+                     put( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR,
+                         System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR ) );
                     put( "bucket_location", System.getProperty( "bucketName" ) );
                 }});
             }});
@@ -180,17 +189,23 @@ public class ImportServiceIT {
             put( "properties", new HashMap<String, Object>() {{
                 put( "storage_provider", "s3" );
                 put( "storage_info", new HashMap<String, Object>() {{
-                    put( "s3_key", System.getProperty( "secretKey" ) );
-                    put( "s3_access_id", System.getProperty( "accessKey" ) );
+                    put( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR,
+                        System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR ) );
+                    put( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR,
+                        System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR ) );
                     put( "bucket_location", System.getProperty( "bucketName" ) );
                 }});
             }});
         }});
 
+
+      //  listener.start();
+
         // TODO countdown latch here?
         while ( !importService.getState( importUUID ).equals( "FINISHED" ) ) {
             Thread.sleep(100);
         }
+
 
         em2.refreshIndex();
 
@@ -242,6 +257,14 @@ public class ImportServiceIT {
         finally {
             logger.debug("\n\nDelete bucket\n");
             deleteBucket();
+        }
+    }
+
+    @After
+    public void after() throws Exception {
+        if(listener != null) {
+            listener.stop();
+            listener = null;
         }
     }
 
@@ -416,7 +439,7 @@ public class ImportServiceIT {
         while ( !exportService.getState( exportUUID ).equals( "FINISHED" ) ) {
             ;
         }
-        //TODo: can check if the temp files got created
+        //TODO: can check if the temp files got created
 
         // import
         S3Import s3Import = new S3ImportImpl();
@@ -682,9 +705,12 @@ public class ImportServiceIT {
         HashMap<String, Object> payload = new HashMap<String, Object>();
         Map<String, Object> properties = new HashMap<String, Object>();
         Map<String, Object> storage_info = new HashMap<String, Object>();
-        storage_info.put( "s3_key", System.getProperty( "secretKey" ) );
-        storage_info.put( "s3_access_id", System.getProperty( "accessKey" ) );
         storage_info.put( "bucket_location", System.getProperty( "bucketName" ) );
+
+        storage_info.put( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR,
+            System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR ) );
+        storage_info.put( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR,
+            System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR ) );
 
         properties.put( "storage_provider", "s3" );
         properties.put( "storage_info", storage_info );
@@ -722,8 +748,8 @@ public class ImportServiceIT {
     public void deleteBucket() {
 
         String bucketName = System.getProperty( "bucketName" );
-        String accessId = System.getProperty( "accessKey" );
-        String secretKey = System.getProperty( "secretKey" );
+        String accessId = System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR );
+        String secretKey = System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR );
 
         Properties overrides = new Properties();
         overrides.setProperty( "s3" + ".identity", accessId );
