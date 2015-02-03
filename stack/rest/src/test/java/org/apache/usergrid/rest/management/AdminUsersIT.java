@@ -177,39 +177,31 @@ public class AdminUsersIT extends AbstractRestIT {
         String username = clientSetup.getUsername();
         String password = clientSetup.getPassword();
 
-        String superToken = superAdminToken();
-
-        String newPassword = "foo";
 
         Map<String, Object> passwordPayload = new HashMap<String, Object>();
-        data.put( "newpassword", newPassword );
+        passwordPayload.put( "newpassword", "testPassword" );
 
 
         // change the password as admin. The old password isn't required
-        management.users().user( username ).password().post( passwordPayload );
+        //management.users().user( username ).password().
 
+        management.users().user( username ).password().post( clientSetup.getSuperuserToken(), passwordPayload );
+
+        this.refreshIndex();
 
 //        JsonNode node = mapper.readTree( resource().path( "/management/users/test/password" ).queryParam( "access_token", superToken )
 //                                                   .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
 //                                                   .post( String.class, data ));
 
-        assertNull( getError( node ) );
+        assertNotNull( management.token().post( new Token( username, "testPassword" ) ) );
 
-        refreshIndex();
-
-        // log in with the new password
-        String token = mgmtToken( "test", newPassword );
-
-        assertNotNull( token );
-
-        data.put( "newpassword", "test" );
-
-        // now change the password back
-        node = mapper.readTree( resource().path( "/management/users/test/password" ).queryParam( "access_token", superToken )
-                                          .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                                          .post( String.class, data ));
-
-        assertNull( getError( node ) );
+        //Check that we cannot get the token using the old password
+        try {
+            management.token().post( new Token( username, password ) );
+            fail( "We shouldn't be able to get a token using the old password" );
+        }catch(UniformInterfaceException uie) {
+            errorParse( 400,"invalid_grant",uie );
+        }
     }
 //
 //    @Test

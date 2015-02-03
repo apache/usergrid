@@ -42,7 +42,12 @@ public class ClientSetup implements TestRule {
 
     RestClient restClient;
 
-    protected String username, password,orgName, appName, superuserToken;
+    protected String username;
+    protected String password;
+    protected String orgName;
+    protected String appName;
+    protected Token superuserToken;
+
     protected Organization organization;
     protected Application application;
 
@@ -84,8 +89,7 @@ public class ClientSetup implements TestRule {
         String name = testClass + "." + methodName;
 
         restClient.superuserSetup();
-        Token superuserResponse = restClient.management().token().post( new Token("superuser","superpassword") );
-        superuserToken=superuserResponse.getAccessToken();
+        superuserToken = restClient.management().token().post( new Token( "superuser", "superpassword" ) );
 
         username = "user_"+name + UUIDUtils.newTimeUUID();
         password = username;
@@ -109,6 +113,10 @@ public class ClientSetup implements TestRule {
     public String getOrganizationName(){return orgName;}
 
     public String getAppName() {return appName;}
+
+    public Token getSuperuserToken() {
+        return superuserToken;
+    }
 
     public void refreshIndex() {
         this.restClient.refreshIndex(getOrganizationName(),getAppName());
