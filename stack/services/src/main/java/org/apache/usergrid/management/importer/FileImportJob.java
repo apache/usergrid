@@ -42,8 +42,8 @@ public class FileImportJob extends OnlyOnceJob {
     public static final String FILE_IMPORT_ID = "fileImportId";
     private static final Logger logger = LoggerFactory.getLogger(FileImportJob.class);
 
-    // injected the Entity Manager Factory
-    protected EntityManagerFactory emf;
+    @Autowired
+    EntityManagerFactory emf;
 
     @Autowired
     ImportService importService;
@@ -54,19 +54,33 @@ public class FileImportJob extends OnlyOnceJob {
 
     @Override
     protected void doJob(JobExecution jobExecution) throws Exception {
-        logger.info( "execute FileImportJob {}", jobExecution.toString() );
+        logger.info("execute FileImportJob {}", jobExecution.toString());
 
-        JobData jobData = jobExecution.getJobData();
-        if ( jobData == null ) {
-            logger.error( "jobData cannot be null" );
-            return;
+        try {
+            JobData jobData = jobExecution.getJobData();
+            if (jobData == null) {
+                logger.error("jobData cannot be null");
+                return;
+            }
+
+            // heartbeat to indicate job has started
+            jobExecution.heartbeat();
+
+            // call the File Parser for the file set in job execution
+            importService.parseFileToEntities(jobExecution);
+            
+        } catch ( Throwable t ) {
+            logger.debug("Error importing file", t);
+
+            // update file import record
+            UUID fileImportId = (UUID) jobExecution.getJobData().getProperty(FILE_IMPORT_ID);
+            EntityManager em = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+            FileImport fileImport = em.get(fileImportId, FileImport.class);
+            fileImport.setState( FileImport.State.FAILED );
+            em.update( fileImport );
+
+            throw t;
         }
-
-        // heartbeat to indicate job has started
-        jobExecution.heartbeat();
-
-        // call the File Parser for the file set in job execution
-        importService.parseFileToEntities(jobExecution);
 
         logger.error("File Import Service completed job");
     }

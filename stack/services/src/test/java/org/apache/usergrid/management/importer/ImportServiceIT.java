@@ -233,10 +233,10 @@ public class ImportServiceIT {
                 }
             }
 
-//            // all things should have been updated
-//            for ( Entity e : importedThings ) {
-//                assertTrue(e.getModified() > thingsMap.get(e.getUuid()).getModified());
-//            }
+            // all things should have been updated
+            for ( Entity e : importedThings ) {
+                assertTrue(e.getModified() > thingsMap.get(e.getUuid()).getModified());
+            }
 
         }
         finally {
