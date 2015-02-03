@@ -113,8 +113,12 @@ public class ImportServiceIT {
                 && !StringUtils.isEmpty(System.getProperty("bucketName"));
 
         if ( !configured ) {
-            logger.warn("Skipping test because accessKey, secretKey and bucketName not " +
-                "specified as system properties, e.g. in your Maven settings.xml file.");
+            logger.warn("Skipping test because {}, {} and bucketName not " +
+                "specified as system properties, e.g. in your Maven settings.xml file.",
+                new Object[] {
+                    SDKGlobalConfiguration.SECRET_KEY_ENV_VAR,
+                    SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR
+                });
         }
 
         Assume.assumeTrue( configured );

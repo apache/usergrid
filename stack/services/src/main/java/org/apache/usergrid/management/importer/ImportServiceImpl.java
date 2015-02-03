@@ -214,13 +214,12 @@ public class ImportServiceImpl implements ImportService {
 
         // TODO SQS: Tear this part out and set the new job to be taken in here
         // schedule file import job
-        //sch.createJob(FILE_IMPORT_JOB_NAME, soonestPossible, jobData);
+        sch.createJob(FILE_IMPORT_JOB_NAME, soonestPossible, jobData);
+
         //probably how it should work
         ImportQueueMessage message = new ImportQueueMessage( fileImport.getUuid(),
             (UUID) config.get( "applicationId" ) ,file );
         qm.sendMessage( message );
-
-
 
         //update state of the job to Scheduled
         fileImport.setState(FileImport.State.SCHEDULED);
@@ -1046,7 +1045,10 @@ public class ImportServiceImpl implements ImportService {
             try {
 
                 boolean done = false;
+
+                // TODO: replace stack with counter or some other mechanism
                 Stack tokenStack = new Stack();
+
                 EntityRef lastEntity = null;
 
                 while (!done) {
