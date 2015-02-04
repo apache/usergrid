@@ -61,6 +61,18 @@ public class FileImport extends TypedEntity {
     @EntityProperty
     protected String lastUpdatedUUID;
 
+
+
+    /**
+     * File completion Status
+     */
+    @EntityProperty
+    protected long importedEntityCount;
+
+    @EntityProperty
+    protected long failedEntityCount;
+
+
     public FileImport() {
     }
 
@@ -148,4 +160,23 @@ public class FileImport extends TypedEntity {
         this.fileName = fileName;
     }
 
+
+    public long getImportedEntityCount() {
+        return importedEntityCount;
+    }
+
+
+    public void setImportedEntityCount( final long importedEntityCount ) {
+        this.importedEntityCount = importedEntityCount;
+    }
+
+
+    public long getFailedEntityCount() {
+        return failedEntityCount;
+    }
+
+
+    public void setFailedEntityCount( final long failedEntityCount ) {
+        this.failedEntityCount = failedEntityCount;
+    }
 }
