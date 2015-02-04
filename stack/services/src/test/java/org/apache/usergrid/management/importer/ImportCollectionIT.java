@@ -126,28 +126,31 @@ public class ImportCollectionIT {
     @Test
     public void testExportImportCollection() throws Exception {
 
+        // clear bucket at start of test
+        deleteBucket();
+
         final EntityManager emApp1 = setup.getEmf().getEntityManager( applicationId );
 
-        // create a collection of "thing" entities in the default test application
+        // create a collection of "thing" entities in the first application
 
         Map<UUID, Entity> thingsMap = new HashMap<>();
         List<Entity> things = new ArrayList<>();
 
-        createTestEntities(emApp1, thingsMap, things);
+        createTestEntities(emApp1, thingsMap, things, "thing");
 
         // export the "things" collection to a JSON file in an S3 bucket
 
-        exportCollection(emApp1);
+        exportCollection( emApp1, "things" );
 
-        // create new application
+        // create new second application
 
         final UUID appId2 = setup.getMgmtSvc().createApplication(
-            organization.getUuid(), "noobapp" ).getId();
+            organization.getUuid(), "secondapp").getId();
 
         // import the data into the new application
 
         final EntityManager emApp2 = setup.getEmf().getEntityManager(appId2);
-        importCollection(appId2, emApp2);
+        importCollection( emApp2, "things" );
 
         // make sure that it worked
 
@@ -159,6 +162,7 @@ public class ImportCollectionIT {
             assertTrue( !importedThings.isEmpty() );
 
             // two things have connections
+
             int conCount = 0;
             for ( Entity e : importedThings ) {
                 Results r = emApp2.getConnectedEntities( e, "related", null, Level.IDS);
@@ -167,29 +171,33 @@ public class ImportCollectionIT {
             }
             assertEquals( 2, conCount );
 
-            logger.debug("\n\nCheck dictionary\n");
+            logger.debug("\n\nCheck dictionaries\n");
 
-            // check if dictionary is created
-            EntityRef er;
-            Map<Object, Object> dictionaries1, dictionaries2;
+            // first two items have things in dictionary
 
-            for (int i = 0; i < 3; i++) {
+            EntityRef entity0 = importedThings.get(0);
+            Map connected0 = emApp2.getDictionaryAsMap(entity0, "connected_types");
+            Map connecting0 = emApp2.getDictionaryAsMap(entity0, "connected_types");
+            Assert.assertEquals( 1, connected0.size() );
+            Assert.assertEquals( 1, connecting0.size() );
 
-                er = importedThings.get(i);
-                dictionaries1 = emApp2.getDictionaryAsMap(er, "connected_types");
-                dictionaries2 = emApp2.getDictionaryAsMap(er, "connecting_types");
+            EntityRef entity1 = importedThings.get(1);
+            Map connected1 = emApp2.getDictionaryAsMap(entity1, "connected_types");
+            Map connecting1 = emApp2.getDictionaryAsMap(entity1, "connected_types");
+            Assert.assertEquals( 1, connected1.size() );
+            Assert.assertEquals( 1, connecting1.size() );
 
-                if (i == 2) {
-                    //for entity 2, these should be empty
-                    assertThat(dictionaries1.size(), is(0));
-                    assertThat(dictionaries2.size(), is(0));
-                } else {
-                    assertThat(dictionaries1.size(), is(not(0)));
-                    assertThat(dictionaries2.size(), is(not(0)));
-                }
-            }
+            // rest do not
+
+            EntityRef entity2 = importedThings.get(2);
+            Map connected2 = emApp2.getDictionaryAsMap(entity2, "connected_types");
+            Map connecting2 = emApp2.getDictionaryAsMap(entity2, "connected_types");
+            Assert.assertEquals( 0, connected2.size() );
+            Assert.assertEquals( 0, connecting2.size() );
 
             // if entities are deleted from app1, they still exist in app2
+
+            logger.debug("\n\nCheck dictionary\n");
             for ( Entity importedThing : importedThings ) {
                 emApp1.delete( importedThing );
             }
@@ -206,16 +214,124 @@ public class ImportCollectionIT {
         }
     }
 
-    private void importCollection(final UUID appId2, final EntityManager em2) throws Exception {
 
-        logger.debug("\n\nImport into new app {}\n", appId2 );
+    /**
+     * Test that an existing collection of entities can be updated
+     * by doing an import of entities identified by UUIDs.
+     */
+    @Test
+    public void testUpdateByImport() throws Exception {
+
+
+        // create collection of things in first application, export them to S3
+
+        final EntityManager emApp1 = setup.getEmf().getEntityManager( applicationId );
+
+        Map<UUID, Entity> thingsMap = new HashMap<>();
+        List<Entity> things = new ArrayList<>();
+        createTestEntities(emApp1, thingsMap, things, "thing");
+
+        deleteBucket();
+        exportCollection( emApp1, "things" );
+
+
+        // create new second application and import those things from S3
+
+        final UUID appId2 = setup.getMgmtSvc().createApplication(
+            organization.getUuid(), "secondapp").getId();
+
+        final EntityManager emApp2 = setup.getEmf().getEntityManager(appId2);
+        importCollection( emApp2, "things" );
+
+
+        // update the things in the new application, export to S3
+
+        for ( UUID uuid : thingsMap.keySet() ) {
+            Entity entity = emApp2.get( uuid );
+            entity.setProperty("fuel_source", "Hydrogen");
+            emApp2.update( entity );
+        }
+
+        deleteBucket();
+        exportCollection( emApp1, "things" );
+
+
+        // import the updated things into the first application, check that they've been updated
+
+        importCollection( emApp1, "things" );
+
+        for ( UUID uuid : thingsMap.keySet() ) {
+            Entity entity = emApp1.get( uuid );
+            Assert.assertEquals("Hydrogen", entity.getProperty("fuel_source"));
+        }
+    }
+
+
+    /**
+     * Test that an existing collection of entities can be updated
+     * by doing an import of entities identified by UUIDs.
+     */
+    @Test
+    public void testCreateByImport() {
+
+        // import from a JSON file stored locally on disk, with no UUID or type info
+
+        // check that entities were created
+
+    }
+
+
+    /**
+     * Test that the types of incoming entities is ignored.
+     */
+    @Test
+    public void testImportWithWrongTypes() {
+
+        // import from a JSON file stored locally on disk, with incorrect type for collection
+
+        // check that entities were created with collection's type
+
+    }
+
+
+    /**
+     * Test that importing bad JSON will result in an informative error message.
+     */
+    @Test
+    public void testImportBadJson() {
+
+        // import from a bad JSON file
+
+        // check that error message indicates JSON parsing error
+    }
+
+
+    /**
+     * Simple import test but with multiple files.
+     */
+    @Test
+    public void testImportWithMultipleFiles() {
+
+        // create collection of things in first app, export them to S3
+
+        // create collection of things in second app, export them to S3
+    }
+
+
+    /**
+     * Call importService to import files from the configured S3 bucket.
+     * @param collectionName Name of collection into which Entities will be imported.
+     */
+    private void importCollection(final EntityManager em, final String collectionName ) throws Exception {
+
+        logger.debug("\n\nImport into new app {}\n", em.getApplication().getUuid() );
 
         ImportService importService = setup.getImportService();
         UUID importUUID = importService.schedule( new HashMap<String, Object>() {{
-            put( "path", organization.getName() + em2.getApplication().getName());
+            put( "path", organization.getName() + em.getApplication().getName());
             put( "organizationId",  organization.getUuid());
-            put( "applicationId", appId2 );
-            put( "collectionName", "things");
+            put( "applicationId", em.getApplication().getUuid() );
+            put( "collectionName", collectionName);
             put( "properties", new HashMap<String, Object>() {{
                 put( "storage_provider", "s3" );
                 put( "storage_info", new HashMap<String, Object>() {{
@@ -235,19 +351,23 @@ public class ImportCollectionIT {
             Thread.sleep(100);
         }
 
-        em2.refreshIndex();
+        em.refreshIndex();
     }
 
-    private void exportCollection(final EntityManager em) throws Exception {
+    /**
+     * Call exportService to export the named collection to the configured S3 bucket.
+     */
+    private void exportCollection(
+        final EntityManager em, final String collectionName ) throws Exception {
 
-        logger.debug("\n\nExport\n");
+        logger.debug("\n\nExporting {} collection\n", collectionName );
 
         ExportService exportService = setup.getExportService();
         UUID exportUUID = exportService.schedule( new HashMap<String, Object>() {{
             put( "path", organization.getName() + em.getApplication().getName());
             put( "organizationId",  organization.getUuid());
             put( "applicationId", applicationId );
-            put( "collectionName", "things");
+            put( "collectionName", collectionName);
             put( "properties", new HashMap<String, Object>() {{
                  put( "storage_provider", "s3" );
                  put( "storage_info", new HashMap<String, Object>() {{
@@ -266,16 +386,21 @@ public class ImportCollectionIT {
         }
     }
 
-    private void createTestEntities(
-            EntityManager em, Map<UUID, Entity> thingsMap, List<Entity> things) throws Exception {
+    /**
+     * Create test entities of a specified type.
+     * First two entities are connected.
+     */
+    private void createTestEntities( final EntityManager em,
+            Map<UUID, Entity> thingsMap, List<Entity> things, final String type) throws Exception {
 
-        logger.debug("\n\nCreate things collection\n");
+        logger.debug("\n\nCreating {} collection\n", type);
 
         for ( int i = 0; i < 10; i++ ) {
             final int count = i;
-            Entity e = em.create( "thing", new HashMap<String, Object>() {{
-                put("name", "thing" + count);
-                put("index", count);
+            Entity e = em.create( type, new HashMap<String, Object>() {{
+                put("name", em.getApplication().getName() + "-" + type + "-" + count);
+                put("originalAppId", em.getApplication().getUuid());
+                put("originalAppName", em.getApplication().getName());
             }});
             thingsMap.put(e.getUuid(), e);
             things.add( e );
@@ -300,7 +425,9 @@ public class ImportCollectionIT {
         }
     }
 
-    // delete the s3 bucket which was created for testing
+    /**
+     * Delete the configured s3 bucket.
+     */
     public void deleteBucket() {
 
         logger.debug("\n\nDelete bucket\n");
@@ -313,17 +440,16 @@ public class ImportCollectionIT {
         overrides.setProperty( "s3" + ".identity", accessId );
         overrides.setProperty( "s3" + ".credential", secretKey );
 
-        Blob bo = null;
-        BlobStore blobStore = null;
         final Iterable<? extends Module> MODULES = ImmutableSet
-            .of(new JavaUrlHttpCommandExecutorServiceModule(), new Log4JLoggingModule(),
+            .of(new JavaUrlHttpCommandExecutorServiceModule(),
+                new Log4JLoggingModule(),
                 new NettyPayloadModule());
 
         BlobStoreContext context =
             ContextBuilder.newBuilder("s3").credentials( accessId, secretKey ).modules( MODULES )
                 .overrides( overrides ).buildView( BlobStoreContext.class );
 
-        blobStore = context.getBlobStore();
+        BlobStore blobStore = context.getBlobStore();
         blobStore.deleteContainer( bucketName );
     }
 
