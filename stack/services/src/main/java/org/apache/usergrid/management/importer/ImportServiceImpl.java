@@ -29,6 +29,7 @@ import org.apache.usergrid.persistence.entities.FileImport;
 import org.apache.usergrid.persistence.entities.Import;
 import org.apache.usergrid.persistence.entities.JobData;
 
+import org.apache.usergrid.utils.InflectionUtils;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.JsonParser;
@@ -584,7 +585,7 @@ public class ImportServiceImpl implements ImportService {
      * @param type        it indicates the type of import
      */
     public ArrayList<File> copyFileFromS3(Import importUG, String appFileName,
-                                          Map<String, Object> config, S3Import s3Import, ImportType type) throws Exception {
+        Map<String, Object> config, S3Import s3Import, ImportType type) throws Exception {
 
         EntityManager rootEm = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
         ArrayList<File> copyFiles = new ArrayList<>();
@@ -610,7 +611,8 @@ public class ImportServiceImpl implements ImportService {
         File file = new File(queueMessage.getFileName());
         UUID targetAppId = queueMessage.getApplicationId();
 
-        parseFileToEntities( fileImport, file, targetAppId );
+        // TODO: fix this or remove the dependency on ImportQueueMessage in this class
+        parseFileToEntities( null, fileImport, file, targetAppId );
     }
 
 
@@ -622,11 +624,15 @@ public class ImportServiceImpl implements ImportService {
         File file = new File(jobExecution.getJobData().getProperty("File").toString());
         UUID targetAppId = (UUID) jobExecution.getJobData().getProperty("applicationId");
 
-        parseFileToEntities( fileImport, file, targetAppId );
+        Map<String, Object> config = (Map<String, Object>) jobExecution.getJobData().getProperty("importInfo");
+        String collectionName = config.get("collectionName").toString();
+
+        parseFileToEntities( collectionName, fileImport, file, targetAppId );
     }
 
 
-    public void parseFileToEntities( FileImport fileImport, File file, UUID targetAppId ) throws Exception {
+    public void parseFileToEntities(
+        String collectionName, FileImport fileImport, File file, UUID targetAppId ) throws Exception {
 
         logger.debug("parseFileToEntities() for file {} ", file.getAbsolutePath());
 
@@ -651,7 +657,7 @@ public class ImportServiceImpl implements ImportService {
                 EntityManager targetEm = emf.getEntityManager(targetAppId);
                 logger.debug("   importing into app {} file {}", targetAppId.toString(), file.getAbsolutePath());
 
-                importEntitiesFromFile(file, targetEm, emManagementApp, fileImport );
+                importEntitiesFromFile( collectionName, file, targetEm, emManagementApp, fileImport );
 
                 // TODO: fix the resume on error feature
 
@@ -774,6 +780,7 @@ public class ImportServiceImpl implements ImportService {
      * @param fileImport   The file import entity
      */
     private void importEntitiesFromFile(
+        final String collectionName,
         final File file,
         final EntityManager em,
         final EntityManager rootEm,
@@ -786,7 +793,7 @@ public class ImportServiceImpl implements ImportService {
         // observable that parses JSON and emits write events
         JsonParser jp = getJsonParserForFile(file);
         final JsonEntityParserObservable jsonObservableEntities =
-            new JsonEntityParserObservable(jp, em, rootEm, fileImport, entitiesOnly);
+            new JsonEntityParserObservable(jp, em, rootEm, collectionName, fileImport, entitiesOnly);
         final Observable<WriteEvent> entityEventObservable = Observable.create(jsonObservableEntities);
 
         // function to execute for each write event
@@ -851,7 +858,7 @@ public class ImportServiceImpl implements ImportService {
         // observable that parses JSON and emits write events
         jp = getJsonParserForFile(file);
         final JsonEntityParserObservable jsonObservableOther =
-            new JsonEntityParserObservable(jp, em, rootEm, fileImport, entitiesOnly);
+            new JsonEntityParserObservable(jp, em, rootEm, collectionName, fileImport, entitiesOnly);
         final Observable<WriteEvent> otherEventObservable = Observable.create(jsonObservableOther);
 
         otherEventObservable.parallel(new Func1<Observable<WriteEvent>, Observable<WriteEvent>>() {
@@ -1011,6 +1018,7 @@ public class ImportServiceImpl implements ImportService {
         private final JsonParser jp;
         EntityManager em;
         EntityManager rootEm;
+        String collectionName;
         FileImport fileImport;
         boolean entitiesOnly;
 
@@ -1019,13 +1027,16 @@ public class ImportServiceImpl implements ImportService {
             JsonParser parser,
             EntityManager em,
             EntityManager rootEm,
+            String collectionName,
             FileImport fileImport,
             boolean entitiesOnly) {
+
             this.jp = parser;
             this.em = em;
             this.rootEm = rootEm;
             this.fileImport = fileImport;
             this.entitiesOnly = entitiesOnly;
+            this.collectionName = collectionName;
         }
 
 
@@ -1038,12 +1049,12 @@ public class ImportServiceImpl implements ImportService {
         private void process(final Subscriber<? super WriteEvent> subscriber) {
 
             try {
-
                 boolean done = false;
 
-                // TODO: replace stack with counter or some other mechanism
-                Stack tokenStack = new Stack();
+                // we ignore imported entity type information, entities get the type of the collection
+                String collectionType = InflectionUtils.singularize( collectionName );
 
+                Stack tokenStack = new Stack();
                 EntityRef lastEntity = null;
 
                 while (!done) {
@@ -1062,13 +1073,12 @@ public class ImportServiceImpl implements ImportService {
 
                         Map<String, Object> entityMap = jp.readValueAs(HashMap.class);
 
-                        String type = (String) entityMap.get("type");
                         UUID uuid = UUID.fromString((String) entityMap.get("uuid"));
-                        lastEntity = new SimpleEntityRef(type, uuid);
+                        lastEntity = new SimpleEntityRef(collectionType, uuid);
 
                         logger.debug("{}Got entity with uuid {}", indent, lastEntity);
                         if (entitiesOnly) {
-                            WriteEvent event = new EntityEvent(uuid, type, entityMap);
+                            WriteEvent event = new EntityEvent(uuid, collectionType, entityMap);
                             subscriber.onNext(event);
                         }
 

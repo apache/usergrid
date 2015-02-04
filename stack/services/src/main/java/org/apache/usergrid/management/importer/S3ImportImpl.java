@@ -114,8 +114,9 @@ public class S3ImportImpl implements S3Import {
                         if (pfn.collectionName == null) {
                             errors.add("Filename does not specify collection name");
 
-                        } else if (!pfn.collectionName.equals(importInfo.get("collectionName"))) {
-                            errors.add("Collection name in input file should be " + pfn.collectionName);
+                            // we shouldn't care what collection name is specified in the import file.
+//                        } else if (!pfn.collectionName.equals(importInfo.get("collectionName"))) {
+//                            errors.add("Collection name in input file should be " + pfn.collectionName);
                         }
                         if (!errors.isEmpty()) {
                             throw new IllegalArgumentException("Input errors " + errors.toString());
