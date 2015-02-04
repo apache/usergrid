@@ -24,27 +24,33 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.entities.FailedEntityImport;
 import org.apache.usergrid.persistence.entities.FileImport;
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
+import org.apache.usergrid.persistence.exceptions.PersistenceException;
 
 
 /**
  * Statistics used to track a file import. Only 1 instance of this class should exist per file imported in the cluster.
- * There is a direct 1-1 mapping of the statistics provided here and the file import status
+ * There is a direct 1-1 mapping of the statistics provided here and the file import status.
+ * This class is threadsafe to be used across multiple threads.
  */
 public class FileImportStatistics {
+
+
+    private static final String ERRORS_CONNECTION_NAME = "errors";
 
     private final AtomicLong entitiesWritten = new AtomicLong( 0 );
     private final AtomicLong entitiesFailed = new AtomicLong( 0 );
 
 
-    private final UUID fileImportId;
+    private final FileImport fileImport;
     private final EntityManager entityManager;
 
 
     public FileImportStatistics( final UUID fileImportId, final EntityManager entityManager ) {
-        this.fileImportId = fileImportId;
         this.entityManager = entityManager;
+        this.fileImport = getFileImport( fileImportId);
     }
 
 
@@ -60,8 +66,20 @@ public class FileImportStatistics {
      * Invoke when an entity fails to write correctly
      */
 
-    public void entityFailed( final String message ) {
+    public void entityFailed(final String message ) {
         entitiesFailed.incrementAndGet();
+
+
+        FailedEntityImport failedEntityImport = new FailedEntityImport();
+        failedEntityImport.setErrorMessage( message );
+
+        try {
+            failedEntityImport = entityManager.create( failedEntityImport );
+            entityManager.createConnection( fileImport, ERRORS_CONNECTION_NAME, failedEntityImport );
+        }
+        catch(Exception e){
+            throw new PersistenceException( "Unable to save failed entity import message", e );
+        }
     }
 
 
@@ -95,16 +113,8 @@ public class FileImportStatistics {
 
         final long failed = entitiesFailed.get();
         final long written = entitiesWritten.get();
-        final FileImport.State state;
 
-        if ( failed > 0 ) {
-            state = FileImport.State.FAILED;
-        }
-        else {
-            state = FileImport.State.FINISHED;
-        }
-
-        updateFileImport( written, failed, state, message );
+        updateFileImport( written, failed, FileImport.State.FAILED, message );
     }
 
 
@@ -120,12 +130,6 @@ public class FileImportStatistics {
                                    final String message ) {
 
         try {
-            FileImport fileImport = entityManager.get( fileImportId, FileImport.class );
-
-            if ( fileImport == null ) {
-                throw new EntityNotFoundException( "Could not file FileImport with id " + fileImportId );
-            }
-
 
             fileImport.setImportedEntityCount( written );
             fileImport.setFailedEntityCount( failed );
@@ -137,6 +141,31 @@ public class FileImportStatistics {
         catch ( Exception e ) {
             throw new RuntimeException( "Unable to persist complete state", e );
         }
+    }
+
+
+    /**
+     * Get the FileImport by uuid and return it
+     * @param fileImportId
+     * @return
+     * @throws EntityNotFoundException if we can't find the file import with the given uuid
+     */
+    private FileImport getFileImport( final UUID fileImportId ) {
+
+       final FileImport fileImport;
+
+        try {
+            fileImport =  entityManager.get( fileImportId, FileImport.class );
+        }
+        catch ( Exception e ) {
+            throw new RuntimeException( "Unable to load fileImport with id " + fileImportId, e );
+        }
+
+        if ( fileImport == null ) {
+            throw new EntityNotFoundException( "Could not file FileImport with id " + fileImportId );
+        }
+
+        return fileImport;
     }
 
 
