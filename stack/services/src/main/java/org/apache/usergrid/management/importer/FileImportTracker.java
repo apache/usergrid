@@ -38,7 +38,7 @@ import org.apache.usergrid.persistence.exceptions.PersistenceException;
  * There is a direct 1-1 mapping of the statistics provided here and the file import status. This class is threadsafe to
  * be used across multiple threads.
  */
-public class FileImportStatistics {
+public class FileImportTracker {
 
     private static final String ERROR_MESSAGE = "Failed to import some data.  See the import counters and errors.";
 
@@ -67,7 +67,7 @@ public class FileImportStatistics {
      * @param fileImportId The uuid of the fileImport
      * @param flushCount The number of success + failures to accumulate before flushing
      */
-    public FileImportStatistics( final EntityManager entityManager, final UUID fileImportId, final int flushCount ) {
+    public FileImportTracker( final EntityManager entityManager, final UUID fileImportId, final int flushCount ) {
         this.entityManager = entityManager;
         this.flushCount = flushCount;
         this.fileImport = getFileImport( fileImportId );
@@ -194,26 +194,20 @@ public class FileImportStatistics {
 
 
     /**
-     * Returns true if we should stop processing.  This will use the following logic
-     *
-     * We've attempted to import over 1k entities After 1k, we have over a 50% failure rate
+     * Returns true if we should stop processing.  We use fail fast logic, so after the first
+     * failure this will return true.
      */
     public boolean shouldStopProcessingEntities() {
-
-        //TODO Dave, George.  What algorithm should we use here?
-        return false;
+       return entitiesFailed.get() > 0;
     }
 
 
     /**
-     * Returns true if we should stop processing.  This will use the following logic
-     *
-     * We've attempted to import over 1k connections After 1k, we have over a 50% failure rate
+     * Returns true if we should stop processing.  We use fail fast logic, so after the first
+          * failure this will return true.
      */
     public boolean shouldStopProcessingConnections() {
-
-        //TODO Dave, George.  What algorithm should we use here?
-        return false;
+        return connectionsFailed.get() > 0;
     }
 
     /**
