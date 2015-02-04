@@ -21,6 +21,8 @@ package org.apache.usergrid.management.importer;
 
 
 import java.util.UUID;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.usergrid.persistence.EntityManager;
@@ -32,8 +34,8 @@ import org.apache.usergrid.persistence.exceptions.PersistenceException;
 
 /**
  * Statistics used to track a file import. Only 1 instance of this class should exist per file imported in the cluster.
- * There is a direct 1-1 mapping of the statistics provided here and the file import status.
- * This class is threadsafe to be used across multiple threads.
+ * There is a direct 1-1 mapping of the statistics provided here and the file import status. This class is threadsafe to
+ * be used across multiple threads.
  */
 public class FileImportStatistics {
 
@@ -42,15 +44,26 @@ public class FileImportStatistics {
 
     private final AtomicLong entitiesWritten = new AtomicLong( 0 );
     private final AtomicLong entitiesFailed = new AtomicLong( 0 );
+    private final AtomicInteger cachedOperations = new AtomicInteger( 0 );
 
+    private final Semaphore writeSemaphore = new Semaphore( 1 );
 
     private final FileImport fileImport;
     private final EntityManager entityManager;
+    private final int flushCount;
 
 
-    public FileImportStatistics( final UUID fileImportId, final EntityManager entityManager ) {
+    /**
+     * Create an instance to track counters
+     *
+     * @param entityManager The entity manager that will hold these entities.
+     * @param fileImportId The uuid of the fileImport
+     * @param flushCount The number of success + failures to accumulate before flushing
+     */
+    public FileImportStatistics( final EntityManager entityManager, final UUID fileImportId, final int flushCount ) {
         this.entityManager = entityManager;
-        this.fileImport = getFileImport( fileImportId);
+        this.flushCount = flushCount;
+        this.fileImport = getFileImport( fileImportId );
     }
 
 
@@ -59,6 +72,7 @@ public class FileImportStatistics {
      */
     public void entityWritten() {
         entitiesWritten.incrementAndGet();
+        maybeFlush();
     }
 
 
@@ -66,7 +80,7 @@ public class FileImportStatistics {
      * Invoke when an entity fails to write correctly
      */
 
-    public void entityFailed(final String message ) {
+    public void entityFailed( final String message ) {
         entitiesFailed.incrementAndGet();
 
 
@@ -77,9 +91,10 @@ public class FileImportStatistics {
             failedEntityImport = entityManager.create( failedEntityImport );
             entityManager.createConnection( fileImport, ERRORS_CONNECTION_NAME, failedEntityImport );
         }
-        catch(Exception e){
+        catch ( Exception e ) {
             throw new PersistenceException( "Unable to save failed entity import message", e );
         }
+        maybeFlush();
     }
 
 
@@ -119,6 +134,60 @@ public class FileImportStatistics {
 
 
     /**
+     * Return the total number of successful imports + failed imports.  Can be used in resume.
+     * Note that this reflects the counts last written to cassandra, NOT the current state in memory
+     * @return
+     */
+    public long getParsedCount(){
+        final FileImport saved  = getFileImport( fileImport.getUuid() );
+
+        return saved.getFailedEntityCount() + saved.getImportedEntityCount();
+    }
+
+
+    /**
+     * Returns true if we should stop processing.  This will use the following logic
+     *
+     * We've attempted to import over 1k entities After 1k, we have over a 50% failure rate
+     */
+    public boolean shouldStopProcessing() {
+
+        //TODO Dave, George.  What algorithm should we use here?
+        return false;
+    }
+
+
+    private void maybeFlush() {
+        final int count = cachedOperations.incrementAndGet();
+
+        //no op
+        if ( count < flushCount ) {
+            return;
+        }
+
+        //another thread is writing, no op, just return
+        if ( !writeSemaphore.tryAcquire() ) {
+            return;
+        }
+
+        final long failed = entitiesFailed.get();
+        final long written = entitiesWritten.get();
+        final String message;
+
+        if ( failed > 0 ) {
+            message = "Failed to import " + failed + " entities.  Successfully imported " + written + " entities";
+        }
+        else {
+            message = "Successfully imported " + written + " entities";
+        }
+
+        updateFileImport( written, failed, FileImport.State.STARTED, message );
+        cachedOperations.addAndGet( flushCount * -1 );
+        writeSemaphore.release();
+    }
+
+
+    /**
      * Update the file import status with the provided messages
      *
      * @param written The number of files written
@@ -146,16 +215,15 @@ public class FileImportStatistics {
 
     /**
      * Get the FileImport by uuid and return it
-     * @param fileImportId
-     * @return
+     *
      * @throws EntityNotFoundException if we can't find the file import with the given uuid
      */
     private FileImport getFileImport( final UUID fileImportId ) {
 
-       final FileImport fileImport;
+        final FileImport fileImport;
 
         try {
-            fileImport =  entityManager.get( fileImportId, FileImport.class );
+            fileImport = entityManager.get( fileImportId, FileImport.class );
         }
         catch ( Exception e ) {
             throw new RuntimeException( "Unable to load fileImport with id " + fileImportId, e );
@@ -169,14 +237,4 @@ public class FileImportStatistics {
     }
 
 
-    /**
-     * Returns true if we should stop processing.  This will use the following logic
-     *
-     * We've attempted to import over 1k entities After 1k, we have over a 50% failure rate
-     */
-    public boolean stopProcessing() {
-
-        //TODO Dave, George.  What algorithm should we use here?
-        return false;
-    }
 }

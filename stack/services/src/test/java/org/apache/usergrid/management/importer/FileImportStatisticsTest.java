@@ -61,7 +61,7 @@ public class FileImportStatisticsTest {
         when( em.get( importFileId, FileImport.class ) ).thenReturn( fileImport );
 
 
-        final FileImportStatistics fileImportStatistics = new FileImportStatistics( importFileId, em );
+        final FileImportStatistics fileImportStatistics = new FileImportStatistics( em, importFileId, 1000 );
 
         final long expectedCount = 100;
 
@@ -110,7 +110,7 @@ public class FileImportStatisticsTest {
             }
         } );
 
-        final FileImportStatistics fileImportStatistics = new FileImportStatistics( importFileId, em );
+        final FileImportStatistics fileImportStatistics = new FileImportStatistics( em, importFileId, 1000 );
 
         final long expectedSuccess = 100;
 
@@ -181,7 +181,7 @@ public class FileImportStatisticsTest {
         when( em.get( importFileId, FileImport.class ) ).thenReturn( fileImport );
 
 
-        final FileImportStatistics fileImportStatistics = new FileImportStatistics( importFileId, em );
+        final FileImportStatistics fileImportStatistics = new FileImportStatistics( em, importFileId, 1000 );
 
         final long expectedCount = 100;
 
@@ -204,11 +204,94 @@ public class FileImportStatisticsTest {
 
         assertEquals( "Same count expected", expectedCount, updated.getImportedEntityCount() );
 
-        assertEquals("Fail count is 0", 0, updated.getFailedEntityCount());
+        assertEquals( "Fail count is 0", 0, updated.getFailedEntityCount() );
 
-        assertEquals("Correct expected message", "Something bad happened", updated.getErrorMessage());
+        assertEquals( "Correct expected message", "Something bad happened", updated.getErrorMessage() );
 
-        assertEquals("Expected failed state", FileImport.State.FAILED, updated.getState());
+        assertEquals( "Expected failed state", FileImport.State.FAILED, updated.getState() );
+    }
+
+
+    @Test
+    public void testAutoFlushSuccess() throws Exception {
+
+        final EntityManager em = mock( EntityManager.class );
+
+        final UUID importFileId = UUIDGenerator.newTimeUUID();
+
+
+        final FileImport fileImport = new FileImport();
+        fileImport.setUuid( importFileId );
+
+        when( em.get( importFileId, FileImport.class ) ).thenReturn( fileImport );
+
+        //mock up returning the FailedEntityImport instance after save is invoked.
+
+        when( em.create( any( FailedEntityImport.class ) ) ).thenAnswer( new Answer<FailedEntityImport>() {
+            @Override
+            public FailedEntityImport answer( final InvocationOnMock invocation ) throws Throwable {
+                return ( FailedEntityImport ) invocation.getArguments()[0];
+            }
+        } );
+
+        final int expectedSuccess = 100;
+        final int expectedFails = 100;
+        final int expectedFlushCount = 2;
+        final int flushSize = ( expectedFails + expectedFails ) / expectedFlushCount;
+
+        //set this to 1/2, so that we get saved twice
+        final FileImportStatistics fileImportStatistics = new FileImportStatistics( em, importFileId, flushSize );
+
+
+        for ( long i = 0; i < expectedSuccess; i++ ) {
+            fileImportStatistics.entityWritten();
+        }
+
+
+        for ( int i = 0; i < expectedFails; i++ ) {
+            fileImportStatistics.entityFailed( "Failed to write entity " + i );
+        }
+
+
+        fileImportStatistics.complete();
+
+
+        ArgumentCaptor<FileImport> savedFileImport = ArgumentCaptor.forClass( FileImport.class );
+
+        verify( em, times( expectedFlushCount + 1 ) ).update( savedFileImport.capture() );
+
+        final FileImport updated = savedFileImport.getAllValues().get( 2 );
+
+        assertSame( "Same instance should be updated", fileImport, updated );
+
+        assertEquals( "Same count expected", expectedSuccess, updated.getImportedEntityCount() );
+
+        assertEquals( "Same fail expected", expectedFails, updated.getFailedEntityCount() );
+
+        assertEquals( "Correct error message",
+            "Failed to import " + expectedFails + " entities.  Successfully imported " + expectedSuccess + " entities",
+            updated.getErrorMessage() );
+
+        //TODO get the connections from the file import
+
+        ArgumentCaptor<FailedEntityImport> failedEntities = ArgumentCaptor.forClass( FailedEntityImport.class );
+
+        verify( em, times( expectedFails ) )
+            .createConnection( same( fileImport ), eq( "errors" ), failedEntities.capture() );
+
+        //now check all our arguments
+
+        final List<FailedEntityImport> args = failedEntities.getAllValues();
+
+        assertEquals( "Same number of error connections created", expectedFails, args.size() );
+
+
+        for ( int i = 0; i < expectedFails; i++ ) {
+
+            final FailedEntityImport failedImport = args.get( i );
+
+            assertEquals( "Same message expected", "Failed to write entity " + i, failedImport.getErrorMessage() );
+        }
     }
 }
 
