@@ -756,6 +756,9 @@ public class ImportServiceImpl implements ImportService {
 
         // observable that parses JSON and emits write events
         JsonParser jp = getJsonParserForFile(file);
+
+        //TODO, move the json parser into the observable creation so that open/close happens automatcially within the stream
+
         final JsonEntityParserObservable jsonObservableEntities =
             new JsonEntityParserObservable(jp, em, rootEm, fileImport, entitiesOnly);
         final Observable<WriteEvent> entityEventObservable = Observable.create(jsonObservableEntities);
@@ -768,16 +771,27 @@ public class ImportServiceImpl implements ImportService {
 
         // function to execute for each write event
 
+        /**
+         * Function that invokes the work of the event.
+         */
         final Action1<WriteEvent> doWork = new Action1<WriteEvent>() {
             @Override
-            public void call(WriteEvent writeEvent) {
-                writeEvent.doWrite(em,fileImport, statistics);
+            public void call( WriteEvent writeEvent ) {
+                writeEvent.doWrite( em, fileImport, statistics );
             }
         };
 
+
+
         // start parsing JSON
+        //only take while our stats tell us we should continue processing
         //potentially skip the first n if this is a resume operation
-        entityEventObservable.skip( entityNumSkip ).parallel( new Func1<Observable<WriteEvent>, Observable<WriteEvent>>() {
+        entityEventObservable.takeWhile( new Func1<WriteEvent, Boolean>() {
+            @Override
+            public Boolean call( final WriteEvent writeEvent ) {
+                return !statistics.shouldStopProcessingEntities();
+            }
+        } ).skip( entityNumSkip ).parallel( new Func1<Observable<WriteEvent>, Observable<WriteEvent>>() {
             @Override
             public Observable<WriteEvent> call( Observable<WriteEvent> entityWrapperObservable ) {
 
@@ -785,6 +799,8 @@ public class ImportServiceImpl implements ImportService {
                 return entityWrapperObservable.doOnNext( doWork );
             }
         }, Schedulers.io() ).toBlocking().last();
+
+
         jp.close();
 
         logger.debug("\n\nWrote entities\n");
@@ -797,16 +813,22 @@ public class ImportServiceImpl implements ImportService {
 
 
         final JsonEntityParserObservable jsonObservableOther =
-            new JsonEntityParserObservable(jp, em, rootEm, fileImport, entitiesOnly);
-        final Observable<WriteEvent> otherEventObservable = Observable.create(jsonObservableOther);
+            new JsonEntityParserObservable( jp, em, rootEm, fileImport, entitiesOnly );
+        final Observable<WriteEvent> otherEventObservable = Observable.create( jsonObservableOther );
 
-        otherEventObservable.skip( connectionNumSkip ).parallel(new Func1<Observable<WriteEvent>, Observable<WriteEvent>>() {
+        //only take while our stats tell us we should continue processing
+        //potentially skip the first n if this is a resume operation
+        otherEventObservable.takeWhile( new Func1<WriteEvent, Boolean>() {
             @Override
-            public Observable<WriteEvent> call(Observable<WriteEvent> entityWrapperObservable) {
-                return entityWrapperObservable.doOnNext(doWork);
-
+            public Boolean call( final WriteEvent writeEvent ) {
+                return !statistics.shouldStopProcessingConnections();
             }
-        }, Schedulers.io()).toBlocking().last();
+        } ).skip( connectionNumSkip ).parallel( new Func1<Observable<WriteEvent>, Observable<WriteEvent>>() {
+                @Override
+                public Observable<WriteEvent> call( Observable<WriteEvent> entityWrapperObservable ) {
+                    return entityWrapperObservable.doOnNext( doWork );
+                }
+            }, Schedulers.io() ).toBlocking().last();
 
         jp.close();
 

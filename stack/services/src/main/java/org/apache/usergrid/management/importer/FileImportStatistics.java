@@ -192,17 +192,29 @@ public class FileImportStatistics {
         return getConnectionsFailed() + getConnectionsWritten();
     }
 
+
     /**
      * Returns true if we should stop processing.  This will use the following logic
      *
      * We've attempted to import over 1k entities After 1k, we have over a 50% failure rate
      */
-    public boolean shouldStopProcessing() {
+    public boolean shouldStopProcessingEntities() {
 
         //TODO Dave, George.  What algorithm should we use here?
         return false;
     }
 
+
+    /**
+     * Returns true if we should stop processing.  This will use the following logic
+     *
+     * We've attempted to import over 1k connections After 1k, we have over a 50% failure rate
+     */
+    public boolean shouldStopProcessingConnections() {
+
+        //TODO Dave, George.  What algorithm should we use here?
+        return false;
+    }
 
     /**
      * Get the number of entities written
