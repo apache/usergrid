@@ -797,7 +797,6 @@ public class ImportServiceImpl implements ImportService {
                 writeEvent.doWrite(em,fileImport);
             }
         };
-
 //        final AtomicLong entityCounter = new AtomicLong();
 //        final AtomicLong eventCounter = new AtomicLong();
 
@@ -805,7 +804,6 @@ public class ImportServiceImpl implements ImportService {
         entityEventObservable.parallel(new Func1<Observable<WriteEvent>, Observable<WriteEvent>>() {
             @Override
             public Observable<WriteEvent> call(Observable<WriteEvent> entityWrapperObservable) {
-
                 // TODO: need to fixed so that number of entities created can be counted correctly and
                 // TODO: also update last updated UUID for fileImport which is a must for resume-ability
 
@@ -840,14 +838,12 @@ public class ImportServiceImpl implements ImportService {
 //                         }
 //                     }
 //                );
-
                 return entityWrapperObservable.doOnNext(doWork);
-
             }
         }, Schedulers.io()).toBlocking().last();
         jp.close();
 
-        logger.debug("\n\nWrote entities\n");
+        logger.debug("\n\nimportEntitiesFromFile(): Wrote entities\n");
 
         // now do other stuff: connections and dictionaries
         entitiesOnly = false;
@@ -862,13 +858,12 @@ public class ImportServiceImpl implements ImportService {
             @Override
             public Observable<WriteEvent> call(Observable<WriteEvent> entityWrapperObservable) {
                 return entityWrapperObservable.doOnNext(doWork);
-
             }
         }, Schedulers.io()).toBlocking().last();
 
         jp.close();
 
-        logger.debug("\n\nWrote others\n");
+        logger.debug("\n\nimportEntitiesFromFile(): Wrote others\n");
     }
 
 

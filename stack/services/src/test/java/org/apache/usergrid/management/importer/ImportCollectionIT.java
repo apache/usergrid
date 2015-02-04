@@ -18,24 +18,19 @@
 package org.apache.usergrid.management.importer;
 
 import com.amazonaws.SDKGlobalConfiguration;
-import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Service;
 import com.google.inject.Module;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
-import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.batch.service.JobSchedulerService;
 import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.management.export.ExportService;
-import org.apache.usergrid.management.export.S3Export;
-import org.apache.usergrid.management.export.S3ExportImpl;
 import org.apache.usergrid.persistence.*;
-import org.apache.usergrid.persistence.entities.JobData;
 import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.persistence.index.query.Query.Level;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
@@ -43,7 +38,6 @@ import org.apache.usergrid.services.notifications.QueueListener;
 import org.jclouds.ContextBuilder;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.BlobStoreContext;
-import org.jclouds.blobstore.domain.Blob;
 import org.jclouds.http.config.JavaUrlHttpCommandExecutorServiceModule;
 import org.jclouds.logging.log4j.config.Log4JLoggingModule;
 import org.jclouds.netty.config.NettyPayloadModule;
@@ -53,11 +47,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNot.not;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 
 //@Concurrent
@@ -126,31 +117,26 @@ public class ImportCollectionIT {
     @Test
     public void testExportImportCollection() throws Exception {
 
-        // clear bucket at start of test
-        deleteBucket();
+
+        // create a collection of "thing" entities in the first application, export to S3
 
         final EntityManager emApp1 = setup.getEmf().getEntityManager( applicationId );
-
-        // create a collection of "thing" entities in the first application
-
         Map<UUID, Entity> thingsMap = new HashMap<>();
         List<Entity> things = new ArrayList<>();
-
         createTestEntities(emApp1, thingsMap, things, "thing");
 
-        // export the "things" collection to a JSON file in an S3 bucket
-
+        deleteBucket();
         exportCollection( emApp1, "things" );
 
-        // create new second application
+
+        // create new second application, import the data from S3
 
         final UUID appId2 = setup.getMgmtSvc().createApplication(
-            organization.getUuid(), "secondapp").getId();
-
-        // import the data into the new application
+            organization.getUuid(), "second").getId();
 
         final EntityManager emApp2 = setup.getEmf().getEntityManager(appId2);
         importCollection( emApp2, "things" );
+
 
         // make sure that it worked
 
@@ -238,13 +224,13 @@ public class ImportCollectionIT {
         // create new second application and import those things from S3
 
         final UUID appId2 = setup.getMgmtSvc().createApplication(
-            organization.getUuid(), "secondapp").getId();
+            organization.getUuid(), "second").getId();
 
         final EntityManager emApp2 = setup.getEmf().getEntityManager(appId2);
         importCollection( emApp2, "things" );
 
 
-        // update the things in the new application, export to S3
+        // update the things in the second application, export to S3
 
         for ( UUID uuid : thingsMap.keySet() ) {
             Entity entity = emApp2.get( uuid );
@@ -253,10 +239,10 @@ public class ImportCollectionIT {
         }
 
         deleteBucket();
-        exportCollection( emApp1, "things" );
+        exportCollection( emApp2, "things" );
 
 
-        // import the updated things into the first application, check that they've been updated
+        // import the updated things back into the first application, check that they've been updated
 
         importCollection( emApp1, "things" );
 
@@ -324,7 +310,7 @@ public class ImportCollectionIT {
      */
     private void importCollection(final EntityManager em, final String collectionName ) throws Exception {
 
-        logger.debug("\n\nImport into new app {}\n", em.getApplication().getUuid() );
+        logger.debug("\n\nImport into new app {}\n", em.getApplication().getName() );
 
         ImportService importService = setup.getImportService();
         UUID importUUID = importService.schedule( new HashMap<String, Object>() {{
@@ -360,13 +346,16 @@ public class ImportCollectionIT {
     private void exportCollection(
         final EntityManager em, final String collectionName ) throws Exception {
 
-        logger.debug("\n\nExporting {} collection\n", collectionName );
+        logger.debug("\n\nExporting {} collection from application {}\n",
+            collectionName, em.getApplication().getName() );
+
+        em.refreshIndex();
 
         ExportService exportService = setup.getExportService();
         UUID exportUUID = exportService.schedule( new HashMap<String, Object>() {{
             put( "path", organization.getName() + em.getApplication().getName());
             put( "organizationId",  organization.getUuid());
-            put( "applicationId", applicationId );
+            put( "applicationId", em.getApplication().getUuid() );
             put( "collectionName", collectionName);
             put( "properties", new HashMap<String, Object>() {{
                  put( "storage_provider", "s3" );
@@ -393,7 +382,8 @@ public class ImportCollectionIT {
     private void createTestEntities( final EntityManager em,
             Map<UUID, Entity> thingsMap, List<Entity> things, final String type) throws Exception {
 
-        logger.debug("\n\nCreating {} collection\n", type);
+        logger.debug("\n\nCreating new {} collection in application {}\n",
+            type, em.getApplication().getName() );
 
         for ( int i = 0; i < 10; i++ ) {
             final int count = i;
@@ -405,8 +395,6 @@ public class ImportCollectionIT {
             thingsMap.put(e.getUuid(), e);
             things.add( e );
         }
-
-        logger.debug("\n\nCreate Connections\n");
 
         // first two things are related to each other
         em.createConnection( new SimpleEntityRef( "thing", things.get(0).getUuid()),
