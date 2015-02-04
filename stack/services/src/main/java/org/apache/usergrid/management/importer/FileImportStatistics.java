@@ -52,7 +52,6 @@ public class FileImportStatistics {
      * Invoke when an entity has been successfully written
      */
     public void entityWritten() {
-
         entitiesWritten.incrementAndGet();
     }
 
@@ -78,11 +77,11 @@ public class FileImportStatistics {
 
         if ( failed > 0 ) {
             state = FileImport.State.FAILED;
-            message = "Successfully imported " + written + " entities";
+            message = "Failed to import " + failed + " entities.  Successfully imported " + written + " entities";
         }
         else {
             state = FileImport.State.FINISHED;
-            message = "Failed to import " + failed + " entities.  Successfully imported " + written + " entities";
+            message = null;
         }
 
         updateFileImport( written, failed, state, message );
