@@ -29,7 +29,9 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.entities.FailedEntityImport;
+import org.apache.usergrid.persistence.entities.FailedImport;
+import org.apache.usergrid.persistence.entities.FailedImportConnection;
+import org.apache.usergrid.persistence.entities.FailedImportEntity;
 import org.apache.usergrid.persistence.entities.FileImport;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
@@ -103,10 +105,10 @@ public class FileImportStatisticsTest {
 
         //mock up returning the FailedEntityImport instance after save is invoked.
 
-        when( em.create( any( FailedEntityImport.class ) ) ).thenAnswer( new Answer<FailedEntityImport>() {
+        when( em.create( any( FailedImportEntity.class ) ) ).thenAnswer( new Answer<FailedImportEntity>() {
             @Override
-            public FailedEntityImport answer( final InvocationOnMock invocation ) throws Throwable {
-                return ( FailedEntityImport ) invocation.getArguments()[0];
+            public FailedImportEntity answer( final InvocationOnMock invocation ) throws Throwable {
+                return ( FailedImportEntity ) invocation.getArguments()[0];
             }
         } );
 
@@ -140,27 +142,26 @@ public class FileImportStatisticsTest {
 
         assertEquals( "Same fail expected", expectedFails, updated.getFailedEntityCount() );
 
-        assertEquals( "Correct error message",
-            "Failed to import " + expectedFails + " entities.  Successfully imported " + expectedSuccess + " entities",
+        assertEquals( "Correct error message", "Failed to import some data.  See the import counters and errors.",
             updated.getErrorMessage() );
 
         //TODO get the connections from the file import
 
-        ArgumentCaptor<FailedEntityImport> failedEntities = ArgumentCaptor.forClass( FailedEntityImport.class );
+        ArgumentCaptor<FailedImportEntity> failedEntities = ArgumentCaptor.forClass( FailedImportEntity.class );
 
         verify( em, times( expectedFails ) )
             .createConnection( same( fileImport ), eq( "errors" ), failedEntities.capture() );
 
         //now check all our arguments
 
-        final List<FailedEntityImport> args = failedEntities.getAllValues();
+        final List<FailedImportEntity> args = failedEntities.getAllValues();
 
         assertEquals( "Same number of error connections created", expectedFails, args.size() );
 
 
         for ( int i = 0; i < expectedFails; i++ ) {
 
-            final FailedEntityImport failedImport = args.get( i );
+            final FailedImportEntity failedImport = args.get( i );
 
             assertEquals( "Same message expected", "Failed to write entity " + i, failedImport.getErrorMessage() );
         }
@@ -227,17 +228,22 @@ public class FileImportStatisticsTest {
 
         //mock up returning the FailedEntityImport instance after save is invoked.
 
-        when( em.create( any( FailedEntityImport.class ) ) ).thenAnswer( new Answer<FailedEntityImport>() {
+
+        when( em.create( any( FailedImportConnection.class ) ) ).thenAnswer( new Answer<Object>() {
             @Override
-            public FailedEntityImport answer( final InvocationOnMock invocation ) throws Throwable {
-                return ( FailedEntityImport ) invocation.getArguments()[0];
+            public Object answer( final InvocationOnMock invocation ) throws Throwable {
+                return invocation.getArguments()[0];
             }
         } );
 
         final int expectedSuccess = 100;
         final int expectedFails = 100;
+        final int expectedConnectionSuccess = 100;
+        final int expectedConnectionFails = 100;
+
         final int expectedFlushCount = 2;
-        final int flushSize = ( expectedFails + expectedFails ) / expectedFlushCount;
+        final int flushSize = ( expectedFails + expectedFails + expectedConnectionSuccess + expectedConnectionFails )
+            / expectedFlushCount;
 
         //set this to 1/2, so that we get saved twice
         final FileImportStatistics fileImportStatistics = new FileImportStatistics( em, importFileId, flushSize );
@@ -250,6 +256,16 @@ public class FileImportStatisticsTest {
 
         for ( int i = 0; i < expectedFails; i++ ) {
             fileImportStatistics.entityFailed( "Failed to write entity " + i );
+        }
+
+
+        for ( long i = 0; i < expectedConnectionSuccess; i++ ) {
+            fileImportStatistics.connectionWritten();
+        }
+
+
+        for ( int i = 0; i < expectedConnectionFails; i++ ) {
+            fileImportStatistics.connectionFailed( "Failed to write connection " + i );
         }
 
 
@@ -268,30 +284,75 @@ public class FileImportStatisticsTest {
 
         assertEquals( "Same fail expected", expectedFails, updated.getFailedEntityCount() );
 
-        assertEquals( "Correct error message",
-            "Failed to import " + expectedFails + " entities.  Successfully imported " + expectedSuccess + " entities",
+        assertEquals( "Same connection count expected", expectedConnectionSuccess,
+            updated.getImportedConnectionCount() );
+
+        assertEquals( "Same connection error count expected", expectedConnectionFails,
+            updated.getFailedConnectionCount() );
+
+        assertEquals( "Correct error message", "Failed to import some data.  See the import counters and errors.",
             updated.getErrorMessage() );
 
         //TODO get the connections from the file import
 
-        ArgumentCaptor<FailedEntityImport> failedEntities = ArgumentCaptor.forClass( FailedEntityImport.class );
+        ArgumentCaptor<FailedImport> failedEntities = ArgumentCaptor.forClass( FailedImport.class );
 
-        verify( em, times( expectedFails ) )
+        verify( em, times( expectedFails + expectedConnectionFails ) )
             .createConnection( same( fileImport ), eq( "errors" ), failedEntities.capture() );
 
         //now check all our arguments
 
-        final List<FailedEntityImport> args = failedEntities.getAllValues();
+        final List<FailedImport> args = failedEntities.getAllValues();
 
-        assertEquals( "Same number of error connections created", expectedFails, args.size() );
+        assertEquals( "Same number of error connections created", expectedFails+expectedConnectionFails, args.size() );
 
 
         for ( int i = 0; i < expectedFails; i++ ) {
 
-            final FailedEntityImport failedImport = args.get( i );
+            final FailedImport failedImport = args.get( i );
 
             assertEquals( "Same message expected", "Failed to write entity " + i, failedImport.getErrorMessage() );
         }
+
+        for ( int i = expectedFails; i < expectedConnectionFails; i++ ) {
+
+            final FailedImport failedImport = args.get( i );
+
+            assertEquals( "Same message expected", "Failed to write connection " + i, failedImport.getErrorMessage() );
+        }
+    }
+
+
+    @Test
+    public void loadingExistingState() throws Exception {
+
+        final EntityManager em = mock( EntityManager.class );
+
+        final UUID importFileId = UUIDGenerator.newTimeUUID();
+
+
+        final FileImport fileImport = new FileImport();
+        fileImport.setUuid( importFileId );
+        fileImport.setImportedEntityCount( 1 );
+        fileImport.setFailedEntityCount( 2 );
+        fileImport.setImportedConnectionCount( 3 );
+        fileImport.setFailedConnectionCount( 4 );
+
+        when( em.get( importFileId, FileImport.class ) ).thenReturn( fileImport );
+
+        //mock up returning the FailedEntityImport instance after save is invoked.
+
+        FileImportStatistics statistics = new FileImportStatistics( em, importFileId, 100 );
+
+        assertEquals( 1, statistics.getEntitiesWritten() );
+        assertEquals( 2, statistics.getEntitiesFailed() );
+
+        assertEquals( 3, statistics.getTotalEntityCount() );
+
+        assertEquals( 3, statistics.getConnectionsWritten() );
+        assertEquals( 4, statistics.getConnectionsFailed() );
+
+        assertEquals( 7, statistics.getTotalConnectionCount() );
     }
 }
 

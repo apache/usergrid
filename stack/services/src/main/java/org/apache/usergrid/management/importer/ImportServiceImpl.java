@@ -762,7 +762,9 @@ public class ImportServiceImpl implements ImportService {
 
         //flush every 100 entities
         final FileImportStatistics statistics = new FileImportStatistics( em, fileImport.getUuid(), 100 );
-        final int numToSkip = statistics.getParsedEntityCount();
+        //truncate due to RX api
+        final int entityNumSkip = (int)statistics.getTotalEntityCount();
+        final int connectionNumSkip = (int)statistics.getTotalConnectionCount();
 
         // function to execute for each write event
 
@@ -775,7 +777,7 @@ public class ImportServiceImpl implements ImportService {
 
         // start parsing JSON
         //potentially skip the first n if this is a resume operation
-        entityEventObservable.skip( numToSkip ).parallel( new Func1<Observable<WriteEvent>, Observable<WriteEvent>>() {
+        entityEventObservable.skip( entityNumSkip ).parallel( new Func1<Observable<WriteEvent>, Observable<WriteEvent>>() {
             @Override
             public Observable<WriteEvent> call( Observable<WriteEvent> entityWrapperObservable ) {
 
@@ -792,11 +794,13 @@ public class ImportServiceImpl implements ImportService {
 
         // observable that parses JSON and emits write events
         jp = getJsonParserForFile(file);
+
+
         final JsonEntityParserObservable jsonObservableOther =
             new JsonEntityParserObservable(jp, em, rootEm, fileImport, entitiesOnly);
         final Observable<WriteEvent> otherEventObservable = Observable.create(jsonObservableOther);
 
-        otherEventObservable.parallel(new Func1<Observable<WriteEvent>, Observable<WriteEvent>>() {
+        otherEventObservable.skip( connectionNumSkip ).parallel(new Func1<Observable<WriteEvent>, Observable<WriteEvent>>() {
             @Override
             public Observable<WriteEvent> call(Observable<WriteEvent> entityWrapperObservable) {
                 return entityWrapperObservable.doOnNext(doWork);

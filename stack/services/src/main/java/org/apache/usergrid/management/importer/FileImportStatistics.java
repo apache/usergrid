@@ -26,7 +26,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.entities.FailedEntityImport;
+import org.apache.usergrid.persistence.entities.FailedImportConnection;
+import org.apache.usergrid.persistence.entities.FailedImportEntity;
 import org.apache.usergrid.persistence.entities.FileImport;
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.persistence.exceptions.PersistenceException;
@@ -38,6 +39,8 @@ import org.apache.usergrid.persistence.exceptions.PersistenceException;
  * be used across multiple threads.
  */
 public class FileImportStatistics {
+
+    private static final String ERROR_MESSAGE = "Failed to import some data.  See the import counters and errors.";
 
 
     private static final String ERRORS_CONNECTION_NAME = "errors";
@@ -56,7 +59,9 @@ public class FileImportStatistics {
 
 
     /**
-     * Create an instance to track counters
+     * Create an instance to track counters.   Note that when this instance is created, it will attempt to load it's state
+     * from the entity manager.  In the case of using this when resuming, be sure you begin processing where the system thinks
+     * it has left off.
      *
      * @param entityManager The entity manager that will hold these entities.
      * @param fileImportId The uuid of the fileImport
@@ -66,6 +71,12 @@ public class FileImportStatistics {
         this.entityManager = entityManager;
         this.flushCount = flushCount;
         this.fileImport = getFileImport( fileImportId );
+
+        this.entitiesWritten.addAndGet( fileImport.getImportedEntityCount() );
+        this.entitiesFailed.addAndGet( fileImport.getFailedEntityCount() );
+
+        this.connectionsWritten.addAndGet( fileImport.getImportedConnectionCount() );
+        this.connectionsFailed.addAndGet( fileImport.getFailedConnectionCount() );
     }
 
 
@@ -78,6 +89,8 @@ public class FileImportStatistics {
     }
 
 
+
+
     /**
      * Invoke when an entity fails to write correctly
      */
@@ -86,12 +99,12 @@ public class FileImportStatistics {
         entitiesFailed.incrementAndGet();
 
 
-        FailedEntityImport failedEntityImport = new FailedEntityImport();
-        failedEntityImport.setErrorMessage( message );
+        FailedImportEntity failedImportEntity = new FailedImportEntity();
+        failedImportEntity.setErrorMessage( message );
 
         try {
-            failedEntityImport = entityManager.create( failedEntityImport );
-            entityManager.createConnection( fileImport, ERRORS_CONNECTION_NAME, failedEntityImport );
+            failedImportEntity = entityManager.create( failedImportEntity );
+            entityManager.createConnection( fileImport, ERRORS_CONNECTION_NAME, failedImportEntity );
         }
         catch ( Exception e ) {
             throw new PersistenceException( "Unable to save failed entity import message", e );
@@ -114,6 +127,18 @@ public class FileImportStatistics {
      */
     public void connectionFailed( final String message ) {
         connectionsFailed.incrementAndGet();
+
+
+        FailedImportConnection failedImportConnection = new FailedImportConnection();
+        failedImportConnection.setErrorMessage( message );
+
+        try {
+            failedImportConnection = entityManager.create( failedImportConnection );
+            entityManager.createConnection( fileImport, ERRORS_CONNECTION_NAME, failedImportConnection );
+        }
+        catch ( Exception e ) {
+            throw new PersistenceException( "Unable to save failed entity import message", e );
+        }
         maybeFlush();
     }
 
@@ -123,21 +148,21 @@ public class FileImportStatistics {
      */
     public void complete() {
 
-        final long failed = entitiesFailed.get();
-        final long written = entitiesWritten.get();
+        final long failed = entitiesFailed.get() + connectionsFailed.get();
+
         final FileImport.State state;
         final String message;
 
         if ( failed > 0 ) {
             state = FileImport.State.FAILED;
-            message = "Failed to import " + failed + " entities.  Successfully imported " + written + " entities";
+            message = ERROR_MESSAGE;
         }
         else {
             state = FileImport.State.FINISHED;
             message = null;
         }
 
-        updateFileImport( written, failed, state, message );
+        updateFileImport( state, message );
     }
 
 
@@ -146,24 +171,26 @@ public class FileImportStatistics {
      */
     public void fatal( final String message ) {
 
-        final long failed = entitiesFailed.get();
-        final long written = entitiesWritten.get();
-
-        updateFileImport( written, failed, FileImport.State.FAILED, message );
+        updateFileImport( FileImport.State.FAILED, message );
     }
 
 
     /**
      * Return the total number of successful imports + failed imports.  Can be used in resume. Note that this reflects
-     * the counts last written to cassandra, NOT the current state in memory
+     * the counts last written to cassandra when this instance was created + any processing
      */
-    public int getParsedEntityCount() {
-        final FileImport saved = getFileImport( fileImport.getUuid() );
-
-        //we could exceed an int.  if we do just truncate
-        return ( int ) ( saved.getFailedEntityCount() + saved.getImportedEntityCount() );
+    public long getTotalEntityCount() {
+        return  getEntitiesWritten() + getEntitiesFailed();
     }
 
+
+    /**
+     * Get the total number of failed + successful connections
+     * @return
+     */
+    public long getTotalConnectionCount(){
+        return getConnectionsFailed() + getConnectionsWritten();
+    }
 
     /**
      * Returns true if we should stop processing.  This will use the following logic
@@ -176,6 +203,41 @@ public class FileImportStatistics {
         return false;
     }
 
+
+    /**
+     * Get the number of entities written
+     * @return
+     */
+    public long getEntitiesWritten() {
+        return entitiesWritten.get();
+    }
+
+
+    /**
+     * Get the number of failed entities
+     * @return
+     */
+    public long getEntitiesFailed() {
+        return entitiesFailed.get();
+    }
+
+
+    /**
+     * Get the number of connections written
+     * @return
+     */
+    public long getConnectionsWritten() {
+        return connectionsWritten.get();
+    }
+
+
+    /**
+     * Get the number of connections failed
+     * @return
+     */
+    public long getConnectionsFailed() {
+        return connectionsFailed.get();
+    }
 
     private void maybeFlush() {
         final int count = cachedOperations.incrementAndGet();
@@ -201,7 +263,7 @@ public class FileImportStatistics {
             message = "Successfully imported " + written + " entities";
         }
 
-        updateFileImport( written, failed, FileImport.State.STARTED, message );
+        updateFileImport( FileImport.State.STARTED, message );
         cachedOperations.addAndGet( flushCount * -1 );
         writeSemaphore.release();
     }
@@ -210,18 +272,25 @@ public class FileImportStatistics {
     /**
      * Update the file import status with the provided messages
      *
-     * @param written The number of files written
-     * @param failed The number of files failed
      * @param state The state to set into the import
      * @param message The message to set
      */
-    private void updateFileImport( final long written, final long failed, final FileImport.State state,
-                                   final String message ) {
+    private void updateFileImport( final FileImport.State state, final String message ) {
 
         try {
 
-            fileImport.setImportedEntityCount( written );
-            fileImport.setFailedEntityCount( failed );
+
+            final long writtenEntities = entitiesWritten.get();
+            final long failedEntities = entitiesFailed.get();
+
+            final long writtenConnections = connectionsFailed.get();
+            final long failedConnections = connectionsFailed.get();
+
+
+            fileImport.setImportedEntityCount( writtenEntities );
+            fileImport.setFailedEntityCount( failedEntities );
+            fileImport.setImportedConnectionCount( writtenConnections );
+            fileImport.setFailedConnectionCount( failedConnections );
             fileImport.setState( state );
             fileImport.setErrorMessage( message );
 

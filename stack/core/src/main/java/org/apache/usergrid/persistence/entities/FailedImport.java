@@ -20,11 +20,7 @@
 package org.apache.usergrid.persistence.entities;
 
 
-import java.util.UUID;
-
 import javax.xml.bind.annotation.XmlRootElement;
-
-import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import org.apache.usergrid.persistence.TypedEntity;
 import org.apache.usergrid.persistence.annotations.EntityProperty;
@@ -34,7 +30,7 @@ import org.apache.usergrid.persistence.annotations.EntityProperty;
  * Contains state information for an entity within a FileImport the failed to load
  */
 @XmlRootElement
-public class FailedEntityImport extends TypedEntity {
+public abstract class FailedImport extends TypedEntity {
 
 
     /**
@@ -44,7 +40,7 @@ public class FailedEntityImport extends TypedEntity {
     protected String errorMessage;
 
 
-    public FailedEntityImport() {
+    public FailedImport() {
     }
 
 
