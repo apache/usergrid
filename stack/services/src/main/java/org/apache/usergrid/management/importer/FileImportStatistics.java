@@ -44,6 +44,8 @@ public class FileImportStatistics {
 
     private final AtomicLong entitiesWritten = new AtomicLong( 0 );
     private final AtomicLong entitiesFailed = new AtomicLong( 0 );
+    private final AtomicLong connectionsWritten = new AtomicLong( 0 );
+    private final AtomicLong connectionsFailed = new AtomicLong( 0 );
     private final AtomicInteger cachedOperations = new AtomicInteger( 0 );
 
     private final Semaphore writeSemaphore = new Semaphore( 1 );
@@ -99,6 +101,24 @@ public class FileImportStatistics {
 
 
     /**
+     * Invoked when a connection is written
+     */
+    public void connectionWritten() {
+        connectionsWritten.incrementAndGet();
+        maybeFlush();
+    }
+
+
+    /**
+     * Invoked when a connection cannot be written
+     */
+    public void connectionFailed( final String message ) {
+        connectionsFailed.incrementAndGet();
+        maybeFlush();
+    }
+
+
+    /**
      * Invoke when the file is completed processing
      */
     public void complete() {
@@ -134,14 +154,14 @@ public class FileImportStatistics {
 
 
     /**
-     * Return the total number of successful imports + failed imports.  Can be used in resume.
-     * Note that this reflects the counts last written to cassandra, NOT the current state in memory
-     * @return
+     * Return the total number of successful imports + failed imports.  Can be used in resume. Note that this reflects
+     * the counts last written to cassandra, NOT the current state in memory
      */
-    public long getParsedCount(){
-        final FileImport saved  = getFileImport( fileImport.getUuid() );
+    public int getParsedEntityCount() {
+        final FileImport saved = getFileImport( fileImport.getUuid() );
 
-        return saved.getFailedEntityCount() + saved.getImportedEntityCount();
+        //we could exceed an int.  if we do just truncate
+        return ( int ) ( saved.getFailedEntityCount() + saved.getImportedEntityCount() );
     }
 
 
@@ -235,6 +255,4 @@ public class FileImportStatistics {
 
         return fileImport;
     }
-
-
 }

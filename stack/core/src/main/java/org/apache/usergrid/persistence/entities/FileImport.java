@@ -73,6 +73,18 @@ public class FileImport extends TypedEntity {
     protected long failedEntityCount;
 
 
+
+
+    /**
+     * File completion Status
+     */
+    @EntityProperty
+    protected long importedConnectionCount;
+
+    @EntityProperty
+    protected long failedConnectionCount;
+
+
     public FileImport() {
     }
 
@@ -178,5 +190,25 @@ public class FileImport extends TypedEntity {
 
     public void setFailedEntityCount( final long failedEntityCount ) {
         this.failedEntityCount = failedEntityCount;
+    }
+
+
+    public long getImportedConnectionCount() {
+        return importedConnectionCount;
+    }
+
+
+    public void setImportedConnectionCount( final long importedConnectionCount ) {
+        this.importedConnectionCount = importedConnectionCount;
+    }
+
+
+    public long getFailedConnectionCount() {
+        return failedConnectionCount;
+    }
+
+
+    public void setFailedConnectionCount( final long failedConnectionCount ) {
+        this.failedConnectionCount = failedConnectionCount;
     }
 }

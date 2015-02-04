@@ -653,35 +653,6 @@ public class ImportServiceImpl implements ImportService {
 
                 importEntitiesFromFile(file, targetEm, emManagementApp, fileImport );
 
-                // TODO: fix the resume on error feature
-
-//                // in case of resume, retrieve the last updated UUID for this file
-//                String lastUpdatedUUID = fileImport.getLastUpdatedUUID();
-//
-//                // this handles partially completed files by updating entities from the point of failure
-//                if (!lastUpdatedUUID.equals(" ")) {
-//
-//                    // go till the last updated entity
-//                    while (!jp.getText().equals(lastUpdatedUUID)) {
-//                        jp.nextToken();
-//                    }
-//
-//                    // skip the last one and start from the next one
-//                    while (!(jp.getCurrentToken() == JsonToken.END_OBJECT
-//                        && jp.nextToken() == JsonToken.START_OBJECT)) {
-//                        jp.nextToken();
-//                    }
-//                }
-//
-//                // get to start of an object i.e next entity.
-//                while (jp.getCurrentToken() != JsonToken.START_OBJECT) {
-//                    jp.nextToken();
-//                }
-//
-//                while (jp.nextToken() != JsonToken.END_ARRAY) {
-//                    importEntitiesFromFile(jp, targetEm, emManagementApp, fileImport, jobExecution);
-//                }
-//                jp.close();
 
                 // Updates the state of file import job
                 if (!fileImport.getState().toString().equals("FAILED")) {
@@ -789,62 +760,29 @@ public class ImportServiceImpl implements ImportService {
             new JsonEntityParserObservable(jp, em, rootEm, fileImport, entitiesOnly);
         final Observable<WriteEvent> entityEventObservable = Observable.create(jsonObservableEntities);
 
+        //flush every 100 entities
+        final FileImportStatistics statistics = new FileImportStatistics( em, fileImport.getUuid(), 100 );
+        final int numToSkip = statistics.getParsedEntityCount();
+
         // function to execute for each write event
-        //TODO: job execution no longer needed due to having queueMessage.
+
         final Action1<WriteEvent> doWork = new Action1<WriteEvent>() {
             @Override
             public void call(WriteEvent writeEvent) {
-                writeEvent.doWrite(em,fileImport);
+                writeEvent.doWrite(em,fileImport, statistics);
             }
         };
 
-//        final AtomicLong entityCounter = new AtomicLong();
-//        final AtomicLong eventCounter = new AtomicLong();
-
         // start parsing JSON
-        entityEventObservable.parallel(new Func1<Observable<WriteEvent>, Observable<WriteEvent>>() {
+        //potentially skip the first n if this is a resume operation
+        entityEventObservable.skip( numToSkip ).parallel( new Func1<Observable<WriteEvent>, Observable<WriteEvent>>() {
             @Override
-            public Observable<WriteEvent> call(Observable<WriteEvent> entityWrapperObservable) {
+            public Observable<WriteEvent> call( Observable<WriteEvent> entityWrapperObservable ) {
 
-                // TODO: need to fixed so that number of entities created can be counted correctly and
-                // TODO: also update last updated UUID for fileImport which is a must for resume-ability
 
-//                return entityWrapperObservable.doOnNext(doWork).doOnNext(new Action1<WriteEvent>() {
-//
-//                         @Override
-//                         public void call(WriteEvent writeEvent) {
-//                             if (!(writeEvent instanceof EntityEvent)) {
-//                                 final long val = eventCounter.incrementAndGet();
-//                                 if(val % 50 == 0) {
-//                                     jobExecution.heartbeat();
-//                                 }
-//                                 return;
-//                             }
-//
-//                             final long value = entityCounter.incrementAndGet();
-//                             if (value % 2000 == 0) {
-//                                 try {
-//                                     logger.error("UUID = {} value = {}",
-//                                         ((EntityEvent) writeEvent).getEntityUuid().toString(),
-//                                          value );
-//                                     fileImport.setLastUpdatedUUID(
-//                                          ((EntityEvent) writeEvent).getEntityUuid().toString());
-//                                     //checkpoint the UUID here.
-//                                     rootEm.update(fileImport);
-//                                 } catch(Exception ex) {}
-//                             }
-//                             if(value % 100 == 0) {
-//                                 logger.error("heartbeat sent by " + fileImport.getFileName());
-//                                 jobExecution.heartbeat();
-//                             }
-//                         }
-//                     }
-//                );
-
-                return entityWrapperObservable.doOnNext(doWork);
-
+                return entityWrapperObservable.doOnNext( doWork );
             }
-        }, Schedulers.io()).toBlocking().last();
+        }, Schedulers.io() ).toBlocking().last();
         jp.close();
 
         logger.debug("\n\nWrote entities\n");
@@ -868,12 +806,15 @@ public class ImportServiceImpl implements ImportService {
 
         jp.close();
 
+        //flush the job statistics
+        statistics.complete();
+
         logger.debug("\n\nWrote others\n");
     }
 
 
     private interface WriteEvent {
-        public void doWrite(EntityManager em, FileImport fileImport);
+        public void doWrite(EntityManager em, FileImport fileImport, FileImportStatistics stats);
     }
 
 
@@ -894,29 +835,19 @@ public class ImportServiceImpl implements ImportService {
 
         // Creates entities
         @Override
-        public void doWrite(EntityManager em, FileImport fileImport) {
-            EntityManager rootEm = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
-
+        public void doWrite(EntityManager em, FileImport fileImport, FileImportStatistics stats) {
             try {
                 logger.debug("Writing imported entity {}:{} into app {}",
                     new Object[]{entityType, entityUuid, em.getApplication().getUuid()});
 
                 em.create(entityUuid, entityType, properties);
 
+                stats.entityWritten();
+
             } catch (Exception e) {
                 logger.error("Error writing entity", e);
 
-                fileImport.setErrorMessage(e.getMessage());
-
-                try {
-                    rootEm.update(fileImport);
-
-                } catch (Exception ex) {
-
-                    // TODO should we abort at this point?
-                    logger.error("Error updating file import report with error message: "
-                        + fileImport.getErrorMessage(), ex);
-                }
+                stats.entityFailed( e.getMessage() );
             }
         }
     }
@@ -936,8 +867,7 @@ public class ImportServiceImpl implements ImportService {
 
         // creates connections between entities
         @Override
-        public void doWrite(EntityManager em, FileImport fileImport) {
-            EntityManager rootEm = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+        public void doWrite(EntityManager em, FileImport fileImport, FileImportStatistics stats) {
 
             try {
                 // TODO: do we need to ensure that all Entity events happen first?
@@ -955,17 +885,11 @@ public class ImportServiceImpl implements ImportService {
 
                 em.createConnection(ownerEntityRef, connectionType, entityRef);
 
+                stats.connectionWritten();
+
             } catch (Exception e) {
                 logger.error("Error writing connection", e);
-                fileImport.setErrorMessage(e.getMessage());
-                try {
-                    rootEm.update(fileImport);
-                } catch (Exception ex) {
-
-                    // TODO should we abort at this point?
-                    logger.error("Error updating file import report with error message: "
-                        + fileImport.getErrorMessage(), ex);
-                }
+                stats.connectionFailed( e.getMessage() );
             }
         }
     }
@@ -985,7 +909,7 @@ public class ImportServiceImpl implements ImportService {
 
         // adds map to the dictionary
         @Override
-        public void doWrite(EntityManager em, FileImport fileImport) {
+        public void doWrite(EntityManager em, FileImport fileImport, FileImportStatistics stats) {
             EntityManager rootEm = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
             try {
 
