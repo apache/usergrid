@@ -53,7 +53,7 @@ public class Token extends Entity{
         return (String) this.get("access_token");
     }
 
-    public Long getExpriationDate(){
+    public Long getExpirationDate(){
         return (Long) this.get("expires_in");
     }
 
