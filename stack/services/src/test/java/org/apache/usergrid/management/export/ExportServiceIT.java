@@ -87,18 +87,17 @@ public class ExportServiceIT {
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
-
     @Rule
-    public NewOrgAppAdminRule orgAppAdminRule = new NewOrgAppAdminRule( setup );
-
+    public NewOrgAppAdminRule newOrgAppAdminRule = new NewOrgAppAdminRule( setup );
 
     // app-level data generated only once
     private UserInfo adminUser;
     private OrganizationInfo organization;
     private UUID applicationId;
 
-    final String bucketName = System.getProperty( "bucketName" )
-        + RandomStringUtils.randomAlphanumeric(10).toLowerCase();
+    private static String bucketPrefix;
+
+    private String bucketName;
 
     @Before
     public void setup() throws Exception {
@@ -110,9 +109,9 @@ public class ExportServiceIT {
             jobScheduler.startAndWait();
         }
 
-        adminUser = orgAppAdminRule.getAdminInfo();
-        organization = orgAppAdminRule.getOrganizationInfo();
-        applicationId = orgAppAdminRule.getApplicationInfo().getId();
+        adminUser = newOrgAppAdminRule.getAdminInfo();
+        organization = newOrgAppAdminRule.getOrganizationInfo();
+        applicationId = newOrgAppAdminRule.getApplicationInfo().getId();
 
         setup.getEmf().refreshIndex();
     }
@@ -122,16 +121,27 @@ public class ExportServiceIT {
     public void before() {
 
         boolean configured =
-               !StringUtils.isEmpty(System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR ))
-            && !StringUtils.isEmpty(System.getProperty(SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR ))
-            && !StringUtils.isEmpty(System.getProperty("bucketName"));
+            !StringUtils.isEmpty(System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR))
+                && !StringUtils.isEmpty(System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR))
+                && !StringUtils.isEmpty(System.getProperty("bucketName"));
 
         if ( !configured ) {
-            logger.warn("Skipping test because accessKey, secretKey and bucketName not " +
-                "specified as system properties, e.g. in your Maven settings.xml file.");
+            logger.warn("Skipping test because {}, {} and bucketName not " +
+                    "specified as system properties, e.g. in your Maven settings.xml file.",
+                new Object[] {
+                    SDKGlobalConfiguration.SECRET_KEY_ENV_VAR,
+                    SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR
+                });
         }
 
-        Assume.assumeTrue(configured);
+        Assume.assumeTrue( configured );
+
+        adminUser = newOrgAppAdminRule.getAdminInfo();
+        organization = newOrgAppAdminRule.getOrganizationInfo();
+        applicationId = newOrgAppAdminRule.getApplicationInfo().getId();
+
+        bucketPrefix = System.getProperty( "bucketName" );
+        bucketName = bucketPrefix + RandomStringUtils.randomAlphanumeric(10).toLowerCase();
     }
 
 
@@ -155,7 +165,7 @@ public class ExportServiceIT {
 
         ExportService exportService = setup.getExportService();
 
-        String appName = orgAppAdminRule.getApplicationInfo().getName();
+        String appName = newOrgAppAdminRule.getApplicationInfo().getName();
         HashMap<String, Object> payload = payloadBuilder(appName);
 
         payload.put( "organizationId", organization.getUuid() );
@@ -231,18 +241,20 @@ public class ExportServiceIT {
 
         ExportService exportService = setup.getExportService();
 
-        String appName = orgAppAdminRule.getApplicationInfo().getName();
+        String appName = newOrgAppAdminRule.getApplicationInfo().getName();
         HashMap<String, Object> payload = payloadBuilder(appName);
 
         payload.put( "organizationId", organization.getUuid() );
         payload.put( "applicationId", applicationId );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
-        //intialize user object to be posted
+
+        // intialize user object to be posted
         Map<String, Object> userProperties = null;
         Entity[] entity;
         entity = new Entity[2];
-        //creates entities
+
+        // creates entities
         for ( int i = 0; i < 2; i++ ) {
             userProperties = new LinkedHashMap<String, Object>();
             userProperties.put( "username", "billybob" + i );
@@ -313,7 +325,7 @@ public class ExportServiceIT {
         }
 
         //create another org to ensure we don't export it
-        orgAppAdminRule.createOwnerAndOrganization(
+        newOrgAppAdminRule.createOwnerAndOrganization(
             "noExport"+newUUIDString(),
             "junkUserName"+newUUIDString(),
             "junkRealName"+newUUIDString(),
@@ -324,7 +336,7 @@ public class ExportServiceIT {
       //  s3Export.setFilename( "exportOneOrg.json" );
         ExportService exportService = setup.getExportService();
 
-        String appName = orgAppAdminRule.getApplicationInfo().getName();
+        String appName = newOrgAppAdminRule.getApplicationInfo().getName();
         HashMap<String, Object> payload = payloadBuilder(appName);
 
         payload.put( "organizationId", organization.getUuid() );
@@ -457,7 +469,7 @@ public class ExportServiceIT {
         S3Export s3Export = new MockS3ExportImpl("exportOneAppWQuery.json" );
         ExportService exportService = setup.getExportService();
 
-        String appName = orgAppAdminRule.getApplicationInfo().getName();
+        String appName = newOrgAppAdminRule.getApplicationInfo().getName();
         HashMap<String, Object> payload = payloadBuilder(appName);
 
         payload.put( "query", "select * where username = 'junkRealName'" );
@@ -505,8 +517,8 @@ public class ExportServiceIT {
         f.deleteOnExit();
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
-       // em.createApplicationCollection( "qtsMagics" );
-        //intialize user object to be posted
+        // em.createApplicationCollection( "qtsMagics" );
+        // intialize user object to be posted
         Map<String, Object> userProperties = null;
         Entity[] entity;
         entity = new Entity[entitiesToCreate];
@@ -521,7 +533,7 @@ public class ExportServiceIT {
         S3Export s3Export = new MockS3ExportImpl("exportOneCollection.json" );
         ExportService exportService = setup.getExportService();
 
-        String appName = orgAppAdminRule.getApplicationInfo().getName();
+        String appName = newOrgAppAdminRule.getApplicationInfo().getName();
         HashMap<String, Object> payload = payloadBuilder(appName);
 
         payload.put( "organizationId", organization.getUuid() );
@@ -566,12 +578,12 @@ public class ExportServiceIT {
         em.createApplicationCollection( "baconators" );
         em.refreshIndex();
 
-        //intialize user object to be posted
+        //initialize user object to be posted
         Map<String, Object> userProperties = null;
         Entity[] entity;
         entity = new Entity[entitiesToCreate];
 
-        //creates entities
+        // creates entities
         for ( int i = 0; i < entitiesToCreate; i++ ) {
             userProperties = new LinkedHashMap<String, Object>();
             userProperties.put( "username", "billybob" + i );
@@ -582,7 +594,7 @@ public class ExportServiceIT {
         S3Export s3Export = new MockS3ExportImpl("exportOneCollectionWQuery.json");
         ExportService exportService = setup.getExportService();
 
-        String appName = orgAppAdminRule.getApplicationInfo().getName();
+        String appName = newOrgAppAdminRule.getApplicationInfo().getName();
         HashMap<String, Object> payload = payloadBuilder(appName);
 
         payload.put( "query", "select * where username contains 'billybob0'" );
@@ -605,7 +617,7 @@ public class ExportServiceIT {
 
         org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
 
-        //only one entity should match the query.
+        // only one entity should match the query.
         assertEquals( 1, a.size() );
     }
 
@@ -662,7 +674,7 @@ public class ExportServiceIT {
 
         JobData jobData = jobDataCreator( payload, exportUUID, s3Export );
         JobExecution jobExecution = mock( JobExecution.class );
-        when( jobExecution.getJobData() ).thenReturn( jobData );
+        when( jobExecution.getJobData() ).thenReturn(jobData);
 
         exportService.doExport( jobExecution );
 
@@ -675,14 +687,14 @@ public class ExportServiceIT {
         org.json.simple.JSONArray a = ( org.json.simple.JSONArray )
             parser.parse( new FileReader( exportedFile ) );
 
-        assertEquals( 23, a.size() );
+        assertEquals(23, a.size());
     }
 
 
     @Test
     public void testExportDoJob() throws Exception {
 
-        String appName = orgAppAdminRule.getApplicationInfo().getName();
+        String appName = newOrgAppAdminRule.getApplicationInfo().getName();
         HashMap<String, Object> payload = payloadBuilder(appName);
 
         payload.put( "organizationId", organization.getUuid() );
@@ -769,7 +781,7 @@ public class ExportServiceIT {
 
         ExportService exportService = setup.getExportService();
 
-        String appName = orgAppAdminRule.getApplicationInfo().getName();
+        String appName = newOrgAppAdminRule.getApplicationInfo().getName();
         HashMap<String, Object> payload = payloadBuilder(appName);
 
         payload.put( "organizationId", organization.getUuid() );
@@ -801,8 +813,8 @@ public class ExportServiceIT {
 
         UUID exportUUID = exportService.schedule( payload );
 
-        int maxRetries = 0;
-        int retries = 100;
+        int maxRetries = 100;
+        int retries = 0;
         while ( !exportService.getState( exportUUID ).equals( "FINISHED" ) && retries++ < maxRetries ) {
             Thread.sleep(100);
         }
@@ -857,7 +869,7 @@ public class ExportServiceIT {
         S3Export s3Export = new S3ExportImpl();
         ExportService exportService = setup.getExportService();
 
-        String appName = orgAppAdminRule.getApplicationInfo().getName();
+        String appName = newOrgAppAdminRule.getApplicationInfo().getName();
         HashMap<String, Object> payload = payloadBuilder(appName);
 
         OrganizationInfo orgMade = null;
@@ -940,7 +952,7 @@ public class ExportServiceIT {
         S3Export s3Export = new S3ExportImpl();
         ExportService exportService = setup.getExportService();
 
-        String appName = orgAppAdminRule.getApplicationInfo().getName();
+        String appName = newOrgAppAdminRule.getApplicationInfo().getName();
         HashMap<String, Object> payload = payloadBuilder(appName);
 
         payload.put( "organizationId", organization.getUuid() );
