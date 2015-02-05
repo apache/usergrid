@@ -380,8 +380,9 @@ public class ImportCollectionIT {
 
         //  listener.start();
 
-        // TODO countdown latch here?
-        while ( !importService.getState( importUUID ).equals( "FINISHED" ) ) {
+        int maxRetries = 0;
+        int retries = 100;
+        while ( !importService.getState( importUUID ).equals( "FINISHED" ) && retries++ < maxRetries ) {
             Thread.sleep(100);
         }
 
@@ -418,8 +419,9 @@ public class ImportCollectionIT {
             }});
         }});
 
-        // TODO countdown latch here?
-        while ( !exportService.getState( exportUUID ).equals( "FINISHED" ) ) {
+        int maxRetries = 0;
+        int retries = 100;
+        while ( !exportService.getState( exportUUID ).equals( "FINISHED" ) && retries++ < maxRetries ) {
             Thread.sleep(100);
         }
     }
