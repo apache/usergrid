@@ -443,7 +443,7 @@ public class ImportCollectionIT {
      * Create test entities of a specified type.
      * First two entities are connected.
      */
-    private void createTestEntities( final EntityManager em,
+   private void createTestEntities( final EntityManager em,
             Map<UUID, Entity> thingsMap, List<Entity> things, final String type) throws Exception {
 
         logger.debug("\n\nCreating new {} collection in application {}\n",
@@ -471,13 +471,13 @@ public class ImportCollectionIT {
             "related",       new SimpleEntityRef( type, created.get(0).getUuid()));
 
         em.refreshIndex();
-    }
+   }
 
 
     /**
      * Delete the configured s3 bucket.
      */
-    public void deleteBucket() {
+   public void deleteBucket() {
 
         logger.debug("\n\nDelete bucket\n");
 
@@ -499,7 +499,6 @@ public class ImportCollectionIT {
 
         BlobStore blobStore = context.getBlobStore();
         blobStore.deleteContainer( bucketName );
-    }
-
+   }
 }
 

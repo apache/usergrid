@@ -338,7 +338,7 @@ public class ExportServiceImpl implements ExportService {
                 continue;
             }
 
-            appFileName = prepareOutputFileName( "application", application.getValue(), null );
+            appFileName = prepareOutputFileName( application.getValue(), null );
 
             File ephemeral = collectionExportAndQuery( application.getKey(), config, export, jobExecution );
 
@@ -371,9 +371,9 @@ public class ExportServiceImpl implements ExportService {
         Export export = getExportEntity( jobExecution );
 
         ApplicationInfo application = managementService.getApplicationInfo( applicationId );
-        String appFileName = prepareOutputFileName( "application", application.getName(), null );
+        String appFileName = prepareOutputFileName( application.getName(), null );
 
-        File ephemeral = collectionExportAndQuery( applicationId, config, export, jobExecution );
+        File ephemeral = collectionExportAndQuery(applicationId, config, export, jobExecution);
 
         fileTransfer( export, appFileName, ephemeral, config, s3Export );
     }
@@ -390,8 +390,7 @@ public class ExportServiceImpl implements ExportService {
         Export export = getExportEntity( jobExecution );
         ApplicationInfo application = managementService.getApplicationInfo( applicationUUID );
 
-        String appFileName = prepareOutputFileName( "application", application.getName(),
-                ( String ) config.get( "collectionName" ) );
+        String appFileName = prepareOutputFileName( application.getName(), ( String ) config.get( "collectionName" ) );
 
 
         File ephemeral = collectionExportAndQuery( applicationUUID, config, export, jobExecution );
@@ -536,13 +535,11 @@ public class ExportServiceImpl implements ExportService {
 
 
     /**
-     * @param type just a label such us: organization, application.
-     *
      * @return the file name concatenated with the type and the name of the collection
      */
-    public String prepareOutputFileName( String type, String name, String CollectionName ) {
+    public String prepareOutputFileName( String applicationName, String CollectionName ) {
         StringBuilder str = new StringBuilder();
-        str.append( name );
+        str.append( applicationName );
         str.append( "." );
         if ( CollectionName != null ) {
             str.append( CollectionName );
