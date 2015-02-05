@@ -22,6 +22,7 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Service;
 import com.google.inject.Module;
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
@@ -77,6 +78,8 @@ public class ImportServiceIT {
 
     QueueListener listener;
 
+    final String bucketName = System.getProperty( "bucketName" )
+        + RandomStringUtils.randomAlphanumeric(10).toLowerCase();
 
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
@@ -569,7 +572,7 @@ public class ImportServiceIT {
         HashMap<String, Object> payload = new HashMap<String, Object>();
         Map<String, Object> properties = new HashMap<String, Object>();
         Map<String, Object> storage_info = new HashMap<String, Object>();
-        storage_info.put( "bucket_location", System.getProperty( "bucketName" ) );
+        storage_info.put( "bucket_location", bucketName );
 
         storage_info.put( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR,
             System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR ) );
@@ -611,7 +614,6 @@ public class ImportServiceIT {
     // delete the s3 bucket which was created for testing
     public void deleteBucket() {
 
-        String bucketName = System.getProperty( "bucketName" );
         String accessId = System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR );
         String secretKey = System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR );
 

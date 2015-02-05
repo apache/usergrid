@@ -21,6 +21,7 @@ import org.apache.usergrid.persistence.TypedEntity;
 import org.apache.usergrid.persistence.annotations.EntityProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.UUID;
 
 
 /**
@@ -29,7 +30,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class FileImport extends TypedEntity {
 
-    //canceled , and expired states aren't used in current iteration.
+   //canceled , and expired states aren't used in current iteration.
     public static enum State {
         CREATED, FAILED, SCHEDULED, STARTED, FINISHED, CANCELED, EXPIRED
     }
@@ -44,10 +45,19 @@ public class FileImport extends TypedEntity {
     protected String errorMessage;
 
     /**
-     * file name
+     * Name of file to import
      */
     @EntityProperty
     protected String fileName;
+
+    @EntityProperty
+    private UUID applicationId;
+
+    /**
+     * Target collection name
+     */
+    @EntityProperty
+    protected String collectionName;
 
     /**
      * File completion Status
@@ -61,18 +71,11 @@ public class FileImport extends TypedEntity {
     @EntityProperty
     protected String lastUpdatedUUID;
 
-
-
-    /**
-     * File completion Status
-     */
     @EntityProperty
     protected long importedEntityCount;
 
     @EntityProperty
     protected long failedEntityCount;
-
-
 
 
     /**
@@ -86,6 +89,18 @@ public class FileImport extends TypedEntity {
 
 
     public FileImport() {
+        setCompleted(false);
+        setLastUpdatedUUID(" ");
+        setErrorMessage(" ");
+        setState(FileImport.State.CREATED);
+    }
+
+
+    public FileImport( String fileName, UUID applicationId, String collectionName ) {
+        this();
+        this.fileName = fileName;
+        this.setApplicationId(applicationId);
+        this.collectionName = collectionName;
     }
 
     /**
@@ -172,6 +187,28 @@ public class FileImport extends TypedEntity {
         this.fileName = fileName;
     }
 
+    /**
+     * Get the collectionName of the target collection of the import.
+     * @return filename
+     */
+    public String getCollectionName() {
+        return collectionName;
+    }
+
+    public void setCollectionName( String collectionName ) {
+        this.collectionName = collectionName;
+    }
+
+    /**
+     * Target application name
+     */
+    public UUID getApplicationId() {
+        return applicationId;
+    }
+
+    public void setApplicationId(UUID applicationId) {
+        this.applicationId = applicationId;
+    }
 
     public long getImportedEntityCount() {
         return importedEntityCount;

@@ -52,7 +52,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 
-//@Concurrent
+//@Concurrent These tests cannot be run concurrently
 public class ImportCollectionIT {
 
     private static final Logger logger = LoggerFactory.getLogger(ImportCollectionIT.class);
@@ -67,6 +67,8 @@ public class ImportCollectionIT {
 
     QueueListener listener;
 
+    final String bucketName = System.getProperty( "bucketName" )
+        + RandomStringUtils.randomAlphanumeric(10).toLowerCase();
 
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
@@ -268,6 +270,8 @@ public class ImportCollectionIT {
     @Test
     public void testImportWithWrongTypes() throws Exception {
 
+        deleteBucket();
+
         // create an app with a collection of cats, export it to S3
 
         String appName = "import-test-" + RandomStringUtils.randomAlphanumeric(10);
@@ -301,6 +305,8 @@ public class ImportCollectionIT {
      */
     @Test
     public void testImportWithMultipleFiles() throws Exception {
+
+        deleteBucket();
 
         // create 10 applications each with collection of 10 things, export all to S3
 
@@ -353,6 +359,7 @@ public class ImportCollectionIT {
 
         logger.debug("\n\nImport into new app {}\n", em.getApplication().getName() );
 
+
         ImportService importService = setup.getImportService();
         UUID importUUID = importService.schedule( new HashMap<String, Object>() {{
             put( "path", organization.getName() + em.getApplication().getName());
@@ -366,7 +373,7 @@ public class ImportCollectionIT {
                         System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR ) );
                     put( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR,
                         System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR ) );
-                    put( "bucket_location", System.getProperty( "bucketName" ) );
+                    put( "bucket_location", bucketName);
                 }});
             }});
         }});
@@ -406,7 +413,7 @@ public class ImportCollectionIT {
                          System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR ) );
                      put( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR,
                          System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR ) );
-                    put( "bucket_location", System.getProperty( "bucketName" ) );
+                    put( "bucket_location", bucketName );
                 }});
             }});
         }});
@@ -460,7 +467,6 @@ public class ImportCollectionIT {
 
         logger.debug("\n\nDelete bucket\n");
 
-        String bucketName = System.getProperty( "bucketName" );
         String accessId = System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR );
         String secretKey = System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR );
 

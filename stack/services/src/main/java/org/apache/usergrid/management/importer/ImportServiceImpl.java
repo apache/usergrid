@@ -182,13 +182,9 @@ public class ImportServiceImpl implements ImportService {
         }
 
         // create a FileImport entity to store metadata about the fileImport job
-        FileImport fileImport = new FileImport();
-
-        fileImport.setFileName(file);
-        fileImport.setCompleted(false);
-        fileImport.setLastUpdatedUUID(" ");
-        fileImport.setErrorMessage(" ");
-        fileImport.setState(FileImport.State.CREATED);
+        String collectionName = config.get("collectionName").toString();
+        UUID applicationId = (UUID)config.get("applicationId");
+        FileImport fileImport = new FileImport( file, applicationId, collectionName );
         fileImport = rootEm.create(fileImport);
 
         Import importUG = rootEm.get(importRef, Import.class);
@@ -611,8 +607,7 @@ public class ImportServiceImpl implements ImportService {
         File file = new File(queueMessage.getFileName());
         UUID targetAppId = queueMessage.getApplicationId();
 
-        // TODO: fix this or remove the dependency on ImportQueueMessage in this class
-        parseFileToEntities( null, fileImport, file, targetAppId );
+        parseFileToEntities( fileImport, file, targetAppId );
     }
 
 
@@ -624,15 +619,11 @@ public class ImportServiceImpl implements ImportService {
         File file = new File(jobExecution.getJobData().getProperty("File").toString());
         UUID targetAppId = (UUID) jobExecution.getJobData().getProperty("applicationId");
 
-        Map<String, Object> config = (Map<String, Object>) jobExecution.getJobData().getProperty("importInfo");
-        String collectionName = config.get("collectionName").toString();
-
-        parseFileToEntities( collectionName, fileImport, file, targetAppId );
+        parseFileToEntities( fileImport, file, targetAppId );
     }
 
 
-    public void parseFileToEntities(
-        String collectionName, FileImport fileImport, File file, UUID targetAppId ) throws Exception {
+    public void parseFileToEntities( FileImport fileImport, File file, UUID targetAppId ) throws Exception {
 
         logger.debug("parseFileToEntities() for file {} ", file.getAbsolutePath());
 
@@ -657,7 +648,7 @@ public class ImportServiceImpl implements ImportService {
                 EntityManager targetEm = emf.getEntityManager(targetAppId);
                 logger.debug("   importing into app {} file {}", targetAppId.toString(), file.getAbsolutePath());
 
-                importEntitiesFromFile( collectionName, file, targetEm, emManagementApp, fileImport );
+                importEntitiesFromFile( file, targetEm, emManagementApp, fileImport );
 
 
                 // Updates the state of file import job
@@ -751,7 +742,6 @@ public class ImportServiceImpl implements ImportService {
      * @param fileImport   The file import entity
      */
     private void importEntitiesFromFile(
-        final String collectionName,
         final File file,
         final EntityManager em,
         final EntityManager rootEm,
@@ -764,23 +754,23 @@ public class ImportServiceImpl implements ImportService {
         // observable that parses JSON and emits write events
         JsonParser jp = getJsonParserForFile(file);
 
-        //TODO, move the json parser into the observable creation so that open/close happens automatcially within the stream
+        // TODO: move the JSON parser into the observable creation
+        // so that open/close happens automatically within the stream
 
         final JsonEntityParserObservable jsonObservableEntities =
-            new JsonEntityParserObservable(jp, em, rootEm, collectionName, fileImport, entitiesOnly);
+            new JsonEntityParserObservable(jp, em, rootEm, fileImport, entitiesOnly);
         final Observable<WriteEvent> entityEventObservable = Observable.create(jsonObservableEntities);
 
-        //flush every 100 entities
-        final FileImportStatistics statistics = new FileImportStatistics( em, fileImport.getUuid(), 100 );
-        //truncate due to RX api
+        // flush every 100 entities
+        final FileImportStatistics statistics = new FileImportStatistics( emf, fileImport, 100 );
+
+        // truncate due to RX api
         final int entityNumSkip = (int)statistics.getTotalEntityCount();
         final int connectionNumSkip = (int)statistics.getTotalConnectionCount();
 
         // function to execute for each write event
 
-        /**
-         * Function that invokes the work of the event.
-         */
+        // function that invokes the work of the event.
         final Action1<WriteEvent> doWork = new Action1<WriteEvent>() {
             @Override
             public void call( WriteEvent writeEvent ) {
@@ -788,12 +778,10 @@ public class ImportServiceImpl implements ImportService {
             }
         };
 
-
-
-
         // start parsing JSON
-        //only take while our stats tell us we should continue processing
-        //potentially skip the first n if this is a resume operation
+
+        // only take while our stats tell us we should continue processing
+        // potentially skip the first n if this is a resume operation
         entityEventObservable.takeWhile( new Func1<WriteEvent, Boolean>() {
             @Override
             public Boolean call( final WriteEvent writeEvent ) {
@@ -802,12 +790,9 @@ public class ImportServiceImpl implements ImportService {
         } ).skip( entityNumSkip ).parallel( new Func1<Observable<WriteEvent>, Observable<WriteEvent>>() {
             @Override
             public Observable<WriteEvent> call( Observable<WriteEvent> entityWrapperObservable ) {
-
-
                 return entityWrapperObservable.doOnNext( doWork );
             }
         }, Schedulers.io() ).toBlocking().last();
-
 
         jp.close();
 
@@ -820,7 +805,7 @@ public class ImportServiceImpl implements ImportService {
         jp = getJsonParserForFile(file);
 
         final JsonEntityParserObservable jsonObservableOther =
-            new JsonEntityParserObservable(jp, em, rootEm, collectionName, fileImport, entitiesOnly);
+            new JsonEntityParserObservable(jp, em, rootEm, fileImport, entitiesOnly);
         final Observable<WriteEvent> otherEventObservable = Observable.create(jsonObservableOther);
 
         // only take while our stats tell us we should continue processing
@@ -973,7 +958,6 @@ public class ImportServiceImpl implements ImportService {
         private final JsonParser jp;
         EntityManager em;
         EntityManager rootEm;
-        String collectionName;
         FileImport fileImport;
         boolean entitiesOnly;
 
@@ -982,7 +966,6 @@ public class ImportServiceImpl implements ImportService {
             JsonParser parser,
             EntityManager em,
             EntityManager rootEm,
-            String collectionName,
             FileImport fileImport,
             boolean entitiesOnly) {
 
@@ -991,7 +974,6 @@ public class ImportServiceImpl implements ImportService {
             this.rootEm = rootEm;
             this.fileImport = fileImport;
             this.entitiesOnly = entitiesOnly;
-            this.collectionName = collectionName;
         }
 
 
@@ -1007,7 +989,7 @@ public class ImportServiceImpl implements ImportService {
                 boolean done = false;
 
                 // we ignore imported entity type information, entities get the type of the collection
-                String collectionType = InflectionUtils.singularize( collectionName );
+                String collectionType = InflectionUtils.singularize( fileImport.getCollectionName() );
 
                 Stack tokenStack = new Stack();
                 EntityRef lastEntity = null;

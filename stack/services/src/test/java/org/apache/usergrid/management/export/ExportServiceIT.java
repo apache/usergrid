@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jclouds.ContextBuilder;
 import org.jclouds.blobstore.BlobStore;
@@ -98,7 +99,8 @@ public class ExportServiceIT {
     private OrganizationInfo organization;
     private UUID applicationId;
 
-
+    final String bucketName = System.getProperty( "bucketName" )
+        + RandomStringUtils.randomAlphanumeric(10).toLowerCase();
 
     @Before
     public void setup() throws Exception {
@@ -805,7 +807,6 @@ public class ExportServiceIT {
             ;
         }
 
-        String bucketName = System.getProperty( "bucketName" );
         String accessId = System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR );
         String secretKey = System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR );
 
@@ -897,7 +898,6 @@ public class ExportServiceIT {
 
         Thread.sleep( 3000 );
 
-        String bucketName = System.getProperty( "bucketName" );
         String accessId = System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR );
         String secretKey = System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR );
 
@@ -1007,7 +1007,6 @@ public class ExportServiceIT {
             ;
         }
 
-        String bucketName = System.getProperty( "bucketName" );
         String accessId = System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR );
         String secretKey = System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR );
 

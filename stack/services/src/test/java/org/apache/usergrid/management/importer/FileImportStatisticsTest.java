@@ -23,6 +23,8 @@ package org.apache.usergrid.management.importer;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.invocation.InvocationOnMock;
@@ -52,18 +54,16 @@ public class FileImportStatisticsTest {
     @Test
     public void testSuccess() throws Exception {
 
+        final EntityManagerFactory emf = mock( EntityManagerFactory.class );
         final EntityManager em = mock( EntityManager.class );
+        when( emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID ) ).thenReturn( em );
 
         final UUID importFileId = UUIDGenerator.newTimeUUID();
-
 
         final FileImport fileImport = new FileImport();
         fileImport.setUuid( importFileId );
 
-        when( em.get( importFileId, FileImport.class ) ).thenReturn( fileImport );
-
-
-        final FileImportStatistics fileImportStatistics = new FileImportStatistics( em, importFileId, 1000 );
+        final FileImportStatistics fileImportStatistics = new FileImportStatistics( emf, fileImport, 1000 );
 
         final long expectedCount = 100;
 
@@ -93,15 +93,15 @@ public class FileImportStatisticsTest {
     @Test
     public void testBoth() throws Exception {
 
+        final EntityManagerFactory emf = mock( EntityManagerFactory.class );
         final EntityManager em = mock( EntityManager.class );
+        when( emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID ) ).thenReturn( em );
 
         final UUID importFileId = UUIDGenerator.newTimeUUID();
 
 
         final FileImport fileImport = new FileImport();
-        fileImport.setUuid( importFileId );
-
-        when( em.get( importFileId, FileImport.class ) ).thenReturn( fileImport );
+        fileImport.setUuid(importFileId);
 
         //mock up returning the FailedEntityImport instance after save is invoked.
 
@@ -112,7 +112,7 @@ public class FileImportStatisticsTest {
             }
         } );
 
-        final FileImportStatistics fileImportStatistics = new FileImportStatistics( em, importFileId, 1000 );
+        final FileImportStatistics fileImportStatistics = new FileImportStatistics( emf, fileImport, 1000 );
 
         final long expectedSuccess = 100;
 
@@ -171,7 +171,9 @@ public class FileImportStatisticsTest {
     @Test
     public void explicitFail() throws Exception {
 
+        final EntityManagerFactory emf = mock( EntityManagerFactory.class );
         final EntityManager em = mock( EntityManager.class );
+        when( emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID ) ).thenReturn( em );
 
         final UUID importFileId = UUIDGenerator.newTimeUUID();
 
@@ -182,7 +184,7 @@ public class FileImportStatisticsTest {
         when( em.get( importFileId, FileImport.class ) ).thenReturn( fileImport );
 
 
-        final FileImportStatistics fileImportStatistics = new FileImportStatistics( em, importFileId, 1000 );
+        final FileImportStatistics fileImportStatistics = new FileImportStatistics( emf, fileImport, 1000 );
 
         final long expectedCount = 100;
 
@@ -216,7 +218,9 @@ public class FileImportStatisticsTest {
     @Test
     public void testAutoFlushSuccess() throws Exception {
 
+        final EntityManagerFactory emf = mock( EntityManagerFactory.class );
         final EntityManager em = mock( EntityManager.class );
+        when( emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID ) ).thenReturn( em );
 
         final UUID importFileId = UUIDGenerator.newTimeUUID();
 
@@ -246,7 +250,7 @@ public class FileImportStatisticsTest {
             / expectedFlushCount;
 
         //set this to 1/2, so that we get saved twice
-        final FileImportStatistics fileImportStatistics = new FileImportStatistics( em, importFileId, flushSize );
+        final FileImportStatistics fileImportStatistics = new FileImportStatistics( emf, fileImport, flushSize );
 
 
         for ( long i = 0; i < expectedSuccess; i++ ) {
@@ -326,7 +330,9 @@ public class FileImportStatisticsTest {
     @Test
     public void loadingExistingState() throws Exception {
 
+        final EntityManagerFactory emf = mock( EntityManagerFactory.class );
         final EntityManager em = mock( EntityManager.class );
+        when( emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID ) ).thenReturn( em );
 
         final UUID importFileId = UUIDGenerator.newTimeUUID();
 
@@ -342,7 +348,7 @@ public class FileImportStatisticsTest {
 
         //mock up returning the FailedEntityImport instance after save is invoked.
 
-        FileImportStatistics statistics = new FileImportStatistics( em, importFileId, 100 );
+        FileImportStatistics statistics = new FileImportStatistics( emf, fileImport, 100 );
 
         assertEquals( 1, statistics.getEntitiesWritten() );
         assertEquals( 2, statistics.getEntitiesFailed() );

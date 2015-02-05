@@ -25,7 +25,9 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.entities.FailedImportConnection;
 import org.apache.usergrid.persistence.entities.FailedImportEntity;
 import org.apache.usergrid.persistence.entities.FileImport;
@@ -34,14 +36,14 @@ import org.apache.usergrid.persistence.exceptions.PersistenceException;
 
 
 /**
- * Statistics used to track a file import. Only 1 instance of this class should exist per file imported in the cluster.
- * There is a direct 1-1 mapping of the statistics provided here and the file import status. This class is threadsafe to
- * be used across multiple threads.
+ * Statistics used to track a file import. Only 1 instance of this class should exist
+ * per file imported in the cluster. There is a direct 1-1 mapping of the statistics provided
+ * here and the file import status. This class is thread-safe to be used across multiple threads.
  */
 public class FileImportStatistics {
 
-    private static final String ERROR_MESSAGE = "Failed to import some data.  See the import counters and errors.";
-
+    private static final String ERROR_MESSAGE =
+        "Failed to import some data.  See the import counters and errors.";
 
     private static final String ERRORS_CONNECTION_NAME = "errors";
 
@@ -54,23 +56,25 @@ public class FileImportStatistics {
     private final Semaphore writeSemaphore = new Semaphore( 1 );
 
     private final FileImport fileImport;
-    private final EntityManager entityManager;
+    private final EntityManagerFactory emf;
     private final int flushCount;
 
 
     /**
-     * Create an instance to track counters.   Note that when this instance is created, it will attempt to load it's state
-     * from the entity manager.  In the case of using this when resuming, be sure you begin processing where the system thinks
-     * it has left off.
+     * Create an instance to track counters.   Note that when this instance is created, it will
+     * attempt to load it's state from the entity manager.  In the case of using this when resuming,
+     * be sure you begin processing where the system thinks * it has left off.
      *
-     * @param entityManager The entity manager that will hold these entities.
-     * @param fileImportId The uuid of the fileImport
+     * @param emf Entity Manager Factory
+     * @param fileImport File Import Entity
      * @param flushCount The number of success + failures to accumulate before flushing
      */
-    public FileImportStatistics( final EntityManager entityManager, final UUID fileImportId, final int flushCount ) {
-        this.entityManager = entityManager;
+    public FileImportStatistics(
+        final EntityManagerFactory emf, final FileImport fileImport, final int flushCount ) {
+
+        this.emf = emf;
         this.flushCount = flushCount;
-        this.fileImport = getFileImport( fileImportId );
+        this.fileImport = fileImport;
 
         this.entitiesWritten.addAndGet( fileImport.getImportedEntityCount() );
         this.entitiesFailed.addAndGet( fileImport.getFailedEntityCount() );
@@ -89,8 +93,6 @@ public class FileImportStatistics {
     }
 
 
-
-
     /**
      * Invoke when an entity fails to write correctly
      */
@@ -98,11 +100,11 @@ public class FileImportStatistics {
     public void entityFailed( final String message ) {
         entitiesFailed.incrementAndGet();
 
-
         FailedImportEntity failedImportEntity = new FailedImportEntity();
         failedImportEntity.setErrorMessage( message );
 
         try {
+            EntityManager entityManager = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
             failedImportEntity = entityManager.create( failedImportEntity );
             entityManager.createConnection( fileImport, ERRORS_CONNECTION_NAME, failedImportEntity );
         }
@@ -133,6 +135,7 @@ public class FileImportStatistics {
         failedImportConnection.setErrorMessage( message );
 
         try {
+            EntityManager entityManager = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
             failedImportConnection = entityManager.create( failedImportConnection );
             entityManager.createConnection( fileImport, ERRORS_CONNECTION_NAME, failedImportConnection );
         }
@@ -306,34 +309,11 @@ public class FileImportStatistics {
             fileImport.setState( state );
             fileImport.setErrorMessage( message );
 
+            EntityManager entityManager = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
             entityManager.update( fileImport );
         }
         catch ( Exception e ) {
             throw new RuntimeException( "Unable to persist complete state", e );
         }
-    }
-
-
-    /**
-     * Get the FileImport by uuid and return it
-     *
-     * @throws EntityNotFoundException if we can't find the file import with the given uuid
-     */
-    private FileImport getFileImport( final UUID fileImportId ) {
-
-        final FileImport fileImport;
-
-        try {
-            fileImport = entityManager.get( fileImportId, FileImport.class );
-        }
-        catch ( Exception e ) {
-            throw new RuntimeException( "Unable to load fileImport with id " + fileImportId, e );
-        }
-
-        if ( fileImport == null ) {
-            throw new EntityNotFoundException( "Could not file FileImport with id " + fileImportId );
-        }
-
-        return fileImport;
     }
 }
