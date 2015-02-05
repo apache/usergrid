@@ -74,9 +74,12 @@ public class OrganizationResource extends NamedResource {
                         organization );
 
     }
-    
+
     public ApplicationResource app(){
         return new ApplicationResource(  context ,this );
+    }
+    public CredentialsResource credentials(){
+        return new CredentialsResource(  context ,this );
     }
 
 

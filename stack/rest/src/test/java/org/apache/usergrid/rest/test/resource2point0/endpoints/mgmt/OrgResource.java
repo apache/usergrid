@@ -110,5 +110,8 @@ public class OrgResource  extends NamedResource {
                 .delete(ApiResponse.class);
 
     }
+    public CredentialsResource credentials(){
+        return new CredentialsResource(  context ,this );
+    }
 
 }
