@@ -25,8 +25,6 @@ import org.apache.usergrid.rest.test.resource2point0.endpoints.NamedResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.UrlResource;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Organization;
-import org.apache.usergrid.rest.test.resource2point0.model.Token;
-import org.apache.usergrid.rest.test.resource2point0.model.User;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 
@@ -74,7 +72,7 @@ public class OrganizationResource extends NamedResource {
                         organization );
 
     }
-    
+
     public ApplicationResource app(){
         return new ApplicationResource(  context ,this );
     }

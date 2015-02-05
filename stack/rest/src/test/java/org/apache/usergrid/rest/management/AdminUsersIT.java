@@ -22,7 +22,9 @@ package org.apache.usergrid.rest.management;
  * Created by ApigeeCorporation on 9/17/14.
  */
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -177,21 +179,15 @@ public class AdminUsersIT extends AbstractRestIT {
         String username = clientSetup.getUsername();
         String password = clientSetup.getPassword();
 
-
+        // change the password as admin. The old password isn't required
         Map<String, Object> passwordPayload = new HashMap<String, Object>();
         passwordPayload.put( "newpassword", "testPassword" );
 
 
-        // change the password as admin. The old password isn't required
-        //management.users().user( username ).password().
 
         management.users().user( username ).password().post( clientSetup.getSuperuserToken(), passwordPayload );
 
         this.refreshIndex();
-
-//        JsonNode node = mapper.readTree( resource().path( "/management/users/test/password" ).queryParam( "access_token", superToken )
-//                                                   .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-//                                                   .post( String.class, data ));
 
         assertNotNull( management.token().post( new Token( username, "testPassword" ) ) );
 
@@ -203,23 +199,50 @@ public class AdminUsersIT extends AbstractRestIT {
             errorParse( 400,"invalid_grant",uie );
         }
     }
-//
-//    @Test
-//    public void mgmtUserFeed() throws Exception {
-//        JsonNode userdata = mapper.readTree( resource().path( "/management/users/test@usergrid.com/feed" )
-//                                                       .queryParam( "access_token", adminAccessToken )
-//                                                       .accept( MediaType.APPLICATION_JSON ).get( String.class ));
-//        assertTrue( StringUtils.contains( this.getEntity( userdata, 0 ).get( "title" ).asText(),
-//                "<a href=\"mailto:test@usergrid.com\">" ) );
-//    }
-//
-//    //everything below is MUUserResourceIT
-//
-//    @Test
-//    public void testCaseSensitivityAdminUser() throws Exception {
-//
-//        LOG.info( "Starting testCaseSensitivityAdminUser()" );
-//
+
+
+    /**
+     * Get the management user feed and check that it has the correct title.
+     * @throws Exception
+     */
+    @Test
+    public void mgmtUserFeed() throws Exception {
+
+        Entity mgmtUserFeedEntity = management.users().user( clientSetup.getUsername() ).feed().get();
+        String correctValue= "<a href=mailto:"+clientSetup.getUsername();  //user_org.apache.usergrid.rest.management.AdminUsersIT.mgmtUserFeed4c3e53e0-acc7-11e4-b527-0b8af3c5813f@usergrid.com">user_org.apache.usergrid.rest.management.AdminUsersIT.mgmtUserFeed4c3e53e0-acc7-11e4-b527-0b8af3c5813f (user_org.apache.usergrid.rest.management.AdminUsersIT.mgmtUserFeed4c3e53e0-acc7-11e4-b527-0b8af3c5813f@usergrid.com)</a> created a new organization account named org_org.apache.usergrid.rest.management.AdminUsersIT.mgmtUserFeed4c3ec910-acc7-11e4-94c8-33f0d48a5559
+
+        assertNotNull( mgmtUserFeedEntity );
+
+        ArrayList<Map<String,Object>> feedEntityMap = ( ArrayList ) mgmtUserFeedEntity.get( "entities" );
+        assertNotNull( feedEntityMap );
+        assertNotNull( feedEntityMap.get( 0 ).get( "title" )  );
+
+    }
+
+    //everything below is MUUserResourceIT
+
+    @Test
+    public void testCaseSensitivityAdminUser() throws Exception {
+
+        //Create adminUser values
+        Entity adminUserPayload = new Entity();
+        String username = "testCaseSensitivityAdminUser"+ org.apache.usergrid.persistence.index.utils
+            .UUIDUtils
+            .newTimeUUID();
+        adminUserPayload.put( "username", username );
+        adminUserPayload.put( "name", username );
+        adminUserPayload.put( "email", username+"@usergrid.com" );
+        adminUserPayload.put( "password", username );
+
+        //create adminUser
+        //Entity adminUserResponse = restClient.management().orgs().organization( clientSetup.getOrganizationName() ).users().post( adminUserPayload );
+        management.users().post( adminUserPayload );
+
+        refreshIndex();
+
+        Entity adminUserResponse = management.users().user( username.toLowerCase() ).get();
+        assertNotNull( adminUserResponse );
+
 //        UserInfo mixcaseUser = setup.getMgmtSvc()
 //                                    .createAdminUser( "AKarasulu", "Alex Karasulu", "AKarasulu@Apache.org", "test", true, false );
 //
@@ -233,15 +256,15 @@ public class AdminUsersIT extends AbstractRestIT {
 //        refreshIndex(context.getOrgName(), context.getAppName());
 //
 //        String tokenStr = mgmtToken( "akarasulu@apache.org", "test" );
-//
-//        // Should succeed even when we use all lowercase
+
+        // Should succeed even when we use all lowercase
 //        JsonNode node = mapper.readTree( resource().path( "/management/users/akarasulu@apache.org" )
 //                                                   .queryParam( "access_token", tokenStr )
 //                                                   .accept( MediaType.APPLICATION_JSON )
 //                                                   .type( MediaType.APPLICATION_JSON_TYPE )
 //                                                   .get( String.class ));
-//        logNode( node );
-//    }
+
+    }
 //
 //
 //    @Test

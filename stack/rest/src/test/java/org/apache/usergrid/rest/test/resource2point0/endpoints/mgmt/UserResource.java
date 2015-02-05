@@ -16,9 +16,15 @@
  */
 package org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt;
 
+import javax.ws.rs.core.MediaType;
+
 import org.apache.usergrid.rest.test.resource2point0.endpoints.NamedResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.UrlResource;
+import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
+
+import com.sun.jersey.api.client.WebResource;
 
 
 /**
@@ -36,4 +42,14 @@ public class UserResource extends NamedResource {
         return new PasswordResource( context, this );
     }
 
+    public FeedResource feed() {
+        return new FeedResource( context, this );
+    }
+
+    public Entity get() {
+        WebResource resource = getResource( true );
+        ApiResponse response = resource.type( MediaType.APPLICATION_JSON_TYPE )
+                                       .accept( MediaType.APPLICATION_JSON ).get( ApiResponse.class );
+        return new Entity(response);
+    }
 }
