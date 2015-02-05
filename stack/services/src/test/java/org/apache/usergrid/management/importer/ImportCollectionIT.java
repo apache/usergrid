@@ -23,6 +23,8 @@ import com.google.common.util.concurrent.Service;
 import com.google.inject.Module;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
+
+import org.apache.usergrid.NewOrgAppAdminRule;
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
 import org.apache.usergrid.batch.service.JobSchedulerService;
@@ -65,10 +67,10 @@ public class ImportCollectionIT {
     private static OrganizationInfo organization;
     private static UUID applicationId;
 
+    private String bucketName;
+
     QueueListener listener;
 
-    final String bucketName = System.getProperty( "bucketName" )
-        + RandomStringUtils.randomAlphanumeric(10).toLowerCase();
 
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
@@ -78,21 +80,25 @@ public class ImportCollectionIT {
         new ServiceITSetupImpl( cassandraResource, new ElasticSearchResource() );
 
 
+    @Rule
+    public NewOrgAppAdminRule newOrgAppAdminRule = new NewOrgAppAdminRule( setup );
+
+
     @BeforeClass
     public static void setup() throws Exception {
-        String username = "test"+ UUIDUtils.newTimeUUID();
+//        String username = "test"+ UUIDUtils.newTimeUUID();
 
         // start the scheduler after we're all set up
         JobSchedulerService jobScheduler = cassandraResource.getBean( JobSchedulerService.class );
         if ( jobScheduler.state() != Service.State.RUNNING ) {
             jobScheduler.startAndWait();
         }
-
-        //creates sample test application
-        adminUser = setup.getMgmtSvc().createAdminUser(
-            username, username, username+"@test.com", username, false, false );
-        organization = setup.getMgmtSvc().createOrganization( username, adminUser, true );
-        applicationId = setup.getMgmtSvc().createApplication( organization.getUuid(), username+"app" ).getId();
+//
+//        //creates sample test application
+//        adminUser = setup.getMgmtSvc().createAdminUser(
+//            username, username, username+"@test.com", username, false, false );
+//        organization = setup.getMgmtSvc().createOrganization( username, adminUser, true );
+//        applicationId = setup.getMgmtSvc().createApplication( organization.getUuid(), username+"app" ).getId();
     }
 
 
@@ -114,6 +120,12 @@ public class ImportCollectionIT {
         }
 
         Assume.assumeTrue( configured );
+
+
+        adminUser = newOrgAppAdminRule.getAdminInfo();
+        organization = newOrgAppAdminRule.getOrganizationInfo();
+        applicationId = newOrgAppAdminRule.getApplicationInfo().getId();
+        bucketName = System.getProperty( "bucketName" )+ RandomStringUtils.randomAlphanumeric(10).toLowerCase();
     }
 
 
