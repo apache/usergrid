@@ -20,19 +20,17 @@
 package org.apache.usergrid.management.importer;
 
 
-import java.util.UUID;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.entities.FailedImportConnection;
 import org.apache.usergrid.persistence.entities.FailedImportEntity;
 import org.apache.usergrid.persistence.entities.FileImport;
-import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.persistence.exceptions.PersistenceException;
+
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 
 /**
@@ -40,7 +38,7 @@ import org.apache.usergrid.persistence.exceptions.PersistenceException;
  * per file imported in the cluster. There is a direct 1-1 mapping of the statistics provided
  * here and the file import status. This class is thread-safe to be used across multiple threads.
  */
-public class FileImportStatistics {
+public class FileImportTracker {
 
     private static final String ERROR_MESSAGE =
         "Failed to import some data.  See the import counters and errors.";
@@ -69,7 +67,7 @@ public class FileImportStatistics {
      * @param fileImport File Import Entity
      * @param flushCount The number of success + failures to accumulate before flushing
      */
-    public FileImportStatistics(
+    public FileImportTracker(
         final EntityManagerFactory emf, final FileImport fileImport, final int flushCount ) {
 
         this.emf = emf;
@@ -179,8 +177,9 @@ public class FileImportStatistics {
 
 
     /**
-     * Return the total number of successful imports + failed imports.  Can be used in resume. Note that this reflects
-     * the counts last written to cassandra when this instance was created + any processing
+     * Return the total number of successful imports + failed imports.
+     * Can be used in resume. Note that this reflects the counts last written
+     * to cassandra when this instance was created + any processing
      */
     public long getTotalEntityCount() {
         return  getEntitiesWritten() + getEntitiesFailed();
@@ -197,26 +196,20 @@ public class FileImportStatistics {
 
 
     /**
-     * Returns true if we should stop processing.  This will use the following logic
-     *
-     * We've attempted to import over 1k entities After 1k, we have over a 50% failure rate
+     * Returns true if we should stop processing.  We use fail fast logic, so after the first
+     * failure this will return true.
      */
     public boolean shouldStopProcessingEntities() {
-
-        //TODO Dave, George.  What algorithm should we use here?
-        return false;
+       return entitiesFailed.get() > 0;
     }
 
 
     /**
-     * Returns true if we should stop processing.  This will use the following logic
-     *
-     * We've attempted to import over 1k connections After 1k, we have over a 50% failure rate
+     * Returns true if we should stop processing.  We use fail fast logic, so after the first
+          * failure this will return true.
      */
     public boolean shouldStopProcessingConnections() {
-
-        //TODO Dave, George.  What algorithm should we use here?
-        return false;
+        return connectionsFailed.get() > 0;
     }
 
     /**
@@ -272,7 +265,8 @@ public class FileImportStatistics {
         final String message;
 
         if ( failed > 0 ) {
-            message = "Failed to import " + failed + " entities.  Successfully imported " + written + " entities";
+            message = "Failed to import " + failed
+                + " entities.  Successfully imported " + written + " entities";
         }
         else {
             message = "Successfully imported " + written + " entities";

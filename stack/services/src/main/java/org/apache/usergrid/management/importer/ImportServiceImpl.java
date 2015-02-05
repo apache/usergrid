@@ -697,8 +697,6 @@ public class ImportServiceImpl implements ImportService {
      * @param collectionFile the file being validated
      * @param rootEm         the Entity Manager for the Management application
      * @param fileImport     the file import entity
-     * @return
-     * @throws Exception
      */
     private boolean isValidJSON(File collectionFile, EntityManager rootEm, FileImport fileImport)
         throws Exception {
@@ -762,11 +760,10 @@ public class ImportServiceImpl implements ImportService {
         final Observable<WriteEvent> entityEventObservable = Observable.create(jsonObservableEntities);
 
         // flush every 100 entities
-        final FileImportStatistics statistics = new FileImportStatistics( emf, fileImport, 100 );
-
+        final FileImportTracker tracker = new FileImportTracker( emf, fileImport, 100 );
         // truncate due to RX api
-        final int entityNumSkip = (int)statistics.getTotalEntityCount();
-        final int connectionNumSkip = (int)statistics.getTotalConnectionCount();
+        final int entityNumSkip = (int)tracker.getTotalEntityCount();
+        final int connectionNumSkip = (int)tracker.getTotalConnectionCount();
 
         // function to execute for each write event
 
@@ -774,7 +771,7 @@ public class ImportServiceImpl implements ImportService {
         final Action1<WriteEvent> doWork = new Action1<WriteEvent>() {
             @Override
             public void call( WriteEvent writeEvent ) {
-                writeEvent.doWrite( em, fileImport, statistics );
+                writeEvent.doWrite( em, fileImport, tracker );
             }
         };
 
@@ -785,7 +782,7 @@ public class ImportServiceImpl implements ImportService {
         entityEventObservable.takeWhile( new Func1<WriteEvent, Boolean>() {
             @Override
             public Boolean call( final WriteEvent writeEvent ) {
-                return !statistics.shouldStopProcessingEntities();
+                return !tracker.shouldStopProcessingEntities();
             }
         } ).skip( entityNumSkip ).parallel( new Func1<Observable<WriteEvent>, Observable<WriteEvent>>() {
             @Override
@@ -813,7 +810,7 @@ public class ImportServiceImpl implements ImportService {
         otherEventObservable.takeWhile( new Func1<WriteEvent, Boolean>() {
             @Override
             public Boolean call( final WriteEvent writeEvent ) {
-                return !statistics.shouldStopProcessingConnections();
+                return !tracker.shouldStopProcessingConnections();
             }
         } ).skip( connectionNumSkip ).parallel( new Func1<Observable<WriteEvent>, Observable<WriteEvent>>() {
                 @Override
@@ -826,13 +823,13 @@ public class ImportServiceImpl implements ImportService {
 
         logger.debug("\n\nimportEntitiesFromFile(): Wrote others\n");
 
-        //flush the job statistics
-        statistics.complete();
+        // flush the job statistics
+        tracker.complete();
     }
 
 
     private interface WriteEvent {
-        public void doWrite(EntityManager em, FileImport fileImport, FileImportStatistics stats);
+        public void doWrite(EntityManager em, FileImport fileImport, FileImportTracker tracker);
     }
 
 
@@ -853,19 +850,19 @@ public class ImportServiceImpl implements ImportService {
 
         // Creates entities
         @Override
-        public void doWrite(EntityManager em, FileImport fileImport, FileImportStatistics stats) {
+        public void doWrite(EntityManager em, FileImport fileImport, FileImportTracker tracker) {
             try {
                 logger.debug("Writing imported entity {}:{} into app {}",
                     new Object[]{entityType, entityUuid, em.getApplication().getUuid()});
 
                 em.create(entityUuid, entityType, properties);
 
-                stats.entityWritten();
+                tracker.entityWritten();
 
             } catch (Exception e) {
                 logger.error("Error writing entity", e);
 
-                stats.entityFailed( e.getMessage() );
+                tracker.entityFailed( e.getMessage() );
             }
         }
     }
@@ -885,7 +882,7 @@ public class ImportServiceImpl implements ImportService {
 
         // creates connections between entities
         @Override
-        public void doWrite(EntityManager em, FileImport fileImport, FileImportStatistics stats) {
+        public void doWrite(EntityManager em, FileImport fileImport, FileImportTracker tracker) {
 
             try {
                 // TODO: do we need to ensure that all Entity events happen first?
@@ -903,11 +900,11 @@ public class ImportServiceImpl implements ImportService {
 
                 em.createConnection(ownerEntityRef, connectionType, entityRef);
 
-                stats.connectionWritten();
+                tracker.connectionWritten();
 
             } catch (Exception e) {
                 logger.error("Error writing connection", e);
-                stats.connectionFailed( e.getMessage() );
+                tracker.connectionFailed( e.getMessage() );
             }
         }
     }
@@ -927,7 +924,7 @@ public class ImportServiceImpl implements ImportService {
 
         // adds map to the dictionary
         @Override
-        public void doWrite(EntityManager em, FileImport fileImport, FileImportStatistics stats) {
+        public void doWrite(EntityManager em, FileImport fileImport, FileImportTracker stats) {
             EntityManager rootEm = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
             try {
 

@@ -38,8 +38,10 @@ import org.apache.usergrid.persistence.entities.FileImport;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.same;
@@ -49,7 +51,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 
-public class FileImportStatisticsTest {
+public class FileImportTrackerTest {
 
     @Test
     public void testSuccess() throws Exception {
@@ -63,16 +65,18 @@ public class FileImportStatisticsTest {
         final FileImport fileImport = new FileImport();
         fileImport.setUuid( importFileId );
 
-        final FileImportStatistics fileImportStatistics = new FileImportStatistics( emf, fileImport, 1000 );
+        when( em.get( importFileId, FileImport.class ) ).thenReturn( fileImport );
+
+        final FileImportTracker fileImportTracker = new FileImportTracker( emf, fileImport, 1000 );
 
         final long expectedCount = 100;
 
         for ( long i = 0; i < expectedCount; i++ ) {
-            fileImportStatistics.entityWritten();
+            fileImportTracker.entityWritten();
         }
 
 
-        fileImportStatistics.complete();
+        fileImportTracker.complete();
 
 
         ArgumentCaptor<FileImport> savedFileImport = ArgumentCaptor.forClass( FileImport.class );
@@ -112,22 +116,22 @@ public class FileImportStatisticsTest {
             }
         } );
 
-        final FileImportStatistics fileImportStatistics = new FileImportStatistics( emf, fileImport, 1000 );
+        final FileImportTracker fileImportTracker = new FileImportTracker( emf, fileImport, 1000 );
 
         final long expectedSuccess = 100;
 
         for ( long i = 0; i < expectedSuccess; i++ ) {
-            fileImportStatistics.entityWritten();
+            fileImportTracker.entityWritten();
         }
 
         final int expectedFails = 10;
 
         for ( int i = 0; i < expectedFails; i++ ) {
-            fileImportStatistics.entityFailed( "Failed to write entity " + i );
+            fileImportTracker.entityFailed( "Failed to write entity " + i );
         }
 
 
-        fileImportStatistics.complete();
+        fileImportTracker.complete();
 
 
         ArgumentCaptor<FileImport> savedFileImport = ArgumentCaptor.forClass( FileImport.class );
@@ -142,12 +146,14 @@ public class FileImportStatisticsTest {
 
         assertEquals( "Same fail expected", expectedFails, updated.getFailedEntityCount() );
 
-        assertEquals( "Correct error message", "Failed to import some data.  See the import counters and errors.",
+        assertEquals( "Correct error message",
+            "Failed to import some data.  See the import counters and errors.",
             updated.getErrorMessage() );
 
         //TODO get the connections from the file import
 
-        ArgumentCaptor<FailedImportEntity> failedEntities = ArgumentCaptor.forClass( FailedImportEntity.class );
+        ArgumentCaptor<FailedImportEntity> failedEntities =
+            ArgumentCaptor.forClass( FailedImportEntity.class );
 
         verify( em, times( expectedFails ) )
             .createConnection( same( fileImport ), eq( "errors" ), failedEntities.capture() );
@@ -163,7 +169,8 @@ public class FileImportStatisticsTest {
 
             final FailedImportEntity failedImport = args.get( i );
 
-            assertEquals( "Same message expected", "Failed to write entity " + i, failedImport.getErrorMessage() );
+            assertEquals( "Same message expected",
+                "Failed to write entity " + i, failedImport.getErrorMessage() );
         }
     }
 
@@ -184,16 +191,16 @@ public class FileImportStatisticsTest {
         when( em.get( importFileId, FileImport.class ) ).thenReturn( fileImport );
 
 
-        final FileImportStatistics fileImportStatistics = new FileImportStatistics( emf, fileImport, 1000 );
+        final FileImportTracker fileImportTracker = new FileImportTracker( emf, fileImport, 1000 );
 
         final long expectedCount = 100;
 
         for ( long i = 0; i < expectedCount; i++ ) {
-            fileImportStatistics.entityWritten();
+            fileImportTracker.entityWritten();
         }
 
 
-        fileImportStatistics.fatal( "Something bad happened" );
+        fileImportTracker.fatal( "Something bad happened" );
 
 
         ArgumentCaptor<FileImport> savedFileImport = ArgumentCaptor.forClass( FileImport.class );
@@ -246,34 +253,35 @@ public class FileImportStatisticsTest {
         final int expectedConnectionFails = 100;
 
         final int expectedFlushCount = 2;
-        final int flushSize = ( expectedFails + expectedFails + expectedConnectionSuccess + expectedConnectionFails )
+        final int flushSize =
+            ( expectedFails + expectedFails + expectedConnectionSuccess + expectedConnectionFails )
             / expectedFlushCount;
 
         //set this to 1/2, so that we get saved twice
-        final FileImportStatistics fileImportStatistics = new FileImportStatistics( emf, fileImport, flushSize );
+        final FileImportTracker fileImportTracker = new FileImportTracker( emf, fileImport, flushSize );
 
 
         for ( long i = 0; i < expectedSuccess; i++ ) {
-            fileImportStatistics.entityWritten();
+            fileImportTracker.entityWritten();
         }
 
 
         for ( int i = 0; i < expectedFails; i++ ) {
-            fileImportStatistics.entityFailed( "Failed to write entity " + i );
+            fileImportTracker.entityFailed( "Failed to write entity " + i );
         }
 
 
         for ( long i = 0; i < expectedConnectionSuccess; i++ ) {
-            fileImportStatistics.connectionWritten();
+            fileImportTracker.connectionWritten();
         }
 
 
         for ( int i = 0; i < expectedConnectionFails; i++ ) {
-            fileImportStatistics.connectionFailed( "Failed to write connection " + i );
+            fileImportTracker.connectionFailed( "Failed to write connection " + i );
         }
 
 
-        fileImportStatistics.complete();
+        fileImportTracker.complete();
 
 
         ArgumentCaptor<FileImport> savedFileImport = ArgumentCaptor.forClass( FileImport.class );
@@ -294,7 +302,8 @@ public class FileImportStatisticsTest {
         assertEquals( "Same connection error count expected", expectedConnectionFails,
             updated.getFailedConnectionCount() );
 
-        assertEquals( "Correct error message", "Failed to import some data.  See the import counters and errors.",
+        assertEquals( "Correct error message",
+            "Failed to import some data.  See the import counters and errors.",
             updated.getErrorMessage() );
 
         //TODO get the connections from the file import
@@ -308,21 +317,24 @@ public class FileImportStatisticsTest {
 
         final List<FailedImport> args = failedEntities.getAllValues();
 
-        assertEquals( "Same number of error connections created", expectedFails+expectedConnectionFails, args.size() );
+        assertEquals( "Same number of error connections created",
+            expectedFails + expectedConnectionFails, args.size() );
 
 
         for ( int i = 0; i < expectedFails; i++ ) {
 
             final FailedImport failedImport = args.get( i );
 
-            assertEquals( "Same message expected", "Failed to write entity " + i, failedImport.getErrorMessage() );
+            assertEquals( "Same message expected",
+                "Failed to write entity " + i, failedImport.getErrorMessage() );
         }
 
         for ( int i = expectedFails; i < expectedConnectionFails; i++ ) {
 
             final FailedImport failedImport = args.get( i );
 
-            assertEquals( "Same message expected", "Failed to write connection " + i, failedImport.getErrorMessage() );
+            assertEquals( "Same message expected",
+                "Failed to write connection " + i, failedImport.getErrorMessage() );
         }
     }
 
@@ -348,7 +360,7 @@ public class FileImportStatisticsTest {
 
         //mock up returning the FailedEntityImport instance after save is invoked.
 
-        FileImportStatistics statistics = new FileImportStatistics( emf, fileImport, 100 );
+        FileImportTracker statistics = new FileImportTracker( emf, fileImport, 100 );
 
         assertEquals( 1, statistics.getEntitiesWritten() );
         assertEquals( 2, statistics.getEntitiesFailed() );
@@ -359,6 +371,40 @@ public class FileImportStatisticsTest {
         assertEquals( 4, statistics.getConnectionsFailed() );
 
         assertEquals( 7, statistics.getTotalConnectionCount() );
+    }
+
+
+    @Test
+    public void failFast() throws Exception {
+
+        final EntityManagerFactory emf = mock( EntityManagerFactory.class );
+        final EntityManager em = mock( EntityManager.class );
+        when( emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID ) ).thenReturn( em );
+
+        final UUID importFileId = UUIDGenerator.newTimeUUID();
+
+
+        final FileImport fileImport = new FileImport();
+
+        when( em.get( importFileId, FileImport.class ) ).thenReturn( fileImport );
+
+        //mock up returning the FailedEntityImport instance after save is invoked.
+
+        FileImportTracker statistics = new FileImportTracker( emf, fileImport, 100 );
+
+
+        assertFalse( statistics.shouldStopProcessingEntities() );
+
+        assertFalse( statistics.shouldStopProcessingConnections() );
+
+
+        statistics.entityFailed( "test fail" );
+
+        assertTrue("We shouldn't process after a failure", statistics.shouldStopProcessingEntities());
+
+        statistics.connectionFailed( "test fail" );
+
+        assertTrue( "We shouldn't process after a failure", statistics.shouldStopProcessingConnections() );
     }
 }
 
