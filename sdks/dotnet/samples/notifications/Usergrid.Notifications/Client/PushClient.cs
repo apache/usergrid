@@ -35,12 +35,14 @@ namespace Usergrid.Notifications.Client
         private IUsergridHttpClient usergrid;
         private ApplicationDataContainer settings;
         private PushNotificationChannel channel;
+        private string userId;
 
-        public PushClient(IUsergridHttpClient usergrid, string notifier)
+        public PushClient(IUsergridHttpClient usergrid,string userId, string notifier)
         {
             this.usergrid = usergrid;
             this.settings = ApplicationData.Current.LocalSettings;
             this.Notifier = notifier;
+            this.userId = userId;
             this.init().ContinueWith(t =>
                   {
                       LastException = t.Exception;
@@ -62,7 +64,7 @@ namespace Usergrid.Notifications.Client
             payloads.Add(Notifier, payload);
             jsonObject.Add("payloads", payloads);
             jsonObject.Add("debug", true);
-            var jsonResponse = await usergrid.SendAsync(HttpMethod.Post, String.Format("devices/{0}/notifications", this.DeviceId), jsonObject);
+            var jsonResponse = await usergrid.SendAsync(HttpMethod.Post, String.Format("users/{1}/devices/{0}/notifications", this.DeviceId,userId), jsonObject);
             return jsonResponse.StatusIsOk;
         }
 
@@ -79,7 +81,7 @@ namespace Usergrid.Notifications.Client
             payloads.Add(Notifier, payload);
             jsonObject.Add("payloads", payloads);
             jsonObject.Add("debug", true);
-            var jsonResponse = await usergrid.SendAsync(HttpMethod.Post, String.Format("devices/{0}/notifications", this.DeviceId), jsonObject);
+            var jsonResponse = await usergrid.SendAsync(HttpMethod.Post, String.Format("users/{1}/devices/{0}/notifications", this.DeviceId,userId), jsonObject);
             return jsonResponse.StatusIsOk;
         }
 
@@ -114,7 +116,7 @@ namespace Usergrid.Notifications.Client
        
         private async Task<JToken> GetDevice(Guid deviceId)
         {
-            var jsonResponse = await usergrid.SendAsync(HttpMethod.Get, "devices/" + deviceId, null);
+            var jsonResponse = await usergrid.SendAsync(HttpMethod.Get, "users/"+userId+"/devices/" + deviceId, null);
 
             if (jsonResponse.StatusIsOk)
             {
@@ -130,7 +132,7 @@ namespace Usergrid.Notifications.Client
             obj.Add(Notifier + ".notifier.id", new JValue(channel.Uri));
             var jsonResponse = await usergrid.SendAsync(
                 (isNew ? HttpMethod.Post : HttpMethod.Put), 
-                "devices/" +   (isNew ? "" : this.DeviceId.ToString()), 
+                "users/"+userId+"/devices/" +   (isNew ? "" : this.DeviceId.ToString()), 
                 obj
                 );
             

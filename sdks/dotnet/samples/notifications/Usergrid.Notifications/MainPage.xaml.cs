@@ -44,27 +44,24 @@ namespace Usergrid.Notifications
         {
             this.InitializeComponent();
             //TODO: change me to your server
-            serverUrl = "http://10.0.1.20:8080";
+            serverUrl = "https://usergrid-push.example.com";
             //TODO: change me to your org
-            org = "mobile";
+            org = "ugvalidate";
             //TODO: change me to your app
             app = "sandbox";
             //TODO: change me to your notifier name
             notifier = "winphone";
             //TODO: change me to your user
-            user = "superuser";
+            user = "mobileuser";
             //TODO: change me to your password
-            password = "test";
+            password = "******";
             this.NavigationCacheMode = NavigationCacheMode.Required;
-            this.setup().ContinueWith(t => {
-                LastException = t.Exception;
-            });
+            usergrid = new Client.Usergrid(serverUrl, org, app, user, password, notifier);
+
         }
 
         private async Task setup()
         {
-            usergrid = new Client.Usergrid(serverUrl, org, app, notifier);
-            await usergrid.Authenticate(user, password, true);
         }
 
         /// <summary>

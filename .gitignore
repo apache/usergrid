@@ -1,9 +1,6 @@
 .DS_Store
 .AppleDouble
 .LSOverride
-stack/core/src/main/java/org/apache/usergrid/persistence/query/tree/QueryFilterParser.java
-stack/core/src/main/java/org/apache/usergrid/persistence/query/tree/QueryFilterLexer.java
-
 target
 
 # Icon must ends with two \r.
