@@ -854,9 +854,7 @@ public class ImportServiceImpl implements ImportService {
             this.properties = properties;
         }
 
-        public UUID getEntityUuid() {
-            return entityUuid;
-        }
+
 
         // Creates entities
         @Override
@@ -864,6 +862,7 @@ public class ImportServiceImpl implements ImportService {
             try {
                 logger.debug("Writing imported entity {}:{} into app {}",
                     new Object[]{entityType, entityUuid, em.getApplication().getUuid()});
+
 
                 em.create(entityUuid, entityType, properties);
 
@@ -935,7 +934,6 @@ public class ImportServiceImpl implements ImportService {
         // adds map to the dictionary
         @Override
         public void doWrite(EntityManager em, FileImport fileImport, FileImportTracker stats) {
-            EntityManager rootEm = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
             try {
 
                 logger.debug("Adding map to {}:{} dictionary {}",
@@ -944,24 +942,27 @@ public class ImportServiceImpl implements ImportService {
                 em.addMapToDictionary(ownerEntityRef, dictionaryName, dictionary);
 
             } catch (Exception e) {
-                logger.error("Error writing dictionary", e);
-                fileImport.setErrorMessage(e.getMessage());
-                try {
 
-                    rootEm.update(fileImport);
-
-                } catch (Exception ex) {
-
-                    // TODO should we abort at this point?
-                    logger.error("Error updating file import report with error message: "
-                        + fileImport.getErrorMessage(), ex);
-                }
+                //TODO add statistics for dictionary writes and failures
+//                logger.error("Error writing dictionary", e);
+//                fileImport.setErrorMessage(e.getMessage());
+//                try {
+//
+//                    rootEm.update(fileImport);
+//
+//                } catch (Exception ex) {
+//
+//                    // TODO should we abort at this point?
+//                    logger.error("Error updating file import report with error message: "
+//                        + fileImport.getErrorMessage(), ex);
+//                }
             }
         }
     }
 
 
     private final class JsonEntityParserObservable implements Observable.OnSubscribe<WriteEvent> {
+        public static final String COLLECTION_OBJECT_NAME = "collections";
         private final JsonParser jp;
         EntityManager em;
         EntityManager rootEm;
@@ -993,85 +994,115 @@ public class ImportServiceImpl implements ImportService {
         private void process(final Subscriber<? super WriteEvent> subscriber) {
 
             try {
-                boolean done = false;
+
 
                 // we ignore imported entity type information, entities get the type of the collection
-                String collectionType = InflectionUtils.singularize( fileImport.getCollectionName() );
-
-                Stack tokenStack = new Stack();
+                Stack<JsonToken> objectStartStack = new Stack();
+                Stack<String> objectNameStack = new Stack();
                 EntityRef lastEntity = null;
 
-                while (!done) {
+//                String collectionName = null;
+                String entityType = null;
+
+                while ( true ) {
+
 
                     JsonToken token = jp.nextToken();
+
+                    //nothing left to do.
+                    if ( token == null ) {
+                        break;
+                    }
+
                     String name = jp.getCurrentName();
 
-                    String indent = "";
-                    for (int i = 0; i < tokenStack.size(); i++) {
-                        indent += "   ";
-                    }
 
-                    //logger.debug("{}Token {} name {}", new Object[]{indent, token, name});
+                    //start of an object with a field name
 
-                    if (token.equals(JsonToken.START_OBJECT) && "Metadata".equals(name)) {
+                    if ( token.equals( JsonToken.START_OBJECT ) ) {
 
-                        Map<String, Object> entityMap = jp.readValueAs(HashMap.class);
+                        objectStartStack.push( token );
 
-                        UUID uuid = UUID.fromString((String) entityMap.get("uuid"));
-                        lastEntity = new SimpleEntityRef(collectionType, uuid);
-
-                        if (entitiesOnly) {
-                            //logger.debug("{}Got entity with uuid {}", indent, lastEntity);
-
-                            WriteEvent event = new EntityEvent(uuid, collectionType, entityMap);
-                            subscriber.onNext(event);
+                        //nothing to do
+                        if ( name == null ) {
+                            continue;
                         }
 
-                    } else if (token.equals(JsonToken.START_OBJECT) && "connections".equals(name)) {
 
-                        Map<String, Object> connectionMap = jp.readValueAs(HashMap.class);
+                        if ( "Metadata".equals( name ) ) {
 
-                        for (String type : connectionMap.keySet()) {
-                            List targets = (List) connectionMap.get(type);
 
-                            for (Object targetObject : targets) {
-                                UUID target = UUID.fromString((String) targetObject);
+                            Map<String, Object> entityMap = jp.readValueAs( HashMap.class );
 
-                                if (!entitiesOnly) {
-                                    //logger.debug("{}Got connection {} to {}",
+                            UUID uuid = UUID.fromString( ( String ) entityMap.get( "uuid" ) );
+                            lastEntity = new SimpleEntityRef( entityType, uuid );
+
+                            if ( entitiesOnly ) {
+                                //logger.debug("{}Got entity with uuid {}", indent, lastEntity);
+
+                                WriteEvent event = new EntityEvent( uuid, entityType, entityMap );
+                                subscriber.onNext( event );
+                            }
+
+                            objectStartStack.pop();
+                        }
+                        else if ( "connections".equals( name ) ) {
+
+
+                            Map<String, Object> connectionMap = jp.readValueAs( HashMap.class );
+
+                            for ( String type : connectionMap.keySet() ) {
+                                List targets = ( List ) connectionMap.get( type );
+
+                                for ( Object targetObject : targets ) {
+                                    UUID target = UUID.fromString( ( String ) targetObject );
+
+                                    if ( !entitiesOnly ) {
+                                        //logger.debug("{}Got connection {} to {}",
                                         //new Object[]{indent, type, target.toString()});
 
-                                    EntityRef entryRef = new SimpleEntityRef(target);
-                                    WriteEvent event = new ConnectionEvent(lastEntity, type, entryRef);
-                                    subscriber.onNext(event);
+                                        EntityRef entryRef = new SimpleEntityRef( target );
+                                        WriteEvent event = new ConnectionEvent( lastEntity, type, entryRef );
+                                        subscriber.onNext( event );
+                                    }
                                 }
                             }
+
+                            objectStartStack.pop();
                         }
+                        else if ( "dictionaries".equals( name ) ) {
 
-                    } else if (token.equals(JsonToken.START_OBJECT) && "dictionaries".equals(name)) {
 
-                        Map<String, Object> dictionariesMap = jp.readValueAs(HashMap.class);
-                        for (String dname : dictionariesMap.keySet()) {
-                            Map dmap = (Map) dictionariesMap.get(dname);
+                            Map<String, Object> dictionariesMap = jp.readValueAs( HashMap.class );
+                            for ( String dname : dictionariesMap.keySet() ) {
+                                Map dmap = ( Map ) dictionariesMap.get( dname );
 
-                            if (!entitiesOnly) {
-                                //logger.debug("{}Got dictionary {} size {}",
+                                if ( !entitiesOnly ) {
+                                    //logger.debug("{}Got dictionary {} size {}",
                                     //new Object[] {indent, dname, dmap.size() });
 
-                                WriteEvent event = new DictionaryEvent(lastEntity, dname, dmap);
-                                subscriber.onNext(event);
+                                    WriteEvent event = new DictionaryEvent( lastEntity, dname, dmap );
+                                    subscriber.onNext( event );
+                                }
                             }
+
+                            objectStartStack.pop();
+                        }
+                        //push onto object names we don't immediately understand.  Used for parent detection
+                        else{
+                            objectNameStack.push( name );
                         }
 
-                    } else if (token.equals(JsonToken.START_OBJECT)) {
-                        tokenStack.push(token);
-
-                    } else if (token.equals(JsonToken.END_OBJECT)) {
-                        tokenStack.pop();
                     }
 
-                    if (token.equals(JsonToken.END_ARRAY) && tokenStack.isEmpty()) {
-                        done = true;
+                    else if (token.equals( JsonToken.START_ARRAY )){
+                         if( objectNameStack.size() == 1 && COLLECTION_OBJECT_NAME.equals( objectNameStack.peek() )) {
+                            entityType = InflectionUtils.singularize( name );
+                         }
+                    }
+
+                    else if ( token.equals( JsonToken.END_OBJECT ) ) {
+                        objectStartStack.pop();
                     }
                 }
 

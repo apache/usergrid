@@ -285,46 +285,7 @@ public class ImportCollectionIT {
     }
 
 
-    /**
-     * Test that the types of i* ncoming entities is ignored.
-     */
-    @Test
-    public void testImportWithWrongTypes() throws Exception {
 
-        deleteBucket();
-
-        try {
-
-            // create an app with a collection of cats, export it to S3
-
-            String appName = "import-test-" + RandomStringUtils.randomAlphanumeric(10);
-            UUID appId = setup.getMgmtSvc().createApplication(organization.getUuid(), appName).getId();
-
-            Map<UUID, Entity> catsMap = new HashMap<>();
-            List<Entity> cats = new ArrayList<>();
-
-            EntityManager emApp = setup.getEmf().getEntityManager(appId);
-            createTestEntities(emApp, catsMap, cats, "cat");
-            exportCollection(emApp, "cats");
-
-            // import the cats data into a new collection called dogs in the default test app
-
-            final EntityManager emDefaultApp = setup.getEmf().getEntityManager(applicationId);
-            importCollection(emDefaultApp, "dogs");
-
-            // check that we now have a collection of dogs in the default test app
-
-            List<Entity> importedThings = emDefaultApp.getCollection(
-                emDefaultApp.getApplicationId(), "dogs", null, Level.ALL_PROPERTIES).getEntities();
-
-            assertTrue(!importedThings.isEmpty());
-            assertEquals(10, importedThings.size());
-
-        } finally {
-            deleteBucket();
-        }
-
-    }
 
 
    /**
