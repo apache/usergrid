@@ -48,11 +48,6 @@ public interface ImportService {
     /**
      * Parses the input file and creates entities
      */
-    void parseFileToEntities(ImportQueueMessage importQueueMessage) throws Exception;
-
-    /**
-     * Parses the input file and creates entities
-     */
     void parseFileToEntities(JobExecution jobExecution) throws Exception;
 
     /**

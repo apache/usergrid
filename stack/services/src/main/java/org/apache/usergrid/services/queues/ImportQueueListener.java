@@ -38,7 +38,7 @@ import com.google.inject.Singleton;
 //TODO: make sure this is properly instantiated by guice
 @Singleton
 public class ImportQueueListener extends QueueListener {
-    
+
     /**
      * Initializes the QueueListener. Need to wire the factories up in guice.
      */
@@ -75,7 +75,7 @@ public class ImportQueueListener extends QueueListener {
         for (QueueMessage message : messages) {
             ImportQueueMessage queueMessage = ( ImportQueueMessage ) message.getBody();
 
-            importService.parseFileToEntities( queueMessage );
+//        TODO   We still need to hide this queue behind the scheduler importService.parseFileToEntities( queueMessage );
 
         }
 
