@@ -743,28 +743,10 @@ public class ImportServiceImpl implements ImportService {
         final FileImport fileImport) throws Exception {
 
 
-        // first we do entities
-        boolean entitiesOnly = true;
-
-        // observable that parses JSON and emits write events
-        JsonParser jp = getJsonParserForFile(file);
-
-        // TODO: move the JSON parser into the observable creation
-        // so that open/close happens automatically within the stream
-
-        final JsonEntityParserObservable jsonObservableEntities =
-            new JsonEntityParserObservable(jp, em, rootEm, fileImport, entitiesOnly);
-        final Observable<WriteEvent> entityEventObservable = Observable.create(jsonObservableEntities);
-
-        // flush every 100 entities
+        // tracker flushes every 100 entities
         final FileImportTracker tracker = new FileImportTracker( emf, fileImport, 100 );
-        // truncate due to RX api
-        final int entityNumSkip = (int)tracker.getTotalEntityCount();
-        final int connectionNumSkip = (int)tracker.getTotalConnectionCount();
 
         // function to execute for each write event
-
-        // function that invokes the work of the event.
         final Action1<WriteEvent> doWork = new Action1<WriteEvent>() {
             @Override
             public void call( WriteEvent writeEvent ) {
@@ -772,68 +754,87 @@ public class ImportServiceImpl implements ImportService {
             }
         };
 
-        //invokes the heartbeat every HEARTBEAT_COUNT operations
+        // invokes the heartbeat every HEARTBEAT_COUNT operations
         final Func2<Integer, WriteEvent, Integer> heartbeatReducer = new Func2<Integer, WriteEvent, Integer>() {
             @Override
             public Integer call( final Integer integer, final WriteEvent writeEvent ) {
                 final int next = integer.intValue() + 1;
-
                 if ( next % HEARTBEAT_COUNT == 0 ) {
                     execution.heartbeat();
                 }
-
                 return next;
             }
         };
 
-        // start parsing JSON
+
+        // FIRST PASS: import all entities in the file
+
+
+        boolean entitiesOnly = true;
+
+        // observable that parses JSON and emits write events
+        JsonParser jp = getJsonParserForFile(file);
+
+        // TODO: move JSON parser into observable creation so open/close happens within the stream
+        final JsonEntityParserObservable jsonObservableEntities =
+            new JsonEntityParserObservable(jp, em, rootEm, fileImport, entitiesOnly);
+        final Observable<WriteEvent> entityEventObservable = Observable.create(jsonObservableEntities);
 
         // only take while our stats tell us we should continue processing
         // potentially skip the first n if this is a resume operation
+        final int entityNumSkip = (int)tracker.getTotalEntityCount();
+
         entityEventObservable.takeWhile( new Func1<WriteEvent, Boolean>() {
             @Override
             public Boolean call( final WriteEvent writeEvent ) {
                 return !tracker.shouldStopProcessingEntities();
             }
-        } ).skip( entityNumSkip ).parallel( new Func1<Observable<WriteEvent>, Observable<WriteEvent>>() {
+        } ).skip(entityNumSkip).parallel(new Func1<Observable<WriteEvent>, Observable<WriteEvent>>() {
             @Override
-            public Observable<WriteEvent> call( Observable<WriteEvent> entityWrapperObservable ) {
-                return entityWrapperObservable.doOnNext( doWork );
+            public Observable<WriteEvent> call(Observable<WriteEvent> entityWrapperObservable) {
+                return entityWrapperObservable.doOnNext(doWork);
             }
-        }, Schedulers.io() ).reduce( 0,heartbeatReducer ).toBlocking().last();
+        }, Schedulers.io()).reduce(0, heartbeatReducer).toBlocking().last();
 
         jp.close();
 
         logger.debug("\n\nimportEntitiesFromFile(): Wrote entities\n");
 
-        // now do other stuff: connections and dictionaries
+
+        // SECOND PASS: import all connections and dictionaries
+
+
         entitiesOnly = false;
 
         // observable that parses JSON and emits write events
         jp = getJsonParserForFile(file);
 
+        // TODO: move JSON parser into observable creation so open/close happens within the stream
         final JsonEntityParserObservable jsonObservableOther =
             new JsonEntityParserObservable(jp, em, rootEm, fileImport, entitiesOnly);
         final Observable<WriteEvent> otherEventObservable = Observable.create(jsonObservableOther);
 
         // only take while our stats tell us we should continue processing
         // potentially skip the first n if this is a resume operation
+        final int connectionNumSkip = (int)tracker.getTotalConnectionCount();
+
         otherEventObservable.takeWhile( new Func1<WriteEvent, Boolean>() {
             @Override
             public Boolean call( final WriteEvent writeEvent ) {
                 return !tracker.shouldStopProcessingConnections();
             }
-        } ).skip( connectionNumSkip ).parallel( new Func1<Observable<WriteEvent>, Observable<WriteEvent>>() {
-                @Override
-                public Observable<WriteEvent> call( Observable<WriteEvent> entityWrapperObservable ) {
-                    return entityWrapperObservable.doOnNext( doWork );
-                }
-            }, Schedulers.io() ).reduce( 0, heartbeatReducer ).toBlocking().last();
+        } ).skip(connectionNumSkip).parallel(new Func1<Observable<WriteEvent>, Observable<WriteEvent>>() {
+            @Override
+            public Observable<WriteEvent> call(Observable<WriteEvent> entityWrapperObservable) {
+                return entityWrapperObservable.doOnNext(doWork);
+            }
+        }, Schedulers.io()).reduce(0, heartbeatReducer).toBlocking().last();
 
         jp.close();
 
         logger.debug("\n\nimportEntitiesFromFile(): Wrote others\n");
 
+        
         // flush the job statistics
         tracker.complete();
     }
@@ -1022,7 +1023,7 @@ public class ImportServiceImpl implements ImportService {
                         lastEntity = new SimpleEntityRef(collectionType, uuid);
 
                         if (entitiesOnly) {
-                            logger.debug("{}Got entity with uuid {}", indent, lastEntity);
+                            //logger.debug("{}Got entity with uuid {}", indent, lastEntity);
 
                             WriteEvent event = new EntityEvent(uuid, collectionType, entityMap);
                             subscriber.onNext(event);
@@ -1039,8 +1040,8 @@ public class ImportServiceImpl implements ImportService {
                                 UUID target = UUID.fromString((String) targetObject);
 
                                 if (!entitiesOnly) {
-                                    logger.debug("{}Got connection {} to {}",
-                                        new Object[]{indent, type, target.toString()});
+                                    //logger.debug("{}Got connection {} to {}",
+                                        //new Object[]{indent, type, target.toString()});
 
                                     EntityRef entryRef = new SimpleEntityRef(target);
                                     WriteEvent event = new ConnectionEvent(lastEntity, type, entryRef);
@@ -1056,8 +1057,8 @@ public class ImportServiceImpl implements ImportService {
                             Map dmap = (Map) dictionariesMap.get(dname);
 
                             if (!entitiesOnly) {
-                                logger.debug("{}Got dictionary {} size {}",
-                                    new Object[] {indent, dname, dmap.size() });
+                                //logger.debug("{}Got dictionary {} size {}",
+                                    //new Object[] {indent, dname, dmap.size() });
 
                                 WriteEvent event = new DictionaryEvent(lastEntity, dname, dmap);
                                 subscriber.onNext(event);

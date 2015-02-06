@@ -36,8 +36,8 @@ import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.management.export.ExportService;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Query.Level;
-import org.apache.usergrid.services.notifications.QueueListener;
 import org.jclouds.ContextBuilder;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.BlobStoreContext;
@@ -336,6 +336,7 @@ public class ImportCollectionIT {
         try {
 
             // create 10 applications each with collection of 10 things, export all to S3
+            logger.debug("\n\nCreating 10 applications with 10 entities each\n");
 
             for (int i = 0; i < 10; i++) {
 
@@ -351,14 +352,23 @@ public class ImportCollectionIT {
             }
 
             // import all those exports from S3 into the default test application
+            logger.debug("\n\nCreating 10 applications with 10 entities each\n");
 
             final EntityManager emDefaultApp = setup.getEmf().getEntityManager(applicationId);
             importCollection(emDefaultApp, "things");
 
             // we should now have 100 Entities in the default app
 
+            logger.debug("\n\nQuery to see if we now have 100 entities\n");
+
+            // take this out and the test will fail
+            // TODO: fix ImportService so that it doesn't mark job finished until ALL entities are written
+            Thread.sleep(5000);
+
+            Query query = Query.fromQL("select *").withLimit(101);
             List<Entity> importedThings = emDefaultApp.getCollection(
-                emDefaultApp.getApplicationId(), "things", null, Level.ALL_PROPERTIES).getEntities();
+                emDefaultApp.getApplicationId(), "things", query, Level.ALL_PROPERTIES).getEntities();
+
 
             assertTrue(!importedThings.isEmpty());
             assertEquals(100, importedThings.size());
