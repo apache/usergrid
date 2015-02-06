@@ -40,12 +40,15 @@ import org.slf4j.LoggerFactory;
 import rx.Observable;
 import rx.Subscriber;
 import rx.functions.Action1;
+import rx.functions.Action2;
 import rx.functions.Func1;
+import rx.functions.Func2;
 import rx.schedulers.Schedulers;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.PostConstruct;
 
@@ -66,6 +69,8 @@ public class ImportServiceImpl implements ImportService {
     public static final String IMPORT_JOB_NAME = "importJob";
     public static final String FILE_IMPORT_ID = "fileImportId";
     public static final String FILE_IMPORT_JOB_NAME = "fileImportJob";
+    public static final int HEARTBEAT_COUNT = 50;
+
 
     private static final Logger logger = LoggerFactory.getLogger(ImportServiceImpl.class);
 
@@ -599,17 +604,6 @@ public class ImportServiceImpl implements ImportService {
     }
 
 
-    @Override
-    // TODO: ImportService should not have to know about ImportQueueMessage
-    public void parseFileToEntities(ImportQueueMessage queueMessage) throws Exception {
-
-        FileImport fileImport = getFileImportEntity(queueMessage);
-        File file = new File(queueMessage.getFileName());
-        UUID targetAppId = queueMessage.getApplicationId();
-
-        parseFileToEntities( fileImport, file, targetAppId );
-    }
-
 
     @Override
     // TODO: ImportService should not have to know about JobExecution
@@ -619,11 +613,11 @@ public class ImportServiceImpl implements ImportService {
         File file = new File(jobExecution.getJobData().getProperty("File").toString());
         UUID targetAppId = (UUID) jobExecution.getJobData().getProperty("applicationId");
 
-        parseFileToEntities( fileImport, file, targetAppId );
+        parseFileToEntities( jobExecution, fileImport, file, targetAppId );
     }
 
 
-    public void parseFileToEntities( FileImport fileImport, File file, UUID targetAppId ) throws Exception {
+    public void parseFileToEntities(final JobExecution execution, final FileImport fileImport, final File file, final UUID targetAppId ) throws Exception {
 
         logger.debug("parseFileToEntities() for file {} ", file.getAbsolutePath());
 
@@ -636,6 +630,7 @@ public class ImportServiceImpl implements ImportService {
         if (!completed) {
 
             // validates the JSON structure
+            //TODO Dave, do we really want to validate this up front?  This will require us to download the file 3x
             if (isValidJSON(file, emManagementApp, fileImport)) {
 
                 // mark the File import job as started
@@ -648,7 +643,7 @@ public class ImportServiceImpl implements ImportService {
                 EntityManager targetEm = emf.getEntityManager(targetAppId);
                 logger.debug("   importing into app {} file {}", targetAppId.toString(), file.getAbsolutePath());
 
-                importEntitiesFromFile( file, targetEm, emManagementApp, fileImport );
+                importEntitiesFromFile(execution,  file, targetEm, emManagementApp, fileImport );
 
 
                 // Updates the state of file import job
@@ -734,12 +729,14 @@ public class ImportServiceImpl implements ImportService {
     /**
      * Imports the entity's connecting references (collections, connections and dictionaries)
      *
+     * @param execution     The job execution currently running
      * @param file         The file to be imported
      * @param em           Entity Manager for the application being imported
      * @param rootEm       Entity manager for the root applicaition
      * @param fileImport   The file import entity
      */
     private void importEntitiesFromFile(
+        final JobExecution execution,
         final File file,
         final EntityManager em,
         final EntityManager rootEm,
@@ -775,6 +772,20 @@ public class ImportServiceImpl implements ImportService {
             }
         };
 
+        //invokes the heartbeat every HEARTBEAT_COUNT operations
+        final Func2<Integer, WriteEvent, Integer> heartbeatReducer = new Func2<Integer, WriteEvent, Integer>() {
+            @Override
+            public Integer call( final Integer integer, final WriteEvent writeEvent ) {
+                final int next = integer.intValue() + 1;
+
+                if ( next % HEARTBEAT_COUNT == 0 ) {
+                    execution.heartbeat();
+                }
+
+                return next;
+            }
+        };
+
         // start parsing JSON
 
         // only take while our stats tell us we should continue processing
@@ -789,7 +800,7 @@ public class ImportServiceImpl implements ImportService {
             public Observable<WriteEvent> call( Observable<WriteEvent> entityWrapperObservable ) {
                 return entityWrapperObservable.doOnNext( doWork );
             }
-        }, Schedulers.io() ).toBlocking().last();
+        }, Schedulers.io() ).reduce( 0,heartbeatReducer ).toBlocking().last();
 
         jp.close();
 
@@ -817,7 +828,7 @@ public class ImportServiceImpl implements ImportService {
                 public Observable<WriteEvent> call( Observable<WriteEvent> entityWrapperObservable ) {
                     return entityWrapperObservable.doOnNext( doWork );
                 }
-            }, Schedulers.io() ).toBlocking().last();
+            }, Schedulers.io() ).reduce( 0, heartbeatReducer ).toBlocking().last();
 
         jp.close();
 
