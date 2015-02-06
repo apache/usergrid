@@ -30,17 +30,20 @@ import org.apache.usergrid.ServiceITSetupImpl;
 import org.apache.usergrid.batch.service.JobSchedulerService;
 import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
+import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.management.export.ExportService;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.persistence.index.query.Query.Level;
-import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.services.notifications.QueueListener;
 import org.jclouds.ContextBuilder;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.BlobStoreContext;
+import org.jclouds.blobstore.ContainerNotFoundException;
+import org.jclouds.blobstore.domain.PageSet;
+import org.jclouds.blobstore.domain.StorageMetadata;
 import org.jclouds.http.config.JavaUrlHttpCommandExecutorServiceModule;
 import org.jclouds.logging.log4j.config.Log4JLoggingModule;
 import org.jclouds.netty.config.NettyPayloadModule;
@@ -54,11 +57,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 
-//@Concurrent These tests cannot be run concurrently
+@Concurrent
 public class ImportCollectionIT {
 
     private static final Logger logger = LoggerFactory.getLogger(ImportCollectionIT.class);
-
 
     private static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
 
@@ -67,9 +69,9 @@ public class ImportCollectionIT {
     private static OrganizationInfo organization;
     private static UUID applicationId;
 
-    private String bucketName;
+    private static String bucketPrefix;
 
-    QueueListener listener;
+    private String bucketName;
 
 
     @Rule
@@ -79,26 +81,27 @@ public class ImportCollectionIT {
     public static final ServiceITSetup setup =
         new ServiceITSetupImpl( cassandraResource, new ElasticSearchResource() );
 
-
     @Rule
     public NewOrgAppAdminRule newOrgAppAdminRule = new NewOrgAppAdminRule( setup );
 
 
     @BeforeClass
     public static void setup() throws Exception {
-//        String username = "test"+ UUIDUtils.newTimeUUID();
 
         // start the scheduler after we're all set up
         JobSchedulerService jobScheduler = cassandraResource.getBean( JobSchedulerService.class );
         if ( jobScheduler.state() != Service.State.RUNNING ) {
             jobScheduler.startAndWait();
         }
-//
-//        //creates sample test application
-//        adminUser = setup.getMgmtSvc().createAdminUser(
-//            username, username, username+"@test.com", username, false, false );
-//        organization = setup.getMgmtSvc().createOrganization( username, adminUser, true );
-//        applicationId = setup.getMgmtSvc().createApplication( organization.getUuid(), username+"app" ).getId();
+
+    }
+
+
+    @AfterClass
+    public static void tearDown() {
+//        if ( !StringUtils.isEmpty( bucketPrefix )) {
+//            deleteBucketsWithPrefix();
+//        }
     }
 
 
@@ -121,20 +124,21 @@ public class ImportCollectionIT {
 
         Assume.assumeTrue( configured );
 
-
         adminUser = newOrgAppAdminRule.getAdminInfo();
         organization = newOrgAppAdminRule.getOrganizationInfo();
         applicationId = newOrgAppAdminRule.getApplicationInfo().getId();
-        bucketName = System.getProperty( "bucketName" )+ RandomStringUtils.randomAlphanumeric(10).toLowerCase();
+
+        bucketPrefix = System.getProperty( "bucketName" );
+        bucketName = bucketPrefix + RandomStringUtils.randomAlphanumeric(10).toLowerCase();
     }
 
 
     @After
     public void after() throws Exception {
-        if(listener != null) {
-            listener.stop();
-            listener = null;
-        }
+//        if (listener != null) {
+//            listener.stop();
+//            listener = null;
+//        }
     }
 
 
@@ -143,27 +147,27 @@ public class ImportCollectionIT {
     public void testExportImportCollection() throws Exception {
 
         // create a collection of "thing" entities in the first application, export to S3
-
-        final EntityManager emApp1 = setup.getEmf().getEntityManager( applicationId );
-        Map<UUID, Entity> thingsMap = new HashMap<>();
-        List<Entity> things = new ArrayList<>();
-        createTestEntities(emApp1, thingsMap, things, "thing");
-
-        deleteBucket();
-        exportCollection( emApp1, "things" );
-
-        // create new second application, import the data from S3
-
-        final UUID appId2 = setup.getMgmtSvc().createApplication(
-            organization.getUuid(), "second").getId();
-
-        final EntityManager emApp2 = setup.getEmf().getEntityManager(appId2);
-        importCollection( emApp2, "things" );
-
-
-        // make sure that it worked
-
         try {
+
+            final EntityManager emApp1 = setup.getEmf().getEntityManager( applicationId );
+            Map<UUID, Entity> thingsMap = new HashMap<>();
+            List<Entity> things = new ArrayList<>();
+            createTestEntities(emApp1, thingsMap, things, "thing");
+
+            deleteBucket();
+            exportCollection( emApp1, "things" );
+
+            // create new second application, import the data from S3
+
+            final UUID appId2 = setup.getMgmtSvc().createApplication(
+                organization.getUuid(), "second").getId();
+
+            final EntityManager emApp2 = setup.getEmf().getEntityManager(appId2);
+            importCollection( emApp2, "things" );
+
+
+            // make sure that it worked
+
             logger.debug("\n\nCheck connections\n");
 
             List<Entity> importedThings = emApp2.getCollection(
@@ -217,8 +221,7 @@ public class ImportCollectionIT {
                 appId2, "things", null, Level.ALL_PROPERTIES).getEntities();
             assertTrue( !importedThings.isEmpty() );
 
-        }
-        finally {
+        } finally {
             deleteBucket();
         }
     }
@@ -241,73 +244,84 @@ public class ImportCollectionIT {
         createTestEntities(emApp1, thingsMap, things, "thing");
 
         deleteBucket();
-        exportCollection( emApp1, "things" );
+
+        try {
+            exportCollection(emApp1, "things");
+
+            // create new second application and import those things from S3
+
+            final UUID appId2 = setup.getMgmtSvc().createApplication(
+                organization.getUuid(), "second").getId();
+
+            final EntityManager emApp2 = setup.getEmf().getEntityManager(appId2);
+            importCollection(emApp2, "things");
 
 
-        // create new second application and import those things from S3
+            // update the things in the second application, export to S3
 
-        final UUID appId2 = setup.getMgmtSvc().createApplication(
-            organization.getUuid(), "second").getId();
+            for (UUID uuid : thingsMap.keySet()) {
+                Entity entity = emApp2.get(uuid);
+                entity.setProperty("fuel_source", "Hydrogen");
+                emApp2.update(entity);
+            }
 
-        final EntityManager emApp2 = setup.getEmf().getEntityManager(appId2);
-        importCollection( emApp2, "things" );
-
-
-        // update the things in the second application, export to S3
-
-        for ( UUID uuid : thingsMap.keySet() ) {
-            Entity entity = emApp2.get( uuid );
-            entity.setProperty("fuel_source", "Hydrogen");
-            emApp2.update( entity );
-        }
-
-        deleteBucket();
-        exportCollection( emApp2, "things" );
+            deleteBucket();
+            exportCollection(emApp2, "things");
 
 
-        // import the updated things back into the first application, check that they've been updated
+            // import the updated things back into the first application, check that they've been updated
 
-        importCollection(emApp1, "things");
+            importCollection(emApp1, "things");
 
-        for ( UUID uuid : thingsMap.keySet() ) {
-            Entity entity = emApp1.get( uuid );
-            Assert.assertEquals("Hydrogen", entity.getProperty("fuel_source"));
+            for (UUID uuid : thingsMap.keySet()) {
+                Entity entity = emApp1.get(uuid);
+                Assert.assertEquals("Hydrogen", entity.getProperty("fuel_source"));
+            }
+
+        } finally {
+            deleteBucket();
         }
     }
 
 
     /**
-     * Test that the types of incoming entities is ignored.
+     * Test that the types of i* ncoming entities is ignored.
      */
     @Test
     public void testImportWithWrongTypes() throws Exception {
 
         deleteBucket();
 
-        // create an app with a collection of cats, export it to S3
+        try {
 
-        String appName = "import-test-" + RandomStringUtils.randomAlphanumeric(10);
-        UUID appId = setup.getMgmtSvc().createApplication(organization.getUuid(), appName).getId();
+            // create an app with a collection of cats, export it to S3
 
-        Map<UUID, Entity> catsMap = new HashMap<>();
-        List<Entity> cats = new ArrayList<>();
+            String appName = "import-test-" + RandomStringUtils.randomAlphanumeric(10);
+            UUID appId = setup.getMgmtSvc().createApplication(organization.getUuid(), appName).getId();
 
-        EntityManager emApp = setup.getEmf().getEntityManager( appId );
-        createTestEntities( emApp, catsMap, cats, "cat");
-        exportCollection(emApp, "cats");
+            Map<UUID, Entity> catsMap = new HashMap<>();
+            List<Entity> cats = new ArrayList<>();
 
-        // import the cats data into a new collection called dogs in the default test app
+            EntityManager emApp = setup.getEmf().getEntityManager(appId);
+            createTestEntities(emApp, catsMap, cats, "cat");
+            exportCollection(emApp, "cats");
 
-        final EntityManager emDefaultApp = setup.getEmf().getEntityManager( applicationId );
-        importCollection( emDefaultApp, "dogs" );
+            // import the cats data into a new collection called dogs in the default test app
 
-        // check that we now have a collection of dogs in the default test app
+            final EntityManager emDefaultApp = setup.getEmf().getEntityManager(applicationId);
+            importCollection(emDefaultApp, "dogs");
 
-        List<Entity> importedThings = emDefaultApp.getCollection(
-            emDefaultApp.getApplicationId(), "dogs", null, Level.ALL_PROPERTIES).getEntities();
+            // check that we now have a collection of dogs in the default test app
 
-        assertTrue( !importedThings.isEmpty() );
-        assertEquals( 10, importedThings.size() );
+            List<Entity> importedThings = emDefaultApp.getCollection(
+                emDefaultApp.getApplicationId(), "dogs", null, Level.ALL_PROPERTIES).getEntities();
+
+            assertTrue(!importedThings.isEmpty());
+            assertEquals(10, importedThings.size());
+
+        } finally {
+            deleteBucket();
+        }
 
     }
 
@@ -320,31 +334,37 @@ public class ImportCollectionIT {
 
         deleteBucket();
 
-        // create 10 applications each with collection of 10 things, export all to S3
+        try {
 
-        Map<UUID, Entity> thingsMap = new HashMap<>();
-        List<Entity> things = new ArrayList<>();
+            // create 10 applications each with collection of 10 things, export all to S3
 
-        for ( int i=0; i<10; i++) {
-            String appName = "import-test-" + i + RandomStringUtils.randomAlphanumeric(10);
-            UUID appId = setup.getMgmtSvc().createApplication(organization.getUuid(), appName).getId();
-            EntityManager emApp = setup.getEmf().getEntityManager( appId );
-            createTestEntities( emApp, thingsMap, things, "thing" );
-            exportCollection( emApp, "things" );
+            Map<UUID, Entity> thingsMap = new HashMap<>();
+            List<Entity> things = new ArrayList<>();
+
+            for (int i = 0; i < 10; i++) {
+                String appName = "import-test-" + i + RandomStringUtils.randomAlphanumeric(10);
+                UUID appId = setup.getMgmtSvc().createApplication(organization.getUuid(), appName).getId();
+                EntityManager emApp = setup.getEmf().getEntityManager(appId);
+                createTestEntities(emApp, thingsMap, things, "thing");
+                exportCollection(emApp, "things");
+            }
+
+            // import all those exports from S3 into the default test application
+
+            final EntityManager emDefaultApp = setup.getEmf().getEntityManager(applicationId);
+            importCollection(emDefaultApp, "things");
+
+            // we should now have 100 Entities in the default app
+
+            List<Entity> importedThings = emDefaultApp.getCollection(
+                emDefaultApp.getApplicationId(), "things", null, Level.ALL_PROPERTIES).getEntities();
+
+            assertTrue(!importedThings.isEmpty());
+            assertEquals(100, importedThings.size());
+
+        } finally {
+            deleteBucket();
         }
-
-        // import all those exports from S3 into the default test application
-
-        final EntityManager emDefaultApp = setup.getEmf().getEntityManager( applicationId );
-        importCollection( emDefaultApp, "things" );
-
-        // we should now have 100 Entities in the default app
-
-        List<Entity> importedThings = emDefaultApp.getCollection(
-            emDefaultApp.getApplicationId(), "things", null, Level.ALL_PROPERTIES).getEntities();
-
-        assertTrue( !importedThings.isEmpty() );
-        assertEquals( 100, importedThings.size() );
     }
 
 
@@ -385,15 +405,16 @@ public class ImportCollectionIT {
                         System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR ) );
                     put( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR,
                         System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR ) );
-                    put( "bucket_location", bucketName);
+                    put( "bucket_location", bucketName );
                 }});
             }});
         }});
 
         //  listener.start();
 
-        // TODO countdown latch here?
-        while ( !importService.getState( importUUID ).equals( "FINISHED" ) ) {
+        int maxRetries = 100;
+        int retries = 0;
+        while ( !importService.getState( importUUID ).equals( "FINISHED" ) && retries++ < maxRetries ) {
             Thread.sleep(100);
         }
 
@@ -430,8 +451,9 @@ public class ImportCollectionIT {
             }});
         }});
 
-        // TODO countdown latch here?
-        while ( !exportService.getState( exportUUID ).equals( "FINISHED" ) ) {
+        int maxRetries = 100;
+        int retries = 0;
+        while ( !exportService.getState( exportUUID ).equals( "FINISHED" ) && retries++ < maxRetries ) {
             Thread.sleep(100);
         }
     }
@@ -441,32 +463,32 @@ public class ImportCollectionIT {
      * Create test entities of a specified type.
      * First two entities are connected.
      */
-    private void createTestEntities( final EntityManager em,
-            Map<UUID, Entity> thingsMap, List<Entity> things, final String type) throws Exception {
+    private void createTestEntities(final EntityManager em,
+        Map<UUID, Entity> thingsMap, List<Entity> things, final String type) throws Exception {
 
         logger.debug("\n\nCreating new {} collection in application {}\n",
-            type, em.getApplication().getName() );
+            type, em.getApplication().getName());
 
         em.refreshIndex();
 
         List<Entity> created = new ArrayList<>();
-        for ( int i = 0; i < 10; i++ ) {
+        for (int i = 0; i < 10; i++) {
             final int count = i;
-            Entity e = em.create( type, new HashMap<String, Object>() {{
+            Entity e = em.create(type, new HashMap<String, Object>() {{
                 put("name", em.getApplication().getName() + "-" + type + "-" + count);
                 put("originalAppId", em.getApplication().getUuid());
                 put("originalAppName", em.getApplication().getName());
             }});
             thingsMap.put(e.getUuid(), e);
-            things.add( e );
-            created.add( e );
+            things.add(e);
+            created.add(e);
         }
 
         // first two things are related to each other
-        em.createConnection( new SimpleEntityRef( type, created.get(0).getUuid()),
-            "related",       new SimpleEntityRef( type, created.get(1).getUuid()));
-        em.createConnection( new SimpleEntityRef( type, created.get(1).getUuid()),
-            "related",       new SimpleEntityRef( type, created.get(0).getUuid()));
+        em.createConnection(new SimpleEntityRef(type, created.get(0).getUuid()),
+            "related", new SimpleEntityRef(type, created.get(1).getUuid()));
+        em.createConnection(new SimpleEntityRef(type, created.get(1).getUuid()),
+            "related", new SimpleEntityRef(type, created.get(0).getUuid()));
 
         em.refreshIndex();
     }
@@ -479,12 +501,12 @@ public class ImportCollectionIT {
 
         logger.debug("\n\nDelete bucket\n");
 
-        String accessId = System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR );
-        String secretKey = System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR );
+        String accessId = System.getProperty(SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR);
+        String secretKey = System.getProperty(SDKGlobalConfiguration.SECRET_KEY_ENV_VAR);
 
         Properties overrides = new Properties();
-        overrides.setProperty( "s3" + ".identity", accessId );
-        overrides.setProperty( "s3" + ".credential", secretKey );
+        overrides.setProperty("s3" + ".identity", accessId);
+        overrides.setProperty("s3" + ".credential", secretKey);
 
         final Iterable<? extends Module> MODULES = ImmutableSet
             .of(new JavaUrlHttpCommandExecutorServiceModule(),
@@ -492,12 +514,49 @@ public class ImportCollectionIT {
                 new NettyPayloadModule());
 
         BlobStoreContext context =
-            ContextBuilder.newBuilder("s3").credentials( accessId, secretKey ).modules( MODULES )
-                .overrides( overrides ).buildView( BlobStoreContext.class );
+            ContextBuilder.newBuilder("s3").credentials(accessId, secretKey).modules(MODULES)
+                .overrides(overrides).buildView(BlobStoreContext.class);
 
         BlobStore blobStore = context.getBlobStore();
         blobStore.deleteContainer( bucketName );
     }
 
+
+    private static void deleteBucketsWithPrefix() {
+
+        logger.debug("\n\nDelete buckets with prefix {}\n", bucketPrefix );
+
+        String accessId = System.getProperty(SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR);
+        String secretKey = System.getProperty(SDKGlobalConfiguration.SECRET_KEY_ENV_VAR);
+
+        Properties overrides = new Properties();
+        overrides.setProperty("s3" + ".identity", accessId);
+        overrides.setProperty("s3" + ".credential", secretKey);
+
+        final Iterable<? extends Module> MODULES = ImmutableSet
+            .of(new JavaUrlHttpCommandExecutorServiceModule(),
+                new Log4JLoggingModule(),
+                new NettyPayloadModule());
+
+        BlobStoreContext context =
+            ContextBuilder.newBuilder("s3").credentials(accessId, secretKey).modules(MODULES)
+                .overrides(overrides).buildView(BlobStoreContext.class);
+
+        BlobStore blobStore = context.getBlobStore();
+        final PageSet<? extends StorageMetadata> blobStoreList = blobStore.list();
+
+        for ( Object o : blobStoreList.toArray() ) {
+            StorageMetadata s = (StorageMetadata)o;
+
+            if ( s.getName().startsWith( bucketPrefix )) {
+                try {
+                    blobStore.deleteContainer(s.getName());
+                } catch ( ContainerNotFoundException cnfe ) {
+                    logger.warn("Attempted to delete bucket {} but it is already deleted", cnfe );
+                }
+                logger.debug("Deleted bucket {}", s.getName());
+            }
+        }
+    }
 }
 

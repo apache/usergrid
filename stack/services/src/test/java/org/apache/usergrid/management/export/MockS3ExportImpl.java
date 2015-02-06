@@ -40,14 +40,14 @@ public class MockS3ExportImpl implements S3Export {
         this.filename = filename;
     }
 
-    
+
     @Override
     public void copyToS3( File ephemeral, final Map<String,Object> exportInfo, String ignoredFileName ) {
 
         File verifiedData = new File( filename );
         try {
             FileUtils.copyFile(ephemeral, verifiedData);
-            logger.info("Copied file {} to {}", filename, ephemeral.getAbsolutePath());
+            logger.info( "Copied file {} to {}", ephemeral.getAbsolutePath(), verifiedData );
         }
         catch ( IOException e ) {
             e.printStackTrace();
