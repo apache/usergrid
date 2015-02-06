@@ -1001,7 +1001,7 @@ public class ImportServiceImpl implements ImportService {
                         indent += "   ";
                     }
 
-                    logger.debug("{}Token {} name {}", new Object[]{indent, token, name});
+                    //logger.debug("{}Token {} name {}", new Object[]{indent, token, name});
 
                     if (token.equals(JsonToken.START_OBJECT) && "Metadata".equals(name)) {
 
@@ -1010,8 +1010,9 @@ public class ImportServiceImpl implements ImportService {
                         UUID uuid = UUID.fromString((String) entityMap.get("uuid"));
                         lastEntity = new SimpleEntityRef(collectionType, uuid);
 
-                        logger.debug("{}Got entity with uuid {}", indent, lastEntity);
                         if (entitiesOnly) {
+                            logger.debug("{}Got entity with uuid {}", indent, lastEntity);
+
                             WriteEvent event = new EntityEvent(uuid, collectionType, entityMap);
                             subscriber.onNext(event);
                         }
@@ -1026,10 +1027,10 @@ public class ImportServiceImpl implements ImportService {
                             for (Object targetObject : targets) {
                                 UUID target = UUID.fromString((String) targetObject);
 
-                                logger.debug("{}Got connection {} to {}",
-                                    new Object[]{indent, type, target.toString()});
-
                                 if (!entitiesOnly) {
+                                    logger.debug("{}Got connection {} to {}",
+                                        new Object[]{indent, type, target.toString()});
+
                                     EntityRef entryRef = new SimpleEntityRef(target);
                                     WriteEvent event = new ConnectionEvent(lastEntity, type, entryRef);
                                     subscriber.onNext(event);
@@ -1043,10 +1044,10 @@ public class ImportServiceImpl implements ImportService {
                         for (String dname : dictionariesMap.keySet()) {
                             Map dmap = (Map) dictionariesMap.get(dname);
 
-                            logger.debug("{}Got dictionary {} size {}",
-                                new Object[] {indent, dname, dmap.size() });
-
                             if (!entitiesOnly) {
+                                logger.debug("{}Got dictionary {} size {}",
+                                    new Object[] {indent, dname, dmap.size() });
+
                                 WriteEvent event = new DictionaryEvent(lastEntity, dname, dmap);
                                 subscriber.onNext(event);
                             }

@@ -234,7 +234,6 @@ public class ImportCollectionIT {
     @Test
     public void testUpdateByImport() throws Exception {
 
-
         // create collection of things in first application, export them to S3
 
         final EntityManager emApp1 = setup.getEmf().getEntityManager( applicationId );
@@ -338,14 +337,16 @@ public class ImportCollectionIT {
 
             // create 10 applications each with collection of 10 things, export all to S3
 
-            Map<UUID, Entity> thingsMap = new HashMap<>();
-            List<Entity> things = new ArrayList<>();
-
             for (int i = 0; i < 10; i++) {
+
                 String appName = "import-test-" + i + RandomStringUtils.randomAlphanumeric(10);
                 UUID appId = setup.getMgmtSvc().createApplication(organization.getUuid(), appName).getId();
                 EntityManager emApp = setup.getEmf().getEntityManager(appId);
+
+                Map<UUID, Entity> thingsMap = new HashMap<>();
+                List<Entity> things = new ArrayList<>();
                 createTestEntities(emApp, thingsMap, things, "thing");
+
                 exportCollection(emApp, "things");
             }
 
@@ -412,10 +413,10 @@ public class ImportCollectionIT {
 
         //  listener.start();
 
-        int maxRetries = 100;
+        int maxRetries = 20;
         int retries = 0;
         while ( !importService.getState( importUUID ).equals( "FINISHED" ) && retries++ < maxRetries ) {
-            Thread.sleep(100);
+            Thread.sleep(1000);
         }
 
         em.refreshIndex();
@@ -451,10 +452,10 @@ public class ImportCollectionIT {
             }});
         }});
 
-        int maxRetries = 100;
+        int maxRetries = 20;
         int retries = 0;
         while ( !exportService.getState( exportUUID ).equals( "FINISHED" ) && retries++ < maxRetries ) {
-            Thread.sleep(100);
+            Thread.sleep(1000);
         }
     }
 
@@ -522,6 +523,7 @@ public class ImportCollectionIT {
     }
 
 
+    // might be handy if you need to clean up buckets
     private static void deleteBucketsWithPrefix() {
 
         logger.debug("\n\nDelete buckets with prefix {}\n", bucketPrefix );
@@ -559,4 +561,3 @@ public class ImportCollectionIT {
         }
     }
 }
-
