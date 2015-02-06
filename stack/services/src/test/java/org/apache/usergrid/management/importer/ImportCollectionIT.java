@@ -88,6 +88,8 @@ public class ImportCollectionIT {
     @BeforeClass
     public static void setup() throws Exception {
 
+        bucketPrefix = System.getProperty( "bucketName" );
+
         // start the scheduler after we're all set up
         JobSchedulerService jobScheduler = cassandraResource.getBean( JobSchedulerService.class );
         if ( jobScheduler.state() != Service.State.RUNNING ) {
@@ -99,9 +101,9 @@ public class ImportCollectionIT {
 
     @AfterClass
     public static void tearDown() {
-//        if ( !StringUtils.isEmpty( bucketPrefix )) {
-//            deleteBucketsWithPrefix();
-//        }
+        if ( !StringUtils.isEmpty( bucketPrefix )) {
+            deleteBucketsWithPrefix();
+        }
     }
 
 
@@ -128,7 +130,7 @@ public class ImportCollectionIT {
         organization = newOrgAppAdminRule.getOrganizationInfo();
         applicationId = newOrgAppAdminRule.getApplicationInfo().getId();
 
-        bucketPrefix = System.getProperty( "bucketName" );
+
         bucketName = bucketPrefix + RandomStringUtils.randomAlphanumeric(10).toLowerCase();
     }
 
@@ -361,9 +363,6 @@ public class ImportCollectionIT {
 
             logger.debug("\n\nQuery to see if we now have 100 entities\n");
 
-            // take this out and the test will fail
-            // TODO: fix ImportService so that it doesn't mark job finished until ALL entities are written
-            Thread.sleep(5000);
 
             Query query = Query.fromQL("select *").withLimit(101);
             List<Entity> importedThings = emDefaultApp.getCollection(
@@ -423,11 +422,12 @@ public class ImportCollectionIT {
 
         //  listener.start();
 
-        int maxRetries = 20;
-        int retries = 0;
-        while ( !importService.getState( importUUID ).equals( "FINISHED" ) && retries++ < maxRetries ) {
+//        int maxRetries = 20;
+//        int retries = 0;
+        while ( !importService.getState( importUUID ).equals( "FINISHED" ) ) {
             Thread.sleep(1000);
         }
+
 
         em.refreshIndex();
     }

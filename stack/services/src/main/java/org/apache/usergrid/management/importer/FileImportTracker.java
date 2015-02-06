@@ -292,14 +292,17 @@ public class FileImportTracker {
             final long writtenEntities = entitiesWritten.get();
             final long failedEntities = entitiesFailed.get();
 
-            final long writtenConnections = connectionsFailed.get();
+            final long writtenConnections = connectionsWritten.get();
             final long failedConnections = connectionsFailed.get();
 
 
             fileImport.setImportedEntityCount( writtenEntities );
             fileImport.setFailedEntityCount( failedEntities );
+
             fileImport.setImportedConnectionCount( writtenConnections );
             fileImport.setFailedConnectionCount( failedConnections );
+
+
             fileImport.setState( state );
             fileImport.setErrorMessage( message );
 

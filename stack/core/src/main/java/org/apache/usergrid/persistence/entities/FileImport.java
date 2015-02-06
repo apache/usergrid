@@ -59,11 +59,6 @@ public class FileImport extends TypedEntity {
     @EntityProperty
     protected String collectionName;
 
-    /**
-     * File completion Status
-     */
-    @EntityProperty
-    protected Boolean completed;
 
     /**
      * LastUpdatedUUID
@@ -89,7 +84,6 @@ public class FileImport extends TypedEntity {
 
 
     public FileImport() {
-        setCompleted(false);
         setLastUpdatedUUID(" ");
         setErrorMessage(" ");
         setState(FileImport.State.CREATED);
@@ -117,22 +111,6 @@ public class FileImport extends TypedEntity {
      */
     public void setLastUpdatedUUID(final String lastUpdatedUUID) {
         this.lastUpdatedUUID = lastUpdatedUUID;
-    }
-
-    /**
-     * Get the completed status of the file i.e. if the file is completely parsed or not.
-     * @return completed status
-     */
-    public Boolean getCompleted() {
-        return completed;
-    }
-
-    /**
-     * Get the completed status of the file i.e. if the file is completely parsed or not.
-     * @param completed Boolean indicating whether parsing this file is complete or not
-     */
-    public void setCompleted(final Boolean completed) {
-        this.completed = completed;
     }
 
     /**
