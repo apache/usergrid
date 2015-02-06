@@ -78,9 +78,20 @@
         "CassReplicationFactor": {
             "Description": "Cassandra replication factor",
             "Type": "Number",
-            "Default": "3",
+            "Default": "2",
             "MinValue": "1"
         },
+
+      "CassReadConsistency": {
+                "Description": "Cassandra replication factor for Astyanax",
+                "Type": "String",
+                "Default": "CL_ONE"
+            },
+      "CassWriteConsistency": {
+                "Description": "Cassandra replication factor for Astyanax",
+                "Type": "String",
+                "Default": "CL_ONE"
+            },
         "ESClusterName": {
             "Description": "Name to be used for Elasticsearch cluster.",
             "Type": "String",
@@ -1149,6 +1160,11 @@
                         "\n",
                         "export CASSANDRA_REPLICATION_FACTOR=", { "Ref":"CassReplicationFactor" }, "\n",
                         "\n",
+                        "export CASSANDRA_READ_CONSISTENCY=", { "Ref":"CassReadConsistency" }, "\n",
+                        "\n",
+                        "export CASSANDRA_WRITE_CONSISTENCY=", { "Ref":"CassWriteConsistency" }, "\n",
+                        "\n",
+
                         "export ES_CLUSTER_NAME=", { "Ref":"ESClusterName" }, "\n",
                         "export ES_NUM_SERVERS=", { "Ref":"ESNumServers" }, "\n",
                          "\n",
