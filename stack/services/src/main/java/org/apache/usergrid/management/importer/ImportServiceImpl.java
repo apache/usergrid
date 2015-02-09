@@ -115,10 +115,6 @@ public class ImportServiceImpl implements ImportService {
         EntityManager rootEm = null;
         try {
             rootEm = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
-            Set<String> collections = rootEm.getApplicationCollections();
-            if (!collections.contains("imports")) {
-                rootEm.createApplicationCollection("imports");
-            }
         } catch (Exception e) {
             logger.error("application doesn't exist within the current context");
             return null;
@@ -421,10 +417,7 @@ public class ImportServiceImpl implements ImportService {
                 if (config.get("applicationId") == null) {
                     throw new UnsupportedOperationException("Import applications not supported");
 
-                } else if (config.get("collectionName") == null) {
-                    throw new UnsupportedOperationException("Import application not supported");
-
-                } else {
+                }  else {
                     bucketFiles = s3Import.getBucketFileNames( bucketName, ".json", accessId, secretKey );
                 }
             }

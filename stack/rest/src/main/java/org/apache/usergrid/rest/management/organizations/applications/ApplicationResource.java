@@ -24,16 +24,25 @@ import com.sun.jersey.api.json.JSONWithPadding;
 import org.apache.amber.oauth2.common.exception.OAuthSystemException;
 import org.apache.amber.oauth2.common.message.OAuthResponse;
 import org.apache.commons.lang.StringUtils;
+
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.export.ExportService;
 import org.apache.usergrid.management.importer.ImportService;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.SimpleEntityRef;
+import org.apache.usergrid.persistence.entities.Import;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.queue.impl.SQSQueueManagerImpl;
 import org.apache.usergrid.persistence.queue.impl.UsergridAwsCredentials;
 import org.apache.usergrid.persistence.queue.impl.UsergridAwsCredentialsProvider;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.applications.ServiceResource;
+import org.apache.usergrid.rest.security.annotations.RequireAdminUserAccess;
+import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
 import org.apache.usergrid.rest.utils.JSONPUtils;
 import org.apache.usergrid.security.oauth.ClientCredentialsInfo;
@@ -50,6 +59,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -351,78 +361,18 @@ public class ApplicationResource extends AbstractContextResource {
         return Response.status( SC_ACCEPTED ).entity( uuidRet ).build();
     }
 
+
+
     @POST
     @Path("import")
     @Consumes(APPLICATION_JSON)
-    @RequireOrganizationAccess
-    public Response importPostJson( @Context UriInfo ui,Map<String, Object> json,
-                                    @QueryParam("callback") @DefaultValue("") String callback )
-            throws OAuthSystemException {
-
-        UUID jobUUID = null;
-        Map<String, String> uuidRet = new HashMap<String, String>();
-
-        Map<String,Object> properties;
-        Map<String, Object> storage_info;
-
-        try {
-            if((properties = ( Map<String, Object> )  json.get( "properties" )) == null){
-                throw new NullPointerException("Could not find 'properties'");
-            }
-            storage_info = ( Map<String, Object> ) properties.get( "storage_info" );
-            String storage_provider = ( String ) properties.get( "storage_provider" );
-            if(storage_provider == null) {
-                throw new NullPointerException( "Could not find field 'storage_provider'" );
-            }
-            if(storage_info == null) {
-                throw new NullPointerException( "Could not find field 'storage_info'" );
-            }
-
-            String bucketName = ( String ) storage_info.get( "bucket_location" );
-            String accessId = ( String ) storage_info.get( "s3_access_id" );
-            String secretKey = ( String ) storage_info.get( "s3_key" );
-
-            if(bucketName == null) {
-                throw new NullPointerException( "Could not find field 'bucketName'" );
-            }
-            if(accessId == null) {
-                throw new NullPointerException( "Could not find field 's3_access_id'" );
-            }
-            if(secretKey == null) {
-                throw new NullPointerException( "Could not find field 's3_key'" );
-            }
-
-            json.put( "organizationId",organization.getUuid());
-            json.put( "applicationId",applicationId);
-
-            jobUUID = importService.schedule( json );
-            uuidRet.put( "Import Entity", jobUUID.toString() );
-        }
-        catch ( NullPointerException e ) {
-            return Response.status( SC_BAD_REQUEST ).type( JSONPUtils.jsonMediaType( callback ) )
-                    .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) ).build();
-        }
-        catch ( Exception e ) {
-            //TODO:throw descriptive error message and or include on in the response
-            //TODO:fix below, it doesn't work if there is an exception. Make it look like the OauthResponse.
-            return Response.status( SC_INTERNAL_SERVER_ERROR ).type( JSONPUtils.jsonMediaType( callback ) )
-                    .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) ).build();
-        }
-
-        return Response.status( SC_ACCEPTED ).entity( uuidRet ).build();
-    }
-
-    @POST
-    @Path("collection/{collection_name}/import")
-    @Consumes(APPLICATION_JSON)
-    @RequireOrganizationAccess
-    public Response importPostJson( @Context UriInfo ui,@PathParam( "collection_name" ) String collection_name ,Map<String, Object> json,
+    @RequireApplicationAccess
+    public Response importPostJson( @Context UriInfo ui ,Map<String, Object> json,
                                     @QueryParam("callback") @DefaultValue("") String callback )
             throws OAuthSystemException {
 
         UsergridAwsCredentials uac = new UsergridAwsCredentials();
         UUID jobUUID = null;
-        String colImport = collection_name;
         Map<String, String> uuidRet = new HashMap<String, String>();
 
         Map<String, Object> properties;
@@ -456,7 +406,6 @@ public class ApplicationResource extends AbstractContextResource {
 
             json.put( "organizationId", organization.getUuid() );
             json.put( "applicationId", applicationId );
-            json.put( "collectionName", colImport );
 
             jobUUID = importService.schedule( json );
             uuidRet.put( "Import Entity", jobUUID.toString() );
@@ -477,6 +426,58 @@ public class ApplicationResource extends AbstractContextResource {
         return Response.status( SC_ACCEPTED ).entity( uuidRet ).build();
     }
 
+
+
+    @GET
+    @RequireApplicationAccess
+    @Path("import/{importEntity: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
+    public Response importGetJson( @Context UriInfo ui, @PathParam("importEntity") UUID importEntityUUIDStr,
+                                   @QueryParam("callback") @DefaultValue("") String callback ) throws Exception {
+
+        //TODO, link the imports to the application, otherwise we can't check ownership
+        Import entity;
+        try {
+            entity = smf.getServiceManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID ).getEntityManager()
+                    .get( importEntityUUIDStr, Import.class );
+        }
+        catch ( Exception e ) { //this might not be a bad request and needs better error checking
+            return Response.status( SC_BAD_REQUEST ).type( JSONPUtils.jsonMediaType( callback ) )
+                    .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) ).build();
+        }
+
+        if ( entity == null ) {
+            return Response.status( SC_NOT_FOUND ).type( JSONPUtils.jsonMediaType( callback ) )
+                           .entity( ServiceResource.wrapWithCallback( "Import Job not found", callback ) ).build();
+        }
+
+        return Response.status( SC_OK ).entity( entity).build();
+    }
+
+
+    @GET
+    @RequireOrganizationAccess
+    @Path("import/{importEntity: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}/includes")
+    public Response importFileGetJson( @Context UriInfo ui, @PathParam("importEntity") UUID importEntityUUIDStr,
+                                   @QueryParam("callback") @DefaultValue("") String callback ) throws Exception {
+        //TODO: fix the below as that method no longer exists.
+        List<Entity> entity = null;
+        EntityRef entityRef = new SimpleEntityRef( importEntityUUIDStr );
+        try {
+                entity = smf.getServiceManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID ).getEntityManager()
+                            .getConnectedEntities( entityRef, "includes", null, Query.Level.ALL_PROPERTIES ).getEntities();
+
+        }
+        catch ( Exception e ) { //this might not be a bad request and needs better error checking
+            return Response.status( SC_BAD_REQUEST ).type( JSONPUtils.jsonMediaType( callback ) )
+                    .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) ).build();
+        }
+
+        if ( entity == null ) {
+            return Response.status( SC_BAD_REQUEST ).build();
+        }
+
+        return Response.status( SC_OK ).entity( entity).build();
+    }
     @GET
     @Path("/status")
     public Response getStatus() {
