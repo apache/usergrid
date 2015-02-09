@@ -570,7 +570,8 @@ public class ExportServiceImpl implements ExportService {
 
         JsonGenerator jg = getJsonGenerator( ephemeral );
 
-        jg.writeStartArray();
+        jg.writeStartObject();
+        jg.writeObjectFieldStart( "collections" );
 
         for ( String collectionName : metadata.keySet() ) {
 
@@ -579,6 +580,10 @@ public class ExportServiceImpl implements ExportService {
             }
             //if the collection you are looping through doesn't match the name of the one you want. Don't export it.
             if ( ( config.get( "collectionName" ) == null ) || collectionName.equalsIgnoreCase((String)config.get( "collectionName" ) ) ) {
+
+                //write out the collection name at the start of the file
+                jg.writeArrayFieldStart( collectionName.toLowerCase() );
+
                 //Query entity manager for the entities in a collection
                 Query query = null;
                 if ( config.get( "query" ) == null ) {
@@ -609,10 +614,17 @@ public class ExportServiceImpl implements ExportService {
                     saveCollectionMembers( jg, em, ( String ) config.get( "collectionName" ), entity );
                     jg.writeEndObject();
                     jg.flush();
+
                 }
+
+
+
+                //write out the end collection
+                jg.writeEndArray();
             }
         }
-        jg.writeEndArray();
+        jg.writeEndObject();
+        jg.writeEndObject();
         jg.flush();
         jg.close();
 

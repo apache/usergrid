@@ -285,46 +285,7 @@ public class ImportCollectionIT {
     }
 
 
-    /**
-     * Test that the types of i* ncoming entities is ignored.
-     */
-    @Test
-    public void testImportWithWrongTypes() throws Exception {
 
-        deleteBucket();
-
-        try {
-
-            // create an app with a collection of cats, export it to S3
-
-            String appName = "import-test-" + RandomStringUtils.randomAlphanumeric(10);
-            UUID appId = setup.getMgmtSvc().createApplication(organization.getUuid(), appName).getId();
-
-            Map<UUID, Entity> catsMap = new HashMap<>();
-            List<Entity> cats = new ArrayList<>();
-
-            EntityManager emApp = setup.getEmf().getEntityManager(appId);
-            createTestEntities(emApp, catsMap, cats, "cat");
-            exportCollection(emApp, "cats");
-
-            // import the cats data into a new collection called dogs in the default test app
-
-            final EntityManager emDefaultApp = setup.getEmf().getEntityManager(applicationId);
-            importCollection(emDefaultApp, "dogs");
-
-            // check that we now have a collection of dogs in the default test app
-
-            List<Entity> importedThings = emDefaultApp.getCollection(
-                emDefaultApp.getApplicationId(), "dogs", null, Level.ALL_PROPERTIES).getEntities();
-
-            assertTrue(!importedThings.isEmpty());
-            assertEquals(10, importedThings.size());
-
-        } finally {
-            deleteBucket();
-        }
-
-    }
 
 
    /**
@@ -337,10 +298,10 @@ public class ImportCollectionIT {
 
         try {
 
-            // create 10 applications each with collection of 10 things, export all to S3
+            // create 4 applications each with collection of 10 things, export all to S3
             logger.debug("\n\nCreating 10 applications with 10 entities each\n");
 
-            for (int i = 0; i < 10; i++) {
+            for (int i = 0; i < 4; i++) {
 
                 String appName = "import-test-" + i + RandomStringUtils.randomAlphanumeric(10);
                 UUID appId = setup.getMgmtSvc().createApplication(organization.getUuid(), appName).getId();
@@ -354,7 +315,7 @@ public class ImportCollectionIT {
             }
 
             // import all those exports from S3 into the default test application
-            logger.debug("\n\nCreating 10 applications with 10 entities each\n");
+            logger.debug("\n\nImporting\n");
 
             final EntityManager emDefaultApp = setup.getEmf().getEntityManager(applicationId);
             importCollection(emDefaultApp, "things");
@@ -370,7 +331,7 @@ public class ImportCollectionIT {
 
 
             assertTrue(!importedThings.isEmpty());
-            assertEquals(100, importedThings.size());
+            assertEquals(40, importedThings.size());
 
         } finally {
             deleteBucket();
