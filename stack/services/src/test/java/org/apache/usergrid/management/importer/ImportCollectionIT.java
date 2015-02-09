@@ -401,7 +401,6 @@ public class ImportCollectionIT {
 
         logger.debug("\n\nImport into new app {}\n", em.getApplication().getName() );
 
-
         ImportService importService = setup.getImportService();
         UUID importUUID = importService.schedule( new HashMap<String, Object>() {{
             put( "path", organization.getName() + em.getApplication().getName());
@@ -420,14 +419,12 @@ public class ImportCollectionIT {
             }});
         }});
 
-        //  listener.start();
-
-//        int maxRetries = 20;
-//        int retries = 0;
-        while ( !importService.getState( importUUID ).equals( "FINISHED" ) ) {
+        int maxRetries = 20;
+        int retries = 0;
+        while ( !importService.getState( importUUID ).equals( "FINISHED" ) && retries++ < maxRetries ) {
+            logger.debug("Waiting for import...");
             Thread.sleep(1000);
         }
-
 
         em.refreshIndex();
     }
@@ -465,6 +462,7 @@ public class ImportCollectionIT {
         int maxRetries = 20;
         int retries = 0;
         while ( !exportService.getState( exportUUID ).equals( "FINISHED" ) && retries++ < maxRetries ) {
+            logger.debug("Waiting for export...");
             Thread.sleep(1000);
         }
     }
