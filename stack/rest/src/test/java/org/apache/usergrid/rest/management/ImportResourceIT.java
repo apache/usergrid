@@ -56,85 +56,11 @@ public class ImportResourceIT extends AbstractRestIT {
         String app = clientSetup.getAppName();
         Entity payload = payloadBuilder();
         ///management/orgs/orgname/apps/appname/collection/users/import
-        Entity entity = this.management().orgs().organization( org ).app().addToPath( app ).addToPath( "collection" ).addToPath( "users" ).addToPath( "import" ).post( payload );
-
+        Entity entity = this.management().orgs().organization( org ).app().addToPath( app ).addToPath( "import" ).post( payload );
         assertNotNull( entity );
         assertNotNull( entity.getString( "Import Entity" ));
 
     }
-
-    @Ignore("Test isn't currently supported")
-    @Test
-    public void importApplicationUUIDRetTest() throws Exception {
-
-        String org = clientSetup.getOrganizationName();
-        String app = clientSetup.getAppName();
-        Entity payload = payloadBuilder();
-        ///management/orgs/orgname/apps/appname/import
-        Entity entity = this.management().orgs().organization(org).app().addToPath( app ).addToPath("import").post(payload);
-
-        assertNotNull( entity );
-        assertNotNull( entity.getString( "Import Entity" ) );
-
-
-    }
-
-    @Ignore("Test isn't currently supported")
-    @Test
-    public void importOrganizationUUIDRetTest() throws Exception {
-
-        String org = clientSetup.getOrganizationName();
-        String app = clientSetup.getAppName();
-        Entity payload = payloadBuilder();
-        ///management/orgs/orgname/import
-        Entity entity = this.management().orgs().organization(org).addToPath("import").post(payload);
-
-        assertNotNull( entity );
-        assertNotNull( entity.getString( "Import Entity" ) );
-
-    }
-
-    @Ignore("Test isn't currently supported")
-    @Test
-    public void importGetOrganizationJobStatTest() throws Exception {
-
-        String org = clientSetup.getOrganizationName();
-        String app = clientSetup.getAppName();
-        Entity payload = payloadBuilder();
-        ///management/orgs/orgname/import
-        Entity entity = this.management().orgs().organization(org).addToPath("import").post(payload);
-        String importEntity = entity.getString( "Import Entity" );
-
-
-        assertNotNull( entity );
-        assertNotNull( importEntity );
-
-        entity = this.management().orgs().organization(org).addToPath("import").addToPath(importEntity).get();
-
-        assertEquals( "SCHEDULED", entity.getString( "state" ) );//TODO: do tests for other states in service tier
-
-    }
-
-
-    @Ignore("Test isn't currently supported")
-    @Test
-    public void importGetApplicationJobStatTest() throws Exception {
-
-        String org = clientSetup.getOrganizationName();
-        String app = clientSetup.getAppName();
-        Entity payload = payloadBuilder();
-        ///management/orgs/orgname/apps/appname/import
-        Entity entity = this.management().orgs().organization( org ).app().addToPath( app ).addToPath("import").post(payload);
-        String importEntity = entity.getString( "Import Entity" );
-
-        assertNotNull( entity );
-        assertNotNull( importEntity );
-
-        entity = this.management().orgs().organization( org ).addToPath("import").addToPath(importEntity).get();
-
-        assertEquals( "SCHEDULED", entity.getString( "state" ) );//TODO: do tests for other states in service tier
-    }
-
 
     @Test
     public void importGetCollectionJobStatTest() throws Exception {
@@ -143,15 +69,15 @@ public class ImportResourceIT extends AbstractRestIT {
         String app = clientSetup.getAppName();
         Entity payload = payloadBuilder();
         ///management/orgs/orgname/apps/appname/import
-        Entity entity = this.management().orgs().organization( org ).app().addToPath( app ).addToPath("collection")
-            .addToPath("users").addToPath("import").post(payload);
+        Entity entity = this.management().orgs().organization( org ).app().addToPath( app ).addToPath( "import" ).post( payload );
+
 
         String importEntity = entity.getString( "Import Entity" );
 
         assertNotNull( entity );
         assertNotNull( importEntity );
 
-        entity = this.management().orgs().organization(org).addToPath("import").addToPath(importEntity).get();
+        entity = this.management().orgs().organization(org).app().addToPath( app ).addToPath("import").addToPath(importEntity).get();
 
         assertEquals( "SCHEDULED", entity.getString( "state" ) );//TODO: do tests for other states in service tier
 
@@ -171,8 +97,7 @@ public class ImportResourceIT extends AbstractRestIT {
         String app = clientSetup.getAppName();
         Entity payload = payloadBuilder();
         ///management/orgs/orgname/apps/appname/import
-        Entity entity = this.management().orgs().organization(org).app().addToPath( app ).addToPath("collection")
-            .addToPath("users").addToPath("import").post(payload);
+        Entity entity = this.management().orgs().organization( org ).app().addToPath( app ).addToPath( "import" ).post( payload );
 
         String importEntity = entity.getString( "Import Entity" );
 
@@ -200,8 +125,8 @@ public class ImportResourceIT extends AbstractRestIT {
 
         //try to read with the new token, which should fail as unauthorized
         try {
-            Entity newEntity = this.management().orgs().organization(org).apps(app).addToPath("collection")
-                .addToPath("users").addToPath("import").get();
+            this.management().orgs().organization(org).app().addToPath( app )
+                                   .addToPath("import").addToPath(importEntity).get();
             fail("Should not be able to read import job with unauthorized token");
         } catch ( UniformInterfaceException ex ) {
             errorParse( 401,"unauthorized",ex);
@@ -215,6 +140,7 @@ public class ImportResourceIT extends AbstractRestIT {
      *
      */
 
+    @Ignore("Test has not been revised")
     @Test
     public void importPostToAppWithValidButUnauthorizedToken() throws Exception {
         //it should also post to an org app that doesn't belong to the token
