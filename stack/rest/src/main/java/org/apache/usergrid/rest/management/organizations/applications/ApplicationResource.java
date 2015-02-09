@@ -17,6 +17,7 @@
 package org.apache.usergrid.rest.management.organizations.applications;
 
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.SDKGlobalConfiguration;
 import com.amazonaws.auth.AWSCredentials;
 import com.google.common.base.Preconditions;
@@ -411,6 +412,10 @@ public class ApplicationResource extends AbstractContextResource {
             uuidRet.put( "Import Entity", jobUUID.toString() );
         }
         catch ( NullPointerException e ) {
+            return Response.status( SC_BAD_REQUEST ).type( JSONPUtils.jsonMediaType( callback ) )
+                           .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) ).build();
+        }
+        catch( AmazonClientException e) {
             return Response.status( SC_BAD_REQUEST ).type( JSONPUtils.jsonMediaType( callback ) )
                            .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) ).build();
         }
