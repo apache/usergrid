@@ -28,10 +28,13 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class Import extends TypedEntity {
 
-    //canceled  and expired states aren't used in current iteration.
+   //canceled  and expired states aren't used in current iteration.
     public static enum State {
         CREATED, FAILED, SCHEDULED, STARTED, FINISHED, CANCELED, EXPIRED
     }
+
+    @EntityProperty
+    private int fileCount;
 
     @EntityProperty
     protected State curState;
@@ -49,8 +52,21 @@ public class Import extends TypedEntity {
     protected String errorMessage;
 
 
-    public Import() {
+    public Import() {}
+
+
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    @EntityProperty
+    public void setFileCount(int fileCount) {
+        this.fileCount = fileCount;
     }
+
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    @EntityProperty
+    public int getFileCount() {
+        return fileCount;
+    }
+
 
     /**
      * get the started time for the import job

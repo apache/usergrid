@@ -18,6 +18,7 @@
 package org.apache.usergrid.management.importer;
 
 import com.amazonaws.SDKGlobalConfiguration;
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.batch.service.SchedulerService;
 import org.apache.usergrid.corepersistence.CpSetup;
@@ -45,9 +46,7 @@ import org.slf4j.LoggerFactory;
 import rx.Observable;
 import rx.Subscriber;
 import rx.functions.Action1;
-import rx.functions.Func1;
 import rx.functions.Func2;
-import rx.schedulers.Schedulers;
 
 import javax.annotation.PostConstruct;
 import java.io.File;
@@ -168,10 +167,10 @@ public class ImportServiceImpl implements ImportService {
         logger.debug("scheduleFile() for import {}:{} file {}",
             new Object[]{importRef.getType(), importRef.getType(), file});
 
-        EntityManager rootEm = null;
+        EntityManager emManagementApp = null;
 
         try {
-            rootEm = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+            emManagementApp = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
         } catch (Exception e) {
             logger.error("application doesn't exist within the current context");
             return null;
@@ -181,33 +180,33 @@ public class ImportServiceImpl implements ImportService {
         String collectionName = config.get("collectionName").toString();
         UUID applicationId = (UUID)config.get("applicationId");
         FileImport fileImport = new FileImport( file, applicationId, collectionName );
-        fileImport = rootEm.create(fileImport);
+        fileImport = emManagementApp.create(fileImport);
 
-        Import importUG = rootEm.get(importRef, Import.class);
+        Import importEntity = emManagementApp.get(importRef, Import.class);
 
         try {
             // create a connection between the main import job and the sub FileImport Job
-            rootEm.createConnection(importUG, "includes", fileImport);
+            emManagementApp.createConnection(importEntity, "includes", fileImport);
         } catch (Exception e) {
             logger.error(e.getMessage());
             return null;
         }
 
         // mark the File Import Job as created
-        fileImport.setState( FileImport.State.CREATED );
-        rootEm.update( fileImport );
+        fileImport.setState(FileImport.State.CREATED);
+        emManagementApp.update( fileImport );
 
         // set data to be transferred to the FileImport Job
         JobData jobData = new JobData();
-        jobData.setProperty( "File", file );
+        jobData.setProperty("File", file);
         jobData.setProperty(FILE_IMPORT_ID, fileImport.getUuid());
         jobData.addProperties(config);
 
         // update state of the job to Scheduled
         fileImport.setState(FileImport.State.SCHEDULED);
-        rootEm.update(fileImport);
+        emManagementApp.update(fileImport);
 
-        rootEm.refreshIndex();
+        emf.refreshIndex();
 
         return jobData;
     }
@@ -453,7 +452,7 @@ public class ImportServiceImpl implements ImportService {
             // create the Entity Connection and set up metadata for each job
 
             for ( String bucketFile : bucketFiles ) {
-                final JobData jobData = createFileTask( config, bucketFile, rootImportTask );
+                final JobData jobData = createFileTask(config, bucketFile, rootImportTask);
                 fileJobs.add( jobData) ;
             }
 
@@ -470,7 +469,8 @@ public class ImportServiceImpl implements ImportService {
             }
 
             fileMetadata.put("files", value);
-            rootImportTask.addProperties( fileMetadata );
+            rootImportTask.addProperties(fileMetadata);
+            rootImportTask.setFileCount( fileJobs.size() );
             emManagementApp.update(rootImportTask);
         }
     }
@@ -543,17 +543,50 @@ public class ImportServiceImpl implements ImportService {
         // mark ImportJob FINISHED but only if all other FileImportJobs are complete
 
         // get parent import job of this file import job
+
         Results importJobResults =
             emManagementApp.getConnectingEntities( fileImport, "includes", null, Level.ALL_PROPERTIES );
         List<Entity> importEntities = importJobResults.getEntities();
         UUID importId = importEntities.get( 0 ).getUuid();
         Import importEntity = emManagementApp.get( importId, Import.class );
 
-        // get all file import job siblings of the current job we're working now
-        Results entities = emManagementApp.getConnectedEntities( importEntity, "includes", null, Level.ALL_PROPERTIES );
+        String randTag = RandomStringUtils.randomAlphanumeric(4);
+        logger.debug("{} Got importEntity {}", randTag, importEntity.getUuid() );
+
+        int retries = 0;
+        int maxRetries = 60;
+        Results entities = null;
+        boolean done = false;
+        while ( !done && retries++ < maxRetries ) {
+
+            // get all file import job siblings of the current job we're working now
+            entities = emManagementApp.getConnectedEntities(
+                importEntity, "includes", "file_import", Level.ALL_PROPERTIES);
+
+            if ( entities.size() == importEntity.getFileCount() ) {
+                logger.debug("{} got {} file_import entities, expected {} DONE!",
+                    new Object[] { randTag, entities.size(), importEntity.getFileCount() });
+                done = true;
+
+            } else {
+                logger.debug("{} got {} file_import entities, expected {} waiting... ",
+                    new Object[] { randTag, entities.size(), importEntity.getFileCount() });
+                Thread.sleep(1000);
+            }
+        }
+
+        if ( retries >= maxRetries ) {
+            throw new RuntimeException("Max retries was reached");
+        }
+
+
         PagingResultsIterator itr = new PagingResultsIterator( entities );
 
+        logger.debug("{} Check {} jobs to see if we are done for file {}",
+            new Object[] { randTag, entities.size(), fileImport.getFileName() } );
+
         int failCount = 0;
+        int successCount = 0;
         while ( itr.hasNext() ) {
             FileImport fi = ( FileImport ) itr.next();
             switch ( fi.getState() ) {
@@ -561,13 +594,18 @@ public class ImportServiceImpl implements ImportService {
                     failCount++;
                     break;
                 case FINISHED:   // finished, we can continue checking
-                    break;
+                    successCount++;
+                    continue;
                 default:         // not something we recognize as complete, short circuit
+                    logger.debug("{} not done yet, bail out...", randTag);
                     return;
             }
         }
 
+        logger.debug("{} successCount = {} failCount = {}", new Object[] { randTag, successCount, failCount } );
+
         if ( failCount == 0 ) {
+            logger.debug("{} FINISHED", randTag);
             importEntity.setState(Import.State.FINISHED);
         }  else {
             // we had failures, set it to failed
@@ -641,35 +679,27 @@ public class ImportServiceImpl implements ImportService {
 
         // TODO: move JSON parser into observable creation so open/close happens within the stream
         final JsonEntityParserObservable jsonObservableEntities =
-            new JsonEntityParserObservable(jp, em, rootEm, fileImport, entitiesOnly);
-        final Observable<WriteEvent> entityEventObservable = Observable.create(jsonObservableEntities);
+            new JsonEntityParserObservable(jp, em, rootEm, fileImport, tracker, entitiesOnly);
 
-        // only take while our stats tell us we should continue processing
-        // potentially skip the first n if this is a resume operation
-        final int entityNumSkip = (int)tracker.getTotalEntityCount();
+        jsonObservableEntities.call( null );
 
-        // with this code we get asynchronous behavior and testImportWithMultipleFiles will fail
+//        final Observable<WriteEvent> entityEventObservable = Observable.create(jsonObservableEntities);
+//
+//        // only take while our stats tell us we should continue processing
+//        // potentially skip the first n if this is a resume operation
+//        final int entityNumSkip = (int)tracker.getTotalEntityCount();
+//
 //       final int entityCount =  entityEventObservable.takeWhile( new Func1<WriteEvent, Boolean>() {
 //            @Override
 //            public Boolean call( final WriteEvent writeEvent ) {
 //                return !tracker.shouldStopProcessingEntities();
 //            }
 //        } ).skip(entityNumSkip).parallel(new Func1<Observable<WriteEvent>, Observable<WriteEvent>>() {
-//            @Override
-//            public Observable<WriteEvent> call(Observable<WriteEvent> entityWrapperObservable) {
-//                return entityWrapperObservable.doOnNext(doWork);
-//            }
-//        }, Schedulers.io()).reduce(0, heartbeatReducer).toBlocking().last();
-
-        entityEventObservable.parallel(
-            new Func1<Observable<WriteEvent>, Observable<WriteEvent>>() {
-                @Override
-                public Observable<WriteEvent> call(Observable<WriteEvent> entityWrapperObservable) {
-                    return entityWrapperObservable.doOnNext(doWork);
-                }
-            }, Schedulers.io()).toBlocking().last();
-
-        jp.close();
+//           @Override
+//           public Observable<WriteEvent> call(Observable<WriteEvent> entityWrapperObservable) {
+//               return entityWrapperObservable.doOnNext(doWork);
+//           }
+//       }, Schedulers.io()).reduce(0, heartbeatReducer).toBlocking().last();
 
         logger.debug("\n\nparseEntitiesAndConnectionsFromJson(): Wrote entities\n");
 
@@ -684,15 +714,17 @@ public class ImportServiceImpl implements ImportService {
 
         // TODO: move JSON parser into observable creation so open/close happens within the stream
         final JsonEntityParserObservable jsonObservableOther =
-            new JsonEntityParserObservable(jp, em, rootEm, fileImport, entitiesOnly);
+            new JsonEntityParserObservable(jp, em, rootEm, fileImport, tracker, entitiesOnly);
 
-        final Observable<WriteEvent> otherEventObservable = Observable.create(jsonObservableOther);
+        jsonObservableOther.call( null );
 
-        // only take while our stats tell us we should continue processing
-        // potentially skip the first n if this is a resume operation
-        final int connectionNumSkip = (int)tracker.getTotalConnectionCount();
-
-        // with this code we get asynchronous behavior and testImportWithMultipleFiles will fail
+//        final Observable<WriteEvent> otherEventObservable = Observable.create(jsonObservableOther);
+//
+//        // only take while our stats tell us we should continue processing
+//        // potentially skip the first n if this is a resume operation
+//        final int connectionNumSkip = (int)tracker.getTotalConnectionCount();
+//
+//        // with this code we get asynchronous behavior and testImportWithMultipleFiles will fail
 //        final int connectionCount = otherEventObservable.takeWhile( new Func1<WriteEvent, Boolean>() {
 //            @Override
 //            public Boolean call( final WriteEvent writeEvent ) {
@@ -704,16 +736,6 @@ public class ImportServiceImpl implements ImportService {
 //                return entityWrapperObservable.doOnNext(doWork);
 //            }
 //        }, Schedulers.io()).reduce(0, heartbeatReducer).toBlocking().last();
-
-       otherEventObservable.parallel(
-            new Func1<Observable<WriteEvent>, Observable<WriteEvent>>() {
-                @Override
-                public Observable<WriteEvent> call(Observable<WriteEvent> entityWrapperObservable) {
-                    return entityWrapperObservable.doOnNext(doWork);
-                }
-            }, Schedulers.io()).toBlocking().last();
-
-        jp.close();
 
         logger.debug("\n\nparseEntitiesAndConnectionsFromJson(): Wrote others for file {}\n",
             fileImport.getFileName());
@@ -852,6 +874,7 @@ public class ImportServiceImpl implements ImportService {
         EntityManager em;
         EntityManager rootEm;
         FileImport fileImport;
+        FileImportTracker tracker;
         boolean entitiesOnly;
 
 
@@ -860,17 +883,19 @@ public class ImportServiceImpl implements ImportService {
             EntityManager em,
             EntityManager rootEm,
             FileImport fileImport,
+            FileImportTracker tracker,
             boolean entitiesOnly) {
 
             this.jp = parser;
             this.em = em;
             this.rootEm = rootEm;
             this.fileImport = fileImport;
+            this.tracker = tracker;
             this.entitiesOnly = entitiesOnly;
         }
 
 
-        @Override
+       @Override
         public void call(final Subscriber<? super WriteEvent> subscriber) {
             process(subscriber);
         }
@@ -910,7 +935,7 @@ public class ImportServiceImpl implements ImportService {
                             //logger.debug("{}Got entity with uuid {}", indent, lastEntity);
 
                             WriteEvent event = new EntityEvent(uuid, collectionType, entityMap);
-                            subscriber.onNext(event);
+                            processWriteEvent( subscriber, event );
                         }
 
                     } else if (token.equals(JsonToken.START_OBJECT) && "connections".equals(name)) {
@@ -929,7 +954,7 @@ public class ImportServiceImpl implements ImportService {
 
                                     EntityRef entryRef = new SimpleEntityRef(target);
                                     WriteEvent event = new ConnectionEvent(lastEntity, type, entryRef);
-                                    subscriber.onNext(event);
+                                    processWriteEvent( subscriber, event );
                                 }
                             }
                         }
@@ -945,7 +970,7 @@ public class ImportServiceImpl implements ImportService {
                                     //new Object[] {indent, dname, dmap.size() });
 
                                 WriteEvent event = new DictionaryEvent(lastEntity, dname, dmap);
-                                subscriber.onNext(event);
+                                processWriteEvent( subscriber, event );
                             }
                         }
 
@@ -961,7 +986,9 @@ public class ImportServiceImpl implements ImportService {
                     }
                 }
 
-                subscriber.onCompleted();
+                if ( subscriber != null ) {
+                    subscriber.onCompleted();
+                }
 
                 logger.debug("process(): done parsing JSON");
 
@@ -973,9 +1000,22 @@ public class ImportServiceImpl implements ImportService {
                 } catch (Exception ex) {
                     logger.error("Error updating file import record", ex);
                 }
-                subscriber.onError(e);
+                if ( subscriber != null ) {
+                    subscriber.onError(e);
+                }
             }
         }
+
+        private void processWriteEvent( final Subscriber<? super WriteEvent> subscriber, WriteEvent writeEvent ) {
+
+            if ( subscriber == null ) {
+                // no Rx, just do it
+                writeEvent.doWrite(em, fileImport, tracker);
+            } else {
+                subscriber.onNext( writeEvent );
+            }
+        }
+
     }
 }
 

@@ -419,7 +419,7 @@ public class ImportCollectionIT {
             }});
         }});
 
-        int maxRetries = 20;
+        int maxRetries = 120;
         int retries = 0;
         while ( !importService.getState( importUUID ).equals( "FINISHED" ) && retries++ < maxRetries ) {
             logger.debug("Waiting for import...");
@@ -459,7 +459,7 @@ public class ImportCollectionIT {
             }});
         }});
 
-        int maxRetries = 20;
+        int maxRetries = 120;
         int retries = 0;
         while ( !exportService.getState( exportUUID ).equals( "FINISHED" ) && retries++ < maxRetries ) {
             logger.debug("Waiting for export...");
