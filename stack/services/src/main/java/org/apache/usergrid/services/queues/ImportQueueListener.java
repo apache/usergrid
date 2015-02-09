@@ -75,7 +75,7 @@ public class ImportQueueListener extends QueueListener {
         for (QueueMessage message : messages) {
             ImportQueueMessage queueMessage = ( ImportQueueMessage ) message.getBody();
 
-//        TODO   We still need to hide this queue behind the scheduler importService.parseFileToEntities( queueMessage );
+//        TODO   We still need to hide this queue behind the scheduler importService.downloadAndImportFile( queueMessage );
 
         }
 

@@ -21,18 +21,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Map;
+import java.util.List;
 
 
 public class MockS3ImportImpl implements S3Import{
     private static final Logger logger = LoggerFactory.getLogger(MockS3ImportImpl.class);
 
     @Override
-    public ArrayList<File> copyFromS3(
-        final Map<String,Object> exportInfo, String filename , ImportService.ImportType type ) {
-        logger.info("Copying from S3 file {} with import type {}", filename, type.toString());
+    public List<String> getBucketFileNames(String bucketName, String endsWith, String accessId, String secretKey) {
         return new ArrayList<>();
+    }
+
+    @Override
+    public File copyFileFromBucket(String blobFileName, String bucketName, String accessId, String secretKey) throws IOException {
+        return File.createTempFile("test","tmp");
     }
 
 }

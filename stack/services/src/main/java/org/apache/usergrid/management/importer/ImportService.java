@@ -48,7 +48,7 @@ public interface ImportService {
     /**
      * Parses the input file and creates entities
      */
-    void parseFileToEntities(JobExecution jobExecution) throws Exception;
+    void downloadAndImportFile(JobExecution jobExecution) throws Exception;
 
     /**
      * Get the state for the Job with UUID
