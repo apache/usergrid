@@ -191,6 +191,10 @@ usergrid.metrics.graphite.host=${graphite}
 usergrid.queue.prefix=${stackName}
 usergrid.queue.region=${ec2Region}
 
+# Enable scheduler for import/export jobs
+usergrid.scheduler.enabled=true
+usergrid.scheduler.job.workers=1
+
 """
 
 println usergridConfig
