@@ -183,6 +183,13 @@ public class ImportServiceImpl implements ImportService {
         try {
             // create a connection between the main import job and the sub FileImport Job
             emManagementApp.createConnection(importEntity, "includes", fileImport);
+
+            logger.debug("Created connection from {}:{} to {}:{}",
+                new Object[] {
+                    importEntity.getType(), importEntity.getUuid(),
+                    fileImport.getType(), fileImport.getUuid()
+                });
+
         } catch (Exception e) {
             logger.error(e.getMessage());
             return null;
@@ -201,8 +208,6 @@ public class ImportServiceImpl implements ImportService {
         // update state of the job to Scheduled
         fileImport.setState(FileImport.State.SCHEDULED);
         emManagementApp.update(fileImport);
-
-        emf.refreshIndex();
 
         return jobData;
     }
@@ -372,12 +377,12 @@ public class ImportServiceImpl implements ImportService {
 
         EntityManager emManagementApp = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
         UUID importId = (UUID) jobExecution.getJobData().getProperty(IMPORT_ID);
-        Import rootImportTask = emManagementApp.get(importId, Import.class);
+        Import importEntity = emManagementApp.get(importId, Import.class);
 
-        rootImportTask.setState(Import.State.STARTED);
-        rootImportTask.setStarted(System.currentTimeMillis());
-        rootImportTask.setErrorMessage( " " );
-        emManagementApp.update(rootImportTask);
+        importEntity.setState(Import.State.STARTED);
+        importEntity.setStarted(System.currentTimeMillis());
+        importEntity.setErrorMessage(" ");
+        emManagementApp.update(importEntity);
         logger.debug("doImport(): updated state");
 
         // if no S3 importer was passed in then create one
@@ -392,9 +397,9 @@ public class ImportServiceImpl implements ImportService {
             }
         } catch (Exception e) {
             logger.error("doImport(): Error creating S3Import", e);
-            rootImportTask.setErrorMessage(e.getMessage());
-            rootImportTask.setState( Import.State.FAILED );
-            emManagementApp.update(rootImportTask);
+            importEntity.setErrorMessage(e.getMessage());
+            importEntity.setState(Import.State.FAILED);
+            emManagementApp.update(importEntity);
             return;
         }
 
@@ -405,9 +410,9 @@ public class ImportServiceImpl implements ImportService {
 
             if (config.get("organizationId") == null) {
                 logger.error("doImport(): No organization could be found");
-                rootImportTask.setErrorMessage( "No organization could be found" );
-                rootImportTask.setState( Import.State.FAILED );
-                emManagementApp.update(rootImportTask);
+                importEntity.setErrorMessage("No organization could be found");
+                importEntity.setState(Import.State.FAILED);
+                emManagementApp.update(importEntity);
                 return;
 
             } else {
@@ -422,9 +427,9 @@ public class ImportServiceImpl implements ImportService {
             }
 
         } catch (OrganizationNotFoundException | ApplicationNotFoundException e) {
-            rootImportTask.setErrorMessage( e.getMessage() );
-            rootImportTask.setState( Import.State.FAILED );
-            emManagementApp.update(rootImportTask);
+            importEntity.setErrorMessage(e.getMessage());
+            importEntity.setState(Import.State.FAILED);
+            emManagementApp.update(importEntity);
             return;
         }
 
@@ -432,9 +437,9 @@ public class ImportServiceImpl implements ImportService {
         // schedule a FileImport job for each file found in the bucket
 
         if ( bucketFiles.isEmpty() )  {
-            rootImportTask.setState( Import.State.FINISHED );
-            rootImportTask.setErrorMessage( "No files found in the bucket: " + bucketName );
-            emManagementApp.update(rootImportTask);
+            importEntity.setState(Import.State.FINISHED);
+            importEntity.setErrorMessage("No files found in the bucket: " + bucketName);
+            emManagementApp.update(importEntity);
 
         } else {
 
@@ -445,8 +450,29 @@ public class ImportServiceImpl implements ImportService {
             // create the Entity Connection and set up metadata for each job
 
             for ( String bucketFile : bucketFiles ) {
-                final JobData jobData = createFileTask(config, bucketFile, rootImportTask);
+                final JobData jobData = createFileTask(config, bucketFile, importEntity);
                 fileJobs.add( jobData) ;
+            }
+
+            int retries = 0;
+            int maxRetries = 60;
+            Results entities;
+            boolean done = false;
+            while ( !done && retries++ < maxRetries ) {
+
+                entities = emManagementApp.getConnectedEntities(
+                    importEntity, "includes", "file_import", Level.ALL_PROPERTIES);
+
+                logger.debug("Found {} jobs", entities.size());
+                
+                if ( entities.size() == fileJobs.size() ) {
+                    done = true;
+                } else {
+                    Thread.sleep(1000);
+                }
+            }
+            if ( retries >= maxRetries ) {
+                throw new RuntimeException("Max retries was reached");
             }
 
             // schedule each job
@@ -462,9 +488,9 @@ public class ImportServiceImpl implements ImportService {
             }
 
             fileMetadata.put("files", value);
-            rootImportTask.addProperties(fileMetadata);
-            rootImportTask.setFileCount( fileJobs.size() );
-            emManagementApp.update(rootImportTask);
+            importEntity.addProperties(fileMetadata);
+            importEntity.setFileCount(fileJobs.size());
+            emManagementApp.update(importEntity);
         }
     }
 
@@ -546,31 +572,35 @@ public class ImportServiceImpl implements ImportService {
         String randTag = RandomStringUtils.randomAlphanumeric(4);
         logger.debug("{} Got importEntity {}", randTag, importEntity.getUuid() );
 
-        int retries = 0;
-        int maxRetries = 60;
-        Results entities = null;
-        boolean done = false;
-        while ( !done && retries++ < maxRetries ) {
+        Results entities = emManagementApp.getConnectedEntities(
+            importEntity, "includes", "file_import", Level.ALL_PROPERTIES);
 
-            // get all file import job siblings of the current job we're working now
-            entities = emManagementApp.getConnectedEntities(
-                importEntity, "includes", "file_import", Level.ALL_PROPERTIES);
 
-            if ( entities.size() == importEntity.getFileCount() ) {
-                logger.debug("{} got {} file_import entities, expected {} DONE!",
-                    new Object[] { randTag, entities.size(), importEntity.getFileCount() });
-                done = true;
-
-            } else {
-                logger.debug("{} got {} file_import entities, expected {} waiting... ",
-                    new Object[] { randTag, entities.size(), importEntity.getFileCount() });
-                Thread.sleep(1000);
-            }
-        }
-
-        if ( retries >= maxRetries ) {
-            throw new RuntimeException("Max retries was reached");
-        }
+//        int retries = 0;
+//        int maxRetries = 60;
+//        Results entities = null;
+//        boolean done = false;
+//        while ( !done && retries++ < maxRetries ) {
+//
+//            // get all file import job siblings of the current job we're working now
+//            entities = emManagementApp.getConnectedEntities(
+//                importEntity, "includes", "file_import", Level.ALL_PROPERTIES);
+//
+//            if ( entities.size() == importEntity.getFileCount() ) {
+//                logger.debug("{} got {} file_import entities, expected {} DONE!",
+//                    new Object[] { randTag, entities.size(), importEntity.getFileCount() });
+//                done = true;
+//
+//            } else {
+//                logger.debug("{} got {} file_import entities, expected {} waiting... ",
+//                    new Object[] { randTag, entities.size(), importEntity.getFileCount() });
+//                Thread.sleep(1000);
+//            }
+//        }
+//
+//        if ( retries >= maxRetries ) {
+//            throw new RuntimeException("Max retries was reached");
+//        }
 
 
         PagingResultsIterator itr = new PagingResultsIterator( entities );

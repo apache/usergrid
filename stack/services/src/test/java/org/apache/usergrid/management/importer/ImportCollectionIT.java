@@ -285,9 +285,6 @@ public class ImportCollectionIT {
     }
 
 
-
-
-
    /**
      * Simple import test but with multiple files.
      */
@@ -301,7 +298,7 @@ public class ImportCollectionIT {
             // create 4 applications each with collection of 10 things, export all to S3
             logger.debug("\n\nCreating 10 applications with 10 entities each\n");
 
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < 10; i++) {
 
                 String appName = "import-test-" + i + RandomStringUtils.randomAlphanumeric(10);
                 UUID appId = setup.getMgmtSvc().createApplication(organization.getUuid(), appName).getId();
@@ -324,14 +321,12 @@ public class ImportCollectionIT {
 
             logger.debug("\n\nQuery to see if we now have 100 entities\n");
 
-
             Query query = Query.fromQL("select *").withLimit(101);
             List<Entity> importedThings = emDefaultApp.getCollection(
                 emDefaultApp.getApplicationId(), "things", query, Level.ALL_PROPERTIES).getEntities();
 
-
             assertTrue(!importedThings.isEmpty());
-            assertEquals(40, importedThings.size());
+            assertEquals(100, importedThings.size());
 
         } finally {
             deleteBucket();
