@@ -28,6 +28,7 @@ import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.entities.FileImport;
 import org.apache.usergrid.persistence.entities.Import;
 import org.apache.usergrid.persistence.entities.JobData;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Query.Level;
 import org.apache.usergrid.persistence.queue.QueueManager;
 import org.apache.usergrid.persistence.queue.QueueManagerFactory;
@@ -63,42 +64,24 @@ public class ImportServiceImpl implements ImportService {
     public static final String FILE_IMPORT_JOB_NAME = "fileImportJob";
     public static final int HEARTBEAT_COUNT = 50;
 
-
     private static final Logger logger = LoggerFactory.getLogger(ImportServiceImpl.class);
 
-    //injected the Entity Manager Factory
+    int MAX_FILE_IMPORTS = 1000; // max number of file import jobs / import job
+
     protected EntityManagerFactory emf;
 
-    //dependency injection
     private SchedulerService sch;
 
-    private ServiceManagerFactory smf;
-
-    //Dependency injection through spring
-    private QueueManager qm;
-
-    private QueueManagerFactory queueManagerFactory;
-
-    //inject Management Service to access Organization Data
     private ManagementService managementService;
+
     private JsonFactory jsonFactory = new JsonFactory();
 
 
     @PostConstruct
     public void init(){
-
-        //TODO: move this to a before or initialization method.
-
-        //TODO: made queueName clearly defined.
-        //smf = getApplicationContext().getBean(ServiceManagerFactory.class);
-
-        String name = ImportQueueListener.QUEUE_NAME;
-        QueueScopeFactory queueScopeFactory = CpSetup.getInjector().getInstance(QueueScopeFactory.class);
-        QueueScope queueScope = queueScopeFactory.getScope(CpNamingUtils.MANAGEMENT_APPLICATION_ID, name);
-        queueManagerFactory = CpSetup.getInjector().getInstance(QueueManagerFactory.class);
-        qm = queueManagerFactory.getQueueManager(queueScope);
     }
 
+    
     /**
      * This schedules the main import Job.
      *
@@ -217,19 +200,25 @@ public class ImportServiceImpl implements ImportService {
     private int getConnectionCount( final Import importRoot ) {
 
         try {
-            EntityManager rootEm = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
 
-            Results entities = rootEm.getConnectedEntities( importRoot, "includes", null, Level.ALL_PROPERTIES );
-            PagingResultsIterator itr = new PagingResultsIterator( entities );
+            EntityManager emMgmtApp = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
+            Query query = Query.fromQL("select *");
+            query.setEntityType("file_import");
+            query.setConnectionType("includes");
+            query.setLimit(MAX_FILE_IMPORTS);
 
-            int count = 0;
+            Results entities = emMgmtApp.searchConnectedEntities( importRoot, query );
+            return entities.size();
 
-            while ( itr.hasNext() ) {
-                itr.next();
-                count++;
-            }
-
-            return count;
+            // see ImportConnectsTest()
+//            Results entities = emMgmtApp.getConnectedEntities( importRoot, "includes", null, Level.ALL_PROPERTIES );
+//            PagingResultsIterator itr = new PagingResultsIterator( entities );
+//            int count = 0;
+//            while ( itr.hasNext() ) {
+//                itr.next();
+//                count++;
+//            }
+//            return count;
         }
         catch ( Exception e ) {
             logger.error( "application doesn't exist within the current context" );
@@ -485,8 +474,10 @@ public class ImportServiceImpl implements ImportService {
 
                 final int count = getConnectionCount(importEntity);
                 if ( count == fileJobs.size() ) {
+                    logger.debug("Got ALL {} of {} expected connections", count, fileJobs.size());
                     done = true;
                 } else {
+                    logger.debug("Got {} of {} expected connections. Waiting...", count, fileJobs.size());
                     Thread.sleep(1000);
                 }
             }
@@ -591,36 +582,12 @@ public class ImportServiceImpl implements ImportService {
         String randTag = RandomStringUtils.randomAlphanumeric(4);
         logger.debug("{} Got importEntity {}", randTag, importEntity.getUuid() );
 
-        Results entities = emManagementApp.getConnectedEntities(
-            importEntity, "includes", "file_import", Level.ALL_PROPERTIES);
-
-
-//        int retries = 0;
-//        int maxRetries = 60;
-//        Results entities = null;
-//        boolean done = false;
-//        while ( !done && retries++ < maxRetries ) {
-//
-//            // get all file import job siblings of the current job we're working now
-//            entities = emManagementApp.getConnectedEntities(
-//                importEntity, "includes", "file_import", Level.ALL_PROPERTIES);
-//
-//            if ( entities.size() == importEntity.getFileCount() ) {
-//                logger.debug("{} got {} file_import entities, expected {} DONE!",
-//                    new Object[] { randTag, entities.size(), importEntity.getFileCount() });
-//                done = true;
-//
-//            } else {
-//                logger.debug("{} got {} file_import entities, expected {} waiting... ",
-//                    new Object[] { randTag, entities.size(), importEntity.getFileCount() });
-//                Thread.sleep(1000);
-//            }
-//        }
-//
-//        if ( retries >= maxRetries ) {
-//            throw new RuntimeException("Max retries was reached");
-//        }
-
+        EntityManager emMgmtApp = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
+        Query query = Query.fromQL("select *");
+        query.setEntityType("file_import");
+        query.setConnectionType("includes");
+        query.setLimit(MAX_FILE_IMPORTS);
+        Results entities = emMgmtApp.searchConnectedEntities(importEntity, query);
 
         PagingResultsIterator itr = new PagingResultsIterator( entities );
 
