@@ -46,7 +46,9 @@ import org.slf4j.LoggerFactory;
 import rx.Observable;
 import rx.Subscriber;
 import rx.functions.Action1;
+import rx.functions.Func1;
 import rx.functions.Func2;
+import rx.schedulers.Schedulers;
 
 import javax.annotation.PostConstruct;
 import java.io.File;
@@ -158,7 +160,7 @@ public class ImportServiceImpl implements ImportService {
      * @return it returns the UUID of the scheduled job
      * @throws Exception
      */
-    public JobData createFileTask( Map<String, Object> config, String file, EntityRef importRef ) throws Exception {
+    private JobData createFileTask( Map<String, Object> config, String file, EntityRef importRef ) throws Exception {
 
         logger.debug("scheduleFile() for import {}:{} file {}",
             new Object[]{importRef.getType(), importRef.getType(), file});
@@ -173,9 +175,8 @@ public class ImportServiceImpl implements ImportService {
         }
 
         // create a FileImport entity to store metadata about the fileImport job
-        String collectionName = config.get("collectionName").toString();
         UUID applicationId = (UUID)config.get("applicationId");
-        FileImport fileImport = new FileImport( file, applicationId, collectionName );
+        FileImport fileImport = new FileImport( file, applicationId );
         fileImport = emManagementApp.create(fileImport);
 
         Import importEntity = emManagementApp.get(importRef, Import.class);
@@ -213,11 +214,34 @@ public class ImportServiceImpl implements ImportService {
     }
 
 
+    private int getConnectionCount( final Import importRoot ) {
+
+        try {
+            EntityManager rootEm = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
+
+            Results entities = rootEm.getConnectedEntities( importRoot, "includes", null, Level.ALL_PROPERTIES );
+            PagingResultsIterator itr = new PagingResultsIterator( entities );
+
+            int count = 0;
+
+            while ( itr.hasNext() ) {
+                itr.next();
+                count++;
+            }
+
+            return count;
+        }
+        catch ( Exception e ) {
+            logger.error( "application doesn't exist within the current context" );
+            throw new RuntimeException( e );
+        }
+    }
+
     /**
      * Schedule the file tasks.  This must happen in 2 phases.  The first is linking the sub files to the master the
      * second is scheduling them to run.
      */
-    public JobData scheduleFileTasks( final JobData jobData ) {
+    private JobData scheduleFileTasks( final JobData jobData ) {
 
         long soonestPossible = System.currentTimeMillis() + 250; //sch grace period
 
@@ -460,12 +484,8 @@ public class ImportServiceImpl implements ImportService {
             boolean done = false;
             while ( !done && retries++ < maxRetries ) {
 
-                entities = emManagementApp.getConnectedEntities(
-                    importEntity, "includes", "file_import", Level.ALL_PROPERTIES);
-
-                logger.debug("Found {} jobs", entities.size());
-                
-                if ( entities.size() == fileJobs.size() ) {
+                final int count = getConnectionCount(importEntity);
+                if ( count == fileJobs.size() ) {
                     done = true;
                 } else {
                     Thread.sleep(1000);
@@ -704,25 +724,26 @@ public class ImportServiceImpl implements ImportService {
         final JsonEntityParserObservable jsonObservableEntities =
             new JsonEntityParserObservable(jp, em, rootEm, fileImport, tracker, entitiesOnly);
 
-        jsonObservableEntities.call( null );
+        final Observable<WriteEvent> entityEventObservable = Observable.create(jsonObservableEntities);
 
-//        final Observable<WriteEvent> entityEventObservable = Observable.create(jsonObservableEntities);
-//
-//        // only take while our stats tell us we should continue processing
-//        // potentially skip the first n if this is a resume operation
-//        final int entityNumSkip = (int)tracker.getTotalEntityCount();
-//
-//       final int entityCount =  entityEventObservable.takeWhile( new Func1<WriteEvent, Boolean>() {
-//            @Override
-//            public Boolean call( final WriteEvent writeEvent ) {
-//                return !tracker.shouldStopProcessingEntities();
-//            }
-//        } ).skip(entityNumSkip).parallel(new Func1<Observable<WriteEvent>, Observable<WriteEvent>>() {
-//           @Override
-//           public Observable<WriteEvent> call(Observable<WriteEvent> entityWrapperObservable) {
-//               return entityWrapperObservable.doOnNext(doWork);
-//           }
-//       }, Schedulers.io()).reduce(0, heartbeatReducer).toBlocking().last();
+        // only take while our stats tell us we should continue processing
+        // potentially skip the first n if this is a resume operation
+        final int entityNumSkip = (int)tracker.getTotalEntityCount();
+
+        // with this code we get asynchronous behavior and testImportWithMultipleFiles will fail
+       final int entityCount =  entityEventObservable.takeWhile( new Func1<WriteEvent, Boolean>() {
+            @Override
+            public Boolean call( final WriteEvent writeEvent ) {
+                return !tracker.shouldStopProcessingEntities();
+            }
+        } ).skip(entityNumSkip).parallel(new Func1<Observable<WriteEvent>, Observable<WriteEvent>>() {
+            @Override
+            public Observable<WriteEvent> call(Observable<WriteEvent> entityWrapperObservable) {
+                return entityWrapperObservable.doOnNext(doWork);
+            }
+        }, Schedulers.io()).reduce(0, heartbeatReducer).toBlocking().last();
+
+        jp.close();
 
         logger.debug("\n\nparseEntitiesAndConnectionsFromJson(): Wrote entities\n");
 
@@ -739,26 +760,26 @@ public class ImportServiceImpl implements ImportService {
         final JsonEntityParserObservable jsonObservableOther =
             new JsonEntityParserObservable(jp, em, rootEm, fileImport, tracker, entitiesOnly);
 
-        jsonObservableOther.call( null );
+        final Observable<WriteEvent> otherEventObservable = Observable.create(jsonObservableOther);
 
-//        final Observable<WriteEvent> otherEventObservable = Observable.create(jsonObservableOther);
-//
-//        // only take while our stats tell us we should continue processing
-//        // potentially skip the first n if this is a resume operation
-//        final int connectionNumSkip = (int)tracker.getTotalConnectionCount();
-//
-//        // with this code we get asynchronous behavior and testImportWithMultipleFiles will fail
-//        final int connectionCount = otherEventObservable.takeWhile( new Func1<WriteEvent, Boolean>() {
-//            @Override
-//            public Boolean call( final WriteEvent writeEvent ) {
-//                return !tracker.shouldStopProcessingConnections();
-//            }
-//        } ).skip(connectionNumSkip).parallel(new Func1<Observable<WriteEvent>, Observable<WriteEvent>>() {
-//            @Override
-//            public Observable<WriteEvent> call(Observable<WriteEvent> entityWrapperObservable) {
-//                return entityWrapperObservable.doOnNext(doWork);
-//            }
-//        }, Schedulers.io()).reduce(0, heartbeatReducer).toBlocking().last();
+        // only take while our stats tell us we should continue processing
+        // potentially skip the first n if this is a resume operation
+        final int connectionNumSkip = (int)tracker.getTotalConnectionCount();
+
+        // with this code we get asynchronous behavior and testImportWithMultipleFiles will fail
+        final int connectionCount = otherEventObservable.takeWhile( new Func1<WriteEvent, Boolean>() {
+            @Override
+            public Boolean call( final WriteEvent writeEvent ) {
+                return !tracker.shouldStopProcessingConnections();
+            }
+        } ).skip(connectionNumSkip).parallel(new Func1<Observable<WriteEvent>, Observable<WriteEvent>>() {
+            @Override
+            public Observable<WriteEvent> call(Observable<WriteEvent> entityWrapperObservable) {
+                return entityWrapperObservable.doOnNext(doWork);
+            }
+        }, Schedulers.io()).reduce(0, heartbeatReducer).toBlocking().last();
+
+        jp.close();
 
         logger.debug("\n\nparseEntitiesAndConnectionsFromJson(): Wrote others for file {}\n",
             fileImport.getFileName());

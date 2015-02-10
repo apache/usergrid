@@ -49,19 +49,10 @@ public class ImportResourceIT extends AbstractRestIT {
 
     }
 
-    @Test
-    public void importCallSuccessful() throws Exception {
-
-        String org = clientSetup.getOrganizationName();
-        String app = clientSetup.getAppName();
-        Entity payload = payloadBuilder();
-        ///management/orgs/orgname/apps/appname/collection/users/import
-        Entity entity = this.management().orgs().organization( org ).app().addToPath( app ).addToPath( "import" ).post( payload );
-        assertNotNull( entity );
-        assertNotNull( entity.getString( "Import Entity" ));
-
-    }
-
+    /**
+     * Verify that we can get call the import endpoint and get the job state back.
+     * @throws Exception
+     */
     @Test
     public void importGetCollectionJobStatTest() throws Exception {
 
@@ -77,16 +68,14 @@ public class ImportResourceIT extends AbstractRestIT {
         assertNotNull( entity );
         assertNotNull( importEntity );
 
-        entity = this.management().orgs().organization(org).app().addToPath( app ).addToPath("import").addToPath(importEntity).get();
+        entity = this.management().orgs().organization( org ).app().addToPath( app ).addToPath("import").addToPath(importEntity).get();
 
-        assertEquals( "SCHEDULED", entity.getString( "state" ) );//TODO: do tests for other states in service tier
-
+        assertNotNull( entity.getString( "state" ) );
     }
 
     /**
-     *
-     * Verify that import job can only be read with authorized token
-     *
+     * Verify that import job can only be read with an authorized token and cannot be read
+     * with an invalid/notAllowed token.
      */
     @Test
     public void importTokenAuthorizationTest() throws Exception {
@@ -104,6 +93,10 @@ public class ImportResourceIT extends AbstractRestIT {
         assertNotNull( entity );
         assertNotNull( importEntity );
 
+        //Test that you can access the organization using the currently set token.
+        this.management().orgs().organization(org).app().addToPath( app )
+            .addToPath("import").addToPath(importEntity).get();
+
         //create a new org/app
         String newOrgName = "org"+UUIDUtils.newTimeUUID();
         String newOrgUsername = "orgusername"+UUIDUtils.newTimeUUID();
@@ -114,12 +107,13 @@ public class ImportResourceIT extends AbstractRestIT {
         this.refreshIndex();
         assertNotNull( orgCreatedResponse );
 
+
+
         //log into the new org/app and get a token
         Token tokenPayload = new Token( "password", newOrgUsername, newOrgPassword );
         Token newOrgToken = clientSetup.getRestClient().management().token().post( tokenPayload );
 
         //save the old token and set the newly issued token as current
-        Token oldToken = context().getToken();
         context().setToken(newOrgToken);
 
 
@@ -134,64 +128,36 @@ public class ImportResourceIT extends AbstractRestIT {
 
     }
 
-    /**
-     *
-     * Verify that import job can only be read with authorized token
-     *
-     */
 
-    @Ignore("Test has not been revised")
-    @Test
-    public void importPostToAppWithValidButUnauthorizedToken() throws Exception {
-        //it should also post to an org app that doesn't belong to the token
-
-        //fail();
-        /*
-        JsonNode node = null;
-        ClientResponse.Status responseStatus = ClientResponse.Status.OK;
-        UUID fake = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
-        try {
-            node = resource().path( "/management/orgs/test-organization/import/" + fake )
-                .queryParam("access_token", superAdminToken()).accept( MediaType.APPLICATION_JSON )
-                .type(MediaType.APPLICATION_JSON_TYPE).get( JsonNode.class );
-        }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
-        }
-        assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
-        */
-    }
-/*
     @Test
     public void importPostApplicationNullPointerProperties() throws Exception {
-        JsonNode node = null;
+        String org = clientSetup.getOrganizationName();
+        String app = clientSetup.getAppName();
         ClientResponse.Status responseStatus = ClientResponse.Status.OK;
 
-        HashMap<String, Object> payload = new HashMap<String, Object>();
+        Entity payload = new Entity();
 
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/import" )
-                    .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+            this.management().orgs().organization( org ).app().addToPath( app ).addToPath( "import" ).post( payload );
         }
         catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
         }
         assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
     }
-
-
     @Test
-    public void importPostOrganizationNullPointerProperties() throws Exception {
-        JsonNode node = null;
+    public void importPostApplicationNullPointerStorageInfo() throws Exception {
+        String org = clientSetup.getOrganizationName();
+        String app = clientSetup.getAppName();
         ClientResponse.Status responseStatus = ClientResponse.Status.OK;
 
-        HashMap<String, Object> payload = new HashMap<String, Object>();
+        Entity payload = payloadBuilder();
+        Entity properties = (Entity) payload.get( "properties" );
+        //remove storage_info field
+        properties.remove( "storage_info" );
 
         try {
-            node = resource().path( "/management/orgs/test-organization/import" )
-                    .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+            this.management().orgs().organization( org ).app().addToPath( app ).addToPath( "import" ).post( payload );
         }
         catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
@@ -199,141 +165,24 @@ public class ImportResourceIT extends AbstractRestIT {
         assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
     }
 
-    @Test
-    public void importPostCollectionNullPointer() throws Exception {
-        JsonNode node = null;
-        ClientResponse.Status responseStatus = ClientResponse.Status.OK;
-
-        HashMap<String, Object> payload = new HashMap<String, Object>();
-
-        try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/import" )
-                    .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
-        }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
-        }
-        assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
-    }
-
-        @Test
-        public void importGetJobStatUnauthorized() throws Exception {
-            JsonNode node = null;
-            ClientResponse.Status responseStatus = ClientResponse.Status.OK;
-            UUID fake = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
-            try {
-                node = resource().path( "/management/orgs/test-organization/import/" + fake )
-                        .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                        .get( JsonNode.class );
-            }
-            catch ( UniformInterfaceException uie ) {
-                responseStatus = uie.getResponse().getClientResponseStatus();
-            }
-            assertEquals( ClientResponse.Status.UNAUTHORIZED, responseStatus );
-        }
-
-        @Test
-        public void importPostOrganizationNullPointerStorageInfo() throws Exception {
-            JsonNode node = null;
-            ClientResponse.Status responseStatus = ClientResponse.Status.OK;
-
-            HashMap<String, Object> payload = payloadBuilder();
-            HashMap<String, Object> properties = ( HashMap<String, Object> ) payload.get( "properties" );
-            //remove storage_info field
-            properties.remove( "storage_info" );
-
-            try {
-                node = resource().path( "/management/orgs/test-organization/import" )
-                        .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                        .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
-            }
-            catch ( UniformInterfaceException uie ) {
-                responseStatus = uie.getResponse().getClientResponseStatus();
-            }
-            assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
-        }
-
-        @Test
-        public void importPostApplicationNullPointerStorageInfo() throws Exception {
-            JsonNode node = null;
-            ClientResponse.Status responseStatus = ClientResponse.Status.OK;
-
-            HashMap<String, Object> payload = payloadBuilder();
-            HashMap<String, Object> properties = ( HashMap<String, Object> ) payload.get( "properties" );
-            //remove storage_info field
-            properties.remove( "storage_info" );
-
-            try {
-                node = resource().path( "/management/orgs/test-organization/apps/test-app/import" )
-                        .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                        .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
-            }
-            catch ( UniformInterfaceException uie ) {
-                responseStatus = uie.getResponse().getClientResponseStatus();
-            }
-            assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
-        }
-
-        @Test
-        public void importPostCollectionNullPointerStorageInfo() throws Exception {
-            JsonNode node = null;
-            ClientResponse.Status responseStatus = ClientResponse.Status.OK;
-
-            HashMap<String, Object> payload = payloadBuilder();
-            HashMap<String, Object> properties = ( HashMap<String, Object> ) payload.get( "properties" );
-            //remove storage_info field
-            properties.remove( "storage_info" );
-
-            try {
-                node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/import" )
-                        .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                        .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
-            }
-            catch ( UniformInterfaceException uie ) {
-                responseStatus = uie.getResponse().getClientResponseStatus();
-            }
-            assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
-        }
-*/
-    /*
-        @Test
-        public void importPostOrganizationNullPointerStorageProvider() throws Exception {
-            JsonNode node = null;
-            ClientResponse.Status responseStatus = ClientResponse.Status.OK;
-
-            HashMap<String, Object> payload = payloadBuilder();
-            HashMap<String, Object> properties = ( HashMap<String, Object> ) payload.get( "properties" );
-            //remove storage_info field
-            properties.remove( "storage_provider" );
 
 
-            try {
-                node = resource().path( "/management/orgs/test-organization/import" )
-                        .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                        .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
-            }
-            catch ( UniformInterfaceException uie ) {
-                responseStatus = uie.getResponse().getClientResponseStatus();
-            }
-            assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
-        }
+
 
         @Test
         public void importPostApplicationNullPointerStorageProvider() throws Exception {
-            JsonNode node = null;
+            String org = clientSetup.getOrganizationName();
+            String app = clientSetup.getAppName();
             ClientResponse.Status responseStatus = ClientResponse.Status.OK;
 
-            HashMap<String, Object> payload = payloadBuilder();
-            HashMap<String, Object> properties = ( HashMap<String, Object> ) payload.get( "properties" );
+            Entity payload = payloadBuilder();
+            Entity properties = (Entity) payload.get( "properties" );
             //remove storage_info field
             properties.remove( "storage_provider" );
 
 
             try {
-                node = resource().path( "/management/orgs/test-organization/apps/test-app/import" )
-                        .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                        .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+                this.management().orgs().organization( org ).app().addToPath( app ).addToPath( "import" ).post( payload );
             }
             catch ( UniformInterfaceException uie ) {
                 responseStatus = uie.getResponse().getClientResponseStatus();
@@ -341,97 +190,24 @@ public class ImportResourceIT extends AbstractRestIT {
             assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
         }
 
-        @Test
-        public void importPostCollectionNullPointerStorageProvider() throws Exception {
-            JsonNode node = null;
-            ClientResponse.Status responseStatus = ClientResponse.Status.OK;
-
-            HashMap<String, Object> payload = payloadBuilder();
-            HashMap<String, Object> properties = ( HashMap<String, Object> ) payload.get( "properties" );
-            //remove storage_info field
-            properties.remove( "storage_provider" );
 
 
-            try {
-                node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/import" )
-                        .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                        .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
-            }
-            catch ( UniformInterfaceException uie ) {
-                responseStatus = uie.getResponse().getClientResponseStatus();
-            }
-            assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
-        }
 
-        @Test
-        public void importPostOrganizationNullPointerStorageVerification() throws Exception {
-            JsonNode node = null;
-            ClientResponse.Status responseStatus = ClientResponse.Status.OK;
-
-            HashMap<String, Object> payload = payloadBuilder();
-            HashMap<String, Object> properties = ( HashMap<String, Object> ) payload.get( "properties" );
-            HashMap<String, Object> storage_info = ( HashMap<String, Object> ) properties.get( "storage_info" );
-            //remove storage_key field
-            storage_info.remove( "s3_key" );
-
-            try {
-                node = resource().path( "/management/orgs/test-organization/import" )
-                        .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                        .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
-            }
-            catch ( UniformInterfaceException uie ) {
-                responseStatus = uie.getResponse().getClientResponseStatus();
-            }
-            assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
-
-            payload = payloadBuilder();
-            properties = ( HashMap<String, Object> ) payload.get( "properties" );
-            storage_info = ( HashMap<String, Object> ) properties.get( "storage_info" );
-            //remove storage_key field
-            storage_info.remove( "s3_access_id" );
-
-            try {
-                node = resource().path( "/management/orgs/test-organization/import" )
-                        .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                        .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
-            }
-            catch ( UniformInterfaceException uie ) {
-                responseStatus = uie.getResponse().getClientResponseStatus();
-            }
-            assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
-
-            payload = payloadBuilder();
-            properties = ( HashMap<String, Object> ) payload.get( "properties" );
-            storage_info = ( HashMap<String, Object> ) properties.get( "storage_info" );
-            //remove storage_key field
-            storage_info.remove( "bucket_location" );
-
-            try {
-                node = resource().path( "/management/orgs/test-organization/import" )
-                        .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                        .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
-            }
-            catch ( UniformInterfaceException uie ) {
-                responseStatus = uie.getResponse().getClientResponseStatus();
-            }
-            assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
-        }
-/*
         @Test
         public void importPostApplicationNullPointerStorageVerification() throws Exception {
-            JsonNode node = null;
+            String org = clientSetup.getOrganizationName();
+            String app = clientSetup.getAppName();
             ClientResponse.Status responseStatus = ClientResponse.Status.OK;
 
-            HashMap<String, Object> payload = payloadBuilder();
-            HashMap<String, Object> properties = ( HashMap<String, Object> ) payload.get( "properties" );
-            HashMap<String, Object> storage_info = ( HashMap<String, Object> ) properties.get( "storage_info" );
+            Entity payload = payloadBuilder();
+
+            Entity properties = (Entity) payload.get( "properties" );
+            Entity storage_info = (Entity) properties.get( "storage_info" );
             //remove storage_key field
-            storage_info.remove( "s3_key" );
+            storage_info.remove( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR);
 
             try {
-                node = resource().path( "/management/orgs/test-organization/apps/test-app/import" )
-                        .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                        .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+                this.management().orgs().organization( org ).app().addToPath( app ).addToPath( "import" ).post( payload );
             }
             catch ( UniformInterfaceException uie ) {
                 responseStatus = uie.getResponse().getClientResponseStatus();
@@ -439,15 +215,13 @@ public class ImportResourceIT extends AbstractRestIT {
             assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
 
             payload = payloadBuilder();
-            properties = ( HashMap<String, Object> ) payload.get( "properties" );
-            storage_info = ( HashMap<String, Object> ) properties.get( "storage_info" );
+            properties = (Entity) payload.get( "properties" );
+            storage_info = (Entity) properties.get( "storage_info" );
             //remove storage_key field
-            storage_info.remove( "s3_access_id" );
+            storage_info.remove( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR );
 
             try {
-                node = resource().path( "/management/orgs/test-organization/apps/test-app/import" )
-                        .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                        .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+                this.management().orgs().organization( org ).app().addToPath( app ).addToPath( "import" ).post( payload );
             }
             catch ( UniformInterfaceException uie ) {
                 responseStatus = uie.getResponse().getClientResponseStatus();
@@ -455,15 +229,13 @@ public class ImportResourceIT extends AbstractRestIT {
             assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
 
             payload = payloadBuilder();
-            properties = ( HashMap<String, Object> ) payload.get( "properties" );
-            storage_info = ( HashMap<String, Object> ) properties.get( "storage_info" );
+            properties = (Entity) payload.get( "properties" );
+            storage_info = (Entity) properties.get( "storage_info" );
             //remove storage_key field
             storage_info.remove( "bucket_location" );
 
             try {
-                node = resource().path( "/management/orgs/test-organization/apps/test-app/import" )
-                        .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                        .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+                this.management().orgs().organization( org ).app().addToPath( app ).addToPath( "import" ).post( payload );
             }
             catch ( UniformInterfaceException uie ) {
                 responseStatus = uie.getResponse().getClientResponseStatus();
@@ -471,59 +243,8 @@ public class ImportResourceIT extends AbstractRestIT {
             assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
         }
 
-        @Test
-        public void importPostCollectionNullPointerStorageVerification() throws Exception {
-            JsonNode node = null;
-            ClientResponse.Status responseStatus = ClientResponse.Status.OK;
 
-            HashMap<String, Object> payload = payloadBuilder();
-            HashMap<String, Object> properties = ( HashMap<String, Object> ) payload.get( "properties" );
-            HashMap<String, Object> storage_info = ( HashMap<String, Object> ) properties.get( "storage_info" );
-            //remove storage_key field
-            storage_info.remove( "s3_key" );
 
-            try {
-                node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/import" )
-                        .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                        .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
-            }
-            catch ( UniformInterfaceException uie ) {
-                responseStatus = uie.getResponse().getClientResponseStatus();
-            }
-            assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
-
-            payload = payloadBuilder();
-            properties = ( HashMap<String, Object> ) payload.get( "properties" );
-            storage_info = ( HashMap<String, Object> ) properties.get( "storage_info" );
-            //remove storage_key field
-            storage_info.remove( "s3_access_id" );
-
-            try {
-                node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/import" )
-                        .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                        .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
-            }
-            catch ( UniformInterfaceException uie ) {
-                responseStatus = uie.getResponse().getClientResponseStatus();
-            }
-            assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
-
-            payload = payloadBuilder();
-            properties = ( HashMap<String, Object> ) payload.get( "properties" );
-            storage_info = ( HashMap<String, Object> ) properties.get( "storage_info" );
-            storage_info.remove( "bucket_location" );
-
-            try {
-                node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/import" )
-                        .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                        .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
-            }
-            catch ( UniformInterfaceException uie ) {
-                responseStatus = uie.getResponse().getClientResponseStatus();
-            }
-            assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
-        }
-    */
     /*Creates fake payload for testing purposes.*/
     public Entity payloadBuilder() {
         Entity payload = new Entity();

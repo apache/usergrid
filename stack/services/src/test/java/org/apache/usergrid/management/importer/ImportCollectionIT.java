@@ -54,6 +54,7 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 
@@ -322,11 +323,13 @@ public class ImportCollectionIT {
             logger.debug("\n\nQuery to see if we now have 100 entities\n");
 
             Query query = Query.fromQL("select *").withLimit(101);
+            
             List<Entity> importedThings = emDefaultApp.getCollection(
                 emDefaultApp.getApplicationId(), "things", query, Level.ALL_PROPERTIES).getEntities();
 
-            assertTrue(!importedThings.isEmpty());
-            assertEquals(100, importedThings.size());
+            assertNotNull("importedThings must not be null", !importedThings.isEmpty());
+            assertTrue("importedThings must not be empty", !importedThings.isEmpty());
+            assertEquals("there must be 100 importedThings", 100, importedThings.size());
 
         } finally {
             deleteBucket();
