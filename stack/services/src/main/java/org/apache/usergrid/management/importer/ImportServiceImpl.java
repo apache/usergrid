@@ -480,7 +480,6 @@ public class ImportServiceImpl implements ImportService {
 
             int retries = 0;
             int maxRetries = 60;
-            Results entities;
             boolean done = false;
             while ( !done && retries++ < maxRetries ) {
 
