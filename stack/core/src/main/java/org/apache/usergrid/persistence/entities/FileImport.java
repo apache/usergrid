@@ -53,12 +53,6 @@ public class FileImport extends TypedEntity {
     @EntityProperty
     private UUID applicationId;
 
-    /**
-     * Target collection name
-     */
-    @EntityProperty
-    protected String collectionName;
-
 
     /**
      * LastUpdatedUUID
@@ -90,11 +84,10 @@ public class FileImport extends TypedEntity {
     }
 
 
-    public FileImport( String fileName, UUID applicationId, String collectionName ) {
+    public FileImport( String fileName, UUID applicationId ) {
         this();
         this.fileName = fileName;
         this.setApplicationId(applicationId);
-        this.collectionName = collectionName;
     }
 
     /**
@@ -165,17 +158,6 @@ public class FileImport extends TypedEntity {
         this.fileName = fileName;
     }
 
-    /**
-     * Get the collectionName of the target collection of the import.
-     * @return filename
-     */
-    public String getCollectionName() {
-        return collectionName;
-    }
-
-    public void setCollectionName( String collectionName ) {
-        this.collectionName = collectionName;
-    }
 
     /**
      * Target application name
