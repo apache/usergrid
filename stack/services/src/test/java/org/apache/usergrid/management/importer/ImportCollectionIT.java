@@ -31,10 +31,12 @@ import org.apache.usergrid.batch.service.JobSchedulerService;
 import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
 import org.apache.usergrid.cassandra.Concurrent;
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.management.export.ExportService;
 import org.apache.usergrid.persistence.*;
+import org.apache.usergrid.persistence.entities.FileImport;
 import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Query.Level;
@@ -52,6 +54,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+
+import javax.ws.rs.core.Response;
+
+import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -323,7 +329,7 @@ public class ImportCollectionIT {
             logger.debug("\n\nQuery to see if we now have 100 entities\n");
 
             Query query = Query.fromQL("select *").withLimit(101);
-            
+
             List<Entity> importedThings = emDefaultApp.getCollection(
                 emDefaultApp.getApplicationId(), "things", query, Level.ALL_PROPERTIES).getEntities();
 
@@ -341,11 +347,64 @@ public class ImportCollectionIT {
      * TODO: Test that importing bad JSON will result in an informative error message.
      */
     @Test
-    public void testImportBadJson() {
-
+    public void testImportBadJson() throws Exception{
         // import from a bad JSON file
 
+        deleteBucket();
+
+        //list out all the files in the resource directory you want uploaded
+        List<String> filenames = new ArrayList<>( 1 );
+
+        filenames.add( "testImportInvalidJson.testApplication.3.json" );
+        // create 10 applications each with collection of 10 things, export all to S3
+        S3Upload s3Upload = new S3Upload();
+        s3Upload.copyToS3( System.getProperty(SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR), System.getProperty(SDKGlobalConfiguration.SECRET_KEY_ENV_VAR),
+            bucketName, filenames );
+
+        // import all those exports from S3 into the default test application
+
+        final EntityManager emDefaultApp = setup.getEmf().getEntityManager( applicationId );
+        importCollection( emDefaultApp, "things" );
+
+        // we should now have 100 Entities in the default app
+
+        List<Entity> importedThings = emDefaultApp.getCollection(
+            emDefaultApp.getApplicationId(), "things", null, Level.ALL_PROPERTIES).getEntities();
+
+        assertTrue( importedThings.isEmpty() );
+      //  assertEquals( , importedThings.size() );
+
         // check that error message indicates JSON parsing error
+    }
+
+    @Test
+    public void testImportWithMultipleFilesSomeBad() throws Exception {
+
+        deleteBucket();
+
+        //list out all the files in the resource directory you want uploaded
+        List<String> filenames = new ArrayList<>( 3 );
+        filenames.add( "testImport.testCollection.1.json" );
+        filenames.add( "testImport.testApplication.2.json" );
+        filenames.add( "testImportInvalidJson.testApplication.3.json" );
+        // create 10 applications each with collection of 10 things, export all to S3
+        S3Upload s3Upload = new S3Upload();
+        s3Upload.copyToS3( System.getProperty(SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR), System.getProperty(SDKGlobalConfiguration.SECRET_KEY_ENV_VAR),
+            bucketName, filenames );
+
+        // import all those exports from S3 into the default test application
+
+        final EntityManager emDefaultApp = setup.getEmf().getEntityManager( applicationId );
+        importCollection( emDefaultApp, "things" );
+
+        // we should now have 100 Entities in the default app
+
+        List<Entity> importedThings = emDefaultApp.getCollection(
+            emDefaultApp.getApplicationId(), "things", null, Level.ALL_PROPERTIES).getEntities();
+
+        assertTrue( !importedThings.isEmpty() );
+        assertEquals( 7, importedThings.size() );
+        //TODO: have something that checks the exceptions and errors.
     }
 
 
@@ -378,9 +437,12 @@ public class ImportCollectionIT {
             }});
         }});
 
+
+
         int maxRetries = 120;
         int retries = 0;
-        while ( !importService.getState( importUUID ).equals( "FINISHED" ) && retries++ < maxRetries ) {
+        while ( (!importService.getState( importUUID ).equals( "FINISHED" ) ||
+                 !importService.getState( importUUID ).equals( "FAILED" )) && retries++ < maxRetries ) {
             logger.debug("Waiting for import...");
             Thread.sleep(1000);
         }

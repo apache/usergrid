@@ -18,9 +18,25 @@
 package org.apache.usergrid.rest.management;
 
 import com.amazonaws.SDKGlobalConfiguration;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.Service;
+import com.google.inject.Module;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
 
+import org.apache.usergrid.ServiceITSetup;
+import org.apache.usergrid.ServiceITSetupImpl;
+import org.apache.usergrid.batch.service.JobSchedulerService;
+import org.apache.usergrid.cassandra.CassandraResource;
+import org.apache.usergrid.management.importer.ImportService;
+import org.apache.usergrid.management.importer.S3Upload;
+import org.apache.usergrid.persistence.ConnectionRef;
+import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.SimpleEntityRef;
+import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.model.Collection;
@@ -29,25 +45,110 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.usergrid.rest.test.resource2point0.model.Organization;
 import org.apache.usergrid.rest.test.resource2point0.model.Token;
 
+import org.jclouds.ContextBuilder;
+import org.jclouds.blobstore.BlobStore;
+import org.jclouds.blobstore.BlobStoreContext;
+import org.jclouds.blobstore.ContainerNotFoundException;
+import org.jclouds.blobstore.domain.PageSet;
+import org.jclouds.blobstore.domain.StorageMetadata;
+import org.jclouds.http.config.JavaUrlHttpCommandExecutorServiceModule;
+import org.jclouds.logging.log4j.config.Log4JLoggingModule;
+import org.jclouds.netty.config.NettyPayloadModule;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.MediaType;
+
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.UUID;
+
+import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 
 public class ImportResourceIT extends AbstractRestIT {
 
+    private static final Logger logger = LoggerFactory.getLogger( ImportResourceIT.class );
+
+
+    private static String bucketPrefix;
+
+    private String bucketName;
+
+    boolean configured;
+
+
     public ImportResourceIT() throws Exception {
 
     }
+
+    private static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
+
+
+    @ClassRule
+    public static final ServiceITSetup setup =
+        new ServiceITSetupImpl( cassandraResource, new ElasticSearchResource() );
+
+    @BeforeClass
+    public static void setup() throws Exception {
+
+        bucketPrefix = System.getProperty( "bucketName" );
+
+        // start the scheduler after we're all set up
+        JobSchedulerService jobScheduler = cassandraResource.getBean( JobSchedulerService.class );
+        if ( jobScheduler.state() != Service.State.RUNNING ) {
+            jobScheduler.startAndWait();
+        }
+
+    }
+
+    @Before
+    public void before() {
+
+        configured =
+            !StringUtils.isEmpty( System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR ) )
+                && !StringUtils.isEmpty(System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR))
+                && !StringUtils.isEmpty(System.getProperty("bucketName"));
+
+
+        if ( !configured ) {
+            logger.warn("Skipping test because {}, {} and bucketName not " +
+                    "specified as system properties, e.g. in your Maven settings.xml file.",
+                new Object[] {
+                    SDKGlobalConfiguration.SECRET_KEY_ENV_VAR,
+                    SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR
+                });
+        }
+
+        if ( !StringUtils.isEmpty( bucketPrefix )) {
+            deleteBucketsWithPrefix();
+        }
+
+        bucketName = bucketPrefix + RandomStringUtils.randomAlphanumeric( 10 ).toLowerCase();
+
+
+
+    }
+
+
 
     /**
      * Verify that we can get call the import endpoint and get the job state back.
@@ -243,6 +344,307 @@ public class ImportResourceIT extends AbstractRestIT {
             assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
         }
 
+//    @Test
+//    public void testExportImportCollection() throws Exception {
+//        Assume.assumeTrue( configured );
+//        // create a collection of "thing" entities in the first application, export to S3
+//        try {
+//
+//            Map<UUID, org.apache.usergrid.persistence.Entity> thingsMap = new HashMap<>();
+//            List<org.apache.usergrid.persistence.Entity> things = new ArrayList<>();
+//            createTestEntities(emApp1, thingsMap, things, "thing");
+//
+//            deleteBucket();
+//            exportCollection( emApp1, "things" );
+//
+//            // create new second application, import the data from S3
+//
+//            final UUID appId2 = setup.getMgmtSvc().createApplication(
+//                organization.getUuid(), "second").getId();
+//
+//            final EntityManager emApp2 = setup.getEmf().getEntityManager(appId2);
+//            importCollection( emApp2, "things" );
+//
+//
+//            // make sure that it worked
+//
+//            logger.debug("\n\nCheck connections\n");
+//
+//            List<org.apache.usergrid.persistence.Entity> importedThings = emApp2.getCollection(
+//                appId2, "things", null, Query.Level.ALL_PROPERTIES).getEntities();
+//            assertTrue( !importedThings.isEmpty() );
+//
+//            // two things have connections
+//
+//            int conCount = 0;
+//            for ( org.apache.usergrid.persistence.Entity e : importedThings ) {
+//                Results r = emApp2.getConnectedEntities( e, "related", null, Query.Level.IDS);
+//                List<ConnectionRef> connections = r.getConnections();
+//                conCount += connections.size();
+//            }
+//            assertEquals( 2, conCount );
+//
+//            logger.debug("\n\nCheck dictionaries\n");
+//
+//            // first two items have things in dictionary
+//
+//            EntityRef entity0 = importedThings.get(0);
+//            Map connected0 = emApp2.getDictionaryAsMap(entity0, "connected_types");
+//            Map connecting0 = emApp2.getDictionaryAsMap(entity0, "connected_types");
+//            Assert.assertEquals( 1, connected0.size() );
+//            Assert.assertEquals( 1, connecting0.size() );
+//
+//            EntityRef entity1 = importedThings.get(1);
+//            Map connected1 = emApp2.getDictionaryAsMap(entity1, "connected_types");
+//            Map connecting1 = emApp2.getDictionaryAsMap(entity1, "connected_types");
+//            Assert.assertEquals( 1, connected1.size() );
+//            Assert.assertEquals( 1, connecting1.size() );
+//
+//            // the rest rest do not have connections
+//
+//            EntityRef entity2 = importedThings.get(2);
+//            Map connected2 = emApp2.getDictionaryAsMap(entity2, "connected_types");
+//            Map connecting2 = emApp2.getDictionaryAsMap(entity2, "connected_types");
+//            Assert.assertEquals( 0, connected2.size() );
+//            Assert.assertEquals( 0, connecting2.size() );
+//
+//            // if entities are deleted from app1, they still exist in app2
+//
+//            logger.debug("\n\nCheck dictionary\n");
+//            for ( org.apache.usergrid.persistence.Entity importedThing : importedThings ) {
+//                emApp1.delete( importedThing );
+//            }
+//            emApp1.refreshIndex();
+//            emApp2.refreshIndex();
+//
+//            importedThings = emApp2.getCollection(
+//                appId2, "things", null, Query.Level.ALL_PROPERTIES).getEntities();
+//            assertTrue( !importedThings.isEmpty() );
+//
+//        } finally {
+//            deleteBucket();
+//        }
+//    }
+
+
+    /**
+     * TODO: Test that importing bad JSON will result in an informative error message.
+     */
+    @Test
+    public void testImportGoodJson() throws Exception{
+        // import from a bad JSON file
+        Assume.assumeTrue( configured );
+
+        String org = clientSetup.getOrganizationName();
+        String app = clientSetup.getAppName();
+
+
+        //list out all the files in the resource directory you want uploaded
+        List<String> filenames = new ArrayList<>( 1 );
+
+        filenames.add( "testImport.testCollection.1.json" );
+        // create 10 applications each with collection of 10 things, export all to S3
+        S3Upload s3Upload = new S3Upload();
+        s3Upload.copyToS3( System.getProperty(SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR), System.getProperty(SDKGlobalConfiguration.SECRET_KEY_ENV_VAR),
+            bucketName, filenames );
+
+        // import all those exports from S3 into the default test application
+
+        Entity importEntity = importCollection( );
+
+        Entity importGet = this.management().orgs().organization( org ).app().addToPath( app )
+                               .addToPath( "import" ).addToPath( ( String ) importEntity.get( "Import Entity" ) ).get();
+
+
+        assertNotNull( importGet );
+
+        assertNull( importGet.get( "errorMessage" ) );
+        assertNotNull( importGet.get( "state" ) );
+        assertEquals("import",importGet.get( "type" ));
+
+//TODO: make sure it checks the actual imported entities. And the progress they have made.
+
+    }
+//export with two files and import the two files.
+    //also test the includes endpoint.
+    /**
+     * TODO: Test that importing bad JSON will result in an informative error message.
+     */
+    @Test
+    public void testImportBadJson() throws Exception{
+        // import from a bad JSON file
+        Assume.assumeTrue( configured );
+
+        String org = clientSetup.getOrganizationName();
+        String app = clientSetup.getAppName();
+
+
+        //list out all the files in the resource directory you want uploaded
+        List<String> filenames = new ArrayList<>( 1 );
+        filenames.add( "testImportInvalidJson.testApplication.3.json" );
+        // create 10 applications each with collection of 10 things, export all to S3
+        S3Upload s3Upload = new S3Upload();
+        s3Upload.copyToS3( System.getProperty(SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR),
+            System.getProperty(SDKGlobalConfiguration.SECRET_KEY_ENV_VAR),
+            bucketName, filenames );
+
+        // import all those exports from S3 into the default test application
+
+        Entity importEntity = importCollection( );
+
+        // we should now have 100 Entities in the default app
+
+        Entity importGet = this.management().orgs().organization( org ).app().addToPath( app )
+                               .addToPath( "import" ).addToPath( ( String ) importEntity.get( "Import Entity" ) )
+                               .get();
+
+        Entity importGetIncludes = this.management().orgs().organization( org ).app().addToPath( app )
+                               .addToPath( "import" ).addToPath( ( String ) importEntity.get( "Import Entity" ) )
+                               .addToPath( "includes" ).get();
+
+        assertNotNull( importGet );
+        //TODO: needs better error checking
+        assertNotNull(importGetIncludes);
+
+        // check that error message indicates JSON parsing error
+    }
+
+    /**
+     * Call importService to import files from the configured S3 bucket.
+     */
+    private Entity importCollection() throws Exception {
+
+        String org = clientSetup.getOrganizationName();
+        String app = clientSetup.getAppName();
+
+        logger.debug("\n\nImport into new app {}\n", app );
+
+        Entity importPayload =  new Entity (new HashMap<String, Object>() {{
+            put( "properties", new HashMap<String, Object>() {{
+                put( "storage_provider", "s3" );
+                put( "storage_info", new HashMap<String, Object>() {{
+                    put( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR,
+                        System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR ) );
+                    put( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR,
+                        System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR ) );
+                    put( "bucket_location", bucketName );
+                }});
+            }});
+        }});
+
+        Entity importEntity = this.management().orgs().organization( org ).app().addToPath( app ).addToPath( "import" ).post( importPayload );
+
+
+        Entity importGet = this.management().orgs().organization( org ).app().addToPath( app )
+                               .addToPath( "import" ).addToPath( ( String ) importEntity.get( "Import Entity" ) ).get();
+
+//        int maxRetries = 120;
+//        int retries = 0;
+//
+//        while ( !importGet.get( "state" ).equals( "FINISHED" ) && retries++ < maxRetries ) {
+//            logger.debug("Waiting for import...");
+//            Thread.sleep(1000);
+//        }
+
+        refreshIndex();
+
+        return importEntity;
+    }
+
+    /**
+     * Create test entities of a specified type.
+     * First two entities are connected.
+     */
+    private void createTestEntities() throws Exception {
+
+        logger.debug("\n\nCreating users in application {}\n",
+            clientSetup.getAppName());
+
+        List<org.apache.usergrid.persistence.Entity> created = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            String name = "test"+i;
+            Entity payload = new Entity(  );
+            payload.put( "name",name);
+            payload.put( "username",name );
+            payload.put("email",name+"@test.com");
+            this.app().collection( "users" ).post(payload);
+
+
+        }
+
+        this.refreshIndex();
+
+//        // first two things are related to each other
+//        em.createConnection(new SimpleEntityRef(type, created.get(0).getUuid()),
+//            "related", new SimpleEntityRef(type, created.get(1).getUuid()));
+//        em.createConnection(new SimpleEntityRef(type, created.get(1).getUuid()),
+//            "related", new SimpleEntityRef(type, created.get(0).getUuid()));
+//
+//        em.refreshIndex();
+    }
+
+    /**
+     * Delete the configured s3 bucket.
+     */
+    public void deleteBucket() {
+
+        logger.debug("\n\nDelete bucket\n");
+
+        String accessId = System.getProperty(SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR);
+        String secretKey = System.getProperty(SDKGlobalConfiguration.SECRET_KEY_ENV_VAR);
+
+        Properties overrides = new Properties();
+        overrides.setProperty("s3" + ".identity", accessId);
+        overrides.setProperty("s3" + ".credential", secretKey);
+
+        final Iterable<? extends Module> MODULES = ImmutableSet
+            .of( new JavaUrlHttpCommandExecutorServiceModule(), new Log4JLoggingModule(), new NettyPayloadModule() );
+
+        BlobStoreContext context =
+            ContextBuilder.newBuilder( "s3" ).credentials(accessId, secretKey).modules(MODULES)
+                          .overrides(overrides).buildView(BlobStoreContext.class);
+
+        BlobStore blobStore = context.getBlobStore();
+        blobStore.deleteContainer( bucketName );
+    }
+
+    // might be handy if you need to clean up buckets
+    private static void deleteBucketsWithPrefix() {
+
+        logger.debug("\n\nDelete buckets with prefix {}\n", bucketPrefix );
+
+        String accessId = System.getProperty(SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR);
+        String secretKey = System.getProperty(SDKGlobalConfiguration.SECRET_KEY_ENV_VAR);
+
+        Properties overrides = new Properties();
+        overrides.setProperty("s3" + ".identity", accessId);
+        overrides.setProperty("s3" + ".credential", secretKey);
+
+        final Iterable<? extends Module> MODULES = ImmutableSet
+            .of(new JavaUrlHttpCommandExecutorServiceModule(),
+                new Log4JLoggingModule(),
+                new NettyPayloadModule());
+
+        BlobStoreContext context =
+            ContextBuilder.newBuilder("s3").credentials(accessId, secretKey).modules(MODULES)
+                          .overrides(overrides).buildView(BlobStoreContext.class);
+
+        BlobStore blobStore = context.getBlobStore();
+        final PageSet<? extends StorageMetadata> blobStoreList = blobStore.list();
+
+        for ( Object o : blobStoreList.toArray() ) {
+            StorageMetadata s = (StorageMetadata)o;
+
+            if ( s.getName().startsWith( bucketPrefix )) {
+                try {
+                    blobStore.deleteContainer(s.getName());
+                } catch ( ContainerNotFoundException cnfe ) {
+                    logger.warn("Attempted to delete bucket {} but it is already deleted", cnfe );
+                }
+                logger.debug("Deleted bucket {}", s.getName());
+            }
+        }
+    }
 
 
     /*Creates fake payload for testing purposes.*/
