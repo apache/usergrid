@@ -21,7 +21,6 @@ import com.amazonaws.SDKGlobalConfiguration;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.batch.service.SchedulerService;
-import org.apache.usergrid.corepersistence.CpSetup;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.persistence.*;
@@ -30,12 +29,6 @@ import org.apache.usergrid.persistence.entities.Import;
 import org.apache.usergrid.persistence.entities.JobData;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Query.Level;
-import org.apache.usergrid.persistence.queue.QueueManager;
-import org.apache.usergrid.persistence.queue.QueueManagerFactory;
-import org.apache.usergrid.persistence.queue.QueueScope;
-import org.apache.usergrid.persistence.queue.QueueScopeFactory;
-import org.apache.usergrid.services.ServiceManagerFactory;
-import org.apache.usergrid.services.queues.ImportQueueListener;
 import org.apache.usergrid.services.queues.ImportQueueMessage;
 import org.apache.usergrid.utils.InflectionUtils;
 import org.codehaus.jackson.JsonFactory;
@@ -81,7 +74,7 @@ public class ImportServiceImpl implements ImportService {
     public void init(){
     }
 
-    
+
     /**
      * This schedules the main import Job.
      *
