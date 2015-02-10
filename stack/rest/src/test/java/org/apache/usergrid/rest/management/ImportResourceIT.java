@@ -442,7 +442,7 @@ public class ImportResourceIT extends AbstractRestIT {
         //list out all the files in the resource directory you want uploaded
         List<String> filenames = new ArrayList<>( 1 );
 
-        filenames.add( "testImport.testCollection.1.json" );
+        filenames.add( "testImportCorrect.testCol.1.json" );
         // create 10 applications each with collection of 10 things, export all to S3
         S3Upload s3Upload = new S3Upload();
         s3Upload.copyToS3( System.getProperty(SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR), System.getProperty(SDKGlobalConfiguration.SECRET_KEY_ENV_VAR),
@@ -458,9 +458,16 @@ public class ImportResourceIT extends AbstractRestIT {
 
         assertNotNull( importGet );
 
-        assertNull( importGet.get( "errorMessage" ) );
-        assertNotNull( importGet.get( "state" ) );
-        assertEquals("import",importGet.get( "type" ));
+
+//        assertNull( importGet.get( "errorMessage" ) );
+//        assertNotNull( importGet.get( "state" ) );
+//        assertEquals("import",importGet.get( "type" ));
+
+        Collection collection = this.app().collection( "things" ).get();
+
+        assertNotNull( collection );
+        assertEquals( 1, collection.getNumOfEntities() );
+        assertEquals( "thing0" ,collection.getResponse().getEntities().get( 0 ).get( "name" ) );
 
 //TODO: make sure it checks the actual imported entities. And the progress they have made.
 
@@ -494,9 +501,8 @@ public class ImportResourceIT extends AbstractRestIT {
 
         // we should now have 100 Entities in the default app
 
-        Entity importGet = this.management().orgs().organization( org ).app().addToPath( app )
-                               .addToPath( "import" ).addToPath( ( String ) importEntity.get( "Import Entity" ) )
-                               .get();
+        Entity importGet = this.management().orgs().organization( org ).app().addToPath( app ).addToPath( "import" )
+                               .addToPath( ( String ) importEntity.get( "Import Entity" ) ).get();
 
         Entity importGetIncludes = this.management().orgs().organization( org ).app().addToPath( app )
                                .addToPath( "import" ).addToPath( ( String ) importEntity.get( "Import Entity" ) )
@@ -538,13 +544,13 @@ public class ImportResourceIT extends AbstractRestIT {
         Entity importGet = this.management().orgs().organization( org ).app().addToPath( app )
                                .addToPath( "import" ).addToPath( ( String ) importEntity.get( "Import Entity" ) ).get();
 
-//        int maxRetries = 120;
-//        int retries = 0;
-//
-//        while ( !importGet.get( "state" ).equals( "FINISHED" ) && retries++ < maxRetries ) {
-//            logger.debug("Waiting for import...");
-//            Thread.sleep(1000);
-//        }
+        int maxRetries = 120;
+        int retries = 0;
+
+        while ( !importGet.get( "state" ).equals( "FINISHED" ) && retries++ < maxRetries ) {
+            logger.debug("Waiting for import...");
+            Thread.sleep(1000);
+        }
 
         refreshIndex();
 
