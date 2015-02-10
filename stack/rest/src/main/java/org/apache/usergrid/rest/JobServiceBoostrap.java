@@ -45,9 +45,6 @@ public class JobServiceBoostrap implements
     @Autowired
     private Properties properties;
 
-    @Autowired
-    EntityManager em;
-
     public JobServiceBoostrap() {
     }
 
