@@ -17,6 +17,7 @@ import org.apache.usergrid.persistence.model.entity.EntityMap;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.UUID;
 
 /**
@@ -182,8 +183,18 @@ public class MvccEntitySerializationStrategyV3Impl extends MvccEntitySerializati
             EntityMap storedEntity;
 
             byte[] array = parser.readBytes();
-
+            String s = "";
             try {
+               s = Arrays.toString(array);
+
+                String[] byteValues = s.substring(1, s.length() - 1).split(",");
+                byte[] bytes = new byte[byteValues.length];
+
+                for (int i=0, len=bytes.length; i<len; i++) {
+                    bytes[i] = Byte.parseByte(byteValues[i].trim());
+                }
+
+                s = new String(bytes);
                 storedEntity = MAPPER.readValue(array, EntityMap.class);
             } catch (Exception e) {
                 throw new DataCorruptionException("Unable to read entity data", e);

@@ -576,6 +576,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
         if ( response.isAcknowledged() ) {
             logger.info( "Deleted index: read {} write {}", alias.getReadAlias(), alias.getWriteAlias());
+            //invlaidate the alias
+            aliasCache.invalidate(alias);
         }
         else {
             logger.info( "Failed to delete index: read {} write {}", alias.getReadAlias(), alias.getWriteAlias());

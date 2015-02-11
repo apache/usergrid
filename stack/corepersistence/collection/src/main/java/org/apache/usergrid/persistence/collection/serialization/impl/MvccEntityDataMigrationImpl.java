@@ -79,9 +79,9 @@ public class MvccEntityDataMigrationImpl implements DataMigration {
 
                     ApplicationScope applicationScope = applicationEntityGroup.applicationScope;
 
-                    if (!(applicationScope instanceof CollectionScope)) {
-                        return idScope.getId();
-                    }
+//                    if (!(applicationScope instanceof CollectionScope)) {
+//                        return idScope.getId();
+//                    }
 
                     CollectionScope currentScope = (CollectionScope) applicationScope;
                     MigrationStrategy.MigrationRelationship<MvccEntitySerializationStrategy> migration = entityMigrationStrategy.getMigration();
