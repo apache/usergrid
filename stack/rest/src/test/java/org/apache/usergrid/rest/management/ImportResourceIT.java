@@ -98,8 +98,8 @@ public class ImportResourceIT extends AbstractRestIT {
     public void before() {
 
         configured =
-            !StringUtils.isEmpty(System.getProperty(SDKGlobalConfiguration.SECRET_KEY_ENV_VAR))
-                && !StringUtils.isEmpty(System.getProperty(SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR))
+            !StringUtils.isEmpty(System.getProperty("s3_key"))
+                && !StringUtils.isEmpty(System.getProperty("s3_access_id"))
                 && !StringUtils.isEmpty(System.getProperty("bucketName"));
 
 
@@ -107,8 +107,8 @@ public class ImportResourceIT extends AbstractRestIT {
             logger.warn("Skipping test because {}, {} and bucketName not " +
                     "specified as system properties, e.g. in your Maven settings.xml file.",
                 new Object[]{
-                    SDKGlobalConfiguration.SECRET_KEY_ENV_VAR,
-                    SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR
+                    "s3_key",
+                    "s3_access_id"
                 });
         }
 
@@ -135,16 +135,13 @@ public class ImportResourceIT extends AbstractRestIT {
         ///management/orgs/orgname/apps/appname/import
         Entity entity = this.management()
             .orgs()
-            .organization(org)
+            .organization( org )
             .app()
-            .addToPath(app)
-            .addToPath("import")
-            .post(payload);
-
-        String importEntity = entity.getString("Import Entity");
+            .addToPath( app )
+            .addToPath( "import" )
+            .post( payload );
 
         assertNotNull(entity);
-        assertNotNull(importEntity);
 
         entity = this.management()
             .orgs()
@@ -152,7 +149,7 @@ public class ImportResourceIT extends AbstractRestIT {
             .app()
             .addToPath(app)
             .addToPath("import")
-            .addToPath(importEntity)
+            .addToPath(entity.getUuid().toString())
             .get();
 
         assertNotNull(entity.getString("state"));
@@ -180,16 +177,14 @@ public class ImportResourceIT extends AbstractRestIT {
             .app()
             .addToPath(app)
             .addToPath("import")
-            .post(payload);
+            .post( payload );
 
-        String importEntity = entity.getString("Import Entity");
 
         assertNotNull(entity);
-        assertNotNull(importEntity);
 
         // test that you can access the organization using the currently set token.
         this.management().orgs().organization(org).app().addToPath(app)
-            .addToPath("import").addToPath(importEntity).get();
+            .addToPath("import").addToPath(entity.getUuid().toString()).get();
 
         //create a new org/app
         String newOrgName = "org" + UUIDUtils.newTimeUUID();
@@ -214,7 +209,7 @@ public class ImportResourceIT extends AbstractRestIT {
         //try to read with the new token, which should fail as unauthorized
         try {
             this.management().orgs().organization(org).app().addToPath(app)
-                .addToPath("import").addToPath(importEntity).get();
+                .addToPath("import").addToPath(entity.getUuid().toString()).get();
             fail("Should not be able to read import job with unauthorized token");
         } catch (UniformInterfaceException ex) {
             errorParse(401, "unauthorized", ex);
@@ -291,7 +286,7 @@ public class ImportResourceIT extends AbstractRestIT {
         Entity properties = (Entity) payload.get("properties");
         Entity storage_info = (Entity) properties.get("storage_info");
         //remove storage_key field
-        storage_info.remove(SDKGlobalConfiguration.SECRET_KEY_ENV_VAR);
+        storage_info.remove("s3_key");
 
         try {
             this.management().orgs().organization(org).app().addToPath(app).addToPath("import").post(payload);
@@ -304,7 +299,7 @@ public class ImportResourceIT extends AbstractRestIT {
         properties = (Entity) payload.get("properties");
         storage_info = (Entity) properties.get("storage_info");
         //remove storage_key field
-        storage_info.remove(SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR);
+        storage_info.remove("s3_access_id");
 
         try {
             this.management().orgs().organization(org).app().addToPath(app).addToPath("import").post(payload);
@@ -429,16 +424,16 @@ public class ImportResourceIT extends AbstractRestIT {
         // create 10 applications each with collection of 10 things, export all to S3
         S3Upload s3Upload = new S3Upload();
         s3Upload.copyToS3(
-            System.getProperty(SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR),
-            System.getProperty(SDKGlobalConfiguration.SECRET_KEY_ENV_VAR),
+            System.getProperty("s3_access_id"),
+            System.getProperty("s3_key"),
             bucketName, filenames);
 
         // import all those exports from S3 into the default test application
 
         Entity importEntity = importCollection();
 
-        Entity importGet = this.management().orgs().organization(org).app().addToPath(app)
-            .addToPath("import").addToPath((String) importEntity.get("Import Entity")).get();
+        Entity importGet = this.management().orgs().organization( org ).app().addToPath( app )
+            .addToPath( "import" ).addToPath( importEntity.getUuid().toString() ).get();
 
 
         assertNotNull(importGet);
@@ -477,8 +472,8 @@ public class ImportResourceIT extends AbstractRestIT {
         // create 10 applications each with collection of 10 things, export all to S3
         S3Upload s3Upload = new S3Upload();
         s3Upload.copyToS3(
-            System.getProperty(SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR),
-            System.getProperty(SDKGlobalConfiguration.SECRET_KEY_ENV_VAR),
+            System.getProperty("s3_access_id"),
+            System.getProperty("s3_key"),
             bucketName, filenames);
 
         // import all those exports from S3 into the default test application
@@ -486,7 +481,7 @@ public class ImportResourceIT extends AbstractRestIT {
         Entity importEntity = importCollection();
 
         Entity importGet = this.management().orgs().organization(org).app().addToPath(app)
-            .addToPath("import").addToPath((String) importEntity.get("Import Entity")).get();
+            .addToPath( "import" ).addToPath(importEntity.getUuid().toString() ).get();
 
 
         assertNotNull(importGet);
@@ -522,8 +517,8 @@ public class ImportResourceIT extends AbstractRestIT {
         // create 10 applications each with collection of 10 things, export all to S3
         S3Upload s3Upload = new S3Upload();
         s3Upload.copyToS3(
-            System.getProperty(SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR),
-            System.getProperty(SDKGlobalConfiguration.SECRET_KEY_ENV_VAR),
+            System.getProperty("s3_access_id"),
+            System.getProperty("s3_key"),
             bucketName, filenames);
 
         // import all those exports from S3 into the default test application
@@ -531,7 +526,7 @@ public class ImportResourceIT extends AbstractRestIT {
         Entity importEntity = importCollection();
 
         Entity importGet = this.management().orgs().organization(org).app().addToPath(app)
-            .addToPath("import").addToPath((String) importEntity.get("Import Entity")).get();
+            .addToPath("import" ).addToPath(importEntity.getUuid().toString() ).get();
 
 
         assertNotNull(importGet);
@@ -566,8 +561,8 @@ public class ImportResourceIT extends AbstractRestIT {
         filenames.add("testImportInvalidJson.testApplication.3.json");
         // create 10 applications each with collection of 10 things, export all to S3
         S3Upload s3Upload = new S3Upload();
-        s3Upload.copyToS3(System.getProperty(SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR),
-            System.getProperty(SDKGlobalConfiguration.SECRET_KEY_ENV_VAR),
+        s3Upload.copyToS3(System.getProperty("s3_access_id"),
+            System.getProperty("s3_key"),
             bucketName, filenames);
 
         // import all those exports from S3 into the default test application
@@ -576,12 +571,12 @@ public class ImportResourceIT extends AbstractRestIT {
 
         // we should now have 100 Entities in the default app
 
-        Entity importGet = this.management().orgs().organization(org).app().addToPath(app).addToPath("import")
-            .addToPath((String) importEntity.get("Import Entity")).get();
+        Entity importGet = this.management().orgs().organization( org ).app().addToPath( app ).addToPath("import")
+            .addToPath( importEntity.getUuid().toString() ).get();
 
         Entity importGetIncludes = this.management().orgs().organization(org).app().addToPath(app)
-            .addToPath("import").addToPath((String) importEntity.get("Import Entity"))
-            .addToPath("includes").get();
+            .addToPath("import" ).addToPath(importEntity.getUuid().toString() )
+            .addToPath("includes" ).get();
 
         assertNotNull(importGet);
         //TODO: needs better error checking
@@ -604,22 +599,17 @@ public class ImportResourceIT extends AbstractRestIT {
             put("properties", new HashMap<String, Object>() {{
                 put("storage_provider", "s3");
                 put("storage_info", new HashMap<String, Object>() {{
-                    put(SDKGlobalConfiguration.SECRET_KEY_ENV_VAR,
-                        System.getProperty(SDKGlobalConfiguration.SECRET_KEY_ENV_VAR));
-                    put(SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR,
-                        System.getProperty(SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR));
+                    put("s3_key",
+                        System.getProperty("s3_key"));
+                    put("s3_access_id",
+                        System.getProperty("s3_access_id"));
                     put("bucket_location", bucketName);
                 }});
             }});
         }});
 
-        Entity importEntity = this.management()
-            .orgs()
-            .organization(org)
-            .app()
-            .addToPath(app)
-            .addToPath("import")
-            .post(importPayload);
+        Entity importEntity = this.management().orgs().organization(org).app().addToPath(app).addToPath("import" )
+                                  .post(importPayload );
 
         int maxRetries = 120;
         int retries = 0;
@@ -687,21 +677,19 @@ public class ImportResourceIT extends AbstractRestIT {
 
         logger.debug("\n\nDelete bucket\n");
 
-        String accessId = System.getProperty(SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR);
-        String secretKey = System.getProperty(SDKGlobalConfiguration.SECRET_KEY_ENV_VAR);
+        String accessId = System.getProperty("s3_access_id");
+        String secretKey = System.getProperty("s3_key");
 
         Properties overrides = new Properties();
         overrides.setProperty("s3" + ".identity", accessId);
         overrides.setProperty("s3" + ".credential", secretKey);
 
-        final Iterable<? extends Module> MODULES = ImmutableSet.of(
-            new JavaUrlHttpCommandExecutorServiceModule(),
-            new Log4JLoggingModule(),
-            new NettyPayloadModule());
+        final Iterable<? extends Module> MODULES = ImmutableSet.of( new JavaUrlHttpCommandExecutorServiceModule(),
+            new Log4JLoggingModule(), new NettyPayloadModule() );
 
         BlobStoreContext context =
             ContextBuilder.newBuilder("s3").credentials(accessId, secretKey).modules(MODULES)
-                .overrides(overrides).buildView(BlobStoreContext.class);
+                .overrides(overrides ).buildView(BlobStoreContext.class);
 
         BlobStore blobStore = context.getBlobStore();
         blobStore.deleteContainer(bucketName);
@@ -712,8 +700,8 @@ public class ImportResourceIT extends AbstractRestIT {
 
         logger.debug("\n\nDelete buckets with prefix {}\n", bucketPrefix);
 
-        String accessId = System.getProperty(SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR);
-        String secretKey = System.getProperty(SDKGlobalConfiguration.SECRET_KEY_ENV_VAR);
+        String accessId = System.getProperty("s3_access_id");
+        String secretKey = System.getProperty("s3_key");
 
         Properties overrides = new Properties();
         overrides.setProperty("s3" + ".identity", accessId);
@@ -726,7 +714,7 @@ public class ImportResourceIT extends AbstractRestIT {
 
         BlobStoreContext context =
             ContextBuilder.newBuilder("s3").credentials(accessId, secretKey).modules(MODULES)
-                .overrides(overrides).buildView(BlobStoreContext.class);
+                .overrides(overrides ).buildView(BlobStoreContext.class);
 
         BlobStore blobStore = context.getBlobStore();
         final PageSet<? extends StorageMetadata> blobStoreList = blobStore.list();
@@ -753,8 +741,8 @@ public class ImportResourceIT extends AbstractRestIT {
         Entity storage_info = new Entity();
         //TODO: always put dummy values here and ignore this test.
         //TODO: add a ret for when s3 values are invalid.
-        storage_info.put(SDKGlobalConfiguration.SECRET_KEY_ENV_VAR, "insert key here");
-        storage_info.put(SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR, "insert access id here");
+        storage_info.put("s3_key", "insert key here");
+        storage_info.put("s3_access_id", "insert access id here");
         storage_info.put("bucket_location", "insert bucket name here");
         properties.put("storage_provider", "s3");
         properties.put("storage_info", storage_info);

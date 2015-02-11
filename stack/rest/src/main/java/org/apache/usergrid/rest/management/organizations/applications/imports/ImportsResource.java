@@ -37,10 +37,15 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriInfo;
+import javax.xml.ws.Response;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
+import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.lang.NullArgumentException;
+import org.apache.commons.lang.ObjectUtils;
 
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
@@ -53,7 +58,9 @@ import org.apache.usergrid.persistence.queue.impl.UsergridAwsCredentials;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RootResource;
+import org.apache.usergrid.rest.applications.ServiceResource;
 import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
+import org.apache.usergrid.rest.utils.JSONPUtils;
 
 import com.sun.jersey.api.json.JSONWithPadding;
 
@@ -110,27 +117,38 @@ public class ImportsResource extends AbstractContextResource {
 
         //             try {
         //checkJsonExportProperties(json);
-        if ( ( properties = ( Map<String, Object> ) json.get( "properties" ) ) == null ) {
-            throw new NullPointerException( "Could not find 'properties'" );
-        }
-        storage_info = ( Map<String, Object> ) properties.get( "storage_info" );
-        String storage_provider = ( String ) properties.get( "storage_provider" );
-        if ( storage_provider == null ) {
-            throw new NullPointerException( "Could not find field 'storage_provider'" );
-        }
-        if ( storage_info == null ) {
-            throw new NullPointerException( "Could not find field 'storage_info'" );
-        }
 
-        String bucketName = ( String ) storage_info.get( "bucket_location" );
 
-        //check to make sure that access key and secret key are there.
-        //        uac.getAWSAccessKeyIdJson( storage_info );
-        //        uac.getAWSSecretKeyJson( storage_info );
+            if ( ( properties = ( Map<String, Object> ) json.get( "properties" ) ) == null ) {
+                throw new NullArgumentException( "Could not find 'properties'" );
+            }
+            storage_info = ( Map<String, Object> ) properties.get( "storage_info" );
+            String storage_provider = ( String ) properties.get( "storage_provider" );
+            if ( storage_provider == null ) {
+                throw new NullArgumentException( "Could not find field 'storage_provider'" );
+            }
+            if ( storage_info == null ) {
+                throw new NullArgumentException( "Could not find field 'storage_info'" );
+            }
 
-        if ( bucketName == null ) {
-            throw new NullPointerException( "Could not find field 'bucketName'" );
-        }
+            String bucketName = ( String ) storage_info.get( "bucket_location" );
+
+
+            String accessId = ( String ) storage_info.get( "s3_access_id" );
+            String secretKey = ( String ) storage_info.get( "s3_key" );
+
+            if ( bucketName == null ) {
+                throw new NullArgumentException( "Could not find field 'bucketName'" );
+            }
+            if ( accessId == null ) {
+                throw new NullArgumentException( "Could not find field 's3_access_id'" );
+            }
+            if ( secretKey == null ) {
+
+                throw new NullArgumentException( "Could not find field 's3_key'" );
+            }
+
+
 
         json.put( "organizationId", organization.getUuid() );
         json.put( "applicationId", application.getId() );
