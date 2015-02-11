@@ -24,6 +24,7 @@ import org.apache.usergrid.batch.service.SchedulerService;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.persistence.*;
+import org.apache.usergrid.persistence.entities.FailedImportEntity;
 import org.apache.usergrid.persistence.entities.FileImport;
 import org.apache.usergrid.persistence.entities.Import;
 import org.apache.usergrid.persistence.entities.JobData;
@@ -78,16 +79,7 @@ public class ImportServiceImpl implements ImportService {
     }
 
 
-    public SchedulerService getSch() {
-        return sch;
-    }
 
-
-    public void setSch(final SchedulerService sch) {
-        this.sch = sch;
-    }
-
-    
     /**
      * This schedules the main import Job.
      *
@@ -146,7 +138,25 @@ public class ImportServiceImpl implements ImportService {
 
     @Override
     public Results getImports( final UUID applicationId, final String cursor ) {
-        return null;
+        try {
+            final EntityManager rootEm = emf.getEntityManager( emf.getManagementAppId() );
+
+
+            final Entity applicationEntity = getApplicationEntity( rootEm, applicationId );
+
+            Query query = new Query();
+            if ( cursor != null ) {
+                query.setCursor( cursor );
+            }
+
+            //set our entity type
+            query.setEntityType( Schema.getDefaultSchema().getEntityType( Import.class ) );
+
+            return rootEm.searchCollection( applicationEntity, APP_IMPORT_CONNECTION, query );
+        }
+        catch ( Exception e ) {
+            throw new RuntimeException( "Unable to get import entity", e );
+        }
     }
 
 
@@ -171,6 +181,8 @@ public class ImportServiceImpl implements ImportService {
     }
 
 
+
+
     private Entity getApplicationEntity(final EntityManager rootEm, final UUID applicationId) throws Exception {
         final Entity entity = rootEm.get( new SimpleEntityRef( "application_info", applicationId ) );
 
@@ -179,6 +191,30 @@ public class ImportServiceImpl implements ImportService {
         }
 
         return entity;
+    }
+
+    @Override
+    public Results getFileImports(final UUID applicationId,  final UUID importId, final String cursor ) {
+        return null;
+    }
+
+
+    @Override
+    public FileImport getFileImport(final UUID applicationId,  final UUID importId, final UUID fileImportId ) {
+        return null;
+    }
+
+
+    @Override
+    public Results getFailedImportEntities(final UUID applicationId,  final UUID importId, final UUID fileImportId, final String cursor ) {
+        return null;
+    }
+
+
+    @Override
+    public FailedImportEntity getFailedImportEntity(final UUID applicationId, final UUID importId, final UUID fileImportId,
+                                                     final UUID failedImportId ) {
+        return null;
     }
 
 
@@ -380,6 +416,11 @@ public class ImportServiceImpl implements ImportService {
 
     public void setManagementService(final ManagementService managementService) {
         this.managementService = managementService;
+    }
+
+
+    public void setSch(final SchedulerService sch) {
+        this.sch = sch;
     }
 
 

@@ -36,50 +36,31 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import org.apache.amber.oauth2.common.exception.OAuthSystemException;
-import org.apache.amber.oauth2.common.message.OAuthResponse;
-import org.apache.commons.lang.StringUtils;
-
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.importer.ImportService;
 import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.entities.Import;
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
-import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.queue.impl.UsergridAwsCredentials;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RootResource;
-import org.apache.usergrid.rest.applications.ServiceResource;
-import org.apache.usergrid.rest.applications.users.UserResource;
-import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
-import org.apache.usergrid.rest.utils.JSONPUtils;
-import org.apache.usergrid.services.ServiceAction;
-import org.apache.usergrid.services.ServicePayload;
 
-import com.amazonaws.AmazonClientException;
 import com.sun.jersey.api.json.JSONWithPadding;
 
-import static javax.servlet.http.HttpServletResponse.SC_ACCEPTED;
-import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
-import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
-import static org.apache.usergrid.services.ServiceParameter.addParameter;
-
-
-@Component("org.apache.usergrid.rest.management.organizations.applications.ImportsResource")
-@Scope("prototype")
-@Produces(MediaType.APPLICATION_JSON)
+@Component( "org.apache.usergrid.rest.management.organizations.applications.imports.ImportsResource" )
+@Scope( "prototype" )
+@Produces( MediaType.APPLICATION_JSON )
 public class ImportsResource extends AbstractContextResource {
 
 
@@ -88,6 +69,7 @@ public class ImportsResource extends AbstractContextResource {
 
     private OrganizationInfo organization;
     private ApplicationInfo application;
+
 
     /**
      * Override our service manager factory so that we get entities from the root management app
@@ -98,7 +80,7 @@ public class ImportsResource extends AbstractContextResource {
     }
 
 
-    public ImportsResource init( final OrganizationInfo organization, final ApplicationInfo application ){
+    public ImportsResource init( final OrganizationInfo organization, final ApplicationInfo application ) {
         this.organization = organization;
         this.application = application;
         return this;
@@ -117,14 +99,10 @@ public class ImportsResource extends AbstractContextResource {
 
 
         response.setAction( "post" );
-        response.setApplication( emf.getEntityManager( application.getId() ).getApplication()  );
+        response.setApplication( emf.getEntityManager( application.getId() ).getApplication() );
         response.setParams( ui.getQueryParameters() );
 
         final Map<String, Object> json = ( Map<String, Object> ) readJsonToObject( body );
-
-        UsergridAwsCredentials uac = new UsergridAwsCredentials();
-
-        Map<String, String> uuidRet = new HashMap<String, String>();
 
         Map<String, Object> properties;
         Map<String, Object> storage_info;
@@ -147,8 +125,8 @@ public class ImportsResource extends AbstractContextResource {
         String bucketName = ( String ) storage_info.get( "bucket_location" );
 
         //check to make sure that access key and secret key are there.
-//        uac.getAWSAccessKeyIdJson( storage_info );
-//        uac.getAWSSecretKeyJson( storage_info );
+        //        uac.getAWSAccessKeyIdJson( storage_info );
+        //        uac.getAWSSecretKeyJson( storage_info );
 
         if ( bucketName == null ) {
             throw new NullPointerException( "Could not find field 'bucketName'" );
@@ -166,14 +144,38 @@ public class ImportsResource extends AbstractContextResource {
 
 
     @GET
+    public JSONWithPadding getImports( @Context UriInfo ui, @QueryParam( "cursor" ) String cursor ) throws Exception {
+
+
+        final Results importResults = importService.getImports( application.getId(), cursor );
+
+        if ( importResults == null ) {
+            throw new EntityNotFoundException( "could not load import results" );
+        }
+
+        ApiResponse response = createApiResponse();
+
+
+        response.setAction( "get" );
+        response.setApplication( emf.getEntityManager( application.getId() ).getApplication() );
+        response.setParams( ui.getQueryParameters() );
+
+
+        response.withResults( importResults );
+
+        return new JSONWithPadding( response );
+    }
+
+
+    @GET
     @Path( RootResource.ENTITY_ID_PATH )
-    public JSONWithPadding addIdParameter( @Context UriInfo ui, @PathParam( "entityId" ) PathSegment entityId )
+    public JSONWithPadding getImportById( @Context UriInfo ui, @PathParam( "entityId" ) PathSegment entityId )
         throws Exception {
 
         final UUID importId = UUID.fromString( entityId.getPath() );
-        final Import importEntity = importService.getImport( application.getId(), importId);
+        final Import importEntity = importService.getImport( application.getId(), importId );
 
-        if(importEntity == null){
+        if ( importEntity == null ) {
             throw new EntityNotFoundException( "could not find import with uuid " + importId );
         }
 
@@ -181,17 +183,21 @@ public class ImportsResource extends AbstractContextResource {
 
 
         response.setAction( "get" );
-        response.setApplication( emf.getEntityManager( application.getId() ).getApplication()  );
+        response.setApplication( emf.getEntityManager( application.getId() ).getApplication() );
         response.setParams( ui.getQueryParameters() );
 
 
         response.setEntities( Collections.<Entity>singletonList( importEntity ) );
 
         return new JSONWithPadding( response );
-
     }
 
 
-
-
+    @GET
+    @Path( RootResource.ENTITY_ID_PATH + "/includes" )
+    public FileIncludesResource getIncludes( @Context UriInfo ui, @PathParam( "entityId" ) PathSegment entityId )
+        throws Exception {
+        final UUID importId = UUID.fromString( entityId.getPath() );
+        return getSubResource( FileIncludesResource.class ).init( application, importId );
+    }
 }

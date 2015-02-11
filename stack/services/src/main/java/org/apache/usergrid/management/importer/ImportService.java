@@ -20,6 +20,7 @@ package org.apache.usergrid.management.importer;
 
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.entities.FailedImportEntity;
 import org.apache.usergrid.persistence.entities.FileImport;
 import org.apache.usergrid.persistence.entities.Import;
 
@@ -37,6 +38,12 @@ public interface ImportService {
      */
     Import schedule( final UUID applicationId, Map<String, Object> json ) throws Exception;
 
+    /**
+     * Get the imports results for the application
+     * @param applicationId
+     * @param cursor
+     * @return
+     */
     Results getImports(final UUID applicationId, final String cursor);
 
     /**
@@ -46,6 +53,44 @@ public interface ImportService {
      * @return
      */
     Import getImport(final UUID applicationId, final UUID importId);
+
+    /**
+     * Get the results
+     *
+     * @param importId The import id to get files from
+     * @param cursor The cursor used in parsing
+     * @return
+     */
+    Results getFileImports(final UUID applicationId, final UUID importId, final String cursor);
+
+    /**
+     * Get the file import
+     * @param importId
+     * @param fileImportId
+     * @return
+     */
+    FileImport getFileImport(final UUID applicationId, final UUID importId, final UUID fileImportId);
+
+
+
+    /**
+     * Get the results of failed imports
+     *
+     * @param importId The import id to get files from
+     * @param fileImportId the fileImportId
+     * @param cursor The cursor used in parsing
+     * @return
+     */
+    Results getFailedImportEntities(final UUID applicationId,  final UUID importId, final UUID fileImportId, final String cursor);
+
+    /**
+     * Get the failedimport entity from it's parentId
+     * @param importId
+     * @param fileImportId
+     * @param failedImportId
+     * @return
+     */
+    FailedImportEntity getFailedImportEntity(final UUID applicationId, final UUID importId, final UUID fileImportId, final UUID failedImportId);
 
     /**
      * Perform the import from the external resource
