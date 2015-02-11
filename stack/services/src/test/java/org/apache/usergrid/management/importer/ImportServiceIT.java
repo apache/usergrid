@@ -391,7 +391,7 @@ public class ImportServiceIT {
     /**
      * Test to schedule a job with null config
      */
-    @Test
+    @Test(expected=NullPointerException.class)
     public void testScheduleJobWithNullConfig() throws Exception {
         HashMap<String, Object> payload = null;
 
