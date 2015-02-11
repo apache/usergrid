@@ -208,11 +208,14 @@ public class ImportServiceImpl implements ImportService {
 
             Query query = Query.fromQLNullSafe( ql );
             query.setCursor( cursor );
+            query.setConnectionType( IMPORT_FILE_INCLUDES_CONNECTION );
+            query.setResultsLevel( Level.ALL_PROPERTIES );
+
 
             //set our entity type
-            query.setEntityType( Schema.getDefaultSchema().getEntityType( Import.class ) );
+            query.setEntityType( Schema.getDefaultSchema().getEntityType( FileImport.class ) );
 
-            return rootEm.searchCollection( importEntity, IMPORT_FILE_INCLUDES_CONNECTION, query );
+            return rootEm.searchConnectedEntities( importEntity, query );
         }
         catch ( Exception e ) {
             throw new RuntimeException( "Unable to get import entity", e );
@@ -265,11 +268,14 @@ public class ImportServiceImpl implements ImportService {
 
             Query query = Query.fromQLNullSafe( ql );
             query.setCursor( cursor );
+            query.setConnectionType( FileImportTracker.ERRORS_CONNECTION_NAME );
+            query.setResultsLevel( Level.ALL_PROPERTIES );
+
 
             //set our entity type
             query.setEntityType( Schema.getDefaultSchema().getEntityType( FailedImportEntity.class ) );
 
-            return rootEm.searchCollection( importEntity, FileImportTracker.ERRORS_CONNECTION_NAME, query );
+            return rootEm.searchConnectedEntities( importEntity,  query );
         }
         catch ( Exception e ) {
             throw new RuntimeException( "Unable to get import entity", e );

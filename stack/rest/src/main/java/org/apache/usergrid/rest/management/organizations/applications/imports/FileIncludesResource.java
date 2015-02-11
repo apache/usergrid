@@ -143,7 +143,6 @@ public class FileIncludesResource extends AbstractContextResource {
 
 
 
-    @GET
     @Path( RootResource.ENTITY_ID_PATH + "/errors" )
     public FileErrorsResource getIncludes( @Context UriInfo ui, @PathParam( "entityId" ) PathSegment entityId )
         throws Exception {

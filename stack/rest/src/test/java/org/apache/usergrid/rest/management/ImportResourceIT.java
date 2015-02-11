@@ -436,7 +436,15 @@ public class ImportResourceIT extends AbstractRestIT {
             .addToPath( "import" ).addToPath( importEntity.getUuid().toString() ).get();
 
 
+        refreshIndex();
+
+        Entity importGetIncludes = this.management().orgs().organization(org).app().addToPath(app)
+                                       .addToPath("import" ).addToPath(importEntity.getUuid().toString() )
+                                       .addToPath("includes" ).get();
+
         assertNotNull(importGet);
+        assertNotNull( importGetIncludes );
+        assertEquals( 1,importGetIncludes.size());
 
         assertEquals("FINISHED", importGet.get("state"));
         assertEquals(1, importGet.get("fileCount"));
