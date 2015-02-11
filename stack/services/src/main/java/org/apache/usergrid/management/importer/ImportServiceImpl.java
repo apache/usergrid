@@ -78,6 +78,16 @@ public class ImportServiceImpl implements ImportService {
     }
 
 
+    public SchedulerService getSch() {
+        return sch;
+    }
+
+
+    public void setSch(final SchedulerService sch) {
+        this.sch = sch;
+    }
+
+    
     /**
      * This schedules the main import Job.
      *

@@ -99,8 +99,8 @@
 
   <bean id="importService" class="org.apache.usergrid.management.importer.ImportServiceImpl" >
     <property name="managementService" ref="managementService"/>
-    <property name="emf" ref="entityManagerFactory"/>
-    <property name="sch" ref="schedulerService"/>
+      <property name="emf" ref="entityManagerFactory"/>
+      <property name="sch" ref="schedulerService"/>
   </bean>
 
     <!--<bean id="importQueueListener" class="org.apache.usergrid.services.queues.ImportQueueListener"-->
