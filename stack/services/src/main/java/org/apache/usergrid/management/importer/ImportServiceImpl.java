@@ -24,6 +24,7 @@ import org.apache.usergrid.batch.service.SchedulerService;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.persistence.*;
+import org.apache.usergrid.persistence.entities.FailedImportEntity;
 import org.apache.usergrid.persistence.entities.FileImport;
 import org.apache.usergrid.persistence.entities.Import;
 import org.apache.usergrid.persistence.entities.JobData;
@@ -44,6 +45,7 @@ import rx.functions.Func1;
 import rx.functions.Func2;
 import rx.schedulers.Schedulers;
 
+import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
 import java.io.File;
 import java.util.*;
@@ -58,9 +60,9 @@ public class ImportServiceImpl implements ImportService {
     public static final int HEARTBEAT_COUNT = 50;
 
     public static final String APP_IMPORT_CONNECTION ="imports";
+    public static final String IMPORT_FILE_INCLUDES_CONNECTION = "includes";
 
     private static final Logger logger = LoggerFactory.getLogger(ImportServiceImpl.class);
-    public static final String IMPORT_FILE_INCLUDES = "includes";
 
     int MAX_FILE_IMPORTS = 1000; // max number of file import jobs / import job
 
@@ -75,16 +77,6 @@ public class ImportServiceImpl implements ImportService {
 
     @PostConstruct
     public void init(){
-    }
-
-
-    public SchedulerService getSch() {
-        return sch;
-    }
-
-
-    public void setSch(final SchedulerService sch) {
-        this.sch = sch;
     }
 
 
@@ -145,13 +137,34 @@ public class ImportServiceImpl implements ImportService {
 
 
     @Override
-    public Results getImports( final UUID applicationId, final String cursor ) {
-        return null;
+    public Results getImports( final UUID applicationId, @Nullable  final String ql,  @Nullable final String cursor ) {
+        Preconditions.checkNotNull( applicationId, "applicationId must be specified" );
+
+        try {
+            final EntityManager rootEm = emf.getEntityManager( emf.getManagementAppId() );
+
+
+            final Entity applicationEntity = getApplicationEntity( rootEm, applicationId );
+
+            Query query = Query.fromQLNullSafe( ql );
+            query.setCursor( cursor );
+
+            //set our entity type
+            query.setEntityType( Schema.getDefaultSchema().getEntityType( Import.class ) );
+
+            return rootEm.searchCollection( applicationEntity, APP_IMPORT_CONNECTION, query );
+        }
+        catch ( Exception e ) {
+            throw new RuntimeException( "Unable to get import entity", e );
+        }
     }
 
 
     @Override
     public Import getImport( final UUID applicationId, final UUID importId ) {
+        Preconditions.checkNotNull( applicationId, "applicationId must be specified" );
+        Preconditions.checkNotNull( importId, "importId must be specified" );
+
         try {
             final EntityManager rootEm = emf.getEntityManager( emf.getManagementAppId() );
 
@@ -179,6 +192,118 @@ public class ImportServiceImpl implements ImportService {
         }
 
         return entity;
+    }
+
+    @Override
+    public Results getFileImports(final UUID applicationId, final UUID importId, @Nullable  final String ql, @Nullable final String cursor ) {
+
+        Preconditions.checkNotNull( applicationId, "applicationId must be specified" );
+               Preconditions.checkNotNull( importId, "importId must be specified" );
+
+        try {
+            final EntityManager rootEm = emf.getEntityManager( emf.getManagementAppId() );
+
+
+            final Import importEntity = getImport( applicationId, importId );
+
+            Query query = Query.fromQLNullSafe( ql );
+            query.setCursor( cursor );
+
+            //set our entity type
+            query.setEntityType( Schema.getDefaultSchema().getEntityType( Import.class ) );
+
+            return rootEm.searchCollection( importEntity, IMPORT_FILE_INCLUDES_CONNECTION, query );
+        }
+        catch ( Exception e ) {
+            throw new RuntimeException( "Unable to get import entity", e );
+        }
+
+    }
+
+
+    @Override
+    public FileImport getFileImport(final UUID applicationId,  final UUID importId, final UUID fileImportId ) {
+        try {
+            final EntityManager rootEm = emf.getEntityManager( emf.getManagementAppId() );
+
+
+            final Import importEntity = getImport( applicationId, importId );
+
+            if ( importEntity == null ) {
+                throw new EntityNotFoundException( "Import not found with id " + importId );
+            }
+
+
+            final FileImport fileImport = rootEm.get( importId, FileImport.class );
+
+
+            // check if it's on the path
+            if ( !rootEm.isConnectionMember( importEntity, APP_IMPORT_CONNECTION, fileImport ) ) {
+                return null;
+            }
+
+            return fileImport;
+        }
+        catch ( Exception e ) {
+            throw new RuntimeException( "Unable to load file import", e );
+        }
+    }
+
+
+    @Override
+    public Results getFailedImportEntities(final UUID applicationId,  final UUID importId, final UUID fileImportId,  @Nullable  final String ql, @Nullable final String cursor ) {
+
+        Preconditions.checkNotNull( applicationId, "applicationId must be specified" );
+        Preconditions.checkNotNull( importId, "importId must be specified" );
+        Preconditions.checkNotNull( fileImportId, "fileImportId must be specified" );
+
+        try {
+            final EntityManager rootEm = emf.getEntityManager( emf.getManagementAppId() );
+
+
+            final FileImport importEntity = getFileImport(applicationId, importId, fileImportId);
+
+            Query query = Query.fromQLNullSafe( ql );
+            query.setCursor( cursor );
+
+            //set our entity type
+            query.setEntityType( Schema.getDefaultSchema().getEntityType( FailedImportEntity.class ) );
+
+            return rootEm.searchCollection( importEntity, FileImportTracker.ERRORS_CONNECTION_NAME, query );
+        }
+        catch ( Exception e ) {
+            throw new RuntimeException( "Unable to get import entity", e );
+        }
+    }
+
+
+    @Override
+    public FailedImportEntity getFailedImportEntity(final UUID applicationId, final UUID importId, final UUID fileImportId,
+                                                     final UUID failedImportId ) {
+        try {
+            final EntityManager rootEm = emf.getEntityManager( emf.getManagementAppId() );
+
+
+            final FileImport importEntity = getFileImport( applicationId, importId, fileImportId );
+
+            if ( importEntity == null ) {
+                throw new EntityNotFoundException( "Import not found with id " + importId );
+            }
+
+
+            final FailedImportEntity fileImport = rootEm.get( importId, FailedImportEntity.class );
+
+
+            // check if it's on the path
+            if ( !rootEm.isConnectionMember( importEntity, FileImportTracker.ERRORS_CONNECTION_NAME, fileImport ) ) {
+                return null;
+            }
+
+            return fileImport;
+        }
+        catch ( Exception e ) {
+            throw new RuntimeException( "Unable to load file import", e );
+        }
     }
 
 
@@ -212,7 +337,7 @@ public class ImportServiceImpl implements ImportService {
 
         try {
             // create a connection between the main import job and the sub FileImport Job
-            emManagementApp.createConnection(importEntity, IMPORT_FILE_INCLUDES, fileImport);
+            emManagementApp.createConnection(importEntity, IMPORT_FILE_INCLUDES_CONNECTION, fileImport);
 
             logger.debug("Created connection from {}:{} to {}:{}",
                 new Object[] {
@@ -248,11 +373,12 @@ public class ImportServiceImpl implements ImportService {
         try {
 
             EntityManager emMgmtApp = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
-            Query query = Query.fromQL("select *");
+            Query query = Query.fromQL( "select *" );
             query.setEntityType("file_import");
-            query.setConnectionType( IMPORT_FILE_INCLUDES );
+            query.setConnectionType( IMPORT_FILE_INCLUDES_CONNECTION );
             query.setLimit(MAX_FILE_IMPORTS);
 
+            //TODO, this won't work with more than 100 files
             Results entities = emMgmtApp.searchConnectedEntities( importRoot, query );
             return entities.size();
 
@@ -343,7 +469,7 @@ public class ImportServiceImpl implements ImportService {
         UUID importId = (UUID) jobExecution.getJobData().getProperty(IMPORT_ID);
         EntityManager importManager = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
 
-        return importManager.get( importId, Import.class );
+        return importManager.get(importId, Import.class);
     }
 
 
@@ -380,6 +506,11 @@ public class ImportServiceImpl implements ImportService {
 
     public void setManagementService(final ManagementService managementService) {
         this.managementService = managementService;
+    }
+
+
+    public void setSch(final SchedulerService sch) {
+        this.sch = sch;
     }
 
 
@@ -659,17 +790,17 @@ public class ImportServiceImpl implements ImportService {
         try {
 
             Results importJobResults =
-                emManagementApp.getConnectingEntities(fileImport, IMPORT_FILE_INCLUDES, null, Level.ALL_PROPERTIES);
+                emManagementApp.getConnectingEntities( fileImport, IMPORT_FILE_INCLUDES_CONNECTION, null, Level.ALL_PROPERTIES );
             List<Entity> importEntities = importJobResults.getEntities();
             UUID importId = importEntities.get(0).getUuid();
             importEntity = emManagementApp.get(importId, Import.class);
 
             logger.debug("{} Got importEntity {}", randTag, importEntity.getUuid());
 
-            EntityManager emMgmtApp = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+            EntityManager emMgmtApp = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
             Query query = Query.fromQL("select *");
             query.setEntityType("file_import");
-            query.setConnectionType(IMPORT_FILE_INCLUDES);
+            query.setConnectionType( IMPORT_FILE_INCLUDES_CONNECTION );
             query.setLimit(MAX_FILE_IMPORTS);
             Results entities = emMgmtApp.searchConnectedEntities(importEntity, query);
 

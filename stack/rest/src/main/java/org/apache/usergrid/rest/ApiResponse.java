@@ -35,6 +35,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.apache.usergrid.persistence.AggregateCounterSet;
 import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.security.oauth.ClientCredentialsInfo;
 import org.apache.usergrid.services.ServiceRequest;
@@ -375,6 +376,21 @@ public class ApiResponse {
         else {
             entities = new ArrayList<Entity>();
         }
+    }
+
+
+    /**
+     * Set the response from the EM results
+     * @param results
+     * @return
+     */
+    public ApiResponse withResults(Results results){
+        entities = results.getEntities();
+        next = results.getNextResult();
+        cursor = results.getCursor();
+        counters = results.getCounters();
+
+        return this;
     }
 
 

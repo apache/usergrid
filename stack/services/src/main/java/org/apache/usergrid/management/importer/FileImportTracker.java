@@ -43,6 +43,9 @@ public class FileImportTracker {
     private static final String ERROR_MESSAGE =
         "Failed to import some data.  See the import counters and errors.";
 
+    /**
+     * Connection name to log individual errors
+     */
     public static final String ERRORS_CONNECTION_NAME = "errors";
 
     private final AtomicLong entitiesWritten = new AtomicLong( 0 );

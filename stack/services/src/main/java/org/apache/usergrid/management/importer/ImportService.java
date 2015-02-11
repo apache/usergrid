@@ -20,6 +20,7 @@ package org.apache.usergrid.management.importer;
 
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.entities.FailedImportEntity;
 import org.apache.usergrid.persistence.entities.FileImport;
 import org.apache.usergrid.persistence.entities.Import;
 
@@ -37,7 +38,14 @@ public interface ImportService {
      */
     Import schedule( final UUID applicationId, Map<String, Object> json ) throws Exception;
 
-    Results getImports(final UUID applicationId, final String cursor);
+    /**
+     * Get the imports results for the application
+     * @param applicationId
+     * @param ql The query executed (nullable)
+     * @param cursor  The cursor passed (nullable)
+     * @return
+     */
+    Results getImports(final UUID applicationId, final String ql, final String cursor);
 
     /**
      * Get the import
@@ -46,6 +54,48 @@ public interface ImportService {
      * @return
      */
     Import getImport(final UUID applicationId, final UUID importId);
+
+    /**
+     * Get the results
+     *
+     * @param applicationId The applicationId
+     * @param importId The import id to get files from
+     * @param ql The query executed (nullable)
+     * @param cursor The cursor passed (nullable)
+     */
+    Results getFileImports(final UUID applicationId, final UUID importId, final String ql, final String cursor);
+
+    /**
+     * Get the results
+     *
+     * @param applicationId The applicationId
+     * @param importId The import id to get files from
+     *
+     * @return The FileImport
+     */
+    FileImport getFileImport(final UUID applicationId, final UUID importId, final UUID fileImportId);
+
+
+    /**
+     * Get the results of failed imports
+     *
+     *
+     * @param applicationId The applicationId
+     * @param importId The import id to get files from
+     * @param ql The query executed (nullable)
+     * @param cursor The cursor passed (nullable)
+     */
+    Results getFailedImportEntities(final UUID applicationId,  final UUID importId, final UUID fileImportId, final String ql,  final String cursor);
+
+    /**
+     * Get the failedimport entity from it's parentId
+     * @param applicationId
+     * @param importId
+     * @param fileImportId
+     * @param failedImportId
+     * @return
+     */
+    FailedImportEntity getFailedImportEntity(final UUID applicationId, final UUID importId, final UUID fileImportId, final UUID failedImportId);
 
     /**
      * Perform the import from the external resource
