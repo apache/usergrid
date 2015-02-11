@@ -52,6 +52,7 @@ import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.importer.ImportService;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.entities.Import;
+import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.queue.impl.UsergridAwsCredentials;
 import org.apache.usergrid.rest.AbstractContextResource;
@@ -79,7 +80,7 @@ import static org.apache.usergrid.services.ServiceParameter.addParameter;
 @Component("org.apache.usergrid.rest.management.organizations.applications.ImportsResource")
 @Scope("prototype")
 @Produces(MediaType.APPLICATION_JSON)
-public class ImportsResource extends ServiceResource {
+public class ImportsResource extends AbstractContextResource {
 
 
     @Autowired
@@ -100,7 +101,6 @@ public class ImportsResource extends ServiceResource {
     public ImportsResource init( final OrganizationInfo organization, final ApplicationInfo application ){
         this.organization = organization;
         this.application = application;
-        services = smf.getServiceManager( application.getId() );
         return this;
     }
 
@@ -112,13 +112,12 @@ public class ImportsResource extends ServiceResource {
                                         @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
         throws Exception {
 
-        LOG.debug( "ServiceResource.executePost: body = " + body );
 
         ApiResponse response = createApiResponse();
 
 
         response.setAction( "post" );
-        response.setApplication( services.getApplication() );
+        response.setApplication( emf.getEntityManager( application.getId() ).getApplication()  );
         response.setParams( ui.getQueryParameters() );
 
         final Map<String, Object> json = ( Map<String, Object> ) readJsonToObject( body );
@@ -158,56 +157,38 @@ public class ImportsResource extends ServiceResource {
         json.put( "organizationId", organization.getUuid() );
         json.put( "applicationId", application.getId() );
 
-        Import importEntity = importService.schedule( json );
+        Import importEntity = importService.schedule( application.getId(), json );
 
         response.setEntities( Collections.<Entity>singletonList( importEntity ) );
-        //             }
-        //             catch ( NullPointerException e ) {
-        //
-        //                 response.set
-        //                 return Response.status( SC_BAD_REQUEST ).type( JSONPUtils.jsonMediaType( callback ) )
-        //                                .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) )
-        // .build();
-        //             }
-        //             catch ( AmazonClientException e ) {
-        //                 return Response.status( SC_BAD_REQUEST ).type( JSONPUtils.jsonMediaType( callback ) )
-        //                                .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) )
-        // .build();
-        //             }
-        //             catch ( Exception e ) {
-        //                 //TODO:throw descriptive error message and or include on in the response
-        //                 //TODO:fix below, it doesn't work if there is an exception. Make it look like the
-        // OauthResponse.
-        //                 OAuthResponse errorMsg = OAuthResponse.errorResponse( SC_INTERNAL_SERVER_ERROR )
-        // .setErrorDescription( e.getMessage() )
-        //                                                       .buildJSONMessage();
-        //                 return Response.status( errorMsg.getResponseStatus() ).type( JSONPUtils.jsonMediaType(
-        // callback ) )
-        //                                .entity( ServiceResource.wrapWithCallback( errorMsg.getBody(), callback ) )
-        // .build();
-        //             }
-
-        //             return Response.status( SC_ACCEPTED ).entity( uuidRet ).build();
-
 
         return new JSONWithPadding( response, callback );
     }
 
 
-    @Override
+    @GET
     @Path( RootResource.ENTITY_ID_PATH )
-    public AbstractContextResource addIdParameter( @Context UriInfo ui, @PathParam( "entityId" ) PathSegment entityId )
+    public JSONWithPadding addIdParameter( @Context UriInfo ui, @PathParam( "entityId" ) PathSegment entityId )
         throws Exception {
 
+        final UUID importId = UUID.fromString( entityId.getPath() );
+        final Import importEntity = importService.getImport( application.getId(), importId);
 
-        UUID itemId = UUID.fromString( entityId.getPath() );
+        if(importEntity == null){
+            throw new EntityNotFoundException( "could not find import with uuid " + importId );
+        }
 
-        addParameter( getServiceParameters(), itemId );
-
-        addMatrixParams( getServiceParameters(), ui, entityId );
+        ApiResponse response = createApiResponse();
 
 
-        return getSubResource( ImportResource.class ).init(  itemId  );
+        response.setAction( "get" );
+        response.setApplication( emf.getEntityManager( application.getId() ).getApplication()  );
+        response.setParams( ui.getQueryParameters() );
+
+
+        response.setEntities( Collections.<Entity>singletonList( importEntity ) );
+
+        return new JSONWithPadding( response );
+
     }
 
 

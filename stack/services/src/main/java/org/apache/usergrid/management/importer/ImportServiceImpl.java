@@ -17,20 +17,19 @@
 
 package org.apache.usergrid.management.importer;
 
-import com.amazonaws.SDKGlobalConfiguration;
+import com.google.common.base.Preconditions;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.batch.service.SchedulerService;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.persistence.*;
-import org.apache.usergrid.persistence.entities.FailedImportEntity;
 import org.apache.usergrid.persistence.entities.FileImport;
 import org.apache.usergrid.persistence.entities.Import;
 import org.apache.usergrid.persistence.entities.JobData;
+import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Query.Level;
-import org.apache.usergrid.services.queues.ImportQueueMessage;
 import org.apache.usergrid.utils.InflectionUtils;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonParser;
@@ -58,7 +57,10 @@ public class ImportServiceImpl implements ImportService {
     public static final String FILE_IMPORT_JOB_NAME = "fileImportJob";
     public static final int HEARTBEAT_COUNT = 50;
 
+    public static final String APP_IMPORT_CONNECTION ="imports";
+
     private static final Logger logger = LoggerFactory.getLogger(ImportServiceImpl.class);
+    public static final String IMPORT_FILE_INCLUDES = "includes";
 
     int MAX_FILE_IMPORTS = 1000; // max number of file import jobs / import job
 
@@ -83,39 +85,36 @@ public class ImportServiceImpl implements ImportService {
      * @return it returns the UUID of the scheduled job
      */
     @Override
-    public Import schedule( Map<String, Object> config ) throws Exception {
+    public Import schedule(final UUID application,  Map<String, Object> config ) throws Exception {
 
-        if (config == null) {
-            logger.error("import information cannot be null");
-            return null;
-        }
+        Preconditions.checkNotNull(config, "import information cannot be null");
+        Preconditions.checkNotNull( application, "application cannot be null" );
 
-        EntityManager rootEm = null;
+        final EntityManager emMgmtApp;
         try {
-            rootEm = emf.getEntityManager(emf.getManagementAppId());
+            emMgmtApp = emf.getEntityManager(emf.getManagementAppId());
         } catch (Exception e) {
             logger.error("application doesn't exist within the current context");
             return null;
         }
 
-        Import importUG = new Import();
+        Import importEntity = new Import();
+        importEntity.setState(Import.State.CREATED);
 
         // create the import entity to store all metadata about the import job
         try {
-            importUG = rootEm.create(importUG);
+            importEntity = emMgmtApp.create( importEntity );
         } catch (Exception e) {
             logger.error("Import entity creation failed");
             return null;
         }
 
         // update state for import job to created
-        importUG.setState(Import.State.CREATED);
-        rootEm.update(importUG);
 
         // set data to be transferred to importInfo
         JobData jobData = new JobData();
         jobData.setProperty("importInfo", config);
-        jobData.setProperty(IMPORT_ID, importUG.getUuid());
+        jobData.setProperty(IMPORT_ID, importEntity.getUuid());
 
         long soonestPossible = System.currentTimeMillis() + 250; //sch grace period
 
@@ -123,10 +122,53 @@ public class ImportServiceImpl implements ImportService {
         sch.createJob(IMPORT_JOB_NAME, soonestPossible, jobData);
 
         // update state for import job to created
-        importUG.setState(Import.State.SCHEDULED);
-        rootEm.update(importUG);
+        importEntity.setState(Import.State.SCHEDULED);
+        emMgmtApp.update(importEntity);
 
-        return importUG;
+        final EntityRef source = getApplicationEntity( emMgmtApp, application );
+
+        //now link it to the application
+        emMgmtApp.createConnection(source, APP_IMPORT_CONNECTION, importEntity);
+
+        return importEntity;
+    }
+
+
+    @Override
+    public Results getImports( final UUID applicationId, final String cursor ) {
+        return null;
+    }
+
+
+    @Override
+    public Import getImport( final UUID applicationId, final UUID importId ) {
+        try {
+            final EntityManager rootEm = emf.getEntityManager( emf.getManagementAppId() );
+
+            final Entity applicationEntity = getApplicationEntity( rootEm, applicationId );
+            final Import importEntity = rootEm.get( importId, Import.class );
+
+            // check if it's on the path
+            if ( !rootEm.isConnectionMember( applicationEntity, APP_IMPORT_CONNECTION, importEntity ) ) {
+                return null;
+            }
+
+            return importEntity;
+        }catch(Exception e){
+            throw new RuntimeException("Unable to get import entity", e );
+        }
+
+    }
+
+
+    private Entity getApplicationEntity(final EntityManager rootEm, final UUID applicationId) throws Exception {
+        final Entity entity = rootEm.get( new SimpleEntityRef( "application_info", applicationId ) );
+
+        if(entity == null){
+            throw new EntityNotFoundException( "Cound not find application with id "  + applicationId);
+        }
+
+        return entity;
     }
 
 
@@ -160,7 +202,7 @@ public class ImportServiceImpl implements ImportService {
 
         try {
             // create a connection between the main import job and the sub FileImport Job
-            emManagementApp.createConnection(importEntity, "includes", fileImport);
+            emManagementApp.createConnection(importEntity, IMPORT_FILE_INCLUDES, fileImport);
 
             logger.debug("Created connection from {}:{} to {}:{}",
                 new Object[] {
@@ -198,7 +240,7 @@ public class ImportServiceImpl implements ImportService {
             EntityManager emMgmtApp = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
             Query query = Query.fromQL("select *");
             query.setEntityType("file_import");
-            query.setConnectionType("includes");
+            query.setConnectionType( IMPORT_FILE_INCLUDES );
             query.setLimit(MAX_FILE_IMPORTS);
 
             Results entities = emMgmtApp.searchConnectedEntities( importRoot, query );
@@ -545,7 +587,7 @@ public class ImportServiceImpl implements ImportService {
         // get parent import job of this file import job
 
         Results importJobResults =
-            emManagementApp.getConnectingEntities( fileImport, "includes", null, Level.ALL_PROPERTIES );
+            emManagementApp.getConnectingEntities( fileImport, IMPORT_FILE_INCLUDES, null, Level.ALL_PROPERTIES );
         List<Entity> importEntities = importJobResults.getEntities();
         UUID importId = importEntities.get( 0 ).getUuid();
         Import importEntity = emManagementApp.get( importId, Import.class );
@@ -556,7 +598,7 @@ public class ImportServiceImpl implements ImportService {
         EntityManager emMgmtApp = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
         Query query = Query.fromQL("select *");
         query.setEntityType("file_import");
-        query.setConnectionType("includes");
+        query.setConnectionType( IMPORT_FILE_INCLUDES );
         query.setLimit(MAX_FILE_IMPORTS);
         Results entities = emMgmtApp.searchConnectedEntities(importEntity, query);
 

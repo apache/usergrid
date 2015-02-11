@@ -90,8 +90,6 @@ public class ServiceResource extends AbstractContextResource {
     protected static final Logger LOG = LoggerFactory.getLogger( ServiceResource.class );
     private static final String FILE_FIELD_NAME = "file";
 
-    protected static TypeReference<Map<String, Object>> mapTypeReference = new TypeReference<Map<String, Object>>() {};
-    protected static TypeReference<List<Object>> listTypeReference = new TypeReference<List<Object>>() {};
 
     @Autowired
     private BinaryStore binaryStore;
@@ -328,28 +326,13 @@ public class ServiceResource extends AbstractContextResource {
     }
 
 
-    /**
-     * Next three new methods necessary to work around inexplicable problems with EntityHolder.
-     * This problem happens consistently when you deploy "two-dot-o" to Tomcat:
-     * https://groups.google.com/forum/#!topic/usergrid/yyAJdmsBfig
-     */
-    protected Object readJsonToObject( String content ) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode jsonNode = mapper.readTree( content );
-        Object jsonObject;
-        if ( jsonNode.isArray() ) {
-            jsonObject = mapper.readValue( content, listTypeReference );
-        } else {
-            jsonObject = mapper.readValue( content, mapTypeReference );
-        }
-        return jsonObject;
-    }
+
 
     /**
      * Necessary to work around inexplicable problems with EntityHolder.
      * See above.
      */
-    public JSONWithPadding executePostWithObject( @Context UriInfo ui, Object json, 
+    public JSONWithPadding executePostWithObject( @Context UriInfo ui, Object json,
             @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 
         LOG.debug( "ServiceResource.executePostWithMap" );
@@ -394,7 +377,7 @@ public class ServiceResource extends AbstractContextResource {
     @POST
     @RequireApplicationAccess
     @Consumes(MediaType.APPLICATION_JSON)
-    public JSONWithPadding executePost( @Context UriInfo ui, String body, 
+    public JSONWithPadding executePost( @Context UriInfo ui, String body,
             @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 
         LOG.debug( "ServiceResource.executePost: body = " + body );

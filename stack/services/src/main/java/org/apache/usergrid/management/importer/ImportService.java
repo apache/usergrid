@@ -17,7 +17,9 @@
 
 package org.apache.usergrid.management.importer;
 
+
 import org.apache.usergrid.batch.JobExecution;
+import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.entities.FileImport;
 import org.apache.usergrid.persistence.entities.Import;
 
@@ -33,7 +35,17 @@ public interface ImportService {
     /**
      * Schedules the import to execute
      */
-    Import schedule( Map<String, Object> json ) throws Exception;
+    Import schedule( final UUID applicationId, Map<String, Object> json ) throws Exception;
+
+    Results getImports(final UUID applicationId, final String cursor);
+
+    /**
+     * Get the import
+     * @param applicationId
+     * @param importId
+     * @return
+     */
+    Import getImport(final UUID applicationId, final UUID importId);
 
     /**
      * Perform the import from the external resource
