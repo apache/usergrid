@@ -424,10 +424,10 @@ public class ImportCollectionIT {
             put( "properties", new HashMap<String, Object>() {{
                 put( "storage_provider", "s3" );
                 put( "storage_info", new HashMap<String, Object>() {{
-                    put( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR,
+                    put( "s3_access_id",
+                        System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR) );
+                    put( "s3_key",
                         System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR ) );
-                    put( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR,
-                        System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR ) );
                     put( "bucket_location", bucketName );
                 }} );
             }} );
@@ -467,10 +467,10 @@ public class ImportCollectionIT {
             put( "properties", new HashMap<String, Object>() {{
                  put( "storage_provider", "s3" );
                  put( "storage_info", new HashMap<String, Object>() {{
-                     put( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR,
-                         System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR ) );
-                     put( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR,
-                         System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR ) );
+                     put( "s3_access_id",
+                         System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR) );
+                     put("s3_key",
+                         System.getProperty(SDKGlobalConfiguration.SECRET_KEY_ENV_VAR));
                     put( "bucket_location", bucketName );
                 }});
             }});
