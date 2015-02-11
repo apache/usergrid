@@ -38,6 +38,7 @@ import org.apache.usergrid.management.export.S3ExportImpl;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.entities.Import;
 import org.apache.usergrid.persistence.entities.JobData;
+import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.persistence.index.query.Query.Level;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
@@ -326,7 +327,7 @@ public class ImportServiceIT {
 
         //import the all application files for the organization and wait for the import to finish
         importService.doImport(jobExecution);
-        while ( !importService.getState( importUUID ).equals( "FINISHED" ) ) {
+        while ( !importService.getState( importUUID ).equals( Import.State.FINISHED ) ) {
             ;
         }
 
@@ -405,27 +406,25 @@ public class ImportServiceIT {
     /**
      * Test to get state of a job with null UUID
      */
-    @Test
+    @Test(expected = NullPointerException.class)
     public void testGetStateWithNullUUID() throws Exception {
         UUID uuid= null;
 
         ImportService importService = setup.getImportService();
-        String state = importService.getState(uuid);
+        Import.State state = importService.getState( uuid );
 
-        assertEquals(state,"UUID passed in cannot be null");
     }
 
     /**
      * Test to get state of a job with fake UUID
      */
-    @Test
+    @Test(expected = EntityNotFoundException.class)
     public void testGetStateWithFakeUUID() throws Exception {
         UUID fake = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
 
         ImportService importService = setup.getImportService();
-        String state = importService.getState(fake);
+        Import.State state = importService.getState( fake );
 
-        assertEquals(state,"No Such Element found");
     }
 
 
@@ -476,7 +475,7 @@ public class ImportServiceIT {
         when( jobExecution.getJobData() ).thenReturn( jobData );
 
         importService.doImport(jobExecution);
-        assertEquals(importService.getState(importUUID),"FAILED");
+        assertEquals(importService.getState(importUUID),Import.State.FAILED);
     }
 
     /**
@@ -506,7 +505,7 @@ public class ImportServiceIT {
 
         //import the all application files for the organization and wait for the import to finish
         importService.doImport(jobExecution);
-        assertEquals("FAILED", importService.getState(importUUID));
+        assertEquals(Import.State.FAILED, importService.getState(importUUID));
     }
 
     /**
@@ -538,7 +537,7 @@ public class ImportServiceIT {
 
         //import the application files for the organization and wait for the import to finish
         importService.doImport(jobExecution);
-        assertEquals("FAILED", importService.getState(importUUID));
+        assertEquals(Import.State.FAILED, importService.getState(importUUID));
     }
 
     /**
@@ -571,7 +570,7 @@ public class ImportServiceIT {
 
         //import the all collection files for the organization-application and wait for the import to finish
         importService.doImport(jobExecution);
-        assertEquals(importService.getState(importUUID),"FAILED");
+        assertEquals(importService.getState(importUUID),Import.State.FAILED);
     }
 
     /*Creates fake payload for testing purposes.*/
