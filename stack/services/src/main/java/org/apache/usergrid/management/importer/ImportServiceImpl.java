@@ -1135,15 +1135,13 @@ public class ImportServiceImpl implements ImportService {
                 Stack<String> objectNameStack = new Stack();
                 EntityRef lastEntity = null;
 
-//                String collectionName = null;
                 String entityType = null;
 
                 while ( true ) {
 
-
                     JsonToken token = jp.nextToken();
 
-                    //nothing left to do.
+                    // nothing left to do.
                     if ( token == null ) {
                         break;
                     }
@@ -1151,13 +1149,13 @@ public class ImportServiceImpl implements ImportService {
                     String name = jp.getCurrentName();
 
 
-                    //start of an object with a field name
+                    // start of an object with a field name
 
                     if ( token.equals( JsonToken.START_OBJECT ) ) {
 
                         objectStartStack.push( token );
 
-                        //nothing to do
+                        // nothing to do
                         if ( name == null ) {
                             continue;
                         }
@@ -1206,7 +1204,6 @@ public class ImportServiceImpl implements ImportService {
 
                         } else if ( "dictionaries".equals(name) ) {
 
-
                             Map<String, Object> dictionariesMap = jp.readValueAs( HashMap.class );
                             for ( String dname : dictionariesMap.keySet() ) {
                                 Map dmap = ( Map ) dictionariesMap.get( dname );
@@ -1228,7 +1225,7 @@ public class ImportServiceImpl implements ImportService {
                         }
 
                     }  else if (token.equals( JsonToken.START_ARRAY )) {
-                         if( objectNameStack.size() == 1 && COLLECTION_OBJECT_NAME.equals( objectNameStack.peek() )) {
+                         if ( objectNameStack.size() == 1 && COLLECTION_OBJECT_NAME.equals( objectNameStack.peek() )) {
                             entityType = InflectionUtils.singularize( name );
                          }
 

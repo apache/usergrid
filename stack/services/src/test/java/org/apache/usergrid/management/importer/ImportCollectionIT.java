@@ -167,7 +167,7 @@ public class ImportCollectionIT {
                 organization.getUuid(), "second").getId();
 
             final EntityManager emApp2 = setup.getEmf().getEntityManager(appId2);
-            importCollection( emApp2, "things" );
+            importCollection( emApp2 );
 
 
             // make sure that it worked
@@ -257,7 +257,7 @@ public class ImportCollectionIT {
                 organization.getUuid(), "second").getId();
 
             final EntityManager emApp2 = setup.getEmf().getEntityManager(appId2);
-            importCollection(emApp2, "things");
+            importCollection(emApp2);
 
 
             // update the things in the second application, export to S3
@@ -274,7 +274,7 @@ public class ImportCollectionIT {
 
             // import the updated things back into the first application, check that they've been updated
 
-            importCollection(emApp1, "things");
+            importCollection(emApp1);
 
             for (UUID uuid : thingsMap.keySet()) {
                 Entity entity = emApp1.get(uuid);
@@ -317,7 +317,7 @@ public class ImportCollectionIT {
             logger.debug("\n\nImporting\n");
 
             final EntityManager emDefaultApp = setup.getEmf().getEntityManager(applicationId);
-            importCollection(emDefaultApp, "things");
+            importCollection(emDefaultApp );
 
             // we should now have 100 Entities in the default app
 
@@ -350,16 +350,19 @@ public class ImportCollectionIT {
         //list out all the files in the resource directory you want uploaded
         List<String> filenames = new ArrayList<>( 1 );
 
-        filenames.add( "testImportInvalidJson.testApplication.3.json" );
+        filenames.add( "testimport-bad-json.json");
+
         // create 10 applications each with collection of 10 things, export all to S3
         S3Upload s3Upload = new S3Upload();
-        s3Upload.copyToS3( System.getProperty(SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR), System.getProperty(SDKGlobalConfiguration.SECRET_KEY_ENV_VAR),
+        s3Upload.copyToS3(
+            System.getProperty(SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR),
+            System.getProperty(SDKGlobalConfiguration.SECRET_KEY_ENV_VAR),
             bucketName, filenames );
 
         // import all those exports from S3 into the default test application
 
         final EntityManager emDefaultApp = setup.getEmf().getEntityManager( applicationId );
-        importCollection( emDefaultApp, "things" );
+        importCollection( emDefaultApp );
 
         // we should now have 100 Entities in the default app
 
@@ -380,9 +383,10 @@ public class ImportCollectionIT {
         // upload good and badly formatted files to our S3 bucket
 
         List<String> filenames = new ArrayList<>( 3 );
-        filenames.add( "testImport.testCollection.1.json" );
-        filenames.add( "testImport.testApplication.2.json" );
-        filenames.add( "testImportInvalidJson.testApplication.3.json" );
+        filenames.add( "testimport-with-connections.json" );
+        filenames.add( "testimport-qtmagics.json" );
+        filenames.add( "testimport-bad-connection.json" );
+        filenames.add( "testimport-bad-json.json" );
 
         S3Upload s3Upload = new S3Upload();
         s3Upload.copyToS3(
@@ -393,15 +397,37 @@ public class ImportCollectionIT {
         // import all those files into the default test application
 
         final EntityManager emDefaultApp = setup.getEmf().getEntityManager( applicationId );
-        importCollection( emDefaultApp, "things" );
+        importCollection( emDefaultApp );
 
         // we should now have 100 Entities in the default app
 
-        List<Entity> importedThings = emDefaultApp.getCollection(
-            emDefaultApp.getApplicationId(), "things", null, Level.ALL_PROPERTIES).getEntities();
+        {
+            List<Entity> importedThings = emDefaultApp.getCollection(
+                emDefaultApp.getApplicationId(), "connfails", null, Level.ALL_PROPERTIES).getEntities();
+            assertTrue(!importedThings.isEmpty());
+            assertEquals(1, importedThings.size());
+        }
 
-        assertTrue( !importedThings.isEmpty() );
-        assertEquals( 7, importedThings.size() );
+        {
+            List<Entity> importedThings = emDefaultApp.getCollection(
+                emDefaultApp.getApplicationId(), "qtmagics", null, Level.ALL_PROPERTIES).getEntities();
+            assertTrue(!importedThings.isEmpty());
+            assertEquals(5, importedThings.size());
+        }
+
+        {
+            List<Entity> importedThings = emDefaultApp.getCollection(
+                emDefaultApp.getApplicationId(), "badjsons", null, Level.ALL_PROPERTIES).getEntities();
+            assertTrue(!importedThings.isEmpty());
+            assertEquals(4, importedThings.size());
+        }
+
+        {
+            List<Entity> importedThings = emDefaultApp.getCollection(
+                emDefaultApp.getApplicationId(), "things", null, Level.ALL_PROPERTIES).getEntities();
+            assertTrue(!importedThings.isEmpty());
+            assertEquals(10, importedThings.size());
+        }
 
         // TODO: have something that checks the exceptions and errors.
     }
@@ -410,11 +436,7 @@ public class ImportCollectionIT {
    //---------------------------------------------------------------------------------------------
 
 
-    /**
-     * Call importService to import files from the configured S3 bucket.
-     * @param collectionName Name of collection into which Entities will be imported.
-     */
-    private void importCollection(final EntityManager em, final String collectionName ) throws Exception {
+    private void importCollection(final EntityManager em ) throws Exception {
 
         logger.debug("\n\nImport into new app {}\n", em.getApplication().getName() );
 
@@ -424,7 +446,6 @@ public class ImportCollectionIT {
             put( "path", organization.getName() + em.getApplication().getName() );
             put( "organizationId", organization.getUuid() );
             put( "applicationId", em.getApplication().getUuid() );
-            put( "collectionName", collectionName );
             put( "properties", new HashMap<String, Object>() {{
                 put( "storage_provider", "s3" );
                 put( "storage_info", new HashMap<String, Object>() {{
@@ -439,10 +460,12 @@ public class ImportCollectionIT {
 
 
 
-        int maxRetries = 120;
+        int maxRetries = 60;
         int retries = 0;
-        while ( (!importService.getState( importEntity.getUuid() ).equals( "FINISHED" ) ||
-                 !importService.getState( importEntity.getUuid() ).equals( "FAILED" )) && retries++ < maxRetries ) {
+        while (     !importService.getState( importEntity.getUuid() ).equals( "FINISHED" )
+                 && !importService.getState( importEntity.getUuid() ).equals( "FAILED" )
+                 && retries++ < maxRetries ) {
+
             logger.debug("Waiting for import...");
             Thread.sleep(1000);
         }
@@ -480,7 +503,7 @@ public class ImportCollectionIT {
             }});
         }});
 
-        int maxRetries = 120;
+        int maxRetries = 60;
         int retries = 0;
         while ( !exportService.getState( exportUUID ).equals( "FINISHED" ) && retries++ < maxRetries ) {
             logger.debug("Waiting for export...");

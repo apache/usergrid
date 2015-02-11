@@ -17,7 +17,6 @@
 
 package org.apache.usergrid.rest.management;
 
-import com.amazonaws.SDKGlobalConfiguration;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Service;
 import com.google.inject.Module;
@@ -135,11 +134,11 @@ public class ImportResourceIT extends AbstractRestIT {
         ///management/orgs/orgname/apps/appname/import
         Entity entity = this.management()
             .orgs()
-            .organization( org )
+            .organization(org)
             .app()
-            .addToPath( app )
-            .addToPath( "import" )
-            .post( payload );
+            .addToPath(app)
+            .addToPath("import")
+            .post(payload);
 
         assertNotNull(entity);
 
@@ -177,7 +176,7 @@ public class ImportResourceIT extends AbstractRestIT {
             .app()
             .addToPath(app)
             .addToPath("import")
-            .post( payload );
+            .post(payload);
 
 
         assertNotNull(entity);
@@ -420,7 +419,7 @@ public class ImportResourceIT extends AbstractRestIT {
         //list out all the files in the resource directory you want uploaded
         List<String> filenames = new ArrayList<>(1);
 
-        filenames.add("testImportCorrect.testCol.1.json");
+        filenames.add("testimport-bad-connection.json");
         // create 10 applications each with collection of 10 things, export all to S3
         S3Upload s3Upload = new S3Upload();
         s3Upload.copyToS3(
@@ -467,7 +466,7 @@ public class ImportResourceIT extends AbstractRestIT {
         //list out all the files in the resource directory you want uploaded
         List<String> filenames = new ArrayList<>(1);
 
-        filenames.add("testImportCorrect.testCol.1.json");
+        filenames.add("testimport-bad-connection.json");
         filenames.add("testImport.testApplication.2.json");
         // create 10 applications each with collection of 10 things, export all to S3
         S3Upload s3Upload = new S3Upload();
@@ -608,8 +607,8 @@ public class ImportResourceIT extends AbstractRestIT {
             }});
         }});
 
-        Entity importEntity = this.management().orgs().organization(org).app().addToPath(app).addToPath("import" )
-                                  .post(importPayload );
+        Entity importEntity = this.management().orgs().organization(org).app().addToPath(app).addToPath("import")
+                                  .post(importPayload);
 
         int maxRetries = 120;
         int retries = 0;
@@ -684,8 +683,8 @@ public class ImportResourceIT extends AbstractRestIT {
         overrides.setProperty("s3" + ".identity", accessId);
         overrides.setProperty("s3" + ".credential", secretKey);
 
-        final Iterable<? extends Module> MODULES = ImmutableSet.of( new JavaUrlHttpCommandExecutorServiceModule(),
-            new Log4JLoggingModule(), new NettyPayloadModule() );
+        final Iterable<? extends Module> MODULES = ImmutableSet.of(new JavaUrlHttpCommandExecutorServiceModule(),
+            new Log4JLoggingModule(), new NettyPayloadModule());
 
         BlobStoreContext context =
             ContextBuilder.newBuilder("s3").credentials(accessId, secretKey).modules(MODULES)

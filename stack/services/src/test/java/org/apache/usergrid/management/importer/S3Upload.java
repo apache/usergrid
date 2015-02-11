@@ -44,23 +44,25 @@ import com.google.inject.Module;
  * Helper class made to upload resource files to s3 so they can be imported later
  */
 public class S3Upload {
+
     private static final Logger logger = LoggerFactory.getLogger( S3Upload.class );
 
-    /*won't need any of the properties as I have the export info*/
-
     public void copyToS3( String accessKey, String secretKey, String bucketName, List<String> filenames ) {
-
 
         Properties overrides = new Properties();
         overrides.setProperty( "s3" + ".identity", accessKey );
         overrides.setProperty( "s3" + ".credential", secretKey );
 
-        final Iterable<? extends Module> MODULES = ImmutableSet
-            .of( new JavaUrlHttpCommandExecutorServiceModule(), new Log4JLoggingModule(), new NettyPayloadModule() );
+        final Iterable<? extends Module> MODULES = ImmutableSet.of(
+            new JavaUrlHttpCommandExecutorServiceModule(),
+            new Log4JLoggingModule(),
+            new NettyPayloadModule() );
 
-        BlobStoreContext context =
-            ContextBuilder.newBuilder( "s3" ).credentials( accessKey, secretKey ).modules( MODULES )
-                          .overrides( overrides ).buildView( BlobStoreContext.class );
+        BlobStoreContext context = ContextBuilder.newBuilder( "s3" )
+            .credentials( accessKey, secretKey )
+            .modules( MODULES )
+            .overrides( overrides )
+            .buildView( BlobStoreContext.class );
 
         // Create Container (the bucket in s3)
         try {
@@ -72,14 +74,20 @@ public class S3Upload {
         catch ( Exception ex ) {
             throw new RuntimeException( "Could not create bucket",ex );
         }
+
         Iterator<String> fileNameIterator = filenames.iterator();
+
         while(fileNameIterator.hasNext()) {
+
             String filename = fileNameIterator.next();
             InputStream fileStream = S3Upload.class.getResourceAsStream( "/" + filename );
+
             try {
                 BlobStore blobStore = context.getBlobStore();
-                BlobBuilder blobBuilder = blobStore.blobBuilder( filename ).payload( fileStream ).calculateMD5()
-                                                   .contentType( "application/json" );
+                BlobBuilder blobBuilder = blobStore.blobBuilder( filename )
+                    .payload( fileStream )
+                    .calculateMD5()
+                    .contentType( "application/json" );
                 Blob blob = blobBuilder.build();
 
                 final String uploadedFile = blobStore.putBlob( bucketName, blob, PutOptions.Builder.multipart() );
@@ -90,7 +98,7 @@ public class S3Upload {
                 logger.info( "Uploaded file name={} etag={}", filename, uploadedFile );
             }
             catch ( Exception e ) {
-                logger.error( "Error uploading to blob store", e );
+                logger.error( "Error uploading to blob store. File: " + filename, e );
             }
         }
     }
