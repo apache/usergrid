@@ -800,7 +800,6 @@ public class ImportServiceImpl implements ImportService {
                 logger.debug("Writing imported entity {}:{} into app {}",
                     new Object[]{entityType, entityUuid, em.getApplication().getUuid()});
 
-
                 em.create(entityUuid, entityType, properties);
 
                 tracker.entityWritten();
@@ -972,8 +971,11 @@ public class ImportServiceImpl implements ImportService {
 
                             Map<String, Object> entityMap = jp.readValueAs( HashMap.class );
 
-                            UUID uuid = UUID.fromString( ( String ) entityMap.get( "uuid" ) );
-                            lastEntity = new SimpleEntityRef( entityType, uuid );
+                            UUID uuid = null;
+                            if ( entityMap.get( "uuid" ) != null ) {
+                                uuid = UUID.fromString((String) entityMap.get("uuid"));
+                                lastEntity = new SimpleEntityRef(entityType, uuid);
+                            }
 
                             if ( entitiesOnly ) {
                                 //logger.debug("{}Got entity with uuid {}", indent, lastEntity);
@@ -983,7 +985,7 @@ public class ImportServiceImpl implements ImportService {
                             }
                             objectStartStack.pop();
                         }
-                        else if ( "connections".equals( name ) ) {
+                        else if ( "connections".equals(name) ) {
 
                             Map<String, Object> connectionMap = jp.readValueAs( HashMap.class );
 

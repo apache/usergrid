@@ -145,12 +145,11 @@ public class ImportsResource extends ServiceResource {
             throw new NullPointerException( "Could not find field 'storage_info'" );
         }
 
-
         String bucketName = ( String ) storage_info.get( "bucket_location" );
 
         //check to make sure that access key and secret key are there.
-        uac.getAWSAccessKeyIdJson( storage_info );
-        uac.getAWSSecretKeyJson( storage_info );
+//        uac.getAWSAccessKeyIdJson( storage_info );
+//        uac.getAWSSecretKeyJson( storage_info );
 
         if ( bucketName == null ) {
             throw new NullPointerException( "Could not find field 'bucketName'" );
