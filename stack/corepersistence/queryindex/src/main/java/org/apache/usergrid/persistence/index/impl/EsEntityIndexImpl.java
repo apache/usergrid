@@ -184,10 +184,14 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
             String[] indexNames = getIndexes(AliasType.Write);
 
             for (String currentIndex : indexNames){
-                isAck = adminClient.indices().prepareAliases().removeAlias(currentIndex,
+                try {
+                    isAck = adminClient.indices().prepareAliases().removeAlias(currentIndex,
                         alias.getWriteAlias()).execute().actionGet().isAcknowledged();
 
-                logger.info("Removed Index Name [{}] from Alias=[{}] ACK=[{}]", currentIndex, alias, isAck);
+                    logger.info("Removed Index Name [{}] from Alias=[{}] ACK=[{}]", currentIndex, alias, isAck);
+                }catch (Exception innere){
+                    logger.warn("Alias removal failed",innere);
+                }
             }
 
             // add read alias

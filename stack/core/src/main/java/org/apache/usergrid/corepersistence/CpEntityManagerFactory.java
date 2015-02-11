@@ -693,7 +693,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         //explicitly invoke create index, we don't know if it exists or not in ES during a rebuild.
         em.createIndex();
         em.reindex(po);
-        
+
         Application app = em.getApplication();
         logger.info("\n\nRebuilt index for application {} id {}\n", app.getName(), appId );
     }
