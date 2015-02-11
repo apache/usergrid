@@ -67,6 +67,13 @@ public interface EntityManagerFactory {
     public abstract UUID createApplication(
             String organizationName, String name, Map<String, Object> properties ) throws Exception;
 
+    /**
+     * Delete Application.
+     *
+     * @param applicationId UUID of Application to be deleted.
+     */
+    public abstract void deleteApplication( UUID applicationId ) throws Exception;
+
     public abstract UUID importApplication( String organization, UUID applicationId, String name,
                                             Map<String, Object> properties ) throws Exception;
 

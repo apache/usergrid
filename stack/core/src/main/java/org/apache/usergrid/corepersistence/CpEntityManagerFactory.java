@@ -150,8 +150,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             if ( em.getApplication() == null ) {
                 logger.info("Creating system application");
                 Map sysAppProps = new HashMap<String, Object>();
-                sysAppProps.put( PROPERTY_NAME, "systemapp");
-                em.create( CpNamingUtils.SYSTEM_APP_ID, TYPE_APPLICATION, sysAppProps );
+                sysAppProps.put(PROPERTY_NAME, "systemapp");
+                em.create(CpNamingUtils.SYSTEM_APP_ID, TYPE_APPLICATION, sysAppProps);
                 em.getApplication();
                 em.createIndex();
                 em.refreshIndex();
@@ -172,6 +172,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 //        }
 //        return managerCache;
 //    }
+
 
 
     @Override
@@ -303,6 +304,36 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     }
 
 
+    /**
+     * Delete Application.
+     *
+     * <p>The Application Entity is be moved to a Deleted_Applications collection and the
+     * Application index will be removed.
+     *
+     * <p>TODO: add scheduled task that can completely delete all deleted application data.</p>
+     *
+     * @param applicationId UUID of Application to be deleted.
+     */
+    @Override
+    public void deleteApplication(UUID applicationId) throws Exception {
+
+        // remove old appinfo Entity, which is in the System App's appinfos collection
+        EntityManager em = getEntityManager(CpNamingUtils.SYSTEM_APP_ID);
+        Query q = Query.fromQL(String.format("select * where applicationUuid = '%s'", applicationId.toString()));
+        Results results = em.searchCollection( em.getApplicationRef(), "appinfos", q);
+        Entity appToDelete = results.getEntity();
+        em.delete( appToDelete );
+
+        // create new Entity in deleted_appinfos collection, with same UUID and properties as deleted appinfo
+        em.create( "deleted_appinfo", appToDelete.getProperties() );
+
+        em.refreshIndex();
+
+        // delete the application's index
+        EntityIndex ei = managerCache.getEntityIndex(new ApplicationScopeImpl(
+            new SimpleId(applicationId, TYPE_APPLICATION)));
+        ei.deleteIndex();
+    }
 
 
     @Override
@@ -413,6 +444,11 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                     managerCache.getEntityCollectionManager( collScope ).load( targetId )
                         .toBlockingObservable().lastOrDefault(null);
 
+            if ( e == null ) {
+                logger.warn("Applicaion {} in index but not found in collections", targetId );
+                continue;
+            }
+
             appMap.put(
                 (String)e.getField( PROPERTY_NAME ).getValue(),
                 (UUID)e.getField( "applicationUuid" ).getValue());
@@ -424,11 +460,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     @Override
     public void setup() throws Exception {
-        final Setup setup = getSetup();
-        setup.init();
-        setup.setupSystemKeyspace();
-        setup.setupStaticKeyspace();
-        setup.createDefaultApplications();
+        getSetup().init();
+        init();
     }
 
 
@@ -725,9 +758,12 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     public Health getEntityStoreHealth() {
 
         // could use any collection scope here, does not matter
-        EntityCollectionManager ecm = managerCache.getEntityCollectionManager(
-            new CollectionScopeImpl( new SimpleId( CpNamingUtils.SYSTEM_APP_ID, "application" ),
-                new SimpleId( CpNamingUtils.SYSTEM_APP_ID, "application" ), "dummy" ) );
+        EntityCollectionManager ecm = getManagerCache().getEntityCollectionManager(
+            new CollectionScopeImpl(
+                new SimpleId( CpNamingUtils.SYSTEM_APP_ID, "application"),
+                new SimpleId( CpNamingUtils.SYSTEM_APP_ID, "application"),
+                "dummy"
+        ));
 
         return ecm.getHealth();
     }

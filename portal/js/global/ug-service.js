@@ -448,8 +448,9 @@ AppServices.Services.factory('ug', function(configuration, $rootScope, utility,
         } else {
 
           var queryPath = data.path;
-          self.getCollection('query', queryPath, null,
-            'order by modified DESC', null);
+          //remove preceeding slash
+          queryPath = queryPath.replace(/^\//, ''); 
+          self.getCollection('query', queryPath, null, 'order by modified DESC', null);
 
         }
       });
@@ -797,6 +798,20 @@ AppServices.Services.factory('ug', function(configuration, $rootScope, utility,
         }
       });
     },
+    createWinNotifier: function(name,sid,apiKey, logging){
+      var options = {
+        method: 'POST',
+        endpoint: 'notifiers',
+        body: {
+          "sid": sid,
+          "apiKey": apiKey,
+          "name": name,
+          "logging": logging,
+          "provider": "windows"
+        }
+      };
+      this.client().request(options, this.notifierResponseReceived);
+    },
     createAndroidNotifier: function(name, APIkey) {
       var options = {
         method: 'POST',
@@ -807,18 +822,7 @@ AppServices.Services.factory('ug', function(configuration, $rootScope, utility,
           "provider": "google"
         }
       };
-      this.client().request(options, function(err, data) {
-        if (err) {
-          console.error(data);
-          $rootScope.$broadcast('alert', 'error',
-            'error creating notifier ');
-        } else {
-          $rootScope.$broadcast('alert', 'success',
-            'New notifier created successfully.');
-          $rootScope.$broadcast('notifier-update');
-        }
-      });
-
+      this.client().request(options, this.notifierResponseReceived);
     },
     createAppleNotifier: function(file, name, environment,
       certificatePassword) {
@@ -832,41 +836,23 @@ AppServices.Services.factory('ug', function(configuration, $rootScope, utility,
       formData.append('provider', provider);
       formData.append('environment', environment);
       formData.append('certificatePassword', certificatePassword || "");
-      //var body = {'p12Certificate':file, "name":name,'environment':environment,"provider":provider};
-      //if(certificatePassword){
-      //    body.certificatePassword = certificatePassword;
-      //}
+
       var options = {
         method: 'POST',
         endpoint: 'notifiers',
         formData: formData
       };
-      this.client().request(options, function(err, data) {
-        if (err) {
-          console.error(data);
-          $rootScope.$broadcast('alert', 'error', data.error_description ||
-            'error creating notifier');
-        } else {
-          $rootScope.$broadcast('alert', 'success',
-            'New notifier created successfully.');
-          $rootScope.$broadcast('notifier-update');
-        }
-      });
-
+      this.client().request(options, this.notifierResponseReceived);
     },
-    deleteNotifier: function(name) {
-      var options = {
-        method: 'DELETE',
-        endpoint: 'notifiers/' + name
-      };
-      this.client().request(options, function(err, data) {
-        if (err) {
-          $rootScope.$broadcast('alert', 'error', 'error deleting notifier');
-        } else {
-          $rootScope.$broadcast('notifier-update');
-        }
-      });
-
+    notifierResponseReceived:function(err, data) {
+      if (err) {
+        console.error(data);
+        $rootScope.$broadcast('alert', 'error', data.error_description || 'error creating notifier');
+      } else {
+        $rootScope.$broadcast('alert', 'success',
+            'New notifier created successfully.');
+        $rootScope.$broadcast('notifier-update');
+      }
     },
     initializeCurrentUser: function(callback) {
       callback = callback || function() {};

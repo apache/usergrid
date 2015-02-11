@@ -116,7 +116,6 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
     }
 
 
-
     /*
      * (non-Javadoc)
      *
@@ -206,6 +205,13 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
         initializeApplication( organizationName, applicationId, appName, properties );
 
         return applicationId;
+    }
+
+
+    @Override
+    public void deleteApplication(UUID applicationId) throws Exception {
+        // TODO implement deleteApplication in Usergrid 1 code base (master branch?)
+        throw new UnsupportedOperationException("Not supported.");
     }
 
 
