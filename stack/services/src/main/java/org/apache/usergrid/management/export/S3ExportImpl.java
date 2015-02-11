@@ -49,8 +49,8 @@ public class S3ExportImpl implements S3Export {
         Map<String, Object> storage_info = (Map<String,Object>)properties.get( "storage_info" );
 
         String bucketName = ( String ) storage_info.get( "bucket_location" );
-        String accessId = ( String ) storage_info.get( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR );
-        String secretKey = ( String ) storage_info.get( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR );
+        String accessId = ( String ) storage_info.get( "s3_access_id");
+        String secretKey = ( String ) storage_info.get( "s3_key" );
 
         Properties overrides = new Properties();
         overrides.setProperty( "s3" + ".identity", accessId );
