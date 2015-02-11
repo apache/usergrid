@@ -32,6 +32,7 @@ import org.apache.usergrid.management.importer.S3Upload;
 import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Collection;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.apache.usergrid.rest.test.resource2point0.model.Organization;
@@ -435,7 +436,17 @@ public class ImportResourceIT extends AbstractRestIT {
             .addToPath( "import" ).addToPath( importEntity.getUuid().toString() ).get();
 
 
+        refreshIndex();
+
+        Entity importGetIncludes = this.management().orgs().organization(org).app().addToPath(app)
+                                       .addToPath("import" ).addToPath(importEntity.getUuid().toString() )
+                                       .addToPath("includes" ).get();
+
+        ApiResponse importGetIncludesResponse = importGetIncludes.getResponse();
+
         assertNotNull(importGet);
+        assertNotNull( importGetIncludes );
+        assertEquals( 1,importGetIncludesResponse.getEntityCount());
 
         assertEquals("FINISHED", importGet.get("state"));
         assertEquals(1, importGet.get("fileCount"));

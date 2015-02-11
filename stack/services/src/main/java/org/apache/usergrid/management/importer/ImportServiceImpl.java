@@ -208,11 +208,14 @@ public class ImportServiceImpl implements ImportService {
 
             Query query = Query.fromQLNullSafe( ql );
             query.setCursor( cursor );
+            query.setConnectionType( IMPORT_FILE_INCLUDES_CONNECTION );
+            query.setResultsLevel( Level.ALL_PROPERTIES );
+
 
             //set our entity type
-            query.setEntityType( Schema.getDefaultSchema().getEntityType( Import.class ) );
+            query.setEntityType( Schema.getDefaultSchema().getEntityType( FileImport.class ) );
 
-            return rootEm.searchCollection( importEntity, IMPORT_FILE_INCLUDES_CONNECTION, query );
+            return rootEm.searchConnectedEntities( importEntity, query );
         }
         catch ( Exception e ) {
             throw new RuntimeException( "Unable to get import entity", e );
@@ -265,11 +268,14 @@ public class ImportServiceImpl implements ImportService {
 
             Query query = Query.fromQLNullSafe( ql );
             query.setCursor( cursor );
+            query.setConnectionType( FileImportTracker.ERRORS_CONNECTION_NAME );
+            query.setResultsLevel( Level.ALL_PROPERTIES );
+
 
             //set our entity type
             query.setEntityType( Schema.getDefaultSchema().getEntityType( FailedImportEntity.class ) );
 
-            return rootEm.searchCollection( importEntity, FileImportTracker.ERRORS_CONNECTION_NAME, query );
+            return rootEm.searchConnectedEntities( importEntity,  query );
         }
         catch ( Exception e ) {
             throw new RuntimeException( "Unable to get import entity", e );
@@ -414,11 +420,10 @@ public class ImportServiceImpl implements ImportService {
      * Query Entity Manager for the state of the Import Entity. This corresponds to the GET /import
      */
     @Override
-    public String getState(UUID uuid) throws Exception {
-        if (uuid == null) {
-            logger.error("getState(): UUID passed in cannot be null.");
-            return "UUID passed in cannot be null";
-        }
+    public Import.State getState( UUID uuid ) throws Exception {
+
+        Preconditions.checkNotNull( uuid, "uuid cannot be null" );
+
 
         EntityManager rootEm = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
 
@@ -426,10 +431,10 @@ public class ImportServiceImpl implements ImportService {
         Import importUG = rootEm.get(uuid, Import.class);
 
         if (importUG == null) {
-            logger.error("getState(): no entity with that uuid was found");
-            return "No Such Element found";
+            throw new EntityNotFoundException( "Could not find entity with uuid " + uuid );
         }
-        return importUG.getState().toString();
+
+        return importUG.getState();
     }
 
     /**
@@ -798,10 +803,13 @@ public class ImportServiceImpl implements ImportService {
             logger.debug("{} Got importEntity {}", randTag, importEntity.getUuid());
 
             EntityManager emMgmtApp = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
-            Query query = Query.fromQL("select *");
-            query.setEntityType("file_import");
+
+
+            Query query = new Query();
+            query.setEntityType(Schema.getDefaultSchema().getEntityType( FileImport.class ));
             query.setConnectionType( IMPORT_FILE_INCLUDES_CONNECTION );
             query.setLimit(MAX_FILE_IMPORTS);
+
             Results entities = emMgmtApp.searchConnectedEntities(importEntity, query);
 
             PagingResultsIterator itr = new PagingResultsIterator(entities);

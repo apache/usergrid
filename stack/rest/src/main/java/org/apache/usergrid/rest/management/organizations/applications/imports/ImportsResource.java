@@ -211,7 +211,6 @@ public class ImportsResource extends AbstractContextResource {
     }
 
 
-    @GET
     @Path( RootResource.ENTITY_ID_PATH + "/includes" )
     public FileIncludesResource getIncludes( @Context UriInfo ui, @PathParam( "entityId" ) PathSegment entityId )
         throws Exception {

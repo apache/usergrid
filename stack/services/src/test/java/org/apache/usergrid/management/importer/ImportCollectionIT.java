@@ -465,7 +465,7 @@ public class ImportCollectionIT {
         while (     !importService.getState( importEntity.getUuid() ).equals( "FINISHED" )
                  && !importService.getState( importEntity.getUuid() ).equals( "FAILED" )
                  && retries++ < maxRetries ) {
-
+            
             logger.debug("Waiting for import...");
             Thread.sleep(1000);
         }

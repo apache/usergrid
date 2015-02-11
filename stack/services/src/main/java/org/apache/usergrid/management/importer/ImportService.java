@@ -112,7 +112,7 @@ public interface ImportService {
      * @param uuid Job UUID
      * @return State of Job
      */
-    String getState(UUID uuid) throws Exception;
+    Import.State getState( UUID uuid ) throws Exception;
 
     /**
      * Returns error message for the job with UUID
