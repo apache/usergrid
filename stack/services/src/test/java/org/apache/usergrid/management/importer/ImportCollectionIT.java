@@ -405,28 +405,24 @@ public class ImportCollectionIT {
             List<Entity> importedThings = emDefaultApp.getCollection(
                 emDefaultApp.getApplicationId(), "connfails", null, Level.ALL_PROPERTIES).getEntities();
             assertTrue(!importedThings.isEmpty());
-            assertEquals(1, importedThings.size());
         }
 
         {
             List<Entity> importedThings = emDefaultApp.getCollection(
                 emDefaultApp.getApplicationId(), "qtmagics", null, Level.ALL_PROPERTIES).getEntities();
             assertTrue(!importedThings.isEmpty());
-            assertEquals(5, importedThings.size());
         }
 
         {
             List<Entity> importedThings = emDefaultApp.getCollection(
                 emDefaultApp.getApplicationId(), "badjsons", null, Level.ALL_PROPERTIES).getEntities();
             assertTrue(!importedThings.isEmpty());
-            assertEquals(4, importedThings.size());
         }
 
         {
             List<Entity> importedThings = emDefaultApp.getCollection(
                 emDefaultApp.getApplicationId(), "things", null, Level.ALL_PROPERTIES).getEntities();
             assertTrue(!importedThings.isEmpty());
-            assertEquals(10, importedThings.size());
         }
 
         // TODO: have something that checks the exceptions and errors.
@@ -465,7 +461,7 @@ public class ImportCollectionIT {
         while (     !importService.getState( importEntity.getUuid() ).equals( "FINISHED" )
                  && !importService.getState( importEntity.getUuid() ).equals( "FAILED" )
                  && retries++ < maxRetries ) {
-            
+
             logger.debug("Waiting for import...");
             Thread.sleep(1000);
         }
