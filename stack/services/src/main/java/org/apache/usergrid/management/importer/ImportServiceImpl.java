@@ -24,6 +24,7 @@ import org.apache.usergrid.batch.service.SchedulerService;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.persistence.*;
+import org.apache.usergrid.persistence.entities.FailedImportEntity;
 import org.apache.usergrid.persistence.entities.FileImport;
 import org.apache.usergrid.persistence.entities.Import;
 import org.apache.usergrid.persistence.entities.JobData;
@@ -82,7 +83,7 @@ public class ImportServiceImpl implements ImportService {
      * @return it returns the UUID of the scheduled job
      */
     @Override
-    public UUID schedule(Map<String, Object> config) throws Exception {
+    public Import schedule( Map<String, Object> config ) throws Exception {
 
         if (config == null) {
             logger.error("import information cannot be null");
@@ -91,7 +92,7 @@ public class ImportServiceImpl implements ImportService {
 
         EntityManager rootEm = null;
         try {
-            rootEm = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+            rootEm = emf.getEntityManager(emf.getManagementAppId());
         } catch (Exception e) {
             logger.error("application doesn't exist within the current context");
             return null;
@@ -125,7 +126,32 @@ public class ImportServiceImpl implements ImportService {
         importUG.setState(Import.State.SCHEDULED);
         rootEm.update(importUG);
 
-        return importUG.getUuid();
+        return importUG;
+    }
+
+
+    @Override
+    public Results getFileImports( final UUID importId, final String cursor ) {
+        return null;
+    }
+
+
+    @Override
+    public FileImport getFileImport( final UUID importId, final UUID fileImportId ) {
+        return null;
+    }
+
+
+    @Override
+    public Results getFailedImports( final UUID importId, final UUID fileImportId, final String cursor ) {
+        return null;
+    }
+
+
+    @Override
+    public FailedImportEntity getFailedImportEntity( final UUID importId, final UUID fileImportId,
+                                                     final UUID failedImportId ) {
+        return null;
     }
 
 

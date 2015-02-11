@@ -168,6 +168,11 @@ public class ServiceResource extends AbstractContextResource {
             //TODO TN query parameters are not being correctly decoded here.  The URL encoded strings
             //aren't getting decoded properly
             Query query = Query.fromQueryParams( params );
+
+            if(query == null && parameters.size() > 0 && parameters.get( 0 ).isId()){
+                query = Query.fromUUID( parameters.get( 0 ).getId() );
+            }
+
             if ( query != null ) {
                 parameters = ServiceParameter.addParameter( parameters, query );
             }

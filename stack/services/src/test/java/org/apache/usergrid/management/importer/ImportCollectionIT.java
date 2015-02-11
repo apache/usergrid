@@ -31,12 +31,11 @@ import org.apache.usergrid.batch.service.JobSchedulerService;
 import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
 import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.management.export.ExportService;
 import org.apache.usergrid.persistence.*;
-import org.apache.usergrid.persistence.entities.FileImport;
+import org.apache.usergrid.persistence.entities.Import;
 import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Query.Level;
@@ -54,10 +53,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-
-import javax.ws.rs.core.Response;
-
-import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -420,11 +415,11 @@ public class ImportCollectionIT {
         logger.debug("\n\nImport into new app {}\n", em.getApplication().getName() );
 
         ImportService importService = setup.getImportService();
-        UUID importUUID = importService.schedule( new HashMap<String, Object>() {{
-            put( "path", organization.getName() + em.getApplication().getName());
-            put( "organizationId",  organization.getUuid());
+        Import importEntity = importService.schedule( new HashMap<String, Object>() {{
+            put( "path", organization.getName() + em.getApplication().getName() );
+            put( "organizationId", organization.getUuid() );
             put( "applicationId", em.getApplication().getUuid() );
-            put( "collectionName", collectionName);
+            put( "collectionName", collectionName );
             put( "properties", new HashMap<String, Object>() {{
                 put( "storage_provider", "s3" );
                 put( "storage_info", new HashMap<String, Object>() {{
@@ -433,16 +428,16 @@ public class ImportCollectionIT {
                     put( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR,
                         System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR ) );
                     put( "bucket_location", bucketName );
-                }});
-            }});
-        }});
+                }} );
+            }} );
+        }} );
 
 
 
         int maxRetries = 120;
         int retries = 0;
-        while ( (!importService.getState( importUUID ).equals( "FINISHED" ) ||
-                 !importService.getState( importUUID ).equals( "FAILED" )) && retries++ < maxRetries ) {
+        while ( (!importService.getState( importEntity.getUuid() ).equals( "FINISHED" ) ||
+                 !importService.getState( importEntity.getUuid() ).equals( "FAILED" )) && retries++ < maxRetries ) {
             logger.debug("Waiting for import...");
             Thread.sleep(1000);
         }
