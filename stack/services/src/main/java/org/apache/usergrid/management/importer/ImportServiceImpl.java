@@ -442,8 +442,8 @@ public class ImportServiceImpl implements ImportService {
             (Map<String, Object>) properties.get("storage_info");
 
         String bucketName = (String) storage_info.get("bucket_location");
-        String accessId = (String) storage_info.get( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR);
-        String secretKey = (String) storage_info.get( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR);
+        String accessId = (String) storage_info.get( "s3_access_id" );
+        String secretKey = (String) storage_info.get( "s3_key" );
 
         // get Import Entity from the management app, update it to show that job has started
 
@@ -577,8 +577,8 @@ public class ImportServiceImpl implements ImportService {
             (Map<String, Object>) properties.get("storage_info");
 
         String bucketName = (String) storage_info.get("bucket_location");
-        String accessId = (String) storage_info.get( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR);
-        String secretKey = (String) storage_info.get( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR);
+        String accessId = (String) storage_info.get( "s3_access_id");
+        String secretKey = (String) storage_info.get( "s3_key" );
 
         FileImport fileImport = getFileImportEntity(jobExecution);
         String fileName = jobExecution.getJobData().getProperty("File").toString();
