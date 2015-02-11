@@ -42,6 +42,7 @@ import org.apache.usergrid.persistence.queue.impl.UsergridAwsCredentialsProvider
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.applications.ServiceResource;
+import org.apache.usergrid.rest.management.organizations.applications.imports.ImportsResource;
 import org.apache.usergrid.rest.security.annotations.RequireAdminUserAccess;
 import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
@@ -363,126 +364,16 @@ public class ApplicationResource extends AbstractContextResource {
     }
 
 
-
-    @POST
-    @Path("import")
-    @Consumes(APPLICATION_JSON)
-    @RequireApplicationAccess
-    public Response importPostJson( @Context UriInfo ui ,Map<String, Object> json,
-                                    @QueryParam("callback") @DefaultValue("") String callback )
-            throws OAuthSystemException {
-
-        UsergridAwsCredentials uac = new UsergridAwsCredentials();
-        UUID jobUUID = null;
-        Map<String, String> uuidRet = new HashMap<String, String>();
-
-        Map<String, Object> properties;
-        Map<String, Object> storage_info;
-       // UsergridAwsCredentialsProvider uacp = new UsergridAwsCredentialsProvider();
-
-        try {
-            //checkJsonExportProperties(json);
-            if ( ( properties = ( Map<String, Object> ) json.get( "properties" ) ) == null ) {
-                throw new NullPointerException( "Could not find 'properties'" );
-            }
-            storage_info = ( Map<String, Object> ) properties.get( "storage_info" );
-            String storage_provider = ( String ) properties.get( "storage_provider" );
-            if ( storage_provider == null ) {
-                throw new NullPointerException( "Could not find field 'storage_provider'" );
-            }
-            if ( storage_info == null ) {
-                throw new NullPointerException( "Could not find field 'storage_info'" );
-            }
-
-
-            String bucketName = ( String ) storage_info.get( "bucket_location" );
-
-            //check to make sure that access key and secret key are there.
-            uac.getAWSAccessKeyIdJson( storage_info );
-            uac.getAWSSecretKeyJson( storage_info );
-
-            if ( bucketName == null ) {
-                throw new NullPointerException( "Could not find field 'bucketName'" );
-            }
-
-            json.put( "organizationId", organization.getUuid() );
-            json.put( "applicationId", applicationId );
-
-            jobUUID = importService.schedule( json );
-            uuidRet.put( "Import Entity", jobUUID.toString() );
-        }
-        catch ( NullPointerException e ) {
-            return Response.status( SC_BAD_REQUEST ).type( JSONPUtils.jsonMediaType( callback ) )
-                           .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) ).build();
-        }
-        catch( AmazonClientException e) {
-            return Response.status( SC_BAD_REQUEST ).type( JSONPUtils.jsonMediaType( callback ) )
-                           .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) ).build();
-        }
-        catch ( Exception e ) {
-            //TODO:throw descriptive error message and or include on in the response
-            //TODO:fix below, it doesn't work if there is an exception. Make it look like the OauthResponse.
-            OAuthResponse errorMsg = OAuthResponse.errorResponse( SC_INTERNAL_SERVER_ERROR ).setErrorDescription( e.getMessage() )
-                                                  .buildJSONMessage();
-            return Response.status( errorMsg.getResponseStatus() ).type( JSONPUtils.jsonMediaType( callback ) )
-                           .entity( ServiceResource.wrapWithCallback( errorMsg.getBody(), callback ) ).build();
-        }
-
-        return Response.status( SC_ACCEPTED ).entity( uuidRet ).build();
-    }
-
-
-
-    @GET
-    @RequireApplicationAccess
-    @Path("import/{importEntity: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
-    public Response importGetJson( @Context UriInfo ui, @PathParam("importEntity") UUID importEntityUUIDStr,
-                                   @QueryParam("callback") @DefaultValue("") String callback ) throws Exception {
-
-        //TODO, link the imports to the application, otherwise we can't check ownership
-        Import entity;
-        try {
-            entity = smf.getServiceManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID ).getEntityManager()
-                    .get( importEntityUUIDStr, Import.class );
-        }
-        catch ( Exception e ) { //this might not be a bad request and needs better error checking
-            return Response.status( SC_BAD_REQUEST ).type( JSONPUtils.jsonMediaType( callback ) )
-                    .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) ).build();
-        }
-
-        if ( entity == null ) {
-            return Response.status( SC_NOT_FOUND ).type( JSONPUtils.jsonMediaType( callback ) )
-                           .entity( ServiceResource.wrapWithCallback( "Import Job not found", callback ) ).build();
-        }
-
-        return Response.status( SC_OK ).entity( entity).build();
-    }
-
-
-    @GET
+    @Path( "import" )
     @RequireOrganizationAccess
-    @Path("import/{importEntity: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}/includes")
-    public Response importFileGetJson( @Context UriInfo ui, @PathParam("importEntity") UUID importEntityUUIDStr,
-                                   @QueryParam("callback") @DefaultValue("") String callback ) throws Exception {
-        //TODO: fix the below as that method no longer exists.
-        List<Entity> entity = null;
-        EntityRef entityRef = new SimpleEntityRef( importEntityUUIDStr );
-        try {
-                entity = smf.getServiceManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID ).getEntityManager()
-                            .getConnectedEntities( entityRef, "includes", null, Query.Level.ALL_PROPERTIES ).getEntities();
+    public ImportsResource importGetJson( @Context UriInfo ui,
+                                          @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
+        throws Exception {
 
-        }
-        catch ( Exception e ) { //this might not be a bad request and needs better error checking
-            return Response.status( SC_BAD_REQUEST ).type( JSONPUtils.jsonMediaType( callback ) )
-                    .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) ).build();
-        }
 
-        if ( entity == null ) {
-            return Response.status( SC_BAD_REQUEST ).build();
-        }
-
-        return Response.status( SC_OK ).entity( entity).build();
+        return getSubResource( ImportsResource.class ).init( organization, application );
     }
+
     @GET
     @Path("/status")
     public Response getStatus() {

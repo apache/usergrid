@@ -630,8 +630,7 @@ public class ImportResourceIT extends AbstractRestIT {
         Entity importEntity = this.management().orgs().organization( org ).app().addToPath( app ).addToPath( "import" ).post( importPayload );
 
 
-        Entity importGet = this.management().orgs().organization( org ).app().addToPath( app )
-                               .addToPath( "import" ).addToPath( ( String ) importEntity.get( "Import Entity" ) ).get();
+        Entity importGet = this.management().orgs().organization( org ).app().addToPath( app ).addToPath( "import" ).addToPath( importEntity.getUuid().toString() ).get();
 
         int maxRetries = 120;
         int retries = 0;

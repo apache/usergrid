@@ -36,6 +36,7 @@ import org.apache.usergrid.management.export.ExportService;
 import org.apache.usergrid.management.export.S3Export;
 import org.apache.usergrid.management.export.S3ExportImpl;
 import org.apache.usergrid.persistence.*;
+import org.apache.usergrid.persistence.entities.Import;
 import org.apache.usergrid.persistence.entities.JobData;
 import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.persistence.index.query.Query.Level;
@@ -187,7 +188,8 @@ public class ImportServiceIT {
         ImportService importService = setup.getImportService();
 
         // scheduele the import job
-        UUID importUUID = importService.schedule( payload );
+        final Import importEntity = importService.schedule( payload );
+        final UUID importUUID = importEntity.getUuid();
 
         //create and initialize jobData returned in JobExecution.
         jobData = jobImportDataCreator( payload,importUUID, s3Import );
@@ -313,7 +315,8 @@ public class ImportServiceIT {
         ImportService importService = setup.getImportService();
 
         //schedule the import job
-        UUID importUUID = importService.schedule( payload );
+        final Import importEntity = importService.schedule( payload );
+        final UUID importUUID = importEntity.getUuid();
 
         //create and initialize jobData returned in JobExecution.
         jobData = jobImportDataCreator( payload,importUUID, s3Import );
@@ -393,9 +396,10 @@ public class ImportServiceIT {
         HashMap<String, Object> payload = null;
 
         ImportService importService = setup.getImportService();
-        UUID importUUID = importService.schedule(payload);
+        final Import importEntity = importService.schedule( payload );
 
-        assertNull(importUUID);
+
+        assertNull(importEntity);
     }
 
     /**
@@ -462,7 +466,8 @@ public class ImportServiceIT {
         HashMap<String, Object> payload = payloadBuilder();
 
         //schedule the import job
-        UUID importUUID = importService.schedule( payload );
+        final Import importEntity = importService.schedule( payload );
+        final UUID importUUID = importEntity.getUuid();
 
         //create and initialize jobData returned in JobExecution.
         JobData jobData = jobImportDataCreator(payload, importUUID, s3Import);
@@ -490,7 +495,8 @@ public class ImportServiceIT {
 
         payload.put("organizationId",fakeOrgId);
         //schedule the import job
-        UUID importUUID = importService.schedule( payload );
+        final Import importEntity = importService.schedule( payload );
+        final UUID importUUID = importEntity.getUuid();
 
         //create and initialize jobData returned in JobExecution.
         JobData jobData = jobImportDataCreator(payload, importUUID, s3Import);
@@ -521,7 +527,8 @@ public class ImportServiceIT {
         payload.put("applicationId",fakeappId);
 
         //schedule the import job
-        UUID importUUID = importService.schedule( payload );
+        final Import importEntity = importService.schedule( payload );
+        final UUID importUUID = importEntity.getUuid();
 
         //create and initialize jobData returned in JobExecution.
         JobData jobData = jobImportDataCreator(payload, importUUID, s3Import);
@@ -553,7 +560,8 @@ public class ImportServiceIT {
         payload.put("collectionName","custom-test");
 
         //schedule the import job
-        UUID importUUID = importService.schedule( payload );
+        final Import importEntity = importService.schedule( payload );
+        final UUID importUUID = importEntity.getUuid();
 
         //create and initialize jobData returned in JobExecution.
         JobData jobData = jobImportDataCreator(payload, importUUID, s3Import);
