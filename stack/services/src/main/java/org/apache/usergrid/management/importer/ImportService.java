@@ -41,10 +41,11 @@ public interface ImportService {
     /**
      * Get the imports results for the application
      * @param applicationId
-     * @param cursor
+     * @param ql The query executed (nullable)
+     * @param cursor  The cursor passed (nullable)
      * @return
      */
-    Results getImports(final UUID applicationId, final String cursor);
+    Results getImports(final UUID applicationId, final String ql, final String cursor);
 
     /**
      * Get the import
@@ -57,34 +58,38 @@ public interface ImportService {
     /**
      * Get the results
      *
+     * @param applicationId The applicationId
      * @param importId The import id to get files from
-     * @param cursor The cursor used in parsing
-     * @return
+     * @param ql The query executed (nullable)
+     * @param cursor The cursor passed (nullable)
      */
-    Results getFileImports(final UUID applicationId, final UUID importId, final String cursor);
+    Results getFileImports(final UUID applicationId, final UUID importId, final String ql, final String cursor);
 
     /**
-     * Get the file import
-     * @param importId
-     * @param fileImportId
-     * @return
+     * Get the results
+     *
+     * @param applicationId The applicationId
+     * @param importId The import id to get files from
+     *
+     * @return The FileImport
      */
     FileImport getFileImport(final UUID applicationId, final UUID importId, final UUID fileImportId);
-
 
 
     /**
      * Get the results of failed imports
      *
+     *
+     * @param applicationId The applicationId
      * @param importId The import id to get files from
-     * @param fileImportId the fileImportId
-     * @param cursor The cursor used in parsing
-     * @return
+     * @param ql The query executed (nullable)
+     * @param cursor The cursor passed (nullable)
      */
-    Results getFailedImportEntities(final UUID applicationId,  final UUID importId, final UUID fileImportId, final String cursor);
+    Results getFailedImportEntities(final UUID applicationId,  final UUID importId, final UUID fileImportId, final String ql,  final String cursor);
 
     /**
      * Get the failedimport entity from it's parentId
+     * @param applicationId
      * @param importId
      * @param fileImportId
      * @param failedImportId

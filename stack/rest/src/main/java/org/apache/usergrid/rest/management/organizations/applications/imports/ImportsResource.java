@@ -144,10 +144,10 @@ public class ImportsResource extends AbstractContextResource {
 
 
     @GET
-    public JSONWithPadding getImports( @Context UriInfo ui, @QueryParam( "cursor" ) String cursor ) throws Exception {
+    public JSONWithPadding getImports( @Context UriInfo ui, @QueryParam( "ql" ) String query,  @QueryParam( "cursor" ) String cursor ) throws Exception {
 
 
-        final Results importResults = importService.getImports( application.getId(), cursor );
+        final Results importResults = importService.getImports( application.getId(), query, cursor );
 
         if ( importResults == null ) {
             throw new EntityNotFoundException( "could not load import results" );

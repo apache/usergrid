@@ -82,12 +82,12 @@ public class FileErrorsResource extends AbstractContextResource {
 
 
     @GET
-    public JSONWithPadding getFileIncludes( @Context UriInfo ui, @QueryParam( "cursor" ) String cursor )
+    public JSONWithPadding getFileIncludes( @Context UriInfo ui, @QueryParam( "ql" ) String query, @QueryParam( "cursor" ) String cursor )
           throws Exception {
 
 
           final Results importResults = importService.getFailedImportEntities( application.getId(), importId,
-              importFileId, cursor );
+              importFileId, query,  cursor );
 
           if(importResults == null){
               throw new EntityNotFoundException( "could not load import results" );

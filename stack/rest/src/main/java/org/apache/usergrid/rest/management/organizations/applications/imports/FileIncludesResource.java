@@ -89,11 +89,11 @@ public class FileIncludesResource extends AbstractContextResource {
 
 
     @GET
-    public JSONWithPadding getFileIncludes( @Context UriInfo ui, @QueryParam( "cursor" ) String cursor )
+    public JSONWithPadding getFileIncludes( @Context UriInfo ui, @QueryParam( "ql" ) String query, @QueryParam( "cursor" ) String cursor )
           throws Exception {
 
 
-          final Results importResults = importService.getFileImports( application.getId(), importId, cursor );
+          final Results importResults = importService.getFileImports( application.getId(), importId, query, cursor );
 
           if(importResults == null){
               throw new EntityNotFoundException( "could not load import results" );
@@ -145,27 +145,11 @@ public class FileIncludesResource extends AbstractContextResource {
 
     @GET
     @Path( RootResource.ENTITY_ID_PATH + "/errors" )
-    public JSONWithPadding getIncludes( @Context UriInfo ui, @PathParam( "entityId" ) PathSegment entityId )
+    public FileErrorsResource getIncludes( @Context UriInfo ui, @PathParam( "entityId" ) PathSegment entityId )
         throws Exception {
 
-        final UUID importId = UUID.fromString( entityId.getPath() );
-        final Import importEntity = importService.getImport( application.getId(), importId);
-
-        if(importEntity == null){
-            throw new EntityNotFoundException( "could not find import with uuid " + importId );
-        }
-
-        ApiResponse response = createApiResponse();
-
-
-        response.setAction( "get" );
-        response.setApplication( emf.getEntityManager( application.getId() ).getApplication()  );
-        response.setParams( ui.getQueryParameters() );
-
-
-        response.setEntities( Collections.<Entity>singletonList( importEntity ) );
-
-        return new JSONWithPadding( response );
+        final UUID fileImportId = UUID.fromString( entityId.getPath() );
+        return getSubResource( FileErrorsResource.class ).init( application, importId,fileImportId  );
 
     }
 
