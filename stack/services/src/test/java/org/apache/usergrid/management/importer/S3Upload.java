@@ -78,7 +78,7 @@ public class S3Upload {
             InputStream fileStream = S3Upload.class.getResourceAsStream( "/" + filename );
             try {
                 BlobStore blobStore = context.getBlobStore();
-                BlobBuilder blobBuilder = blobStore.blobBuilder( "testorganization/"+filename ).payload( fileStream ).calculateMD5()
+                BlobBuilder blobBuilder = blobStore.blobBuilder( filename ).payload( fileStream ).calculateMD5()
                                                    .contentType( "application/json" );
                 Blob blob = blobBuilder.build();
 

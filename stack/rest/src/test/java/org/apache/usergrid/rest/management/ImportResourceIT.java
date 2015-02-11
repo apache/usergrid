@@ -458,10 +458,55 @@ public class ImportResourceIT extends AbstractRestIT {
 
         assertNotNull( importGet );
 
+        assertEquals( "FINISHED",importGet.get( "state" ) );
+        assertEquals( 1, importGet.get("fileCount") );
 
-//        assertNull( importGet.get( "errorMessage" ) );
-//        assertNotNull( importGet.get( "state" ) );
-//        assertEquals("import",importGet.get( "type" ));
+        Collection collection = this.app().collection( "things" ).get();
+
+         assertNotNull( collection );
+         assertEquals( 1, collection.getNumOfEntities() );
+         assertEquals( "thing0" ,collection.getResponse().getEntities().get( 0 ).get( "name" ) );
+
+
+
+    //TODO: make sure it checks the actual imported entities. And the progress they have made.
+
+}
+
+    /**
+     * TODO: Test that importing bad JSON will result in an informative error message.
+     */
+    @Test
+    public void testImportOneGoodOneBad() throws Exception{
+        // import from a bad JSON file
+        Assume.assumeTrue( configured );
+
+        String org = clientSetup.getOrganizationName();
+        String app = clientSetup.getAppName();
+
+
+        //list out all the files in the resource directory you want uploaded
+        List<String> filenames = new ArrayList<>( 1 );
+
+        filenames.add( "testImportCorrect.testCol.1.json" );
+        filenames.add( "testImport.testApplication.2.json" );
+        // create 10 applications each with collection of 10 things, export all to S3
+        S3Upload s3Upload = new S3Upload();
+        s3Upload.copyToS3( System.getProperty(SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR), System.getProperty(SDKGlobalConfiguration.SECRET_KEY_ENV_VAR),
+            bucketName, filenames );
+
+        // import all those exports from S3 into the default test application
+
+        Entity importEntity = importCollection( );
+
+        Entity importGet = this.management().orgs().organization( org ).app().addToPath( app )
+                               .addToPath( "import" ).addToPath( ( String ) importEntity.get( "Import Entity" ) ).get();
+
+
+        assertNotNull( importGet );
+
+        assertEquals( "FAILED",importGet.get( "state" ) );
+        assertEquals( 2, importGet.get("fileCount") );
 
         Collection collection = this.app().collection( "things" ).get();
 
@@ -469,7 +514,52 @@ public class ImportResourceIT extends AbstractRestIT {
         assertEquals( 1, collection.getNumOfEntities() );
         assertEquals( "thing0" ,collection.getResponse().getEntities().get( 0 ).get( "name" ) );
 
-//TODO: make sure it checks the actual imported entities. And the progress they have made.
+
+
+
+    }
+
+    /**
+     * TODO: Test that importing bad JSON will result in an informative error message.
+     */
+    @Test
+    public void testImportOneBadFile() throws Exception{
+        // import from a bad JSON file
+        Assume.assumeTrue( configured );
+
+        String org = clientSetup.getOrganizationName();
+        String app = clientSetup.getAppName();
+
+
+        //list out all the files in the resource directory you want uploaded
+        List<String> filenames = new ArrayList<>( 1 );
+
+        filenames.add( "testImport.testApplication.2.json" );
+        // create 10 applications each with collection of 10 things, export all to S3
+        S3Upload s3Upload = new S3Upload();
+        s3Upload.copyToS3( System.getProperty(SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR), System.getProperty(SDKGlobalConfiguration.SECRET_KEY_ENV_VAR),
+            bucketName, filenames );
+
+        // import all those exports from S3 into the default test application
+
+        Entity importEntity = importCollection( );
+
+        Entity importGet = this.management().orgs().organization( org ).app().addToPath( app )
+                               .addToPath( "import" ).addToPath( ( String ) importEntity.get( "Import Entity" ) ).get();
+
+
+        assertNotNull( importGet );
+
+        assertEquals( "FAILED",importGet.get( "state" ) );
+        assertEquals( 1, importGet.get("fileCount") );
+
+
+        Collection collection = this.app().collection( "things" ).get();
+
+        assertNotNull( collection );
+        assertEquals( 0, collection.getNumOfEntities() );
+
+
 
     }
 //export with two files and import the two files.
@@ -484,7 +574,6 @@ public class ImportResourceIT extends AbstractRestIT {
 
         String org = clientSetup.getOrganizationName();
         String app = clientSetup.getAppName();
-
 
         //list out all the files in the resource directory you want uploaded
         List<String> filenames = new ArrayList<>( 1 );
