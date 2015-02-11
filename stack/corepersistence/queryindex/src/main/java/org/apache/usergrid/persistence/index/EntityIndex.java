@@ -105,8 +105,6 @@ public interface EntityIndex {
      * Check health of this specific index.
      */
     public Health getIndexHealth();
-    
-    public void deleteIndex();
 
 
 }
