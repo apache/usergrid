@@ -18,15 +18,9 @@
 package org.apache.usergrid.management.importer;
 
 import org.apache.usergrid.batch.JobExecution;
-import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.entities.FailedImportEntity;
 import org.apache.usergrid.persistence.entities.FileImport;
 import org.apache.usergrid.persistence.entities.Import;
-import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.services.queues.ImportQueueMessage;
 
-import java.io.File;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.UUID;
 
@@ -36,50 +30,10 @@ import java.util.UUID;
  */
 public interface ImportService {
 
-    enum ImportType { COLLECTION, APPLICATION, ORGANIZATION }
-
     /**
      * Schedules the import to execute
      */
     Import schedule( Map<String, Object> json ) throws Exception;
-
-    /**
-     * Get the results
-     *
-     * @param importId The import id to get files from
-     * @param cursor The cursor used in parsing
-     * @return
-     */
-    Results getFileImports( final UUID importId, final String cursor);
-
-    /**
-     * Get the file import
-     * @param importId
-     * @param fileImportId
-     * @return
-     */
-    FileImport getFileImport(final UUID importId, final UUID fileImportId);
-
-
-
-    /**
-     * Get the results of failed imports
-     *
-     * @param importId The import id to get files from
-     * @param fileImportId the fileImportId
-     * @param cursor The cursor used in parsing
-     * @return
-     */
-    Results getFailedImports( final UUID importId, final UUID fileImportId, final String cursor);
-
-    /**
-     * Get the failedimport entity from it's parentId
-     * @param importId
-     * @param fileImportId
-     * @param failedImportId
-     * @return
-     */
-    FailedImportEntity getFailedImportEntity(final UUID importId, final UUID fileImportId, final UUID failedImportId);
 
     /**
      * Perform the import from the external resource
@@ -101,14 +55,8 @@ public interface ImportService {
     /**
      * Returns error message for the job with UUID
      * @param uuid Job UUID
-     * @return error message
      */
     String getErrorMessage(UUID uuid) throws Exception;
-
-    /**
-     * @return FileImportEntity
-     */
-    FileImport getFileImportEntity(final ImportQueueMessage importQueueMessage) throws Exception;
 
     /**
      * @return FileImportEntity
@@ -120,6 +68,4 @@ public interface ImportService {
      * @return ImportEntity
      */
     Import getImportEntity(final JobExecution jobExecution) throws Exception;
-
-
 }

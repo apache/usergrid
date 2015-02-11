@@ -130,31 +130,6 @@ public class ImportServiceImpl implements ImportService {
     }
 
 
-    @Override
-    public Results getFileImports( final UUID importId, final String cursor ) {
-        return null;
-    }
-
-
-    @Override
-    public FileImport getFileImport( final UUID importId, final UUID fileImportId ) {
-        return null;
-    }
-
-
-    @Override
-    public Results getFailedImports( final UUID importId, final UUID fileImportId, final String cursor ) {
-        return null;
-    }
-
-
-    @Override
-    public FailedImportEntity getFailedImportEntity( final UUID importId, final UUID fileImportId,
-                                                     final UUID failedImportId ) {
-        return null;
-    }
-
-
     /**
      * This schedules the sub  FileImport Job
      *
@@ -325,19 +300,6 @@ public class ImportServiceImpl implements ImportService {
      * @return File Import Entity
      */
     @Override
-    public FileImport getFileImportEntity(final ImportQueueMessage queueMessage) throws Exception {
-
-        EntityManager em = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
-
-        return em.get(queueMessage.getFileId(), FileImport.class);
-    }
-
-
-    /**
-     * Returns the File Import Entity that stores all meta-data for the particular sub File import Job
-     * @return File Import Entity
-     */
-    @Override
     public FileImport getFileImportEntity(final JobExecution jobExecution) throws Exception {
 
         UUID fileImportId = (UUID) jobExecution.getJobData().getProperty(FILE_IMPORT_ID);
@@ -345,16 +307,6 @@ public class ImportServiceImpl implements ImportService {
         EntityManager em = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
 
         return em.get(fileImportId, FileImport.class);
-    }
-
-
-    public SchedulerService getSch() {
-        return sch;
-    }
-
-
-    public void setSch(final SchedulerService sch) {
-        this.sch = sch;
     }
 
 

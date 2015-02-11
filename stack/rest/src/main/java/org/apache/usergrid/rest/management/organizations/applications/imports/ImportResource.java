@@ -19,47 +19,37 @@
 package org.apache.usergrid.rest.management.organizations.applications.imports;
 
 
-import java.util.UUID;
-
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.UriInfo;
-
+import com.sun.jersey.api.json.JSONWithPadding;
+import org.apache.usergrid.exception.NotImplementedException;
+import org.apache.usergrid.management.importer.ImportService;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.rest.AbstractContextResource;
+import org.apache.usergrid.rest.ApiResponse;
+import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import org.apache.shiro.authz.UnauthorizedException;
-
-import org.apache.usergrid.exception.NotImplementedException;
-import org.apache.usergrid.management.OrganizationInfo;
-import org.apache.usergrid.rest.AbstractContextResource;
-import org.apache.usergrid.rest.ApiResponse;
-import org.apache.usergrid.rest.RootResource;
-import org.apache.usergrid.rest.applications.ApplicationResource;
-import org.apache.usergrid.rest.exceptions.NoOpException;
-import org.apache.usergrid.rest.exceptions.OrganizationApplicationNotFoundException;
-import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
-import org.apache.usergrid.rest.utils.PathingUtils;
-import org.apache.usergrid.security.shiro.utils.SubjectUtils;
-
-import com.google.common.collect.BiMap;
-import com.sun.jersey.api.json.JSONWithPadding;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriInfo;
+import java.util.Collections;
+import java.util.UUID;
 
 
 @Component("org.apache.usergrid.rest.management.organizations.applications.imports.ImportResource")
 @Scope("prototype")
 @Produces({
-        MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
-        "application/ecmascript", "text/jscript"
+    MediaType.APPLICATION_JSON,
+    "application/javascript",
+    "application/x-javascript",
+    "text/ecmascript",
+    "application/ecmascript",
+    "text/jscript"
 })
 public class ImportResource extends AbstractContextResource {
 
@@ -67,41 +57,41 @@ public class ImportResource extends AbstractContextResource {
 
     private UUID importId;
 
-    public ImportResource() {
+    @Autowired
+    ImportService importService;
 
+
+    public ImportResource() {
     }
 
 
     public ImportResource init( final UUID importId ) {
-       this.importId = importId;
+        this.importId = importId;
         return this;
     }
 
 
     @GET
-    public JSONWithPadding get(  )
-            throws Exception {
+    public JSONWithPadding get() throws Exception {
 
-
-        logger.info( "UserResource.sendPin" );
+        logger.info( "ImportResource.get" );
 
         ApiResponse response = createApiResponse();
         response.setAction( "Get Import" );
 
+        EntityManager emMgmtApp = emf.getEntityManager( emf.getManagementAppId() );
+        Entity importEntity = emMgmtApp.get(importId);
 
+        response.setEntities( Collections.singletonList( importEntity ));
 
         return new JSONWithPadding( response );
     }
 
 
-
-
     @DELETE
     @RequireOrganizationAccess
     public JSONWithPadding executeDelete( @Context UriInfo ui,
-                                          @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception {
-
+        @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 
         throw new NotImplementedException( "Organization delete is not allowed yet" );
     }
