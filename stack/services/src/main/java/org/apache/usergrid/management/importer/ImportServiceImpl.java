@@ -87,7 +87,7 @@ public class ImportServiceImpl implements ImportService {
         this.sch = sch;
     }
 
-    
+
     /**
      * This schedules the main import Job.
      *
@@ -529,7 +529,9 @@ public class ImportServiceImpl implements ImportService {
 
 
     @Override
-    public void downloadAndImportFile(JobExecution jobExecution) throws Exception {
+    public void downloadAndImportFile(JobExecution jobExecution) {
+
+        // get values we need
 
         Map<String, Object> properties =
             (Map<String, Object>)jobExecution.getJobData().getProperty("properties");
@@ -544,12 +546,22 @@ public class ImportServiceImpl implements ImportService {
         String accessId = (String) storage_info.get( "s3_access_id");
         String secretKey = (String) storage_info.get( "s3_key" );
 
-        FileImport fileImport = getFileImportEntity(jobExecution);
+        EntityManager emManagementApp = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
+
+        // get the file import entity
+
+        FileImport fileImport;
+        try {
+            fileImport = getFileImportEntity(jobExecution);
+        } catch (Exception e) {
+            logger.error("Error updating fileImport to set state of file import", e);
+            return;
+        }
+
         String fileName = jobExecution.getJobData().getProperty("File").toString();
         UUID targetAppId = (UUID) jobExecution.getJobData().getProperty("applicationId");
 
-        logger.debug("downloadAndImportFile() for file {} ", fileName);
-
+        // is job already done?
         if (   FileImport.State.FAILED.equals( fileImport.getState() )
             || FileImport.State.FINISHED .equals(fileImport.getState()) ) {
             return;
@@ -557,18 +569,33 @@ public class ImportServiceImpl implements ImportService {
 
         // update FileImport Entity to indicate that we have started
 
-        EntityManager emManagementApp = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
-        emManagementApp.update( fileImport );
-        fileImport.setState( FileImport.State.STARTED );
-        emManagementApp.update( fileImport );
+        logger.debug("downloadAndImportFile() for file {} ", fileName);
+        try {
+            emManagementApp.update( fileImport );
+            fileImport.setState(FileImport.State.STARTED);
+            emManagementApp.update(fileImport);
 
-        if ( emManagementApp.get( targetAppId ) == null ) {
-            throw new IllegalArgumentException( "Application does not exist: " + targetAppId.toString() );
+            if ( emManagementApp.get( targetAppId ) == null ) {
+                fileImport.setState( FileImport.State.FAILED );
+                fileImport.setErrorMessage("Application " + targetAppId + " does not exist");
+                emManagementApp.update(fileImport);
+                return;
+            }
+
+        } catch (Exception e) {
+            fileImport.setState( FileImport.State.FAILED );
+            fileImport.setErrorMessage("Application " + targetAppId + " does not exist");
+            try {
+                emManagementApp.update( fileImport );
+            } catch (Exception e1) {
+                logger.error("Error updating fileImport to set state of file import", e1);
+            }
         }
         EntityManager targetEm = emf.getEntityManager( targetAppId );
 
         // download file from S3, if no S3 importer was passed in then create one
 
+        File downloadedFile = null;
         S3Import s3Import;
         Object s3PlaceHolder = jobExecution.getJobData().getProperty("s3Import");
         try {
@@ -581,70 +608,115 @@ public class ImportServiceImpl implements ImportService {
             logger.error("doImport(): Error creating S3Import", e);
             fileImport.setErrorMessage(e.getMessage());
             fileImport.setState( FileImport.State.FAILED );
-            emManagementApp.update(fileImport);
+            try {
+                emManagementApp.update(fileImport);
+            } catch (Exception e1) {
+                logger.error("Error updating file import with error information", e1);
+            }
             return;
         }
-        File downloadedFile = s3Import.copyFileFromBucket(
-            fileName, bucketName, accessId, secretKey );
+
+        try {
+            downloadedFile = s3Import.copyFileFromBucket(
+                fileName, bucketName, accessId, secretKey );
+        } catch (Exception e) {
+            logger.error("Error downloading file " + fileName, e);
+            fileImport.setErrorMessage("Error downloading file " + fileName + ": " + e.getMessage());
+            fileImport.setState(FileImport.State.FAILED);
+            try {
+                emManagementApp.update(fileImport);
+            } catch (Exception e1) {
+                logger.error("Error updating file import with error information", e1);
+            }
+        }
 
         // parse JSON data, create Entities and Connections from import data
 
-        parseEntitiesAndConnectionsFromJson(
-            jobExecution, downloadedFile, targetEm, emManagementApp, fileImport);
+        try {
+            parseEntitiesAndConnectionsFromJson(
+                jobExecution, downloadedFile, targetEm, emManagementApp, fileImport);
+
+        } catch (Exception e) {
+            logger.error("Error importing file " + fileName, e);
+            fileImport.setErrorMessage("Error downloading file " + fileName + ": " + e.getMessage());
+            fileImport.setState( FileImport.State.FAILED );
+            try {
+                emManagementApp.update(fileImport);
+            } catch (Exception e1) {
+                logger.error("Error updating file import with error information", e1);
+            }
+        }
 
         // mark ImportJob FINISHED but only if all other FileImportJobs are complete
 
         // get parent import job of this file import job
 
-        Results importJobResults =
-            emManagementApp.getConnectingEntities( fileImport, IMPORT_FILE_INCLUDES, null, Level.ALL_PROPERTIES );
-        List<Entity> importEntities = importJobResults.getEntities();
-        UUID importId = importEntities.get( 0 ).getUuid();
-        Import importEntity = emManagementApp.get( importId, Import.class );
-
-        String randTag = RandomStringUtils.randomAlphanumeric(4);
-        logger.debug("{} Got importEntity {}", randTag, importEntity.getUuid() );
-
-        EntityManager emMgmtApp = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
-        Query query = Query.fromQL("select *");
-        query.setEntityType("file_import");
-        query.setConnectionType( IMPORT_FILE_INCLUDES );
-        query.setLimit(MAX_FILE_IMPORTS);
-        Results entities = emMgmtApp.searchConnectedEntities(importEntity, query);
-
-        PagingResultsIterator itr = new PagingResultsIterator( entities );
-
-        logger.debug("{} Check {} jobs to see if we are done for file {}",
-            new Object[] { randTag, entities.size(), fileImport.getFileName() } );
+        String randTag = RandomStringUtils.randomAlphanumeric(4); // for logging
 
         int failCount = 0;
         int successCount = 0;
-        while ( itr.hasNext() ) {
-            FileImport fi = ( FileImport ) itr.next();
-            switch ( fi.getState() ) {
-                case FAILED:     // failed, but we may not be complete so continue checking
-                    failCount++;
-                    break;
-                case FINISHED:   // finished, we can continue checking
-                    successCount++;
-                    continue;
-                default:         // not something we recognize as complete, short circuit
-                    logger.debug("{} not done yet, bail out...", randTag);
-                    return;
+        Import importEntity = null;
+        try {
+
+            Results importJobResults =
+                emManagementApp.getConnectingEntities(fileImport, IMPORT_FILE_INCLUDES, null, Level.ALL_PROPERTIES);
+            List<Entity> importEntities = importJobResults.getEntities();
+            UUID importId = importEntities.get(0).getUuid();
+            importEntity = emManagementApp.get(importId, Import.class);
+
+            logger.debug("{} Got importEntity {}", randTag, importEntity.getUuid());
+
+            EntityManager emMgmtApp = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+            Query query = Query.fromQL("select *");
+            query.setEntityType("file_import");
+            query.setConnectionType(IMPORT_FILE_INCLUDES);
+            query.setLimit(MAX_FILE_IMPORTS);
+            Results entities = emMgmtApp.searchConnectedEntities(importEntity, query);
+
+            PagingResultsIterator itr = new PagingResultsIterator(entities);
+
+            logger.debug("{} Check {} jobs to see if we are done for file {}",
+                new Object[]{randTag, entities.size(), fileImport.getFileName()});
+
+            while (itr.hasNext()) {
+                FileImport fi = (FileImport) itr.next();
+                switch (fi.getState()) {
+                    case FAILED:     // failed, but we may not be complete so continue checking
+                        failCount++;
+                        break;
+                    case FINISHED:   // finished, we can continue checking
+                        successCount++;
+                        continue;
+                    default:         // not something we recognize as complete, short circuit
+                        logger.debug("{} not done yet, bail out...", randTag);
+                        return;
+                }
             }
+
+        } catch ( Exception e ) {
+            failCount++;
+            if ( importEntity != null ) {
+                importEntity.setErrorMessage("Error determining status of file import jobs");
+            }
+            logger.debug("Error determining status of file import jobs", e);
         }
 
         logger.debug("{} successCount = {} failCount = {}", new Object[] { randTag, successCount, failCount } );
 
-        if ( failCount == 0 ) {
+        if ( importEntity != null && failCount == 0 ) {
             logger.debug("{} FINISHED", randTag);
             importEntity.setState(Import.State.FINISHED);
-        }  else {
+
+        }  else if ( importEntity != null ) {
             // we had failures, set it to failed
             importEntity.setState(Import.State.FAILED);
         }
 
-        emManagementApp.update( importEntity );
+        try {
+            emManagementApp.update( importEntity );
+        } catch (Exception e) {
+            logger.error("Error updating import entity", e);
+        }
     }
 
 
@@ -809,9 +881,9 @@ public class ImportServiceImpl implements ImportService {
                 tracker.entityWritten();
 
             } catch (Exception e) {
-                logger.error("Error writing entity", e);
+                logger.error("Error writing entity. From file:" + fileImport.getFileName(), e);
 
-                tracker.entityFailed( e.getMessage() );
+                tracker.entityFailed( e.getMessage() + " From file: " + fileImport.getFileName() );
             }
         }
     }
@@ -826,7 +898,6 @@ public class ImportServiceImpl implements ImportService {
             this.ownerEntityRef = ownerEntityRef;
             this.connectionType = connectionType;
             this.entityRef = entryRef;
-
         }
 
         // creates connections between entities
@@ -852,8 +923,9 @@ public class ImportServiceImpl implements ImportService {
                 tracker.connectionWritten();
 
             } catch (Exception e) {
-                logger.error("Error writing connection", e);
-                tracker.connectionFailed( e.getMessage() );
+                logger.error("Error writing connection. From file: " + fileImport.getFileName(), e);
+
+                tracker.connectionFailed( e.getMessage() + " From file: " + fileImport.getFileName() );
             }
         }
     }
@@ -882,20 +954,9 @@ public class ImportServiceImpl implements ImportService {
                 em.addMapToDictionary(ownerEntityRef, dictionaryName, dictionary);
 
             } catch (Exception e) {
-                logger.error("Error writing dictionary", e);
+                logger.error("Error writing dictionary. From file: " + fileImport.getFileName(), e);
 
-                //TODO add statistics for dictionary writes and failures
-//                fileImport.setErrorMessage(e.getMessage());
-//                try {
-//
-//                    rootEm.update(fileImport);
-//
-//                } catch (Exception ex) {
-//
-//                    // TODO should we abort at this point?
-//                    logger.error("Error updating file import report with error message: "
-//                        + fileImport.getErrorMessage(), ex);
-//                }
+                // TODO add statistics for dictionary writes and failures
             }
         }
     }

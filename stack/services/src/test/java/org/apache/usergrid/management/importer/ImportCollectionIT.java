@@ -377,17 +377,20 @@ public class ImportCollectionIT {
 
         deleteBucket();
 
-        //list out all the files in the resource directory you want uploaded
+        // upload good and badly formatted files to our S3 bucket
+
         List<String> filenames = new ArrayList<>( 3 );
         filenames.add( "testImport.testCollection.1.json" );
         filenames.add( "testImport.testApplication.2.json" );
         filenames.add( "testImportInvalidJson.testApplication.3.json" );
-        // create 10 applications each with collection of 10 things, export all to S3
+
         S3Upload s3Upload = new S3Upload();
-        s3Upload.copyToS3( System.getProperty(SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR), System.getProperty(SDKGlobalConfiguration.SECRET_KEY_ENV_VAR),
+        s3Upload.copyToS3(
+            System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR),
+            System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR),
             bucketName, filenames );
 
-        // import all those exports from S3 into the default test application
+        // import all those files into the default test application
 
         final EntityManager emDefaultApp = setup.getEmf().getEntityManager( applicationId );
         importCollection( emDefaultApp, "things" );
@@ -399,7 +402,8 @@ public class ImportCollectionIT {
 
         assertTrue( !importedThings.isEmpty() );
         assertEquals( 7, importedThings.size() );
-        //TODO: have something that checks the exceptions and errors.
+
+        // TODO: have something that checks the exceptions and errors.
     }
 
 
