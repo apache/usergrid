@@ -188,7 +188,7 @@ public class ImportServiceIT {
         ImportService importService = setup.getImportService();
 
         // scheduele the import job
-        final Import importEntity = importService.schedule( payload );
+        final Import importEntity = importService.schedule( null,  payload );
         final UUID importUUID = importEntity.getUuid();
 
         //create and initialize jobData returned in JobExecution.
@@ -315,7 +315,7 @@ public class ImportServiceIT {
         ImportService importService = setup.getImportService();
 
         //schedule the import job
-        final Import importEntity = importService.schedule( payload );
+        final Import importEntity = importService.schedule(  null, payload );
         final UUID importUUID = importEntity.getUuid();
 
         //create and initialize jobData returned in JobExecution.
@@ -396,7 +396,7 @@ public class ImportServiceIT {
         HashMap<String, Object> payload = null;
 
         ImportService importService = setup.getImportService();
-        final Import importEntity = importService.schedule( payload );
+        final Import importEntity = importService.schedule( null,  payload );
 
 
         assertNull(importEntity);
@@ -466,7 +466,7 @@ public class ImportServiceIT {
         HashMap<String, Object> payload = payloadBuilder();
 
         //schedule the import job
-        final Import importEntity = importService.schedule( payload );
+        final Import importEntity = importService.schedule( null,  payload );
         final UUID importUUID = importEntity.getUuid();
 
         //create and initialize jobData returned in JobExecution.
@@ -495,7 +495,7 @@ public class ImportServiceIT {
 
         payload.put("organizationId",fakeOrgId);
         //schedule the import job
-        final Import importEntity = importService.schedule( payload );
+        final Import importEntity = importService.schedule( null,  payload );
         final UUID importUUID = importEntity.getUuid();
 
         //create and initialize jobData returned in JobExecution.
@@ -527,7 +527,7 @@ public class ImportServiceIT {
         payload.put("applicationId",fakeappId);
 
         //schedule the import job
-        final Import importEntity = importService.schedule( payload );
+        final Import importEntity = importService.schedule(  null, payload );
         final UUID importUUID = importEntity.getUuid();
 
         //create and initialize jobData returned in JobExecution.
@@ -560,7 +560,7 @@ public class ImportServiceIT {
         payload.put("collectionName","custom-test");
 
         //schedule the import job
-        final Import importEntity = importService.schedule( payload );
+        final Import importEntity = importService.schedule( null,  payload );
         final UUID importUUID = importEntity.getUuid();
 
         //create and initialize jobData returned in JobExecution.

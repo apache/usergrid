@@ -17,18 +17,17 @@
 
 package org.apache.usergrid.management.importer;
 
+
+import java.util.Map;
+import java.util.UUID;
+
 import org.apache.usergrid.batch.JobExecution;
+import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.entities.FailedImportEntity;
 import org.apache.usergrid.persistence.entities.FileImport;
 import org.apache.usergrid.persistence.entities.Import;
-import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.services.queues.ImportQueueMessage;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.UUID;
 
 
 /**
@@ -36,12 +35,20 @@ import java.util.UUID;
  */
 public interface ImportService {
 
-    enum ImportType { COLLECTION, APPLICATION, ORGANIZATION }
-
     /**
      * Schedules the import to execute
      */
-    Import schedule( Map<String, Object> json ) throws Exception;
+    Import schedule( final UUID applicationId, Map<String, Object> json ) throws Exception;
+
+    Results getImports(final UUID applicationId, final String cursor);
+
+    /**
+     * Get the import
+     * @param applicationId
+     * @param importId
+     * @return
+     */
+    Import getImport(final UUID applicationId, final UUID importId);
 
     /**
      * Get the results
@@ -50,7 +57,7 @@ public interface ImportService {
      * @param cursor The cursor used in parsing
      * @return
      */
-    Results getFileImports( final UUID importId, final String cursor);
+    Results getFileImports(final UUID applicationId, final UUID importId, final String cursor);
 
     /**
      * Get the file import
@@ -58,7 +65,7 @@ public interface ImportService {
      * @param fileImportId
      * @return
      */
-    FileImport getFileImport(final UUID importId, final UUID fileImportId);
+    FileImport getFileImport(final UUID applicationId, final UUID importId, final UUID fileImportId);
 
 
 
@@ -70,7 +77,7 @@ public interface ImportService {
      * @param cursor The cursor used in parsing
      * @return
      */
-    Results getFailedImports( final UUID importId, final UUID fileImportId, final String cursor);
+    Results getFailedImports(final UUID applicationId,  final UUID importId, final UUID fileImportId, final String cursor);
 
     /**
      * Get the failedimport entity from it's parentId
@@ -79,7 +86,7 @@ public interface ImportService {
      * @param failedImportId
      * @return
      */
-    FailedImportEntity getFailedImportEntity(final UUID importId, final UUID fileImportId, final UUID failedImportId);
+    FailedImportEntity getFailedImportEntity(final UUID applicationId, final UUID importId, final UUID fileImportId, final UUID failedImportId);
 
     /**
      * Perform the import from the external resource
@@ -104,11 +111,6 @@ public interface ImportService {
      * @return error message
      */
     String getErrorMessage(UUID uuid) throws Exception;
-
-    /**
-     * @return FileImportEntity
-     */
-    FileImport getFileImportEntity(final ImportQueueMessage importQueueMessage) throws Exception;
 
     /**
      * @return FileImportEntity

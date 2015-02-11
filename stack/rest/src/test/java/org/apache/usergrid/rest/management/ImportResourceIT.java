@@ -630,12 +630,17 @@ public class ImportResourceIT extends AbstractRestIT {
         Entity importEntity = this.management().orgs().organization( org ).app().addToPath( app ).addToPath( "import" ).post( importPayload );
 
 
-        Entity importGet = this.management().orgs().organization( org ).app().addToPath( app ).addToPath( "import" ).addToPath( importEntity.getUuid().toString() ).get();
 
         int maxRetries = 120;
         int retries = 0;
 
-        while ( !importGet.get( "state" ).equals( "FINISHED" ) && retries++ < maxRetries ) {
+        while (  retries++ < maxRetries ) {
+
+            Entity importGet = this.management().orgs().organization( org ).app().addToPath( app ).addToPath( "import" ).addToPath( importEntity.getUuid().toString() ).get();
+            if(importGet.get( "state" ).equals( "FINISHED" )){
+                break;
+            }
+
             logger.debug("Waiting for import...");
             Thread.sleep(1000);
         }
