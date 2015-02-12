@@ -39,6 +39,9 @@ import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.cluster.tasks.PendingClusterTasksRequest;
 import org.elasticsearch.action.admin.cluster.tasks.PendingClusterTasksResponse;
+import org.elasticsearch.action.admin.indices.alias.IndicesAliasesResponse;
+import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
+import org.elasticsearch.action.admin.indices.alias.get.GetAliasesResponse;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
 import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateResponse;
@@ -187,10 +190,9 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
                 try {
                     isAck = adminClient.indices().prepareAliases().removeAlias(currentIndex,
                         alias.getWriteAlias()).execute().actionGet().isAcknowledged();
-
                     logger.info("Removed Index Name [{}] from Alias=[{}] ACK=[{}]", currentIndex, alias, isAck);
                 }catch (Exception innere){
-                    logger.warn("Alias removal failed",innere);
+                    logger.info("Alias removal failed",innere);
                 }
             }
 
