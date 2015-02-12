@@ -207,12 +207,19 @@ sh /etc/init.d/tomcat7 start
 until curl -m 1 -I -X GET http://localhost:8080/status | grep "200 OK";  do sleep 5; done
 
 
+#Install collectd client to report to graphite
+cd /usr/share/usergrid/init_instance
+./install_collectd.sh
+
+
 #If we're the first rest server, run the migration, the database setup, then run the Cassanda keyspace updates
 cd /usr/share/usergrid/scripts
 groovy registry_register.groovy rest
 
 FIRSTHOST="$(groovy get_first_instance.groovy rest)"
+GRAPHITE_SERVER="$(groovy get_first_instance.groovy graphite )"
 
+#First host run the migration and setup
 if [ "$FIRSTHOST"=="$PUBLIC_HOSTNAME" ]; then
 
 #Run the migration
@@ -230,9 +237,19 @@ cd /usr/share/usergrid/init_instance
 
 fi
 
+#Always create our graphite dashboard.  Last to write will implicity win, since they will have the most recent cluster state
+cd /usr/share/usergrid/scripts
+JSON_PAYLOAD="$(groovy create_dashboard.groovy rest)"
 
-cd /usr/share/usergrid/init_instance
-./install_collectd.sh
+echo ${JSON_PAYLOAD} > /var/lib/tomcat7/webapps/portal/graphite.json
+
+
+#Post the JSON graphite payload to graphite
+## The json is correct, but this doens't work yet. To get the generated data to save, just hit ELB/portal/graphite.json to set into graphite manually
+##curl -X POST -d "${JSON_PAYLOAD}" "http://${GRAPHITE_SERVER}/dashboard/save/Tomcats"
+
+
+
 
 # tag last so we can see in the console that the script ran to completion
 cd /usr/share/usergrid/scripts

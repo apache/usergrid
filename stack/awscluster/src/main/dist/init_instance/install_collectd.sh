@@ -330,10 +330,13 @@ LoadPlugin java
         Host "${PUBLIC_HOSTNAME}"
         Collect "classes"
         Collect "compilation"
-        Collect "garbage_collector"
         Collect "memory_pool"
         Collect "memory_heap"
         Collect "memory_nonheap"
+        Collect "garbage_collector"
+        Collect "catalina/global_request_processor"
+        Collect "catalina/detailed_request_processor"
+        Collect "catalina/thread_pool"
       </Connection>
     </Plugin>
 </Plugin>
