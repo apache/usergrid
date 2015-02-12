@@ -138,7 +138,7 @@ public class ImportResourceIT extends AbstractRestIT {
             .organization(org)
             .app()
             .addToPath(app)
-            .addToPath("import")
+            .addToPath("imports")
             .post(payload);
 
         assertNotNull(entity);
@@ -148,7 +148,7 @@ public class ImportResourceIT extends AbstractRestIT {
             .organization(org)
             .app()
             .addToPath(app)
-            .addToPath("import")
+            .addToPath("imports")
             .addToPath(entity.getUuid().toString())
             .get();
 
@@ -176,7 +176,7 @@ public class ImportResourceIT extends AbstractRestIT {
             .organization(org)
             .app()
             .addToPath(app)
-            .addToPath("import")
+            .addToPath("imports")
             .post(payload);
 
 
@@ -184,7 +184,7 @@ public class ImportResourceIT extends AbstractRestIT {
 
         // test that you can access the organization using the currently set token.
         this.management().orgs().organization(org).app().addToPath(app)
-            .addToPath("import").addToPath(entity.getUuid().toString()).get();
+            .addToPath("imports").addToPath(entity.getUuid().toString()).get();
 
         //create a new org/app
         String newOrgName = "org" + UUIDUtils.newTimeUUID();
@@ -209,7 +209,7 @@ public class ImportResourceIT extends AbstractRestIT {
         //try to read with the new token, which should fail as unauthorized
         try {
             this.management().orgs().organization(org).app().addToPath(app)
-                .addToPath("import").addToPath(entity.getUuid().toString()).get();
+                .addToPath("imports").addToPath(entity.getUuid().toString()).get();
             fail("Should not be able to read import job with unauthorized token");
         } catch (UniformInterfaceException ex) {
             errorParse(401, "unauthorized", ex);
@@ -227,7 +227,7 @@ public class ImportResourceIT extends AbstractRestIT {
         Entity payload = new Entity();
 
         try {
-            this.management().orgs().organization(org).app().addToPath(app).addToPath("import").post(payload);
+            this.management().orgs().organization(org).app().addToPath(app).addToPath("imports").post(payload);
         } catch (UniformInterfaceException uie) {
             responseStatus = uie.getResponse().getClientResponseStatus();
         }
@@ -246,7 +246,7 @@ public class ImportResourceIT extends AbstractRestIT {
         properties.remove("storage_info");
 
         try {
-            this.management().orgs().organization(org).app().addToPath(app).addToPath("import").post(payload);
+            this.management().orgs().organization(org).app().addToPath(app).addToPath("imports").post(payload);
         } catch (UniformInterfaceException uie) {
             responseStatus = uie.getResponse().getClientResponseStatus();
         }
@@ -267,7 +267,7 @@ public class ImportResourceIT extends AbstractRestIT {
 
 
         try {
-            this.management().orgs().organization(org).app().addToPath(app).addToPath("import").post(payload);
+            this.management().orgs().organization(org).app().addToPath(app).addToPath("imports").post(payload);
         } catch (UniformInterfaceException uie) {
             responseStatus = uie.getResponse().getClientResponseStatus();
         }
@@ -289,7 +289,7 @@ public class ImportResourceIT extends AbstractRestIT {
         storage_info.remove("s3_key");
 
         try {
-            this.management().orgs().organization(org).app().addToPath(app).addToPath("import").post(payload);
+            this.management().orgs().organization(org).app().addToPath(app).addToPath("imports").post(payload);
         } catch (UniformInterfaceException uie) {
             responseStatus = uie.getResponse().getClientResponseStatus();
         }
@@ -302,7 +302,7 @@ public class ImportResourceIT extends AbstractRestIT {
         storage_info.remove("s3_access_id");
 
         try {
-            this.management().orgs().organization(org).app().addToPath(app).addToPath("import").post(payload);
+            this.management().orgs().organization(org).app().addToPath(app).addToPath("imports").post(payload);
         } catch (UniformInterfaceException uie) {
             responseStatus = uie.getResponse().getClientResponseStatus();
         }
@@ -315,7 +315,7 @@ public class ImportResourceIT extends AbstractRestIT {
         storage_info.remove("bucket_location");
 
         try {
-            this.management().orgs().organization(org).app().addToPath(app).addToPath("import").post(payload);
+            this.management().orgs().organization(org).app().addToPath(app).addToPath("imports").post(payload);
         } catch (UniformInterfaceException uie) {
             responseStatus = uie.getResponse().getClientResponseStatus();
         }
@@ -420,7 +420,7 @@ public class ImportResourceIT extends AbstractRestIT {
         //list out all the files in the resource directory you want uploaded
         List<String> filenames = new ArrayList<>(1);
 
-        filenames.add("testimport-bad-connection.json");
+        filenames.add("testImportCorrect.testCol.1.json");
         // create 10 applications each with collection of 10 things, export all to S3
         S3Upload s3Upload = new S3Upload();
         s3Upload.copyToS3(
@@ -433,14 +433,14 @@ public class ImportResourceIT extends AbstractRestIT {
         Entity importEntity = importCollection();
 
         Entity importGet = this.management().orgs().organization( org ).app().addToPath( app )
-            .addToPath( "import" ).addToPath( importEntity.getUuid().toString() ).get();
+            .addToPath( "imports" ).addToPath( importEntity.getUuid().toString() ).get();
 
 
         refreshIndex();
 
         Entity importGetIncludes = this.management().orgs().organization(org).app().addToPath(app)
-                                       .addToPath("import" ).addToPath(importEntity.getUuid().toString() )
-                                       .addToPath("includes" ).get();
+                                       .addToPath("imports" ).addToPath(importEntity.getUuid().toString() )
+                                       .addToPath("files" ).get();
 
         ApiResponse importGetIncludesResponse = importGetIncludes.getResponse();
 
@@ -451,7 +451,7 @@ public class ImportResourceIT extends AbstractRestIT {
 
         final Entity includesEntity = importGetIncludesResponse.getEntities().get( 0 );
 
-        assertEquals( "testimport-bad-connection.json", includesEntity.getString( "fileName" ) );
+        assertEquals( "testImportCorrect.testCol.1.json", includesEntity.getString( "fileName" ) );
         assertEquals(1, includesEntity.get( "importedConnectionCount" ));
         assertEquals(1, includesEntity.get( "importedEntityCount" ));
 
@@ -484,7 +484,7 @@ public class ImportResourceIT extends AbstractRestIT {
         //list out all the files in the resource directory you want uploaded
         List<String> filenames = new ArrayList<>(1);
 
-        filenames.add("testimport-bad-connection.json");
+        filenames.add("testImportCorrect.testCol.1.json");
         filenames.add("testImport.testApplication.2.json");
         // create 10 applications each with collection of 10 things, export all to S3
         S3Upload s3Upload = new S3Upload();
@@ -498,7 +498,7 @@ public class ImportResourceIT extends AbstractRestIT {
         Entity importEntity = importCollection();
 
         Entity importGet = this.management().orgs().organization(org).app().addToPath(app)
-            .addToPath( "import" ).addToPath(importEntity.getUuid().toString() ).get();
+            .addToPath( "imports" ).addToPath(importEntity.getUuid().toString() ).get();
 
 
         assertNotNull(importGet);
@@ -543,7 +543,7 @@ public class ImportResourceIT extends AbstractRestIT {
         Entity importEntity = importCollection();
 
         Entity importGet = this.management().orgs().organization(org).app().addToPath(app)
-            .addToPath("import" ).addToPath(importEntity.getUuid().toString() ).get();
+            .addToPath("imports" ).addToPath(importEntity.getUuid().toString() ).get();
 
 
         assertNotNull(importGet);
@@ -588,12 +588,12 @@ public class ImportResourceIT extends AbstractRestIT {
 
         // we should now have 100 Entities in the default app
 
-        Entity importGet = this.management().orgs().organization( org ).app().addToPath( app ).addToPath("import")
+        Entity importGet = this.management().orgs().organization( org ).app().addToPath( app ).addToPath("imports")
             .addToPath( importEntity.getUuid().toString() ).get();
 
         Entity importGetIncludes = this.management().orgs().organization(org).app().addToPath(app)
-            .addToPath("import" ).addToPath(importEntity.getUuid().toString() )
-            .addToPath("includes" ).get();
+            .addToPath("imports" ).addToPath(importEntity.getUuid().toString() )
+            .addToPath("files" ).get();
 
         assertNotNull(importGet);
         //TODO: needs better error checking
@@ -625,7 +625,7 @@ public class ImportResourceIT extends AbstractRestIT {
             }});
         }});
 
-        Entity importEntity = this.management().orgs().organization(org).app().addToPath(app).addToPath("import")
+        Entity importEntity = this.management().orgs().organization(org).app().addToPath(app).addToPath("imports")
                                   .post(importPayload);
 
         int maxRetries = 120;
@@ -638,7 +638,7 @@ public class ImportResourceIT extends AbstractRestIT {
                 .organization(org)
                 .app()
                 .addToPath(app)
-                .addToPath("import")
+                .addToPath("imports")
                 .addToPath(importEntity.getUuid().toString())
                 .get();
 

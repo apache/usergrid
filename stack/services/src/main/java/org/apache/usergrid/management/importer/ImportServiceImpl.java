@@ -59,7 +59,7 @@ public class ImportServiceImpl implements ImportService {
     public static final int HEARTBEAT_COUNT = 50;
 
     public static final String APP_IMPORT_CONNECTION ="imports";
-    public static final String IMPORT_FILE_INCLUDES_CONNECTION = "includes";
+    public static final String IMPORT_FILE_INCLUDES_CONNECTION = "files";
 
     private static final Logger logger = LoggerFactory.getLogger(ImportServiceImpl.class);
 
