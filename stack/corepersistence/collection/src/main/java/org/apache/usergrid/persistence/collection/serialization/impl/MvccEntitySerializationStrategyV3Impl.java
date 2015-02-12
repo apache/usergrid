@@ -187,14 +187,14 @@ public class MvccEntitySerializationStrategyV3Impl extends MvccEntitySerializati
             try {
                s = Arrays.toString(array);
 
-                String[] byteValues = s.substring(1, s.length() - 1).split(",");
-                byte[] bytes = new byte[byteValues.length];
-
-                for (int i=0, len=bytes.length; i<len; i++) {
-                    bytes[i] = Byte.parseByte(byteValues[i].trim());
-                }
-
-                s = new String(bytes);
+//                String[] byteValues = s.substring(1, s.length() - 1).split(",");
+//                byte[] bytes = new byte[byteValues.length];
+//
+//                for (int i=0, len=bytes.length; i<len; i++) {
+//                    bytes[i] = Byte.parseByte(byteValues[i].trim());
+//                }
+//
+//                s = new String(bytes);
                 storedEntity = MAPPER.readValue(array, EntityMap.class);
             } catch (Exception e) {
                 throw new DataCorruptionException("Unable to read entity data", e);

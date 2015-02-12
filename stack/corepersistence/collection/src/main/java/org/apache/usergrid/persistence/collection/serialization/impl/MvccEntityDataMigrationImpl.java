@@ -78,32 +78,31 @@ public class MvccEntityDataMigrationImpl implements DataMigration {
                 public Id call(EntityIdScope idScope) {
 
                     ApplicationScope applicationScope = applicationEntityGroup.applicationScope;
-
-//                    if (!(applicationScope instanceof CollectionScope)) {
-//                        return idScope.getId();
-//                    }
-
-                    CollectionScope currentScope = (CollectionScope) applicationScope;
                     MigrationStrategy.MigrationRelationship<MvccEntitySerializationStrategy> migration = entityMigrationStrategy.getMigration();
-                    //for each element in the history in the previous version,
-                    // copy it to the CF in v2
-                    Iterator<MvccEntity> allVersions = migration.from()
-                        .loadDescendingHistory(currentScope, idScope.getId(), now,
-                            1000);
 
-                    while (allVersions.hasNext()) {
-                        final MvccEntity version = allVersions.next();
+                    if (applicationScope instanceof CollectionScope) {
+                        CollectionScope currentScope = (CollectionScope) applicationScope;
+                        //for each element in the history in the previous version,
+                        // copy it to the CF in v2
+                        Iterator<MvccEntity> allVersions = migration.from()
+                            .loadDescendingHistory(currentScope, idScope.getId(), now,
+                                1000);
 
-                        final MutationBatch versionBatch =
-                            migration.to().write(currentScope, version);
+                        while (allVersions.hasNext()) {
+                            final MvccEntity version = allVersions.next();
 
-                        totalBatch.mergeShallow(versionBatch);
+                            final MutationBatch versionBatch =
+                                migration.to().write(currentScope, version);
 
-                        if (atomicLong.incrementAndGet() % 50 == 0) {
-                            executeBatch(totalBatch, observer, atomicLong);
+                            totalBatch.mergeShallow(versionBatch);
+
+                            if (atomicLong.incrementAndGet() % 50 == 0) {
+                                executeBatch(totalBatch, observer, atomicLong);
+                            }
                         }
+                        executeBatch(totalBatch, observer, atomicLong);
                     }
-                    executeBatch(totalBatch, observer, atomicLong);
+                    
                     return idScope.getId();
                 }
             })
