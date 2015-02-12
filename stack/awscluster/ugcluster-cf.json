@@ -61,7 +61,7 @@
             "Description": "Number of Cass servers to start.",
             "Type": "Number",
             "Default": "6",
-            "MinValue": "3"
+            "MinValue": "2"
         },
         "CassInstanceType": {
             "Description": "Instance type for Cass servers",
@@ -101,7 +101,7 @@
             "Description": "Number of ES servers to start.",
             "Type": "Number",
             "Default": "6",
-            "MinValue": "3"
+            "MinValue": "2"
         },
         "ESInstanceType": {
             "Description": "Instance type for ES servers",

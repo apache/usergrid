@@ -116,7 +116,7 @@ case `(curl http://169.254.169.254/latest/meta-data/instance-type)` in
 esac
 
 
-sed -i.bak "s/Xmx128m/Xmx${TOMCAT_RAM} -Xms${TOMCAT_RAM} -Dlog4j\.configuration=file:\/usr\/share\/usergrid\/lib\/log4j\.properties/g" /etc/default/tomcat7
+sed -i.bak "s/Xmx128m/Xmx${TOMCAT_RAM} -Xms${TOMCAT_RAM} -Dlog4j\.configuration=file:\/usr\/share\/usergrid\/lib\/log4j\.properties -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=8050 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false/g" /etc/default/tomcat7
 sed -i.bak "s/<Connector/<Connector maxThreads=\"${TOMCAT_THREADS}\" acceptCount=\"${ACCEPT_COUNT}\" maxConnections=\"${TOMCAT_THREADS}\"/g" /var/lib/tomcat7/conf/server.xml
 
 
@@ -229,6 +229,10 @@ cd /usr/share/usergrid/init_instance
 ./update_keyspaces.sh
 
 fi
+
+
+cd /usr/share/usergrid/init_instance
+./install_collectd.sh
 
 # tag last so we can see in the console that the script ran to completion
 cd /usr/share/usergrid/scripts
