@@ -453,7 +453,7 @@ public class ImportResourceIT extends AbstractRestIT {
 
         assertEquals( "testimport-bad-connection.json", includesEntity.getString( "fileName" ) );
         assertEquals(1, includesEntity.get( "importedConnectionCount" ));
-        assertEquals(1, includesEntity.getString( "importedEntityCount" ));
+        assertEquals(1, includesEntity.get( "importedEntityCount" ));
 
         assertEquals("FINISHED", importGet.get("state"));
         assertEquals(1, importGet.get("fileCount"));
@@ -642,7 +642,7 @@ public class ImportResourceIT extends AbstractRestIT {
                 .addToPath(importEntity.getUuid().toString())
                 .get();
 
-            if (importGet.get("state").equals("FINISHED")) {
+            if (importGet.get("state").equals("FINISHED") || importGet.get( "state" ).equals( "FAILED" )) {
                 break;
             }
 
