@@ -327,7 +327,7 @@ LoadPlugin java
       #####################
       <Connection>
         ServiceURL "service:jmx:rmi:///jndi/rmi://localhost:8050/jmxrmi"
-        Host "localhost"
+        Host "${PUBLIC_HOSTNAME}"
         Collect "classes"
         Collect "compilation"
         Collect "garbage_collector"
