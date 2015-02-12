@@ -282,7 +282,7 @@ public class EmailFlowIT {
 
         User user = setupAppUser( app.getId(), appUserUsername, appUserEmail, false );
 
-        String subject = "Request For User Account Activation " + email;
+        String subject = "Request For User Account Activation " + user.getEmail();
         String activation_url = String.format( setup.get( PROPERTIES_USER_ACTIVATION_URL ), orgName, appName,
                 user.getUuid().toString() );
 
