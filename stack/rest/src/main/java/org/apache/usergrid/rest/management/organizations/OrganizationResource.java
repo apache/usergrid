@@ -78,9 +78,6 @@ public class OrganizationResource extends AbstractContextResource {
     @Autowired
     protected ExportService exportService;
 
-    @Autowired
-    protected ImportService importService; //ExportService importService;
-
     OrganizationInfo organization;
 
 

@@ -90,9 +90,6 @@ public class ApplicationResource extends AbstractContextResource {
     @Autowired
     protected ExportService exportService;
 
-    @Autowired
-    protected ImportService importService;
-
     OrganizationInfo organization;
     UUID applicationId;
     ApplicationInfo application;
@@ -363,16 +360,6 @@ public class ApplicationResource extends AbstractContextResource {
         return Response.status( SC_ACCEPTED ).entity( uuidRet ).build();
     }
 
-
-    @Path( "import" )
-    @RequireOrganizationAccess
-    public ImportsResource importGetJson( @Context UriInfo ui,
-                                          @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
-        throws Exception {
-
-
-        return getSubResource( ImportsResource.class ).init( organization, application );
-    }
 
     @GET
     @Path("/status")
