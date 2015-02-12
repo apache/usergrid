@@ -740,7 +740,7 @@ public class ImportServiceImpl implements ImportService {
                 s3Import = new S3ImportImpl();
             }
         } catch (Exception e) {
-            tracker.fatal("Unable to connect to S3 bucket, error: " + e.getMessage());
+            tracker.fatal("Error connecting to S3: " + e.getMessage());
             checkIfComplete( emManagementApp, fileImport );
             return;
         }
@@ -749,7 +749,7 @@ public class ImportServiceImpl implements ImportService {
             downloadedFile = s3Import.copyFileFromBucket(
                 fileName, bucketName, accessId, secretKey );
         } catch (Exception e) {
-            tracker.fatal("Error downloading file " + fileName + ": " + e.getMessage());
+            tracker.fatal("Error downloading file: " +  e.getMessage());
             checkIfComplete( emManagementApp, fileImport );
             return;
         }
@@ -761,7 +761,7 @@ public class ImportServiceImpl implements ImportService {
                 jobExecution, downloadedFile, targetEm, emManagementApp, fileImport, tracker);
 
         } catch (Exception e) {
-            tracker.fatal("Error importing file " + fileName + ": " + e.getMessage());
+            tracker.fatal(e.getMessage());
         }
 
         checkIfComplete( emManagementApp, fileImport );
@@ -1276,7 +1276,7 @@ public class ImportServiceImpl implements ImportService {
 
             } catch (Exception e) {
 
-                tracker.fatal("Failed to import file" + fileImport.getFileName() + " error " + e.getMessage());
+                tracker.fatal( e.getMessage() );
 
                 if ( subscriber != null ) {
 
