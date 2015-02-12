@@ -764,6 +764,8 @@ public class ImportServiceImpl implements ImportService {
             } catch (Exception e1) {
                 logger.error("Error updating file import with error information", e1);
             }
+
+            return;
         }
 
         // parse JSON data, create Entities and Connections from import data
@@ -781,6 +783,8 @@ public class ImportServiceImpl implements ImportService {
             } catch (Exception e1) {
                 logger.error("Error updating file import with error information", e1);
             }
+
+            return;
         }
 
         // mark ImportJob FINISHED but only if all other FileImportJobs are complete

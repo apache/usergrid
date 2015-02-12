@@ -17,6 +17,7 @@
 
 package org.apache.usergrid.rest.management;
 
+import com.amazonaws.SDKGlobalConfiguration;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Service;
 import com.google.inject.Module;
@@ -96,10 +97,9 @@ public class ImportResourceIT extends AbstractRestIT {
 
     @Before
     public void before() {
-
         configured =
-            !StringUtils.isEmpty(System.getProperty("s3_key"))
-                && !StringUtils.isEmpty(System.getProperty("s3_access_id"))
+            !StringUtils.isEmpty(System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR ))
+                && !StringUtils.isEmpty(System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR ))
                 && !StringUtils.isEmpty(System.getProperty("bucketName"));
 
 
@@ -424,8 +424,8 @@ public class ImportResourceIT extends AbstractRestIT {
         // create 10 applications each with collection of 10 things, export all to S3
         S3Upload s3Upload = new S3Upload();
         s3Upload.copyToS3(
-            System.getProperty("s3_access_id"),
-            System.getProperty("s3_key"),
+            System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR ),
+            System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR ),
             bucketName, filenames);
 
         // import all those exports from S3 into the default test application
@@ -447,6 +447,13 @@ public class ImportResourceIT extends AbstractRestIT {
         assertNotNull(importGet);
         assertNotNull( importGetIncludes );
         assertEquals( 1,importGetIncludesResponse.getEntityCount());
+
+
+        final Entity includesEntity = importGetIncludesResponse.getEntities().get( 0 );
+
+        assertEquals( "testimport-bad-connection.json", includesEntity.getString( "fileName" ) );
+        assertEquals(1, includesEntity.get( "importedConnectionCount" ));
+        assertEquals(1, includesEntity.getString( "importedEntityCount" ));
 
         assertEquals("FINISHED", importGet.get("state"));
         assertEquals(1, importGet.get("fileCount"));
@@ -482,8 +489,8 @@ public class ImportResourceIT extends AbstractRestIT {
         // create 10 applications each with collection of 10 things, export all to S3
         S3Upload s3Upload = new S3Upload();
         s3Upload.copyToS3(
-            System.getProperty("s3_access_id"),
-            System.getProperty("s3_key"),
+            System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR ),
+            System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR ),
             bucketName, filenames);
 
         // import all those exports from S3 into the default test application
@@ -527,8 +534,8 @@ public class ImportResourceIT extends AbstractRestIT {
         // create 10 applications each with collection of 10 things, export all to S3
         S3Upload s3Upload = new S3Upload();
         s3Upload.copyToS3(
-            System.getProperty("s3_access_id"),
-            System.getProperty("s3_key"),
+            System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR ),
+            System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR ),
             bucketName, filenames);
 
         // import all those exports from S3 into the default test application
@@ -571,8 +578,8 @@ public class ImportResourceIT extends AbstractRestIT {
         filenames.add("testImportInvalidJson.testApplication.3.json");
         // create 10 applications each with collection of 10 things, export all to S3
         S3Upload s3Upload = new S3Upload();
-        s3Upload.copyToS3(System.getProperty("s3_access_id"),
-            System.getProperty("s3_key"),
+        s3Upload.copyToS3(System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR ),
+            System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR ),
             bucketName, filenames);
 
         // import all those exports from S3 into the default test application
@@ -610,9 +617,9 @@ public class ImportResourceIT extends AbstractRestIT {
                 put("storage_provider", "s3");
                 put("storage_info", new HashMap<String, Object>() {{
                     put("s3_key",
-                        System.getProperty("s3_key"));
+                        System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR ));
                     put("s3_access_id",
-                        System.getProperty("s3_access_id"));
+                        System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR ));
                     put("bucket_location", bucketName);
                 }});
             }});
@@ -687,8 +694,8 @@ public class ImportResourceIT extends AbstractRestIT {
 
         logger.debug("\n\nDelete bucket\n");
 
-        String accessId = System.getProperty("s3_access_id");
-        String secretKey = System.getProperty("s3_key");
+        String accessId = System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR );
+        String secretKey = System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR );
 
         Properties overrides = new Properties();
         overrides.setProperty("s3" + ".identity", accessId);
@@ -710,8 +717,8 @@ public class ImportResourceIT extends AbstractRestIT {
 
         logger.debug("\n\nDelete buckets with prefix {}\n", bucketPrefix);
 
-        String accessId = System.getProperty("s3_access_id");
-        String secretKey = System.getProperty("s3_key");
+        String accessId = System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR );
+        String secretKey = System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR );
 
         Properties overrides = new Properties();
         overrides.setProperty("s3" + ".identity", accessId);
