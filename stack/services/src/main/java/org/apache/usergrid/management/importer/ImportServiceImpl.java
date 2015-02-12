@@ -18,7 +18,6 @@
 package org.apache.usergrid.management.importer;
 
 import com.google.common.base.Preconditions;
-import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.batch.service.SchedulerService;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
@@ -389,7 +388,8 @@ public class ImportServiceImpl implements ImportService {
             return entities.size();
 
             // see ImportConnectsTest()
-//            Results entities = emMgmtApp.getConnectedEntities( importRoot, "includes", null, Level.ALL_PROPERTIES );
+//            Results entities = emMgmtApp.getConnectedEntities(
+//              importRoot, "includes", null, Level.ALL_PROPERTIES );
 //            PagingResultsIterator itr = new PagingResultsIterator( entities );
 //            int count = 0;
 //            while ( itr.hasNext() ) {
@@ -404,9 +404,10 @@ public class ImportServiceImpl implements ImportService {
         }
     }
 
+
     /**
-     * Schedule the file tasks.  This must happen in 2 phases.  The first is linking the sub files to the master the
-     * second is scheduling them to run.
+     * Schedule the file tasks.  This must happen in 2 phases.  The first is linking the
+     * sub files to the master the second is scheduling them to run.
      */
     private JobData scheduleFileTasks( final JobData jobData ) {
 
@@ -415,6 +416,7 @@ public class ImportServiceImpl implements ImportService {
         // schedule file import job
         return sch.createJob(FILE_IMPORT_JOB_NAME, soonestPossible, jobData);
     }
+
 
     /**
      * Query Entity Manager for the state of the Import Entity. This corresponds to the GET /import
@@ -436,6 +438,7 @@ public class ImportServiceImpl implements ImportService {
 
         return importUG.getState();
     }
+
 
     /**
      * Query Entity Manager for the error message generated for an import job.
@@ -462,6 +465,7 @@ public class ImportServiceImpl implements ImportService {
         return importUG.getErrorMessage();
     }
 
+
     /**
      * Returns the Import Entity that stores all meta-data for the particular import Job
      *
@@ -484,11 +488,8 @@ public class ImportServiceImpl implements ImportService {
      */
     @Override
     public FileImport getFileImportEntity(final JobExecution jobExecution) throws Exception {
-
         UUID fileImportId = (UUID) jobExecution.getJobData().getProperty(FILE_IMPORT_ID);
-
         EntityManager em = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
-
         return em.get(fileImportId, FileImport.class);
     }
 
@@ -721,7 +722,10 @@ public class ImportServiceImpl implements ImportService {
 
         } catch (Exception e) {
             tracker.fatal("Application " + targetAppId + " does not exist");
+            checkIfComplete( emManagementApp, fileImport );
+            return;
         }
+
         EntityManager targetEm = emf.getEntityManager( targetAppId );
 
         // download file from S3, if no S3 importer was passed in then create one
@@ -737,6 +741,7 @@ public class ImportServiceImpl implements ImportService {
             }
         } catch (Exception e) {
             tracker.fatal("Unable to connect to S3 bucket, error: " + e.getMessage());
+            checkIfComplete( emManagementApp, fileImport );
             return;
         }
 
@@ -745,6 +750,8 @@ public class ImportServiceImpl implements ImportService {
                 fileName, bucketName, accessId, secretKey );
         } catch (Exception e) {
             tracker.fatal("Error downloading file " + fileName + ": " + e.getMessage());
+            checkIfComplete( emManagementApp, fileImport );
+            return;
         }
 
         // parse JSON data, create Entities and Connections from import data
@@ -757,45 +764,65 @@ public class ImportServiceImpl implements ImportService {
             tracker.fatal("Error importing file " + fileName + ": " + e.getMessage());
         }
 
-        // mark ImportJob FINISHED but only if all other FileImportJobs are complete
+        checkIfComplete( emManagementApp, fileImport );
+    }
 
-        // get parent import job of this file import job
 
-        String randTag = RandomStringUtils.randomAlphanumeric(4); // for logging
+    private Import getImportEntity( final EntityManager rootEm, final FileImport fileImport ) {
+        try {
+            Results importJobResults =
+                rootEm.getConnectingEntities( fileImport, IMPORT_FILE_INCLUDES_CONNECTION,
+                    null, Level.ALL_PROPERTIES );
 
+            List<Entity> importEntities = importJobResults.getEntities();
+            final Import importEntity = ( Import ) importEntities.get( 0 ).toTypedEntity();
+            return importEntity;
+        }
+        catch ( Exception e ) {
+            throw new RuntimeException( "Unable to import entity" );
+        }
+    }
+
+    /**
+     * Check if we're the last job on failure
+     */
+    private void checkIfComplete( final EntityManager emMgmtApp, final FileImport fileImport ) {
         int failCount = 0;
         int successCount = 0;
-        Import importEntity = null;
+
+        final Import importEntity = getImportEntity( emMgmtApp, fileImport );
+
         try {
 
-            Results importJobResults =
-                emManagementApp.getConnectingEntities( fileImport, IMPORT_FILE_INCLUDES_CONNECTION, null, Level.ALL_PROPERTIES );
-            List<Entity> importEntities = importJobResults.getEntities();
-            UUID importId = importEntities.get(0).getUuid();
-            importEntity = emManagementApp.get(importId, Import.class);
+            // wait for query index to catch up
 
-            logger.debug("{} Got importEntity {}", randTag, importEntity.getUuid());
-
-            EntityManager emMgmtApp = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
-
-            Query query = new Query();
-            query.setEntityType(Schema.getDefaultSchema().getEntityType( FileImport.class ));
-            query.setConnectionType( IMPORT_FILE_INCLUDES_CONNECTION );
-            query.setLimit(MAX_FILE_IMPORTS);
-
-            // TODO: better way to wait for ES indexes to catch up
+            // TODO: better way to wait for indexes to catch up
             try { Thread.sleep(5000); } catch ( Exception intentionallyIgnored ) {}
 
-            Results entities = emMgmtApp.searchConnectedEntities(importEntity, query);
+            // get file import entities for this import job
 
-            PagingResultsIterator itr = new PagingResultsIterator(entities);
+            Query query = new Query();
+            query.setEntityType( Schema.getDefaultSchema().getEntityType( FileImport.class ) );
+            query.setConnectionType( IMPORT_FILE_INCLUDES_CONNECTION );
+            query.setLimit( MAX_FILE_IMPORTS );
 
-            logger.debug("{} Check {} jobs to see if we are done for file {}",
-                new Object[]{randTag, entities.size(), fileImport.getFileName()});
+            Results entities = emMgmtApp.searchConnectedEntities( importEntity, query );
+            PagingResultsIterator itr = new PagingResultsIterator( entities );
 
-            while (itr.hasNext()) {
-                FileImport fi = (FileImport) itr.next();
-                switch (fi.getState()) {
+            if ( !itr.hasNext() ) {
+                logger.warn("Found no FileImport entities for import {}, " +
+                    "unable to check if complete", importEntity.getUuid());
+                return;
+            }
+
+            logger.debug( "Checking {} file import jobs to see if we are done for file {}",
+                new Object[] { entities.size(), fileImport.getFileName() } );
+
+            // loop through entities, count different types of status
+
+            while ( itr.hasNext() ) {
+                FileImport fi = ( FileImport ) itr.next();
+                switch ( fi.getState() ) {
                     case FAILED:     // failed, but we may not be complete so continue checking
                         failCount++;
                         break;
@@ -803,35 +830,40 @@ public class ImportServiceImpl implements ImportService {
                         successCount++;
                         continue;
                     default:         // not something we recognize as complete, short circuit
-                        logger.debug("{} not done yet, bail out...", randTag);
-                        return;
+                        logger.debug( "not done yet, bail out..." ); return;
                 }
             }
-
-        } catch ( Exception e ) {
+        }
+        catch ( Exception e ) {
             failCount++;
             if ( importEntity != null ) {
-                importEntity.setErrorMessage("Error determining status of file import jobs");
+                importEntity.setErrorMessage( "Error determining status of file import jobs" );
             }
-            logger.debug("Error determining status of file import jobs", e);
+            logger.debug( "Error determining status of file import jobs", e );
         }
 
-        logger.debug("{} successCount = {} failCount = {}", new Object[] { randTag, successCount, failCount } );
+        logger.debug( "successCount = {} failCount = {}", new Object[] { successCount, failCount } );
 
-        if ( importEntity != null && failCount == 0 ) {
-            logger.debug("{} FINISHED", randTag);
-            importEntity.setState(Import.State.FINISHED);
+        if ( importEntity != null ) {
+            logger.debug( "FINISHED" );
 
-        }  else if ( importEntity != null ) {
-            // we had failures, set it to failed
-            importEntity.setState(Import.State.FAILED);
+            if ( failCount == 0 ) {
+                importEntity.setState( Import.State.FINISHED );
+            }
+            else {
+                // we had failures, set it to failed
+                importEntity.setState( Import.State.FAILED );
+            }
+
+            try {
+                emMgmtApp.update( importEntity );
+            }
+            catch ( Exception e ) {
+                logger.error( "Error updating import entity", e );
+            }
         }
 
-        try {
-            emManagementApp.update( importEntity );
-        } catch (Exception e) {
-            logger.error("Error updating import entity", e);
-        }
+
     }
 
 
@@ -979,7 +1011,7 @@ public class ImportServiceImpl implements ImportService {
                 fileImport.getFileName());
             return;
         }
-        logger.debug("\n\nWrote connections and dictionaries. File: {}\n", fileImport.getFileName() );
+        logger.debug("\n\nWrote connections and dictionaries. File: {}\n", fileImport.getFileName());
     }
 
 
@@ -1226,7 +1258,8 @@ public class ImportServiceImpl implements ImportService {
                         }
 
                     }  else if (token.equals( JsonToken.START_ARRAY )) {
-                         if ( objectNameStack.size() == 1 && COLLECTION_OBJECT_NAME.equals( objectNameStack.peek() )) {
+                         if ( objectNameStack.size() == 1
+                                && COLLECTION_OBJECT_NAME.equals( objectNameStack.peek() )) {
                             entityType = InflectionUtils.singularize( name );
                          }
 
