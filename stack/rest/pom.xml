@@ -32,6 +32,7 @@
     <!-- Override these properties in an active profile within your settings.xml -->
     <properties>
        <cargo.servlet.port>8081</cargo.servlet.port>
+        <usergrid.rest.threads>1C</usergrid.rest.threads>
     </properties>
 
 
@@ -111,8 +112,8 @@
                         <target.directory>${project.build.directory}</target.directory>
                     </systemPropertyVariables>
                     <parallel>methods</parallel>
-                    <forkCount>${usergrid.it.forkCount}</forkCount>
-                    <threadCount>${usergrid.it.threads}</threadCount>
+                    <forkCount>1</forkCount>
+                    <threadCount>${usergrid.rest.threads}</threadCount>
                     <reuseForks>true</reuseForks>
                     <argLine>-Dtest.barrier.timestamp=${maven.build.timestamp} -Dtest.clean.storage=true -Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}</argLine>
                 </configuration>

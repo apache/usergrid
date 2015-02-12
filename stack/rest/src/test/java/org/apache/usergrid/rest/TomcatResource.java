@@ -47,331 +47,83 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 
 /**
- * Setup Tomcat to run Usergrid from src/main/webapps plus inherited (Maven) classpath. 
- * Caller must provide Cassandra and ElasticSearch ports. 
- * Generates Usergrid properties files.
+ * Simple singleton to get tests running again. A temporary solution until we start using
+ * Arquillian
+ *
  */
-public class TomcatResource extends ExternalResource {
+public class TomcatResource  {
     private static final Logger log = LoggerFactory.getLogger(TomcatResource.class);
 
-    public static final TomcatResource instance = new TomcatResource();
+    public static TomcatResource instance;
 
-    private static final Object mutex = new Object();
-    private String webAppsPath;
+
+    private Tomcat tomcat = null;
     private int port;
-    private int esPort;
-    private int cassPort;
-    private boolean started = false;
-    private Properties properties;
-    private boolean forkTomcat = true;
-
-    private static AtomicInteger clientCount = new AtomicInteger(0);
-
-    Tomcat tomcat = null;
-    Process process = null;
 
 
-    protected TomcatResource() {
+
+    public static synchronized TomcatResource getInstance(){
+      if(instance == null){
+          instance = new TomcatResource();
+      }
+
+        return instance;
+    }
+
+    private TomcatResource(){
         try {
-            String[] locations = { "usergrid-properties-context.xml" };
-            ConfigurableApplicationContext appContext = 
-                    new ClassPathXmlApplicationContext( locations );
-            
-            properties = (Properties)appContext.getBean("properties");
-
-        } catch (Exception ex) {
-            throw new RuntimeException("Error getting properties", ex);
+            startTomcatEmbedded();
+        }
+        catch ( Exception e ) {
+            throw new RuntimeException( "Unable to delete tomcat" );
         }
     }
-
-
-    @Override
-    protected void after() {    
-        log.info("Entering after");
-
-        synchronized (mutex) {
-
-            if ( clientCount.decrementAndGet() < 1 ) {
-
-                log.info("----------------------------------------------------------------------");
-                log.info("Destroying Tomcat running on port " + port);
-                log.info("----------------------------------------------------------------------");
-
-                if ( process != null ) {
-                    process.destroy();
-                    
-                } else if ( tomcat != null ) {
-                    try {
-                        tomcat.stop();
-                        tomcat.destroy();
-                    } catch (LifecycleException ex) {
-                        log.error("Error stopping Tomcat", ex);
-                    }
-                }
-                started = false;
-
-            } else {
-                log.info("NOT stopping Tomcat because it is still in use by {}", clientCount.get());
-            }
-        }
-
-        log.info("Leaving after");
-    }
-
-
-    @Override
-    protected void before() throws Throwable {
-        log.info("Entering before");
-
-        String esStartup = properties.getProperty("tomcat.startup");
-        if ( "forked".equals( esStartup )) {
-            forkTomcat = true;
-        } else {
-            forkTomcat = false;
-        }
-
-        synchronized (mutex) {
-
-            clientCount.incrementAndGet();
-
-            if (started) {
-                log.info("NOT starting Tomcat because it is already started");
-                log.info("Leaving before: {} users of Tomcat", clientCount.get());
-                return;
-            }
-
-            if ( forkTomcat ) {
-                process = startTomcatProcess();
-            } else {
-                startTomcatEmbedded();
-            }
-
-            log.info("Leaving before: Started Tomcat, now {} users", clientCount.get());
-        }
-
-    }
-
-
-    private String createPropDir() {
-        String propDirName = "target" + File.separator + "tomcat_" + port;
-        File newDir = new File( propDirName );
-        newDir.mkdirs();
-        String propDirPath = newDir.getAbsolutePath();
-        return propDirPath;
-    }
-
 
     private void waitForTomcat() throws RuntimeException {
-        String url = "http://localhost:" + port + "/status"; 
+        String url = "http://localhost:" + port + "/status";
         int count = 0;
         while (count++ < 30) {
             try {
                 Thread.sleep(1000);
                 Client c = Client.create();
                 WebResource wr = c.resource( url );
-                wr.get(String.class);
+                wr.get( String.class );
                 log.info("Tomcat is started.");
-                started = true;
-                break;
-                
+                return;
+
             } catch (Exception e) {
                 log.info("Waiting for Tomcat on url {}", url);
             }
         }
-        if ( !started ) {
-            throw new RuntimeException("Tomcat process never started.");
-        }
+
+
+        throw new RuntimeException("Tomcat process never started.");
+
     }
 
 
     private void startTomcatEmbedded() throws ServletException, LifecycleException {
 
-            File dataDir = Files.createTempDir();
-            dataDir.deleteOnExit();
+        File dataDir = Files.createTempDir();
+        dataDir.deleteOnExit();
 
-            port = AvailablePortFinder.getNextAvailable( 9998 + RandomUtils.nextInt(10)  );
-
-            String threads = (String)properties.get("tomcat.threads");
-
-            tomcat = new Tomcat();
-            tomcat.setBaseDir( dataDir.getAbsolutePath() );
-            tomcat.setPort( port );
-            tomcat.getConnector().setAttribute("maxThreads", "2000");
-            tomcat.addWebapp( "/", new File( getWebAppsPath() ).getAbsolutePath() );
-
-            log.info("-----------------------------------------------------------------");
-            log.info("Starting Tomcat embedded port {} dir {}", port, dataDir.getAbsolutePath());
-            log.info("-----------------------------------------------------------------");
-            tomcat.start();
-
-            waitForTomcat();
-
-            mutex.notifyAll();
-    }
+        port = AvailablePortFinder.getNextAvailable( 9998 + RandomUtils.nextInt( 10 ) );
 
 
-    private Process startTomcatProcess() throws IOException {
+        tomcat = new Tomcat();
+        tomcat.setBaseDir( dataDir.getAbsolutePath() );
+        tomcat.setPort( port );
+        tomcat.getConnector().setAttribute( "maxThreads", "2000" );
+        tomcat.addWebapp( "/", new File( "target/ROOT" ).getAbsolutePath() );
 
-        port = AvailablePortFinder.getNextAvailable(9998 + RandomUtils.nextInt(10));
-
-        String propDirPath = createPropDir();
-
-        createPropertyFilesForForkedTomcat( propDirPath );
-
-        String javaHome = (String)System.getenv("JAVA_HOME");
-
-        String logConfig = "-Dlog4j.configuration=file:./src/test/resources/log4j.properties";
-        String maxMemory = "-Xmx1000m";
-
-        ProcessBuilder pb = new ProcessBuilder(javaHome + "/bin/java", maxMemory, logConfig,
-                "org.apache.usergrid.TomcatMain", "src/main/webapp", port + "");
-
-        // ensure Tomcat gets same classpath we have, but with...
-        String classpath = System.getProperty("java.class.path");
-        List<String> path = new ArrayList<String>();
-
-        // our properties dir at the start
-        path.add( propDirPath );
-
-        String parts[] = classpath.split( File.pathSeparator );
-        for ( String part : parts ) {
-            if ( part.endsWith("test-classes") ) {
-                continue;
-            }
-            path.add(part);
-        }
-        String newClasspath = StringUtils.join( path, File.pathSeparator );
-
-        Map<String, String> env = pb.environment();
-        StringBuilder sb = new StringBuilder();
-        sb.append( newClasspath );
-        env.put("CLASSPATH", sb.toString());
-
-        //pb.directory(new File("."));
-        pb.redirectErrorStream(true);
-
-        final Process p = pb.start();
-
-        //log.debug("Started Tomcat process with classpath = " + newClasspath );
-
-        // use thread to log Tomcat output
-        new Thread( new Runnable() {
-            @Override
-            public void run() {
-                BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-                String line = null;
-                try {
-                    while ((line = br.readLine()) != null) {
-                        log.info(line);
-                    }
-
-                } catch (Exception ex) {
-                    log.error("Error reading from Tomcat process", ex);
-                    return;
-                } 
-            }
-        }).start();
-
+        log.info( "-----------------------------------------------------------------" );
+        log.info( "Starting Tomcat embedded port {} dir {}", port, dataDir.getAbsolutePath() );
+        log.info( "-----------------------------------------------------------------" );
+        tomcat.start();
 
         waitForTomcat();
-
-        Runtime.getRuntime().addShutdownHook( new Thread() {
-            @Override
-            public void run() {
-                after();
-            }
-        } );
-
-        mutex.notifyAll();
-
-        return p;
     }
 
-
-    private void createPropertyFilesForForkedTomcat( String propDirPath ) throws IOException {
-
-        PrintWriter pw = new PrintWriter( 
-            new FileWriter( propDirPath + File.separator + "usergrid-deployment.properties"));
-        
-        pw.println("cassandra.url=localhost:" + cassPort);
-        pw.println("cassandra.version=1.2");
-        pw.println("cassandra.cluster_name=Usergrid");
-        pw.println("cassandra.connections=600");
-        pw.println("cassandra.timeout=5000");
-
-        pw.println("elasticsearch.hosts=127.0.0.1");
-        pw.println("elasticsearch.port=" + esPort);
-        pw.println("elasticsearch.cluster_name=test_cluster");
-        pw.println("elasticsearch.index_prefix=usergrid");
-        pw.println("elasticsearch.startup=remote");
-        pw.println("elasticsearch.force_refresh=" + properties.getProperty("elasticsearch.force_refresh"));
-        
-        pw.println("collections.keyspace=Usergrid_Applications");
-        pw.println("collections.keyspace.strategy.options=replication_factor:1");
-        pw.println("collections.keyspace.strategy.class=org.apache.cassandra.locator.SimpleStrategy");
-        pw.println("collection.stage.transient.timeout=6");
-
-        pw.println("usergrid.mongo.disable=true");
-        pw.println("swagger.basepath=http://sometestvalue");
-        pw.println("usergrid.counter.batch.size=1");
-        pw.println("usergrid.test=true");
-
-        pw.println("usergrid.sysadmin.login.name=superuser");
-        pw.println("usergrid.sysadmin.login.email=superuser@usergrid.com");
-        pw.println("usergrid.sysadmin.login.password=superpassword");
-        pw.println("usergrid.sysadmin.login.allowed=true");
-        
-        pw.println("mail.transport.protocol=smtp");
-        pw.println("mail.store.protocol=imap");
-        pw.println("mail.smtp.host=usergrid.com");
-        pw.println("mail.smtp.username=testuser");
-        pw.println("mail.smtp.password=testpassword");
-        
-        pw.println("index.query.limit.default=1000");
-
-        pw.println("usergrid.recaptcha.public=");
-        pw.println("usergrid.recaptcha.private=");
-        pw.println("usergrid.sysadmin.email=");
-
-        pw.println("usergrid.management.admin_users_require_confirmation=false");
-        pw.println("usergrid.management.admin_users_require_activation=false");
-        pw.println("usergrid.management.notify_admin_of_activation=false");
-        pw.println("usergrid.management.organizations_require_confirmation=false");
-        pw.println("usergrid.management.organizations_require_activation=false");
-        pw.println("usergrid.management.notify_sysadmin_of_new_organizations=false");
-        pw.println("usergrid.management.notify_sysadmin_of_new_admin_users=false");
-
-        pw.println("usergrid.setup-test-account=true");
-        pw.println("usergrid.test-account.app=test-app");
-        pw.println("usergrid.test-account.organization=test-organization");
-        pw.println("usergrid.test-account.admin-user.username=test");
-        pw.println("usergrid.test-account.admin-user.name=Test User");
-        pw.println("usergrid.test-account.admin-user.email=test@usergrid.com");
-        pw.println("usergrid.test-account.admin-user.password=test");
-        
-        pw.flush();
-        pw.close();
-
-
-//        // include all properties 
-//        Map<String, String> allProperties = new HashMap<String, String>();
-//        for ( Object name : properties.keySet() ) { 
-//            allProperties.put( (String)name, properties.getProperty((String)name));
-//        }
-//
-//        // override some properties with correct port numbers
-//        allProperties.put("cassandra.url", "localhost:" + cassPort);
-//        allProperties.put("elasticsearch.hosts", "127.0.0.1");
-//        allProperties.put("elasticsearch.port", ""+esPort );
-//
-//        PrintWriter pw = new PrintWriter( 
-//            new FileWriter( propDirPath + File.separator + "usergrid-deployment.properties"));
-//        for ( String name : allProperties.keySet() ) {
-//            pw.println(name + "=" + allProperties.get( name ));
-//        } 
-//        pw.flush();
-//        pw.close();
-    }
 
     /**
      * Get the port Tomcat runs on.
@@ -380,23 +132,4 @@ public class TomcatResource extends ExternalResource {
         return port;
     }
 
-    public String getWebAppsPath() {
-        return webAppsPath;
-    }
-
-    public void setWebAppsPath(String webAppsPath) {
-        this.webAppsPath = webAppsPath;
-    }
-
-    void setCassandraPort(int cassPort) {
-        this.cassPort = cassPort;
-    }
-
-    void setElasticSearchPort(int esPort) {
-        this.esPort = esPort;
-    }
-
-    void setProperties(Properties properties) {
-        this.properties = properties;
-    }
 }

@@ -52,6 +52,8 @@ public class ITSetup  {
 
         this.springResource = ConcurrentProcessSingleton.getInstance().getSpringResource();
 
+        //start tomcat
+
 
 
         emf =                springResource.getBean( EntityManagerFactory.class );
