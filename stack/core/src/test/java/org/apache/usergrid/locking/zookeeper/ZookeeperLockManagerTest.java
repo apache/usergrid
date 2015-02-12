@@ -32,14 +32,18 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.locking.Lock;
 import org.apache.usergrid.locking.LockManager;
 import org.apache.usergrid.locking.exception.UGLockException;
+
+import net.jcip.annotations.NotThreadSafe;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 
+@NotThreadSafe
 public class ZookeeperLockManagerTest extends AbstractZooKeeperTest {
 
     private static final Logger logger = LoggerFactory.getLogger( ZookeeperLockManagerTest.class );
@@ -136,7 +140,6 @@ public class ZookeeperLockManagerTest extends AbstractZooKeeperTest {
         logger.info( "Cleaning up locks for current thread..." );
         lock.unlock();
         lock.unlock();
-
         second.unlock();
 
         boolean locked = lockInDifferentThread( application, entity );

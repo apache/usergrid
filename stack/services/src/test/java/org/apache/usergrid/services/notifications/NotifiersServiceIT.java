@@ -19,6 +19,8 @@ package org.apache.usergrid.services.notifications;
 import org.apache.commons.io.IOUtils;
 import org.apache.usergrid.services.notifications.apns.MockSuccessfulProviderAdapter;
 import org.apache.usergrid.persistence.entities.Notifier;
+
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -32,6 +34,8 @@ import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
 import org.apache.usergrid.services.AbstractServiceIT;
 import org.apache.usergrid.services.ServiceAction;
+import org.apache.usergrid.setup.ConcurrentProcessSingleton;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertArrayEquals;
@@ -41,10 +45,27 @@ import static org.junit.Assert.fail;
 public class NotifiersServiceIT extends AbstractServiceIT {
     private NotificationsService ns;
 
+
+    private QueueListener listener;
+
+
     @Before
     public void before() throws Exception {
+
+
         ns = (NotificationsService) app.getSm().getService("notifications");
+
+        listener = ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( QueueListener.class );
+
+        listener.start();
+
     }
+
+    @After
+    public void after() throws Exception {
+       listener.stop();
+    }
+
 
     @Test
     public void badProvider() throws Exception {

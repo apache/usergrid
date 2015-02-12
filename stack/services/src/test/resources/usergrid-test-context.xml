@@ -38,10 +38,10 @@
 
     <import resource="classpath:/usergrid-services-context.xml" />
 
-    <bean id="setup" class="org.apache.usergrid.corepersistence.HybridSetup">
-        <constructor-arg ref="properties"/>
+    <bean id="setup" class="org.apache.usergrid.corepersistence.CpSetup">
         <constructor-arg ref="entityManagerFactory"/>
         <constructor-arg ref="cassandraService"/>
+        <constructor-arg ref="injector"/>
     </bean>
 
     <!-- The default schema manager -->

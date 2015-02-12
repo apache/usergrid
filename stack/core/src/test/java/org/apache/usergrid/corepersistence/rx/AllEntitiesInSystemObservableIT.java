@@ -34,7 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.corepersistence.CpSetup;
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.corepersistence.EntityWriteHelper;
 import org.apache.usergrid.corepersistence.ManagerCache;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
@@ -43,6 +43,8 @@ import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.model.entity.Id;
+
+import com.google.inject.Injector;
 
 import rx.functions.Action1;
 
@@ -61,8 +63,8 @@ public class AllEntitiesInSystemObservableIT extends AbstractCoreIT {
     @Test
     public void testEntities() throws Exception {
 
-        AllEntitiesInSystemObservable allEntitiesInSystemObservableImpl = CpSetup.getInjector().getInstance(AllEntitiesInSystemObservable.class);
-        TargetIdObservable targetIdObservable = CpSetup.getInjector().getInstance(TargetIdObservable.class);
+        AllEntitiesInSystemObservable allEntitiesInSystemObservableImpl =SpringResource.getInstance().getBean(AllEntitiesInSystemObservable.class);
+        TargetIdObservable targetIdObservable = SpringResource.getInstance().getBean(TargetIdObservable.class);
 
         final EntityManager em = app.getEntityManager();
 
@@ -92,7 +94,7 @@ public class AllEntitiesInSystemObservableIT extends AbstractCoreIT {
         //this is hacky, but our context integration b/t guice and spring is a mess.  We need to clean this up when we
         //clean up our wiring
         //
-        ManagerCache managerCache = CpSetup.getInjector().getInstance( ManagerCache.class );
+        ManagerCache managerCache =  SpringResource.getInstance().getBean( Injector.class ).getInstance( ManagerCache.class );
 
 
         final ApplicationScope scope = CpNamingUtils.getApplicationScope( app.getId() );

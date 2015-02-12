@@ -18,16 +18,13 @@ package org.apache.usergrid.batch;
 
 
 import org.junit.Test;
-import org.apache.usergrid.cassandra.Concurrent;
 
 import com.google.common.base.CharMatcher;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-
 /** @author zznate */
-@Concurrent()
 public class AppArgsTest {
 
     @Test

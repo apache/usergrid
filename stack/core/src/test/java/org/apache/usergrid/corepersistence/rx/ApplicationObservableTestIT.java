@@ -28,11 +28,13 @@ import org.apache.usergrid.persistence.core.rx.ApplicationObservable;
 import org.junit.Test;
 
 import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.corepersistence.CpSetup;
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.corepersistence.ManagerCache;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.model.entity.Id;
+
+import com.google.inject.Injector;
 
 import rx.Observable;
 import rx.functions.Action1;
@@ -50,7 +52,7 @@ public class ApplicationObservableTestIT extends AbstractCoreIT {
 
         final Application createdApplication = app.getEntityManager().getApplication();
 
-        ApplicationObservable applicationObservable = CpSetup.getInjector().getInstance(ApplicationObservable.class);
+        ApplicationObservable applicationObservable =SpringResource.getInstance().getBean(ApplicationObservable.class);
 
         //now our get all apps we expect.  There may be more, but we don't care about those.
         final Set<UUID> applicationIds = new HashSet<UUID>() {{
@@ -63,7 +65,7 @@ public class ApplicationObservableTestIT extends AbstractCoreIT {
 
         //this is hacky, but our context integration b/t guice and spring is a mess.  We need to clean this up when we
         //clean up our wiring
-        ManagerCache managerCache = CpSetup.getInjector().getInstance( ManagerCache.class );
+        ManagerCache managerCache = SpringResource.getInstance().getBean( Injector.class ).getInstance( ManagerCache.class );
 
         Observable<Id> appObservable = applicationObservable.getAllApplicationIds();
 

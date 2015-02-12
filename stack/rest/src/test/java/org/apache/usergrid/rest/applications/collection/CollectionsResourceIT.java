@@ -28,7 +28,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.cassandra.Concurrent;
+
 import org.apache.usergrid.rest.AbstractRestIT;
 import org.apache.usergrid.utils.UUIDUtils;
 
@@ -45,7 +45,7 @@ import static org.apache.usergrid.utils.MapUtils.hashMap;
  * @author zznate
  * @author tnine
  */
-@Concurrent()
+
 public class CollectionsResourceIT extends AbstractRestIT {
 
     private static Logger log = LoggerFactory.getLogger( CollectionsResourceIT.class );

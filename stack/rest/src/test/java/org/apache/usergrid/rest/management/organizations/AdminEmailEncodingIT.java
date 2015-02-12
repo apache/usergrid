@@ -21,7 +21,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
-import org.apache.usergrid.cassandra.Concurrent;
+
 import org.apache.usergrid.rest.AbstractRestIT;
 import org.apache.usergrid.rest.TestContextSetup;
 import org.apache.usergrid.rest.test.security.TestAdminUser;
@@ -36,7 +36,7 @@ import static org.junit.Assert.assertNotNull;
  *
  * @author tnine
  */
-@Concurrent()
+
 public class AdminEmailEncodingIT extends AbstractRestIT {
 
     @Rule

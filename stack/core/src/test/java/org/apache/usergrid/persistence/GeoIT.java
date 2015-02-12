@@ -22,20 +22,22 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.persistence.geo.model.Point;
-import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.model.field.value.Location;
-import org.apache.usergrid.utils.MapUtils;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.usergrid.AbstractCoreIT;
+import org.apache.usergrid.persistence.geo.model.Point;
+import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.model.field.value.Location;
+import org.apache.usergrid.utils.MapUtils;
 
-@Concurrent()
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+
+
 public class GeoIT extends AbstractCoreIT {
     private static final Logger LOG = LoggerFactory.getLogger(GeoIT.class);
 
@@ -46,7 +48,7 @@ public class GeoIT extends AbstractCoreIT {
       A list of concrete entities with locations to be used for geoQuery tests
       NOTE: Adding or removing items from this list could affect test outcome!!!
      */
-    private static List<Map<String, Object>> LOCATION_PROPERTIES = 
+    private static List<Map<String, Object>> LOCATION_PROPERTIES =
             new ArrayList<Map<String, Object>>();
 
     static {
@@ -198,16 +200,16 @@ public class GeoIT extends AbstractCoreIT {
         em.refreshIndex();
         //4. Test that the user is within 2000m of the entity
         Results emSearchResults = em.searchConnectedEntities(user,
-            Query.fromQL("location within 2000 of " 
-                + ((LinkedHashMap<String, Object>) userProperties.get("location")).get("latitude") 
-                + ", " + ((LinkedHashMap<String, Object>) 
+            Query.fromQL("location within 2000 of "
+                + ((LinkedHashMap<String, Object>) userProperties.get("location")).get("latitude")
+                + ", " + ((LinkedHashMap<String, Object>)
                         userProperties.get("location")).get("longitude")).setConnectionType("likes"));
         assertEquals(1, emSearchResults.size());
         //5. Test that the user is NOT within 1000m of the entity
         emSearchResults = em.searchConnectedEntities(user,
-            Query.fromQL("location within 1000 of " 
-                + ((LinkedHashMap<String, Object>) userProperties.get("location")).get("latitude") 
-                + ", " + ((LinkedHashMap<String, Object>) 
+            Query.fromQL("location within 1000 of "
+                + ((LinkedHashMap<String, Object>) userProperties.get("location")).get("latitude")
+                + ", " + ((LinkedHashMap<String, Object>)
                         userProperties.get("location")).get("longitude")).setConnectionType("likes"));
         assertEquals(0, emSearchResults.size());
         //cleanup
@@ -273,7 +275,7 @@ public class GeoIT extends AbstractCoreIT {
             + center.getLat() + "," + center.getLon());
         listResults = em.searchCollection(em.getApplicationRef(), "stores", query2);
 
-        assertEquals("Results within " + CIRCUMFERENCE_OF_THE_EARTH 
+        assertEquals("Results within " + CIRCUMFERENCE_OF_THE_EARTH
                 + "m from center", LOCATION_PROPERTIES.size(), listResults.size());
 
     }
@@ -308,7 +310,7 @@ public class GeoIT extends AbstractCoreIT {
         query = Query.fromQL("select * where location within " + CIRCUMFERENCE_OF_THE_EARTH + " of "
             + center.getLat() + "," + center.getLon());
         listResults = em.searchCollection(em.getApplicationRef(), "stores", query);
-        assertEquals("Results within " + CIRCUMFERENCE_OF_THE_EARTH 
+        assertEquals("Results within " + CIRCUMFERENCE_OF_THE_EARTH
                 + "m from center", LOCATION_PROPERTIES.size(), listResults.size());
     }
 
@@ -350,7 +352,7 @@ public class GeoIT extends AbstractCoreIT {
             Query query2 = Query.fromQL("select * where location within 40000000 of "
                 + center.getLat() + "," + center.getLon());
             listResults = em.searchCollection(em.getApplicationRef(), "stores", query2);
-            assertEquals("Results from center point to ridiculously far", 
+            assertEquals("Results from center point to ridiculously far",
                     LOCATION_PROPERTIES.size(), listResults.size());
         }
     }
@@ -602,7 +604,7 @@ public class GeoIT extends AbstractCoreIT {
             float latitude = minLatitude + latitudeDelta * i;
             float longitude = minLongitude + longitudeDelta * i;
 
-            Map<String, Float> location = 
+            Map<String, Float> location =
                     MapUtils.hashMap("latitude", latitude).map("longitude", longitude);
 
             Map<String, Object> data = new HashMap<String, Object>(2);

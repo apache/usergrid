@@ -28,9 +28,9 @@ import org.junit.Test;
 
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
-import org.apache.usergrid.cassandra.CassandraResource;
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
-import org.apache.usergrid.cassandra.Concurrent;
+
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.persistence.entities.Application;
@@ -46,28 +46,22 @@ import static org.junit.Assert.assertNotNull;
 
 
 /** @author zznate */
-@Concurrent()
+
 public class FacebookProviderIT {
 
     private static SignInProviderFactory providerFactory;
     private static UUID applicationId;
 
-    @ClassRule
-    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
-
-    @ClassRule
-    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
-
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @ClassRule
-    public static ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource, elasticSearchResource );
+    public static ServiceITSetup setup = new ServiceITSetupImpl( );
 
 
     @BeforeClass
     public static void setup() throws Exception {
-        providerFactory = cassandraResource.getBean( SignInProviderFactory.class );
+        providerFactory =  SpringResource.getInstance().getBean( SignInProviderFactory.class );
         UserInfo adminUser = setup.getMgmtSvc()
                                   .createAdminUser( uniqueUsername(), "Facebook User", "user"+newUUIDString()+"@facebook.com", "test", false,
                                           false );

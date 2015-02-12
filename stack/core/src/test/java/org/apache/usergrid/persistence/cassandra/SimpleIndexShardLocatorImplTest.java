@@ -25,7 +25,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
-import org.apache.usergrid.cassandra.Concurrent;
+
 import org.apache.usergrid.persistence.IndexBucketLocator.IndexType;
 import org.apache.usergrid.utils.UUIDUtils;
 
@@ -37,7 +37,7 @@ import static org.junit.Assert.assertEquals;
 
 
 /** @author tnine */
-@Concurrent()
+
 public class SimpleIndexShardLocatorImplTest {
     @Test
     public void oneBucket() {

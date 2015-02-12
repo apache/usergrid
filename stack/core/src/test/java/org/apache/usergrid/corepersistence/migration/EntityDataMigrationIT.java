@@ -32,11 +32,12 @@ import org.apache.usergrid.persistence.core.rx.AllEntitiesInSystemObservable;
 import org.apache.usergrid.persistence.core.scope.ApplicationEntityGroup;
 import org.apache.usergrid.persistence.core.scope.EntityIdScope;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
 import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.corepersistence.CpSetup;
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.corepersistence.EntityWriteHelper;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.Entity;
@@ -55,14 +56,16 @@ import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 
+import net.jcip.annotations.NotThreadSafe;
+
 import rx.functions.Action1;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import org.junit.Ignore;
 
 
+@NotThreadSafe
 public class EntityDataMigrationIT extends AbstractCoreIT {
 
 
@@ -83,14 +86,17 @@ public class EntityDataMigrationIT extends AbstractCoreIT {
      */
     @Rule
     public MigrationTestRule migrationTestRule =
-            new MigrationTestRule( app, CpSetup.getInjector() ,MvccEntityDataMigrationImpl.class  );
+
+            new MigrationTestRule( app, SpringResource.getInstance().getBean( Injector.class ) ,MvccEntityDataMigrationImpl.class  );
     private AllEntitiesInSystemObservable allEntitiesInSystemObservable;
+
 
     @Before
     public void setup() {
         emf = setup.getEmf();
-        injector = CpSetup.getInjector();
+        injector = SpringResource.getInstance().getBean(Injector.class);
         entityDataMigration = injector.getInstance( MvccEntityDataMigrationImpl.class );
+        injector =  SpringResource.getInstance().getBean( Injector.class );
         dataMigrationManager = injector.getInstance( DataMigrationManager.class );
         migrationInfoSerialization = injector.getInstance( MigrationInfoSerialization.class );
         MvccEntityMigrationStrategy strategy = injector.getInstance(Key.get(MvccEntityMigrationStrategy.class));

@@ -27,7 +27,7 @@ import java.io.IOException;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.cassandra.Concurrent;
+
 import org.apache.usergrid.rest.AbstractRestIT;
 
 import static org.junit.Assert.assertEquals;
@@ -35,7 +35,6 @@ import static org.junit.Assert.assertNotNull;
 import org.junit.Ignore;
 
 
-@Concurrent
 public class EventsResourceIT extends AbstractRestIT {
 
     private static Logger log = LoggerFactory.getLogger( EventsResourceIT.class );
@@ -73,7 +72,7 @@ public class EventsResourceIT extends AbstractRestIT {
                 put( "ad_sales", 20 );
             }
         } );
-        
+
         node = mapper.readTree( resource().path( "/test-organization/test-app/events" )
                 .queryParam( "access_token", access_token )
                 .accept( MediaType.APPLICATION_JSON )
@@ -114,7 +113,7 @@ public class EventsResourceIT extends AbstractRestIT {
                     .queryParam( "access_token", access_token )
                     .accept( MediaType.APPLICATION_JSON )
                     .type( MediaType.APPLICATION_JSON_TYPE )
-                    .get( String.class )); 
+                    .get( String.class ));
             logNode( node );
             assertEquals( "Expected Advertising", advertising, node.get( "messages" ).get( 0 ).get( "uuid" ).asText() );
             lastId = node.get( "last" ).asText();

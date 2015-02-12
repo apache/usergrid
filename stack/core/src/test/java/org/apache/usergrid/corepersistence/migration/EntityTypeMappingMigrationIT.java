@@ -27,11 +27,12 @@ import org.apache.usergrid.persistence.core.rx.AllEntitiesInSystemObservable;
 import org.apache.usergrid.persistence.core.scope.ApplicationEntityGroup;
 import org.apache.usergrid.persistence.core.scope.EntityIdScope;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
 import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.corepersistence.CpSetup;
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.corepersistence.EntityWriteHelper;
 import org.apache.usergrid.corepersistence.ManagerCache;
 import org.apache.usergrid.corepersistence.rx.impl.AllEntitiesInSystemObservableImpl;
@@ -47,14 +48,16 @@ import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import com.google.inject.Injector;
 import com.netflix.astyanax.Keyspace;
 
+import net.jcip.annotations.NotThreadSafe;
+
 import rx.functions.Action1;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import org.junit.Ignore;
 
 
+@NotThreadSafe
 public class EntityTypeMappingMigrationIT extends AbstractCoreIT {
 
 
@@ -73,13 +76,13 @@ public class EntityTypeMappingMigrationIT extends AbstractCoreIT {
      */
     @Rule
     public MigrationTestRule migrationTestRule = new MigrationTestRule(
-            app, CpSetup.getInjector() ,EntityTypeMappingMigration.class  );
+            app,  SpringResource.getInstance().getBean( Injector.class ) ,EntityTypeMappingMigration.class  );
     private AllEntitiesInSystemObservable allEntitiesInSystemObservable;
 
 
     @Before
     public void setup() {
-        injector = CpSetup.getInjector();
+        injector =  SpringResource.getInstance().getBean( Injector.class );
         emf = setup.getEmf();
         entityTypeMappingMigration = injector.getInstance( EntityTypeMappingMigration.class );
         keyspace = injector.getInstance( Keyspace.class );

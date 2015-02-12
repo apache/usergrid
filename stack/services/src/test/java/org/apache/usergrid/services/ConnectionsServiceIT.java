@@ -21,7 +21,7 @@ import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.apache.usergrid.cassandra.Concurrent;
+
 import org.apache.usergrid.persistence.Entity;
 
 import static org.junit.Assert.assertFalse;
@@ -31,10 +31,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-@Concurrent()
+
 public class ConnectionsServiceIT extends AbstractServiceIT {
     private static final Logger logger = LoggerFactory.getLogger( ConnectionsServiceIT.class );
-    
+
     @SuppressWarnings("rawtypes")
     @Test
     public void testUserConnections() throws Exception {

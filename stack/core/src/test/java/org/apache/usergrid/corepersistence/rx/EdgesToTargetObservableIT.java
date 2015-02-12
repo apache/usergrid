@@ -23,11 +23,12 @@ package org.apache.usergrid.corepersistence.rx;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.usergrid.corepersistence.CpSetup;
 import org.apache.usergrid.persistence.graph.serialization.EdgesObservable;
 import org.junit.Test;
 
 import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.corepersistence.CpSetup;
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.corepersistence.EntityWriteHelper;
 import org.apache.usergrid.corepersistence.ManagerCache;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
@@ -37,6 +38,8 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.model.entity.Id;
+
+import com.google.inject.Injector;
 
 import rx.functions.Action1;
 
@@ -54,7 +57,8 @@ public class EdgesToTargetObservableIT extends AbstractCoreIT {
     @Test
     public void testEntities() throws Exception {
 
-        EdgesObservable edgesFromSourceObservable=  CpSetup.getInjector().getInstance(EdgesObservable.class);
+        Injector injector = SpringResource.getInstance().getBean( Injector.class );
+        EdgesObservable edgesFromSourceObservable=  injector.getInstance(EdgesObservable.class);
         final EntityManager em = app.getEntityManager();
 
         final String type1 = "type1things";
@@ -79,7 +83,7 @@ public class EdgesToTargetObservableIT extends AbstractCoreIT {
         //this is hacky, but our context integration b/t guice and spring is a mess.  We need to clean this up when we
         //clean up our wiring
         //
-        ManagerCache managerCache = CpSetup.getInjector().getInstance( ManagerCache.class );
+        ManagerCache managerCache =  SpringResource.getInstance().getBean( Injector.class ).getInstance( ManagerCache.class );
 
 
         final ApplicationScope scope = CpNamingUtils.getApplicationScope( app.getId() );

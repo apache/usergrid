@@ -32,7 +32,7 @@ import org.elasticsearch.common.collect.HppcMaps;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.apache.usergrid.cassandra.Concurrent;
+
 import org.apache.usergrid.java.client.entities.Group;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationOwnerInfo;
@@ -51,7 +51,7 @@ import static org.junit.Assert.*;
  * Tests permissions of adding and removing users from roles as well as groups
  *
  */
-@Concurrent()
+
 public class PermissionsResourceIT extends AbstractRestIT {
 
     private static final String ROLE = "permtestrole";

@@ -22,13 +22,14 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import org.apache.commons.lang3.RandomStringUtils;
 
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.apache.commons.lang3.RandomStringUtils;
+
 import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.persistence.entities.Role;
 import org.apache.usergrid.persistence.index.query.Query.Level;
 
@@ -37,7 +38,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 
-@Concurrent()
+
 public class PermissionsIT extends AbstractCoreIT {
 
     private static final Logger logger = LoggerFactory.getLogger( PermissionsIT.class );

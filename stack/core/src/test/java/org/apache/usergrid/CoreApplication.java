@@ -26,16 +26,17 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.mq.QueueManager;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.SimpleEntityRef;
+import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import static junit.framework.Assert.assertNotNull;
-import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.SimpleEntityRef;
-import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 
 public class CoreApplication implements Application, TestRule {
@@ -142,6 +143,8 @@ public class CoreApplication implements Application, TestRule {
 
     protected void after( Description description ) {
         LOG.info( "Test {}: finish with application", description.getDisplayName() );
+
+        setup.getEmf().getEntityManager( id ).deleteIndex();
     }
 
 
@@ -176,24 +179,24 @@ public class CoreApplication implements Application, TestRule {
         return setup.getQmf().getQueueManager( getId() );
     }
 
-    
+
     @Override
     public void remove(Entity entity) throws Exception {
         em.delete( entity );
     }
 
-    
+
     @Override
     public void remove(EntityRef entityRef) throws Exception {
         em.delete( entityRef );
     }
 
-    
+
     @Override
     public Entity get( EntityRef entityRef ) throws Exception {
         return em.get( entityRef );
     }
-    
+
 
     @Override
     public Entity get( UUID id, String type ) throws Exception {

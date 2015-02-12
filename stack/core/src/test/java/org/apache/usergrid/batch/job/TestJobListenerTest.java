@@ -17,13 +17,13 @@
 package org.apache.usergrid.batch.job;
 
 
-import org.apache.usergrid.batch.JobExecution;
-import org.apache.usergrid.persistence.entities.JobData;
-import org.apache.usergrid.persistence.entities.JobStat;
-
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.apache.usergrid.batch.JobExecution;
+import org.apache.usergrid.persistence.entities.JobData;
+import org.apache.usergrid.persistence.entities.JobStat;
 
 import static org.junit.Assert.assertTrue;
 

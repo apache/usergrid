@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -16,22 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.corepersistence;
-
-import com.google.inject.AbstractModule;
-import org.apache.usergrid.persistence.EntityManagerFactory;
+package org.apache.usergrid.persistence.exceptions;
 
 
-public class TestGuiceModule extends AbstractModule {
+/**
+ * Thrown when an organization already exists
+ */
+public class OrganizationAlreadyExistsException extends PersistenceException {
 
-    private static EntityManagerFactory emf;
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
+    final String organizationName;
 
-    public TestGuiceModule( EntityManagerFactory emf ) {
-        this.emf = emf;
+
+    public OrganizationAlreadyExistsException( String organizationName ) {
+        super( "Organization " + organizationName + " already exists" );
+        this.organizationName = organizationName;
     }
 
-    @Override
-    protected void configure() {
-        install( new GuiceModule( emf ) );
+
+    public String getOrganizationName() {
+        return organizationName;
     }
 }

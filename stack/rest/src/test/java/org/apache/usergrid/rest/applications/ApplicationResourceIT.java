@@ -24,7 +24,7 @@ import javax.ws.rs.core.MediaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.apache.usergrid.cassandra.Concurrent;
+
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.rest.AbstractRestIT;
@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author zznate
  */
-@Concurrent()
+
 public class ApplicationResourceIT extends AbstractRestIT {
     private static final Logger logger = LoggerFactory.getLogger( ApplicationResourceIT.class );
 
@@ -114,7 +114,7 @@ public class ApplicationResourceIT extends AbstractRestIT {
     }
 
     /**
-     * Verifies that we return JSON even when text/html is requested. 
+     * Verifies that we return JSON even when text/html is requested.
      * (for backwards compatibility)
      */
     @Test

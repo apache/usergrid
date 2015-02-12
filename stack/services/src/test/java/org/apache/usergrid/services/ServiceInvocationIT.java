@@ -94,6 +94,7 @@ public class ServiceInvocationIT extends AbstractServiceIT {
         app.testRequest( ServiceAction.GET, 1, "users", "edanuff", "likes",
                 Query.fromQL( "select * where name='axis*'" ) );
 
+//        TODO, we don't allow this at the RESt level, why is this a test?
 //        app.testRequest( ServiceAction.GET, 3, null, "users", "edanuff", "connections" );
 
         app.put( "color", "blacknwhite" );
@@ -112,6 +113,7 @@ public class ServiceInvocationIT extends AbstractServiceIT {
         app.testRequest( ServiceAction.DELETE, 1, null, "users", user.getUuid(), "connections", "likes",
                 restaurant.getUuid() );
 
+//        TODO, we don't allow this at the RESt level, why is this a test?
 //        app.testRequest( ServiceAction.GET, 2, null, "users", "edanuff", "connections" );
 
         app.testRequest( ServiceAction.GET, 1, null, "users", "edanuff", "likes", "restaurants" );

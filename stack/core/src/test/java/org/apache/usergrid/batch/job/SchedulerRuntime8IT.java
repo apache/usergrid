@@ -19,14 +19,13 @@ package org.apache.usergrid.batch.job;
 
 import java.util.UUID;
 
-import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.entities.JobData;
-import org.apache.usergrid.utils.UUIDUtils;
-
 import org.junit.Ignore;
 import org.junit.Test;
+
+import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.entities.JobData;
+import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.utils.UUIDUtils;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -35,18 +34,18 @@ import static org.junit.Assert.assertFalse;
 /**
  * Class to test job runtimes
  */
-@Concurrent
+
 @Ignore("These tests no longer work with shared spring context. Need to re-evaluate")
 public class SchedulerRuntime8IT extends AbstractSchedulerRuntimeIT {
-    
+
     /**
-     * Test the scheduler ramps up correctly when there are more jobs to be read after a pause 
+     * Test the scheduler ramps up correctly when there are more jobs to be read after a pause
      * when the job specifies the retry time
      */
     @Test
     public void queryAndDeleteJobs() throws Exception {
 
-        CountdownLatchJob job = cassandraResource.getBean( "countdownLatch", CountdownLatchJob.class );
+        CountdownLatchJob job = springResource.getBean( "countdownLatch", CountdownLatchJob.class );
 
         job.setLatch( 1 );
 

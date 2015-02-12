@@ -25,7 +25,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.cassandra.Concurrent;
+
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.index.query.Query;
@@ -44,7 +44,7 @@ import static org.junit.Assert.assertNotNull;
  *
  * @author realbeast
  */
-@Concurrent()
+
 public class ApplicationRequestCounterIT extends AbstractRestIT {
     private static final Logger log = LoggerFactory.getLogger( ApplicationRequestCounterIT.class );
     long ts = System.currentTimeMillis() - ( 24 * 60 * 60 * 1000 );

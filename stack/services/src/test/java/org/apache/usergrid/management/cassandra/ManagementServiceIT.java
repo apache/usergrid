@@ -33,9 +33,9 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.NewOrgAppAdminRule;
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
-import org.apache.usergrid.cassandra.CassandraResource;
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
-import org.apache.usergrid.cassandra.Concurrent;
+
 import org.apache.usergrid.count.SimpleBatcher;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
@@ -68,20 +68,13 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author zznate
  */
-@Concurrent()
+
 public class ManagementServiceIT {
     private static final Logger LOG = LoggerFactory.getLogger( ManagementServiceIT.class );
 
 
-    @ClassRule
-    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
-
-
-    @ClassRule
-    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
-
-    @ClassRule
-    public static final ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource, elasticSearchResource );
+     @ClassRule
+    public static final ServiceITSetup setup = new ServiceITSetupImpl();
 
 
     @Rule
@@ -151,7 +144,7 @@ public class ManagementServiceIT {
 
     @Test
     public void testCountAdminUserAction() throws Exception {
-        SimpleBatcher batcher = cassandraResource.getBean( SimpleBatcher.class );
+        SimpleBatcher batcher = SpringResource.getInstance().getBean( SimpleBatcher.class );
 
         batcher.setBlockingSubmit( true );
         batcher.setBatchSize( 1 );

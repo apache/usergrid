@@ -17,7 +17,6 @@
 package org.apache.usergrid.persistence;
 
 
-import org.apache.usergrid.persistence.index.query.Query;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -25,10 +24,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import org.apache.commons.lang3.RandomStringUtils;
 
 import org.junit.Test;
+
+import org.apache.commons.lang3.RandomStringUtils;
+
 import org.apache.usergrid.AbstractCoreIT;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Query.Level;
 
 import static org.junit.Assert.assertEquals;
@@ -38,7 +40,7 @@ public class PathQueryIT extends AbstractCoreIT {
 
     @Test
     public void testUserDevicePathQuery() throws Exception {
-        UUID applicationId = setup.createApplication( 
+        UUID applicationId = setup.createApplication(
                 "testOrganization", "testUserDevicePathQuery" + RandomStringUtils.randomAlphabetic(20)  );
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
@@ -94,7 +96,7 @@ public class PathQueryIT extends AbstractCoreIT {
         deviceQuery.addFilter( "index >= 2" );
         int expectedDeviceQuerySize = 3;
 
-        PathQuery<EntityRef> usersPQ = new PathQuery<EntityRef>( 
+        PathQuery<EntityRef> usersPQ = new PathQuery<EntityRef>(
                 new SimpleEntityRef( em.getApplicationRef()), userQuery );
         PathQuery<Entity> devicesPQ = usersPQ.chain( deviceQuery );
         HashSet set = new HashSet( expectedUserQuerySize * expectedDeviceQuerySize );
@@ -109,7 +111,7 @@ public class PathQueryIT extends AbstractCoreIT {
     @Test
     public void testGroupUserDevicePathQuery() throws Exception {
 
-        UUID applicationId = setup.createApplication( 
+        UUID applicationId = setup.createApplication(
                 "testOrganization", "testGroupUserDevicePathQuery" + RandomStringUtils.randomAlphabetic(20)  );
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 

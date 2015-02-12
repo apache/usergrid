@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.junit.Test;
+
 import org.apache.usergrid.utils.UUIDUtils;
 
 import static org.junit.Assert.assertEquals;

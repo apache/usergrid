@@ -42,6 +42,11 @@ public interface EntityIndex extends CPManager {
     public void initializeIndex();
 
     /**
+     * Delete the index from ES
+     */
+    public void deleteIndex();
+
+    /**
      * Create an index and add to alias, will create alias and remove any old index from write alias if alias already exists
      * @param indexSuffix index name
      * @param shards
@@ -102,7 +107,7 @@ public interface EntityIndex extends CPManager {
      */
     public Health getIndexHealth();
 
-    public void deleteIndex();
+
 
 }
 

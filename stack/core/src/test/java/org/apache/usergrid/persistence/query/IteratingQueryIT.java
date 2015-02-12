@@ -28,47 +28,261 @@ import java.util.TreeSet;
 
 import org.junit.ClassRule;
 import org.junit.Rule;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.CoreApplication;
 import org.apache.usergrid.CoreITSetup;
 import org.apache.usergrid.CoreITSetupImpl;
-import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
-import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.index.query.Query;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 
 /** @author tnine */
-public abstract class AbstractIteratingQueryIT {
-    private static final Logger LOG = LoggerFactory.getLogger( AbstractIteratingQueryIT.class );
-
-    public static final long WRITE_DELAY = 0; // milliseconds to delay between writes in loop
-
+public class IteratingQueryIT {
+    private static final Logger LOG = LoggerFactory.getLogger( IteratingQueryIT.class );
 
     @ClassRule
-    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
-
-    @ClassRule
-    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
-
-
-    @ClassRule
-    public static CoreITSetup setup = new CoreITSetupImpl( cassandraResource, elasticSearchResource );
+    public static CoreITSetup setup = new CoreITSetupImpl(  );
 
     @Rule
     public CoreApplication app = new CoreApplication( setup );
 
 
+    @Test
+    public void allInCollection() throws Exception {
+        allIn( new CollectionIoHelper( app ) );
+    }
+
+
+    @Test
+    public void allInConnection() throws Exception {
+        allIn( new ConnectionHelper( app ) );
+    }
+
+
+    @Test
+    public void allInConnectionNoType() throws Exception {
+        allIn( new ConnectionNoTypeHelper( app ) );
+    }
+
+
+    @Test
+    public void multiOrderByCollection() throws Exception {
+        multiOrderBy( new CollectionIoHelper( app ) );
+    }
+
+
+    @Test
+    public void multiOrderByComplexUnionCollection() throws Exception {
+        multiOrderByComplexUnion( new CollectionIoHelper( app ) );
+    }
+
+
+    @Test
+    public void multiOrderByComplexUnionConnection() throws Exception {
+        multiOrderByComplexUnion( new CollectionIoHelper( app ) );
+    }
+
+
+    @Test
+    public void multOrderByConnection() throws Exception {
+        multiOrderBy( new ConnectionHelper( app ) );
+    }
+
+
+    @Test
+    public void orderByWithNotCollection() throws Exception {
+        notOrderBy( new CollectionIoHelper( app ) );
+    }
+
+
+    @Test
+    public void orderByWithNotConnection() throws Exception {
+        notOrderBy( new ConnectionHelper( app ) );
+    }
+
+
+    @Test
+    public void singleOrderByBoundRangeScanAscCollection() throws Exception {
+        singleOrderByBoundRangeScanAsc( new CollectionIoHelper( app ) );
+    }
+
+
+    @Test
+    public void singleOrderByBoundRangeScanAscConnection() throws Exception {
+        singleOrderByBoundRangeScanAsc( new ConnectionHelper( app ) );
+    }
+
+
+    @Test
+    public void singleOrderByBoundRangeScanDescCollection() throws Exception {
+        singleOrderByBoundRangeScanDesc( new CollectionIoHelper( app ) );
+    }
+
+
+    @Test
+    public void singleOrderByBoundRangeScanDescConnection() throws Exception {
+        singleOrderByBoundRangeScanDesc( new ConnectionHelper( app ) );
+    }
+
+
+    @Test
+    public void singleOrderByComplexIntersectionCollection() throws Exception {
+        singleOrderByComplexIntersection( new CollectionIoHelper( app ) );
+    }
+
+
+    @Test
+    public void singleOrderByComplexIntersectionConnection() throws Exception {
+        singleOrderByComplexIntersection( new ConnectionHelper( app ) );
+    }
+
+
+    @Test
+    public void singleOrderByComplexUnionCollection() throws Exception {
+        singleOrderByComplexUnion( new CollectionIoHelper( app ) );
+    }
+
+
+    @Test
+    public void singleOrderByComplexUnionConnection() throws Exception {
+        singleOrderByComplexUnion( new ConnectionHelper( app ) );
+    }
+
+
+    @Test
+    public void singleOrderByIntersectionCollection() throws Exception {
+        singleOrderByIntersection( new CollectionIoHelper( app ) );
+    }
+
+
+    @Test
+    public void singleOrderByIntersectionConnection() throws Exception {
+        singleOrderByIntersection( new ConnectionHelper( app ) );
+    }
+
+
+    @Test
+    public void singleOrderByLessThanLimitCollection() throws Exception {
+        singleOrderByLessThanLimit( new CollectionIoHelper( app ) );
+    }
+
+
+    @Test
+    public void singleOrderByLessThanLimitConnection() throws Exception {
+        singleOrderByLessThanLimit( new ConnectionHelper( app ) );
+    }
+
+
+    @Test
+    public void singleOrderByMaxLimitCollection() throws Exception {
+        singleOrderByMaxLimit( new CollectionIoHelper( app ) );
+    }
+
+
+    @Test
+    public void singleOrderByMaxLimitConnection() throws Exception {
+        singleOrderByMaxLimit( new ConnectionHelper( app ) );
+    }
+
+
+    @Test
+    public void singleOrderByNoIntersectionCollection() throws Exception {
+        singleOrderByNoIntersection( new CollectionIoHelper( app ) );
+    }
+
+
+    @Test
+    public void singleOrderByNoIntersectionConnection() throws Exception {
+        singleOrderByNoIntersection( new CollectionIoHelper( app ) );
+    }
+
+
+    @Test
+    public void singleOrderByNotCollection() throws Exception {
+        singleOrderByNot( new CollectionIoHelper( app ) );
+    }
+
+
+    @Test
+    public void singleOrderByNotConnection() throws Exception {
+        singleOrderByNot( new ConnectionHelper( app ) );
+    }
+
+
+    @Test
+    public void singleOrderBySameRangeScanGreaterCollection() throws Exception {
+        singleOrderBySameRangeScanGreater( new CollectionIoHelper( app ) );
+    }
+
+
+    @Test
+    public void singleOrderBySameRangeScanGreaterConnection() throws Exception {
+        singleOrderBySameRangeScanGreater( new ConnectionHelper( app ) );
+    }
+
+
+    @Test
+    public void singleOrderBySameRangeScanGreaterThanEqualCollection() throws Exception {
+        singleOrderBySameRangeScanGreaterThanEqual( new CollectionIoHelper( app ) );
+    }
+
+
+    @Test
+    public void singleOrderBySameRangeScanLessCollection() throws Exception {
+        singleOrderBySameRangeScanLessEqual( new CollectionIoHelper( app ) );
+    }
+
+
+    @Test
+    public void singleOrderBySameRangeScanLessConnection() throws Exception {
+        singleOrderBySameRangeScanLessEqual( new ConnectionHelper( app ) );
+    }
+
+
+    @Test
+    public void singleOrderBySameRangeScanLessThanEqualCollection() throws Exception {
+        singleOrderBySameRangeScanLessThanEqual( new CollectionIoHelper( app ) );
+    }
+
+
+    @Test
+    public void singleOrderBySameRangeScanLessThanEqualConnection() throws Exception {
+        singleOrderBySameRangeScanLessThanEqual( new ConnectionHelper( app ) );
+    }
+
+    class ConnectionNoTypeHelper extends ConnectionHelper {
+
+        public ConnectionNoTypeHelper( final CoreApplication app ) {
+            super( app );
+        }
+
+
+        /**
+         * (non-Javadoc) @see org.apache.usergrid.persistence.query.SingleOrderByMaxLimitCollection
+         * .ConnectionHelper#getResults
+         * (org.apache.usergrid.persistence.Query)
+         */
+        @Override
+        public Results getResults( Query query ) throws Exception {
+            query.setConnectionType( CONNECTION );
+            // don't set it on purpose
+            query.setEntityType( null );
+            return app.getEntityManager().searchConnectedEntities( rootEntity, query );
+        }
+    }
+
     public void singleOrderByMaxLimit( IoHelper io ) throws Exception {
 
         io.doSetup();
 
-        int size = 500;
+        int size = 200;
         int queryLimit = Query.MAX_LIMIT;
 
         long start = System.currentTimeMillis();
@@ -193,7 +407,7 @@ public abstract class AbstractIteratingQueryIT {
 
     protected void singleOrderByComplexIntersection( IoHelper io ) throws Exception {
 
-        int size = 5000;
+        int size = 200;
         int queryLimit = Query.MAX_LIMIT;
 
         // the number of entities that should be written including an intersection
@@ -267,7 +481,7 @@ public abstract class AbstractIteratingQueryIT {
     protected void singleOrderByNoIntersection( IoHelper io ) throws Exception {
         io.doSetup();
 
-        int size = 2000;
+        int size = 200;
         int queryLimit = Query.MAX_LIMIT;
 
         // the number of entities that should be written including an intersection
@@ -315,7 +529,7 @@ public abstract class AbstractIteratingQueryIT {
 
         io.doSetup();
 
-        int size = 2000;
+        int size = 200;
         int queryLimit = Query.MAX_LIMIT;
 
         // the number of entities that should be written including an intersection
@@ -385,7 +599,7 @@ public abstract class AbstractIteratingQueryIT {
 
         io.doSetup();
 
-        int size = 2000;
+        int size = 200;
         int queryLimit = Query.MAX_LIMIT;
 
         // the number of entities that should be written including an intersection
@@ -451,11 +665,11 @@ public abstract class AbstractIteratingQueryIT {
     }
 
 
-    public void singleOrderByLessThanLimit( IoHelper io ) throws Exception {
+    protected void singleOrderByLessThanLimit( IoHelper io ) throws Exception {
 
         io.doSetup();
 
-        int size = 500;
+        int size = 200;
         int queryLimit = Query.MAX_LIMIT;
 
         int matchMax = queryLimit - 1;
@@ -511,13 +725,13 @@ public abstract class AbstractIteratingQueryIT {
     }
 
 
-    public void singleOrderBySameRangeScanLessThanEqual( IoHelper io ) throws Exception {
+    protected void singleOrderBySameRangeScanLessThanEqual( IoHelper io ) throws Exception {
 
         io.doSetup();
 
-        int size = 500;
+        int size = 200;
         int queryLimit = 100;
-        int startValue = 400;
+        int startValue = 100;
 
         long start = System.currentTimeMillis();
 
@@ -573,13 +787,13 @@ public abstract class AbstractIteratingQueryIT {
     }
 
 
-    public void singleOrderBySameRangeScanLessEqual( IoHelper io ) throws Exception {
+    protected void singleOrderBySameRangeScanLessEqual( IoHelper io ) throws Exception {
 
         io.doSetup();
 
-        int size = 500;
-        int queryLimit = 100;
-        int startValue = 400;
+        int size = 200;
+        int queryLimit = 50;
+        int startValue = 100;
 
         long start = System.currentTimeMillis();
 
@@ -635,11 +849,11 @@ public abstract class AbstractIteratingQueryIT {
     }
 
 
-    public void singleOrderBySameRangeScanGreaterThanEqual( IoHelper io ) throws Exception {
+    protected void singleOrderBySameRangeScanGreaterThanEqual( IoHelper io ) throws Exception {
 
         io.doSetup();
 
-        int size = 500;
+        int size = 200;
         int queryLimit = 100;
         int startValue = 100;
 
@@ -696,11 +910,11 @@ public abstract class AbstractIteratingQueryIT {
     }
 
 
-    public void singleOrderBySameRangeScanGreater( IoHelper io ) throws Exception {
+    protected void singleOrderBySameRangeScanGreater( IoHelper io ) throws Exception {
 
         io.doSetup();
 
-        int size = 500;
+        int size = 200;
         int queryLimit = 100;
         int startValue = 99;
 
@@ -757,14 +971,14 @@ public abstract class AbstractIteratingQueryIT {
     }
 
 
-    public void singleOrderByBoundRangeScanDesc( IoHelper io ) throws Exception {
+    protected void singleOrderByBoundRangeScanDesc( IoHelper io ) throws Exception {
 
         io.doSetup();
 
-        int size = 500;
+        int size = 200;
         int queryLimit = 100;
-        int startValue = 100;
-        int endValue = 400;
+        int startValue = 50;
+        int endValue = 150;
 
         long start = System.currentTimeMillis();
 
@@ -820,14 +1034,14 @@ public abstract class AbstractIteratingQueryIT {
     }
 
 
-    public void singleOrderByBoundRangeScanAsc( IoHelper io ) throws Exception {
+    protected void singleOrderByBoundRangeScanAsc( IoHelper io ) throws Exception {
 
         io.doSetup();
 
-        int size = 500;
+        int size = 200;
         int queryLimit = 100;
-        int startValue = 100;
-        int endValue = 400;
+        int startValue = 50;
+        int endValue = 150;
 
         long start = System.currentTimeMillis();
 
@@ -888,7 +1102,7 @@ public abstract class AbstractIteratingQueryIT {
      *
      * @param io the io helper
      */
-    public void allIn( IoHelper io ) throws Exception {
+    protected void allIn( IoHelper io ) throws Exception {
 
         io.doSetup();
 
@@ -945,7 +1159,7 @@ public abstract class AbstractIteratingQueryIT {
 
         io.doSetup();
 
-        int size = 2000;
+        int size = 200;
         int queryLimit = Query.MAX_LIMIT;
 
         // the number of entities that should be written including an intersection
@@ -1052,7 +1266,7 @@ public abstract class AbstractIteratingQueryIT {
 
         io.doSetup();
 
-        int size = 2000;
+        int size = 200;
         int queryLimit = Query.MAX_LIMIT;
 
         // the number of entities that should be written including an intersection
@@ -1157,14 +1371,14 @@ public abstract class AbstractIteratingQueryIT {
      *
      * @param io the io helper
      */
-    public void notOrderBy( IoHelper io ) throws Exception {
+    protected void notOrderBy( IoHelper io ) throws Exception {
 
         io.doSetup();
 
         /**
          * Leave this as a large size.  We have to write over 1k to reproduce this issue
          */
-        int size = 2000;
+        int size = 200;
 
         long start = System.currentTimeMillis();
 
@@ -1215,122 +1429,4 @@ public abstract class AbstractIteratingQueryIT {
     }
 
 
-    /**
-     * Interface to abstract actually doing I/O targets. The same test logic can be applied to both collections and
-     * connections
-     *
-     * @author tnine
-     */
-    public static interface IoHelper {
-        /** Perform any setup required */
-        public void doSetup() throws Exception;
-
-        /**
-         * Write the entity to the data store
-         *
-         * @param entity the entity
-         */
-        public Entity writeEntity( Map<String, Object> entity ) throws Exception;
-
-        /**
-         * Get the results for the query
-         *
-         * @param query the query to get results for
-         *
-         * @return the results of the query
-         */
-        public Results getResults( Query query ) throws Exception;
-    }
-
-
-    public static  class CollectionIoHelper implements IoHelper {
-
-        protected final CoreApplication app;
-
-
-        public CollectionIoHelper( final CoreApplication app ) {
-            this.app = app;
-        }
-
-
-        @Override
-        public void doSetup() throws Exception {
-        }
-
-
-        @Override
-        public Entity writeEntity( Map<String, Object> entity ) throws Exception {
-
-            Entity e = app.getEntityManager().create( "test", entity );
-
-            if ( WRITE_DELAY > 0 ) {
-                Thread.sleep( WRITE_DELAY );
-            }
-
-            return e;
-        }
-
-
-        @Override
-        public Results getResults( Query query ) throws Exception {
-            app.getEntityManager().refreshIndex();
-            return app.getEntityManager().searchCollection( app.getEntityManager().getApplicationRef(), "tests", query );
-        }
-    }
-
-
-    public static class ConnectionHelper extends CollectionIoHelper {
-
-        /**
-         *
-         */
-        protected static final String CONNECTION = "connection";
-        protected Entity rootEntity;
-
-
-        public ConnectionHelper( final CoreApplication app) {
-            super( app );
-        }
-
-
-        @Override
-        public void doSetup() throws Exception {
-            Map<String, Object> data = new HashMap<String, Object>();
-            data.put( "name", "rootentity" );
-            rootEntity = app.getEntityManager().create( "root", data );
-        }
-
-
-        @Override
-        public Entity writeEntity( Map<String, Object> entity ) throws Exception {
-
-            // write to the collection
-            Entity created = super.writeEntity( entity );
-            app.getEntityManager().createConnection( rootEntity, CONNECTION, created );
-
-            if ( WRITE_DELAY > 0 ) {
-                Thread.sleep( WRITE_DELAY );
-            }
-
-            return created;
-        }
-
-
-        /*
-         * (non-Javadoc)
-         *
-         * @see
-         * org.apache.usergrid.persistence.query.SingleOrderByMaxLimitCollection.CollectionIoHelper#
-         * getResults(org.apache.usergrid.persistence.Query)
-         */
-        @Override
-        public Results getResults( Query query ) throws Exception {
-
-            app.getEntityManager().refreshIndex();
-            query.setConnectionType( CONNECTION );
-            query.setEntityType( "test" );
-
-            return app.getEntityManager().searchConnectedEntities( rootEntity, query );
-        }
-    }
 }

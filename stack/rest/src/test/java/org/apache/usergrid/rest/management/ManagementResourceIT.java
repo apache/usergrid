@@ -33,7 +33,7 @@ import org.junit.Test;
 
 import org.apache.commons.lang.StringUtils;
 
-import org.apache.usergrid.cassandra.Concurrent;
+
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.OrganizationOwnerInfo;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
@@ -57,7 +57,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author tnine
  */
-@Concurrent()
+
 public class ManagementResourceIT extends AbstractRestIT {
 
     @Rule

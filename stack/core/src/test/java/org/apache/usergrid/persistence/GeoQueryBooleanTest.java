@@ -21,14 +21,14 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
-import org.apache.commons.lang3.RandomStringUtils;
 
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.commons.lang3.RandomStringUtils;
+
 import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.persistence.geo.model.Point;
 import org.apache.usergrid.persistence.index.query.Query;
 
@@ -36,7 +36,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 
-@Concurrent()
+
 public class GeoQueryBooleanTest extends AbstractCoreIT {
     private static final Logger log = LoggerFactory.getLogger( GeoQueryBooleanTest.class );
 
@@ -51,7 +51,7 @@ public class GeoQueryBooleanTest extends AbstractCoreIT {
 
         log.info( "GeoQueryBooleanTest.testGeoQueryWithOr" );
 
-        UUID applicationId = setup.createApplication( 
+        UUID applicationId = setup.createApplication(
             "testOrganization", "testGeoQueryWithOr-" + RandomStringUtils.randomAlphabetic(20));
         assertNotNull( applicationId );
 
@@ -67,7 +67,7 @@ public class GeoQueryBooleanTest extends AbstractCoreIT {
             put( "location", new LinkedHashMap<String, Object>() {{
                 put("latitude", 37.776753 );
                 put("longitude", -122.407846 );
-            }} ); 
+            }} );
         }};
 
         Entity user1 = em.create( "user", properties );
@@ -80,7 +80,7 @@ public class GeoQueryBooleanTest extends AbstractCoreIT {
             put( "location", new LinkedHashMap<String, Object>() {{
                 put("latitude", 37.776753 );
                 put("longitude", -122.407846 );
-            }} ); 
+            }} );
         }};
 
         Entity user2 = em.create( "user", properties );
@@ -91,19 +91,19 @@ public class GeoQueryBooleanTest extends AbstractCoreIT {
         // define center point about 300m from that location
         Point center = new Point( 37.774277, -122.404744 );
 
-        Query query = Query.fromQL( "select * where location within 400 of " 
+        Query query = Query.fromQL( "select * where location within 400 of "
                                     + center.getLat() + "," + center.getLon());
         Results listResults = em.searchCollection( em.getApplicationRef(), "users", query );
         assertEquals( 2, listResults.size() );
 
-        query = Query.fromQL( "select * where employer='Apigee' or location within 100 of " 
+        query = Query.fromQL( "select * where employer='Apigee' or location within 100 of "
                                     + center.getLat() + "," + center.getLon());
         listResults = em.searchCollection( em.getApplicationRef(), "users", query );
 
         // no results because geo filter applied after query even in the case or 'or'
         assertEquals( 0, listResults.size() );
 
-        query = Query.fromQL( "select * where employer='Apigee' or location within 400 of " 
+        query = Query.fromQL( "select * where employer='Apigee' or location within 400 of "
                                     + center.getLat() + "," + center.getLon());
         listResults = em.searchCollection( em.getApplicationRef(), "users", query );
 
@@ -118,14 +118,14 @@ public class GeoQueryBooleanTest extends AbstractCoreIT {
 
         log.info( "GeoQueryBooleanTest.testGeoQueryWithOr" );
 
-        UUID applicationId = setup.createApplication( 
+        UUID applicationId = setup.createApplication(
             "testOrganization", "testGeoQueryWithNot-" + RandomStringUtils.randomAlphabetic(20) );
         assertNotNull( applicationId );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
         assertNotNull( em );
 
-        // define two users at a location 
+        // define two users at a location
 
         Map<String, Object> properties = new LinkedHashMap<String, Object>() {{
             put( "username", "bart" );
@@ -134,7 +134,7 @@ public class GeoQueryBooleanTest extends AbstractCoreIT {
                 add( new LinkedHashMap<String, Object>() {{ put("name", "fred"); }});
                 add( new LinkedHashMap<String, Object>() {{ put("name", "gertrude"); }});
                 add( new LinkedHashMap<String, Object>() {{ put("name", "mina"); }});
-            }});            
+            }});
             put( "blockedBy", new ArrayList<Object>() {{
                 add( new LinkedHashMap<String, Object>() {{ put("name", "gertrude"); }});
                 add( new LinkedHashMap<String, Object>() {{ put("name", "isabell"); }});
@@ -142,7 +142,7 @@ public class GeoQueryBooleanTest extends AbstractCoreIT {
             put( "location", new LinkedHashMap<String, Object>() {{
                 put("latitude", 37.776753 );
                 put("longitude", -122.407846 );
-            }}); 
+            }});
         }};
 
         Entity userBart = em.create( "user", properties );
@@ -162,7 +162,7 @@ public class GeoQueryBooleanTest extends AbstractCoreIT {
             put( "location", new LinkedHashMap<String, Object>() {{
                 put("latitude", 37.776753 );
                 put("longitude", -122.407846 );
-            }} ); 
+            }} );
         }};
 
         Entity userFred = em.create( "user", properties );
@@ -174,15 +174,15 @@ public class GeoQueryBooleanTest extends AbstractCoreIT {
         Point center = new Point( 37.774277, -122.404744 );
 
         // one user within 400 meters IS NOT blocked by bart
-        Query query = Query.fromQL( 
-            "select * where NOT blockedBy.name='bart' and location within 400 of " 
+        Query query = Query.fromQL(
+            "select * where NOT blockedBy.name='bart' and location within 400 of "
                + center.getLat() + "," + center.getLon());
         Results listResults = em.searchCollection( em.getApplicationRef(), "users", query );
         assertEquals( 1, listResults.size() );
 
         // one user within 400 meters IS blocked by bart
-        query = Query.fromQL( 
-            "select * where blockedBy.name='bart' and location within 400 of " 
+        query = Query.fromQL(
+            "select * where blockedBy.name='bart' and location within 400 of "
                + center.getLat() + "," + center.getLon());
         listResults = em.searchCollection( em.getApplicationRef(), "users", query );
         assertEquals( 1, listResults.size() );

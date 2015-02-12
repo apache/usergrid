@@ -47,9 +47,9 @@ import org.apache.usergrid.NewOrgAppAdminRule;
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
 import org.apache.usergrid.batch.JobExecution;
-import org.apache.usergrid.cassandra.CassandraResource;
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
-import org.apache.usergrid.cassandra.Concurrent;
+
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
@@ -81,20 +81,13 @@ import static org.mockito.Mockito.when;
  *
  *
  */
-@Concurrent
 public class ExportServiceIT {
 
     private static final Logger LOG = LoggerFactory.getLogger( ExportServiceIT.class );
 
-    @ClassRule
-    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
 
     @ClassRule
-    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
-
-
-    @ClassRule
-    public static final ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource, elasticSearchResource );
+    public static final ServiceITSetup setup = new ServiceITSetupImpl(  );
 
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
@@ -163,11 +156,11 @@ public class ExportServiceIT {
             entity[i] = em.create( "users", userProperties );
         }
         //creates connections
-        em.createConnection( 
-                em.get( new SimpleEntityRef( "user", entity[0].getUuid()) ), "Vibrations", 
+        em.createConnection(
+                em.get( new SimpleEntityRef( "user", entity[0].getUuid()) ), "Vibrations",
                 em.get( new SimpleEntityRef( "user", entity[1].getUuid()) ) );
-        em.createConnection( 
-                em.get( new SimpleEntityRef( "user", entity[1].getUuid()) ), "Vibrations", 
+        em.createConnection(
+                em.get( new SimpleEntityRef( "user", entity[1].getUuid()) ), "Vibrations",
                 em.get( new SimpleEntityRef( "user", entity[0].getUuid()) ) );
 
         UUID exportUUID = exportService.schedule( payload );
@@ -243,11 +236,11 @@ public class ExportServiceIT {
         }
         em.refreshIndex();
         //creates connections
-        em.createConnection( 
-                em.get( new SimpleEntityRef( "user", entity[0].getUuid())), "Vibrations", 
+        em.createConnection(
+                em.get( new SimpleEntityRef( "user", entity[0].getUuid())), "Vibrations",
                 em.get( new SimpleEntityRef( "user", entity[1].getUuid())) );
-        em.createConnection( 
-                em.get( new SimpleEntityRef( "user", entity[1].getUuid())), "Vibrations", 
+        em.createConnection(
+                em.get( new SimpleEntityRef( "user", entity[1].getUuid())), "Vibrations",
                 em.get( new SimpleEntityRef( "user", entity[0].getUuid())) );
 
         UUID exportUUID = exportService.schedule( payload );

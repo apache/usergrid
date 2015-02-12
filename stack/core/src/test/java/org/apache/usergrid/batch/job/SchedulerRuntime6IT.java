@@ -19,12 +19,11 @@ package org.apache.usergrid.batch.job;
 
 import java.util.concurrent.TimeUnit;
 
-import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.persistence.entities.JobData;
-import org.apache.usergrid.persistence.entities.JobStat;
-
 import org.junit.Ignore;
 import org.junit.Test;
+
+import org.apache.usergrid.persistence.entities.JobData;
+import org.apache.usergrid.persistence.entities.JobStat;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -35,12 +34,12 @@ import static org.junit.Assert.assertTrue;
 /**
  * Class to test job runtimes
  */
-@Concurrent
+
 @Ignore("These tests no longer work with shared spring context. Need to re-evaluate")
 public class SchedulerRuntime6IT extends AbstractSchedulerRuntimeIT {
 
     /**
-     * Test the scheduler ramps up correctly when there are more jobs to be read after a 
+     * Test the scheduler ramps up correctly when there are more jobs to be read after a
      * pause when the job specifies the retry time
      */
     @Test
@@ -51,7 +50,7 @@ public class SchedulerRuntime6IT extends AbstractSchedulerRuntimeIT {
         long customRetry = sleepTime + 1000;
         int numberOfRuns = 1;
 
-        OnlyOnceExceution job = cassandraResource.getBean( "onlyOnceExceution", OnlyOnceExceution.class );
+        OnlyOnceExceution job = springResource.getBean( "onlyOnceExceution", OnlyOnceExceution.class );
 
         job.setTimeout( customRetry );
         job.setLatch( numberOfRuns );

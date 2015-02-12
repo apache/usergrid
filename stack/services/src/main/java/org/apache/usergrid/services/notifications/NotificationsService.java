@@ -20,6 +20,8 @@ import java.util.*;
 
 import com.codahale.metrics.*;
 import com.codahale.metrics.Timer;
+import com.google.inject.Injector;
+
 import org.apache.usergrid.corepersistence.CpSetup;
 import org.apache.usergrid.metrics.MetricsFactory;
 import org.apache.usergrid.mq.Message;
@@ -89,9 +91,9 @@ public class NotificationsService extends AbstractCollectionService {
         postTimer = metricsService.getTimer(this.getClass(), "execution_rest");
         JobScheduler jobScheduler = new JobScheduler(sm,em);
         String name = ApplicationQueueManagerImpl.getQueueNames(props);
-        QueueScopeFactory queueScopeFactory = CpSetup.getInjector().getInstance(QueueScopeFactory.class);
+        QueueScopeFactory queueScopeFactory = getApplicationContext().getBean( Injector.class ).getInstance(QueueScopeFactory.class);
         QueueScope queueScope = queueScopeFactory.getScope(smf.getManagementAppId(), name);
-        queueManagerFactory = CpSetup.getInjector().getInstance(QueueManagerFactory.class);
+        queueManagerFactory = getApplicationContext().getBean( Injector.class ).getInstance(QueueManagerFactory.class);
         QueueManager queueManager = TEST_QUEUE_MANAGER !=null ? TEST_QUEUE_MANAGER : queueManagerFactory.getQueueManager(queueScope);
         notificationQueueManager = new ApplicationQueueManagerImpl(jobScheduler,em,queueManager,metricsService,props);
         gracePeriod = jobScheduler.SCHEDULER_GRACE_PERIOD;
