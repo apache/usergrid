@@ -159,7 +159,7 @@ public class FileImportTracker {
 
         if ( failed > 0 ) {
             state = FileImport.State.FAILED;
-            message = ERROR_MESSAGE;
+            message = fileImport.getErrorMessage() == null ? ERROR_MESSAGE : fileImport.getErrorMessage();
         }
         else {
             state = FileImport.State.FINISHED;

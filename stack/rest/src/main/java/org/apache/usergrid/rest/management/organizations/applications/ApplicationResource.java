@@ -90,9 +90,6 @@ public class ApplicationResource extends AbstractContextResource {
     @Autowired
     protected ExportService exportService;
 
-    @Autowired
-    protected ImportService importService;
-
     OrganizationInfo organization;
     UUID applicationId;
     ApplicationInfo application;

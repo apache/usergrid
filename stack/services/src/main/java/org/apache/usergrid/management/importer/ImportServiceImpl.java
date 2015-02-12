@@ -91,9 +91,9 @@ public class ImportServiceImpl implements ImportService {
         Preconditions.checkNotNull(config, "import information cannot be null");
         Preconditions.checkNotNull( application, "application cannot be null" );
 
-        final EntityManager emMgmtApp;
+        final EntityManager rootEM;
         try {
-            emMgmtApp = emf.getEntityManager(emf.getManagementAppId());
+            rootEM = emf.getEntityManager(emf.getManagementAppId());
         } catch (Exception e) {
             logger.error("application doesn't exist within the current context");
             return null;
@@ -104,7 +104,7 @@ public class ImportServiceImpl implements ImportService {
 
         // create the import entity to store all metadata about the import job
         try {
-            importEntity = emMgmtApp.create( importEntity );
+            importEntity = rootEM.create( importEntity );
         } catch (Exception e) {
             logger.error("Import entity creation failed");
             return null;
@@ -124,12 +124,12 @@ public class ImportServiceImpl implements ImportService {
 
         // update state for import job to created
         importEntity.setState(Import.State.SCHEDULED);
-        emMgmtApp.update(importEntity);
+        rootEM.update(importEntity);
 
-        final EntityRef source = getApplicationEntity( emMgmtApp, application );
+        final EntityRef source = getApplicationEntity( rootEM, application );
 
         //now link it to the application
-        emMgmtApp.createConnection(source, APP_IMPORT_CONNECTION, importEntity);
+        rootEM.createConnection(source, APP_IMPORT_CONNECTION, importEntity);
 
         return importEntity;
     }
@@ -228,13 +228,11 @@ public class ImportServiceImpl implements ImportService {
         try {
             final EntityManager rootEm = emf.getEntityManager( emf.getManagementAppId() );
 
-
             final Import importEntity = getImport( applicationId, importId );
 
             if ( importEntity == null ) {
                 throw new EntityNotFoundException( "Import not found with id " + importId );
             }
-
 
             final FileImport fileImport = rootEm.get( importId, FileImport.class );
 
@@ -324,10 +322,10 @@ public class ImportServiceImpl implements ImportService {
         logger.debug("scheduleFile() for import {}:{} file {}",
             new Object[]{importRef.getType(), importRef.getType(), file});
 
-        EntityManager emManagementApp = null;
+        EntityManager rootEM;
 
         try {
-            emManagementApp = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+            rootEM = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
         } catch (Exception e) {
             logger.error("application doesn't exist within the current context");
             return null;
@@ -336,13 +334,13 @@ public class ImportServiceImpl implements ImportService {
         // create a FileImport entity to store metadata about the fileImport job
         UUID applicationId = (UUID)config.get("applicationId");
         FileImport fileImport = new FileImport( file, applicationId );
-        fileImport = emManagementApp.create(fileImport);
+        fileImport = rootEM.create(fileImport);
 
-        Import importEntity = emManagementApp.get(importRef, Import.class);
+        Import importEntity = rootEM.get(importRef, Import.class);
 
         try {
             // create a connection between the main import job and the sub FileImport Job
-            emManagementApp.createConnection(importEntity, IMPORT_FILE_INCLUDES_CONNECTION, fileImport);
+            rootEM.createConnection(importEntity, IMPORT_FILE_INCLUDES_CONNECTION, fileImport);
 
             logger.debug("Created connection from {}:{} to {}:{}",
                 new Object[] {
@@ -357,7 +355,7 @@ public class ImportServiceImpl implements ImportService {
 
         // mark the File Import Job as created
         fileImport.setState(FileImport.State.CREATED);
-        emManagementApp.update( fileImport );
+        rootEM.update( fileImport );
 
         // set data to be transferred to the FileImport Job
         JobData jobData = new JobData();
@@ -367,7 +365,7 @@ public class ImportServiceImpl implements ImportService {
 
         // update state of the job to Scheduled
         fileImport.setState(FileImport.State.SCHEDULED);
-        emManagementApp.update(fileImport);
+        rootEM.update(fileImport);
 
         return jobData;
     }
@@ -377,18 +375,18 @@ public class ImportServiceImpl implements ImportService {
 
         try {
 
-            EntityManager emMgmtApp = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
+            EntityManager rootEM = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
             Query query = Query.fromQL( "select *" );
             query.setEntityType("file_import");
             query.setConnectionType( IMPORT_FILE_INCLUDES_CONNECTION );
             query.setLimit(MAX_FILE_IMPORTS);
 
             //TODO, this won't work with more than 100 files
-            Results entities = emMgmtApp.searchConnectedEntities( importRoot, query );
+            Results entities = rootEM.searchConnectedEntities( importRoot, query );
             return entities.size();
 
             // see ImportConnectsTest()
-//            Results entities = emMgmtApp.getConnectedEntities(
+//            Results entities = rootEM.getConnectedEntities(
 //              importRoot, "includes", null, Level.ALL_PROPERTIES );
 //            PagingResultsIterator itr = new PagingResultsIterator( entities );
 //            int count = 0;
@@ -425,7 +423,6 @@ public class ImportServiceImpl implements ImportService {
     public Import.State getState( UUID uuid ) throws Exception {
 
         Preconditions.checkNotNull( uuid, "uuid cannot be null" );
-
 
         EntityManager rootEm = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
 
@@ -548,14 +545,14 @@ public class ImportServiceImpl implements ImportService {
 
         // get Import Entity from the management app, update it to show that job has started
 
-        EntityManager emManagementApp = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+        final EntityManager rootEM = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
         UUID importId = (UUID) jobExecution.getJobData().getProperty(IMPORT_ID);
-        Import importEntity = emManagementApp.get(importId, Import.class);
+        Import importEntity = rootEM.get(importId, Import.class);
 
         importEntity.setState(Import.State.STARTED);
         importEntity.setStarted(System.currentTimeMillis());
         importEntity.setErrorMessage(" ");
-        emManagementApp.update(importEntity);
+        rootEM.update(importEntity);
         logger.debug("doImport(): updated state");
 
         // if no S3 importer was passed in then create one
@@ -572,7 +569,7 @@ public class ImportServiceImpl implements ImportService {
             logger.error("doImport(): Error creating S3Import", e);
             importEntity.setErrorMessage(e.getMessage());
             importEntity.setState(Import.State.FAILED);
-            emManagementApp.update(importEntity);
+            rootEM.update(importEntity);
             return;
         }
 
@@ -585,7 +582,7 @@ public class ImportServiceImpl implements ImportService {
                 logger.error("doImport(): No organization could be found");
                 importEntity.setErrorMessage("No organization could be found");
                 importEntity.setState(Import.State.FAILED);
-                emManagementApp.update(importEntity);
+                rootEM.update(importEntity);
                 return;
 
             } else {
@@ -602,7 +599,7 @@ public class ImportServiceImpl implements ImportService {
         } catch (OrganizationNotFoundException | ApplicationNotFoundException e) {
             importEntity.setErrorMessage(e.getMessage());
             importEntity.setState(Import.State.FAILED);
-            emManagementApp.update(importEntity);
+            rootEM.update(importEntity);
             return;
         }
 
@@ -612,7 +609,7 @@ public class ImportServiceImpl implements ImportService {
         if ( bucketFiles.isEmpty() )  {
             importEntity.setState(Import.State.FINISHED);
             importEntity.setErrorMessage("No files found in the bucket: " + bucketName);
-            emManagementApp.update(importEntity);
+            rootEM.update(importEntity);
 
         } else {
 
@@ -660,7 +657,7 @@ public class ImportServiceImpl implements ImportService {
             fileMetadata.put("files", value);
             importEntity.addProperties(fileMetadata);
             importEntity.setFileCount(fileJobs.size());
-            emManagementApp.update(importEntity);
+            rootEM.update(importEntity);
         }
     }
 
@@ -683,7 +680,7 @@ public class ImportServiceImpl implements ImportService {
         String accessId = (String) storage_info.get( "s3_access_id");
         String secretKey = (String) storage_info.get( "s3_key" );
 
-        EntityManager emManagementApp = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
+        EntityManager rootEM = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
 
        // get the file import entity
 
@@ -711,18 +708,18 @@ public class ImportServiceImpl implements ImportService {
 
         logger.debug("downloadAndImportFile() for file {} ", fileName);
         try {
-            emManagementApp.update( fileImport );
+            rootEM.update( fileImport );
             fileImport.setState(FileImport.State.STARTED);
-            emManagementApp.update(fileImport);
+            rootEM.update(fileImport);
 
-            if ( emManagementApp.get( targetAppId ) == null ) {
+            if ( rootEM.get( targetAppId ) == null ) {
                 tracker.fatal("Application " + targetAppId + " does not exist");
                 return;
             }
 
         } catch (Exception e) {
             tracker.fatal("Application " + targetAppId + " does not exist");
-            checkIfComplete( emManagementApp, fileImport );
+            checkIfComplete( rootEM, fileImport );
             return;
         }
 
@@ -741,7 +738,7 @@ public class ImportServiceImpl implements ImportService {
             }
         } catch (Exception e) {
             tracker.fatal("Error connecting to S3: " + e.getMessage());
-            checkIfComplete( emManagementApp, fileImport );
+            checkIfComplete( rootEM, fileImport );
             return;
         }
 
@@ -750,7 +747,7 @@ public class ImportServiceImpl implements ImportService {
                 fileName, bucketName, accessId, secretKey );
         } catch (Exception e) {
             tracker.fatal("Error downloading file: " +  e.getMessage());
-            checkIfComplete( emManagementApp, fileImport );
+            checkIfComplete( rootEM, fileImport );
             return;
         }
 
@@ -758,13 +755,13 @@ public class ImportServiceImpl implements ImportService {
 
         try {
             parseEntitiesAndConnectionsFromJson(
-                jobExecution, downloadedFile, targetEm, emManagementApp, fileImport, tracker);
+                jobExecution, downloadedFile, targetEm, rootEM, fileImport, tracker);
 
         } catch (Exception e) {
             tracker.fatal(e.getMessage());
         }
 
-        checkIfComplete( emManagementApp, fileImport );
+        checkIfComplete( rootEM, fileImport );
     }
 
 
@@ -786,11 +783,11 @@ public class ImportServiceImpl implements ImportService {
     /**
      * Check if we're the last job on failure
      */
-    private void checkIfComplete( final EntityManager emMgmtApp, final FileImport fileImport ) {
+    private void checkIfComplete( final EntityManager rootEM, final FileImport fileImport ) {
         int failCount = 0;
         int successCount = 0;
 
-        final Import importEntity = getImportEntity( emMgmtApp, fileImport );
+        final Import importEntity = getImportEntity( rootEM, fileImport );
 
         try {
 
@@ -806,7 +803,7 @@ public class ImportServiceImpl implements ImportService {
             query.setConnectionType( IMPORT_FILE_INCLUDES_CONNECTION );
             query.setLimit( MAX_FILE_IMPORTS );
 
-            Results entities = emMgmtApp.searchConnectedEntities( importEntity, query );
+            Results entities = rootEM.searchConnectedEntities( importEntity, query );
             PagingResultsIterator itr = new PagingResultsIterator( entities );
 
             if ( !itr.hasNext() ) {
@@ -856,7 +853,7 @@ public class ImportServiceImpl implements ImportService {
             }
 
             try {
-                emMgmtApp.update( importEntity );
+                rootEM.update( importEntity );
             }
             catch ( Exception e ) {
                 logger.error( "Error updating import entity", e );
