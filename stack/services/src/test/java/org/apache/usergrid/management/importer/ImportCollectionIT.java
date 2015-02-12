@@ -35,6 +35,7 @@ import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.management.export.ExportService;
 import org.apache.usergrid.persistence.*;
+import org.apache.usergrid.persistence.entities.FileImport;
 import org.apache.usergrid.persistence.entities.Import;
 import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.persistence.index.query.Query;
@@ -342,37 +343,49 @@ public class ImportCollectionIT {
      * TODO: Test that importing bad JSON will result in an informative error message.
      */
     @Test
-    public void testImportBadJson() throws Exception{
-        // import from a bad JSON file
+    public void testImportBadJson() throws Exception {
 
         deleteBucket();
 
-        //list out all the files in the resource directory you want uploaded
-        List<String> filenames = new ArrayList<>( 1 );
+        // export and upload a bad JSON file to the S3 bucket
 
+        List<String> filenames = new ArrayList<>( 1 );
         filenames.add( "testimport-bad-json.json");
 
-        // create 10 applications each with collection of 10 things, export all to S3
         S3Upload s3Upload = new S3Upload();
         s3Upload.copyToS3(
             System.getProperty(SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR),
             System.getProperty(SDKGlobalConfiguration.SECRET_KEY_ENV_VAR),
             bucketName, filenames );
 
-        // import all those exports from S3 into the default test application
+        // import bad JSON from from the S3 bucket
 
         final EntityManager emDefaultApp = setup.getEmf().getEntityManager( applicationId );
-        importCollection( emDefaultApp );
+        UUID importId = importCollection( emDefaultApp );
 
-        // we should now have 100 Entities in the default app
+
+        // check that we got an informative error message back
 
         List<Entity> importedThings = emDefaultApp.getCollection(
             emDefaultApp.getApplicationId(), "things", null, Level.ALL_PROPERTIES).getEntities();
 
-        assertTrue( importedThings.isEmpty() );
-      //  assertEquals( , importedThings.size() );
+        assertTrue("No entities should have been imported", importedThings.isEmpty());
 
-        // check that error message indicates JSON parsing error
+        ImportService importService = setup.getImportService();
+        Results results = importService.getFileImports( applicationId, importId, null, null );
+
+        assertEquals( "There is one", 1, results.size() );
+
+        assertEquals( "Entity is FileImport object",
+            FileImport.class, results.getEntity().getClass() );
+
+        FileImport fileImport = (FileImport)results.getEntity();
+
+        assertEquals( "File name is correct",
+            "testimport-bad-json.json", fileImport.getFileName());
+
+        assertTrue( "Error message is correct",
+            fileImport.getErrorMessage().startsWith("Unexpected character ('<' (code 60))"));
     }
 
     @Test
@@ -432,7 +445,7 @@ public class ImportCollectionIT {
    //---------------------------------------------------------------------------------------------
 
 
-    private void importCollection(final EntityManager em ) throws Exception {
+    private UUID importCollection(final EntityManager em ) throws Exception {
 
         logger.debug("\n\nImport into new app {}\n", em.getApplication().getName() );
 
@@ -454,19 +467,25 @@ public class ImportCollectionIT {
             }} );
         }} );
 
-
-
-        int maxRetries = 60;
+        int maxRetries = 30;
         int retries = 0;
-        while (     !importService.getState( importEntity.getUuid() ).equals( "FINISHED" )
-                 && !importService.getState( importEntity.getUuid() ).equals( "FAILED" )
+        Import.State state = importService.getState(importEntity.getUuid());
+        while (     !state.equals( Import.State.FINISHED )
+                 && !state.equals( Import.State.FAILED )
                  && retries++ < maxRetries ) {
 
-            logger.debug("Waiting for import...");
+            logger.debug("Waiting for import ({}) ...", state.toString());
             Thread.sleep(1000);
+
+            state = importService.getState(importEntity.getUuid());
         }
 
+        if ( retries >= maxRetries ) {
+            throw new RuntimeException("Max retries reached");
+        }
         em.refreshIndex();
+
+        return importEntity.getUuid();
     }
 
 
@@ -499,11 +518,15 @@ public class ImportCollectionIT {
             }});
         }});
 
-        int maxRetries = 60;
+        int maxRetries = 30;
         int retries = 0;
         while ( !exportService.getState( exportUUID ).equals( "FINISHED" ) && retries++ < maxRetries ) {
             logger.debug("Waiting for export...");
             Thread.sleep(1000);
+        }
+
+        if ( retries >= maxRetries ) {
+            throw new RuntimeException("Max retries reached");
         }
     }
 

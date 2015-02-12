@@ -684,7 +684,7 @@ public class ImportServiceImpl implements ImportService {
 
         EntityManager emManagementApp = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
 
-        // get the file import entity
+       // get the file import entity
 
         FileImport fileImport;
         try {
@@ -693,6 +693,9 @@ public class ImportServiceImpl implements ImportService {
             logger.error("Error updating fileImport to set state of file import", e);
             return;
         }
+
+        // tracker flushes every 100 entities
+        final FileImportTracker tracker = new FileImportTracker( emf, fileImport, 100 );
 
         String fileName = jobExecution.getJobData().getProperty("File").toString();
         UUID targetAppId = (UUID) jobExecution.getJobData().getProperty("applicationId");
@@ -712,20 +715,12 @@ public class ImportServiceImpl implements ImportService {
             emManagementApp.update(fileImport);
 
             if ( emManagementApp.get( targetAppId ) == null ) {
-                fileImport.setState( FileImport.State.FAILED );
-                fileImport.setErrorMessage("Application " + targetAppId + " does not exist");
-                emManagementApp.update(fileImport);
+                tracker.fatal("Application " + targetAppId + " does not exist");
                 return;
             }
 
         } catch (Exception e) {
-            fileImport.setState( FileImport.State.FAILED );
-            fileImport.setErrorMessage("Application " + targetAppId + " does not exist");
-            try {
-                emManagementApp.update( fileImport );
-            } catch (Exception e1) {
-                logger.error("Error updating fileImport to set state of file import", e1);
-            }
+            tracker.fatal("Application " + targetAppId + " does not exist");
         }
         EntityManager targetEm = emf.getEntityManager( targetAppId );
 
@@ -741,14 +736,7 @@ public class ImportServiceImpl implements ImportService {
                 s3Import = new S3ImportImpl();
             }
         } catch (Exception e) {
-            logger.error("doImport(): Error creating S3Import", e);
-            fileImport.setErrorMessage(e.getMessage());
-            fileImport.setState( FileImport.State.FAILED );
-            try {
-                emManagementApp.update(fileImport);
-            } catch (Exception e1) {
-                logger.error("Error updating file import with error information", e1);
-            }
+            tracker.fatal("Unable to connect to S3 bucket, error: " + e.getMessage());
             return;
         }
 
@@ -756,31 +744,17 @@ public class ImportServiceImpl implements ImportService {
             downloadedFile = s3Import.copyFileFromBucket(
                 fileName, bucketName, accessId, secretKey );
         } catch (Exception e) {
-            logger.error("Error downloading file " + fileName, e);
-            fileImport.setErrorMessage("Error downloading file " + fileName + ": " + e.getMessage());
-            fileImport.setState(FileImport.State.FAILED);
-            try {
-                emManagementApp.update(fileImport);
-            } catch (Exception e1) {
-                logger.error("Error updating file import with error information", e1);
-            }
+            tracker.fatal("Error downloading file " + fileName + ": " + e.getMessage());
         }
 
         // parse JSON data, create Entities and Connections from import data
 
         try {
             parseEntitiesAndConnectionsFromJson(
-                jobExecution, downloadedFile, targetEm, emManagementApp, fileImport);
+                jobExecution, downloadedFile, targetEm, emManagementApp, fileImport, tracker);
 
         } catch (Exception e) {
-            logger.error("Error importing file " + fileName, e);
-            fileImport.setErrorMessage("Error downloading file " + fileName + ": " + e.getMessage());
-            fileImport.setState( FileImport.State.FAILED );
-            try {
-                emManagementApp.update(fileImport);
-            } catch (Exception e1) {
-                logger.error("Error updating file import with error information", e1);
-            }
+            tracker.fatal("Error importing file " + fileName + ": " + e.getMessage());
         }
 
         // mark ImportJob FINISHED but only if all other FileImportJobs are complete
@@ -804,11 +778,13 @@ public class ImportServiceImpl implements ImportService {
 
             EntityManager emMgmtApp = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
 
-
             Query query = new Query();
             query.setEntityType(Schema.getDefaultSchema().getEntityType( FileImport.class ));
             query.setConnectionType( IMPORT_FILE_INCLUDES_CONNECTION );
             query.setLimit(MAX_FILE_IMPORTS);
+
+            // TODO: better way to wait for ES indexes to catch up
+            try { Thread.sleep(5000); } catch ( Exception intentionallyIgnored ) {}
 
             Results entities = emMgmtApp.searchConnectedEntities(importEntity, query);
 
@@ -885,11 +861,12 @@ public class ImportServiceImpl implements ImportService {
         final File file,
         final EntityManager em,
         final EntityManager rootEm,
-        final FileImport fileImport) throws Exception {
+        final FileImport fileImport,
+        final FileImportTracker tracker) throws Exception {
 
 
         // tracker flushes every 100 entities
-        final FileImportTracker tracker = new FileImportTracker( emf, fileImport, 100 );
+        //final FileImportTracker tracker = new FileImportTracker( emf, fileImport, 100 );
 
         // function to execute for each write event
         final Action1<WriteEvent> doWork = new Action1<WriteEvent>() {
@@ -945,7 +922,12 @@ public class ImportServiceImpl implements ImportService {
 
         jp.close();
 
-        logger.debug("\n\nparseEntitiesAndConnectionsFromJson(): Wrote entities\n");
+        if ( FileImport.State.FAILED.equals( fileImport.getState() ) ) {
+            logger.debug("\n\nFailed to completely write entities, skipping second phase. File: {}\n",
+                fileImport.getFileName());
+            return;
+        }
+        logger.debug("\n\nWrote entities. File: {}\n", fileImport.getFileName() );
 
 
         // SECOND PASS: import all connections and dictionaries
@@ -984,9 +966,20 @@ public class ImportServiceImpl implements ImportService {
         logger.debug("\n\nparseEntitiesAndConnectionsFromJson(): Wrote others for file {}\n",
             fileImport.getFileName());
 
+        if ( FileImport.State.FAILED.equals( fileImport.getState() ) ) {
+            logger.debug("\n\nparseEntitiesAndConnectionsFromJson(): failed to completely write entities\n");
+            return;
+        }
 
         // flush the job statistics
         tracker.complete();
+
+        if ( FileImport.State.FAILED.equals( fileImport.getState() ) ) {
+            logger.debug("\n\nFailed to completely wrote connections and dictionaries. File: {}\n",
+                fileImport.getFileName());
+            return;
+        }
+        logger.debug("\n\nWrote connections and dictionaries. File: {}\n", fileImport.getFileName() );
     }
 
 
@@ -1249,15 +1242,17 @@ public class ImportServiceImpl implements ImportService {
                 logger.debug("process(): done parsing JSON");
 
             } catch (Exception e) {
-                // skip illegal entity UUID and go to next one
-                fileImport.setErrorMessage(e.getMessage());
-                try {
-                    rootEm.update(fileImport);
-                } catch (Exception ex) {
-                    logger.error("Error updating file import record", ex);
-                }
+
+                tracker.fatal("Failed to import file" + fileImport.getFileName() + " error " + e.getMessage());
+
                 if ( subscriber != null ) {
-                    subscriber.onError(e);
+
+                    // don't need to blow up here, we handled the problem
+                    // if we blow up we may prevent in-flight entities from being written
+                    // subscriber.onError(e);
+
+                    // but we are done reading entities
+                    subscriber.onCompleted();
                 }
             }
         }
@@ -1265,8 +1260,11 @@ public class ImportServiceImpl implements ImportService {
         private void processWriteEvent( final Subscriber<? super WriteEvent> subscriber, WriteEvent writeEvent ) {
 
             if ( subscriber == null ) {
+
+                // this logic makes it easy to remove Rx for debugging purposes
                 // no Rx, just do it
                 writeEvent.doWrite(em, fileImport, tracker);
+
             } else {
                 subscriber.onNext( writeEvent );
             }
