@@ -168,7 +168,7 @@ public class ImportCollectionIT {
                 organization.getUuid(), "second").getId();
 
             final EntityManager emApp2 = setup.getEmf().getEntityManager(appId2);
-            importCollection( emApp2 );
+            importCollections(emApp2);
 
 
             // make sure that it worked
@@ -258,7 +258,7 @@ public class ImportCollectionIT {
                 organization.getUuid(), "second").getId();
 
             final EntityManager emApp2 = setup.getEmf().getEntityManager(appId2);
-            importCollection(emApp2);
+            importCollections(emApp2);
 
 
             // update the things in the second application, export to S3
@@ -275,7 +275,7 @@ public class ImportCollectionIT {
 
             // import the updated things back into the first application, check that they've been updated
 
-            importCollection(emApp1);
+            importCollections(emApp1);
 
             for (UUID uuid : thingsMap.keySet()) {
                 Entity entity = emApp1.get(uuid);
@@ -318,7 +318,7 @@ public class ImportCollectionIT {
             logger.debug("\n\nImporting\n");
 
             final EntityManager emDefaultApp = setup.getEmf().getEntityManager(applicationId);
-            importCollection(emDefaultApp );
+            importCollections(emDefaultApp);
 
             // we should now have 100 Entities in the default app
 
@@ -361,7 +361,7 @@ public class ImportCollectionIT {
         // import bad JSON from from the S3 bucket
 
         final EntityManager emDefaultApp = setup.getEmf().getEntityManager( applicationId );
-        UUID importId = importCollection( emDefaultApp );
+        UUID importId = importCollections(emDefaultApp);
 
 
         // check that we got an informative error message back
@@ -410,42 +410,55 @@ public class ImportCollectionIT {
         // import all those files into the default test application
 
         final EntityManager emDefaultApp = setup.getEmf().getEntityManager( applicationId );
-        importCollection( emDefaultApp );
-
-        // we should now have 100 Entities in the default app
+        UUID importId = importCollections(emDefaultApp);
 
         {
             List<Entity> importedThings = emDefaultApp.getCollection(
                 emDefaultApp.getApplicationId(), "connfails", null, Level.ALL_PROPERTIES).getEntities();
-            assertTrue(!importedThings.isEmpty());
+            assertTrue( !importedThings.isEmpty());
+
+            //
+            assertEquals( 1, importedThings.size() );
         }
 
         {
             List<Entity> importedThings = emDefaultApp.getCollection(
                 emDefaultApp.getApplicationId(), "qtmagics", null, Level.ALL_PROPERTIES).getEntities();
             assertTrue(!importedThings.isEmpty());
+            assertEquals(5, importedThings.size());
         }
 
         {
             List<Entity> importedThings = emDefaultApp.getCollection(
                 emDefaultApp.getApplicationId(), "badjsons", null, Level.ALL_PROPERTIES).getEntities();
             assertTrue(!importedThings.isEmpty());
+            assertEquals( 4, importedThings.size() );
         }
 
         {
             List<Entity> importedThings = emDefaultApp.getCollection(
                 emDefaultApp.getApplicationId(), "things", null, Level.ALL_PROPERTIES).getEntities();
             assertTrue(!importedThings.isEmpty());
+            assertEquals( 10, importedThings.size() );
         }
 
-        // TODO: have something that checks the exceptions and errors.
+        Thread.sleep(3000);
+
+        ImportService importService = setup.getImportService();
+        Results results = importService.getFileImports( applicationId, importId, null, null );
+
+        assertEquals( "There four file imports", 4, results.size() );
+
     }
 
 
    //---------------------------------------------------------------------------------------------
 
 
-    private UUID importCollection(final EntityManager em ) throws Exception {
+    /**
+     * Start import job that will import all collections in all data files in the S3 bucket.
+     */
+    private UUID importCollections(final EntityManager em) throws Exception {
 
         logger.debug("\n\nImport into new app {}\n", em.getApplication().getName() );
 
@@ -490,7 +503,7 @@ public class ImportCollectionIT {
 
 
     /**
-     * Call exportService to export the named collection to the configured S3 bucket.
+     * Start export job that wilk export a specific collection to the S3 bucket.
      */
     private void exportCollection(
         final EntityManager em, final String collectionName ) throws Exception {

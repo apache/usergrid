@@ -69,8 +69,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
     private static final Logger logger = LoggerFactory.getLogger( StaleIndexCleanupTest.class );
 
     // take it easy on Cassandra
-    private static final long writeDelayMs = 50;
-    private static final long readDelayMs = 50;
+    private static final long writeDelayMs = 0;
 
     Lock sequential = new ReentrantLock();
 
@@ -126,7 +125,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
     /**
      * Test that the CpRelationManager cleans up and stale indexes that it finds when
-     * it is building search results.
+     * it is building search results (aka read-repair).
      */
     @Test
     public void testStaleIndexCleanup() throws Exception {
@@ -138,8 +137,8 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
         final EntityManager em = app.getEntityManager();
 
-        final int numEntities = 10;
-        final int numUpdates = 3;
+        final int numEntities = 20;
+        final int numUpdates = 40;
 
         final AtomicInteger updateCount =  new AtomicInteger(  );
 
@@ -190,18 +189,17 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         Assert.assertEquals( "Expect stale candidates", numEntities * ( numUpdates + 1 ), crs.size() );
 
         // query EntityManager for results and page through them
-        // should return numEntities becuase it filters out the stale entities
+        // should return numEntities because it filters out the stale entities
         final int limit = 8;
 
         // we order by updateCount asc, this forces old versions to appear first, otherwise,
         // we don't clean them up in our versions
         Query q = Query.fromQL( "select * order by updateCount asc" );
         q.setLimit( limit );
+
         int thingCount = 0;
-        String cursor = null;
-
         int index = 0;
-
+        String cursor;
 
         do {
             Results results = em.searchCollection( em.getApplicationRef(), "things", q );
@@ -218,7 +216,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
                 final Entity returned = results.getEntities().get( i );
 
-                //last entities appear first
+                // last entities appear first
                 final Entity expected = maxVersions.get( index );
                 assertEquals("correct entity returned", expected, returned);
 
@@ -239,10 +237,10 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
 
     /**
-     * Test that the EntityDeleteImpl cleans up stale indexes on delete. Ensures that when an
-     * entity is deleted its old indexes are cleared from ElasticSearch.
+     * Test that the EntityDeleteImpl cleans up stale indexes on delete.
+     * Ensures that when an entity is deleted its old indexes are cleared from ElasticSearch.
      */
-    @Test(timeout=10000)
+    @Test(timeout=30000)
     public void testCleanupOnDelete() throws Exception {
 
         logger.info("Started testStaleIndexCleanup()");
@@ -252,8 +250,8 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
         final EntityManager em = app.getEntityManager();
 
-        final int numEntities = 10;
-        final int numUpdates = 3;
+        final int numEntities = 20;
+        final int numUpdates = 40;
 
         // create lots of entities
         final List<Entity> things = new ArrayList<Entity>(numEntities);
@@ -319,10 +317,10 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
 
     /**
-     * Test that the EntityDeleteImpl cleans up stale indexes on update. Ensures that when an
-     * entity is updated its old indexes are cleared from ElasticSearch.
+     * Test that the EntityDeleteImpl cleans up stale indexes on update.
+     * Ensures that when an entity is updated its old indexes are cleared from ElasticSearch.
      */
-    @Test(timeout=10000)
+    @Test(timeout=30000)
     public void testCleanupOnUpdate() throws Exception {
 
         logger.info( "Started testCleanupOnUpdate()" );
@@ -332,8 +330,8 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
         final EntityManager em = app.getEntityManager();
 
-        final int numEntities = 10;
-        final int numUpdates = 3;
+        final int numEntities = 20;
+        final int numUpdates = 40;
 
         // create lots of entities
         final List<Entity> things = new ArrayList<Entity>(numEntities);
@@ -352,11 +350,10 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         // turn off post processing stuff that cleans up stale entities
         System.setProperty( EVENTS_DISABLED, "false" );
 
-        // update each one a bunch of times
-        int count = 0;
+        // update each entity a bunch of times
 
         List<Entity> maxVersions = new ArrayList<>(numEntities);
-
+        int count = 0;
         for ( Entity thing : things ) {
             Entity toUpdate = null;
 
@@ -430,6 +427,8 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         IndexScope is = new IndexScopeImpl( new SimpleId( em.getApplicationId(), TYPE_APPLICATION ),
                 CpNamingUtils.getCollectionScopeNameFromCollectionName( collName ) );
         Query rcq = Query.fromQL( query );
+
+        // TODO: why does this have no effect; max we ever get is 1000 entities
         rcq.setLimit( 10000 ); // no paging
 
         return ei.search( is, SearchTypes.fromTypes( type ), rcq );
