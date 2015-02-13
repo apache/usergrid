@@ -66,7 +66,7 @@ public class NotificationsService extends AbstractCollectionService {
                 MESSAGE_PROPERTY_DEVICE_UUID, UUID.class);
     }
 
-
+//not really a queue manager at all
     private ApplicationQueueManager notificationQueueManager;
     private long gracePeriod;
     private ServiceManagerFactory smf;

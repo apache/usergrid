@@ -448,8 +448,9 @@ AppServices.Services.factory('ug', function(configuration, $rootScope, utility,
         } else {
 
           var queryPath = data.path;
-          self.getCollection('query', queryPath, null,
-            'order by modified DESC', null);
+          //remove preceeding slash
+          queryPath = queryPath.replace(/^\//, ''); 
+          self.getCollection('query', queryPath, null, 'order by modified DESC', null);
 
         }
       });

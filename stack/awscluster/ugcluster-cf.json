@@ -61,7 +61,7 @@
             "Description": "Number of Cass servers to start.",
             "Type": "Number",
             "Default": "6",
-            "MinValue": "3"
+            "MinValue": "2"
         },
         "CassInstanceType": {
             "Description": "Instance type for Cass servers",
@@ -78,9 +78,20 @@
         "CassReplicationFactor": {
             "Description": "Cassandra replication factor",
             "Type": "Number",
-            "Default": "3",
+            "Default": "2",
             "MinValue": "1"
         },
+
+      "CassReadConsistency": {
+                "Description": "Cassandra replication factor for Astyanax",
+                "Type": "String",
+                "Default": "CL_ONE"
+            },
+      "CassWriteConsistency": {
+                "Description": "Cassandra replication factor for Astyanax",
+                "Type": "String",
+                "Default": "CL_ONE"
+            },
         "ESClusterName": {
             "Description": "Name to be used for Elasticsearch cluster.",
             "Type": "String",
@@ -90,7 +101,7 @@
             "Description": "Number of ES servers to start.",
             "Type": "Number",
             "Default": "6",
-            "MinValue": "3"
+            "MinValue": "2"
         },
         "ESInstanceType": {
             "Description": "Instance type for ES servers",
@@ -1145,10 +1156,16 @@
                         "export CASSANDRA_CLUSTER_NAME=", { "Ref":"CassClusterName" }, "\n",
                         "export CASSANDRA_KEYSPACE_NAME=usergrid", "\n",
                         "export CASSANDRA_NUM_SERVERS=", { "Ref":"CassNumServers" }, "\n",
-                         "export GRAPHITE_NUM_SERVERS=", { "Ref":"GraphiteNumServers" }, "\n",
+                        "export GRAPHITE_NUM_SERVERS=", { "Ref":"GraphiteNumServers" }, "\n",
+                        "export TOMCAT_NUM_SERVERS=", { "Ref":"RestMinServers" }, "\n",
                         "\n",
                         "export CASSANDRA_REPLICATION_FACTOR=", { "Ref":"CassReplicationFactor" }, "\n",
                         "\n",
+                        "export CASSANDRA_READ_CONSISTENCY=", { "Ref":"CassReadConsistency" }, "\n",
+                        "\n",
+                        "export CASSANDRA_WRITE_CONSISTENCY=", { "Ref":"CassWriteConsistency" }, "\n",
+                        "\n",
+
                         "export ES_CLUSTER_NAME=", { "Ref":"ESClusterName" }, "\n",
                         "export ES_NUM_SERVERS=", { "Ref":"ESNumServers" }, "\n",
                          "\n",

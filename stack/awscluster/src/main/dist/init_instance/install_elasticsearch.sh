@@ -1,14 +1,14 @@
 #!/bin/bash
 
-# 
+#
 #  Licensed to the Apache Software Foundation (ASF) under one or more
 #   contributor license agreements.  The ASF licenses this file to You
 #  under the Apache License, Version 2.0 (the "License"); you may not
 #  use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-# 
+#
 #      http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,10 +23,10 @@ pushd /etc/apt/sources.list.d
 
 # Install and stop ElasticSearch
 cat >> elasticsearch.sources.list << EOF
-deb http://packages.elasticsearch.org/elasticsearch/1.3/debian stable main
+deb http://packages.elasticsearch.org/elasticsearch/1.4/debian stable main
 EOF
 apt-get update
-apt-get --force-yes -y install elasticsearch
+apt-get --force-yes -y install elasticsearch=1.4.2
 /etc/init.d/elasticsearch stop
 
 mkdir -p /mnt/data/elasticsearch
@@ -49,7 +49,7 @@ groovy wait_for_instances.groovy elasticsearch ${ES_NUM_SERVERS}
 # leave room for Cassandra: use about one half of RAM for heap
 case `(curl http://169.254.169.254/latest/meta-data/instance-type)` in
 'c3.large' )
-    # total of 15g 
+    # total of 15g
     export ES_HEAP_SIZE=1920m
 ;;
 'c3.xlarge' )

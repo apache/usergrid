@@ -17,8 +17,11 @@
 
 package org.apache.usergrid.management.importer;
 
+import com.amazonaws.SDKGlobalConfiguration;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
+import org.apache.commons.lang.RandomStringUtils;
+import org.apache.lucene.document.StringField;
 import org.jclouds.ContextBuilder;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.BlobStoreContext;
@@ -34,127 +37,93 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 
 public class S3ImportImpl implements S3Import {
+    private static final Logger logger = LoggerFactory.getLogger(S3ImportImpl.class);
 
-    private BlobStore blobStore;
-    private ArrayList<Blob> blobs = new ArrayList<Blob>();
-    private ArrayList<File> files = new ArrayList<File>();
-    private int i=0;
 
-    /**
-     * Downloads the files from s3 into temp local files
-     * @param importInfo the information entered by the user required to perform import from S3
-     * @param filename the filename generated based on the request URI
-     * @param type  it indicates the type of import. 0 - Collection , 1 - Application and 2 - Organization
-     * @return It returns an ArrayList of files i.e. the files downloaded from s3
-     */
-    public ArrayList<File> copyFromS3( final Map<String,Object> importInfo, String filename , int type) {
+    public File copyFileFromBucket(
+        String blobFileName, String bucketName, String accessId, String secretKey ) throws Exception {
 
-        Map<String,Object> properties = ( Map<String, Object> ) importInfo.get( "properties" );
-
-        Map<String, Object> storage_info = (Map<String,Object>)properties.get( "storage_info" );
-
-        String bucketName = ( String ) storage_info.get( "bucket_location" );
-        String accessId = ( String ) storage_info.get( "s3_access_id" );
-        String secretKey = ( String ) storage_info.get( "s3_key" );
+        // setup to use JCloud BlobStore interface to AWS S3
 
         Properties overrides = new Properties();
-        overrides.setProperty( "s3" + ".identity", accessId );
-        overrides.setProperty( "s3" + ".credential", secretKey );
+        overrides.setProperty("s3" + ".identity", accessId);
+        overrides.setProperty("s3" + ".credential", secretKey);
 
-        final Iterable<? extends Module> MODULES = ImmutableSet
-                .of(new JavaUrlHttpCommandExecutorServiceModule(), new Log4JLoggingModule(),
-                        new NettyPayloadModule());
+        final Iterable<? extends Module> MODULES = ImmutableSet.of(
+            new JavaUrlHttpCommandExecutorServiceModule(),
+            new Log4JLoggingModule(),
+            new NettyPayloadModule());
 
-        BlobStoreContext context =
-                ContextBuilder.newBuilder("s3").credentials( accessId, secretKey ).modules( MODULES )
-                        .overrides( overrides ).buildView( BlobStoreContext.class );
+        BlobStoreContext context = ContextBuilder.newBuilder("s3")
+            .credentials(accessId, secretKey)
+            .modules(MODULES)
+            .overrides(overrides)
+            .buildView(BlobStoreContext.class);
+        BlobStore blobStore = context.getBlobStore();
 
-        try{
+        // get file from configured bucket, copy it to local temp file
 
-            blobStore = context.getBlobStore();
-
-            // gets all the files in the bucket recursively
-            PageSet<? extends StorageMetadata> pageSet = blobStore.list(bucketName, new ListContainerOptions().recursive());
-
-            Iterator itr = pageSet.iterator();
-
-            while(itr.hasNext())
-            {
-                String fname = ((MutableBlobMetadata)itr.next()).getName();
-                switch(type) {
-                    // check if file is a collection file and is in format <org_name>/<app_name>.<collection_name>.[0-9]+.json
-                    case 0:
-                        if(fname.contains(filename))
-                        {
-                            copyFile(bucketName,fname);
-                            i++;
-                        }
-                        break;
-                    // check if file is an application file and is in format <org_name>/<app_name>.[0-9]+.json
-                    case 1:
-                        if(fname.matches(filename+"[0-9]+\\.json"))
-                        {
-                            copyFile(bucketName,fname);
-                            i++;
-                        }
-                        break;
-                    // check if file is an application file and is in format <org_name>/[-a-zA-Z0-9]+.[0-9]+.json
-                    case 2:
-                        if(fname.matches(filename+"[-a-zA-Z0-9]+\\.[0-9]+\\.json"))
-                        {
-                            copyFile(bucketName,fname);
-                            i++;
-                        }
-                        break;
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        Blob blob = blobStore.getBlob(bucketName, blobFileName);
+        if ( blob == null) {
+            throw new RuntimeException(
+                "Blob file name " + blobFileName + " not found in bucket " + bucketName );
         }
-        return files;
-    }
-
-    /**
-     * Copy the file from s3 into a temp local file
-     * @param bucketName the S3 bucket name from where files need to be imported
-     * @param fname the filename by which the temp file should be created
-     * @throws IOException
-     */
-    void copyFile(String bucketName, String fname) throws IOException {
-
-        Logger logger = LoggerFactory.getLogger(ImportServiceImpl.class);
-        Blob blob = blobStore.getBlob(bucketName, fname);
-        blobs.add(blob);
-        String[] fileOrg = fname.split("/");
-        File organizationDirectory = new File(fileOrg[0]);
-
-        if (!organizationDirectory.exists()) {
-            try {
-                organizationDirectory.mkdir();
-            }catch(SecurityException se) {
-                logger.error(se.getMessage());
-            }
-        }
-
-        File ephemeral = new File(fname);
-
-        FileOutputStream fop = new FileOutputStream(ephemeral);
-
-        blobs.get(i).getPayload().writeTo(fop);
-
-        files.add(ephemeral);
-
-        organizationDirectory.deleteOnExit();
-        ephemeral.deleteOnExit();
+        File tempFile = File.createTempFile( bucketName, RandomStringUtils.randomAlphabetic(10));
+        FileOutputStream fop = new FileOutputStream(tempFile);
+        blob.getPayload().writeTo(fop);
         fop.close();
+        tempFile.deleteOnExit();
+
+        return tempFile;
     }
+
+
+    @Override
+    public List<String> getBucketFileNames(
+        String bucketName, String endsWith, String accessId, String secretKey ) {
+
+        // get setup to use JCloud BlobStore interface to AWS S3
+
+        Properties overrides = new Properties();
+        overrides.setProperty("s3" + ".identity", accessId);
+        overrides.setProperty("s3" + ".credential", secretKey);
+
+        final Iterable<? extends Module> MODULES = ImmutableSet.of(
+            new JavaUrlHttpCommandExecutorServiceModule(),
+            new Log4JLoggingModule(),
+            new NettyPayloadModule());
+
+        BlobStoreContext context = ContextBuilder.newBuilder("s3")
+            .credentials(accessId, secretKey)
+            .modules(MODULES)
+            .overrides(overrides)
+            .buildView(BlobStoreContext.class);
+        BlobStore blobStore = context.getBlobStore();
+
+        // gets all the files in the configured bucket recursively
+
+        PageSet<? extends StorageMetadata> pageSets =
+            blobStore.list(bucketName, new ListContainerOptions().recursive());
+        logger.debug("   Found {} files in bucket {}", pageSets.size(), bucketName);
+
+        List<String> blobFileNames = new ArrayList<>();
+        for ( Object pageSet : pageSets ) {
+            String blobFileName = ((MutableBlobMetadata)pageSet).getName();
+            if ( blobFileName.endsWith( endsWith )) {
+                blobFileNames.add(blobFileName);
+            }
+        }
+
+        return blobFileNames;
+    }
+
+
 }
+

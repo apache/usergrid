@@ -15,33 +15,28 @@
  * limitations under the License.
  */
 
-package org.apache.usergrid.management.cassandra;
+package org.apache.usergrid.management.importer;
 
-import org.apache.usergrid.management.importer.S3Import;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Map;
+import java.util.List;
 
 
 public class MockS3ImportImpl implements S3Import{
-    private final String filename;
+    private static final Logger logger = LoggerFactory.getLogger(MockS3ImportImpl.class);
 
-    public MockS3ImportImpl (String filename) {
-        this.filename = filename;
+    @Override
+    public List<String> getBucketFileNames(String bucketName, String endsWith, String accessId, String secretKey) {
+        return new ArrayList<>();
     }
 
     @Override
-    public ArrayList<File> copyFromS3(final Map<String,Object> exportInfo, String filename , int type) {
-
-//        File verfiedData = new File( this.filename );
-//        try {
-//            //FileUtils.copyFile(filename, verfiedData);
-//        }
-//        catch ( IOException e ) {
-//            e.printStackTrace();
-//        }
-        return new ArrayList<File>();
+    public File copyFileFromBucket(String blobFileName, String bucketName, String accessId, String secretKey) throws IOException {
+        return File.createTempFile("test","tmp");
     }
 
 }

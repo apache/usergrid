@@ -21,6 +21,7 @@ import org.apache.usergrid.persistence.TypedEntity;
 import org.apache.usergrid.persistence.annotations.EntityProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.UUID;
 
 
 /**
@@ -29,7 +30,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class FileImport extends TypedEntity {
 
-    //canceled , and expired states aren't used in current iteration.
+   //canceled , and expired states aren't used in current iteration.
     public static enum State {
         CREATED, FAILED, SCHEDULED, STARTED, FINISHED, CANCELED, EXPIRED
     }
@@ -44,16 +45,14 @@ public class FileImport extends TypedEntity {
     protected String errorMessage;
 
     /**
-     * file name
+     * Name of file to import
      */
     @EntityProperty
     protected String fileName;
 
-    /**
-     * File completion Status
-     */
     @EntityProperty
-    protected Boolean completed;
+    private UUID applicationId;
+
 
     /**
      * LastUpdatedUUID
@@ -61,7 +60,34 @@ public class FileImport extends TypedEntity {
     @EntityProperty
     protected String lastUpdatedUUID;
 
+    @EntityProperty
+    protected long importedEntityCount;
+
+    @EntityProperty
+    protected long failedEntityCount;
+
+
+    /**
+     * File completion Status
+     */
+    @EntityProperty
+    protected long importedConnectionCount;
+
+    @EntityProperty
+    protected long failedConnectionCount;
+
+
     public FileImport() {
+        setLastUpdatedUUID(" ");
+        setErrorMessage(" ");
+        setState(FileImport.State.CREATED);
+    }
+
+
+    public FileImport( String fileName, UUID applicationId ) {
+        this();
+        this.fileName = fileName;
+        this.setApplicationId(applicationId);
     }
 
     /**
@@ -78,22 +104,6 @@ public class FileImport extends TypedEntity {
      */
     public void setLastUpdatedUUID(final String lastUpdatedUUID) {
         this.lastUpdatedUUID = lastUpdatedUUID;
-    }
-
-    /**
-     * Get the completed status of the file i.e. if the file is completely parsed or not.
-     * @return completed status
-     */
-    public Boolean getCompleted() {
-        return completed;
-    }
-
-    /**
-     * Get the completed status of the file i.e. if the file is completely parsed or not.
-     * @param completed Boolean indicating whether parsing this file is complete or not
-     */
-    public void setCompleted(final Boolean completed) {
-        this.completed = completed;
     }
 
     /**
@@ -148,4 +158,54 @@ public class FileImport extends TypedEntity {
         this.fileName = fileName;
     }
 
+
+    /**
+     * Target application name
+     */
+    public UUID getApplicationId() {
+        return applicationId;
+    }
+
+    public void setApplicationId(UUID applicationId) {
+        this.applicationId = applicationId;
+    }
+
+    public long getImportedEntityCount() {
+        return importedEntityCount;
+    }
+
+
+    public void setImportedEntityCount( final long importedEntityCount ) {
+        this.importedEntityCount = importedEntityCount;
+    }
+
+
+    public long getFailedEntityCount() {
+        return failedEntityCount;
+    }
+
+
+    public void setFailedEntityCount( final long failedEntityCount ) {
+        this.failedEntityCount = failedEntityCount;
+    }
+
+
+    public long getImportedConnectionCount() {
+        return importedConnectionCount;
+    }
+
+
+    public void setImportedConnectionCount( final long importedConnectionCount ) {
+        this.importedConnectionCount = importedConnectionCount;
+    }
+
+
+    public long getFailedConnectionCount() {
+        return failedConnectionCount;
+    }
+
+
+    public void setFailedConnectionCount( final long failedConnectionCount ) {
+        this.failedConnectionCount = failedConnectionCount;
+    }
 }

@@ -79,6 +79,10 @@ public class Entity implements Serializable, Map<String,Object> {
                 this.putAll( entity );
             }
         }
+        //TODO: added bit for import tests and other tests that only put a single thing into properties
+        else if (response.getProperties() != null){
+            this.putAll( response.getProperties() );
+        }
     }
 
     //For the owner , should have different cases that looks at the different types it could be

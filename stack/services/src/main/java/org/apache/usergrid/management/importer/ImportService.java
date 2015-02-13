@@ -17,24 +17,85 @@
 
 package org.apache.usergrid.management.importer;
 
+
 import org.apache.usergrid.batch.JobExecution;
+import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.entities.FailedImportEntity;
 import org.apache.usergrid.persistence.entities.FileImport;
 import org.apache.usergrid.persistence.entities.Import;
 
-import java.io.File;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.UUID;
 
+
 /**
- * Performs all functions related to importing
+ * Performs all functions related to importing.
  */
 public interface ImportService {
 
     /**
      * Schedules the import to execute
      */
-    UUID schedule(Map<String, Object> json) throws Exception;
+    Import schedule( final UUID applicationId, Map<String, Object> json ) throws Exception;
+
+    /**
+     * Get the imports results for the application
+     * @param applicationId
+     * @param ql The query executed (nullable)
+     * @param cursor  The cursor passed (nullable)
+     * @return
+     */
+    Results getImports(final UUID applicationId, final String ql, final String cursor);
+
+    /**
+     * Get the import
+     * @param applicationId
+     * @param importId
+     * @return
+     */
+    Import getImport(final UUID applicationId, final UUID importId);
+
+    /**
+     * Get the results
+     *
+     * @param applicationId The applicationId
+     * @param importId The import id to get files from
+     * @param ql The query executed (nullable)
+     * @param cursor The cursor passed (nullable)
+     */
+    Results getFileImports(final UUID applicationId, final UUID importId, final String ql, final String cursor);
+
+    /**
+     * Get the results
+     *
+     * @param applicationId The applicationId
+     * @param importId The import id to get files from
+     *
+     * @return The FileImport
+     */
+    FileImport getFileImport(final UUID applicationId, final UUID importId, final UUID fileImportId);
+
+
+    /**
+     * Get the results of failed imports
+     *
+     *
+     * @param applicationId The applicationId
+     * @param importId The import id to get files from
+     * @param ql The query executed (nullable)
+     * @param cursor The cursor passed (nullable)
+     */
+    Results getFailedImportEntities(final UUID applicationId,  final UUID importId, final UUID fileImportId, final String ql,  final String cursor);
+
+    /**
+     * Get the failedimport entity from it's parentId
+     * @param applicationId
+     * @param importId
+     * @param fileImportId
+     * @param failedImportId
+     * @return
+     */
+    FailedImportEntity getFailedImportEntity(final UUID applicationId, final UUID importId, final UUID fileImportId, final UUID failedImportId);
 
     /**
      * Perform the import from the external resource
@@ -43,47 +104,30 @@ public interface ImportService {
 
     /**
      * Parses the input file and creates entities
-     *
-     * @param jobExecution
-     * @throws Exception
      */
-    void parseFileToEntities(JobExecution jobExecution) throws Exception;
+    void downloadAndImportFile(JobExecution jobExecution) throws Exception;
 
     /**
      * Get the state for the Job with UUID
      * @param uuid Job UUID
      * @return State of Job
-     * @throws Exception
      */
-    String getState(UUID uuid) throws Exception;
+    Import.State getState( UUID uuid ) throws Exception;
 
     /**
      * Returns error message for the job with UUID
      * @param uuid Job UUID
-     * @return error message
-     * @throws Exception
      */
     String getErrorMessage(UUID uuid) throws Exception;
 
     /**
-     * Returns all the temp files downloaded from s3
-     * @return the list of downloaded files from S3.
-     */
-    ArrayList<File> getEphemeralFile();
-
-    /**
-     * @param jobExecution
      * @return FileImportEntity
-     * @throws Exception
      */
     FileImport getFileImportEntity(final JobExecution jobExecution) throws Exception;
 
     /**
      * @param jobExecution
      * @return ImportEntity
-     * @throws Exception
      */
     Import getImportEntity(final JobExecution jobExecution) throws Exception;
-
-
 }

@@ -15,7 +15,7 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-update keyspace Locks with placement_strategy = 'NetworkTopologyStrategy' and strategy_options = {KEYSPACE_REGION : 3} and durable_writes = false;
+update keyspace Locks with placement_strategy = 'NetworkTopologyStrategy' and strategy_options = {KEYSPACE_REGION : REPLICATION_FACTOR} and durable_writes = false;
 
 use Locks;
 

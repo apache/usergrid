@@ -17,6 +17,7 @@
 package org.apache.usergrid.batch.job;
 
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.persistence.entities.JobData;
 import org.apache.usergrid.persistence.entities.JobStat;

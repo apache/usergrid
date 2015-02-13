@@ -17,15 +17,21 @@
 
 package org.apache.usergrid.management.importer;
 
-import java.util.ArrayList;
-import java.util.Map;
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 
 /**
- * Created by ApigeeCorporation on 7/8/14.
+ * Plug-able S3Import interface.
  */
-
-// interface for S3ImportImpl
 public interface S3Import {
-    ArrayList<File> copyFromS3(Map<String, Object> exportInfo, String filename, int type);
+
+    List<String> getBucketFileNames(
+        String bucketName, String endsWith, String accessId, String secretKey ) throws Exception;
+
+    public File copyFileFromBucket(
+        String blobFileName, String bucketName, String accessId, String secretKey ) throws Exception;
 }
