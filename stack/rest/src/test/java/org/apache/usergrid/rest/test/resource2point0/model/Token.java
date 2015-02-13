@@ -45,16 +45,25 @@ public class Token extends Entity{
      */
     public Token(String grantType, String username, String password){
         this.put("grant_type",grantType);
-        this.put("username", username);
-        this.put("password", password);
+        if("client_credentials".equals(grantType)){
+            this.put("client_id", username);
+            this.put("client_secret", password);
+        }else{
+            this.put("username", username);
+            this.put("password", password);
+        }
     }
 
     public String getAccessToken(){
         return (String) this.get("access_token");
     }
 
+    public String getGrantType(){
+        return (String) this.get("grant_type");
+    }
+
     public Long getExpirationDate(){
-        return (Long) this.get("expires_in");
+        return ((Integer)this.get("expires_in")).longValue();
     }
 
     public Long getPasswordChanged(){
