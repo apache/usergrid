@@ -30,14 +30,14 @@ import rx.Observable;
  * Note that this only walks each application applicationId graph, and emits edges from the applicationId and it's edges as the s
  * source node
  */
-public interface AllEntitiesInSystemObservable {
+public interface AllEntitiesInSystemObservable<T extends ApplicationScope> {
     /**
      * Return an observable that emits all entities in the system.
      *
      * @param bufferSize The amount of entityIds to buffer into each ApplicationEntityGroup.  Note that if we exceed the buffer size
      *                   you may be more than 1 ApplicationEntityGroup with the same application and different ids
      */
-    public Observable<ApplicationEntityGroup> getAllEntitiesInSystem(final int bufferSize);
+    public Observable<ApplicationEntityGroup<T>> getAllEntitiesInSystem(final int bufferSize);
 
 
 }

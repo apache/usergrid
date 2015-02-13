@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.usergrid.corepersistence.CpSetup;
+import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.core.migration.data.DataMigration;
 import org.apache.usergrid.persistence.core.rx.AllEntitiesInSystemObservable;
 import org.apache.usergrid.persistence.core.scope.ApplicationEntityGroup;
@@ -127,15 +128,15 @@ public class GraphShardVersionMigrationIT extends AbstractCoreIT {
         //read everything in previous version format and put it into our types.
 
         allEntitiesInSystemObservable.getAllEntitiesInSystem( 1000)
-                                     .doOnNext( new Action1<ApplicationEntityGroup>() {
+                                     .doOnNext( new Action1<ApplicationEntityGroup<CollectionScope>>() {
                                          @Override
                                          public void call(
-                                                 final ApplicationEntityGroup entity ) {
+                                                 final ApplicationEntityGroup<CollectionScope> entity ) {
 
                                              final GraphManager gm =
                                                      managerCache.getGraphManager( entity.applicationScope );
 
-                                             for ( final EntityIdScope idScope : entity.entityIds ) {
+                                             for ( final EntityIdScope<CollectionScope> idScope : entity.entityIds ) {
                                                  /**
                                                   * Get our edge types from the source
                                                   */
@@ -195,15 +196,15 @@ public class GraphShardVersionMigrationIT extends AbstractCoreIT {
 
         //now visit all nodes in the system and remove their types from the multi maps, it should be empty at the end
         allEntitiesInSystemObservable.getAllEntitiesInSystem( 1000)
-                                     .doOnNext( new Action1<ApplicationEntityGroup>() {
+                                     .doOnNext( new Action1<ApplicationEntityGroup<CollectionScope>>() {
                                                     @Override
                                                     public void call(
-                                                            final ApplicationEntityGroup entity ) {
+                                                            final ApplicationEntityGroup<CollectionScope> entity ) {
 
                                                         final GraphManager gm =
                                                                 managerCache.getGraphManager( entity.applicationScope );
 
-                                                        for ( final EntityIdScope idScope : entity.entityIds ) {
+                                                        for ( final EntityIdScope<CollectionScope> idScope : entity.entityIds ) {
                                                             /**
                                                              * Get our edge types from the source
                                                              */

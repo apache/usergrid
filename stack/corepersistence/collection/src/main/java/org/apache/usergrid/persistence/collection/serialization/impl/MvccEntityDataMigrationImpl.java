@@ -65,7 +65,7 @@ public class MvccEntityDataMigrationImpl implements DataMigration {
         final AtomicLong atomicLong = new AtomicLong();
         final MutationBatch totalBatch = keyspace.prepareMutationBatch();
 
-        final List<EntityIdScope> entityIds = applicationEntityGroup.entityIds;
+        final List<EntityIdScope<CollectionScope>> entityIds = applicationEntityGroup.entityIds;
 
         final UUID now = UUIDGenerator.newTimeUUID();
 
@@ -73,15 +73,15 @@ public class MvccEntityDataMigrationImpl implements DataMigration {
         // history
         return Observable.from(entityIds)
             .subscribeOn(Schedulers.io())
-            .map(new Func1<EntityIdScope, Id>() {
+            .map(new Func1<EntityIdScope<CollectionScope>, Id>() {
                 @Override
-                public Id call(EntityIdScope idScope) {
+                public Id call(EntityIdScope<CollectionScope> idScope) {
 
                     ApplicationScope applicationScope = applicationEntityGroup.applicationScope;
                     MigrationStrategy.MigrationRelationship<MvccEntitySerializationStrategy> migration = entityMigrationStrategy.getMigration();
 
-                    if (applicationScope instanceof CollectionScope) {
-                        CollectionScope currentScope = (CollectionScope) applicationScope;
+                    if (idScope.getCollectionScope() instanceof CollectionScope) {
+                        CollectionScope currentScope =  idScope.getCollectionScope();
                         //for each element in the history in the previous version,
                         // copy it to the CF in v2
                         Iterator<MvccEntity> allVersions = migration.from()
@@ -102,7 +102,7 @@ public class MvccEntityDataMigrationImpl implements DataMigration {
                         }
                         executeBatch(totalBatch, observer, atomicLong);
                     }
-                    
+
                     return idScope.getId();
                 }
             })

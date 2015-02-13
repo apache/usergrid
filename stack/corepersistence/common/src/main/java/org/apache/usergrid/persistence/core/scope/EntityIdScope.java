@@ -24,11 +24,11 @@ import org.apache.usergrid.persistence.model.entity.Id;
 /**
  * Tuple containing collectionscope and entityid
  */
-public class EntityIdScope{
+public class EntityIdScope<T extends ApplicationScope>{
     private final Id id;
-    private final ApplicationScope collectionScope;
+    private final T collectionScope;
 
-    public EntityIdScope(Id id, ApplicationScope collectionScope){
+    public EntityIdScope(Id id, T collectionScope){
         this.id = id;
         this.collectionScope = collectionScope;
     }
@@ -38,7 +38,7 @@ public class EntityIdScope{
         return id;
     }
 
-    public ApplicationScope getCollectionScope() {
+    public T getCollectionScope() {
         return collectionScope;
     }
 }

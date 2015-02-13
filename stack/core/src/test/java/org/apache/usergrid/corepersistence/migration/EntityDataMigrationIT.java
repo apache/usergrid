@@ -142,10 +142,10 @@ public class EntityDataMigrationIT extends AbstractCoreIT {
         //using a test system, and it's not a huge amount of data, otherwise we'll overflow.
 
         allEntitiesInSystemObservable.getAllEntitiesInSystem(  1000)
-            .doOnNext( new Action1<ApplicationEntityGroup>() {
+            .doOnNext( new Action1<ApplicationEntityGroup<CollectionScope>>() {
                 @Override
                 public void call(
-                        final ApplicationEntityGroup entity ) {
+                        final ApplicationEntityGroup<CollectionScope> entity ) {
 
                     //add all versions from history to our comparison
                     for ( final EntityIdScope id : entity.entityIds ) {
@@ -205,12 +205,12 @@ public class EntityDataMigrationIT extends AbstractCoreIT {
 
         //now visit all entities in the system again, load them from v2, and ensure they're the same
         allEntitiesInSystemObservable.getAllEntitiesInSystem( 1000)
-            .doOnNext( new Action1<ApplicationEntityGroup>() {
+            .doOnNext( new Action1<ApplicationEntityGroup<CollectionScope>>() {
                 @Override
                 public void call(
-                        final ApplicationEntityGroup entity ) {
+                        final ApplicationEntityGroup<CollectionScope> entity ) {
                     //add all versions from history to our comparison
-                    for ( final EntityIdScope id : entity.entityIds ) {
+                    for ( final EntityIdScope<CollectionScope> id : entity.entityIds ) {
 
                         CollectionScope scope = CpNamingUtils
                                 .getCollectionScopeNameFromEntityType(
@@ -241,16 +241,16 @@ public class EntityDataMigrationIT extends AbstractCoreIT {
         //now visit all entities in the system again, and load them from the EM,
         // ensure we see everything we did in the v1 traversal
         allEntitiesInSystemObservable.getAllEntitiesInSystem( 1000)
-            .doOnNext( new Action1<ApplicationEntityGroup>() {
+            .doOnNext( new Action1<ApplicationEntityGroup<CollectionScope>>() {
                 @Override
                 public void call(
-                        final ApplicationEntityGroup entity ) {
+                        final ApplicationEntityGroup<CollectionScope> entity ) {
 
                     final EntityManager em = emf.getEntityManager(
                             entity.applicationScope.getApplication().getUuid() );
 
                     //add all versions from history to our comparison
-                    for ( final EntityIdScope id : entity.entityIds ) {
+                    for ( final EntityIdScope<CollectionScope> id : entity.entityIds ) {
 
 
                         try {

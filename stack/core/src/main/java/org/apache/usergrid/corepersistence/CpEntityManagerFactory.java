@@ -601,7 +601,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     public long performEntityCount() {
         //TODO, this really needs to be a task that writes this data somewhere since this will get
         //progressively slower as the system expands
-        return getAllEntitiesObservable().getAllEntitiesInSystem(1000).longCount().toBlocking().last();
+        return (Long) getAllEntitiesObservable().getAllEntitiesInSystem(1000).longCount().toBlocking().last();
     }
 
 

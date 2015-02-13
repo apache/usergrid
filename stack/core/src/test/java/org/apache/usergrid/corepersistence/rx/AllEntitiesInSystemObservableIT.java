@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.usergrid.corepersistence.rx.impl.AllEntitiesInSystemObservableImpl;
+import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.core.rx.AllEntitiesInSystemObservable;
 import org.apache.usergrid.persistence.core.rx.ApplicationObservable;
 import org.apache.usergrid.persistence.core.scope.ApplicationEntityGroup;
@@ -103,9 +104,9 @@ public class AllEntitiesInSystemObservableIT extends AbstractCoreIT {
 
         final GraphManager gm = managerCache.getGraphManager( scope );
 
-        allEntitiesInSystemObservableImpl.getAllEntitiesInSystem( 1000).doOnNext( new Action1<ApplicationEntityGroup>() {
+        allEntitiesInSystemObservableImpl.getAllEntitiesInSystem( 1000).doOnNext( new Action1<ApplicationEntityGroup<CollectionScope>>() {
             @Override
-            public void call( final ApplicationEntityGroup entity ) {
+            public void call( final ApplicationEntityGroup<CollectionScope> entity ) {
 
                 assertNotNull(entity);
                 assertNotNull(entity.applicationScope);
@@ -116,7 +117,7 @@ public class AllEntitiesInSystemObservableIT extends AbstractCoreIT {
                     return;
                 }
 
-                for(EntityIdScope idScope: entity.entityIds) {
+                for(EntityIdScope<CollectionScope> idScope : entity.entityIds) {
 
                     //we should only emit each node once
                     if ( idScope.getId().getType().equals( type1 ) ) {

@@ -27,11 +27,11 @@ import java.util.List;
 /**
  * Get the entity data.  Immutable bean for fast access
  */
-public final class ApplicationEntityGroup {
+public final class ApplicationEntityGroup<T extends ApplicationScope> {
     public final ApplicationScope applicationScope;
-    public final List<EntityIdScope> entityIds;
+    public final List<EntityIdScope<T>> entityIds;
 
-    public ApplicationEntityGroup(final ApplicationScope applicationScope, final List<EntityIdScope> entityIds) {
+    public ApplicationEntityGroup(final ApplicationScope applicationScope, final List<EntityIdScope<T>> entityIds) {
         this.applicationScope = applicationScope;
         this.entityIds = entityIds;
     }

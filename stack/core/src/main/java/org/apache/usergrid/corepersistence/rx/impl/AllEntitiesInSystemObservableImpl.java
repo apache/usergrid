@@ -46,7 +46,7 @@ import rx.functions.Func1;
  * Note that this only walks each application applicationId graph, and emits edges from the applicationId and it's edges as the s
  * source node
  */
-public class AllEntitiesInSystemObservableImpl implements AllEntitiesInSystemObservable {
+public class AllEntitiesInSystemObservableImpl implements AllEntitiesInSystemObservable<CollectionScope> {
 
     private final ApplicationObservable applicationObservable;
     private final GraphManagerFactory graphManagerFactory;
@@ -61,13 +61,13 @@ public class AllEntitiesInSystemObservableImpl implements AllEntitiesInSystemObs
     }
 
 
-    public  Observable<ApplicationEntityGroup> getAllEntitiesInSystem(final int bufferSize) {
+    public  Observable<ApplicationEntityGroup<CollectionScope>> getAllEntitiesInSystem(final int bufferSize) {
         //traverse all nodes in the graph, load all source edges from them, then re-save the meta data
         return applicationObservable.getAllApplicationIds( )
 
-                                    .flatMap( new Func1<Id, Observable<ApplicationEntityGroup>>() {
+                                    .flatMap( new Func1<Id, Observable<ApplicationEntityGroup<CollectionScope>>>() {
                                         @Override
-                                        public Observable<ApplicationEntityGroup> call( final Id applicationId ) {
+                                        public Observable<ApplicationEntityGroup<CollectionScope>> call( final Id applicationId ) {
 
                                             //set up our application scope and graph manager
                                             final ApplicationScope applicationScope = new ApplicationScopeImpl(
@@ -94,22 +94,22 @@ public class AllEntitiesInSystemObservableImpl implements AllEntitiesInSystemObs
                                             return Observable
                                                 .merge(applicationNode, entityNodes)
                                                     .buffer(bufferSize)
-                                                    .map(new Func1<List<Id>, List<EntityIdScope>>() {
+                                                    .map(new Func1<List<Id>, List<EntityIdScope<CollectionScope>>>() {
                                                         @Override
-                                                        public List<EntityIdScope> call(List<Id> ids) {
-                                                            List<EntityIdScope> scopes = new ArrayList<>(ids.size());
+                                                        public List<EntityIdScope<CollectionScope>> call(List<Id> ids) {
+                                                            List<EntityIdScope<CollectionScope>> scopes = new ArrayList<>(ids.size());
                                                             for (Id id : ids) {
                                                                 CollectionScope scope = CpNamingUtils.getCollectionScopeNameFromEntityType(applicationId, id.getType());
-                                                                EntityIdScope idScope = new EntityIdScope(id, scope);
+                                                                EntityIdScope<CollectionScope> idScope = new EntityIdScope<>(id, scope);
                                                                 scopes.add(idScope);
                                                             }
                                                             return scopes;
                                                         }
                                                     })
-                                                    .map(new Func1<List<EntityIdScope>, ApplicationEntityGroup>() {
+                                                    .map(new Func1<List<EntityIdScope<CollectionScope>>, ApplicationEntityGroup<CollectionScope>>() {
                                                         @Override
-                                                        public ApplicationEntityGroup call(final List<EntityIdScope> scopes) {
-                                                            return new ApplicationEntityGroup(applicationScope, scopes);
+                                                        public ApplicationEntityGroup<CollectionScope> call(final List<EntityIdScope<CollectionScope>> scopes) {
+                                                            return new ApplicationEntityGroup<>(applicationScope, scopes);
                                                         }
                                                     });
                                         }

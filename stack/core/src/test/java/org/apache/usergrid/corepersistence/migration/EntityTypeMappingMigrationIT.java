@@ -23,6 +23,7 @@ package org.apache.usergrid.corepersistence.migration;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.core.rx.AllEntitiesInSystemObservable;
 import org.apache.usergrid.persistence.core.scope.ApplicationEntityGroup;
 import org.apache.usergrid.persistence.core.scope.EntityIdScope;
@@ -142,16 +143,16 @@ public class EntityTypeMappingMigrationIT extends AbstractCoreIT {
             });
 
         allEntitiesInSystemObservable.getAllEntitiesInSystem(1000)
-            .doOnNext(new Action1<ApplicationEntityGroup>() {
+            .doOnNext(new Action1<ApplicationEntityGroup<CollectionScope>>() {
                 @Override
                 public void call(
-                    final ApplicationEntityGroup entity) {
+                    final ApplicationEntityGroup<CollectionScope> entity) {
                     //ensure that each one has a type
 
                     final EntityManager em = emf.getEntityManager(
                         entity.applicationScope.getApplication().getUuid());
 
-                    for (final EntityIdScope idScope : entity.entityIds) {
+                    for (final EntityIdScope<CollectionScope> idScope : entity.entityIds) {
                         final Id id = idScope.getId();
                         try {
                             final Entity returned = em.get(id.getUuid());
