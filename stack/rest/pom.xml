@@ -32,9 +32,56 @@
     <!-- Override these properties in an active profile within your settings.xml -->
     <properties>
        <cargo.servlet.port>8081</cargo.servlet.port>
-        <usergrid.rest.threads>1C</usergrid.rest.threads>
+        <usergrid.rest.threads>8</usergrid.rest.threads>
+        <guice.version>4.0-beta5</guice.version>
     </properties>
 
+    <!-- profile that arquillian uses when it builds/starts tomcat -->
+    <profiles>
+        <profile>
+            <id>arquillian-tomcat</id>
+            <dependencies>
+
+
+                <dependency>
+                   <groupId>org.apache.tomcat.embed</groupId>
+                   <artifactId>tomcat-embed-core</artifactId>
+                   <version>7.0.59</version>
+                   <scope>provided</scope>
+                </dependency>
+                <dependency>
+                   <groupId>org.apache.tomcat.embed</groupId>
+                   <artifactId>tomcat-embed-jasper</artifactId>
+                   <version>7.0.59</version>
+                   <scope>provided</scope>
+                </dependency>
+                <dependency>
+                   <groupId>org.apache.tomcat.embed</groupId>
+                   <artifactId>tomcat-embed-logging-juli</artifactId>
+                   <version>7.0.59</version>
+                   <scope>provided</scope>
+                </dependency>
+                <dependency>
+                   <groupId>org.eclipse.jdt.core.compiler</groupId>
+                   <artifactId>ecj</artifactId>
+                   <version>3.7</version>
+                   <scope>test</scope>
+                </dependency>
+
+                <!-- Weld servlet for testing CDI injections -->
+           <dependency>
+               <groupId>org.jboss.weld.servlet</groupId>
+               <artifactId>weld-servlet</artifactId>
+               <version>2.2.9.Final</version>
+           </dependency>
+
+            </dependencies>
+
+
+        </profile>
+
+
+    </profiles>
 
     <build>
         <finalName>ROOT</finalName>
@@ -60,6 +107,7 @@
             </testResource>
         </testResources>
 
+
         <plugins>
 
             <plugin>
@@ -67,24 +115,21 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${surefire.plugin.version}</version>
                 <configuration>
-                    <skipTests>true</skipTests>
-                    <!--<systemPropertyVariables>-->
-                        <!--<storage-config>${basedir}/src/test/conf</storage-config>-->
-                        <!--<target.directory>${project.build.directory}</target.directory>-->
-                    <!--</systemPropertyVariables>-->
-                    <!--<parallel>methods</parallel>-->
-                    <!--<forkCount>${usergrid.it.forkCount}</forkCount>-->
-                    <!--<threadCount>${usergrid.it.threads}</threadCount>-->
-                    <!--<reuseForks>true</reuseForks>-->
-                    <!--<argLine>-Dtest.barrier.timestamp=${maven.build.timestamp} -Dtest.clean.storage=true-->
-                        <!---Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8-->
-                        <!---javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar-->
-                        <!--${ug.argline}-->
-                    <!--</argLine>-->
-                    <!--<includes>-->
-                        <!--<include>**/*IT.java</include>-->
-                        <!--<include>**/*Test.java</include>-->
-                    <!--</includes>-->
+                    <!--<skipTests>true</skipTests>-->
+                    <systemPropertyVariables>
+                        <storage-config>${basedir}/src/test/conf</storage-config>
+                        <target.directory>${project.build.directory}</target.directory>
+                    </systemPropertyVariables>
+                    <parallel>methods</parallel>
+                    <forkCount>1</forkCount>
+                    <threadCount>${usergrid.rest.threads}</threadCount>
+                    <reuseForks>true</reuseForks>
+                    <argLine>-Dtest.barrier.timestamp=${maven.build.timestamp} -Dtest.clean.storage=true -Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}
+                    </argLine>
+                    <includes>
+                        <include>**/*IT.java</include>
+                        <include>**/*Test.java</include>
+                    </includes>
 
                 </configuration>
 
@@ -97,46 +142,6 @@
                 </dependencies>
             </plugin>
 
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-failsafe-plugin</artifactId>
-                <version>${surefire.plugin.version}</version>
-                <configuration>
-                    <includes>
-                        <include>**/*IT.java</include>
-                        <include>**/*Test.java</include>
-                    </includes>
-
-                    <systemPropertyVariables>
-                        <storage-config>${basedir}/src/test/conf</storage-config>
-                        <target.directory>${project.build.directory}</target.directory>
-                    </systemPropertyVariables>
-                    <parallel>methods</parallel>
-                    <forkCount>1</forkCount>
-                    <threadCount>${usergrid.rest.threads}</threadCount>
-                    <reuseForks>true</reuseForks>
-                    <argLine>-Dtest.barrier.timestamp=${maven.build.timestamp} -Dtest.clean.storage=true -Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}</argLine>
-                </configuration>
-                <dependencies>
-                   <dependency>
-                       <groupId>org.apache.maven.surefire</groupId>
-                       <artifactId>surefire-junit47</artifactId>
-                       <version>${surefire.plugin.version}</version>
-                   </dependency>
-               </dependencies>
-
-                <!-- run the integration tests then verify the results -->
-                <executions>
-                    <execution>
-                        <id>failsafe-integration-tests</id>
-                        <phase>integration-test</phase>
-                        <goals>
-                            <goal>integration-test</goal>
-                            <goal>verify</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -204,77 +209,6 @@
                     </execution>
                 </executions>
             </plugin>
-
-            <plugin>
-                <groupId>org.codehaus.cargo</groupId>
-                <artifactId>cargo-maven2-plugin</artifactId>
-                <version>1.4.12</version>
-                <executions>
-                   <execution>
-                     <id>start-container</id>
-                     <phase>pre-integration-test</phase>
-                     <goals>
-                       <goal>start</goal>
-                     </goals>
-                   </execution>
-                   <execution>
-                     <id>stop-container</id>
-                     <phase>post-integration-test</phase>
-                     <goals>
-                       <goal>stop</goal>
-                     </goals>
-                   </execution>
-                 </executions>
-
-                <configuration>
-                    <container>
-                        <containerId>tomcat7x</containerId>
-                        <!-- Run the latest version of to tomcat 7 -->
-                        <zipUrlInstaller>
-                            <url>http://mirror.tcpdiag.net/apache/tomcat/tomcat-7/v7.0.57/bin/apache-tomcat-7.0.57.zip</url>
-                        </zipUrlInstaller>
-
-                    </container>
-                    <configuration>
-                        <configfiles>
-                              <configfile>
-                                <file>${project.basedir}/target/test-classes/usergrid-deployment.properties</file>
-                                <todir>lib</todir>
-                              </configfile>
-                            </configfiles>
-                        <!--If you're getting port conflicts, override the ports here-->
-                        <properties>
-                            <cargo.jvmargs>-Xmx1G -Xms500m -server -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8000</cargo.jvmargs>
-                            <!--<cargo.rmi.port>10200</cargo.rmi.port>-->
-                            <!--<cargo.servlet.port>${cargo.servlet.port}</cargo.servlet.port>-->
-                            <!--<cargo.tomcat.ajp.port>10201</cargo.tomcat.ajp.port>-->
-                        </properties>
-
-
-                    </configuration>
-
-                    <deployables>
-                        <!-- This deployable specifies the webapp you want to deploy -->
-                        <deployable>
-                            <groupId>${project.groupId}</groupId>
-                            <artifactId>${project.artifactId}</artifactId>
-                            <type>war</type>
-                        </deployable>
-
-                    </deployables>
-
-
-
-
-                    <!--<configFiles>-->
-                          <!--<configfile>-->
-                            <!--<file>${project.basedir}/src/main/config/jetty-env.xml</file>-->
-                            <!--<todir>webapps/datasource-war/WEB-INF</todir>-->
-                          <!--</configfile>-->
-                </configuration>
-            </plugin>
-
-
         </plugins>
     </build>
 
@@ -434,35 +368,91 @@
             <scope>test</scope>
         </dependency>
 
-<!--        <dependency>
-            <groupId>org.apache.tomcat.embed</groupId>
-            <artifactId>tomcat-embed-core</artifactId>
+        <!-- arquillian deps -->
+
+        <dependency>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-xc</artifactId>
+            <version>${jackson-version}</version>
+            <scope>test</scope>
+        </dependency>
+
+
+
+        <!--<dependency>-->
+                       <!--<groupId>org.jboss.arquillian.container</groupId>-->
+                       <!--<artifactId>arquillian-tomcat-embedded-7</artifactId>-->
+                       <!--<version>1.1.7.Final</version>-->
+                       <!--<scope>test</scope>-->
+                    <!--</dependency>-->
+
+        <dependency>
+            <groupId>org.jboss.arquillian</groupId>
+            <artifactId>arquillian-bom</artifactId>
+            <version>1.1.7.Final</version>
+            <scope>import</scope>
+            <type>pom</type>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jboss.arquillian.junit</groupId>
+            <artifactId>arquillian-junit-container</artifactId>
+            <version>1.1.7.Final</version>
+            <scope>test</scope>
+        </dependency>
+
+
+
+        <!-- Some arquillian dependency runs and old version of guice. We're overridding it here so that we include
+          the right value into the test scope -->
+        <dependency>
+          <groupId>com.google.inject</groupId>
+          <artifactId>guice</artifactId>
+          <version>${guice.version}</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.tomcat.embed</groupId>
-            <artifactId>tomcat-embed-logging-juli</artifactId>
+          <groupId>com.google.inject.extensions</groupId>
+          <artifactId>guice-multibindings</artifactId>
+          <version>${guice.version}</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.tomcat.embed</groupId>
-            <artifactId>tomcat-embed-jasper</artifactId>
+          <groupId>com.google.inject.extensions</groupId>
+          <artifactId>guice-assistedinject</artifactId>
+          <version>${guice.version}</version>
             <scope>test</scope>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.tomcat</groupId>
-            <artifactId>tomcat-jasper-el</artifactId>
-            <scope>test</scope>
-        </dependency>
+
+        <!-- documentation here
+        https://github.com/shrinkwrap/resolver
+        -->
 
         <dependency>
-            <groupId>org.apache.tomcat</groupId>
-            <artifactId>tomcat-jsp-api</artifactId>
+              <groupId>org.jboss.shrinkwrap.resolver</groupId>
+              <artifactId>shrinkwrap-resolver-depchain</artifactId>
+              <version>2.1.1</version>
+              <scope>test</scope>
+              <type>pom</type>
+            </dependency>
+
+        <!--<dependency>-->
+            <!--<groupId>org.jboss.shrinkwrap.resolver</groupId>-->
+            <!--<artifactId>shrinkwrap-resolver-impl-maven</artifactId>-->
+            <!--<scope>test</scope>-->
+            <!--<version>2.1.1</version>-->
+        <!--</dependency>-->
+
+
+        <dependency>
+            <groupId>org.jboss.arquillian.container</groupId>
+            <artifactId>arquillian-tomcat-embedded-7</artifactId>
+            <version>1.0.0.CR7</version>
             <scope>test</scope>
-        </dependency>-->
+        </dependency>
 
         <!--  use the external test client.  Just depend on the maven jetty plugin to launch jetty -->
         <dependency>
