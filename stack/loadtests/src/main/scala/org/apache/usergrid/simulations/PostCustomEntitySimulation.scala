@@ -48,7 +48,7 @@ class PostCustomEntitySimulation extends Simulation {
   val collectionType:String = "restaurants"
   val rampTime:Int = Settings.rampTime
   val throttle:Int = Settings.throttle
-  val feeder = FeederGenerator.generateCustomEntityFeeder(numEntities).queue
+  val feeder = FeederGenerator.generateCustomEntityInfinite(0)
   val httpConf = Settings.httpConf
 
   val scnToRun = scenario("POST custom entities")
