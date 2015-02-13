@@ -60,25 +60,19 @@ public class EdgesFromSourceObservableIT extends AbstractCoreIT {
     @Test
     public void testEntities() throws Exception {
 
-        EdgesObservable edgesToTargetObservable = SpringResource.getInstance().getBean(EdgesObservable.class);
+        EdgesObservable edgesToTargetObservable = SpringResource.getInstance().getBean(Injector.class).getInstance(EdgesObservable.class);
         final EntityManager em = app.getEntityManager();
         final Application createdApplication = em.getApplication();
-
-
 
         final String type1 = "targetthings";
         final String type2 = "sourcethings";
         final int size = 10;
-
-
 
         final Set<Id> sourceIdentities = EntityWriteHelper.createTypes( em, type2, size );
 
 
         final Entity entity = em.create( type1, new HashMap<String, Object>(){{put("property", "value");}} );
                   final Id target = new SimpleId( entity.getUuid(), entity.getType() );
-
-
 
 
         for ( Id source : sourceIdentities ) {

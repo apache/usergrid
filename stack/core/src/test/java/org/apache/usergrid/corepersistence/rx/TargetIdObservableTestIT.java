@@ -54,7 +54,7 @@ public class TargetIdObservableTestIT extends AbstractCoreIT {
     @Test
     public void testEntities() throws Exception {
 
-        TargetIdObservable targetIdObservable = SpringResource.getInstance().getBean(TargetIdObservable.class);
+        TargetIdObservable targetIdObservable = SpringResource.getInstance().getBean(Injector.class).getInstance(TargetIdObservable.class);
 
         final EntityManager em = app.getEntityManager();
 

@@ -97,7 +97,9 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
         int currentVersion = migrationInfoSerialization.getCurrentVersion();
 
         if(currentVersion <= 0){
-            currentVersion = resetToHighestVersion();
+            resetToHighestVersion();
+            //you have no work to do, just use the latest
+            return;
         }
 
         LOG.info( "Saved schema version is {}, max migration version is {}", currentVersion,
@@ -110,6 +112,7 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
         final CassandraProgressObserver observer = new CassandraProgressObserver();
 
         Observable<DataMigration> migrations = Observable.from(migrationsToRun.values()).subscribeOn(Schedulers.io());
+        final Observable appIdObservable = applicationObservable.getAllApplicationIds();
 
         Observable entityMigrations = migrations
             .filter(new Func1<DataMigration, Boolean>() {
@@ -121,7 +124,7 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
                 @Override
                 public Observable<ApplicationEntityGroup> call(final DataMigration dataMigration) {
                     return allEntitiesInSystemObservable
-                        .getAllEntitiesInSystem(1000)
+                        .getAllEntitiesInSystem(appIdObservable, 1000)
                         .doOnNext(new Action1<ApplicationEntityGroup>() {
                             @Override
                             public void call(ApplicationEntityGroup entityGroup) {
@@ -141,22 +144,24 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
             }).flatMap(new Func1<DataMigration, Observable<?>>() {
                 @Override
                 public Observable call(final DataMigration dataMigration) {
-                    return applicationObservable.getAllApplicationIds()
-                        .doOnNext(new Action1<Id>() {
-                            @Override
-                            public void call(Id id) {
-                                ApplicationScope scope = new ApplicationScopeImpl(id);
-                                runMigration(dataMigration, observer, new ApplicationEntityGroup(scope, null));
-                            }
-                        });
+                    return appIdObservable.doOnNext(new Action1<Id>() {
+                        @Override
+                        public void call(Id id) {
+                            ApplicationScope scope = new ApplicationScopeImpl(id);
+                            runMigration(dataMigration, observer, new ApplicationEntityGroup(scope, null));
+                        }
+                    });
 
                 }
             });
 
         try {
-            Observable.merge(entityMigrations, otherMigrations).toBlocking().lastOrDefault(null);
+            Observable
+                .merge(entityMigrations, otherMigrations)
+                .subscribeOn(Schedulers.io())
+                .toBlocking().lastOrDefault(null);
             migrationInfoSerialization.setStatusCode( StatusCode.COMPLETE.status );
-        }catch (Exception e){
+        } catch (Exception e){
             LOG.error("Migration Failed");
         }
 

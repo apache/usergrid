@@ -60,59 +60,61 @@ public class AllEntitiesInSystemObservableImpl implements AllEntitiesInSystemObs
         this.targetIdObservable = targetIdObservable;
     }
 
-
     public  Observable<ApplicationEntityGroup<CollectionScope>> getAllEntitiesInSystem(final int bufferSize) {
+        return getAllEntitiesInSystem(applicationObservable.getAllApplicationIds( ),bufferSize);
+
+    }
+
+    public  Observable<ApplicationEntityGroup<CollectionScope>> getAllEntitiesInSystem(final Observable<Id> appIdsObservable, final int bufferSize) {
         //traverse all nodes in the graph, load all source edges from them, then re-save the meta data
-        return applicationObservable.getAllApplicationIds( )
+        return appIdsObservable.flatMap(new Func1<Id, Observable<ApplicationEntityGroup<CollectionScope>>>() {
+            @Override
+            public Observable<ApplicationEntityGroup<CollectionScope>> call(final Id applicationId) {
 
-                                    .flatMap( new Func1<Id, Observable<ApplicationEntityGroup<CollectionScope>>>() {
-                                        @Override
-                                        public Observable<ApplicationEntityGroup<CollectionScope>> call( final Id applicationId ) {
+                //set up our application scope and graph manager
+                final ApplicationScope applicationScope = new ApplicationScopeImpl(
+                    applicationId);
 
-                                            //set up our application scope and graph manager
-                                            final ApplicationScope applicationScope = new ApplicationScopeImpl(
-                                                    applicationId );
+                final GraphManager gm = graphManagerFactory.createEdgeManager(applicationScope);
 
-                                            final GraphManager gm = graphManagerFactory.createEdgeManager(applicationScope);
-
-                                            //load all nodes that are targets of our application node.  I.E.
-                                            // entities that have been saved
-                                            final Observable<Id> entityNodes =
-                                                    targetIdObservable.getTargetNodes(gm, applicationId);
+                //load all nodes that are targets of our application node.  I.E.
+                // entities that have been saved
+                final Observable<Id> entityNodes =
+                    targetIdObservable.getTargetNodes(gm, applicationId);
 
 
-                                            //get scope here
+                //get scope here
 
 
-                                            //emit Scope + ID
+                //emit Scope + ID
 
-                                            //create our application node to emit since it's an entity as well
-                                            final Observable<Id> applicationNode = Observable.just( applicationId );
+                //create our application node to emit since it's an entity as well
+                final Observable<Id> applicationNode = Observable.just(applicationId);
 
-                                            //merge both the specified application node and the entity node
-                                            // so they all get used
-                                            return Observable
-                                                .merge(applicationNode, entityNodes)
-                                                    .buffer(bufferSize)
-                                                    .map(new Func1<List<Id>, List<EntityIdScope<CollectionScope>>>() {
-                                                        @Override
-                                                        public List<EntityIdScope<CollectionScope>> call(List<Id> ids) {
-                                                            List<EntityIdScope<CollectionScope>> scopes = new ArrayList<>(ids.size());
-                                                            for (Id id : ids) {
-                                                                CollectionScope scope = CpNamingUtils.getCollectionScopeNameFromEntityType(applicationId, id.getType());
-                                                                EntityIdScope<CollectionScope> idScope = new EntityIdScope<>(id, scope);
-                                                                scopes.add(idScope);
-                                                            }
-                                                            return scopes;
-                                                        }
-                                                    })
-                                                    .map(new Func1<List<EntityIdScope<CollectionScope>>, ApplicationEntityGroup<CollectionScope>>() {
-                                                        @Override
-                                                        public ApplicationEntityGroup<CollectionScope> call(final List<EntityIdScope<CollectionScope>> scopes) {
-                                                            return new ApplicationEntityGroup<>(applicationScope, scopes);
-                                                        }
-                                                    });
-                                        }
+                //merge both the specified application node and the entity node
+                // so they all get used
+                return Observable
+                    .merge(applicationNode, entityNodes)
+                    .buffer(bufferSize)
+                    .map(new Func1<List<Id>, List<EntityIdScope<CollectionScope>>>() {
+                        @Override
+                        public List<EntityIdScope<CollectionScope>> call(List<Id> ids) {
+                            List<EntityIdScope<CollectionScope>> scopes = new ArrayList<>(ids.size());
+                            for (Id id : ids) {
+                                CollectionScope scope = CpNamingUtils.getCollectionScopeNameFromEntityType(applicationId, id.getType());
+                                EntityIdScope<CollectionScope> idScope = new EntityIdScope<>(id, scope);
+                                scopes.add(idScope);
+                            }
+                            return scopes;
+                        }
+                    })
+                    .map(new Func1<List<EntityIdScope<CollectionScope>>, ApplicationEntityGroup<CollectionScope>>() {
+                        @Override
+                        public ApplicationEntityGroup<CollectionScope> call(final List<EntityIdScope<CollectionScope>> scopes) {
+                            return new ApplicationEntityGroup<>(applicationScope, scopes);
+                        }
+                    });
+            }
                                     } );
     }
 

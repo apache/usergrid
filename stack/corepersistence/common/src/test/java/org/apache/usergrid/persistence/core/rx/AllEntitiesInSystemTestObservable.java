@@ -31,4 +31,9 @@ public class AllEntitiesInSystemTestObservable implements AllEntitiesInSystemObs
     public Observable<ApplicationEntityGroup> getAllEntitiesInSystem(int bufferSize) {
         return Observable.empty();
     }
+
+    @Override
+    public Observable<ApplicationEntityGroup> getAllEntitiesInSystem(Observable appIdObservable, int bufferSize) {
+        return this.getAllEntitiesInSystem(bufferSize);
+    }
 }

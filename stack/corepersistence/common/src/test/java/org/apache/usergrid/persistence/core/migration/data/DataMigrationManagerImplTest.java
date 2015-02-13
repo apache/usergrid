@@ -63,6 +63,11 @@ public class DataMigrationManagerImplTest {
                 }
             });
         }
+
+        @Override
+        public Observable<ApplicationEntityGroup> getAllEntitiesInSystem(Observable appIdObservable, int bufferSize) {
+            return this.getAllEntitiesInSystem(bufferSize) ;
+        }
     };
 
     ApplicationObservable allApplicationsObservable = new ApplicationObservable() {

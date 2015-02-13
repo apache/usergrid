@@ -52,7 +52,7 @@ public class ApplicationObservableTestIT extends AbstractCoreIT {
 
         final Application createdApplication = app.getEntityManager().getApplication();
 
-        ApplicationObservable applicationObservable =SpringResource.getInstance().getBean(ApplicationObservable.class);
+        ApplicationObservable applicationObservable =SpringResource.getInstance().getBean(Injector.class).getInstance(ApplicationObservable.class);
 
         //now our get all apps we expect.  There may be more, but we don't care about those.
         final Set<UUID> applicationIds = new HashSet<UUID>() {{
