@@ -24,6 +24,8 @@ import org.apache.usergrid.persistence.core.guice.MaxMigrationModule;
 import org.apache.usergrid.persistence.core.guice.TestModule;
 import org.apache.usergrid.persistence.core.rx.AllEntitiesInSystemObservable;
 import org.apache.usergrid.persistence.core.rx.AllEntitiesInSystemTestObservable;
+import org.apache.usergrid.persistence.core.rx.ApplicationObservable;
+import org.apache.usergrid.persistence.core.rx.ApplicationsTestObservable;
 
 
 /**
@@ -36,6 +38,7 @@ public class TestGraphModule extends TestModule {
         /**
          * Runtime modules
          */
+        bind(ApplicationObservable.class).to(ApplicationsTestObservable.class);
 
         bind(AllEntitiesInSystemObservable.class).to(AllEntitiesInSystemTestObservable.class);
 

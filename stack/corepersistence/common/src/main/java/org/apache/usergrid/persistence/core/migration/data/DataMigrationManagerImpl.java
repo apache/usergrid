@@ -96,7 +96,7 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
 
         int currentVersion = migrationInfoSerialization.getCurrentVersion();
 
-        if(currentVersion < 0){
+        if(currentVersion <= 0){
             currentVersion = resetToHighestVersion();
         }
 

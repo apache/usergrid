@@ -75,7 +75,7 @@ public class DataMigrationManagerImplTest {
     @Test
     public void noMigrations() throws MigrationException {
         final MigrationInfoSerialization serialization = mock( MigrationInfoSerialization.class );
-        when(serialization.getCurrentVersion()).thenReturn(0);
+        when(serialization.getCurrentVersion()).thenReturn(1);
 
         Set<DataMigration> emptyMigration = new HashSet<>();
 
@@ -92,15 +92,15 @@ public class DataMigrationManagerImplTest {
     @Test
     public void multipleMigrations() throws Throwable {
         final MigrationInfoSerialization serialization = mock( MigrationInfoSerialization.class );
-        when(serialization.getCurrentVersion()).thenReturn(0);
+        when(serialization.getCurrentVersion()).thenReturn(1);
 
 
         final DataMigration v1 = mock( DataMigration.class );
-        when( v1.getVersion() ).thenReturn( 1 );
+        when( v1.getVersion() ).thenReturn( 2 );
         when( v1.migrate(any(ApplicationEntityGroup.class), any(DataMigration.ProgressObserver.class))).thenReturn(Observable.empty());
 
         final DataMigration v2 = mock( DataMigration.class );
-        when( v2.getVersion() ).thenReturn( 2 );
+        when( v2.getVersion() ).thenReturn( 3 );
         when(v2.migrate(any(ApplicationEntityGroup.class), any(DataMigration.ProgressObserver.class))).thenReturn(Observable.empty());
 
 
@@ -126,21 +126,21 @@ public class DataMigrationManagerImplTest {
         verify( serialization ).setStatusCode( DataMigrationManagerImpl.StatusCode.COMPLETE.status );
 
         //verify we set version 1
-        verify( serialization ).setVersion( 1 );
+        verify( serialization ).setVersion( 2 );
 
         //verify we set version 2
-        verify( serialization ).setVersion( 2 );
+        verify( serialization ).setVersion( 3 );
     }
 
 
     @Test
     public void shortCircuitVersionFails() throws Throwable {
         final MigrationInfoSerialization serialization = mock( MigrationInfoSerialization.class );
-        when(serialization.getCurrentVersion()).thenReturn(0);
+        when(serialization.getCurrentVersion()).thenReturn(1);
 
 
         final DataMigration v1 = mock( DataMigration.class,"mock1" );
-        when( v1.getVersion() ).thenReturn( 1 );
+        when( v1.getVersion() ).thenReturn( 2 );
         when( v1.getType() ).thenReturn(DataMigration.MigrationType.Entities);
         when( v1.migrate(any(ApplicationEntityGroup.class), any(DataMigration.ProgressObserver.class))).thenReturn(Observable.empty());
 
@@ -150,7 +150,7 @@ public class DataMigrationManagerImplTest {
 
         final DataMigration v2 = mock( DataMigration.class,"mock2" );
         when( v2.getType() ).thenReturn(DataMigration.MigrationType.Entities);
-        when( v2.getVersion() ).thenReturn( 2 );
+        when( v2.getVersion() ).thenReturn( 3 );
 
         Set<DataMigration> migrations = new HashSet<>();
         migrations.add( v1 );
@@ -187,10 +187,10 @@ public class DataMigrationManagerImplTest {
     @Test
     public void failStopsProgress() throws Throwable {
         final MigrationInfoSerialization serialization = mock(MigrationInfoSerialization.class);
-        when(serialization.getCurrentVersion()).thenReturn(0);
+        when(serialization.getCurrentVersion()).thenReturn(1);
 
         final DataMigration v1 = mock( DataMigration.class );
-        when( v1.getVersion() ).thenReturn( 1 );
+        when( v1.getVersion() ).thenReturn( 2 );
         when( v1.getType() ).thenReturn(DataMigration.MigrationType.Entities);
         when( v1.migrate(any(ApplicationEntityGroup.class), any(DataMigration.ProgressObserver.class))).thenReturn(Observable.empty());
 
@@ -214,7 +214,7 @@ public class DataMigrationManagerImplTest {
         );
 
         final DataMigration v2 = mock( DataMigration.class );
-        when( v2.getVersion() ).thenReturn( 2 );
+        when( v2.getVersion() ).thenReturn( 3 );
         when( v2.getType() ).thenReturn(DataMigration.MigrationType.Entities);
         when(v2.migrate(any(ApplicationEntityGroup.class), any(DataMigration.ProgressObserver.class))).thenReturn(Observable.empty());
 
@@ -237,7 +237,7 @@ public class DataMigrationManagerImplTest {
         verify( serialization, times( 1 ) ).setStatusCode( DataMigrationManagerImpl.StatusCode.RUNNING.status );
 
         //set the status message
-        verify( serialization ).setStatusMessage( "Migration version 1.  Starting migration" );
+        verify( serialization ).setStatusMessage( "Migration version 2.  Starting migration" );
 
         verify( serialization ).setStatusMessage( "Migration version 100.  Failed to migrate, reason is appended.  Error 'test reason'" );
 

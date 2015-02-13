@@ -25,6 +25,8 @@ import org.apache.usergrid.persistence.core.guice.MaxMigrationModule;
 import org.apache.usergrid.persistence.core.guice.TestModule;
 import org.apache.usergrid.persistence.core.rx.AllEntitiesInSystemObservable;
 import org.apache.usergrid.persistence.core.rx.AllEntitiesInSystemTestObservable;
+import org.apache.usergrid.persistence.core.rx.ApplicationObservable;
+import org.apache.usergrid.persistence.core.rx.ApplicationsTestObservable;
 
 
 public class TestCollectionModule extends TestModule {
@@ -35,6 +37,7 @@ public class TestCollectionModule extends TestModule {
          * Runtime modules
          */
         bind(AllEntitiesInSystemObservable.class).to(AllEntitiesInSystemTestObservable.class);
+        bind(ApplicationObservable.class).to(ApplicationsTestObservable.class);
 
         install( new CommonModule() );
         install( new CollectionModule() );
