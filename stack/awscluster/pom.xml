@@ -30,7 +30,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <aws.s3.release-bucket>ug-cloudformation-todd</aws.s3.release-bucket>
+    <aws.s3.release-bucket>ug-cloudformation</aws.s3.release-bucket>
     <!--  Pulls the file path from maven when using the dependency plugin.  This doesn't work b/c it doesn't name the file properly to ROOT.war.  Solve that to use the latest from the repo-->
     <!--<stack.war>${org.apache.usergrid:usergrid-rest:war}</stack.war>-->
     <stack.war>../rest/target/ROOT.war</stack.war>
