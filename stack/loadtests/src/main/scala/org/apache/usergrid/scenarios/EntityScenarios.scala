@@ -55,8 +55,8 @@ object EntityScenarios {
   val postEntity = exec(
     http("Post custom entity")
       //.post(Settings.baseUrl+"/${collectionType}")
-      .post(Settings.baseAppUrl+"/restaurants")
-      //.body(StringBody(EntityDataGenerator.generateCustomEntity("/${entityName}").toString()))
+      .post(Settings.baseAppUrl+"/freds")
+      //.body(StringBody(EntityDataGenerator.generateCustomEntity().toString()))
       .body(StringBody("{\"property\":\"fred\"}"))
       .headers(Headers.jsonAnonymous)
       .check(status.is(200))
