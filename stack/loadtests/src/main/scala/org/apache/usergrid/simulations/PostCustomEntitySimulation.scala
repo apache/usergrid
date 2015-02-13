@@ -37,8 +37,8 @@ class PostCustomEntitySimulation extends Simulation {
 
   if(!Settings.skipSetup) {
     println("Begin setup")
-    Setup.setupOrg()
-    Setup.setupApplication()
+    //Setup.setupOrg()
+    //Setup.setupApplication()
     println("End Setup")
   }else{
     println("Skipping Setup")
@@ -53,7 +53,6 @@ class PostCustomEntitySimulation extends Simulation {
 
   val scnToRun = scenario("POST custom entities")
     .feed(feeder)
-    .exec(TokenScenarios.getManagementToken)
     .exec(EntityScenarios.postEntity)
 
   setUp(scnToRun.inject(atOnceUsers(numEntities)).throttle(reachRps(throttle) in (rampTime.seconds)).protocols(httpConf)).maxDuration(Settings.duration)

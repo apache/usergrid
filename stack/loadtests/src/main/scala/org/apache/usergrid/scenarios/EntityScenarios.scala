@@ -31,14 +31,14 @@ object EntityScenarios {
 
   val getEntity = exec(
     http("GET custom entityr")
-      .get(Settings.baseUrl+"/${collectionType}/${entityName}")
+      .get(Settings.baseAppUrl+"/${collectionType}/${entityName}")
       .headers(Headers.jsonAuthorized)
       .check(status.is(200))
   )
 
   val putEntity = exec(
     http("Put custom entity")
-      .put(Settings.baseUrl+"/${collectionType}/${entityName}")
+      .put(Settings.baseAppUrl+"/${collectionType}/${entityName}")
       .body(StringBody("{\"address\":\""+Utils.generateRandomInt(1, Settings.numEntities)+"\",\"phone\":\""+Utils.generateRandomInt(1, Settings.numEntities)+"\"}}"))
       .headers(Headers.jsonAuthorized)
       .check(status.is(200))
@@ -47,7 +47,7 @@ object EntityScenarios {
 
   val deleteEntity = exec(
     http("DELETE custom entityr")
-      .get(Settings.baseUrl+"/${collectionType}/${entityName}")
+      .get(Settings.baseAppUrl+"/${collectionType}/${entityName}")
       .headers(Headers.jsonAuthorized)
       .check(status.is(200))
   )
@@ -55,10 +55,10 @@ object EntityScenarios {
   val postEntity = exec(
     http("Post custom entity")
       //.post(Settings.baseUrl+"/${collectionType}")
-      .post(Settings.baseUrl+"/restaurants")
+      .post(Settings.baseAppUrl+"/restaurants")
       //.body(StringBody(EntityDataGenerator.generateCustomEntity("/${entityName}").toString()))
       .body(StringBody("{\"property\":\"fred\"}"))
-      .headers(Headers.jsonAuthorized)
+      .headers(Headers.jsonAnonymous)
       .check(status.is(200))
   )
 
