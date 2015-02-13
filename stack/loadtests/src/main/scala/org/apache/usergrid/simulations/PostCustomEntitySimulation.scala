@@ -55,6 +55,9 @@ class PostCustomEntitySimulation extends Simulation {
     .feed(feeder)
     .exec(EntityScenarios.postEntity)
 
-  setUp(scnToRun.inject(atOnceUsers(numEntities)).throttle(reachRps(throttle) in (rampTime.seconds)).protocols(httpConf)).maxDuration(Settings.duration)
+  setUp(scnToRun.inject(
+    rampUsers(Settings.maxPossibleUsers) over Settings.rampTime,
+    constantUsersPerSec(Settings.maxPossibleUsers) during Settings.duration
+  ).protocols(httpConf)).maxDuration(Settings.duration)
 
 }
