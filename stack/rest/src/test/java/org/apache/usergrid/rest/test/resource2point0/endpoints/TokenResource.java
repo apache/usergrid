@@ -39,12 +39,23 @@ public class TokenResource extends NamedResource {
     /**
      * Obtains an access token and sets the token for the context to use in later calls
      *
+     * @return
+     */
+    public Token post() {
+        Token token = getResource().accept(MediaType.APPLICATION_JSON).post(Token.class);
+        this.context.setToken(token);
+        return token;
+    }
+
+    /**
+     * Obtains an access token and sets the token for the context to use in later calls
+     *
      * @param token
      * @return
      */
     public Token post(Token token) {
         token = getResource().type(MediaType.APPLICATION_JSON_TYPE)
-                .accept(MediaType.APPLICATION_JSON).post(Token.class, token);
+            .accept(MediaType.APPLICATION_JSON).post(Token.class, token);
         this.context.setToken(token);
         return token;
     }
