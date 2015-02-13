@@ -62,9 +62,9 @@ public class AllEntitiesInSystemObservableIT extends AbstractCoreIT {
 
     @Test
     public void testEntities() throws Exception {
-
-        AllEntitiesInSystemObservable allEntitiesInSystemObservableImpl =SpringResource.getInstance().getBean(AllEntitiesInSystemObservable.class);
-        TargetIdObservable targetIdObservable = SpringResource.getInstance().getBean(TargetIdObservable.class);
+        Injector injector =  SpringResource.getInstance().getBean(Injector.class);
+        AllEntitiesInSystemObservable allEntitiesInSystemObservableImpl =injector.getInstance(AllEntitiesInSystemObservable.class);
+        TargetIdObservable targetIdObservable = injector.getInstance(TargetIdObservable.class);
 
         final EntityManager em = app.getEntityManager();
 

@@ -85,6 +85,10 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
 
         final int currentVersion = migrationInfoSerialization.getVersion();
 
+        if(currentVersion <= 0){
+            resetToHighestVersion();
+        }
+
         LOG.info( "Saved schema version is {}, max migration version is {}", currentVersion,
                 migrationTreeMap.lastKey() );
 
@@ -190,6 +194,7 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
     }
 
 
+
     @Override
     public void resetToVersion( final int version ) {
         final int highestAllowed = migrationTreeMap.lastKey();
@@ -201,6 +206,10 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
         migrationInfoSerialization.setVersion( version );
     }
 
+    private void resetToHighestVersion( ) {
+        final int highestAllowed = migrationTreeMap.lastKey();
+        resetToVersion(highestAllowed);
+    }
 
     @Override
     public String getLastStatus() {
