@@ -132,4 +132,9 @@ public class MvccEntityDataMigrationImpl implements DataMigration {
     public int getVersion() {
         return entityMigrationStrategy.getVersion();
     }
+
+    @Override
+    public MigrationType getType() {
+        return MigrationType.Entities;
+    }
 }

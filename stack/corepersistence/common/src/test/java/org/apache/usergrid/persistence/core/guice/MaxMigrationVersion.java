@@ -41,4 +41,9 @@ public class MaxMigrationVersion implements DataMigration {
     public int getVersion() {
         return Integer.MAX_VALUE;
     }
+
+    @Override
+    public MigrationType getType() {
+        return MigrationType.Other;
+    }
 }

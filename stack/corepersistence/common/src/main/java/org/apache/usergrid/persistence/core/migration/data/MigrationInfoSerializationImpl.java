@@ -146,7 +146,7 @@ public class MigrationInfoSerializationImpl implements MigrationInfoSerializatio
         }
         //swallow, it doesn't exist
         catch ( NotFoundException nfe ) {
-            return 0;
+            return -1;
         }
         catch ( ConnectionException e ) {
             throw new DataMigrationException( "Unable to retrieve status", e );

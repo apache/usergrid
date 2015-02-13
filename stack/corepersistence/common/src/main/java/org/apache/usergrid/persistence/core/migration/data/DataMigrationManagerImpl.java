@@ -21,6 +21,7 @@ package org.apache.usergrid.persistence.core.migration.data;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.NavigableMap;
 import java.util.Set;
 import java.util.TreeMap;
@@ -28,7 +29,12 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.usergrid.persistence.core.rx.AllEntitiesInSystemObservable;
+import org.apache.usergrid.persistence.core.rx.ApplicationObservable;
 import org.apache.usergrid.persistence.core.scope.ApplicationEntityGroup;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
+import org.apache.usergrid.persistence.core.scope.EntityIdScope;
+import org.apache.usergrid.persistence.model.entity.Id;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,6 +49,7 @@ import com.google.inject.Singleton;
 import rx.Observable;
 import rx.functions.Action1;
 import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 
 @Singleton
@@ -57,21 +64,25 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
 
 
     private final Set<DataMigration> migrations;
+    private final ApplicationObservable applicationObservable;
 
 
     @Inject
     public DataMigrationManagerImpl( final MigrationInfoSerialization migrationInfoSerialization,
                                      final Set<DataMigration> migrations,
-                                     final AllEntitiesInSystemObservable allEntitiesInSystemObservable
+                                     final AllEntitiesInSystemObservable allEntitiesInSystemObservable,
+                                     final ApplicationObservable applicationObservable
     ) {
 
         Preconditions.checkNotNull( migrationInfoSerialization,
                 "migrationInfoSerialization must not be null" );
         Preconditions.checkNotNull( migrations, "migrations must not be null" );
         Preconditions.checkNotNull( allEntitiesInSystemObservable, "allentitiesobservable must not be null" );
+        Preconditions.checkNotNull( applicationObservable, "applicationObservable must not be null" );
 
         this.migrationInfoSerialization = migrationInfoSerialization;
         this.allEntitiesInSystemObservable = allEntitiesInSystemObservable;
+        this.applicationObservable = applicationObservable;
 
         this.migrations = migrations;
     }
@@ -83,10 +94,10 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
         if (!populateTreeMap())
             return;
 
-        final int currentVersion = migrationInfoSerialization.getVersion();
+        int currentVersion = migrationInfoSerialization.getCurrentVersion();
 
-        if(currentVersion <= 0){
-            resetToHighestVersion();
+        if(currentVersion < 0){
+            currentVersion = resetToHighestVersion();
         }
 
         LOG.info( "Saved schema version is {}, max migration version is {}", currentVersion,
@@ -98,46 +109,87 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
 
         final CassandraProgressObserver observer = new CassandraProgressObserver();
 
-        allEntitiesInSystemObservable.getAllEntitiesInSystem(1000)
-            .doOnNext(
-                new Action1<ApplicationEntityGroup>() {
-                    @Override
-                    public void call(
-                        final ApplicationEntityGroup applicationEntityGroup) {
-                        for (DataMigration migration : migrationsToRun.values()) {
+        Observable<DataMigration> migrations = Observable.from(migrationsToRun.values()).subscribeOn(Schedulers.io());
 
-                            migrationInfoSerialization.setStatusCode(StatusCode.RUNNING.status);
-
-                            final int migrationVersion = migration.getVersion();
-
-                            LOG.info("Running migration version {}", migrationVersion);
-
-                            observer.update(migrationVersion, "Starting migration");
-
-                            //perform this migration, if it fails, short circuit
-                            try {
-                                migration.migrate(applicationEntityGroup, observer).toBlocking().lastOrDefault(null);
-                            } catch (Throwable throwable) {
-                                observer.failed(migrationVersion, "Exception thrown during migration", throwable);
-                                LOG.error("Unable to migrate to version {}.", migrationVersion, throwable);
-                                return ;
+        Observable entityMigrations = migrations
+            .filter(new Func1<DataMigration, Boolean>() {
+                @Override
+                public Boolean call(DataMigration dataMigration) {
+                    return dataMigration.getType() == DataMigration.MigrationType.Entities;
+                }
+            }).flatMap(new Func1<DataMigration, Observable<ApplicationEntityGroup>>() {
+                @Override
+                public Observable<ApplicationEntityGroup> call(final DataMigration dataMigration) {
+                    return allEntitiesInSystemObservable
+                        .getAllEntitiesInSystem(1000)
+                        .doOnNext(new Action1<ApplicationEntityGroup>() {
+                            @Override
+                            public void call(ApplicationEntityGroup entityGroup) {
+                                runMigration(dataMigration,observer,entityGroup);
                             }
+                        });
+                }
+            });
 
-                            //we had an unhandled exception or the migration failed, short circuit
-                            if (observer.failed) {
-                                return ;
+        //migrations that aren't entities
+        Observable otherMigrations = migrations
+            .filter(new Func1<DataMigration, Boolean>() {
+                @Override
+                public Boolean call(DataMigration dataMigration) {
+                    return dataMigration.getType() != DataMigration.MigrationType.Entities;
+                }
+            }).flatMap(new Func1<DataMigration, Observable<?>>() {
+                @Override
+                public Observable call(final DataMigration dataMigration) {
+                    return applicationObservable.getAllApplicationIds()
+                        .doOnNext(new Action1<Id>() {
+                            @Override
+                            public void call(Id id) {
+                                ApplicationScope scope = new ApplicationScopeImpl(id);
+                                runMigration(dataMigration, observer, new ApplicationEntityGroup(scope, null));
                             }
+                        });
 
-                            //set the version
-                            migrationInfoSerialization.setVersion(migrationVersion);
+                }
+            });
 
-                            //update the observer for progress so other nodes can see it
-                            observer.update(migrationVersion, "Completed successfully");
-                        }
-                        return ;
-                    }
-                }).toBlocking().lastOrDefault(null);
-        migrationInfoSerialization.setStatusCode( StatusCode.COMPLETE.status );
+        try {
+            Observable.merge(entityMigrations, otherMigrations).toBlocking().lastOrDefault(null);
+            migrationInfoSerialization.setStatusCode( StatusCode.COMPLETE.status );
+        }catch (Exception e){
+            LOG.error("Migration Failed");
+        }
+
+    }
+
+    private void runMigration(DataMigration migration, CassandraProgressObserver observer, ApplicationEntityGroup applicationEntityGroup) {
+        migrationInfoSerialization.setStatusCode(StatusCode.RUNNING.status);
+
+        final int migrationVersion = migration.getVersion();
+
+        LOG.info("Running migration version {}", migrationVersion);
+
+        observer.update(migrationVersion, "Starting migration");
+
+        //perform this migration, if it fails, short circuit
+        try {
+            migration.migrate(applicationEntityGroup, observer).toBlocking().lastOrDefault(null);
+        } catch (Throwable throwable) {
+            observer.failed(migrationVersion, "Exception thrown during migration", throwable);
+            LOG.error("Unable to migrate to version {}.", migrationVersion, throwable);
+            throw new RuntimeException(throwable) ;
+        }
+
+        //we had an unhandled exception or the migration failed, short circuit
+        if (observer.failed) {
+            return ;
+        }
+
+        //set the version
+        migrationInfoSerialization.setVersion(migrationVersion);
+
+        //update the observer for progress so other nodes can see it
+        observer.update(migrationVersion, "Completed successfully");
     }
 
     private boolean populateTreeMap() {
@@ -206,9 +258,10 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
         migrationInfoSerialization.setVersion( version );
     }
 
-    private void resetToHighestVersion( ) {
+    private int resetToHighestVersion( ) {
         final int highestAllowed = migrationTreeMap.lastKey();
         resetToVersion(highestAllowed);
+        return highestAllowed;
     }
 
     @Override

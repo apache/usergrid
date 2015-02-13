@@ -96,4 +96,9 @@ public class EntityTypeMappingMigration implements DataMigration {
     public int getVersion() {
         return Versions.VERSION_1;
     }
+
+    @Override
+    public MigrationType getType() {
+        return MigrationType.Entities;
+    }
 }

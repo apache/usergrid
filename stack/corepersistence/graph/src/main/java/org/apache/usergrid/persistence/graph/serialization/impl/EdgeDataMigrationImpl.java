@@ -75,14 +75,12 @@ public class EdgeDataMigrationImpl implements DataMigration {
         rx.Observable o =
             Observable
                 .from(applicationEntityGroup.entityIds)
-
                 .flatMap(new Func1<EntityIdScope, Observable<List<Edge>>>() {
                     //for each id in the group, get it's edges
                     @Override
                     public Observable<List<Edge>> call(final EntityIdScope idScope) {
                         logger.info("Migrating edges from node {} in scope {}", idScope.getId(),
                             applicationEntityGroup.applicationScope);
-
 
                         //get each edge from this node as a source
                         return edgesFromSource
@@ -137,5 +135,10 @@ public class EdgeDataMigrationImpl implements DataMigration {
     @Override
     public int getVersion() {
         return edgeMigrationStrategy.getVersion();
+    }
+
+    @Override
+    public MigrationType getType() {
+        return MigrationType.Edges;
     }
 }

@@ -56,6 +56,8 @@ public interface DataMigration {
      */
     public int getVersion();
 
+    public MigrationType getType();
+
     public interface ProgressObserver{
         /**
          * Mark the migration as failed
@@ -79,6 +81,13 @@ public interface DataMigration {
          * @param message The message to save for the status
          */
         public void update(final int migrationVersion, final String message);
+    }
+
+    public enum MigrationType{
+        Entities,
+        Edges,
+        Index,
+        Other
     }
 
 }
