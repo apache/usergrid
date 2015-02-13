@@ -1,5 +1,7 @@
 
 Usergrid REST API Web App
+=========================
+
 
 Installs as a webapp in Tomcat. Has not been extensively tested in other web containers.
 See usergrid-standalone for an example of running inside Grizzly.
@@ -27,7 +29,7 @@ usergrid.sysadmin.login.name=superuser
 usergrid.sysadmin.login.password=superuser
 usergrid.sysadmin.login.allowed=true
 
---------------------
+
 Implementation Notes
 --------------------
 
@@ -58,3 +60,31 @@ The usergrid-standalone project is set up to run in Grizzly and will be at:
 http://localhost:8080
 
 
+Running Tests
+-------------
+
+To test, add the following configuration to the TOMCAT_HOME/conf/tomcat-users.xml
+
+```xml
+<tomcat-users>
+    <role rolename="manager-gui"/>
+    <tomcat-users>
+        <role rolename="manager-gui"/>
+        <role rolename="manager-jmx"/>
+        <role rolename="manager-script"/>
+        <role rolename="manager-status"/>
+       <!-- this username and password is set into src/test/resources/arquillian.xml -->
+        <user username="usergrid" password="testpassword" roles="manager-script, manager-jmx, manager-gui, manager-status"/>
+    </tomcat-users>
+</tomcat-users>
+```
+
+
+See the [documentation here](https://docs.jboss.org/author/display/ARQ/Tomcat+7.0+-+Managed) for more setup information.
+
+
+Add the following properties to you maven settings.xml
+
+```xml
+ <catalina.home>[path to your tomcat directory]</catalina.home>
+ ```
