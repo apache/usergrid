@@ -59,7 +59,7 @@ import com.google.inject.Injector;
 
 import net.jcip.annotations.NotThreadSafe;
 
-import static org.apache.usergrid.corepersistence.GuiceModule.EVENTS_DISABLED;
+import static org.apache.usergrid.corepersistence.CoreModule.EVENTS_DISABLED;
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getCollectionScopeNameFromEntityType;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 import static org.junit.Assert.assertEquals;

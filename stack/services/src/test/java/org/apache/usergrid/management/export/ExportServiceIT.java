@@ -54,6 +54,7 @@ import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.entities.JobData;
 import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
+import org.apache.usergrid.setup.ConcurrentProcessSingleton;
 
 import com.amazonaws.SDKGlobalConfiguration;
 import com.google.common.collect.ImmutableSet;
@@ -102,9 +103,10 @@ public class ExportServiceIT {
         logger.info("in setup");
 
         // start the scheduler after we're all set up
-        JobSchedulerService jobScheduler = ConcurrentSasdfasdf.getBean( JobSchedulerService.class );
+        JobSchedulerService jobScheduler = ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( JobSchedulerService.class );
         if ( jobScheduler.state() != Service.State.RUNNING ) {
-            jobScheduler.startAndWait();
+            jobScheduler.startAsync();
+            jobScheduler.awaitRunning();
         }
 
         adminUser = newOrgAppAdminRule.getAdminInfo();
@@ -184,9 +186,8 @@ public class ExportServiceIT {
             entity[i] = em.create( "users", userProperties );
         }
         //creates connections
-        em.createConnection(
-                em.get( new SimpleEntityRef( "user", entity[0].getUuid()) ), "Vibrations",
-                em.get( new SimpleEntityRef( "user", entity[1].getUuid()) ) );
+        em.createConnection( em.get( new SimpleEntityRef( "user", entity[0].getUuid() ) ), "Vibrations",
+            em.get( new SimpleEntityRef( "user", entity[1].getUuid() ) ) );
         em.createConnection(
                 em.get( new SimpleEntityRef( "user", entity[1].getUuid()) ), "Vibrations",
                 em.get( new SimpleEntityRef( "user", entity[0].getUuid()) ) );
@@ -240,7 +241,7 @@ public class ExportServiceIT {
         ExportService exportService = setup.getExportService();
 
         String appName = newOrgAppAdminRule.getApplicationInfo().getName();
-        HashMap<String, Object> payload = payloadBuilder(appName);
+        HashMap<String, Object> payload = payloadBuilder( appName );
 
         payload.put( "organizationId", organization.getUuid() );
         payload.put( "applicationId", applicationId );
@@ -262,9 +263,8 @@ public class ExportServiceIT {
         }
         em.refreshIndex();
         //creates connections
-        em.createConnection(
-                em.get( new SimpleEntityRef( "user", entity[0].getUuid())), "Vibrations",
-                em.get( new SimpleEntityRef( "user", entity[1].getUuid())) );
+        em.createConnection( em.get( new SimpleEntityRef( "user", entity[0].getUuid() ) ), "Vibrations",
+            em.get( new SimpleEntityRef( "user", entity[1].getUuid() ) ) );
         em.createConnection(
                 em.get( new SimpleEntityRef( "user", entity[1].getUuid())), "Vibrations",
                 em.get( new SimpleEntityRef( "user", entity[0].getUuid())) );
@@ -685,7 +685,7 @@ public class ExportServiceIT {
         org.json.simple.JSONArray a = ( org.json.simple.JSONArray )
             parser.parse( new FileReader( exportedFile ) );
 
-        assertEquals(23, a.size());
+        assertEquals( 23, a.size() );
     }
 
 
@@ -1009,16 +1009,14 @@ public class ExportServiceIT {
         BlobStore blobStore = null;
 
         try {
-            final Iterable<? extends Module> MODULES = ImmutableSet.of(
-                new JavaUrlHttpCommandExecutorServiceModule(),
-                new Log4JLoggingModule(),
-                new NettyPayloadModule() );
+            final Iterable<? extends Module> MODULES = ImmutableSet.of( new JavaUrlHttpCommandExecutorServiceModule(),
+                new Log4JLoggingModule(), new NettyPayloadModule() );
 
             BlobStoreContext context = ContextBuilder.newBuilder( "s3" )
-                .credentials(accessId, secretKey )
-                .modules(MODULES )
-                .overrides(overrides )
-                .buildView(BlobStoreContext.class );
+                .credentials( accessId, secretKey )
+                .modules( MODULES )
+                .overrides( overrides )
+                .buildView( BlobStoreContext.class );
 
             String expectedFileName = ((ExportServiceImpl)exportService)
                 .prepareOutputFileName(organization.getName(), "applications");

@@ -44,7 +44,7 @@ import org.springframework.context.ApplicationContext;
 /**
  * Guice Module that encapsulates Core Persistence.
  */
-public class GuiceModule  extends AbstractModule {
+public class CoreModule  extends AbstractModule {
 
     /**
      * TODO this is a circular dependency, and should be refactored
@@ -55,7 +55,7 @@ public class GuiceModule  extends AbstractModule {
 
 
 
-    public GuiceModule( final ApplicationContext context ) {
+    public CoreModule( final ApplicationContext context ) {
         this.lazyEntityManagerFactoryProvider = new LazyEntityManagerFactoryProvider( context );
     }
 
