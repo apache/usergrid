@@ -25,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.exception.JsonReadException;
 import org.apache.usergrid.exception.JsonWriteException;
 import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.index.query.Identifier;
 
 import com.fasterxml.jackson.core.io.JsonStringEncoder;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -54,6 +56,8 @@ public class JsonUtils {
     static ObjectMapper smileMapper = new ObjectMapper( smile );
 
     private static ObjectMapper indentObjectMapper = new ObjectMapper();
+
+    private static final Pattern UUID_PATTERN = Pattern.compile( Identifier.UUID_REX );
 
 
     static {
@@ -169,7 +173,7 @@ public class JsonUtils {
     private static UUID tryConvertToUUID( Object o ) {
         if ( o instanceof String ) {
             String s = ( String ) o;
-            if ( s.length() == 36 ) {
+            if ( UUID_PATTERN.matcher( s ).matches() ) {
                 try {
                     return UUID.fromString( s );
                 }
