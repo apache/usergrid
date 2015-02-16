@@ -235,12 +235,12 @@ public class CpRelationManager implements RelationManager {
 
         Id entityId = new SimpleId( headEntity.getUuid(), headEntity.getType() );
 
-        if(headEntity instanceof Entity){
-            cpHeadEntity = entityToCpEntity( (Entity)headEntity, headEntity.getUuid() );
-        }else {
+//        if(headEntity instanceof Entity){
+//            cpHeadEntity = entityToCpEntity( (Entity)headEntity, headEntity.getUuid() );
+//        }else {
             this.cpHeadEntity =
                 ( ( CpEntityManager ) em ).load( new CpEntityManager.EntityScope( headEntityScope, entityId ) );
-        }
+//        }
 
         // commented out because it is possible that CP entity has not been created yet
         Assert.notNull( cpHeadEntity, "cpHeadEntity cannot be null" );

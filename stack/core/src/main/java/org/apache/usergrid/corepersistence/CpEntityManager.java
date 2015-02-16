@@ -193,8 +193,8 @@ public class CpEntityManager implements EntityManager {
 
     private boolean skipAggregateCounters;
 
-    /** Short-term cache to keep us from reloading same Entity during single request. */
-    private LoadingCache<EntityScope, org.apache.usergrid.persistence.model.entity.Entity> entityCache;
+//    /** Short-term cache to keep us from reloading same Entity during single request. */
+//    private LoadingCache<EntityScope, org.apache.usergrid.persistence.model.entity.Entity> entityCache;
 
 
     public CpEntityManager() {}
@@ -218,24 +218,7 @@ public class CpEntityManager implements EntityManager {
         // set to false for now
         this.skipAggregateCounters = false;
 
-        int entityCacheSize = Integer.parseInt( cass.getProperties()
-                .getProperty( "usergrid.entity_cache_size", "100" ) );
 
-        int entityCacheTimeout = Integer.parseInt( cass.getProperties()
-                .getProperty( "usergrid.entity_cache_timeout_ms", "500" ) );
-
-        this.entityCache = CacheBuilder.newBuilder()
-            .maximumSize(entityCacheSize)
-            .expireAfterWrite(entityCacheTimeout, TimeUnit.MILLISECONDS)
-            .build( new CacheLoader<EntityScope, org.apache.usergrid.persistence.model.entity.Entity>() {
-
-                public org.apache.usergrid.persistence.model.entity.Entity load( EntityScope es) {
-                        return managerCache.getEntityCollectionManager(es.scope)
-                            .load(es.entityId).toBlocking()
-                            .lastOrDefault(null);
-                    }
-                }
-            );
     }
 
 
@@ -267,17 +250,11 @@ public class CpEntityManager implements EntityManager {
      * @return Entity or null if not found
      */
     org.apache.usergrid.persistence.model.entity.Entity load( EntityScope es ) {
-        try {
-            return entityCache.get( es );
-        }
-        catch ( InvalidCacheLoadException icle ) {
-            // fine, entity not found
-            return null;
-        }
-        catch ( ExecutionException exex ) {
-            // uh-oh, more serious problem
-            throw new RuntimeException( "Error loading entity", exex );
-        }
+
+            return managerCache.getEntityCollectionManager(es.scope)
+                                       .load(es.entityId).toBlocking()
+                                       .lastOrDefault(null);
+
     }
 
 
@@ -2508,7 +2485,6 @@ public class CpEntityManager implements EntityManager {
                     cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion()
             } );
 
-            entityCache.put( new EntityScope( collectionScope, cpEntity.getId() ), cpEntity );
         }
         catch ( WriteUniqueVerifyException wuve ) {
             handleWriteUniqueVerifyException( entity, wuve );
