@@ -23,6 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -70,12 +71,12 @@ public class CounterIT extends AbstractCoreIT {
         LOG.info( "CounterIT.testIncrementAndDecrement" );
 
 
+        EntityManager em = app.getEntityManager();
 
-        UUID applicationId =  app.getId();
-        assertNotNull( applicationId );
 
-        EntityManager em = setup.getEmf().getEntityManager( applicationId );
         assertNotNull( em );
+
+        final UUID applicationId = em.getApplicationId();
 
         Map<String, Long> counters = em.getEntityCounters( applicationId );
         assertEquals( null, counters.get( "application.collection.users" ) );
@@ -102,11 +103,10 @@ public class CounterIT extends AbstractCoreIT {
     public void testCounters() throws Exception {
         LOG.info( "CounterIT.testCounters" );
 
-        UUID applicationId = app.getId();
-        assertNotNull( applicationId );
+        EntityManager em = app.getEntityManager();
 
-        EntityManager em = setup.getEmf().getEntityManager( applicationId );
         assertNotNull( em );
+
 
 
         UUID user1 = UUID.randomUUID();
@@ -180,6 +180,7 @@ public class CounterIT extends AbstractCoreIT {
 
 
     @Test
+    @Ignore()
     public void testCommunityCounters() throws Exception {
 
         EntityManager em = setup.getEmf().getEntityManager( setup.getEmf().getManagementAppId() );

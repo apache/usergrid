@@ -64,10 +64,7 @@ public class EntityDictionaryIT extends AbstractCoreIT {
 
         LOG.info( "EntityDictionaryIT.testApplicationDictionaries" );
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testApplicationDictionaries" + UUIDGenerator.newTimeUUID()  );
-        assertNotNull( applicationId );
-
-        EntityManager em = setup.getEmf().getEntityManager( applicationId );
+        EntityManager em = app.getEntityManager();
         assertNotNull( em );
 
         em.addToDictionary( em.getApplicationRef(), "oauthproviders", "google", provider );
@@ -81,10 +78,9 @@ public class EntityDictionaryIT extends AbstractCoreIT {
     public void testUserDictionaries() throws Exception {
         LOG.info( "EntityDictionaryIT.testUserDictionaries" );
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testUserDictionaries" + UUIDGenerator.newTimeUUID()  );
-        assertNotNull( applicationId );
 
-        EntityManager em = setup.getEmf().getEntityManager( applicationId );
+
+        EntityManager em = app.getEntityManager();
         assertNotNull( em );
 
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
@@ -154,10 +150,8 @@ public class EntityDictionaryIT extends AbstractCoreIT {
 
         LOG.info( "EntityDictionaryIT.testApplicationDictionaries" );
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testRemoveFromDictionary" + UUIDGenerator.newTimeUUID()  );
-        assertNotNull( applicationId );
 
-        EntityManager em = setup.getEmf().getEntityManager( applicationId );
+        EntityManager em = app.getEntityManager();
         assertNotNull( em );
 
         em.addToDictionary( em.getApplicationRef(), "oauthproviders", "google", provider );
@@ -188,10 +182,7 @@ public class EntityDictionaryIT extends AbstractCoreIT {
         provider.setAccessTokenEndpointUrl( "https://accounts.google.com/o/oauth2/token" );
         provider.setVersion( "2.0" );
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testGetDictionaries" + UUIDGenerator.newTimeUUID()  );
-        assertNotNull( applicationId );
-
-        EntityManager em = setup.getEmf().getEntityManager( applicationId );
+        EntityManager em = app.getEntityManager();
         assertNotNull( em );
 
         em.addToDictionary( em.getApplicationRef(), "oauthproviders", "google", provider );
@@ -209,11 +200,8 @@ public class EntityDictionaryIT extends AbstractCoreIT {
         LOG.info( "EntityDictionaryIT.testAddMapToDictionaries" );
 
         Map<String,Object> testMap = new HashMap<String,Object>();
-        UUID applicationId = setup.createApplication( "testOrganization", "testAddMapToDictionaries" + UUIDGenerator
-            .newTimeUUID()  );
-        assertNotNull( applicationId );
 
-        EntityManager em = setup.getEmf().getEntityManager( applicationId );
+        EntityManager em = app.getEntityManager();
         assertNotNull( em );
 
         testMap.put( "testName","testval" );

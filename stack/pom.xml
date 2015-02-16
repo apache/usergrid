@@ -127,6 +127,10 @@
       <rx.version>0.19.6</rx.version>
         <surefire.plugin.version>2.18.1</surefire.plugin.version>
         <powermock.version>1.6.1</powermock.version>
+
+
+           <maven.build.timestamp.format>yyyy-MM-dd'T'HH-mm-ss'Z'</maven.build.timestamp.format>
+
     </properties>
 
   <licenses>

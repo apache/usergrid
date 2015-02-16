@@ -17,40 +17,42 @@
 
 package org.apache.usergrid.management.importer;
 
-import org.apache.usergrid.NewOrgAppAdminRule;
-import org.apache.usergrid.ServiceITSetup;
-import org.apache.usergrid.ServiceITSetupImpl;
-import org.apache.usergrid.cassandra.CassandraResource;
-import org.apache.usergrid.cassandra.ClearShiroSubject;
-import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.corepersistence.util.CpNamingUtils;
-import org.apache.usergrid.persistence.*;
-import org.apache.usergrid.persistence.entities.FileImport;
-import org.apache.usergrid.persistence.entities.Import;
-import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
-import org.apache.usergrid.persistence.index.query.Query;
-import org.junit.*;
+
+import java.util.UUID;
+
+import org.junit.ClassRule;
+import org.junit.Ignore;
+import org.junit.Rule;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import org.apache.usergrid.NewOrgAppAdminRule;
+import org.apache.usergrid.ServiceITSetup;
+import org.apache.usergrid.ServiceITSetupImpl;
+import org.apache.usergrid.cassandra.ClearShiroSubject;
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.PagingResultsIterator;
+import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.entities.FileImport;
+import org.apache.usergrid.persistence.entities.Import;
+import org.apache.usergrid.persistence.index.query.Query;
 
 import static org.junit.Assert.assertEquals;
 
 
-@Concurrent
+
 public class ImportConnectionsTest {
 
     private static final Logger logger = LoggerFactory.getLogger(ImportConnectionsTest.class);
-
-    private static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
 
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @ClassRule
     public static final ServiceITSetup setup =
-        new ServiceITSetupImpl( cassandraResource, new ElasticSearchResource() );
+        new ServiceITSetupImpl( );
 
     @Rule
     public NewOrgAppAdminRule newOrgAppAdminRule = new NewOrgAppAdminRule( setup );

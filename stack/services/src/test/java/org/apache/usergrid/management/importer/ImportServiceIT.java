@@ -43,6 +43,7 @@ import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.persistence.index.query.Query.Level;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.services.notifications.QueueListener;
+import org.apache.usergrid.setup.ConcurrentProcessSingleton;
 
 import org.jclouds.ContextBuilder;
 import org.jclouds.blobstore.BlobStore;
@@ -70,9 +71,6 @@ public class ImportServiceIT {
 
     private static final Logger logger = LoggerFactory.getLogger(ImportServiceIT.class);
 
-
-    private static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
-
     // app-level data generated only once
     private static UserInfo adminUser;
     private static OrganizationInfo organization;
@@ -88,7 +86,7 @@ public class ImportServiceIT {
 
     @ClassRule
     public static final ServiceITSetup setup =
-        new ServiceITSetupImpl( cassandraResource, new ElasticSearchResource() );
+        new ServiceITSetupImpl(  );
 
 
     @BeforeClass
@@ -96,9 +94,13 @@ public class ImportServiceIT {
         String username = "test"+ UUIDUtils.newTimeUUID();
 
         // start the scheduler after we're all set up
-        JobSchedulerService jobScheduler = cassandraResource.getBean( JobSchedulerService.class );
+         // start the scheduler after we're all set up
+        JobSchedulerService jobScheduler = ConcurrentProcessSingleton
+            .getInstance().getSpringResource().getBean( JobSchedulerService.class );
+
         if ( jobScheduler.state() != Service.State.RUNNING ) {
-            jobScheduler.startAndWait();
+            jobScheduler.startAsync();
+            jobScheduler.awaitRunning();
         }
 
         //creates sample test application
