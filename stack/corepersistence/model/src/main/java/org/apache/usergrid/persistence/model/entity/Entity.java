@@ -151,4 +151,8 @@ public class Entity extends EntityObject {
                 '}';
     }
 
+    public boolean hasVersion(){
+        return getVersion() != null;
+    }
+
 }
