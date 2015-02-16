@@ -21,6 +21,7 @@ package org.apache.usergrid.persistence.graph.guice;
 
 import org.apache.usergrid.persistence.core.guice.V1Impl;
 import org.apache.usergrid.persistence.core.guice.V2Impl;
+import org.apache.usergrid.persistence.core.migration.data.ApplicationDataMigration;
 import org.apache.usergrid.persistence.core.migration.data.DataMigration;
 import org.apache.usergrid.persistence.graph.serialization.*;
 import org.apache.usergrid.persistence.graph.serialization.impl.*;
@@ -116,8 +117,8 @@ public class GraphModule extends AbstractModule {
         bind( EdgeMetaRepair.class ).to( EdgeMetaRepairImpl.class );
         bind( EdgeDeleteRepair.class ).to( EdgeDeleteRepairImpl.class );
 
-        Multibinder<DataMigration> dataMigrationMultibinder =
-            Multibinder.newSetBinder( binder(), DataMigration.class );
+        Multibinder<ApplicationDataMigration> dataMigrationMultibinder =
+            Multibinder.newSetBinder( binder(), ApplicationDataMigration.class );
         dataMigrationMultibinder.addBinding().to( EdgeDataMigrationImpl.class );
 
         /**
@@ -130,11 +131,11 @@ public class GraphModule extends AbstractModule {
 
         bind( EdgeShardStrategy.class ).to( SizebasedEdgeShardStrategy.class );
 
-        bind( ShardedEdgeSerialization.class ).to( ShardedEdgeSerializationImpl.class );
+        bind(ShardedEdgeSerialization.class ).to( ShardedEdgeSerializationImpl.class );
 
         bind( EdgeColumnFamilies.class ).to( SizebasedEdgeColumnFamilies.class );
 
-        bind( ShardGroupCompaction.class ).to( ShardGroupCompactionImpl.class );
+        bind(ShardGroupCompaction.class ).to( ShardGroupCompactionImpl.class );
 
 
         /**

@@ -20,22 +20,23 @@
 package org.apache.usergrid.persistence.core.guice;
 
 
+import org.apache.usergrid.persistence.core.migration.data.ApplicationDataMigration;
 import org.apache.usergrid.persistence.core.migration.data.DataMigration;
 import org.apache.usergrid.persistence.core.scope.ApplicationEntityGroup;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import rx.Observable;
 
 
 /**
  * A simple migration that sets the version to max. This way our integration tests always test the latest code
  */
-public class MaxMigrationVersion implements DataMigration {
+public class MaxMigrationVersion implements ApplicationDataMigration {
 
     @Override
-    public Observable migrate(final ApplicationEntityGroup applicationEntityGroup, final ProgressObserver observer ) throws Throwable {
+    public Observable migrate(final Observable<ApplicationScope> applicationEntityGroup, final ProgressObserver observer) {
          //no op, just needs to run to be set
         return Observable.empty();
     }
-
 
     @Override
     public int getVersion() {
@@ -44,6 +45,6 @@ public class MaxMigrationVersion implements DataMigration {
 
     @Override
     public MigrationType getType() {
-        return MigrationType.Other;
+        return MigrationType.Applications;
     }
 }

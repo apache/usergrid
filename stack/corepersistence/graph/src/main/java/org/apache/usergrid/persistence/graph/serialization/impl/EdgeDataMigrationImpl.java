@@ -23,9 +23,10 @@ import com.google.inject.Inject;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import org.apache.usergrid.persistence.core.migration.data.ApplicationDataMigration;
 import org.apache.usergrid.persistence.core.migration.data.DataMigration;
 import org.apache.usergrid.persistence.core.scope.ApplicationEntityGroup;
-import org.apache.usergrid.persistence.core.scope.EntityIdScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
@@ -44,7 +45,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * Encapsulates data mi
  */
 
-public class EdgeDataMigrationImpl implements DataMigration {
+public class EdgeDataMigrationImpl implements ApplicationDataMigration {
 
     private static final Logger logger = LoggerFactory.getLogger(EdgeDataMigrationImpl.class);
 
@@ -65,72 +66,61 @@ public class EdgeDataMigrationImpl implements DataMigration {
         this.edgesFromSourceObservable = edgesFromSourceObservable;
         this.edgeMigrationStrategy = edgeMigrationStrategy;
     }
+
+
     @Override
-    public Observable<Long> migrate(final ApplicationEntityGroup applicationEntityGroup,
-                                    final DataMigration.ProgressObserver observer) {
-        final GraphManager gm = graphManagerFactory.createEdgeManager(applicationEntityGroup.applicationScope);
-        final Observable<Edge> edgesFromSource = edgesFromSourceObservable.edgesFromSource(gm, applicationEntityGroup.applicationScope.getApplication());
-
+    public Observable migrate(final Observable<ApplicationScope> scopes,
+                              final DataMigration.ProgressObserver observer) {
         final AtomicLong counter = new AtomicLong();
-        rx.Observable o =
-            Observable
-                .from(applicationEntityGroup.entityIds)
-                .flatMap(new Func1<EntityIdScope, Observable<List<Edge>>>() {
-                    //for each id in the group, get it's edges
-                    @Override
-                    public Observable<List<Edge>> call(final EntityIdScope idScope) {
-                        logger.info("Migrating edges from node {} in scope {}", idScope.getId(),
-                            applicationEntityGroup.applicationScope);
 
-                        //get each edge from this node as a source
-                        return edgesFromSource
+        return scopes.flatMap(new Func1<ApplicationScope, Observable<?>>() {
+            @Override
+            public Observable call(final ApplicationScope applicationScope) {
+                final GraphManager gm = graphManagerFactory.createEdgeManager(applicationScope);
+                final Observable<Edge> edgesFromSource = edgesFromSourceObservable.edgesFromSource(gm, applicationScope.getApplication());
+                logger.info("Migrating edges scope {}", applicationScope);
 
-                            //for each edge, re-index it in v2  every 1000 edges or less
-                            .buffer(1000)
-                            .doOnNext(new Action1<List<Edge>>() {
-                                @Override
-                                public void call(List<Edge> edges) {
-                                    final MutationBatch batch =
-                                        keyspace.prepareMutationBatch();
+                //get each edge from this node as a source
+                return edgesFromSource
 
-                                    for (Edge edge : edges) {
-                                        logger.info("Migrating meta for edge {}", edge);
-                                        final MutationBatch edgeBatch = edgeMigrationStrategy.getMigration().to()
-                                            .writeEdge(
-                                                applicationEntityGroup
-                                                    .applicationScope,
-                                                edge);
-                                        batch.mergeShallow(edgeBatch);
-                                    }
+                    //for each edge, re-index it in v2  every 1000 edges or less
+                    .buffer(1000)
+                    .doOnNext(new Action1<List<Edge>>() {
+                        @Override
+                        public void call(List<Edge> edges) {
+                            final MutationBatch batch =
+                                keyspace.prepareMutationBatch();
 
-                                    try {
-                                        batch.execute();
-                                    } catch (ConnectionException e) {
-                                        throw new RuntimeException(
-                                            "Unable to perform migration", e);
-                                    }
+                            for (Edge edge : edges) {
+                                logger.info("Migrating meta for edge {}", edge);
+                                final MutationBatch edgeBatch = edgeMigrationStrategy.getMigration().to()
+                                    .writeEdge(applicationScope,
+                                        edge);
+                                batch.mergeShallow(edgeBatch);
+                            }
 
-                                    //update the observer so the admin can see it
-                                    final long newCount =
-                                        counter.addAndGet(edges.size());
+                            try {
+                                batch.execute();
+                            } catch (ConnectionException e) {
+                                throw new RuntimeException(
+                                    "Unable to perform migration", e);
+                            }
 
-                                    observer.update(getVersion(), String.format(
-                                        "Currently running.  Rewritten %d edge types",
-                                        newCount));
-                                }
-                            });
-                    }
+                            //update the observer so the admin can see it
+                            final long newCount =
+                                counter.addAndGet(edges.size());
 
+                            observer.update(getVersion(), String.format(
+                                "Currently running.  Rewritten %d edge types",
+                                newCount));
+                        }
+                    });
+            }
+        });
 
-                })
-                .map(new Func1<List<Edge>, Long>() {
-                    @Override
-                    public Long call(List<Edge> edges) {
-                        return counter.get();
-                    }
-                });
-        return o;
     }
+
+
 
     @Override
     public int getVersion() {
@@ -139,6 +129,6 @@ public class EdgeDataMigrationImpl implements DataMigration {
 
     @Override
     public MigrationType getType() {
-        return MigrationType.Edges;
+        return MigrationType.Applications;
     }
 }

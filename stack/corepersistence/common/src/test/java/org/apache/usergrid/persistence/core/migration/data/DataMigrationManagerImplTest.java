@@ -28,6 +28,7 @@ import org.apache.usergrid.persistence.core.rx.AllEntitiesInSystemObservable;
 import org.apache.usergrid.persistence.core.rx.ApplicationObservable;
 import org.apache.usergrid.persistence.core.scope.ApplicationEntityGroup;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.scope.EntityIdScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
@@ -75,6 +76,11 @@ public class DataMigrationManagerImplTest {
         public Observable<Id> getAllApplicationIds() {
             return Observable.just( (Id)new SimpleId("application"));
         }
+
+        @Override
+        public Observable<ApplicationScope> getAllApplicationScopes() {
+            return Observable.just( (ApplicationScope)new ApplicationScopeImpl((Id)new SimpleId("application")));
+        }
     };
 
     @Test
@@ -82,9 +88,10 @@ public class DataMigrationManagerImplTest {
         final MigrationInfoSerialization serialization = mock( MigrationInfoSerialization.class );
         when(serialization.getCurrentVersion()).thenReturn(1);
 
-        Set<DataMigration> emptyMigration = new HashSet<>();
+        Set<CollectionDataMigration> collectionDataMigrations = new HashSet<>();
+        Set<ApplicationDataMigration> emptyMigration = new HashSet<>();
 
-        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( serialization, emptyMigration, allEntitiesInSystemObservable,allApplicationsObservable );
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( serialization, emptyMigration,collectionDataMigrations, allEntitiesInSystemObservable,allApplicationsObservable );
 
         migrationManager.migrate();
 
@@ -100,27 +107,29 @@ public class DataMigrationManagerImplTest {
         when(serialization.getCurrentVersion()).thenReturn(1);
 
 
-        final DataMigration v1 = mock( DataMigration.class );
+        final ApplicationDataMigration v1 = mock( ApplicationDataMigration.class );
         when( v1.getVersion() ).thenReturn( 2 );
-        when( v1.migrate(any(ApplicationEntityGroup.class), any(DataMigration.ProgressObserver.class))).thenReturn(Observable.empty());
+        when( v1.migrate(any(Observable.class), any(DataMigration.ProgressObserver.class))).thenReturn(Observable.empty());
 
-        final DataMigration v2 = mock( DataMigration.class );
+        final ApplicationDataMigration v2 = mock( ApplicationDataMigration.class );
         when( v2.getVersion() ).thenReturn( 3 );
-        when(v2.migrate(any(ApplicationEntityGroup.class), any(DataMigration.ProgressObserver.class))).thenReturn(Observable.empty());
+        when(v2.migrate(any(Observable.class), any(DataMigration.ProgressObserver.class))).thenReturn(Observable.empty());
 
 
-        Set<DataMigration> migrations = new HashSet<>();
+        Set<ApplicationDataMigration> migrations = new HashSet<>();
         migrations.add( v1 );
         migrations.add( v2 );
 
+        Set<CollectionDataMigration> collectionDataMigrations = new HashSet<>();
 
-        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( serialization, migrations,allEntitiesInSystemObservable,allApplicationsObservable );
+
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( serialization, migrations,collectionDataMigrations,allEntitiesInSystemObservable,allApplicationsObservable );
 
         migrationManager.migrate();
 
 
-        verify( v1 ).migrate(any(ApplicationEntityGroup.class), any( DataMigration.ProgressObserver.class ) );
-        verify( v2 ).migrate(any(ApplicationEntityGroup.class), any( DataMigration.ProgressObserver.class ) );
+        verify( v1 ).migrate(any(Observable.class), any( DataMigration.ProgressObserver.class ) );
+        verify( v2 ).migrate(any(Observable.class), any( DataMigration.ProgressObserver.class ) );
 
         //verify we set the running status
         verify( serialization, times( 2 ) ).setStatusCode( DataMigrationManagerImpl.StatusCode.RUNNING.status );
@@ -144,33 +153,35 @@ public class DataMigrationManagerImplTest {
         when(serialization.getCurrentVersion()).thenReturn(1);
 
 
-        final DataMigration v1 = mock( DataMigration.class,"mock1" );
+        final ApplicationDataMigration v1 = mock( ApplicationDataMigration.class,"mock1" );
         when( v1.getVersion() ).thenReturn( 2 );
         when( v1.getType() ).thenReturn(DataMigration.MigrationType.Entities);
-        when( v1.migrate(any(ApplicationEntityGroup.class), any(DataMigration.ProgressObserver.class))).thenReturn(Observable.empty());
+        when( v1.migrate(any(Observable.class), any(DataMigration.ProgressObserver.class))).thenReturn(Observable.empty());
 
         //throw an exception
-        when( v1.migrate(any(ApplicationEntityGroup.class),
+        when( v1.migrate(any(Observable.class),
                 any(DataMigration.ProgressObserver.class) )).thenThrow(new RuntimeException( "Something bad happened" ));
 
-        final DataMigration v2 = mock( DataMigration.class,"mock2" );
+        final ApplicationDataMigration v2 = mock( ApplicationDataMigration.class,"mock2" );
         when( v2.getType() ).thenReturn(DataMigration.MigrationType.Entities);
         when( v2.getVersion() ).thenReturn( 3 );
 
-        Set<DataMigration> migrations = new HashSet<>();
+        Set<ApplicationDataMigration> migrations = new HashSet<>();
         migrations.add( v1 );
         migrations.add( v2 );
+        Set<CollectionDataMigration> collectionDataMigrations = new HashSet<>();
 
 
-        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( serialization, migrations,allEntitiesInSystemObservable,allApplicationsObservable );
+        DataMigrationManagerImpl migrationManager
+            = new DataMigrationManagerImpl( serialization, migrations,collectionDataMigrations,allEntitiesInSystemObservable,allApplicationsObservable );
 
         migrationManager.migrate();
 
 
-        verify( v1 ).migrate( any(ApplicationEntityGroup.class),any( DataMigration.ProgressObserver.class ) );
+        verify( v1 ).migrate( any(Observable.class),any( DataMigration.ProgressObserver.class ) );
 
         //verify we don't run migration
-        verify( v2, never() ).migrate( any(ApplicationEntityGroup.class),any( DataMigration.ProgressObserver.class ) );
+        verify( v2, never() ).migrate( any(Observable.class),any( DataMigration.ProgressObserver.class ) );
 
         //verify we set the running status
         verify( serialization, times( 1 ) ).setStatusCode( DataMigrationManagerImpl.StatusCode.RUNNING.status );
@@ -194,17 +205,17 @@ public class DataMigrationManagerImplTest {
         final MigrationInfoSerialization serialization = mock(MigrationInfoSerialization.class);
         when(serialization.getCurrentVersion()).thenReturn(1);
 
-        final DataMigration v1 = mock( DataMigration.class );
+        final CollectionDataMigration v1 = mock( CollectionDataMigration.class );
         when( v1.getVersion() ).thenReturn( 2 );
         when( v1.getType() ).thenReturn(DataMigration.MigrationType.Entities);
-        when( v1.migrate(any(ApplicationEntityGroup.class), any(DataMigration.ProgressObserver.class))).thenReturn(Observable.empty());
+        when( v1.migrate(any(Observable.class), any(DataMigration.ProgressObserver.class))).thenReturn(Observable.empty());
 
         final int returnedCode = 100;
 
         final String reason = "test reason";
 
         //mark as fail but don't
-        when(v1.migrate(any(ApplicationEntityGroup.class), any(DataMigration.ProgressObserver.class))).thenAnswer(
+        when(v1.migrate(any(Observable.class), any(DataMigration.ProgressObserver.class))).thenAnswer(
             new Answer<Object>() {
                 @Override
                 public Object answer(final InvocationOnMock invocation) throws Throwable {
@@ -218,25 +229,26 @@ public class DataMigrationManagerImplTest {
 
         );
 
-        final DataMigration v2 = mock( DataMigration.class );
+        final CollectionDataMigration v2 = mock( CollectionDataMigration.class );
         when( v2.getVersion() ).thenReturn( 3 );
         when( v2.getType() ).thenReturn(DataMigration.MigrationType.Entities);
-        when(v2.migrate(any(ApplicationEntityGroup.class), any(DataMigration.ProgressObserver.class))).thenReturn(Observable.empty());
+        when(v2.migrate(any(Observable.class), any(DataMigration.ProgressObserver.class))).thenReturn(Observable.empty());
 
-        Set<DataMigration> migrations = new HashSet<>();
-        migrations.add( v1 );
-        migrations.add( v2 );
+        Set<CollectionDataMigration> collectionMigrations = new HashSet<>();
+        collectionMigrations.add( v1 );
+        collectionMigrations.add(v2);
+        Set<ApplicationDataMigration> applicationDataMigrations = new HashSet<>();
 
 
-        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( serialization, migrations,allEntitiesInSystemObservable, allApplicationsObservable );
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( serialization, applicationDataMigrations,collectionMigrations,allEntitiesInSystemObservable, allApplicationsObservable );
 
         migrationManager.migrate();
 
 
-        verify( v1 ).migrate(any(ApplicationEntityGroup.class), any( DataMigration.ProgressObserver.class ) );
+        verify( v1 ).migrate(any(Observable.class), any( DataMigration.ProgressObserver.class ) );
 
         //verify we don't run migration
-        verify( v2, never() ).migrate( any(ApplicationEntityGroup.class),any( DataMigration.ProgressObserver.class ) );
+        verify( v2, never() ).migrate( any(Observable.class),any( DataMigration.ProgressObserver.class ) );
 
         //verify we set the running status
         verify( serialization, times( 1 ) ).setStatusCode( DataMigrationManagerImpl.StatusCode.RUNNING.status );

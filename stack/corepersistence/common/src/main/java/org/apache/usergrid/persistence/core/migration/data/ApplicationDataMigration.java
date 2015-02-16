@@ -17,23 +17,22 @@
  *  * directory of this distribution.
  *
  */
-package org.apache.usergrid.persistence.core.rx;
+package org.apache.usergrid.persistence.core.migration.data;
 
+import org.apache.usergrid.persistence.core.scope.ApplicationEntityGroup;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.model.entity.Id;
 import rx.Observable;
 
 /**
- * Observable to emit all app ids
+ * Migrate applications
  */
-public interface ApplicationObservable {
-    /**
-     * Get all applicationIds as an observable
-     */
-    Observable<Id> getAllApplicationIds();
+public interface ApplicationDataMigration extends DataMigration {
 
     /**
-    * get all application scopes
+     * Migrate the data to the specified version
+     * @param observer
+     * @throws Throwable
      */
-    Observable<ApplicationScope> getAllApplicationScopes();
+    public Observable migrate(final Observable<ApplicationScope> applicationEntityGroup, final ProgressObserver observer) throws Throwable;
+
 }

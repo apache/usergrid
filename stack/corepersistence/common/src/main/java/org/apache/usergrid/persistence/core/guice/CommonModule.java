@@ -19,6 +19,7 @@
 package org.apache.usergrid.persistence.core.guice;
 
 
+import org.apache.usergrid.persistence.core.migration.data.*;
 import org.safehaus.guicyfig.GuicyFigModule;
 
 import org.apache.usergrid.persistence.core.astyanax.AstyanaxKeyspaceProvider;
@@ -27,11 +28,6 @@ import org.apache.usergrid.persistence.core.astyanax.CassandraConfigImpl;
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.core.consistency.TimeService;
 import org.apache.usergrid.persistence.core.consistency.TimeServiceImpl;
-import org.apache.usergrid.persistence.core.migration.data.DataMigration;
-import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
-import org.apache.usergrid.persistence.core.migration.data.DataMigrationManagerImpl;
-import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerialization;
-import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerializationImpl;
 import org.apache.usergrid.persistence.core.migration.schema.Migration;
 import org.apache.usergrid.persistence.core.migration.schema.MigrationManager;
 import org.apache.usergrid.persistence.core.migration.schema.MigrationManagerFig;
@@ -81,7 +77,8 @@ public class CommonModule extends AbstractModule {
 
 
         //do multibindings for migrations
-        Multibinder<DataMigration> dataMigrationMultibinder = Multibinder.newSetBinder( binder(), DataMigration.class );
+        Multibinder<ApplicationDataMigration> applicationDataMigrationMultibinder = Multibinder.newSetBinder( binder(), ApplicationDataMigration.class );
+        Multibinder<CollectionDataMigration> collectionDataMigrationMultibinder = Multibinder.newSetBinder( binder(), CollectionDataMigration.class );
 //        dataMigrationMultibinder.addBinding();
 //        dataMigrationManagerMultibinder.addBinding().to( DataMigrationManagerImpl.class );
 //        migrationBinding.addBinding().to( Key.get( MigrationInfoSerialization.class ) );

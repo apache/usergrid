@@ -31,6 +31,7 @@ import org.apache.usergrid.persistence.collection.event.EntityVersionCreated;
 import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
 import org.apache.usergrid.persistence.collection.guice.CollectionModule;
 import org.apache.usergrid.persistence.core.guice.CommonModule;
+import org.apache.usergrid.persistence.core.migration.data.CollectionDataMigration;
 import org.apache.usergrid.persistence.core.migration.data.DataMigration;
 import org.apache.usergrid.persistence.core.rx.AllEntitiesInSystemObservable;
 import org.apache.usergrid.persistence.core.rx.ApplicationObservable;
@@ -79,8 +80,8 @@ public class GuiceModule  extends AbstractModule {
         bind(AllEntitiesInSystemObservable.class).to( AllEntitiesInSystemObservableImpl.class );
         bind(ApplicationObservable.class).to( ApplicationObservableImpl.class );
 
-        Multibinder<DataMigration> dataMigrationMultibinder =
-                Multibinder.newSetBinder( binder(), DataMigration.class );
+        Multibinder<CollectionDataMigration> dataMigrationMultibinder =
+                Multibinder.newSetBinder( binder(), CollectionDataMigration.class );
         dataMigrationMultibinder.addBinding().to( EntityTypeMappingMigration.class );
 
         Multibinder<EntityDeleted> entityBinder =

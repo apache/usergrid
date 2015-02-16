@@ -27,8 +27,9 @@ import java.util.Set;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntityMigrationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.impl.MvccEntityDataMigrationImpl;
 import org.apache.usergrid.persistence.collection.serialization.impl.MvccEntitySerializationStrategyProxyV2Impl;
-import org.apache.usergrid.persistence.core.migration.data.DataMigration;
+import org.apache.usergrid.persistence.core.migration.data.*;
 import org.apache.usergrid.persistence.core.rx.AllEntitiesInSystemObservable;
+import org.apache.usergrid.persistence.core.rx.ApplicationObservable;
 import org.apache.usergrid.persistence.core.scope.ApplicationEntityGroup;
 import org.apache.usergrid.persistence.core.scope.EntityIdScope;
 import org.junit.Before;
@@ -47,9 +48,6 @@ import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
-import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
-import org.apache.usergrid.persistence.core.migration.data.DataMigrationManagerImpl;
-import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerialization;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
@@ -72,7 +70,7 @@ public class EntityDataMigrationIT extends AbstractCoreIT {
     private Injector injector;
 
 
-    private DataMigration entityDataMigration;
+    private CollectionDataMigration entityDataMigration;
     private DataMigrationManager dataMigrationManager;
     private MigrationInfoSerialization migrationInfoSerialization;
     private MvccEntitySerializationStrategy v1Strategy;
@@ -89,6 +87,7 @@ public class EntityDataMigrationIT extends AbstractCoreIT {
 
             new MigrationTestRule( app, SpringResource.getInstance().getBean( Injector.class ) ,MvccEntityDataMigrationImpl.class  );
     private AllEntitiesInSystemObservable allEntitiesInSystemObservable;
+    private ApplicationObservable applicationObservable;
 
 
     @Before
@@ -101,6 +100,8 @@ public class EntityDataMigrationIT extends AbstractCoreIT {
         migrationInfoSerialization = injector.getInstance( MigrationInfoSerialization.class );
         MvccEntityMigrationStrategy strategy = injector.getInstance(Key.get(MvccEntityMigrationStrategy.class));
         allEntitiesInSystemObservable = injector.getInstance(AllEntitiesInSystemObservable.class);
+        applicationObservable = injector.getInstance(ApplicationObservable.class);
+
         v1Strategy = strategy.getMigration().from();
         v2Strategy = strategy.getMigration().to();
     }
@@ -177,18 +178,9 @@ public class EntityDataMigrationIT extends AbstractCoreIT {
         assertTrue( "Saved new entities", savedEntities.size() > 0 );
 
         //perform the migration
-        allEntitiesInSystemObservable.getAllEntitiesInSystem(  1000)
-            .doOnNext(new Action1<ApplicationEntityGroup>() {
-                @Override
-                public void call(ApplicationEntityGroup applicationEntityGroup) {
-                   try {
-                       entityDataMigration.migrate(applicationEntityGroup, progressObserver).toBlocking().last();
-                   }catch (Throwable e){
-                       throw new RuntimeException(e);
-                   }
-                }
-            }).toBlocking().last();
+        rx.Observable<ApplicationEntityGroup> oRx = allEntitiesInSystemObservable.getAllEntitiesInSystem(applicationObservable.getAllApplicationScopes(), 1000);
 
+        entityDataMigration.migrate(oRx, progressObserver).toBlocking().last();
 
         assertFalse( "Progress observer should not have failed", progressObserver.getFailed() );
         assertTrue( "Progress observer should have update messages", progressObserver.getUpdates().size() > 0 );

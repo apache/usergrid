@@ -27,6 +27,7 @@ import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntityMigrationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
+import org.apache.usergrid.persistence.core.migration.data.CollectionDataMigration;
 import org.apache.usergrid.persistence.core.migration.data.DataMigration;
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationException;
 import org.apache.usergrid.persistence.core.migration.schema.MigrationStrategy;
@@ -48,7 +49,7 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Data migration strategy for entities
  */
-public class MvccEntityDataMigrationImpl implements DataMigration {
+public class MvccEntityDataMigrationImpl implements CollectionDataMigration {
 
     private final Keyspace keyspace;
     private final MvccEntityMigrationStrategy entityMigrationStrategy;
@@ -61,59 +62,65 @@ public class MvccEntityDataMigrationImpl implements DataMigration {
     }
 
     @Override
-    public Observable migrate(final ApplicationEntityGroup applicationEntityGroup, final DataMigration.ProgressObserver observer) {
+    public Observable migrate(final  Observable<ApplicationEntityGroup> applicationEntityGroupObservable, final DataMigration.ProgressObserver observer) {
         final AtomicLong atomicLong = new AtomicLong();
         final MutationBatch totalBatch = keyspace.prepareMutationBatch();
 
-        final List<EntityIdScope<CollectionScope>> entityIds = applicationEntityGroup.entityIds;
 
         final UUID now = UUIDGenerator.newTimeUUID();
 
-        //go through each entity in the system, and load it's entire
-        // history
-        return Observable.from(entityIds)
-            .subscribeOn(Schedulers.io())
-            .map(new Func1<EntityIdScope<CollectionScope>, Id>() {
-                @Override
-                public Id call(EntityIdScope<CollectionScope> idScope) {
+        return applicationEntityGroupObservable.flatMap(new Func1<ApplicationEntityGroup, Observable<Id>>() {
+            @Override
+            public Observable call(final ApplicationEntityGroup applicationEntityGroup) {
+                final List<EntityIdScope<CollectionScope>> entityIds = applicationEntityGroup.entityIds;
 
-                    ApplicationScope applicationScope = applicationEntityGroup.applicationScope;
-                    MigrationStrategy.MigrationRelationship<MvccEntitySerializationStrategy> migration = entityMigrationStrategy.getMigration();
+                //go through each entity in the system, and load it's entire
+                // history
+                return Observable.from(entityIds)
+                    .subscribeOn(Schedulers.io())
+                    .map(new Func1<EntityIdScope<CollectionScope>, Id>() {
+                        @Override
+                        public Id call(EntityIdScope<CollectionScope> idScope) {
 
-                    if (idScope.getCollectionScope() instanceof CollectionScope) {
-                        CollectionScope currentScope =  idScope.getCollectionScope();
-                        //for each element in the history in the previous version,
-                        // copy it to the CF in v2
-                        Iterator<MvccEntity> allVersions = migration.from()
-                            .loadDescendingHistory(currentScope, idScope.getId(), now,
-                                1000);
+                            MigrationStrategy.MigrationRelationship<MvccEntitySerializationStrategy> migration = entityMigrationStrategy.getMigration();
 
-                        while (allVersions.hasNext()) {
-                            final MvccEntity version = allVersions.next();
+                            if (idScope.getCollectionScope() instanceof CollectionScope) {
+                                CollectionScope currentScope = idScope.getCollectionScope();
+                                //for each element in the history in the previous version,
+                                // copy it to the CF in v2
+                                Iterator<MvccEntity> allVersions = migration.from()
+                                    .loadDescendingHistory(currentScope, idScope.getId(), now,
+                                        1000);
 
-                            final MutationBatch versionBatch =
-                                migration.to().write(currentScope, version);
+                                while (allVersions.hasNext()) {
+                                    final MvccEntity version = allVersions.next();
 
-                            totalBatch.mergeShallow(versionBatch);
+                                    final MutationBatch versionBatch =
+                                        migration.to().write(currentScope, version);
 
-                            if (atomicLong.incrementAndGet() % 50 == 0) {
+                                    totalBatch.mergeShallow(versionBatch);
+
+                                    if (atomicLong.incrementAndGet() % 50 == 0) {
+                                        executeBatch(totalBatch, observer, atomicLong);
+                                    }
+                                }
                                 executeBatch(totalBatch, observer, atomicLong);
                             }
+
+                            return idScope.getId();
                         }
-                        executeBatch(totalBatch, observer, atomicLong);
-                    }
+                    })
+                    .buffer(100)
+                    .doOnNext(new Action1<List<Id>>() {
+                        @Override
+                        public void call(List<Id> ids) {
+                            executeBatch(totalBatch, observer, atomicLong);
 
-                    return idScope.getId();
-                }
-            })
-            .buffer(100)
-            .doOnNext(new Action1<List<Id>>() {
-                @Override
-                public void call(List<Id> ids) {
-                    executeBatch(totalBatch, observer, atomicLong);
+                        }
+                    });
+            }
+        });
 
-                }
-            });
     }
 
     protected void executeBatch( final MutationBatch batch, final DataMigration.ProgressObserver po, final AtomicLong count ) {

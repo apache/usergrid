@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.usergrid.corepersistence.ManagerCache;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.persistence.core.migration.data.CollectionDataMigration;
 import org.apache.usergrid.persistence.core.scope.ApplicationEntityGroup;
 import org.apache.usergrid.persistence.core.migration.data.DataMigration;
 import org.apache.usergrid.persistence.core.rx.AllEntitiesInSystemObservable;
@@ -46,7 +47,7 @@ import rx.schedulers.Schedulers;
 /**
  * Migration to ensure that our entity id is written into our map data
  */
-public class EntityTypeMappingMigration implements DataMigration {
+public class EntityTypeMappingMigration implements CollectionDataMigration {
 
     private final ManagerCache managerCache;
     private final AllEntitiesInSystemObservable allEntitiesInSystemObservable;
@@ -60,29 +61,34 @@ public class EntityTypeMappingMigration implements DataMigration {
 
 
     @Override
-    public Observable migrate(final ApplicationEntityGroup applicationEntityGroup, final ProgressObserver observer) throws Throwable {
+    public Observable migrate(final Observable<ApplicationEntityGroup> applicationEntityGroupObservable, final ProgressObserver observer) throws Throwable {
 
         final AtomicLong atomicLong = new AtomicLong();
 
-        final MapScope ms = CpNamingUtils.getEntityTypeMapScope(applicationEntityGroup.applicationScope.getApplication());
+        return applicationEntityGroupObservable.flatMap(new Func1<ApplicationEntityGroup, Observable<Long>>() {
+            @Override
+            public Observable call(final ApplicationEntityGroup applicationEntityGroup) {
+                final MapScope ms = CpNamingUtils.getEntityTypeMapScope(applicationEntityGroup.applicationScope.getApplication());
 
-        final MapManager mapManager = managerCache.getMapManager(ms);
-        return Observable.from(applicationEntityGroup.entityIds)
-            .subscribeOn(Schedulers.io())
-            .map(new Func1<EntityIdScope, Long>() {
-                @Override
-                public Long call(EntityIdScope idScope) {
-                    final UUID entityUuid = idScope.getId().getUuid();
-                    final String entityType = idScope.getId().getType();
+                final MapManager mapManager = managerCache.getMapManager(ms);
+                return Observable.from(applicationEntityGroup.entityIds)
+                    .subscribeOn(Schedulers.io())
+                    .map(new Func1<EntityIdScope, Long>() {
+                        @Override
+                        public Long call(EntityIdScope idScope) {
+                            final UUID entityUuid = idScope.getId().getUuid();
+                            final String entityType = idScope.getId().getType();
 
-                    mapManager.putString(entityUuid.toString(), entityType);
+                            mapManager.putString(entityUuid.toString(), entityType);
 
-                    if (atomicLong.incrementAndGet() % 100 == 0) {
-                        updateStatus(atomicLong, observer);
-                    }
-                    return atomicLong.get();
-                }
-            });
+                            if (atomicLong.incrementAndGet() % 100 == 0) {
+                                updateStatus(atomicLong, observer);
+                            }
+                            return atomicLong.get();
+                        }
+                    });
+            }
+        });
     }
 
 

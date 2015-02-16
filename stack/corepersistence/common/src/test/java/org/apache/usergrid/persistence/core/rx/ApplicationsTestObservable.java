@@ -19,6 +19,7 @@
  */
 package org.apache.usergrid.persistence.core.rx;
 
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 import rx.Observable;
 
@@ -28,6 +29,11 @@ import rx.Observable;
 public class ApplicationsTestObservable implements ApplicationObservable {
     @Override
     public Observable<Id> getAllApplicationIds() {
+        return Observable.empty();
+    }
+
+    @Override
+    public Observable<ApplicationScope> getAllApplicationScopes() {
         return Observable.empty();
     }
 }

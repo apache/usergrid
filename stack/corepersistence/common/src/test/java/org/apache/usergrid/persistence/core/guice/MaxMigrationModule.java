@@ -20,6 +20,7 @@
 package org.apache.usergrid.persistence.core.guice;
 
 
+import org.apache.usergrid.persistence.core.migration.data.ApplicationDataMigration;
 import org.apache.usergrid.persistence.core.migration.data.DataMigration;
 
 import com.google.inject.AbstractModule;
@@ -33,7 +34,7 @@ import com.google.inject.multibindings.Multibinder;
 public class MaxMigrationModule extends AbstractModule {
     @Override
     protected void configure() {
-        Multibinder<DataMigration> dataMigrationMultibinder = Multibinder.newSetBinder( binder(), DataMigration.class );
+        Multibinder<ApplicationDataMigration> dataMigrationMultibinder = Multibinder.newSetBinder( binder(), ApplicationDataMigration.class );
         dataMigrationMultibinder.addBinding().to( MaxMigrationVersion.class );
     }
 }

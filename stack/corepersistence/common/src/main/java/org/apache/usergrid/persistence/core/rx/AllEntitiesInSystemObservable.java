@@ -43,10 +43,10 @@ public interface AllEntitiesInSystemObservable<T extends ApplicationScope> {
      * Return an observable that emits all entities in the system.
      *
      * @param appIdObservable list of app ids
-     * @param bufferSize The amount of entityIds to buffer into each ApplicationEntityGroup.  Note that if we exceed the buffer size
-     *                   you may be more than 1 ApplicationEntityGroup with the same application and different ids
+     * @param bufferSize      The amount of entityIds to buffer into each ApplicationEntityGroup.  Note that if we exceed the buffer size
+     *                        you may be more than 1 ApplicationEntityGroup with the same application and different ids
      */
-    public Observable<ApplicationEntityGroup<T>> getAllEntitiesInSystem(Observable<Id> appIdObservable, final int bufferSize);
+    public Observable<ApplicationEntityGroup<T>> getAllEntitiesInSystem(Observable<ApplicationScope> appIdObservable, final int bufferSize);
 
 
 }

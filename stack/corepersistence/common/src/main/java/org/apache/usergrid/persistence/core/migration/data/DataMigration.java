@@ -43,12 +43,6 @@ import rx.Observable;
 public interface DataMigration {
 
 
-    /**
-     * Migrate the data to the specified version
-     * @param observer
-     * @throws Throwable
-     */
-    public Observable migrate(final ApplicationEntityGroup applicationEntityGroup,final ProgressObserver observer) throws Throwable;
 
     /**
      * Get the version of this migration.  It must be unique.
@@ -85,9 +79,9 @@ public interface DataMigration {
 
     public enum MigrationType{
         Entities,
-        Edges,
-        Index,
-        Other
+        Applications,
+        System,
+        Collections
     }
 
 }

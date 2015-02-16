@@ -26,6 +26,7 @@ import java.util.UUID;
 import com.google.inject.Inject;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.core.rx.ApplicationObservable;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -133,5 +134,16 @@ public class ApplicationObservableImpl implements ApplicationObservable {
         } );
 
         return Observable.merge( systemIds, appIds );
+    }
+
+    @Override
+    public Observable<ApplicationScope> getAllApplicationScopes() {
+        return getAllApplicationIds().map(new Func1<Id, ApplicationScope>() {
+            @Override
+            public ApplicationScope call(Id id) {
+                ApplicationScope scope = new ApplicationScopeImpl(id);
+                return scope;
+            }
+        });
     }
 }
