@@ -43,7 +43,7 @@ public class IndexingUtils {
     // These are not allowed in document type names: _ . , | #
     public static final String SEPARATOR = "__";
 
-    
+
     //
     // Reserved UG fields.
     //
@@ -152,7 +152,8 @@ public class IndexingUtils {
             .startObject()
 
                 .startObject( type )
-
+                    /**  add routing  "_routing":{ "required":false,  "path":"ug_entityId" **/
+                    .startObject("_routing").field("required",true).field("path",ENTITYID_ID_FIELDNAME).endObject()
                     .startArray("dynamic_templates")
 
                         // we need most specific mappings first since it's a stop on match algorithm
