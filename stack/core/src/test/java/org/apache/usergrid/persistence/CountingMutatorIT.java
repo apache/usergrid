@@ -32,6 +32,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.persistence.hector.CountingMutator;
 import org.apache.usergrid.persistence.index.query.Query.Level;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.utils.UUIDUtils;
 
 import static org.junit.Assert.assertEquals;
@@ -65,7 +66,7 @@ public class CountingMutatorIT extends AbstractCoreIT {
         CountingMutator.MAX_SIZE = 10;
 
         UUID applicationId = setup.createApplication(
-            "testOrganization", "testFlushingMutator-" + RandomStringUtils.randomAlphabetic(20) );
+            "testOrganization", "testFlushingMutator-" + UUIDGenerator.newTimeUUID() );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 

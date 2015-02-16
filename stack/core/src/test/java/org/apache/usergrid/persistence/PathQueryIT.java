@@ -32,6 +32,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Query.Level;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import static org.junit.Assert.assertEquals;
 
@@ -41,7 +42,7 @@ public class PathQueryIT extends AbstractCoreIT {
     @Test
     public void testUserDevicePathQuery() throws Exception {
         UUID applicationId = setup.createApplication(
-                "testOrganization", "testUserDevicePathQuery" + RandomStringUtils.randomAlphabetic(20)  );
+                "testOrganization"+ UUIDGenerator.newTimeUUID(), "testUserDevicePathQuery" + UUIDGenerator.newTimeUUID()  );
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
         List<Entity> users = new ArrayList<Entity>();
@@ -112,7 +113,7 @@ public class PathQueryIT extends AbstractCoreIT {
     public void testGroupUserDevicePathQuery() throws Exception {
 
         UUID applicationId = setup.createApplication(
-                "testOrganization", "testGroupUserDevicePathQuery" + RandomStringUtils.randomAlphabetic(20)  );
+                "testOrganization"+ UUIDGenerator.newTimeUUID(), "testGroupUserDevicePathQuery" + UUIDGenerator.newTimeUUID()  );
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
         List<Entity> groups = new ArrayList<Entity>();

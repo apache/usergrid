@@ -26,8 +26,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.commons.lang3.RandomStringUtils;
-
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
@@ -63,8 +61,7 @@ public class IndexIT extends AbstractCoreIT {
     public void testCollectionOrdering() throws Exception {
         LOG.info( "testCollectionOrdering" );
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testCollectionOrdering" + RandomStringUtils.randomAlphabetic(20)  );
-        assertNotNull( applicationId );
+        UUID applicationId = app.getId();
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
         assertNotNull( em );
@@ -136,7 +133,7 @@ public class IndexIT extends AbstractCoreIT {
     public void testCollectionFilters() throws Exception {
         LOG.info( "testCollectionFilters" );
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testCollectionFilters" + RandomStringUtils.randomAlphabetic(20)  );
+        UUID applicationId = app.getId();
         assertNotNull( applicationId );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
@@ -262,7 +259,7 @@ public class IndexIT extends AbstractCoreIT {
     public void testSecondarySorts() throws Exception {
         LOG.info( "testSecondarySorts" );
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testSecondarySorts" + RandomStringUtils.randomAlphabetic(20)  );
+        UUID applicationId = app.getId();
         assertNotNull( applicationId );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
@@ -296,7 +293,7 @@ public class IndexIT extends AbstractCoreIT {
     @Test
     public void testPropertyUpdateWithConnection() throws Exception {
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testPropertyUpdateWithConnection" + RandomStringUtils.randomAlphabetic(20)  );
+        UUID applicationId = app.getId();
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
@@ -371,7 +368,7 @@ public class IndexIT extends AbstractCoreIT {
     public void testPropertyUpdateWithConnectionEntityIndexEntryAudit() throws Exception {
 
         UUID applicationId =
-                setup.createApplication( "testOrganization", "testPropertyUpdateWithConnectionEntityIndexEntryAudit" + RandomStringUtils.randomAlphabetic(20)  );
+                app.getId();
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 

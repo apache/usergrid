@@ -31,6 +31,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.persistence.geo.model.Point;
 import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -52,7 +53,7 @@ public class GeoQueryBooleanTest extends AbstractCoreIT {
         log.info( "GeoQueryBooleanTest.testGeoQueryWithOr" );
 
         UUID applicationId = setup.createApplication(
-            "testOrganization", "testGeoQueryWithOr-" + RandomStringUtils.randomAlphabetic(20));
+            "testOrganization", "testGeoQueryWithOr-" + UUIDGenerator.newTimeUUID());
         assertNotNull( applicationId );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
@@ -119,7 +120,7 @@ public class GeoQueryBooleanTest extends AbstractCoreIT {
         log.info( "GeoQueryBooleanTest.testGeoQueryWithOr" );
 
         UUID applicationId = setup.createApplication(
-            "testOrganization", "testGeoQueryWithNot-" + RandomStringUtils.randomAlphabetic(20) );
+            "testOrganization", "testGeoQueryWithNot-" + UUIDGenerator.newTimeUUID() );
         assertNotNull( applicationId );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );

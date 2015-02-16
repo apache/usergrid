@@ -41,6 +41,7 @@ import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.cassandra.util.TraceTag;
 import org.apache.usergrid.persistence.cassandra.util.TraceTagManager;
 import org.apache.usergrid.persistence.cassandra.util.TraceTagReporter;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.setup.ConcurrentProcessSingleton;
 
 import static org.junit.Assert.assertEquals;
@@ -102,7 +103,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
     @Test
     public void testDeleteApplication() throws Exception {
 
-        String rand = RandomStringUtils.randomAlphabetic(20);
+        String rand = UUIDGenerator.newTimeUUID().toString();
 
         // create an application with a collection and an entity
 
@@ -147,7 +148,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
         logger.info( "EntityDaoTest.testCreateAndGet" );
 
         UUID applicationId = createApplication( "EntityManagerFactoryImplIT", "testCreateAndGet"
-                + RandomStringUtils.randomAlphabetic(20)  );
+                + UUIDGenerator.newTimeUUID()  );
         logger.info( "Application id " + applicationId );
 
         EntityManager em = emf.getEntityManager( applicationId );
