@@ -19,6 +19,7 @@ package org.apache.usergrid.batch;
 
 import java.util.UUID;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.usergrid.batch.repository.JobDescriptor;
 import org.apache.usergrid.batch.service.JobRuntimeService;
 import org.apache.usergrid.persistence.entities.JobData;
@@ -56,6 +57,15 @@ public class JobExecutionImpl implements JobExecution, JobRuntime {
         this.transactionId = jobDescriptor.getTransactionId();
         this.data = jobDescriptor.getData();
         this.stats = jobDescriptor.getStats();
+    }
+
+
+    public String toString() {
+        return new ToStringBuilder(this)
+            .append("runId", runId)
+            .append("jobName", jobName)
+            .append("status", status)
+            .toString();
     }
 
 

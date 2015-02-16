@@ -2936,7 +2936,6 @@ public class EntityManagerImpl implements EntityManager {
         throw new UnsupportedOperationException("Not supported.");
     }
 
-
     @Override
     public Health getIndexHealth() {
         return Health.GREEN; // no good way to assess index status using old-school entity manager

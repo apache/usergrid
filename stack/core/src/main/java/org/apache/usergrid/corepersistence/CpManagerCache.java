@@ -49,7 +49,6 @@ public class CpManagerCache implements ManagerCache {
 
 
 
-
     @Inject
     public CpManagerCache( final EntityCollectionManagerFactory ecmf, final EntityIndexFactory eif,
                            final GraphManagerFactory gmf, final MapManagerFactory mmf ) {
@@ -63,7 +62,9 @@ public class CpManagerCache implements ManagerCache {
 
     @Override
     public EntityCollectionManager getEntityCollectionManager( CollectionScope scope ) {
-        return ecmf.createCollectionManager(scope);
+
+        //cache is now in the colletion manager level
+        return ecmf.createCollectionManager( scope );
     }
 
 

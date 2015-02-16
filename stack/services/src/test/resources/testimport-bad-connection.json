@@ -1,0 +1,18 @@
+{
+    "collections" : {
+        "connfails" : [
+            {
+                "Metadata" : {
+                    "uuid" : "e2c5fed0-a7ea-11e4-a129-a1a7aeaea66e",
+                    "name" : "thing0",
+                    "created" : 1422558799676,
+                    "modified" : 1422558799676,
+                    "index" : 0
+                },
+                "connections" : {
+                    "related" : [ "e2c896ea-a7ea-11e4-bebf-77bfb1f0c5f4" ]
+                }
+            }
+        ]
+    }
+}

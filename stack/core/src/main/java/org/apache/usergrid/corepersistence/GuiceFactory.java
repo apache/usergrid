@@ -134,7 +134,7 @@ public class GuiceFactory implements FactoryBean<Injector>, ApplicationContextAw
         }
 
         //this is seriously fugly, and needs removed
-        injector = Guice.createInjector( new GuiceModule( applicationContext ) );
+        injector = Guice.createInjector( new CoreModule( applicationContext ) );
 
         return injector;
     }

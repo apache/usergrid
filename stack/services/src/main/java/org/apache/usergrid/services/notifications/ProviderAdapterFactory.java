@@ -26,7 +26,6 @@ import org.apache.usergrid.services.notifications.apns.APNsAdapter;
 import org.apache.usergrid.services.notifications.gcm.GCMAdapter;
 import org.apache.usergrid.services.notifications.wns.WNSAdapter;
 
-import java.util.HashMap;
 
 /**
  * Get valid provideradapters

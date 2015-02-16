@@ -53,7 +53,7 @@
         <directory>src/main/resources</directory>
         <filtering>true</filtering>
         <includes>
-          <include>**/*.xml</include>
+            <include>**/*.xml</include>
         </includes>
       </resource>
       <resource>
@@ -69,6 +69,7 @@
           <include>**/*.xml</include>
           <include>**/*.properties</include>
           <include>**/*.p12</include>
+          <include>**/*.json</include>
         </includes>
       </testResource>
       <testResource>

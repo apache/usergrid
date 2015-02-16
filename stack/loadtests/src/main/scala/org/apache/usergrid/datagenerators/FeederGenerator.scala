@@ -143,13 +143,19 @@
 
   }
 
-  def generateCustomEntityFeeder(numEntities: Int): Array[Map[String, String]] = {
-    var entityArray: ArrayBuffer[Map[String, String]] = new ArrayBuffer[Map[String, String]]
-    for (entityCount <- 1 to numEntities) {
-      var entity: Map[String, String] = EntityDataGenerator.generateCustomEntity(entityCount.toString)
-      entityArray += entity
-    }
-    return entityArray.toArray
-  }
+
+
+
+   /**
+    * Generate users forever
+    * @param seed The seed
+    * @return
+    */
+   def generateCustomEntityInfinite(seed:Int): Iterator[Map[String, String]] = {
+     val userFeeder = Iterator.from(seed).map(i=>EntityDataGenerator.generateCustomEntity(i.toString))
+     return userFeeder
+   }
+
+
 
 }

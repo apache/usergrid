@@ -1,0 +1,155 @@
+{
+    "collections": {
+        "things": [
+            {
+                "Metadata": {
+                    "uuid": "a48f87da-ad7b-11e4-a929-1903ccb95468",
+                    "type": "thing",
+                    "name": "org.apache.usergrid.management.importer.importcollectionit9dc7ff35ad7b11e49e42e2c2c83d257d/testupdatebyimport-thing-0",
+                    "created": 1423170728141,
+                    "modified": 1423170728141,
+                    "originalAppId": "a445ad9e-ad7b-11e4-9e42-e2c2c83d257d",
+                    "originalAppName": "org.apache.usergrid.management.importer.importcollectionit9dc7ff35ad7b11e49e42e2c2c83d257d/testupdatebyimport",
+                    "connections": {
+                        "related": ["a4921fea-ad7b-11e4-ab93-5b5c80acc33f"]
+                    },
+                    "dictionaries": {
+                        "connected_types": {
+                            "related": ""
+                        },
+                        "connecting_types": {
+                            "related": ""
+                        }
+                    }
+                }
+            },
+            {
+                "Metadata": {
+                    "uuid": "a4921fea-ad7b-11e4-ab93-5b5c80acc33f",
+                    "type": "thing",
+                    "name": "org.apache.usergrid.management.importer.importcollectionit9dc7ff35ad7b11e49e42e2c2c83d257d/testupdatebyimport-thing-1",
+                    "created": 1423170728158,
+                    "modified": 1423170728158,
+                    "originalAppId": "a445ad9e-ad7b-11e4-9e42-e2c2c83d257d",
+                    "originalAppName": "org.apache.usergrid.management.importer.importcollectionit9dc7ff35ad7b11e49e42e2c2c83d257d/testupdatebyimport"
+                },
+                "connections": {
+                    "related": ["a48f87da-ad7b-11e4-a929-1903ccb95468"]
+                },
+                "dictionaries": {
+                    "connected_types": {
+                        "related": ""
+                    },
+                    "connecting_types": {
+                        "related": ""
+                    }
+                }
+            },
+            {
+                "Metadata": {
+                    "uuid": "a494b7fa-ad7b-11e4-b590-df421e4b4225",
+                    "type": "thing",
+                    "name": "org.apache.usergrid.management.importer.importcollectionit9dc7ff35ad7b11e49e42e2c2c83d257d/testupdatebyimport-thing-2",
+                    "created": 1423170728175,
+                    "modified": 1423170728175,
+                    "originalAppId": "a445ad9e-ad7b-11e4-9e42-e2c2c83d257d",
+                    "originalAppName": "org.apache.usergrid.management.importer.importcollectionit9dc7ff35ad7b11e49e42e2c2c83d257d/testupdatebyimport"
+                },
+                "connections": {},
+                "dictionaries": {}
+            },
+            {
+                "Metadata": {
+                    "uuid": "a497771a-ad7b-11e4-9168-173fd0d6b09b",
+                    "type": "thing",
+                    "name": "org.apache.usergrid.management.importer.importcollectionit9dc7ff35ad7b11e49e42e2c2c83d257d/testupdatebyimport-thing-3",
+                    "created": 1423170728193,
+                    "modified": 1423170728193,
+                    "originalAppId": "a445ad9e-ad7b-11e4-9e42-e2c2c83d257d",
+                    "originalAppName": "org.apache.usergrid.management.importer.importcollectionit9dc7ff35ad7b11e49e42e2c2c83d257d/testupdatebyimport"
+                },
+                "connections": {},
+                "dictionaries": {}
+            },
+            {
+                "Metadata": {
+                    "uuid": "a49a0f2a-ad7b-11e4-b8c5-01f63321a18b",
+                    "type": "thing",
+                    "name": "org.apache.usergrid.management.importer.importcollectionit9dc7ff35ad7b11e49e42e2c2c83d257d/testupdatebyimport-thing-4",
+                    "created": 1423170728210,
+                    "modified": 1423170728210,
+                    "originalAppId": "a445ad9e-ad7b-11e4-9e42-e2c2c83d257d",
+                    "originalAppName": "org.apache.usergrid.management.importer.importcollectionit9dc7ff35ad7b11e49e42e2c2c83d257d/testupdatebyimport"
+                },
+                "connections": {},
+                "dictionaries": {}
+            },
+            {
+                "Metadata": {
+                    "uuid": "a49ca73a-ad7b-11e4-afa9-abe6d52a0752",
+                    "type": "thing",
+                    "name": "org.apache.usergrid.management.importer.importcollectionit9dc7ff35ad7b11e49e42e2c2c83d257d/testupdatebyimport-thing-5",
+                    "created": 1423170728227,
+                    "modified": 1423170728227,
+                    "originalAppId": "a445ad9e-ad7b-11e4-9e42-e2c2c83d257d",
+                    "originalAppName": "org.apache.usergrid.management.importer.importcollectionit9dc7ff35ad7b11e49e42e2c2c83d257d/testupdatebyimport"
+                },
+                "connections": {},
+                "dictionaries": {}
+            },
+            {
+                "Metadata": {
+                    "uuid": "a49f1844-ad7b-11e4-a9b2-71d39c6a3448",
+                    "type": "thing",
+                    "name": "org.apache.usergrid.management.importer.importcollectionit9dc7ff35ad7b11e49e42e2c2c83d257d/testupdatebyimport-thing-6",
+                    "created": 1423170728243,
+                    "modified": 1423170728243,
+                    "originalAppId": "a445ad9e-ad7b-11e4-9e42-e2c2c83d257d",
+                    "originalAppName": "org.apache.usergrid.management.importer.importcollectionit9dc7ff35ad7b11e49e42e2c2c83d257d/testupdatebyimport"
+                },
+                "connections": {},
+                "dictionaries": {}
+            },
+            {
+                "Metadata": {
+                    "uuid": "a4a1622a-ad7b-11e4-bf9f-3facb3ba8073",
+                    "type": "thing",
+                    "name": "org.apache.usergrid.management.importer.importcollectionit9dc7ff35ad7b11e49e42e2c2c83d257d/testupdatebyimport-thing-7",
+                    "created": 1423170728258,
+                    "modified": 1423170728258,
+                    "originalAppId": "a445ad9e-ad7b-11e4-9e42-e2c2c83d257d",
+                    "originalAppName": "org.apache.usergrid.management.importer.importcollectionit9dc7ff35ad7b11e49e42e2c2c83d257d/testupdatebyimport"
+                },
+                "connections": {},
+                "dictionaries": {}
+            },
+            {
+                "Metadata": {
+                    "uuid": "a4a3ac1a-ad7b-11e4-868c-b1d8d4f657f1",
+                    "type": "thing",
+                    "name": "org.apache.usergrid.management.importer.importcollectionit9dc7ff35ad7b11e49e42e2c2c83d257d/testupdatebyimport-thing-8",
+                    "created": 1423170728273,
+                    "modified": 1423170728273,
+                    "originalAppId": "a445ad9e-ad7b-11e4-9e42-e2c2c83d257d",
+                    "originalAppName": "org.apache.usergrid.management.importer.importcollectionit9dc7ff35ad7b11e49e42e2c2c83d257d/testupdatebyimport"
+                },
+                "connections": {},
+                "dictionaries": {}
+            },
+            {
+                "Metadata": {
+                    "uuid": "a4a6442a-ad7b-11e4-867e-976ae355c744",
+                    "type": "thing",
+                    "name": "org.apache.usergrid.management.importer.importcollectionit9dc7ff35ad7b11e49e42e2c2c83d257d/testupdatebyimport-thing-9",
+                    "created": 1423170728290,
+                    "modified": 1423170728290,
+                    "originalAppId": "a445ad9e-ad7b-11e4-9e42-e2c2c83d257d",
+                    "originalAppName": "org.apache.usergrid.management.importer.importcollectionit9dc7ff35ad7b11e49e42e2c2c83d257d/testupdatebyimport"
+                },
+                "connections": {},
+                "dictionaries": {}
+            }
+        ]
+    }
+}
+    

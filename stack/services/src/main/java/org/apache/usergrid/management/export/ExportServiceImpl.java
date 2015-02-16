@@ -91,7 +91,7 @@ public class ExportServiceImpl implements ExportService {
         try {
             em = emf.getEntityManager( emf.getManagementAppId() );
             Set<String> collections = em.getApplicationCollections();
-            //Set<String> collections = em.getE
+
             if ( !collections.contains( "exports" ) ) {
                 em.createApplicationCollection( "exports" );
             }
@@ -338,7 +338,7 @@ public class ExportServiceImpl implements ExportService {
                 continue;
             }
 
-            appFileName = prepareOutputFileName( "application", application.getValue(), null );
+            appFileName = prepareOutputFileName( application.getValue(), null );
 
             File ephemeral = collectionExportAndQuery( application.getKey(), config, export, jobExecution );
 
@@ -371,9 +371,9 @@ public class ExportServiceImpl implements ExportService {
         Export export = getExportEntity( jobExecution );
 
         ApplicationInfo application = managementService.getApplicationInfo( applicationId );
-        String appFileName = prepareOutputFileName( "application", application.getName(), null );
+        String appFileName = prepareOutputFileName( application.getName(), null );
 
-        File ephemeral = collectionExportAndQuery( applicationId, config, export, jobExecution );
+        File ephemeral = collectionExportAndQuery(applicationId, config, export, jobExecution);
 
         fileTransfer( export, appFileName, ephemeral, config, s3Export );
     }
@@ -390,8 +390,7 @@ public class ExportServiceImpl implements ExportService {
         Export export = getExportEntity( jobExecution );
         ApplicationInfo application = managementService.getApplicationInfo( applicationUUID );
 
-        String appFileName = prepareOutputFileName( "application", application.getName(),
-                ( String ) config.get( "collectionName" ) );
+        String appFileName = prepareOutputFileName( application.getName(), ( String ) config.get( "collectionName" ) );
 
 
         File ephemeral = collectionExportAndQuery( applicationUUID, config, export, jobExecution );
@@ -459,12 +458,6 @@ public class ExportServiceImpl implements ExportService {
                 jg.writeEndArray();
             }
         }
-
-        // Write connections
-        saveConnections( entity, em, jg );
-
-        // Write dictionaries
-        saveDictionaries( entity, em, jg );
     }
 
 
@@ -515,8 +508,8 @@ public class ExportServiceImpl implements ExportService {
             jg.writeFieldName( connectionType );
             jg.writeStartArray();
 
-            Results results = em.getConnectedEntities( 
-                new SimpleEntityRef(entity.getType(), entity.getUuid()), 
+            Results results = em.getConnectedEntities(
+                new SimpleEntityRef(entity.getType(), entity.getUuid()),
                 connectionType, null, Level.IDS );
 
             List<ConnectionRef> connections = results.getConnections();
@@ -542,13 +535,11 @@ public class ExportServiceImpl implements ExportService {
 
 
     /**
-     * @param type just a label such us: organization, application.
-     *
      * @return the file name concatenated with the type and the name of the collection
      */
-    protected String prepareOutputFileName( String type, String name, String CollectionName ) {
+    public String prepareOutputFileName( String applicationName, String CollectionName ) {
         StringBuilder str = new StringBuilder();
-        str.append( name );
+        str.append( applicationName );
         str.append( "." );
         if ( CollectionName != null ) {
             str.append( CollectionName );
@@ -579,7 +570,8 @@ public class ExportServiceImpl implements ExportService {
 
         JsonGenerator jg = getJsonGenerator( ephemeral );
 
-        jg.writeStartArray();
+        jg.writeStartObject();
+        jg.writeObjectFieldStart( "collections" );
 
         for ( String collectionName : metadata.keySet() ) {
 
@@ -588,6 +580,10 @@ public class ExportServiceImpl implements ExportService {
             }
             //if the collection you are looping through doesn't match the name of the one you want. Don't export it.
             if ( ( config.get( "collectionName" ) == null ) || collectionName.equalsIgnoreCase((String)config.get( "collectionName" ) ) ) {
+
+                //write out the collection name at the start of the file
+                jg.writeArrayFieldStart( collectionName.toLowerCase() );
+
                 //Query entity manager for the entities in a collection
                 Query query = null;
                 if ( config.get( "query" ) == null ) {
@@ -618,10 +614,17 @@ public class ExportServiceImpl implements ExportService {
                     saveCollectionMembers( jg, em, ( String ) config.get( "collectionName" ), entity );
                     jg.writeEndObject();
                     jg.flush();
+
                 }
+
+
+
+                //write out the end collection
+                jg.writeEndArray();
             }
         }
-        jg.writeEndArray();
+        jg.writeEndObject();
+        jg.writeEndObject();
         jg.flush();
         jg.close();
 

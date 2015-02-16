@@ -38,6 +38,7 @@ import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Query.Level;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.utils.UUIDUtils;
 
 import static org.junit.Assert.assertEquals;
@@ -61,7 +62,7 @@ public class EntityManagerIT extends AbstractCoreIT {
         LOG.info( "EntityManagerIT.testEntityManagerTest" );
 
         UUID applicationId = setup.createApplication(
-            "testOrganization", "testEntityManagerTest" + RandomStringUtils.randomAlphabetic(20) );
+            "testOrganization", "testEntityManagerTest" + UUIDGenerator.newTimeUUID() );
         assertNotNull( applicationId );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
@@ -122,7 +123,7 @@ public class EntityManagerIT extends AbstractCoreIT {
         LOG.info( "EntityDaoTest.testCreateAndGet" );
 
         UUID applicationId = setup.createApplication(
-                "testOrganization", "testCreateAndGet" + RandomStringUtils.randomAlphabetic(20)  );
+                "testOrganization", "testCreateAndGet" + UUIDGenerator.newTimeUUID()  );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
@@ -193,7 +194,7 @@ public class EntityManagerIT extends AbstractCoreIT {
         LOG.info( "EntityDaoTest.testDictionaries" );
 
         UUID applicationId = setup.createApplication(
-                "testOrganization", "testDictionaries" + RandomStringUtils.randomAlphabetic(20)  );
+                "testOrganization", "testDictionaries" + UUIDGenerator.newTimeUUID()  );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
@@ -237,7 +238,7 @@ public class EntityManagerIT extends AbstractCoreIT {
         LOG.info( "EntityDaoTest.testProperties" );
 
         UUID applicationId = setup.createApplication(
-                "testOrganization", "testProperties" + RandomStringUtils.randomAlphabetic(20)  );
+                "testOrganization", "testProperties" + UUIDGenerator.newTimeUUID()  );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
@@ -276,7 +277,7 @@ public class EntityManagerIT extends AbstractCoreIT {
         LOG.info( "EntityDaoTest.testCreateAndDelete" );
 
         UUID applicationId = setup.createApplication(
-                "testOrganization", "testCreateAndDelete" + RandomStringUtils.randomAlphabetic(20)  );
+                "testOrganization", "testCreateAndDelete" + UUIDGenerator.newTimeUUID()  );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
@@ -310,7 +311,7 @@ public class EntityManagerIT extends AbstractCoreIT {
         LOG.info( "EntityDaoTest.testCreateAndDeleteUser" );
 
         UUID applicationId = setup.createApplication(
-                "testOrganization", "testCreateAndDeleteUser" + RandomStringUtils.randomAlphabetic(20)  );
+                "testOrganization", "testCreateAndDeleteUser" + UUIDGenerator.newTimeUUID()  );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
@@ -366,7 +367,7 @@ public class EntityManagerIT extends AbstractCoreIT {
         LOG.info( "EntityDaoTest.testProperties" );
 
         UUID applicationId = setup.createApplication(
-                "testOrganization", "testJson" + RandomStringUtils.randomAlphabetic(20)  );
+                "testOrganization", "testJson" + UUIDGenerator.newTimeUUID()  );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
@@ -408,7 +409,7 @@ public class EntityManagerIT extends AbstractCoreIT {
         organizationEntity = em.create( organizationEntity );
 
         UUID applicationId = setup.getEmf().createApplication(
-                "testCounterOrg", "testEntityCounters" + RandomStringUtils.randomAlphabetic(20)  );
+                "testCounterOrg", "testEntityCounters" + UUIDGenerator.newTimeUUID()  );
 
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
         properties.put( "name", "testEntityCounters" );
@@ -445,7 +446,7 @@ public class EntityManagerIT extends AbstractCoreIT {
         LOG.info( "EntityDaoTest.testCreateAndDelete" );
 
         UUID applicationId = setup.createApplication(
-                "testOrganization", "testCreateAndList" + RandomStringUtils.randomAlphabetic(20) );
+                "testOrganization", "testCreateAndList" + UUIDGenerator.newTimeUUID() );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
@@ -488,7 +489,7 @@ public class EntityManagerIT extends AbstractCoreIT {
     public void testCorrectType() throws Exception {
 
         UUID applicationId = setup.createApplication(
-                "testOrganization", "testCorrectType" + RandomStringUtils.randomAlphabetic(20)  );
+                "testOrganization", "testCorrectType" + UUIDGenerator.newTimeUUID()  );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
@@ -515,7 +516,7 @@ public class EntityManagerIT extends AbstractCoreIT {
         LOG.info( "EntityDaoTest.testProperties" );
 
         UUID applicationId = setup.createApplication(
-                "testOrganization", "testNamePropChanges" + RandomStringUtils.randomAlphabetic(20)  );
+                "testOrganization", "testNamePropChanges" + UUIDGenerator.newTimeUUID()  );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
@@ -539,7 +540,7 @@ public class EntityManagerIT extends AbstractCoreIT {
     public void ownershipScopeCorrect() throws Exception {
 
         UUID applicationId = setup.createApplication(
-                "testOrganization", "ownershipScopeCorrect" + RandomStringUtils.randomAlphabetic(20)  );
+                "testOrganization", "ownershipScopeCorrect" + UUIDGenerator.newTimeUUID()  );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
@@ -598,7 +599,7 @@ public class EntityManagerIT extends AbstractCoreIT {
         LOG.info( "EntityManagerIT.testDeprecatedGet" );
 
         UUID applicationId = setup.createApplication(
-                "testOrganization", "testDeprecatedGet" + RandomStringUtils.randomAlphabetic(20)  );
+                "testOrganization", "testDeprecatedGet" + UUIDGenerator.newTimeUUID()  );
         assertNotNull( applicationId );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );

@@ -17,47 +17,53 @@
 package org.apache.usergrid.rest.management.organizations.applications;
 
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
-
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.SDKGlobalConfiguration;
+import com.amazonaws.auth.AWSCredentials;
+import com.google.common.base.Preconditions;
+import com.sun.jersey.api.json.JSONWithPadding;
 import org.apache.amber.oauth2.common.exception.OAuthSystemException;
 import org.apache.amber.oauth2.common.message.OAuthResponse;
 import org.apache.commons.lang.StringUtils;
 
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.export.ExportService;
+import org.apache.usergrid.management.importer.ImportService;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.SimpleEntityRef;
+import org.apache.usergrid.persistence.entities.Import;
+import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.queue.impl.SQSQueueManagerImpl;
+import org.apache.usergrid.persistence.queue.impl.UsergridAwsCredentials;
+import org.apache.usergrid.persistence.queue.impl.UsergridAwsCredentialsProvider;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.applications.ServiceResource;
+import org.apache.usergrid.rest.management.organizations.applications.imports.ImportsResource;
+import org.apache.usergrid.rest.security.annotations.RequireAdminUserAccess;
+import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
 import org.apache.usergrid.rest.utils.JSONPUtils;
 import org.apache.usergrid.security.oauth.ClientCredentialsInfo;
 import org.apache.usergrid.security.providers.SignInAsProvider;
 import org.apache.usergrid.security.providers.SignInProviderFactory;
 import org.apache.usergrid.services.ServiceManager;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
-import com.google.common.base.Preconditions;
-import com.sun.jersey.api.json.JSONWithPadding;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import static javax.servlet.http.HttpServletResponse.SC_ACCEPTED;
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
@@ -72,17 +78,18 @@ import org.apache.usergrid.persistence.core.util.Health;
 @Component("org.apache.usergrid.rest.management.organizations.applications.ApplicationResource")
 @Scope("prototype")
 @Produces({
-    MediaType.APPLICATION_JSON, 
-    "application/javascript", 
-    "application/x-javascript", 
+    MediaType.APPLICATION_JSON,
+    "application/javascript",
+    "application/x-javascript",
     "text/ecmascript",
-    "application/ecmascript", 
+    "application/ecmascript",
     "text/jscript"
 })
 public class ApplicationResource extends AbstractContextResource {
 
     @Autowired
     protected ExportService exportService;
+
     OrganizationInfo organization;
     UUID applicationId;
     ApplicationInfo application;
@@ -112,7 +119,7 @@ public class ApplicationResource extends AbstractContextResource {
 
     @RequireOrganizationAccess
     @DELETE
-    public JSONWithPadding deleteApplicationFromOrganizationByApplicationId( 
+    public JSONWithPadding deleteApplicationFromOrganizationByApplicationId(
             @Context UriInfo ui, @QueryParam("callback") @DefaultValue("callback") String callback )
         throws Exception {
 
@@ -127,7 +134,7 @@ public class ApplicationResource extends AbstractContextResource {
 
     @RequireOrganizationAccess
     @GET
-    public JSONWithPadding getApplication( 
+    public JSONWithPadding getApplication(
             @Context UriInfo ui, @QueryParam("callback") @DefaultValue("callback") String callback )
         throws Exception {
 
@@ -144,7 +151,7 @@ public class ApplicationResource extends AbstractContextResource {
     @RequireOrganizationAccess
     @GET
     @Path("credentials")
-    public JSONWithPadding getCredentials( 
+    public JSONWithPadding getCredentials(
             @Context UriInfo ui, @QueryParam("callback") @DefaultValue("callback") String callback )
         throws Exception {
 
@@ -163,7 +170,7 @@ public class ApplicationResource extends AbstractContextResource {
     @RequireOrganizationAccess
     @POST
     @Path("credentials")
-    public JSONWithPadding generateCredentials( @Context UriInfo ui, 
+    public JSONWithPadding generateCredentials( @Context UriInfo ui,
             @QueryParam("callback") @DefaultValue("callback") String callback )
         throws Exception {
 
@@ -183,11 +190,11 @@ public class ApplicationResource extends AbstractContextResource {
     @Path("sia-provider")
     @Consumes(APPLICATION_JSON)
     @RequireOrganizationAccess
-    public JSONWithPadding configureProvider( 
-            @Context UriInfo ui, 
+    public JSONWithPadding configureProvider(
+            @Context UriInfo ui,
             @QueryParam("provider_key") String siaProvider,
-            Map<String, Object> json, 
-            @QueryParam("callback") 
+            Map<String, Object> json,
+            @QueryParam("callback")
             @DefaultValue("") String callback )
         throws Exception {
 
@@ -198,19 +205,19 @@ public class ApplicationResource extends AbstractContextResource {
 
         SignInAsProvider signInAsProvider = null;
         if ( StringUtils.equalsIgnoreCase( siaProvider, "facebook" ) ) {
-            signInAsProvider = signInProviderFactory.facebook( 
+            signInAsProvider = signInProviderFactory.facebook(
                     smf.getServiceManager( applicationId ).getApplication() );
         }
         else if ( StringUtils.equalsIgnoreCase( siaProvider, "pingident" ) ) {
-            signInAsProvider = signInProviderFactory.pingident( 
+            signInAsProvider = signInProviderFactory.pingident(
                     smf.getServiceManager( applicationId ).getApplication() );
         }
         else if ( StringUtils.equalsIgnoreCase( siaProvider, "foursquare" ) ) {
-            signInAsProvider = signInProviderFactory.foursquare( 
+            signInAsProvider = signInProviderFactory.foursquare(
                     smf.getServiceManager( applicationId ).getApplication() );
         }
 
-        Preconditions.checkArgument( signInAsProvider != null, 
+        Preconditions.checkArgument( signInAsProvider != null,
                 "No signin provider found by that name: " + siaProvider );
 
         signInAsProvider.saveToConfiguration( json );
@@ -226,8 +233,8 @@ public class ApplicationResource extends AbstractContextResource {
                                     @QueryParam("callback") @DefaultValue("") String callback )
             throws OAuthSystemException {
 
+        UsergridAwsCredentials uac = new UsergridAwsCredentials();
 
-        OAuthResponse response = null;
         UUID jobUUID = null;
         Map<String, String> uuidRet = new HashMap<String, String>();
 
@@ -249,23 +256,16 @@ public class ApplicationResource extends AbstractContextResource {
 
 
             String bucketName = ( String ) storage_info.get( "bucket_location" );
-            String accessId = ( String ) storage_info.get( "s3_access_id" );
-            String secretKey = ( String ) storage_info.get( "s3_key" );
+
+            uac.getAWSAccessKeyIdJson( storage_info );
+            uac.getAWSSecretKeyJson( storage_info );
 
             if(bucketName == null) {
                 throw new NullPointerException( "Could not find field 'bucketName'" );
             }
-            if(accessId == null) {
-                throw new NullPointerException( "Could not find field 's3_access_id'" );
-            }
-            if(secretKey == null) {
-                throw new NullPointerException( "Could not find field 's3_key'" );
-            }
 
-            json.put( "organizationId",organization.getUuid());
-            //objEx.setOrganizationId( organization.getUuid() );
+            json.put("organizationId", organization.getUuid());
             json.put( "applicationId",applicationId);
-            //objEx.setApplicationId( applicationId );
 
             jobUUID = exportService.schedule( json );
             uuidRet.put( "Export Entity", jobUUID.toString() );
@@ -277,7 +277,7 @@ public class ApplicationResource extends AbstractContextResource {
         }
         catch ( Exception e ) {
             // TODO: throw descriptive error message and or include on in the response
-            // TODO: fix below, it doesn't work if there is an exception. 
+            // TODO: fix below, it doesn't work if there is an exception.
             // Make it look like the OauthResponse.
             return Response.status( SC_INTERNAL_SERVER_ERROR )
                 .type( JSONPUtils.jsonMediaType( callback ) )
@@ -296,8 +296,7 @@ public class ApplicationResource extends AbstractContextResource {
             @QueryParam("callback") @DefaultValue("") String callback )
             throws OAuthSystemException {
 
-
-        OAuthResponse response = null;
+        UsergridAwsCredentials uac = new UsergridAwsCredentials();
         UUID jobUUID = null;
         String colExport = collection_name;
         Map<String, String> uuidRet = new HashMap<String, String>();
@@ -319,20 +318,16 @@ public class ApplicationResource extends AbstractContextResource {
                 throw new NullPointerException( "Could not find field 'storage_info'" );
             }
 
-
             String bucketName = ( String ) storage_info.get( "bucket_location" );
-            String accessId = ( String ) storage_info.get( "s3_access_id" );
-            String secretKey = ( String ) storage_info.get( "s3_key" );
+
+            //check to make sure that access key and secret key are there.
+            uac.getAWSAccessKeyIdJson( storage_info );
+            uac.getAWSSecretKeyJson( storage_info );
 
             if(bucketName == null) {
                 throw new NullPointerException( "Could not find field 'bucketName'" );
             }
-            if(accessId == null) {
-                throw new NullPointerException( "Could not find field 's3_access_id'" );
-            }
-            if(secretKey == null) {
-                throw new NullPointerException( "Could not find field 's3_key'" );
-            }
+
             json.put( "organizationId",organization.getUuid() );
             json.put( "applicationId", applicationId);
             json.put( "collectionName", colExport);
@@ -349,7 +344,7 @@ public class ApplicationResource extends AbstractContextResource {
         catch ( Exception e ) {
 
             // TODO: throw descriptive error message and or include on in the response
-            // TODO: fix below, it doesn't work if there is an exception.  
+            // TODO: fix below, it doesn't work if there is an exception.
             // Make it look like the OauthResponse.
 
             OAuthResponse errorMsg = OAuthResponse.errorResponse( SC_INTERNAL_SERVER_ERROR )
@@ -363,6 +358,17 @@ public class ApplicationResource extends AbstractContextResource {
         }
 
         return Response.status( SC_ACCEPTED ).entity( uuidRet ).build();
+    }
+
+
+    @Path( "imports" )
+    @RequireOrganizationAccess
+    public ImportsResource importGetJson( @Context UriInfo ui,
+                                          @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
+        throws Exception {
+
+
+        return getSubResource( ImportsResource.class ).init( organization, application );
     }
 
     @GET
@@ -379,15 +385,15 @@ public class ApplicationResource extends AbstractContextResource {
 
         try {
             if ( em.getApplication() == null ) {
-                statusMap.put("message", "Appliction " + applicationId + " not found");
+                statusMap.put("message", "Application " + applicationId + " not found");
                 return Response.status( SC_NOT_FOUND ).entity( statusMap ).build();
             }
 
         } catch (Exception ex) {
-            statusMap.put("message", "Error looking up appliction " + applicationId );
+            statusMap.put("message", "Error looking up application " + applicationId );
             return Response.status( SC_INTERNAL_SERVER_ERROR ).entity( statusMap ).build();
         }
-            
+
         return Response.status( SC_OK ).entity( null ).build();
     }
 }

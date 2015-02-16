@@ -36,6 +36,7 @@ import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.index.query.CounterResolution;
 import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.utils.ImmediateCounterRule;
 import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
@@ -206,7 +207,7 @@ public class CounterIT extends AbstractCoreIT {
             originalAdminLoginsCount = counts.get( "admin.logins" );
         }
 
-        String randomSuffix = RandomStringUtils.randomAlphabetic(20);
+        String randomSuffix = UUIDGenerator.newTimeUUID().toString();
         String orgName = "testCounter" + randomSuffix;
         String appName = "testEntityCounters" + randomSuffix;
 

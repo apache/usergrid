@@ -1,4 +1,5 @@
 /*
+<<<<<<< HEAD
  *
  *  * Licensed to the Apache Software Foundation (ASF) under one or more
  *  *  contributor license agreements.  The ASF licenses this file to You
@@ -44,6 +45,41 @@ import org.apache.usergrid.persistence.core.task.TaskExecutor;
 
 import java.util.concurrent.ExecutionException;
 
+
+import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerSync;
+import org.apache.usergrid.persistence.collection.EntityDeletedFactory;
+import org.apache.usergrid.persistence.collection.EntityVersionCleanupFactory;
+import org.apache.usergrid.persistence.collection.EntityVersionCreatedFactory;
+import org.apache.usergrid.persistence.collection.cache.CachedEntityCollectionManager;
+import org.apache.usergrid.persistence.collection.cache.EntityCacheFig;
+import org.apache.usergrid.persistence.collection.guice.CollectionTaskExecutor;
+import org.apache.usergrid.persistence.collection.guice.Write;
+import org.apache.usergrid.persistence.collection.guice.WriteUpdate;
+import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
+import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkCommit;
+import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkStart;
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.RollbackAction;
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteCommit;
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteOptimisticVerify;
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteStart;
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteUniqueVerify;
+import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
+import org.apache.usergrid.persistence.core.guice.ProxyImpl;
+import org.apache.usergrid.persistence.core.task.TaskExecutor;
+
+import com.google.common.base.Preconditions;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.netflix.astyanax.Keyspace;
+
+
 /**
  * returns Entity Collection Managers built to manage caching
  */
@@ -63,44 +99,52 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
     private final UniqueValueSerializationStrategy uniqueValueSerializationStrategy;
     private final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy;
     private final Keyspace keyspace;
-    private final SerializationFig config;
     private final EntityVersionCleanupFactory entityVersionCleanupFactory;
     private final EntityVersionCreatedFactory entityVersionCreatedFactory;
     private final EntityDeletedFactory entityDeletedFactory;
     private final TaskExecutor taskExecutor;
+
+    private EntityCacheFig entityCacheFig;
+    private SerializationFig serializationFig;
     private LoadingCache<CollectionScope, EntityCollectionManager> ecmCache =
         CacheBuilder.newBuilder().maximumSize( 1000 )
-            .build( new CacheLoader<CollectionScope, EntityCollectionManager>() {
-                public EntityCollectionManager load( CollectionScope scope ) {
-                    return new EntityCollectionManagerImpl(
-                        writeStart,
-                        writeUpdate,
-                        writeVerifyUnique,
-                        writeOptimisticVerify,writeCommit,rollback,markStart,markCommit,entitySerializationStrategy,uniqueValueSerializationStrategy,mvccLogEntrySerializationStrategy,keyspace,config,entityVersionCleanupFactory,entityVersionCreatedFactory,entityDeletedFactory,taskExecutor,scope);
-                }
-            } );
+                    .build( new CacheLoader<CollectionScope, EntityCollectionManager>() {
+                        public EntityCollectionManager load( CollectionScope scope ) {
 
+                                  //create the target EM that will perform logic
+                            final EntityCollectionManager target = new EntityCollectionManagerImpl(
+                                writeStart, writeUpdate, writeVerifyUnique,
+                                writeOptimisticVerify, writeCommit, rollback, markStart, markCommit,
+                                entitySerializationStrategy, uniqueValueSerializationStrategy,
+                                mvccLogEntrySerializationStrategy, keyspace, serializationFig,entityVersionCleanupFactory,
+                                entityVersionCreatedFactory, entityDeletedFactory, taskExecutor, scope );
+
+
+                            final EntityCollectionManager proxy = new CachedEntityCollectionManager(entityCacheFig, target  );
+
+                            return proxy;
+                        }
+                    } );
 
 
     @Inject
     public EntityCollectionManagerFactoryImpl( @Write final WriteStart writeStart,
-                                               @WriteUpdate final WriteStart              writeUpdate,
+                                               @WriteUpdate final WriteStart writeUpdate,
                                                final WriteUniqueVerify writeVerifyUnique,
                                                final WriteOptimisticVerify writeOptimisticVerify,
-                                               final WriteCommit writeCommit,
-                                               final RollbackAction rollback,
-                                               final MarkStart markStart,
-                                               final MarkCommit markCommit,
-                                               @ProxyImpl final MvccEntitySerializationStrategy entitySerializationStrategy,
+                                               final WriteCommit writeCommit, final RollbackAction rollback,
+                                               final MarkStart markStart, final MarkCommit markCommit, @ProxyImpl
+                                               final MvccEntitySerializationStrategy entitySerializationStrategy,
                                                final UniqueValueSerializationStrategy uniqueValueSerializationStrategy,
-                                               final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy,
+                                               final MvccLogEntrySerializationStrategy
+                                                   mvccLogEntrySerializationStrategy,
                                                final Keyspace keyspace,
-                                               final SerializationFig config,
                                                final EntityVersionCleanupFactory entityVersionCleanupFactory,
-                                               final EntityVersionCreatedFactory          entityVersionCreatedFactory,
-                                               final EntityDeletedFactory                 entityDeletedFactory,
-                                               @CollectionTaskExecutor final TaskExecutor taskExecutor
-                                               ){
+                                               final EntityVersionCreatedFactory entityVersionCreatedFactory,
+                                               final EntityDeletedFactory entityDeletedFactory,
+                                               @CollectionTaskExecutor final TaskExecutor taskExecutor,
+                                              final EntityCacheFig entityCacheFig,
+                                               final SerializationFig serializationFig) {
 
         this.writeStart = writeStart;
         this.writeUpdate = writeUpdate;
@@ -114,11 +158,12 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
         this.uniqueValueSerializationStrategy = uniqueValueSerializationStrategy;
         this.mvccLogEntrySerializationStrategy = mvccLogEntrySerializationStrategy;
         this.keyspace = keyspace;
-        this.config = config;
         this.entityVersionCleanupFactory = entityVersionCleanupFactory;
         this.entityVersionCreatedFactory = entityVersionCreatedFactory;
         this.entityDeletedFactory = entityDeletedFactory;
         this.taskExecutor = taskExecutor;
+        this.entityCacheFig = entityCacheFig;
+        this.serializationFig = serializationFig;
     }
     @Override
     public EntityCollectionManager createCollectionManager(CollectionScope collectionScope) {
@@ -139,4 +184,5 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
     public void invalidate() {
         ecmCache.invalidateAll();
     }
+
 }

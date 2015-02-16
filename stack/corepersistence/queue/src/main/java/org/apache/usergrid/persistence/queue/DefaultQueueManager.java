@@ -56,13 +56,13 @@ public class DefaultQueueManager implements QueueManager {
     public synchronized void sendMessages(List bodies) throws IOException {
         for(Object body : bodies){
             String uuid = UUID.randomUUID().toString();
-            queue.add(new QueueMessage(uuid,"handle_"+uuid,body));
+            queue.add(new QueueMessage(uuid,"handle_"+uuid,body,"putappriate type here"));
         }
     }
 
     @Override
     public synchronized void sendMessage(Object body) throws IOException {
         String uuid = UUID.randomUUID().toString();
-        queue.add(new QueueMessage(uuid,"handle_"+uuid,body));
+        queue.add(new QueueMessage(uuid,"handle_"+uuid,body,"put type here"));
     }
 }

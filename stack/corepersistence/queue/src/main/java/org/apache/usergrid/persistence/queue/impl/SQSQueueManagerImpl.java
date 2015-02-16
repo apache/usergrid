@@ -143,7 +143,7 @@ public class SQSQueueManagerImpl implements QueueManager {
                 LOG.error("failed to deserialize message", e);
                 throw new RuntimeException(e);
             }
-            QueueMessage queueMessage = new QueueMessage(message.getMessageId(),message.getReceiptHandle(),body);
+            QueueMessage queueMessage = new QueueMessage(message.getMessageId(),message.getReceiptHandle(),body,message.getAttributes().get( "type" ));
             queueMessages.add(queueMessage);
         }
         return queueMessages;
@@ -163,7 +163,8 @@ public class SQSQueueManagerImpl implements QueueManager {
         for(Object body : bodies){
             SendMessageBatchRequestEntry entry = new SendMessageBatchRequestEntry();
             entry.setId(UUID.randomUUID().toString());
-            entry.setMessageBody(toString(body));
+            entry.setMessageBody( toString( body ) );
+            entry.addMessageAttributesEntry( "type",new MessageAttributeValue().withStringValue( "mytype" ) );
             entries.add(entry);
         }
         request.setEntries(entries);
@@ -224,57 +225,6 @@ public class SQSQueueManagerImpl implements QueueManager {
     /** Write the object to a Base64 string. */
     private  String toString( Object o ) throws IOException {
         return mapper.writeValueAsString(o);
-    }
-
-
-
-
-    public class UsergridAwsCredentialsProvider implements AWSCredentialsProvider {
-
-        private AWSCredentials creds;
-
-        public  UsergridAwsCredentialsProvider(){
-            init();
-        }
-
-        private void init() {
-            creds = new AWSCredentials() {
-                @Override
-                public String getAWSAccessKeyId() {
-                    String accessKey = System.getProperty(SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR);
-                    if(StringUtils.isEmpty(accessKey)){
-                        accessKey = System.getProperty(SDKGlobalConfiguration.ALTERNATE_ACCESS_KEY_ENV_VAR);
-                    }
-                    return StringUtils.trim(accessKey);
-                }
-
-                @Override
-                public String getAWSSecretKey() {
-                    String secret = System.getProperty(SDKGlobalConfiguration.SECRET_KEY_ENV_VAR);
-                    if(StringUtils.isEmpty(secret)){
-                        secret = System.getProperty(SDKGlobalConfiguration.ALTERNATE_SECRET_KEY_ENV_VAR);
-                    }
-                    return StringUtils.trim(secret);
-                }
-            };
-            if(StringUtils.isEmpty(creds.getAWSAccessKeyId())){
-                throw new AmazonClientException("could not get aws access key from system properties");
-            }
-            if(StringUtils.isEmpty(creds.getAWSSecretKey())){
-                throw new AmazonClientException("could not get aws secret key from system properties");
-            }
-        }
-
-        @Override
-        public AWSCredentials getCredentials() {
-            return creds;
-        }
-
-
-        @Override
-        public void refresh() {
-            init();
-        }
     }
 
     public class SqsLoader {

@@ -156,6 +156,32 @@ class NodeRegistry {
 
     }
 
+    /**
+     * Wait until the number of servers are available with the type specified
+     * @param nodeType
+     * @param count
+     */
+    def waitUntilAvailable(def nodeType, def numberOfServers){
+
+        while (true) {
+            try {
+                def selectResult = searchNode(nodeType)
+
+                def count = selectResult.size();
+
+                if (count >= numberOfServers) {
+                    println("count = ${count}, total number of servers is ${numberOfServers}.  Breaking")
+                    break
+                }
+
+                println("Found ${count} nodes but need at least ${numberOfServers}.  Waiting...")
+            } catch (Exception e) {
+                println "ERROR waiting for ${nodeType} ${e.getMessage()}, will continue waiting"
+            }
+            Thread.sleep(2000)
+        }
+    }
+
 
     class ServerEntry implements Comparable<ServerEntry> {
         private final Date launchDate;

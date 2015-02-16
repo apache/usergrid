@@ -31,6 +31,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.persistence.entities.Application;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.utils.JsonUtils;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -63,7 +64,7 @@ public class EntityDictionaryIT extends AbstractCoreIT {
 
         LOG.info( "EntityDictionaryIT.testApplicationDictionaries" );
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testApplicationDictionaries" + RandomStringUtils.randomAlphabetic(20)  );
+        UUID applicationId = setup.createApplication( "testOrganization", "testApplicationDictionaries" + UUIDGenerator.newTimeUUID()  );
         assertNotNull( applicationId );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
@@ -80,7 +81,7 @@ public class EntityDictionaryIT extends AbstractCoreIT {
     public void testUserDictionaries() throws Exception {
         LOG.info( "EntityDictionaryIT.testUserDictionaries" );
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testUserDictionaries" + RandomStringUtils.randomAlphabetic(20)  );
+        UUID applicationId = setup.createApplication( "testOrganization", "testUserDictionaries" + UUIDGenerator.newTimeUUID()  );
         assertNotNull( applicationId );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
@@ -153,7 +154,7 @@ public class EntityDictionaryIT extends AbstractCoreIT {
 
         LOG.info( "EntityDictionaryIT.testApplicationDictionaries" );
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testRemoveFromDictionary" + RandomStringUtils.randomAlphabetic(20)  );
+        UUID applicationId = setup.createApplication( "testOrganization", "testRemoveFromDictionary" + UUIDGenerator.newTimeUUID()  );
         assertNotNull( applicationId );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
@@ -187,7 +188,7 @@ public class EntityDictionaryIT extends AbstractCoreIT {
         provider.setAccessTokenEndpointUrl( "https://accounts.google.com/o/oauth2/token" );
         provider.setVersion( "2.0" );
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testGetDictionaries" + RandomStringUtils.randomAlphabetic(20)  );
+        UUID applicationId = setup.createApplication( "testOrganization", "testGetDictionaries" + UUIDGenerator.newTimeUUID()  );
         assertNotNull( applicationId );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
@@ -208,7 +209,8 @@ public class EntityDictionaryIT extends AbstractCoreIT {
         LOG.info( "EntityDictionaryIT.testAddMapToDictionaries" );
 
         Map<String,Object> testMap = new HashMap<String,Object>();
-        UUID applicationId = setup.createApplication( "testOrganization", "testAddMapToDictionaries" + RandomStringUtils.randomAlphabetic(20)  );
+        UUID applicationId = setup.createApplication( "testOrganization", "testAddMapToDictionaries" + UUIDGenerator
+            .newTimeUUID()  );
         assertNotNull( applicationId );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );

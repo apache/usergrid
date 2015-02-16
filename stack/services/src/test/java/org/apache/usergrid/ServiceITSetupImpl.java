@@ -29,10 +29,18 @@ import org.apache.shiro.SecurityUtils;
 import org.apache.usergrid.management.ApplicationCreator;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.management.export.ExportService;
+import org.apache.usergrid.management.importer.ImportService;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.security.providers.SignInProviderFactory;
 import org.apache.usergrid.security.tokens.TokenService;
 import org.apache.usergrid.services.ServiceManagerFactory;
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.config.PropertiesFactoryBean;
+
+import java.util.Properties;
 
 
 /** A {@link org.junit.rules.TestRule} that sets up services. */
@@ -46,6 +54,7 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
     private SignInProviderFactory providerFactory;
     private Properties properties;
     private ExportService exportService;
+    private ImportService importService;
 
 
     public ServiceITSetupImpl() {
@@ -105,6 +114,9 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
 
     @Override
     public ExportService getExportService() { return exportService; }
+
+    @Override
+    public ImportService getImportService() { return importService; }
 
 
     public ServiceManagerFactory getSmf() {

@@ -155,7 +155,6 @@ public class IndexingUtils {
                     /**  add routing  "_routing":{ "required":false,  "path":"ug_entityId" **/
                     .startObject("_routing").field("required",true).field("path",ENTITYID_ID_FIELDNAME).endObject()
                     .startArray("dynamic_templates")
-
                         // we need most specific mappings first since it's a stop on match algorithm
 
                         .startObject()
@@ -218,7 +217,7 @@ public class IndexingUtils {
                             .startObject( "template_3" )
                                 .field( "match", GEO_PREFIX + "location" )
                                     .startObject( "mapping" )
-                                        .field( "type", "geo_point" )
+            .field( "type", "geo_point" )
                                     .endObject()
                             .endObject()
                         .endObject()

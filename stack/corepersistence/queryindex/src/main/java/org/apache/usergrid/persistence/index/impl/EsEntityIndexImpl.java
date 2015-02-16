@@ -58,6 +58,7 @@ import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.index.query.*;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.elasticsearch.indices.IndexMissingException;
+import org.elasticsearch.indices.InvalidAliasNameException;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.sort.FieldSortBuilder;
@@ -111,7 +112,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     private static final String VERIFY_TYPE = "verification";
 
     private static final ImmutableMap<String, Object> DEFAULT_PAYLOAD =
-            ImmutableMap.<String, Object>of( "field", "test" );
+            ImmutableMap.<String, Object>builder().put( "field", "test" ).put(IndexingUtils.ENTITYID_ID_FIELDNAME, UUIDGenerator.newTimeUUID().toString()).build();
 
     private static final MatchAllQueryBuilder MATCH_ALL_QUERY_BUILDER = QueryBuilders.matchAllQuery();
 
@@ -439,7 +440,10 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
             @Override
             public boolean doOp() {
                 try {
-                    String[] indexes = ArrayUtils.addAll( getIndexes(AliasType.Write), getIndexes(AliasType.Write) );
+                    String[] indexes = ArrayUtils.addAll(
+                        getIndexes(AliasType.Read),
+                        getIndexes(AliasType.Write) );
+
                     if ( indexes.length == 0 ) {
                         logger.debug( "Not refreshing indexes, none found for app {}",
                                 applicationScope.getApplication().getUuid() );
@@ -579,7 +583,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
         if ( response.isAcknowledged() ) {
             logger.info( "Deleted index: read {} write {}", alias.getReadAlias(), alias.getWriteAlias());
             //invlaidate the alias
-            aliasCache.invalidate(alias);
+            aliasCache.invalidate( alias );
         }
         else {
             logger.info( "Failed to delete index: read {} write {}", alias.getReadAlias(), alias.getWriteAlias());

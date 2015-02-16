@@ -101,12 +101,14 @@ public abstract class AbstractRestIT extends JerseyTest {
     }
 
 
+    //We set testable = false so we deploy the archive to the server and test it locally
     @Deployment(testable = false)
     public static WebArchive createTestArchive() {
 
         //we use the MavenImporter from shrinkwrap to just produce whatever maven would build then test with it
 
         //set maven to be in offline mode
+
         System.setProperty( "org.apache.maven.offline", "true" );
 
       return  ShrinkWrap.create(MavenImporter.class)

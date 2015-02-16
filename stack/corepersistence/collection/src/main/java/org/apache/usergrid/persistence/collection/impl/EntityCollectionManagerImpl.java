@@ -113,7 +113,6 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     private final TaskExecutor taskExecutor;
 
     private final Keyspace keyspace;
-    private SerializationFig config;
 
 
     @Inject
@@ -154,7 +153,6 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         this.markCommit = markCommit;
 
         this.keyspace = keyspace;
-        this.config = config;
 
         this.entityVersionCleanupFactory = entityVersionCleanupFactory;
         this.entityVersionCreatedFactory = entityVersionCreatedFactory;

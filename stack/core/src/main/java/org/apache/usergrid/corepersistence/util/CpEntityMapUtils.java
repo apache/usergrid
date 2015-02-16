@@ -32,6 +32,7 @@ import java.util.UUID;
 
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.ArrayField;
 import org.apache.usergrid.persistence.model.field.BooleanField;
 import org.apache.usergrid.persistence.model.field.ByteArrayField;
@@ -63,6 +64,26 @@ public class CpEntityMapUtils {
     private static final Logger logger = LoggerFactory.getLogger( CpEntityMapUtils.class );
 
     public static ObjectMapper objectMapper = new ObjectMapper(  );
+
+
+    /**
+     * Convert a usergrid 1.0 entity into a usergrid 2.0 entity
+     */
+    public static org.apache.usergrid.persistence.model.entity.Entity entityToCpEntity(
+        org.apache.usergrid.persistence.Entity entity, UUID importId ) {
+
+        UUID uuid = importId != null ? importId : entity.getUuid();
+
+        org.apache.usergrid.persistence.model.entity.Entity cpEntity =
+            new org.apache.usergrid.persistence.model.entity.Entity( new SimpleId( uuid, entity.getType() ) );
+
+        cpEntity = CpEntityMapUtils.fromMap( cpEntity, entity.getProperties(), entity.getType(), true );
+
+        cpEntity = CpEntityMapUtils.fromMap( cpEntity, entity.getDynamicProperties(), entity.getType(), true );
+
+        return cpEntity;
+    }
+
 
     public static Entity fromMap( Map<String, Object> map, String entityType, boolean topLevel ) {
         return fromMap( null, map, entityType, topLevel );
@@ -209,7 +230,6 @@ public class CpEntityMapUtils {
 
         } else if ( sample instanceof List ) {
             return new ArrayField<List>( fieldName, processListForField( list, entityType ));
-
         } else if ( sample instanceof String ) {
             return new ArrayField<String>( fieldName, (List<String>)list );
 
