@@ -130,17 +130,7 @@ public class EntityTypeMappingMigrationIT extends AbstractCoreIT {
 
         final TestProgressObserver progressObserver = new TestProgressObserver();
 
-        allEntitiesInSystemObservable.getAllEntitiesInSystem(  1000)
-            .doOnNext(new Action1<ApplicationEntityGroup>() {
-                @Override
-                public void call(final ApplicationEntityGroup entity) {
-                    try {
-                        entityTypeMappingMigration.migrate(entity, progressObserver).toBlocking().last();
-                    }catch (Throwable e ){
-                        throw new RuntimeException(e);
-                    }
-                }
-            });
+        entityTypeMappingMigration.migrate(allEntitiesInSystemObservable.getAllEntitiesInSystem(1000), progressObserver).toBlocking().last();
 
         allEntitiesInSystemObservable.getAllEntitiesInSystem(1000)
             .doOnNext(new Action1<ApplicationEntityGroup<CollectionScope>>() {

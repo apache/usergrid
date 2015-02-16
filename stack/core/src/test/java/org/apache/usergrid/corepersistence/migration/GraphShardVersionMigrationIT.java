@@ -25,8 +25,9 @@ import java.util.Set;
 
 import org.apache.usergrid.corepersistence.CpSetup;
 import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.core.migration.data.DataMigration;
+import org.apache.usergrid.persistence.core.migration.data.*;
 import org.apache.usergrid.persistence.core.rx.AllEntitiesInSystemObservable;
+import org.apache.usergrid.persistence.core.rx.ApplicationObservable;
 import org.apache.usergrid.persistence.core.scope.ApplicationEntityGroup;
 import org.apache.usergrid.persistence.core.scope.EntityIdScope;
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeDataMigrationImpl;
@@ -42,9 +43,6 @@ import org.apache.usergrid.corepersistence.EntityWriteHelper;
 import org.apache.usergrid.corepersistence.ManagerCache;
 import org.apache.usergrid.corepersistence.rx.impl.AllEntitiesInSystemObservableImpl;
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
-import org.apache.usergrid.persistence.core.migration.data.DataMigrationManagerImpl;
-import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerialization;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -66,7 +64,7 @@ import static org.junit.Assert.assertTrue;
 public class GraphShardVersionMigrationIT extends AbstractCoreIT {
 
     private Injector injector;
-    private DataMigration graphShardVersionMigration;
+    private ApplicationDataMigration graphShardVersionMigration;
     private ManagerCache managerCache;
     private DataMigrationManager dataMigrationManager;
     private MigrationInfoSerialization migrationInfoSerialization;
@@ -78,7 +76,7 @@ public class GraphShardVersionMigrationIT extends AbstractCoreIT {
     @Rule
     public MigrationTestRule migrationTestRule = new MigrationTestRule( app,  SpringResource.getInstance().getBean(Injector.class) ,EdgeDataMigrationImpl.class  );
     private AllEntitiesInSystemObservable allEntitiesInSystemObservable;
-
+    private ApplicationObservable applicationObservable;
 
 
     @Before
@@ -90,6 +88,8 @@ public class GraphShardVersionMigrationIT extends AbstractCoreIT {
         dataMigrationManager = injector.getInstance( DataMigrationManager.class );
         migrationInfoSerialization = injector.getInstance( MigrationInfoSerialization.class );
         allEntitiesInSystemObservable = injector.getInstance(AllEntitiesInSystemObservable.class);
+        applicationObservable = injector.getInstance(ApplicationObservable.class);
+
     }
 
 
@@ -167,18 +167,8 @@ public class GraphShardVersionMigrationIT extends AbstractCoreIT {
 
 
         //perform the migration
-        allEntitiesInSystemObservable.getAllEntitiesInSystem( 1000)
-            .doOnNext( new Action1<ApplicationEntityGroup>() {
-                @Override
-                public void call(
-                    final ApplicationEntityGroup entity) {
-                    try {
-                        graphShardVersionMigration.migrate(entity, progressObserver).toBlocking().last();
-                    }catch (Throwable e){
-                        throw new RuntimeException(e);
-                    }
-                }
-            }).toBlocking().last();
+
+        graphShardVersionMigration.migrate(applicationObservable.getAllApplicationScopes(), progressObserver).toBlocking().last();
 
         assertEquals( "Newly saved entities encounterd", 0, allEntities.size() );
         assertFalse( "Progress observer should not have failed", progressObserver.getFailed() );
