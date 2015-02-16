@@ -20,13 +20,12 @@ package org.apache.usergrid.persistence.index.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.persistence.index.query.CandidateResult;
+import org.apache.usergrid.persistence.index.utils.IndexValidationUtils;
+import org.apache.usergrid.persistence.model.field.UUIDField;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -196,8 +195,8 @@ public class EntityIndexTest extends BaseIT {
             Entity entity = new Entity( entityType );
             entity = EntityIndexMapUtils.fromMap(entity, item);
             EntityUtils.setVersion(entity, UUIDGenerator.newTimeUUID());
-
-            batch.index( indexScope, entity );
+            entity.setField(new UUIDField(IndexingUtils.ENTITYID_ID_FIELDNAME, UUID.randomUUID()));
+            batch.index(indexScope, entity);
 
             if(count %1000 == 0){
                 batch.execute();
@@ -239,6 +238,8 @@ public class EntityIndexTest extends BaseIT {
         Entity entity = EntityIndexMapUtils.fromMap( entityMap );
         EntityUtils.setId( entity, new SimpleId( "fastcar" ) );
         EntityUtils.setVersion( entity, UUIDGenerator.newTimeUUID() );
+        entity.setField(new UUIDField(IndexingUtils.ENTITYID_ID_FIELDNAME, UUID.randomUUID()));
+
         entityIndex.createBatch().index(indexScope , entity ).executeAndRefresh();
 
         CandidateResults candidateResults = entityIndex.search( indexScope, SearchTypes.fromTypes(entity.getId().getType()),
@@ -381,6 +382,7 @@ public class EntityIndexTest extends BaseIT {
 
 
         final EntityIndexBatch batch = entityIndex.createBatch();
+        user.setField(new UUIDField(IndexingUtils.ENTITYID_ID_FIELDNAME, UUID.randomUUID()));
 
         batch.index( indexScope, user );
 
