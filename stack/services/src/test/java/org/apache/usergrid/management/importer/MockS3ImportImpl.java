@@ -14,43 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.management.cassandra;
 
+package org.apache.usergrid.management.importer;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
-
-import org.apache.commons.io.FileUtils;
-
-import org.apache.usergrid.management.export.S3Export;
+import java.util.ArrayList;
+import java.util.List;
 
 
-/**
- * Streams / reads the information written from the export service to a file named "test.json"
- */
-public class MockS3ExportImpl implements S3Export {
-    private final String filename;
+public class MockS3ImportImpl implements S3Import{
+    private static final Logger logger = LoggerFactory.getLogger(MockS3ImportImpl.class);
 
-    public MockS3ExportImpl (String filename) {
-        this.filename = filename;
+    @Override
+    public List<String> getBucketFileNames(String bucketName, String endsWith, String accessId, String secretKey) {
+        return new ArrayList<>();
     }
 
     @Override
-    public void copyToS3( File ephemeral, final Map<String,Object> exportInfo, String filename ) {
-
-        File verfiedData = new File( this.filename );
-        try {
-            FileUtils.copyFile(ephemeral,verfiedData);
-        }
-        catch ( IOException e ) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public String getFilename () {
-        return filename;
+    public File copyFileFromBucket(String blobFileName, String bucketName, String accessId, String secretKey) throws IOException {
+        return File.createTempFile("test","tmp");
     }
 
 }

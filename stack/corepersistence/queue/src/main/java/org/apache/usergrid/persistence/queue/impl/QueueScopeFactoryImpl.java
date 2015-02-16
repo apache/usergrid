@@ -40,6 +40,7 @@ public class QueueScopeFactoryImpl implements QueueScopeFactory {
         this.fig = fig;
     }
 
+    //applicationId is always ManagementApplicationId so not really needed here.
     @Override
     public QueueScope getScope(UUID applicationId, String queueName) {
         return new QueueScopeImpl(new SimpleId(applicationId, fig.getPrefix()), queueName);

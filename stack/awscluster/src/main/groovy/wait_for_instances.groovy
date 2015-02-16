@@ -42,24 +42,6 @@ NodeRegistry registry = new NodeRegistry();
 
 println "Waiting for ${numberOfServers} nodes of type ${nodetype} to register..."
 
-def count = 0
-
-while (true) {
-    try {
-        def selectResult = registry.searchNode(nodetype)
-
-        count = selectResult.size();
-
-        if (count >= numberOfServers) {
-            println("count = ${count}, total number of servers is ${numberOfServers}.  Breaking")
-            break
-        }
-
-        println("Found ${count} nodes but need at least ${numberOfServers}.  Waiting...")
-    } catch (Exception e) {
-        println "ERROR waiting for Casasndra ${e.getMessage()}, will continue waiting"
-    }
-    Thread.sleep(2000)
-}
+registry.waitUntilAvailable(nodetype, numberOfServers)
 
 println "Waiting done."

@@ -26,6 +26,9 @@ import org.junit.Rule;
 import org.apache.usergrid.rest.ITSetup;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.ApplicationsResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.OrganizationResource;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.ManagementResource;
+import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
+import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.apache.usergrid.rest.test.resource2point0.model.Token;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
@@ -110,6 +113,10 @@ public class AbstractRestIT extends JerseyTest {
     protected ApplicationsResource app(){
         return clientSetup.restClient.org(clientSetup.getOrganization().getName()).app(clientSetup.getAppName());
 
+    }
+
+    protected ManagementResource management(){
+        return clientSetup.restClient.management();
     }
 
     protected ClientContext context(){

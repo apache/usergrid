@@ -56,6 +56,10 @@ import org.apache.usergrid.persistence.RelationManager;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.SimpleEntityRef;
+
+import static org.apache.usergrid.corepersistence.util.CpEntityMapUtils.entityToCpEntity;
+import static org.apache.usergrid.persistence.SimpleEntityRef.getUuid;
+
 import org.apache.usergrid.persistence.SimpleRoleRef;
 import org.apache.usergrid.persistence.TypedEntity;
 import org.apache.usergrid.persistence.cassandra.ApplicationCF;
@@ -1311,7 +1315,8 @@ public class CpEntityManager implements EntityManager {
     public Results getCollection( UUID entityId, String collectionName, Query query, Level resultsLevel )
             throws Exception {
 
-        throw new UnsupportedOperationException( "Cannot get entity by UUID alone" );
+        return getRelationManager( get( entityId ))
+                .getCollection ( collectionName, query, resultsLevel );
     }
 
 
@@ -2756,19 +2761,7 @@ public class CpEntityManager implements EntityManager {
     }
 
 
-    public static org.apache.usergrid.persistence.model.entity.Entity entityToCpEntity( Entity entity, UUID importId ) {
 
-        UUID uuid = importId != null ? importId : entity.getUuid();
-
-        org.apache.usergrid.persistence.model.entity.Entity cpEntity =
-                new org.apache.usergrid.persistence.model.entity.Entity( new SimpleId( uuid, entity.getType() ) );
-
-        cpEntity = CpEntityMapUtils.fromMap( cpEntity, entity.getProperties(), entity.getType(), true );
-
-        cpEntity = CpEntityMapUtils.fromMap( cpEntity, entity.getDynamicProperties(), entity.getType(), true );
-
-        return cpEntity;
-    }
 
 
     @Override

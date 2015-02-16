@@ -143,18 +143,18 @@ public class MeteringFilter implements ContainerRequestFilter, ContainerResponse
 
 
                 if ( time > 0 ) {
-                    logger.info( "Application: {}, spent {} milliseconds of CPU time", applicationId, time );
+                    logger.trace( "Application: {}, spent {} milliseconds of CPU time", applicationId, time );
                     counters.put( "application.request.time", time );
                 }
 
                 Long read = ( Long ) httpServletRequest.getAttribute( "application.request.upload" );
                 if ( ( read != null ) && ( read > 0 ) ) {
-                    logger.info( "Application: {}, received {} bytes", applicationId, written );
+                    logger.trace( "Application: {}, received {} bytes", applicationId, written );
                     counters.put( "application.request.upload", read );
                 }
 
                 if ( written > 0 ) {
-                    logger.info( "Application: {}, sending {} bytes", applicationId, written );
+                    logger.trace( "Application: {}, sending {} bytes", applicationId, written );
                     counters.put( "application.request.download", written );
                 }
 

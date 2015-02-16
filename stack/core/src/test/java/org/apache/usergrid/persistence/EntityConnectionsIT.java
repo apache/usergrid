@@ -17,12 +17,14 @@
 package org.apache.usergrid.persistence;
 
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -334,4 +336,103 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         assertEquals( 1, res.size() );
         assertEquals( "user", res.getEntity().getType() );
     }
+
+
+
+
+    @Test
+    @Ignore("This is broken, and needs fixed after the refactor")
+    public void testConnectionsIterable() throws Exception {
+        EntityManager em = app.getEntityManager();
+        assertNotNull( em );
+
+        User first = new User();
+        first.setUsername( "first" );
+        first.setEmail( "first@usergrid.com" );
+
+        Entity firstUserEntity = em.create( first );
+
+        assertNotNull( firstUserEntity );
+
+
+        final int connectionCount = 100;
+        final List<Entity> things = new ArrayList<>( connectionCount );
+
+        for(int i = 0; i < connectionCount; i ++){
+            Map<String, Object> data = new HashMap<String, Object>();
+            data.put( "ordinal",  i );
+
+            Entity entity = em.create( "thing", data );
+
+            em.createConnection( firstUserEntity, "likes", entity );
+
+            things.add( entity );
+        }
+
+
+        em.refreshIndex();
+
+        Results r = em.getConnectedEntities( firstUserEntity, "likes", null, Level.ALL_PROPERTIES ) ;
+
+        PagingResultsIterator itr = new PagingResultsIterator( r );
+
+
+        int checkedIndex = 0;
+        for(; checkedIndex < connectionCount && itr.hasNext(); checkedIndex ++){
+            final Entity returned = ( Entity ) itr.next();
+            final Entity expected = things.get( checkedIndex );
+
+            assertEquals("Entity expected", expected, returned);
+        }
+
+        assertEquals("Checked all entities", connectionCount, checkedIndex  );
+
+
+    }
+//
+//
+//    @Test
+//    public void testGetConnectingEntities() throws Exception {
+//
+//        UUID applicationId = app.getId( );
+//        assertNotNull( applicationId );
+//
+//        EntityManager em = app.getEntityManager();
+//        assertNotNull( em );
+//
+//        User fred = new User();
+//        fred.setUsername( "fred" );
+//        fred.setEmail( "fred@flintstones.com" );
+//        Entity fredEntity = em.create( fred );
+//        assertNotNull( fredEntity );
+//
+//        User wilma = new User();
+//        wilma.setUsername( "wilma" );
+//        wilma.setEmail( "wilma@flintstones.com" );
+//        Entity wilmaEntity = em.create( wilma );
+//        assertNotNull( wilmaEntity );
+//
+//        em.createConnection( fredEntity, "likes", wilmaEntity );
+//
+//        em.refreshIndex();
+//
+////        // search for "likes" edges from fred
+////        assertEquals( 1,
+////            em.getConnectedEntities( fredEntity, "likes", null, Level.IDS ).size());
+////
+////        // search for any type of edges from fred
+////        assertEquals( 1,
+////            em.getConnectedEntities( fredEntity, null, null, Level.IDS ).size());
+//
+//        // search for "likes" edges to wilman from any type of object
+//        Results res = em.getConnectingEntities( wilmaEntity, "likes", null, Level.ALL_PROPERTIES);
+//        assertEquals( 1, res.size() );
+//        assertEquals( "user", res.getEntity().getType() ); // fred is a user
+//
+//        // search for "likes" edges to wilman from user type object
+//        res = em.getConnectingEntities( wilmaEntity, "likes", "user", Level.ALL_PROPERTIES);
+//        assertEquals( 1, res.size() );
+//        assertEquals( "user", res.getEntity().getType() );
+//    }
+
 }

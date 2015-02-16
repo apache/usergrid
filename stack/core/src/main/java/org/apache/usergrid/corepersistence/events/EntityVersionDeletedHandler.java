@@ -20,7 +20,7 @@ package org.apache.usergrid.corepersistence.events;
 import com.google.inject.Inject;
 import java.util.List;
 import org.apache.usergrid.corepersistence.CpEntityManagerFactory;
-import static org.apache.usergrid.corepersistence.GuiceModule.EVENTS_DISABLED;
+import static org.apache.usergrid.corepersistence.CoreModule.EVENTS_DISABLED;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.MvccEntity;
@@ -40,7 +40,7 @@ import rx.schedulers.Schedulers;
 
 /**
  * Remove Entity index when specific version of Entity is deleted.
- * TODO: do we need this? Don't our version-created and entity-deleted handlers take care of this? 
+ * TODO: do we need this? Don't our version-created and entity-deleted handlers take care of this?
  * If we do need it then it should be wired in via GuiceModule in the corepersistence package.
  */
 public class EntityVersionDeletedHandler implements EntityVersionDeleted {
@@ -57,7 +57,7 @@ public class EntityVersionDeletedHandler implements EntityVersionDeleted {
     public void versionDeleted(
             final CollectionScope scope, final Id entityId, final List<MvccEntity> entityVersions) {
 
-        // This check is for testing purposes and for a test that to be able to dynamically turn 
+        // This check is for testing purposes and for a test that to be able to dynamically turn
         // off and on delete previous versions so that it can test clean-up on read.
         if ( System.getProperty( EVENTS_DISABLED, "false" ).equals( "true" )) {
             return;
@@ -65,18 +65,18 @@ public class EntityVersionDeletedHandler implements EntityVersionDeleted {
 
         logger.debug("Handling versionDeleted count={} event for entity {}:{} v {} "
                 + "scope\n   name: {}\n   owner: {}\n   app: {}",
-            new Object[] { 
+            new Object[] {
                 entityVersions.size(),
-                entityId.getType(), 
-                entityId.getUuid(), 
-                scope.getName(), 
-                scope.getOwner(), 
+                entityId.getType(),
+                entityId.getUuid(),
+                scope.getName(),
+                scope.getOwner(),
                 scope.getApplication()});
 
         CpEntityManagerFactory cpemf = (CpEntityManagerFactory)emf;
 
         final EntityIndex ei = cpemf.getManagerCache().getEntityIndex(scope);
-        
+
         final EntityIndexBatch eibatch = ei.createBatch();
 
         final IndexScope indexScope = new IndexScopeImpl(
