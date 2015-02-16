@@ -53,27 +53,22 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
 
 
     private final ApplicationObservable applicationObservable;
-    private final Set<ApplicationDataMigration> appMigrations;
-    private final Set<CollectionDataMigration> collectionMigrations;
+    private final Set<DataMigration> dataMigrations;
 
 
     @Inject
     public DataMigrationManagerImpl( final MigrationInfoSerialization migrationInfoSerialization,
-                                     final Set<ApplicationDataMigration> appMigrations,
-                                     final Set<CollectionDataMigration> collectionMigrations,
+                                     final Set<DataMigration> dataMigrations,
                                      final AllEntitiesInSystemObservable allEntitiesInSystemObservable,
                                      final ApplicationObservable applicationObservable
     ) {
-        this.appMigrations = appMigrations;
-        this.collectionMigrations = collectionMigrations;
 
         Preconditions.checkNotNull( migrationInfoSerialization,
                 "migrationInfoSerialization must not be null" );
-        Preconditions.checkNotNull( collectionMigrations, "migrations must not be null" );
-        Preconditions.checkNotNull( appMigrations, "migrations must not be null" );
+        Preconditions.checkNotNull( dataMigrations, "migrations must not be null" );
         Preconditions.checkNotNull( allEntitiesInSystemObservable, "allentitiesobservable must not be null" );
         Preconditions.checkNotNull( applicationObservable, "applicationObservable must not be null" );
-
+        this.dataMigrations = dataMigrations;
         this.migrationInfoSerialization = migrationInfoSerialization;
         this.allEntitiesInSystemObservable = allEntitiesInSystemObservable;
         this.applicationObservable = applicationObservable;
@@ -228,31 +223,7 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
 
     private boolean populateTreeMap() {
         if ( migrationTreeMap.isEmpty() ) {
-            for ( DataMigration migration : appMigrations ) {
-
-                Preconditions.checkNotNull(migration,
-                    "A migration instance in the set of migrations was null.  This is not allowed");
-
-                final int version = migration.getVersion();
-
-                final DataMigration existing = migrationTreeMap.get( version );
-
-                if ( existing != null ) {
-
-                    final Class<? extends DataMigration> existingClass = existing.getClass();
-
-                    final Class<? extends DataMigration> currentClass = migration.getClass();
-
-
-                    throw new DataMigrationException( String.format(
-                        "Data migrations must be unique.  Both classes %s and %s have version %d",
-                        existingClass, currentClass, version ) );
-                }
-
-                migrationTreeMap.put( version, migration );
-            }
-
-            for ( DataMigration migration : collectionMigrations ) {
+            for ( DataMigration migration : dataMigrations ) {
 
                 Preconditions.checkNotNull(migration,
                     "A migration instance in the set of migrations was null.  This is not allowed");

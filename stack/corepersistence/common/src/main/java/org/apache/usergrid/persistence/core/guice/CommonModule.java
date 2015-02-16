@@ -77,8 +77,7 @@ public class CommonModule extends AbstractModule {
 
 
         //do multibindings for migrations
-        Multibinder<ApplicationDataMigration> applicationDataMigrationMultibinder = Multibinder.newSetBinder( binder(), ApplicationDataMigration.class );
-        Multibinder<CollectionDataMigration> collectionDataMigrationMultibinder = Multibinder.newSetBinder( binder(), CollectionDataMigration.class );
+        Multibinder<DataMigration> applicationDataMigrationMultibinder = Multibinder.newSetBinder( binder(), DataMigration.class );
 //        dataMigrationMultibinder.addBinding();
 //        dataMigrationManagerMultibinder.addBinding().to( DataMigrationManagerImpl.class );
 //        migrationBinding.addBinding().to( Key.get( MigrationInfoSerialization.class ) );

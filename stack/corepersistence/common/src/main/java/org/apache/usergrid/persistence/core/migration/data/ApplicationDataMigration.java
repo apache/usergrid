@@ -26,13 +26,7 @@ import rx.Observable;
 /**
  * Migrate applications
  */
-public interface ApplicationDataMigration extends DataMigration {
+public interface ApplicationDataMigration extends DataMigration<ApplicationScope> {
 
-    /**
-     * Migrate the data to the specified version
-     * @param observer
-     * @throws Throwable
-     */
-    public Observable migrate(final Observable<ApplicationScope> applicationEntityGroup, final ProgressObserver observer) throws Throwable;
 
 }

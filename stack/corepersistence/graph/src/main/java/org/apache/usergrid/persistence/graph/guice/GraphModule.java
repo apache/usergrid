@@ -117,8 +117,8 @@ public class GraphModule extends AbstractModule {
         bind( EdgeMetaRepair.class ).to( EdgeMetaRepairImpl.class );
         bind( EdgeDeleteRepair.class ).to( EdgeDeleteRepairImpl.class );
 
-        Multibinder<ApplicationDataMigration> dataMigrationMultibinder =
-            Multibinder.newSetBinder( binder(), ApplicationDataMigration.class );
+        Multibinder<DataMigration> dataMigrationMultibinder =
+            Multibinder.newSetBinder( binder(), DataMigration.class );
         dataMigrationMultibinder.addBinding().to( EdgeDataMigrationImpl.class );
 
         /**

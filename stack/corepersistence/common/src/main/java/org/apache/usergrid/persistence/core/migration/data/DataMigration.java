@@ -40,9 +40,15 @@ import rx.Observable;
  */
 
 
-public interface DataMigration {
+public interface DataMigration <T> {
 
 
+    /**
+     * Migrate the data to the specified version
+     * @param observer
+     * @throws Throwable
+     */
+    public Observable migrate(final Observable<T> applicationEntityGroup,final ProgressObserver observer) throws Throwable;
 
     /**
      * Get the version of this migration.  It must be unique.

@@ -34,7 +34,7 @@ import com.google.inject.multibindings.Multibinder;
 public class MaxMigrationModule extends AbstractModule {
     @Override
     protected void configure() {
-        Multibinder<ApplicationDataMigration> dataMigrationMultibinder = Multibinder.newSetBinder( binder(), ApplicationDataMigration.class );
+        Multibinder<DataMigration> dataMigrationMultibinder = Multibinder.newSetBinder( binder(), DataMigration.class );
         dataMigrationMultibinder.addBinding().to( MaxMigrationVersion.class );
     }
 }

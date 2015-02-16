@@ -56,8 +56,7 @@ public class SerializationModule extends AbstractModule {
         bind(MvccEntitySerializationStrategy.class ).annotatedWith(ProxyImpl.class)
                                                      .to(MvccEntitySerializationStrategyProxyV2Impl.class);
 
-        Multibinder<CollectionDataMigration> dataMigrationMultibinder =
-            Multibinder.newSetBinder( binder(), CollectionDataMigration.class );
+        Multibinder<DataMigration> dataMigrationMultibinder =  Multibinder.newSetBinder( binder(), DataMigration.class );
         dataMigrationMultibinder.addBinding().to( MvccEntityDataMigrationImpl.class );
 
         bind( MvccEntityMigrationStrategy.class ).to(MvccEntitySerializationStrategyProxyV2Impl.class);

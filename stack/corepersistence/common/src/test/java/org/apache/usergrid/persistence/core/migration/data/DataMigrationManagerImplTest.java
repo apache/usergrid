@@ -88,10 +88,9 @@ public class DataMigrationManagerImplTest {
         final MigrationInfoSerialization serialization = mock( MigrationInfoSerialization.class );
         when(serialization.getCurrentVersion()).thenReturn(1);
 
-        Set<CollectionDataMigration> collectionDataMigrations = new HashSet<>();
-        Set<ApplicationDataMigration> emptyMigration = new HashSet<>();
+        Set<DataMigration> emptyMigration = new HashSet<>();
 
-        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( serialization, emptyMigration,collectionDataMigrations, allEntitiesInSystemObservable,allApplicationsObservable );
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( serialization, emptyMigration, allEntitiesInSystemObservable,allApplicationsObservable );
 
         migrationManager.migrate();
 
@@ -116,14 +115,13 @@ public class DataMigrationManagerImplTest {
         when(v2.migrate(any(Observable.class), any(DataMigration.ProgressObserver.class))).thenReturn(Observable.empty());
 
 
-        Set<ApplicationDataMigration> migrations = new HashSet<>();
+        Set<DataMigration> migrations = new HashSet<>();
         migrations.add( v1 );
         migrations.add( v2 );
 
-        Set<CollectionDataMigration> collectionDataMigrations = new HashSet<>();
 
 
-        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( serialization, migrations,collectionDataMigrations,allEntitiesInSystemObservable,allApplicationsObservable );
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( serialization, migrations,allEntitiesInSystemObservable,allApplicationsObservable );
 
         migrationManager.migrate();
 
@@ -166,14 +164,12 @@ public class DataMigrationManagerImplTest {
         when( v2.getType() ).thenReturn(DataMigration.MigrationType.Entities);
         when( v2.getVersion() ).thenReturn( 3 );
 
-        Set<ApplicationDataMigration> migrations = new HashSet<>();
+        Set<DataMigration> migrations = new HashSet<>();
         migrations.add( v1 );
         migrations.add( v2 );
-        Set<CollectionDataMigration> collectionDataMigrations = new HashSet<>();
-
 
         DataMigrationManagerImpl migrationManager
-            = new DataMigrationManagerImpl( serialization, migrations,collectionDataMigrations,allEntitiesInSystemObservable,allApplicationsObservable );
+            = new DataMigrationManagerImpl( serialization, migrations,allEntitiesInSystemObservable,allApplicationsObservable );
 
         migrationManager.migrate();
 
@@ -234,13 +230,12 @@ public class DataMigrationManagerImplTest {
         when( v2.getType() ).thenReturn(DataMigration.MigrationType.Entities);
         when(v2.migrate(any(Observable.class), any(DataMigration.ProgressObserver.class))).thenReturn(Observable.empty());
 
-        Set<CollectionDataMigration> collectionMigrations = new HashSet<>();
-        collectionMigrations.add( v1 );
-        collectionMigrations.add(v2);
-        Set<ApplicationDataMigration> applicationDataMigrations = new HashSet<>();
+        Set<DataMigration> applicationDataMigrations = new HashSet<>();
+        applicationDataMigrations.add( v1 );
+        applicationDataMigrations.add(v2);
 
 
-        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( serialization, applicationDataMigrations,collectionMigrations,allEntitiesInSystemObservable, allApplicationsObservable );
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( serialization, applicationDataMigrations,allEntitiesInSystemObservable, allApplicationsObservable );
 
         migrationManager.migrate();
 
