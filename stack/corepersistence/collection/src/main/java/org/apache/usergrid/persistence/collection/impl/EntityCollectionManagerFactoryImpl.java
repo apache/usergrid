@@ -98,6 +98,7 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
                             final EntityCollectionManager proxy = new CachedEntityCollectionManager(entityCacheFig, target  );
 
                             return proxy;
+//                            return target;
                         }
                     } );
 
