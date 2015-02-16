@@ -39,11 +39,20 @@ import javax.ws.rs.core.UriBuilder;
 import org.apache.usergrid.java.client.Client;
 import static org.apache.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
+
+import org.jboss.arquillian.container.test.api.Deployment;
+import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.shrinkwrap.api.Archive;
+import org.jboss.shrinkwrap.api.ShrinkWrap;
+import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
+import org.jboss.shrinkwrap.resolver.api.maven.archive.importer.MavenImporter;
 import org.junit.AfterClass;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,6 +65,7 @@ import org.slf4j.LoggerFactory;
  * failure condition if multiple]
  */
 //
+@RunWith( Arquillian.class )
 public abstract class AbstractRestIT extends JerseyTest {
     private static final Logger LOG = LoggerFactory.getLogger( AbstractRestIT.class );
     private static boolean usersSetup = false;
@@ -89,6 +99,21 @@ public abstract class AbstractRestIT extends JerseyTest {
                 .clientConfig( clientConfig ).build();
         dumpClasspath( AbstractRestIT.class.getClassLoader() );
     }
+
+
+    @Deployment(testable = false)
+    public static WebArchive createTestArchive() {
+
+        //we use the MavenImporter from shrinkwrap to just produce whatever maven would build then test with it
+
+        //set maven to be in offline mode
+        System.setProperty( "org.apache.maven.offline", "true" );
+
+      return  ShrinkWrap.create(MavenImporter.class)
+          .loadPomFromFile("pom.xml", "arquillian-tomcat" ).importBuildOutput().as(WebArchive.class);
+
+    }
+
 
 
     @AfterClass

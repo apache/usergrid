@@ -20,17 +20,13 @@
 
 package org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt;
 
-import org.apache.usergrid.batch.service.App;
-import org.apache.usergrid.rest.test.resource2point0.endpoints.NamedResource;
-import org.apache.usergrid.rest.test.resource2point0.endpoints.UrlResource;
-import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
-import org.apache.usergrid.rest.test.resource2point0.model.Application;
-import org.apache.usergrid.rest.test.resource2point0.model.Organization;
-import org.apache.usergrid.rest.test.resource2point0.model.Token;
-import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 import javax.ws.rs.core.MediaType;
-import java.util.Map;
+
+import org.apache.usergrid.rest.test.resource2point0.endpoints.NamedResource;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.UrlResource;
+import org.apache.usergrid.rest.test.resource2point0.model.Application;
+import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 /**
  * Classy class class.
