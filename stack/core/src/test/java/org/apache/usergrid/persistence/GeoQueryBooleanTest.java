@@ -52,11 +52,8 @@ public class GeoQueryBooleanTest extends AbstractCoreIT {
 
         log.info( "GeoQueryBooleanTest.testGeoQueryWithOr" );
 
-        UUID applicationId = setup.createApplication(
-            "testOrganization", "testGeoQueryWithOr-" + UUIDGenerator.newTimeUUID());
-        assertNotNull( applicationId );
 
-        EntityManager em = setup.getEmf().getEntityManager( applicationId );
+        EntityManager em = app.getEntityManager();
         assertNotNull( em );
 
         // create two users at a location
@@ -119,11 +116,8 @@ public class GeoQueryBooleanTest extends AbstractCoreIT {
 
         log.info( "GeoQueryBooleanTest.testGeoQueryWithOr" );
 
-        UUID applicationId = setup.createApplication(
-            "testOrganization", "testGeoQueryWithNot-" + UUIDGenerator.newTimeUUID() );
-        assertNotNull( applicationId );
+        EntityManager em = app.getEntityManager();
 
-        EntityManager em = setup.getEmf().getEntityManager( applicationId );
         assertNotNull( em );
 
         // define two users at a location

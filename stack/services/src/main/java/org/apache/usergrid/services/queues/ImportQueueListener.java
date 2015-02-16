@@ -32,6 +32,7 @@ import org.apache.usergrid.persistence.queue.QueueMessage;
 import org.apache.usergrid.services.ServiceManagerFactory;
 
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 
@@ -52,8 +53,8 @@ public class ImportQueueListener extends QueueListener {
 
     @Inject
     public ImportQueueListener( final ServiceManagerFactory smf, final EntityManagerFactory emf,
-                                final MetricsFactory metricsService, final Properties props ) {
-        super( smf, emf, metricsService, props );
+                                final MetricsFactory metricsService, final Injector injector, final Properties props ) {
+        super( smf, emf, metricsService, injector,  props );
     }
 
 

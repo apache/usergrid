@@ -19,6 +19,8 @@ package org.apache.usergrid.services.queues;
 import com.codahale.metrics.*;
 import com.codahale.metrics.Timer;
 import com.google.common.cache.*;
+import com.google.inject.Injector;
+
 import org.apache.usergrid.corepersistence.CpSetup;
 import org.apache.usergrid.metrics.MetricsFactory;
 
@@ -85,14 +87,14 @@ public abstract class QueueListener  {
      * @param metricsService
      * @param props
      */
-    public QueueListener(ServiceManagerFactory smf, EntityManagerFactory emf, MetricsFactory metricsService, Properties props){
+    public QueueListener(ServiceManagerFactory smf, EntityManagerFactory emf, MetricsFactory metricsService, Injector injector, Properties props){
         //TODO: change current injectors to use service module instead of CpSetup
-        this.queueManagerFactory = CpSetup.getInjector().getInstance(QueueManagerFactory.class);
+        this.queueManagerFactory = injector.getInstance( QueueManagerFactory.class );
         this.smf = smf;
-        this.emf = CpSetup.getInjector().getInstance( EntityManagerFactory.class ); //emf;
+        this.emf = injector.getInstance( EntityManagerFactory.class ); //emf;
         this.metricsService = metricsService;
         this.properties = props;
-        this.queueScopeFactory = CpSetup.getInjector().getInstance(QueueScopeFactory.class);
+        this.queueScopeFactory = injector.getInstance(QueueScopeFactory.class);
 
     }
 

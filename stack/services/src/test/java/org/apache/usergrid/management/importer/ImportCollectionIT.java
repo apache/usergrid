@@ -17,29 +17,14 @@
 
 package org.apache.usergrid.management.importer;
 
-import com.amazonaws.SDKGlobalConfiguration;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.Service;
-import com.google.inject.Module;
-import org.apache.commons.lang.RandomStringUtils;
-import org.apache.commons.lang3.StringUtils;
 
-import org.apache.usergrid.NewOrgAppAdminRule;
-import org.apache.usergrid.ServiceITSetup;
-import org.apache.usergrid.ServiceITSetupImpl;
-import org.apache.usergrid.batch.service.JobSchedulerService;
-import org.apache.usergrid.cassandra.CassandraResource;
-import org.apache.usergrid.cassandra.ClearShiroSubject;
-import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.management.OrganizationInfo;
-import org.apache.usergrid.management.UserInfo;
-import org.apache.usergrid.management.export.ExportService;
-import org.apache.usergrid.persistence.*;
-import org.apache.usergrid.persistence.entities.FileImport;
-import org.apache.usergrid.persistence.entities.Import;
-import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
-import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.index.query.Query.Level;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.UUID;
+
 import org.jclouds.ContextBuilder;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.BlobStoreContext;
@@ -49,23 +34,54 @@ import org.jclouds.blobstore.domain.StorageMetadata;
 import org.jclouds.http.config.JavaUrlHttpCommandExecutorServiceModule;
 import org.jclouds.logging.log4j.config.Log4JLoggingModule;
 import org.jclouds.netty.config.NettyPayloadModule;
-import org.junit.*;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang3.StringUtils;
+
+import org.apache.usergrid.NewOrgAppAdminRule;
+import org.apache.usergrid.ServiceITSetup;
+import org.apache.usergrid.ServiceITSetupImpl;
+import org.apache.usergrid.batch.service.JobSchedulerService;
+import org.apache.usergrid.cassandra.ClearShiroSubject;
+import org.apache.usergrid.management.OrganizationInfo;
+import org.apache.usergrid.management.UserInfo;
+import org.apache.usergrid.management.export.ExportService;
+import org.apache.usergrid.persistence.ConnectionRef;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.SimpleEntityRef;
+import org.apache.usergrid.persistence.entities.FileImport;
+import org.apache.usergrid.persistence.entities.Import;
+import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.index.query.Query.Level;
+import org.apache.usergrid.setup.ConcurrentProcessSingleton;
+
+import com.amazonaws.SDKGlobalConfiguration;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.Service;
+import com.google.inject.Module;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 
-@Concurrent
 public class ImportCollectionIT {
 
     private static final Logger logger = LoggerFactory.getLogger(ImportCollectionIT.class);
-
-    private static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
 
     // app-level data generated only once
     private static UserInfo adminUser;
@@ -82,7 +98,7 @@ public class ImportCollectionIT {
 
     @ClassRule
     public static final ServiceITSetup setup =
-        new ServiceITSetupImpl( cassandraResource, new ElasticSearchResource() );
+        new ServiceITSetupImpl(  );
 
     @Rule
     public NewOrgAppAdminRule newOrgAppAdminRule = new NewOrgAppAdminRule( setup );
@@ -94,9 +110,10 @@ public class ImportCollectionIT {
         bucketPrefix = System.getProperty( "bucketName" );
 
         // start the scheduler after we're all set up
-        JobSchedulerService jobScheduler = cassandraResource.getBean( JobSchedulerService.class );
+        JobSchedulerService jobScheduler = ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( JobSchedulerService.class );
         if ( jobScheduler.state() != Service.State.RUNNING ) {
-            jobScheduler.startAndWait();
+            jobScheduler.startAsync();
+            jobScheduler.awaitRunning();
         }
 
     }
