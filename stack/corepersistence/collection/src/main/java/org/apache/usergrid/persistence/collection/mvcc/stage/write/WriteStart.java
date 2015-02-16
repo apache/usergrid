@@ -28,7 +28,7 @@ import rx.functions.Func1;
 
 
 /**
- * This is the first stage and should be invoked immediately when a write is started.  It should 
+ * This is the first stage and should be invoked immediately when a write is started.  It should
  * persist the start of a new write in the data store for a checkpoint and recovery
  */
 @Singleton
@@ -70,25 +70,22 @@ public class WriteStart implements Func1<CollectionIoEvent<Entity>, CollectionIo
             MutationBatch write = logStrategy.write( collectionScope, startEntry );
 
             final MvccEntityImpl nextStage = new MvccEntityImpl( entityId, newVersion, status, entity );
-
-
-            try {
-                write.execute();
-            }
-            catch ( ConnectionException e ) {
-                LOG.error( "Failed to execute write ", e );
-                throw new WriteStartException( nextStage, collectionScope,
-                        "Failed to execute write ", e );
-            }
-            catch ( NullPointerException e) {
-                LOG.error( "Failed to execute write ", e );
-                throw new WriteStartException( nextStage, collectionScope,
+            if(ioEvent.getEvent().hasVersion()) {
+                try {
+                    write.execute();
+                } catch (ConnectionException e) {
+                    LOG.error("Failed to execute write ", e);
+                    throw new WriteStartException(nextStage, collectionScope,
+                        "Failed to execute write ", e);
+                } catch (NullPointerException e) {
+                    LOG.error("Failed to execute write ", e);
+                    throw new WriteStartException(nextStage, collectionScope,
                         "Failed to execute write", e);
+                }
             }
 
-
-          //create the mvcc entity for the next stage
-            //todo, we need to create a complete or partial update here (or sooner)
+            //create the mvcc entity for the next stage
+           //TODO: we need to create a complete or partial update here (or sooner)
 
             return new CollectionIoEvent<MvccEntity>( collectionScope, nextStage );
         }
