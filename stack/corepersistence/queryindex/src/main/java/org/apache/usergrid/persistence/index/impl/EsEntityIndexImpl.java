@@ -86,6 +86,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
     private final IndexIdentifier.IndexAlias alias;
     private final IndexIdentifier indexIdentifier;
+    private final IndexBatchBuffer indexBatchBuffer;
 
     /**
      * We purposefully make this per instance. Some indexes may work, while others may fail
@@ -117,7 +118,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
 
     @Inject
-    public EsEntityIndexImpl( @Assisted final ApplicationScope appScope, final IndexFig config, final EsProvider provider, final EsIndexCache indexCache) {
+    public EsEntityIndexImpl( @Assisted final ApplicationScope appScope, final IndexFig config, final IndexBatchBuffer indexBatchBuffer, final EsProvider provider, final EsIndexCache indexCache) {
+        this.indexBatchBuffer = indexBatchBuffer;
         ValidationUtils.validateApplicationScope( appScope );
         this.applicationScope = appScope;
         this.esProvider = provider;
@@ -279,7 +281,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     @Override
     public EntityIndexBatch createBatch() {
         return new EsEntityIndexBatchImpl(
-                applicationScope, esProvider.getClient(), config, 1000, failureMonitor, this );
+                applicationScope, esProvider.getClient(),indexBatchBuffer, config, failureMonitor, this );
     }
 
 

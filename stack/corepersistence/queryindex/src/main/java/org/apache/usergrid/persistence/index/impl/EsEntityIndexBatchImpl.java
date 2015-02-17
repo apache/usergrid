@@ -31,6 +31,8 @@ import org.apache.usergrid.persistence.index.*;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.action.delete.DeleteRequestBuilder;
+import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.client.Client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,29 +89,23 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
     private final IndexIdentifier.IndexAlias alias;
     private final IndexIdentifier indexIdentifier;
 
-    private BulkRequestBuilder bulkRequest;
-
-    private final int autoFlushSize;
-
-    private int count;
-
+    private final IndexBatchBuffer indexBatchBuffer;
     private final FailureMonitor failureMonitor;
 
     private final AliasedEntityIndex entityIndex;
 
 
-    public EsEntityIndexBatchImpl( final ApplicationScope applicationScope, final Client client,
-            final IndexFig config, final int autoFlushSize, final FailureMonitor failureMonitor, final AliasedEntityIndex entityIndex ) {
+    public EsEntityIndexBatchImpl(final ApplicationScope applicationScope, final Client client,final IndexBatchBuffer indexBatchBuffer,
+            final IndexFig config, final FailureMonitor failureMonitor, final AliasedEntityIndex entityIndex ) {
 
         this.applicationScope = applicationScope;
         this.client = client;
+        this.indexBatchBuffer = indexBatchBuffer;
         this.failureMonitor = failureMonitor;
         this.entityIndex = entityIndex;
         this.indexIdentifier = IndexingUtils.createIndexIdentifier(config, applicationScope);
         this.alias = indexIdentifier.getAlias();
         this.refresh = config.isForcedRefresh();
-        this.autoFlushSize = autoFlushSize;
-        initBatch();
     }
 
 
@@ -120,8 +116,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         IndexValidationUtils.validateIndexScope( indexScope );
         ValidationUtils.verifyEntityWrite( entity );
 
-        final String context = createContextName( indexScope );
-        final String entityType = entity.getId().getType();
+        final String context = createContextName(indexScope);
 
         if ( log.isDebugEnabled() ) {
             log.debug( "Indexing entity {}:{}\n   alias: {}\n" +
@@ -136,7 +131,6 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
         // need prefix here because we index UUIDs as strings
 
-
         // let caller add these fields if needed
         // entityAsMap.put("created", entity.getId().getUuid().timestamp();
         // entityAsMap.put("updated", entity.getVersion().timestamp());
@@ -144,12 +138,10 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         String indexId = createIndexDocId( entity, context );
 
         log.debug( "Indexing entity documentId {} data {} ", indexId, entityAsMap );
-
-        bulkRequest.add( client.prepareIndex(
-                alias.getWriteAlias(), entityType, indexId ).setSource( entityAsMap ) );
-
-        maybeFlush();
-
+        final String entityType = entity.getId().getType();
+        IndexRequestBuilder builder =
+                client.prepareIndex(alias.getWriteAlias(), entityType, indexId).setSource( entityAsMap );
+        indexBatchBuffer.put(builder);
         return this;
     }
 
@@ -194,7 +186,8 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
                    @Override
                    public Object call(String index) {
                        try {
-                           bulkRequest.add(client.prepareDelete(index, entityType, indexId).setRefresh(refresh));
+                           DeleteRequestBuilder builder = client.prepareDelete(index, entityType, indexId).setRefresh(refresh);
+                           indexBatchBuffer.put(builder);
                        }catch (Exception e){
                            log.error("failed to deindex",e);
                            throw e;
@@ -205,7 +198,6 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
         log.debug( "Deindexed Entity with index id " + indexId );
 
-        maybeFlush();
 
         return this;
     }
@@ -228,58 +220,14 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
     @Override
     public void execute() {
-        execute( bulkRequest.setRefresh( refresh ) );
+        indexBatchBuffer.flush();
     }
 
-
-    /**
-     * Execute the request, check for errors, then re-init the batch for future use
-     */
-    private void execute( final BulkRequestBuilder request ) {
-
-        //nothing to do, we haven't added anthing to the index
-        if ( request.numberOfActions() == 0 ) {
-            return;
-        }
-
-        final BulkResponse responses;
-
-        try {
-            responses = request.execute().actionGet();
-        }
-        catch ( Throwable t ) {
-            log.error( "Unable to communicate with elasticsearch" );
-            failureMonitor.fail( "Unable to execute batch", t );
-            throw t;
-        }
-
-
-        failureMonitor.success();
-
-        for ( BulkItemResponse response : responses ) {
-            if ( response.isFailed() ) {
-                throw new RuntimeException( "Unable to index documents.  Errors are :"
-                        + response.getFailure().getMessage() );
-            }
-        }
-
-        initBatch();
-    }
 
 
     @Override
     public void executeAndRefresh() {
-        execute( bulkRequest.setRefresh( true ) );
-    }
-
-
-    private void maybeFlush() {
-        count++;
-
-        if ( count % autoFlushSize == 0 ) {
-            execute();
-            count = 0;
-        }
+        indexBatchBuffer.flushAndRefresh();
     }
 
 
@@ -422,7 +370,4 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
     }
 
 
-    private void initBatch() {
-        this.bulkRequest = client.prepareBulk();
-    }
 }
