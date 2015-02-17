@@ -16,7 +16,10 @@
  */
 package org.apache.usergrid.persistence.index.impl;
 
+import com.codahale.metrics.Timer;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.index.IndexBatchBuffer;
 import org.apache.usergrid.persistence.index.IndexFig;
 import org.elasticsearch.action.bulk.BulkItemResponse;
@@ -30,9 +33,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
 import rx.Subscriber;
+import rx.Subscription;
 import rx.functions.Action1;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -46,15 +51,26 @@ public class IndexBatchBufferImpl implements IndexBatchBuffer {
     private final FailureMonitor failureMonitor;
     private final IndexFig config;
     private final boolean refresh;
+    private final int timeout;
+    private final int bufferSize;
+    private final MetricsFactory metricsFactory;
+    private final Timer flushTimer;
     private BulkRequestBuilder bulkRequest;
     private Producer producer;
+    private Subscription producerObservable;
 
-    public IndexBatchBufferImpl(final Client client, FailureMonitor failureMonitor,final IndexFig config){
-        this.client = client;
-        this.failureMonitor = failureMonitor;
+    @Inject
+    public IndexBatchBufferImpl(final IndexFig config, final EsProvider provider, MetricsFactory metricsFactory){
+        this.metricsFactory = metricsFactory;
+        this.client = provider.getClient();
+        this.failureMonitor = new FailureMonitorImpl( config, provider );
         this.config = config;
         this.producer = new Producer();
         this.refresh = config.isForcedRefresh();
+        this.timeout = config.getIndexBufferTimeout();
+        this.bufferSize = config.getIndexBufferSize();
+        this.flushTimer = metricsFactory.getTimer(IndexBatchBuffer.class,"index.buffer.flush");
+        clearBulk();
         init();
     }
 
@@ -63,24 +79,25 @@ public class IndexBatchBufferImpl implements IndexBatchBuffer {
     }
 
     private void init() {
-        clearBulk();
-        Observable.create(producer)
-                .buffer(10)
+        this.producerObservable = Observable.create(producer)
+                .doOnNext(new Action1<RequestBuilderContainer>() {
+                    @Override
+                    public void call(RequestBuilderContainer container) {
+                        ShardReplicationOperationRequestBuilder builder = container.getBuilder();
+                        if (builder instanceof IndexRequestBuilder) {
+                            bulkRequest.add((IndexRequestBuilder) builder);
+                        }
+                        if (builder instanceof DeleteRequestBuilder) {
+                            bulkRequest.add((DeleteRequestBuilder)builder);
+                        }
+                    }
+                })
+                .buffer(timeout, TimeUnit.MILLISECONDS, bufferSize)
                 .doOnNext(new Action1<List<RequestBuilderContainer>>() {
                     @Override
                     public void call(List<RequestBuilderContainer> builderContainerList) {
-                        System.out.println("test test!!!");
-                        for (RequestBuilderContainer container : builderContainerList) {
-                            ShardReplicationOperationRequestBuilder builder = container.getBuilder();
-                            if (builder instanceof IndexRequestBuilder) {
-                                bulkRequest.add((IndexRequestBuilder) builder);
-                                continue;
-                            }
-                            if (builder instanceof DeleteRequestBuilder) {
-                                bulkRequest.add((DeleteRequestBuilder)builder);
-                                continue;
-                            }
-                        }
+                        flushTimer.time();
+                        metricsFactory.getCounter(IndexBatchBuffer.class,"index.buffer.size").dec(builderContainerList.size());
                         execute();
                     }
                 })
@@ -88,10 +105,12 @@ public class IndexBatchBufferImpl implements IndexBatchBuffer {
     }
 
     public void put(IndexRequestBuilder builder){
+        metricsFactory.getCounter(IndexBatchBuffer.class,"index.buffer.size").inc();
         producer.put(new RequestBuilderContainer(builder));
     }
 
     public void put(DeleteRequestBuilder builder){
+        metricsFactory.getCounter(IndexBatchBuffer.class,"index.buffer.size").inc();
         producer.put(new RequestBuilderContainer(builder));
     }
 

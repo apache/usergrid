@@ -201,15 +201,12 @@ public class EntityIndexTest extends BaseIT {
             if(count %1000 == 0){
                 batch.execute();
             }
-
-
-
             if ( ++count > max ) {
                 break;
             }
         }
 
-        batch.execute();
+        batch.executeAndRefresh();
         timer.stop();
         log.info( "Total time to index {} entries {}ms, average {}ms/entry",
                 new Object[] { count, timer.getTime(), timer.getTime() / count } );

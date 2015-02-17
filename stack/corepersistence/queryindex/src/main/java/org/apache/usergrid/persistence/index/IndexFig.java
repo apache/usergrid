@@ -49,6 +49,9 @@ public interface IndexFig extends GuicyFig {
 
     public static final String ELASTICSEARCH_FORCE_REFRESH = "elasticsearch.force_refresh";
 
+    public static final String INDEX_BUFFER_SIZE = "elasticsearch.buffer_size";
+
+    public static final String INDEX_BUFFER_TIMEOUT = "elasticsearch.buffer_size";
 
     /**
      * the number of times we can fail before we refresh the client
@@ -113,4 +116,12 @@ public interface IndexFig extends GuicyFig {
 
     @Default("2")
     int getIndexCacheMaxWorkers();
+
+    @Default("1000")
+    @Key( INDEX_BUFFER_TIMEOUT )
+    int getIndexBufferTimeout();
+
+    @Default("100")
+    @Key( INDEX_BUFFER_SIZE )
+    int getIndexBufferSize();
 }
