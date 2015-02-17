@@ -22,6 +22,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.util.*;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.Service;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -33,8 +35,6 @@ import org.jclouds.blobstore.domain.Blob;
 import org.jclouds.http.config.JavaUrlHttpCommandExecutorServiceModule;
 import org.jclouds.logging.log4j.config.Log4JLoggingModule;
 import org.jclouds.netty.config.NettyPayloadModule;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 import org.junit.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +43,6 @@ import org.apache.usergrid.NewOrgAppAdminRule;
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
 import org.apache.usergrid.batch.JobExecution;
-import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
 
 import org.apache.usergrid.management.ApplicationInfo;
@@ -53,7 +52,6 @@ import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.entities.JobData;
-import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.setup.ConcurrentProcessSingleton;
 
 import com.amazonaws.SDKGlobalConfiguration;
@@ -103,10 +101,15 @@ public class ExportServiceIT {
         logger.info("in setup");
 
         // start the scheduler after we're all set up
-        JobSchedulerService jobScheduler = ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( JobSchedulerService.class );
-        if ( jobScheduler.state() != Service.State.RUNNING ) {
-            jobScheduler.startAsync();
-            jobScheduler.awaitRunning();
+        try {
+
+            JobSchedulerService jobScheduler = ConcurrentProcessSingleton.getInstance().getSpringResource().getBean(JobSchedulerService.class);
+            if (jobScheduler.state() != Service.State.RUNNING) {
+                jobScheduler.startAsync();
+                jobScheduler.awaitRunning();
+            }
+        } catch ( Exception e ) {
+            logger.warn("Ignoring error starting jobScheduler, already started?", e);
         }
 
         adminUser = newOrgAppAdminRule.getAdminInfo();
@@ -194,30 +197,36 @@ public class ExportServiceIT {
 
         UUID exportUUID = exportService.schedule( payload );
 
-        JSONParser parser = new JSONParser();
+        TypeReference<HashMap<String,Object>> typeRef
+            = new TypeReference<HashMap<String,Object>>() {};
 
-        org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
-        //assertEquals(2, a.size() );
+        ObjectMapper mapper = new ObjectMapper();
+        HashMap<String,Object> jsonMap = mapper.readValue(new FileReader( f ), typeRef);
 
-        for ( indexCon = 0; indexCon < a.size(); indexCon++ ) {
-            JSONObject jObj = ( JSONObject ) a.get( indexCon );
-            JSONObject data = ( JSONObject ) jObj.get( "Metadata" );
-            String uuid = ( String ) data.get( "uuid" );
+        Map collectionsMap = (Map)jsonMap.get("collections");
+        List usersList = (List)collectionsMap.get("users");
+
+        int indexApp = 0;
+        for ( indexApp = 0; indexApp < usersList.size(); indexApp++ ) {
+            Map user = (Map)usersList.get( indexApp );
+            Map userProps = (Map)user.get("Metadata");
+            String uuid = ( String ) userProps.get( "uuid" );
             if ( entity[0].getUuid().toString().equals( uuid ) ) {
                 break;
             }
         }
 
-        org.json.simple.JSONObject objEnt = ( org.json.simple.JSONObject ) a.get( indexCon );
-        org.json.simple.JSONObject objConnections = ( org.json.simple.JSONObject ) objEnt.get( "connections" );
+        assertTrue("Uuid was not found in exported files. ", indexApp < usersList.size());
 
-        assertNotNull( objConnections );
+        Map userMap = (Map)usersList.get( indexApp );
+        Map connectionsMap = (Map)userMap.get("connections");
+        assertNotNull( connectionsMap );
 
-        org.json.simple.JSONArray objVibrations = ( org.json.simple.JSONArray ) objConnections.get( "Vibrations" );
+        List vibrationsList = (List)connectionsMap.get( "Vibrations" );
 
-        assertNotNull( objVibrations );
+        assertNotNull( vibrationsList );
 
-
+        f.deleteOnExit();
     }
 
 
@@ -279,31 +288,34 @@ public class ExportServiceIT {
 
         exportService.doExport( jobExecution );
 
-        JSONParser parser = new JSONParser();
+        TypeReference<HashMap<String,Object>> typeRef
+            = new TypeReference<HashMap<String,Object>>() {};
 
-        org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
+        ObjectMapper mapper = new ObjectMapper();
+        HashMap<String,Object> jsonMap = mapper.readValue(new FileReader( f ), typeRef);
+
+        Map collectionsMap = (Map)jsonMap.get("collections");
+        List usersList = (List)collectionsMap.get("users");
+
         int indexApp = 0;
-
-        for ( indexApp = 0; indexApp < a.size(); indexApp++ ) {
-            JSONObject jObj = ( JSONObject ) a.get( indexApp );
-            JSONObject data = ( JSONObject ) jObj.get( "Metadata" );
-            String uuid = ( String ) data.get( "uuid" );
+        for ( indexApp = 0; indexApp < usersList.size(); indexApp++ ) {
+            Map user = (Map)usersList.get( indexApp );
+            Map userProps = (Map)user.get("Metadata");
+            String uuid = ( String ) userProps.get( "uuid" );
             if ( entity[0].getUuid().toString().equals( uuid ) ) {
                 break;
             }
         }
 
-       assertTrue( "Uuid was not found in exported files. ", indexApp < a.size() );
+        assertTrue("Uuid was not found in exported files. ", indexApp < usersList.size());
 
+        Map userMap = (Map)usersList.get( indexApp );
+        Map connectionsMap = (Map)userMap.get("connections");
+        assertNotNull( connectionsMap );
 
-        org.json.simple.JSONObject objEnt = ( org.json.simple.JSONObject ) a.get( indexApp );
-        org.json.simple.JSONObject objConnections = ( org.json.simple.JSONObject ) objEnt.get( "connections" );
+        List vibrationsList = (List)connectionsMap.get( "Vibrations" );
 
-        assertNotNull( objConnections );
-
-        org.json.simple.JSONArray objVibrations = ( org.json.simple.JSONArray ) objConnections.get( "Vibrations" );
-
-        assertNotNull( objVibrations );
+        assertNotNull( vibrationsList );
 
         f.deleteOnExit();
     }
@@ -351,16 +363,20 @@ public class ExportServiceIT {
 
         exportService.doExport( jobExecution );
 
-        JSONParser parser = new JSONParser();
+        TypeReference<HashMap<String,Object>> typeRef
+            = new TypeReference<HashMap<String,Object>>() {};
 
-        org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
+        ObjectMapper mapper = new ObjectMapper();
+        Map<String,Object> jsonMap = mapper.readValue(new FileReader( f ), typeRef);
 
-        assertEquals( 3, a.size() );
-        for ( int i = 0; i < a.size(); i++ ) {
-            org.json.simple.JSONObject entity = ( org.json.simple.JSONObject ) a.get( i );
-            org.json.simple.JSONObject entityData = ( JSONObject ) entity.get( "Metadata" );
-            String entityName = ( String ) entityData.get( "name" );
-            // assertNotEquals( "NotEqual","junkRealName",entityName );
+        Map collectionsMap = (Map)jsonMap.get("collections");
+        String collectionName = (String)collectionsMap.keySet().iterator().next();
+        List collection = (List)collectionsMap.get(collectionName);
+
+        for ( Object o : collection ) {
+            Map entityMap = (Map)o;
+            Map metadataMap = (Map)entityMap.get("Metadata");
+            String entityName = (String)metadataMap.get("name");
             assertFalse( "junkRealName".equals( entityName ) );
         }
         f.deleteOnExit();
@@ -422,15 +438,20 @@ public class ExportServiceIT {
 
         exportService.doExport( jobExecution );
 
-        JSONParser parser = new JSONParser();
+        TypeReference<HashMap<String,Object>> typeRef
+            = new TypeReference<HashMap<String,Object>>() {};
 
-        org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
+        ObjectMapper mapper = new ObjectMapper();
+        Map<String,Object> jsonMap = mapper.readValue(new FileReader( f ), typeRef);
 
-        //assertEquals( 3 , a.size() );
-        for ( int i = 0; i < a.size(); i++ ) {
-            org.json.simple.JSONObject data = ( org.json.simple.JSONObject ) a.get( i );
-            org.json.simple.JSONObject entityData = ( JSONObject ) data.get( "Metadata" );
-            String entityName = ( String ) entityData.get( "name" );
+        Map collectionsMap = (Map)jsonMap.get("collections");
+        String collectionName = (String)collectionsMap.keySet().iterator().next();
+        List collection = (List)collectionsMap.get(collectionName);
+
+        for ( Object o : collection ) {
+            Map entityMap = (Map)o;
+            Map metadataMap = (Map)entityMap.get("Metadata");
+            String entityName = (String)metadataMap.get("name");
             assertFalse( "junkRealName".equals( entityName ) );
         }
     }
@@ -485,14 +506,20 @@ public class ExportServiceIT {
 
         exportService.doExport( jobExecution );
 
-        JSONParser parser = new JSONParser();
+        TypeReference<HashMap<String,Object>> typeRef
+            = new TypeReference<HashMap<String,Object>>() {};
 
-        org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
-        assertEquals( 1, a.size() );
-        for ( int i = 0; i < a.size(); i++ ) {
-            org.json.simple.JSONObject data = ( org.json.simple.JSONObject ) a.get( i );
-            org.json.simple.JSONObject entityData = ( JSONObject ) data.get( "Metadata" );
-            String entityName = ( String ) entityData.get( "name" );
+        ObjectMapper mapper = new ObjectMapper();
+        Map<String,Object> jsonMap = mapper.readValue(new FileReader( f ), typeRef);
+
+        Map collectionsMap = (Map)jsonMap.get("collections");
+        String collectionName = (String)collectionsMap.keySet().iterator().next();
+        List collection = (List)collectionsMap.get( collectionName );
+
+        for ( Object o : collection ) {
+            Map entityMap = (Map)o;
+            Map metadataMap = (Map)entityMap.get("Metadata");
+            String entityName = (String)metadataMap.get("name");
             assertFalse( "junkRealName".equals( entityName ) );
         }
     }
@@ -515,6 +542,7 @@ public class ExportServiceIT {
         f.deleteOnExit();
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
+
         // em.createApplicationCollection( "qtsMagics" );
         // intialize user object to be posted
         Map<String, Object> userProperties = null;
@@ -549,11 +577,17 @@ public class ExportServiceIT {
 
         exportService.doExport( jobExecution );
 
-        JSONParser parser = new JSONParser();
+        TypeReference<HashMap<String,Object>> typeRef
+            = new TypeReference<HashMap<String,Object>>() {};
 
-        org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
+        ObjectMapper mapper = new ObjectMapper();
+        HashMap<String,Object> jsonMap = mapper.readValue(new FileReader( f ), typeRef);
 
-        assertEquals( entitiesToCreate, a.size() );
+        Map collectionsMap = (Map)jsonMap.get("collections");
+        String collectionName = (String)collectionsMap.keySet().iterator().next();
+        List collection = (List)collectionsMap.get( collectionName );
+
+        assertEquals(entitiesToCreate, collection.size());
     }
 
 
@@ -611,16 +645,22 @@ public class ExportServiceIT {
 
         exportService.doExport( jobExecution );
 
-        JSONParser parser = new JSONParser();
+        TypeReference<HashMap<String,Object>> typeRef
+            = new TypeReference<HashMap<String,Object>>() {};
 
-        org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
+        ObjectMapper mapper = new ObjectMapper();
+        Map<String,Object> jsonMap = mapper.readValue(new FileReader( f ), typeRef);
 
-        // only one entity should match the query.
-        assertEquals( 1, a.size() );
+        Map collectionsMap = (Map)jsonMap.get("collections");
+        String collectionName = (String)collectionsMap.keySet().iterator().next();
+        List collectionList = (List)collectionsMap.get( collectionName );
+
+        assertEquals(1, collectionList.size());
     }
 
 
     @Test
+    @Ignore("this is a meaningless test because our export format does not support export of organizations")
     public void testExportOneOrganization() throws Exception {
 
         // create a bunch of organizations, each with applications and collections of entities
@@ -681,11 +721,16 @@ public class ExportServiceIT {
         File exportedFile = new File( exportFileName );
         exportedFile.deleteOnExit();
 
-        JSONParser parser = new JSONParser();
-        org.json.simple.JSONArray a = ( org.json.simple.JSONArray )
-            parser.parse( new FileReader( exportedFile ) );
+        TypeReference<HashMap<String,Object>> typeRef
+            = new TypeReference<HashMap<String,Object>>() {};
 
-        assertEquals( 23, a.size() );
+        ObjectMapper mapper = new ObjectMapper();
+        Map<String,Object> jsonMap = mapper.readValue(new FileReader( exportedFile ), typeRef);
+        Map collectionsMap = (Map)jsonMap.get("collections");
+
+        List collectionList = (List)collectionsMap.get("users");
+
+        assertEquals( 3, collectionList.size() );
     }
 
 

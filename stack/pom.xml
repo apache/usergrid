@@ -102,7 +102,7 @@
       <hector-test-version>1.1-4</hector-test-version>
       <jackson-version>1.9.9</jackson-version>
       <jackson-2-version>2.3.3</jackson-2-version>
-      <jclouds.version>1.6.2-incubating</jclouds.version>
+      <jclouds.version>1.8.0</jclouds.version>
       <jersey-version>1.18.1</jersey-version>
       <junit-version>4.12</junit-version>
       <log4j-version>1.2.16</log4j-version>

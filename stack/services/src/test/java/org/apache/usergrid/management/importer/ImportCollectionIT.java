@@ -18,6 +18,7 @@
 package org.apache.usergrid.management.importer;
 
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -97,8 +98,7 @@ public class ImportCollectionIT {
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @ClassRule
-    public static final ServiceITSetup setup =
-        new ServiceITSetupImpl(  );
+    public static final ServiceITSetup setup = new ServiceITSetupImpl(  );
 
     @Rule
     public NewOrgAppAdminRule newOrgAppAdminRule = new NewOrgAppAdminRule( setup );
@@ -110,7 +110,9 @@ public class ImportCollectionIT {
         bucketPrefix = System.getProperty( "bucketName" );
 
         // start the scheduler after we're all set up
-        JobSchedulerService jobScheduler = ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( JobSchedulerService.class );
+        JobSchedulerService jobScheduler = ConcurrentProcessSingleton
+            .getInstance().getSpringResource().getBean( JobSchedulerService.class );
+
         if ( jobScheduler.state() != Service.State.RUNNING ) {
             jobScheduler.startAsync();
             jobScheduler.awaitRunning();
@@ -366,8 +368,12 @@ public class ImportCollectionIT {
 
         // export and upload a bad JSON file to the S3 bucket
 
+        File cwd = new File(".");
+        String basePath = System.getProperty("target.directory")
+            + File.separator + "test-classes" + File.separator;
+
         List<String> filenames = new ArrayList<>( 1 );
-        filenames.add( "testimport-bad-json.json");
+        filenames.add( basePath + "testimport-bad-json.json");
 
         S3Upload s3Upload = new S3Upload();
         s3Upload.copyToS3(
@@ -412,11 +418,16 @@ public class ImportCollectionIT {
 
         // upload good and badly formatted files to our S3 bucket
 
+        File cwd = new File(".");
+        String basePath = cwd.getAbsolutePath();
+        basePath = basePath.substring( 0 , basePath.length() - 1 );
+        basePath = basePath + "src" + File.separator + "test" + File.separator + "resource" + File.separator;
+
         List<String> filenames = new ArrayList<>( 3 );
-        filenames.add( "testimport-with-connections.json" );
-        filenames.add( "testimport-qtmagics.json" );
-        filenames.add( "testimport-bad-connection.json" );
-        filenames.add( "testimport-bad-json.json" );
+        filenames.add( basePath + "testimport-with-connections.json" );
+        filenames.add( basePath + "testimport-qtmagics.json" );
+        filenames.add( basePath + "testimport-bad-connection.json" );
+        filenames.add( basePath + "testimport-bad-json.json" );
 
         S3Upload s3Upload = new S3Upload();
         s3Upload.copyToS3(
@@ -481,11 +492,12 @@ public class ImportCollectionIT {
 
         ImportService importService = setup.getImportService();
 
-        Import importEntity = importService.schedule(em.getApplication().getUuid(),  new HashMap<String, Object>() {{
-            put( "path", organization.getName() + em.getApplication().getName() );
-            put( "organizationId", organization.getUuid() );
-            put( "applicationId", em.getApplication().getUuid() );
-            put( "properties", new HashMap<String, Object>() {{
+        Import importEntity = importService.schedule(em.getApplication().getUuid(),
+            new HashMap<String, Object>() {{
+                put( "path", organization.getName() + em.getApplication().getName() );
+                put( "organizationId", organization.getUuid() );
+                put( "applicationId", em.getApplication().getUuid() );
+                put( "properties", new HashMap<String, Object>() {{
                 put( "storage_provider", "s3" );
                 put( "storage_info", new HashMap<String, Object>() {{
                     put( "s3_access_id",
@@ -495,7 +507,7 @@ public class ImportCollectionIT {
                     put( "bucket_location", bucketName );
                 }} );
             }} );
-        }} );
+        }});
 
         int maxRetries = 30;
         int retries = 0;

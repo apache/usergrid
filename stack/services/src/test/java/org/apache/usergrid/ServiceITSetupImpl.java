@@ -66,6 +66,7 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
         properties = springResource.getBean( "properties", Properties.class );
         smf = springResource.getBean( ServiceManagerFactory.class );
         exportService = springResource.getBean( ExportService.class );
+        importService = springResource.getBean( ImportService.class );
 
         //set our security manager for shiro
         SecurityUtils.setSecurityManager(springResource.getBean( org.apache.shiro.mgt.SecurityManager.class ));
