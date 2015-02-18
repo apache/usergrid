@@ -33,7 +33,8 @@
     <properties>
         <usergrid.rest.threads>8</usergrid.rest.threads>
         <guice.version>4.0-beta5</guice.version>
-        <catalina.home>OVERRIDE_ME_IN_SETTINGS>XML</catalina.home>
+        <catalina.host>localhost</catalina.host>
+        <catalina.jmx.port>8089</catalina.jmx.port>
     </properties>
 
 

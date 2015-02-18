@@ -97,5 +97,6 @@ JAVA_OPTS="$JAVA_OPTS -Dcom.sun.management.jmxremote.authenticate=false"
 Add the following properties to you maven settings.xml
 
 ```xml
- <catalina.home>[path to your tomcat directory]</catalina.home>
+<catalina.host>localhost</catalina.host>
+<catalina.jmx.port>8089</catalina.jmx.port>
  ```
