@@ -31,9 +31,10 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Singleton class to manage metrics.
+ * TODO:remove this in favor of cp one
  */
 @Component("metricsFactory")
-public class MetricsFactory {
+public class MetricsFactory implements org.apache.usergrid.persistence.core.metrics.MetricsFactory {
     @Autowired
     private Properties properties;
     public MetricRegistry registry;

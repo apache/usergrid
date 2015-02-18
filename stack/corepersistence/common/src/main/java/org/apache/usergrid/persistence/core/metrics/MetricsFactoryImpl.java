@@ -20,6 +20,7 @@ package org.apache.usergrid.persistence.core.metrics;
 import com.codahale.metrics.*;
 import com.codahale.metrics.graphite.Graphite;
 import com.codahale.metrics.graphite.GraphiteReporter;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +42,7 @@ public class MetricsFactoryImpl implements MetricsFactory {
     private ConcurrentHashMap<String,Metric> hashMap;
     private static final Logger LOG = LoggerFactory.getLogger(MetricsFactoryImpl.class);
 
+    @Inject
     public MetricsFactoryImpl(MetricsFig metricsFig) {
         this.metricsFig = metricsFig;
         registry = new MetricRegistry();
