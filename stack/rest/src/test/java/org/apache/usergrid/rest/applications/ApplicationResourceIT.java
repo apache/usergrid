@@ -17,86 +17,81 @@
 package org.apache.usergrid.rest.applications;
 
 
-import java.util.Map;
-
-import javax.ws.rs.core.MediaType;
-
 import com.fasterxml.jackson.databind.JsonNode;
+import com.sun.jersey.api.client.ClientResponse.Status;
+import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
-import org.apache.usergrid.rest.test.resource.CollectionResource;
-import org.apache.usergrid.rest.test.resource2point0.endpoints.ApplicationsResource;
-import org.apache.usergrid.rest.test.resource2point0.endpoints.CollectionEndpoint;
+import com.sun.jersey.api.representation.Form;
+import org.apache.shiro.codec.Base64;
+import org.apache.usergrid.cassandra.Concurrent;
+import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.OrganizationResource;
 import org.apache.usergrid.rest.test.resource2point0.model.*;
 import org.apache.usergrid.utils.MapUtils;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.management.ApplicationInfo;
-import org.apache.usergrid.management.OrganizationInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import org.apache.shiro.codec.Base64;
-
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.ClientResponse.Status;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.representation.Form;
+import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.*;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
-
 
 /**
  * Invokes methods on ApplicationResource
- *
- * @author zznate
  */
 @Concurrent()
 public class ApplicationResourceIT extends AbstractRestIT {
-    private static final Logger logger = LoggerFactory.getLogger( ApplicationResourceIT.class );
+    private static final Logger logger = LoggerFactory.getLogger(ApplicationResourceIT.class);
 
+    /**
+     * Retrieve an application using the organization client credentials
+     *
+     * @throws Exception
+     */
     @Test
     public void applicationWithOrgCredentials() throws Exception {
-
-        //Create the organization resource
-        OrganizationResource orgResource=clientSetup.getRestClient().management().orgs().organization(clientSetup.getOrganizationName());
-
         //retrieve the credentials
-        Credentials orgCredentials=orgResource.credentials().get();
-        String clientId = orgCredentials.getClientId();
-        String clientSecret = orgCredentials.getClientSecret();
-        //Add the org credentials to the query
-        QueryParameters params = new QueryParameters();
-        params.addParam("client_id", clientId);
-        params.addParam("client_secret", clientSecret);
-        //retrieve the users collection using only the org credentials
-        Collection users = this.app().collection("users").get(params, false);
-        //make sure that a valid response is returned without error
-        assertNotNull(users);
-        assertNull(users.getResponse().getError());
+        Credentials orgCredentials = getOrgCredentials();
+
+        //retrieve the app using only the org credentials
+        ApiResponse apiResponse = this.org().app(clientSetup.getAppName()).getResource(false)
+            .queryParam("grant_type", "client_credentials")
+            .queryParam("client_id", orgCredentials.getClientId())
+            .queryParam("client_secret", orgCredentials.getClientSecret())
+            .accept(MediaType.APPLICATION_JSON)
+            .type(MediaType.APPLICATION_JSON_TYPE)
+            .get(ApiResponse.class);
+        //assert that a valid response is returned without error
+        assertNotNull(apiResponse);
+        assertNull(apiResponse.getError());
     }
 
+    /**
+     * Retrieve an application using the application client credentials
+     *
+     * @throws Exception
+     */
     @Test
     public void applicationWithAppCredentials() throws Exception {
 
         //retrieve the credentials
-        Credentials appCredentials=this.app().credentials().get();
-        String clientId = appCredentials.getClientId();
-        String clientSecret = appCredentials.getClientSecret();
-        //add the app credentials to the query
-        QueryParameters params = new QueryParameters();
-        params.addParam("client_id", clientId);
-        params.addParam("client_secret", clientSecret);
-        //retrieve the users collection using only the app credentials
-        Collection users = this.app().collection("users").get(params, false);
-        //make sure that a valid response is returned without error
-        assertNotNull(users);
-        assertNull(users.getResponse().getError());
+        Credentials appCredentials = getAppCredentials();
+
+        //retrieve the app using only the org credentials
+        ApiResponse apiResponse = this.app().getResource(false)
+            .queryParam("grant_type", "client_credentials")
+            .queryParam("client_id", appCredentials.getClientId())
+            .queryParam("client_secret", appCredentials.getClientSecret())
+            .accept(MediaType.APPLICATION_JSON)
+            .type(MediaType.APPLICATION_JSON_TYPE)
+            .get(ApiResponse.class);
+        //assert that a valid response is returned without error
+        assertNotNull(apiResponse);
+        assertNull(apiResponse.getError());
     }
 
     /**
@@ -105,24 +100,20 @@ public class ApplicationResourceIT extends AbstractRestIT {
      */
     @Test
     public void jsonForNoAccepts() throws Exception {
-
-        //Create the organization resource
-        OrganizationResource orgResource=clientSetup.getRestClient().management().orgs().organization(clientSetup.getOrganizationName());
-        CollectionEndpoint usersResource=this.app().collection("users");
         //retrieve the credentials
-        Credentials orgCredentials=orgResource.credentials().get();
-        String clientId = orgCredentials.getClientId();
-        String clientSecret = orgCredentials.getClientSecret();
+        Credentials orgCredentials = getOrgCredentials();
+
         //retrieve the users collection without setting the "Accept" header
-        WebResource.Builder builder=resource().path(usersResource.getResource().getURI().getPath())
+        WebResource.Builder builder = this.app().collection("users").getResource(false)
             //Add the org credentials to the query
-            .queryParam("client_id", clientId)
-            .queryParam("client_secret", clientSecret)
+            .queryParam("grant_type", "client_credentials")
+            .queryParam("client_id", orgCredentials.getClientId())
+            .queryParam("client_secret", orgCredentials.getClientSecret())
             .type(MediaType.APPLICATION_JSON_TYPE);
 
-        ApiResponse apiResponse=builder.get(ApiResponse.class);
+        ApiResponse apiResponse = builder.get(ApiResponse.class);
         Collection users = new Collection(apiResponse);
-        //make sure that a valid response is returned without error
+        //assert that a valid response is returned without error
         assertNotNull(users);
         assertNull(users.getResponse().getError());
 
@@ -136,582 +127,644 @@ public class ApplicationResourceIT extends AbstractRestIT {
     public void jsonForAcceptsTextHtml() throws Exception {
 
         //Create the organization resource
-        OrganizationResource orgResource=clientSetup.getRestClient().management().orgs().organization(clientSetup.getOrganizationName());
-        //create the "users" resource
-        CollectionEndpoint usersResource=this.app().collection("users");
+        OrganizationResource orgResource = clientSetup.getRestClient().management().orgs().organization(clientSetup.getOrganizationName());
+
         //retrieve the credentials
-        Credentials orgCredentials=orgResource.credentials().get();
+        Credentials orgCredentials = orgResource.credentials().get();
         String clientId = orgCredentials.getClientId();
         String clientSecret = orgCredentials.getClientSecret();
-        //Add the org credentials to the query
-        QueryParameters params = new QueryParameters();
-        params.addParam("client_id", clientId);
-        params.addParam("client_secret", clientSecret);
+
         //retrieve the users collection, setting the "Accept" header to text/html
-        ApiResponse apiResponse=resource().path(usersResource.getResource().getURI().getPath())
-            .queryParam( "client_id", clientId )
-            .queryParam( "client_secret", clientSecret )
-            .accept( MediaType.TEXT_HTML )
-            .type( MediaType.APPLICATION_JSON_TYPE )
-            .get(ApiResponse.class);
+        WebResource.Builder builder = this.app().collection("users").getResource(false)
+            //Add the org credentials to the query
+            .queryParam("grant_type", "client_credentials")
+            .queryParam("client_id", clientId)
+            .queryParam("client_secret", clientSecret)
+            .accept(MediaType.TEXT_HTML)
+            .type(MediaType.APPLICATION_JSON_TYPE);
+
+        ApiResponse apiResponse = builder.get(ApiResponse.class);
         Collection users = new Collection(apiResponse);
         //make sure that a valid response is returned without error
         assertNotNull(users);
         assertNull(users.getResponse().getError());
     }
 
+    /**
+     * Retrieve an application using password credentials
+     *
+     * @throws Exception
+     */
     @Test
     public void applicationWithJsonCreds() throws Exception {
 
-        //Create the organization resource
-        OrganizationResource orgResource=clientSetup.getRestClient().management().orgs().organization(clientSetup.getOrganizationName());
-        CollectionEndpoint usersResource=this.app().collection("users");
-        //retrieve the credentials
-        Credentials orgCredentials=orgResource.credentials().get();
-        String clientId = orgCredentials.getClientId();
-        String clientSecret = orgCredentials.getClientSecret();
-        //Add the org credentials to the query
-        QueryParameters params = new QueryParameters();
-        params.addParam("client_id", clientId);
-        params.addParam("client_secret", clientSecret);
-
         User user = new User("applicationWithJsonCreds", "applicationWithJsonCreds", "applicationWithJsonCreds@usergrid.org", "applicationWithJsonCreds");
-        user.put("pin", "1234");
         Entity entity = this.app().collection("users").post(user);
 
-        assertNotNull( entity );
+        assertNotNull(entity);
 
         refreshIndex();
-        Token token=this.app().token().post(new Token("password", "applicationWithJsonCreds", "applicationWithJsonCreds"));
 
-        assertNotNull( token );
+        //retrieve the app using a username and password
+        QueryParameters params = new QueryParameters()
+            .addParam("grant_type", "password")
+            .addParam("username", "applicationWithJsonCreds")
+            .addParam("password", "applicationWithJsonCreds");
+        Token apiResponse = this.app().token().post(params);
+
+        //assert that a valid response is returned without error
+        assertNotNull(apiResponse);
+        assertNull(apiResponse.getResponse().getError());
     }
 
-
+    /**
+     * Retrieve the root application using client credentials
+     *
+     * @throws Exception
+     */
     @Test
-//    @Ignore("When run with all tests it fails with expected 3 but got 4, "
-//            + "but alone it succeeds: ApplicationResourceIT."
-//            + "rootApplicationWithOrgCredentials:139 expected:<3> but was:<4>")
     public void rootApplicationWithOrgCredentials() throws Exception {
 
-        String orgName=clientSetup.getOrganizationName().toLowerCase();
-        String appName=clientSetup.getAppName().toLowerCase();
-        //Create the organization resource
-        OrganizationResource orgResource=clientSetup.getRestClient().management().orgs().organization(clientSetup.getOrganizationName());
-
+        String orgName = clientSetup.getOrganizationName().toLowerCase();
+        String appName = clientSetup.getAppName().toLowerCase();
         //retrieve the credentials
-        Credentials orgCredentials=orgResource.credentials().get();
-        String clientId = orgCredentials.getClientId();
-        String clientSecret = orgCredentials.getClientSecret();
+        Credentials orgCredentials = getOrgCredentials();
 
-        ApiResponse apiResponse=resource().path(resource().path(String.format("/%s/%s",orgName, appName)).getURI().getPath())
-            .queryParam( "client_id", clientId )
-            .queryParam( "client_secret", clientSecret )
-            .accept( MediaType.APPLICATION_JSON )
-            .type( MediaType.APPLICATION_JSON_TYPE )
+        ApiResponse apiResponse = this.app().getResource(false)
+            .queryParam("grant_type", "client_credentials")
+            .queryParam("client_id", orgCredentials.getClientId())
+            .queryParam("client_secret", orgCredentials.getClientSecret())
+            .accept(MediaType.APPLICATION_JSON)
+            .type(MediaType.APPLICATION_JSON_TYPE)
             .get(ApiResponse.class);
 
-        // ensure the URI uses the properties file as a base
-        assertEquals( apiResponse.getUri(), String.format("http://sometestvalue/%s/%s",orgName, appName) );
+        // assert that the response returns the correct URI
+        assertEquals(apiResponse.getUri(), String.format("http://sometestvalue/%s/%s", orgName, appName));
 
-        Application application=new Application(apiResponse);
-        Map<String, Object> roles = ((Map<String, Object>) application.getMap( "metadata" ).get( "collections" ).get( "roles" ));
-        assertEquals( String.format("%s/%s",orgName, appName), application.get("name") );
-        assertEquals( "Roles", (String) roles.get( "title" ) );
+        //unmarshal the application from the response
+        Application application = new Application(apiResponse);
 
-        // TODO - when run together with many tests this sees 4 instead of expected 3
-        assertEquals( 3, Integer.parseInt(roles.get( "count" ).toString()) );
+        //assert that the application name is correct
+        assertEquals(String.format("%s/%s", orgName, appName), application.get("name"));
+
+        //retrieve the application's roles collection
+        apiResponse = this.app().collection("roles").getResource(false)
+            .queryParam("grant_type", "client_credentials")
+            .queryParam("client_id", orgCredentials.getClientId())
+            .queryParam("client_secret", orgCredentials.getClientSecret())
+            .accept(MediaType.APPLICATION_JSON)
+            .type(MediaType.APPLICATION_JSON_TYPE)
+            .get(ApiResponse.class);
+        Collection roles = new Collection(apiResponse);
+        //assert that we have the correct number of default roles
+        assertEquals(3, roles.getNumOfEntities());
     }
 
-
+    /**
+     * Retrieve the client credentials for an application
+     *
+     * @throws IOException
+     */
     @Test
-    public void test_GET_credentials_ok() throws IOException {
-        String orgName=clientSetup.getOrganizationName().toLowerCase();
-        String appName=clientSetup.getAppName().toLowerCase();
-        String mgmtToken = this.getAdminToken().getAccessToken();
-        ApiResponse apiResponse=resource().path(String.format("/%s/%s/credentials",orgName, appName))
-            .queryParam( "access_token", mgmtToken )
-            .accept( MediaType.APPLICATION_JSON )
-            .type( MediaType.APPLICATION_JSON_TYPE )
-            .get(ApiResponse.class);
+    public void testGetAppCredentials() throws IOException {
+        Credentials credentials = getAppCredentials();
 
-        assertEquals( "ok", apiResponse.getStatus() );
+        assertNotNull(credentials.getClientId());
+        assertNotNull(credentials.getClientSecret());
+    }
+
+    /**
+     * retrieve the client credentials for an organization
+     *
+     * @throws IOException
+     */
+    @Test
+    public void testGetOrgCredentials() throws IOException {
+        Credentials credentials = getOrgCredentials();
+
+        assertNotNull(credentials.getClientId());
+        assertNotNull(credentials.getClientSecret());
     }
 
 
+    /**
+     * Reset an application's client credentials
+     */
     @Test
     public void testResetAppCredentials() throws IOException {
-        String orgName=clientSetup.getOrganizationName().toLowerCase();
-        String appName=clientSetup.getAppName().toLowerCase();
-        String mgmtToken = this.getAdminToken().getAccessToken();
-        ApiResponse apiResponse=resource().path(String.format("/%s/%s/credentials",orgName, appName))
-            .queryParam( "access_token", mgmtToken )
-            .accept( MediaType.APPLICATION_JSON )
-            .type( MediaType.APPLICATION_JSON_TYPE )
-            .post(ApiResponse.class);
-        assertEquals( "ok", apiResponse.getStatus() );
+        Credentials credentials = this.app().credentials()
+            .get(new QueryParameters().addParam("access_token", this.getAdminToken().getAccessToken()), false);
+
+//        assertNull(credentials.entrySet().toString());
+        assertNotNull(credentials.getClientId());
+        assertNotNull(credentials.getClientSecret());
     }
 
 
     @Test
     @Ignore //This is implemented now
     public void noAppDelete() throws IOException {
-        String orgName=clientSetup.getOrganizationName().toLowerCase();
-        String appName=clientSetup.getAppName().toLowerCase();
-        String mgmtToken = this.getAdminToken().getAccessToken();
+        String orgName = clientSetup.getOrganizationName().toLowerCase();
+        String appName = clientSetup.getAppName().toLowerCase();
 
-        ApiResponse apiResponse=resource().path(String.format("/%s/%s",orgName, appName))
-            .queryParam( "access_token", mgmtToken )
-            .accept( MediaType.APPLICATION_JSON )
-            .type( MediaType.APPLICATION_JSON_TYPE )
-            .delete( ApiResponse.class );
+        ApiResponse apiResponse = resource().path(String.format("/%s/%s", orgName, appName))
+            .queryParam("access_token", this.getAdminToken().getAccessToken())
+            .accept(MediaType.APPLICATION_JSON)
+            .type(MediaType.APPLICATION_JSON_TYPE)
+            .delete(ApiResponse.class);
 
         assertNotNull(apiResponse.getError());
     }
-//
-//
+
+    /**
+     * Test for an exception when a token's TTL is set greater than the maximum
+     */
     @Test
     public void ttlOverMax() throws Exception {
 
-        String orgName=clientSetup.getOrganizationName().toLowerCase();
-        String appName=clientSetup.getAppName().toLowerCase();
+        String orgName = clientSetup.getOrganizationName().toLowerCase();
+        String appName = clientSetup.getAppName().toLowerCase();
         String username = "username";
         String name = "name";
 
+        //Create a new user entity
         User user = new User(username, name, username + "@usergrid.org", "password");
 
+        //save the user entity
         Entity entity = this.app().collection("users").post(user);
+        //assert that it was saved correctly
         assertNotNull(entity);
+        refreshIndex();
 
+        //add a ttl to the entity that is greater than the maximum
         entity.chainPut("grant_type", "password").chainPut("ttl", Long.MAX_VALUE);
 
         try {
-            ApiResponse apiResponse=resource().path(String.format("/%s/%s/token",orgName, appName))
-                .accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE )
-                .post(ApiResponse.class,entity);
+            //POST the updated TTL, anticipating an exception
+            resource().path(String.format("/%s/%s/token", orgName, appName))
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE)
+                .post(ApiResponse.class, entity);
             fail("This should cause an exception");
-        }
-        catch ( UniformInterfaceException uie ) {
-            assertEquals(Status.BAD_REQUEST, uie.getResponse().getClientResponseStatus());
+        } catch (UniformInterfaceException uie) {
+            assertEquals(String.valueOf(Status.BAD_REQUEST.getStatusCode()), String.valueOf(uie.getResponse().getStatus()));
         }
     }
 
-
+    /**
+     * Set a token's TTL
+     *
+     * @throws Exception
+     */
     @Test
     public void tokenTtl() throws Exception {
 
         long ttl = 2000;
 
-        String orgName=clientSetup.getOrganizationName().toLowerCase();
-        String appName=clientSetup.getAppName().toLowerCase();
+        String orgName = clientSetup.getOrganizationName().toLowerCase();
+        String appName = clientSetup.getAppName().toLowerCase();
         String username = "username";
         String name = "name";
 
+        //Create a new user entity
         User user = new User(username, name, username + "@usergrid.org", "password");
 
+        //save the entity
         Entity entity = this.app().collection("users").post(user);
         assertNotNull(entity);
+        refreshIndex();
 
-        ApiResponse apiResponse=resource().path(String.format("/%s/%s/token",orgName, appName))
-            .queryParam( "grant_type", "password" )
-            .queryParam( "username", username )
-            .queryParam( "password", "password" )
-            .queryParam( "ttl", String.valueOf( ttl ) )
-            .accept( MediaType.APPLICATION_JSON )
-            .type( MediaType.APPLICATION_JSON_TYPE )
-            .get(ApiResponse.class);
+        //Retrieve an authentication token for the user, setting the TTL
+        Token apiResponse = resource().path(String.format("/%s/%s/token", orgName, appName))
+            .queryParam("grant_type", "password")
+            .queryParam("username", username)
+            .queryParam("password", "password")
+            .queryParam("ttl", String.valueOf(ttl))
+            .accept(MediaType.APPLICATION_JSON)
+            .type(MediaType.APPLICATION_JSON_TYPE)
+            .get(Token.class);
 
+        //Set a start time so we can calculate then the token should expire
         long startTime = System.currentTimeMillis();
 
+        //Get the string value of the token
         String token = apiResponse.getAccessToken();
+        assertNotNull(token);
 
-        assertNotNull( token );
+        //Get the expiration time of the token (in seconds)
+        long expires_in = apiResponse.getExpirationDate();
 
-        long expires_in = Long.parseLong(apiResponse.getProperties().get("expires_in").toString());
-        assertEquals( ttl, expires_in * 1000 );
+        //assert that the token's ttl was set correctly
+        assertEquals(ttl, expires_in * 1000);
 
+        //retrieve the user entity using the new token
         entity = this.app().collection("users").entity(entity).get(new QueryParameters().addParam("access_token", token), false);
 
-        assertEquals( username + "@usergrid.org", (String)entity.get( "email" ) );
+        //assert that we got the correct user
+        assertEquals(username + "@usergrid.org", entity.get("email"));
 
         // wait for the token to expire
-        Thread.sleep( ttl - ( System.currentTimeMillis() - startTime ) + 1000 );
+        Thread.sleep(ttl - (System.currentTimeMillis() - startTime) + 1000);
 
         try {
-            entity = this.app().collection("users").entity(entity).get(new QueryParameters().addParam("access_token", token), false);
+            //attempt to retrieve the user again. At this point, the token should have expired
+            this.app().collection("users").entity(entity).get(new QueryParameters().addParam("access_token", token), false);
             fail("The expired token should cause an exception");
-        }
-        catch ( UniformInterfaceException uie ) {
-            assertEquals( Status.UNAUTHORIZED.getStatusCode(), uie.getResponse().getStatus());
+        } catch (UniformInterfaceException uie) {
+            assertEquals(Status.UNAUTHORIZED.getStatusCode(), uie.getResponse().getStatus());
         }
 
     }
 
-
+    /**
+     * Attempt to set the TTL to an invalid value
+     *
+     * @throws Exception
+     */
     @Test
     public void ttlNan() throws Exception {
 
-        String orgName=clientSetup.getOrganizationName().toLowerCase();
-        String appName=clientSetup.getAppName().toLowerCase();
+        String orgName = clientSetup.getOrganizationName().toLowerCase();
+        String appName = clientSetup.getAppName().toLowerCase();
         String username = "username";
         String name = "name";
 
+        //Create a new user entity
         User user = new User(username, name, username + "@usergrid.org", "password");
 
+        //save the entity
         Entity entity = this.app().collection("users").post(user);
         assertNotNull(entity);
+        refreshIndex();
 
         try {
-            ApiResponse apiResponse=resource().path(String.format("/%s/%s/token",orgName, appName))
-                .queryParam( "grant_type", "password" )
-                .queryParam( "username", username )
-                .queryParam( "password", "password" )
-                .queryParam( "ttl", "derp" )
-                .accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE )
+            //Retrieve a token for the new user, setting the TTL to an invalid value
+            resource().path(String.format("/%s/%s/token", orgName, appName))
+                .queryParam("grant_type", "password")
+                .queryParam("username", username)
+                .queryParam("password", "password")
+                .queryParam("ttl", "derp")
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE)
                 .get(ApiResponse.class);
             fail("The invalid TTL should cause an exception");
 
-        }
-        catch ( UniformInterfaceException uie ) {
+        } catch (UniformInterfaceException uie) {
             //TODO should this be handled and returned as a Status.BAD_REQUEST?
+            //Status.INTERNAL_SERVER_ERROR is thrown because Jersey throws a NumberFormatException
             assertEquals(Status.INTERNAL_SERVER_ERROR, uie.getResponse().getClientResponseStatus());
         }
 
     }
 
-
+    /**
+     * Update the default auth token TTL for an application
+     *
+     * @throws Exception
+     */
     @Test
     public void updateAccessTokenTtl() throws Exception {
 
-        String orgName=clientSetup.getOrganizationName().toLowerCase();
-        String appName=clientSetup.getAppName().toLowerCase();
+        String orgName = clientSetup.getOrganizationName().toLowerCase();
+        String appName = clientSetup.getAppName().toLowerCase();
         String username = "username";
         String name = "name";
 
+        //Create a new user entity
         User user = new User(username, name, username + "@usergrid.org", "password");
 
+        //save the entity
         Entity entity = this.app().collection("users").post(user);
         assertNotNull(entity);
+        refreshIndex();
 
-        ApiResponse apiResponse=resource().path(String.format("/%s/%s/token",orgName, appName))
-            .queryParam( "grant_type", "password" )
-            .queryParam( "username", username )
-            .queryParam( "password", "password" )
-            .accept( MediaType.APPLICATION_JSON )
-            .type( MediaType.APPLICATION_JSON_TYPE )
-            .get(ApiResponse.class);
+        //Retrieve an authentication token for the user
+        Token tokenResponse = resource().path(String.format("/%s/%s/token", orgName, appName))
+            .queryParam("grant_type", "password")
+            .queryParam("username", username)
+            .queryParam("password", "password")
+            .accept(MediaType.APPLICATION_JSON)
+            .type(MediaType.APPLICATION_JSON_TYPE)
+            .get(Token.class);
 
-        long startTime = System.currentTimeMillis();
+        String token = tokenResponse.getAccessToken();
+        assertNotNull(token);
 
-        String token = apiResponse.getAccessToken();
+        //Retrieve the expiration time of the token. Should be set to the default of 1 day
+        long expires_in = tokenResponse.getExpirationDate();
+        assertEquals(604800, expires_in);
 
-        assertNotNull( token );
+        //Set the default TTL of the application to a date far in the future
+        this.app().getResource(false)
+            .queryParam("access_token", token)
+            .accept(MediaType.APPLICATION_JSON)
+            .type(MediaType.APPLICATION_JSON_TYPE)
+            .put(Token.class, new MapUtils.HashMapBuilder<String, String>().map("accesstokenttl", "31536000000"));
 
-        long expires_in = Long.parseLong(apiResponse.getProperties().get("expires_in").toString());
-        assertEquals( 604800, expires_in );
+        //Create a new token for the user
+        tokenResponse = this.app().token().getResource(false)
+            .queryParam("grant_type", "password")
+            .queryParam("username", username)
+            .queryParam("password", "password")
+            .accept(MediaType.APPLICATION_JSON)
+            .type(MediaType.APPLICATION_JSON_TYPE)
+            .get(Token.class);
 
-        entity = this.app().collection("users").entity(entity).get(new QueryParameters().addParam("access_token", token), false);
-
-        assertEquals( username + "@usergrid.org", (String)entity.get( "email" ) );
-
-        apiResponse=resource().path(String.format("/%s/%s",orgName, appName))
-            .queryParam( "access_token", this.getAdminToken().getAccessToken() )
-            .accept( MediaType.APPLICATION_JSON )
-            .type( MediaType.APPLICATION_JSON_TYPE )
-            .put(ApiResponse.class, new MapUtils.HashMapBuilder<String, String>().map("accesstokenttl", "31536000000"));
-//        this.app().token()
-        apiResponse=resource().path(String.format("/%s/%s/token",orgName, appName))
-            .queryParam( "grant_type", "password" )
-            .queryParam( "username", username )
-            .queryParam( "password", "password" )
-            .accept( MediaType.APPLICATION_JSON )
-            .type( MediaType.APPLICATION_JSON_TYPE )
-            .get(ApiResponse.class);
-
-        assertEquals( 31536000, Long.parseLong(apiResponse.getProperties().get( "expires_in" ).toString()) );
+        //assert that the new token has the new default TTL
+        assertEquals(31536000, tokenResponse.getExpirationDate().intValue());
 
     }
 
-
+    /**
+     * Retrieve an oauth authorization using invalid credentials
+     *
+     * @throws Exception
+     */
     @Test
     public void authorizationCodeWithWrongCredentials() throws Exception {
-        String orgName=clientSetup.getOrganizationName().toLowerCase();
-        String appName=clientSetup.getAppName().toLowerCase();
-        //Create the organization resource
-        OrganizationResource orgResource=clientSetup.getRestClient().management().orgs().organization(orgName);
-
-        //retrieve the credentials
-        Credentials orgCredentials=orgResource.credentials().get();
-        String clientId = orgCredentials.getClientId();
-
+        //Create form input with bogus credentials
         Form payload = new Form();
-        payload.add( "username", "wrong_user" );
-        payload.add( "password", "wrong_password" );
-        payload.add( "response_type", "code" );
-        payload.add( "client_id", clientId );
-        payload.add( "scope", "none" );
-        payload.add( "redirect_uri", "http://www.my_test.com" );
+        payload.add("username", "wrong_user");
+        payload.add("password", "wrong_password");
+        payload.add("response_type", "code");
+        payload.add("scope", "none");
+        payload.add("redirect_uri", "http://www.my_test.com");
 
-        String apiResponse=resource().path(String.format("/%s/%s/authorize",orgName, appName))
-            .accept(MediaType.APPLICATION_JSON)
-            .type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
-            .post(String.class, payload);
+        //POST the form to the authorization endpoint
+        String apiResponse = clientSetup.getRestClient().management().authorize().post(String.class, payload);
 
-        logger.debug("result: " + apiResponse);
-        assertTrue( apiResponse.contains( "Username or password do not match" ) );
+        //Assert that an appropriate error message is returned
+        assertTrue(apiResponse.contains("Username or password do not match"));
     }
 
 
+    /**
+     * retrieve an oauth authorization using invalid application client credentials
+     *
+     * @throws Exception
+     */
     @Test
     public void authorizeWithInvalidClientIdRaisesError() throws Exception {
-        String orgName=clientSetup.getOrganizationName().toLowerCase();
-        String appName=clientSetup.getAppName().toLowerCase();
-        String apiResponse=resource().path(String.format("/%s/%s/authorize",orgName, appName))
-            .queryParam("response_type", "token")
+        //GET the application authorization endpoint using bogus client credentials
+        String apiResponse = clientSetup.getRestClient().management().authorize().getResource(false)
+            .queryParam("response_type", "code")
             .queryParam("client_id", "invalid_client_id")
             .queryParam("redirect_uri", "http://www.my_test.com")
             .accept(MediaType.APPLICATION_JSON)
             .type(MediaType.APPLICATION_JSON_TYPE)
             .get(String.class);
-
-
-        assertTrue( apiResponse.contains( "Unable to authenticate (OAuth). Invalid client_id." ) );
+        //Assert that an appropriate error message is returned
+        assertTrue(apiResponse.contains("Unable to authenticate (OAuth). Invalid client_id."));
     }
 
-
+    //Retrieve an oauth authorization using valid client credentials
     @Test
     public void authorizationCodeWithValidCredentials() throws Exception {
-        String orgName=clientSetup.getOrganizationName().toLowerCase();
-        String appName=clientSetup.getAppName().toLowerCase();
-        //Create the organization resource
-        OrganizationResource orgResource=clientSetup.getRestClient().management().orgs().organization(orgName);
         //retrieve the credentials
-        Credentials orgCredentials=orgResource.credentials().get();
-        String clientId = orgCredentials.getClientId();
-        String clientSecret = orgCredentials.getClientSecret();
+        Credentials orgCredentials = getOrgCredentials();
 
-        String username = "username";
-        String name = "name";
-
-        User user = new User(username, name, username + "@usergrid.org", "password");
-
-        Entity entity = this.app().collection("users").post(user);
-        assertNotNull(entity);
-
+        //Create form input with valid credentials
         Form payload = new Form();
-        payload.add( "username", username );
-        payload.add( "password", "password" );
-        payload.add( "response_type", "code" );
-        payload.add( "grant_type","client_credentials" );
-        payload.add( "client_id", clientId );
-        payload.add( "client_secret", clientSecret );
-        payload.add( "scope", "none" );
-        payload.add( "redirect_uri", "http://www.my_test.com" );
+        payload.add("response_type", "code");
+        payload.add("grant_type", "client_credentials");
+        payload.add("client_id", orgCredentials.getClientId());
+        payload.add("client_secret", orgCredentials.getClientSecret());
+        payload.add("scope", "none");
+        payload.add("redirect_uri", "http://www.my_test.com");
 
-        client().setFollowRedirects( false );
+        //Set the client to not follow the initial redirect returned by the stack
+        client().setFollowRedirects(false);
 
         try {
-            resource().path(String.format("/%s/%s/authorize",orgName, appName))
-                .accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_FORM_URLENCODED_TYPE )
-                .post(String.class, payload);
-        }
-        catch ( UniformInterfaceException uie ) {
-            assertEquals( Status.TEMPORARY_REDIRECT, uie.getResponse().getClientResponseStatus() );
+            //POST the form to the authorization endpoint
+            clientSetup.getRestClient().management().authorize().post(String.class, payload);
+        } catch (UniformInterfaceException uie) {
+            assertEquals(String.valueOf(Status.TEMPORARY_REDIRECT.getStatusCode()), uie.getResponse().getStatus());
         }
 
     }
 
-
+    /**
+     * Retrieve an access token using HTTP Basic authentication
+     *
+     * @throws Exception
+     */
     @Test
-    public void clientCredentialsFlowWithHeaderAuthorization() throws Exception {
-        String orgName=clientSetup.getOrganizationName().toLowerCase();
-        String appName=clientSetup.getAppName().toLowerCase();
-        //Create the organization resource
-        OrganizationResource orgResource=clientSetup.getRestClient().management().orgs().organization(clientSetup.getOrganizationName());
-
+    public void clientCredentialsFlowWithBasicAuthentication() throws Exception {
         //retrieve the credentials
-        Credentials orgCredentials=orgResource.credentials().get();
+        Credentials orgCredentials = getOrgCredentials();
         String clientId = orgCredentials.getClientId();
         String clientSecret = orgCredentials.getClientSecret();
 
+        //encode the credentials
         String clientCredentials = clientId + ":" + clientSecret;
-        String token = Base64.encodeToString( clientCredentials.getBytes() );
+        String token = Base64.encodeToString(clientCredentials.getBytes());
 
-        Form payload = new Form();
-        payload.add( "grant_type", "client_credentials" );
-
-        ApiResponse apiResponse=resource().path(String.format("/%s/%s/token", orgName, appName))
-            .header("Authorization", "Basic " + token)
-            .accept( MediaType.APPLICATION_JSON )
-            .type( MediaType.APPLICATION_JSON_TYPE )
-            .get(ApiResponse.class);
-//        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/token" ).header( "Authorization", "Basic " + token )
-//                        .type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
-//                        .post( String.class, payload ));
-
-        assertNotNull("It has access_token.", apiResponse.getAccessToken());
-        assertNotNull("It has expires_in.", apiResponse.getProperties().get("expires_in"));
-    }
-
-
-    @Test
-    public void clientCredentialsFlowWithPayload() throws Exception {
-        String orgName=clientSetup.getOrganizationName().toLowerCase();
-        String appName=clientSetup.getAppName().toLowerCase();
-        //Create the organization resource
-        OrganizationResource orgResource=clientSetup.getRestClient().management().orgs().organization(clientSetup.getOrganizationName());
-
-        //retrieve the credentials
-        Credentials orgCredentials=orgResource.credentials().get();
-        String clientId = orgCredentials.getClientId();
-        String clientSecret = orgCredentials.getClientSecret();
-
-        Form payload = new Form();
-        payload.add( "grant_type", "client_credentials" );
-        payload.add( "client_id", clientId );
-        payload.add( "client_secret", clientSecret );
-
-        ApiResponse apiResponse=resource().path(String.format("/%s/%s/token",orgName, appName))
-            .accept( MediaType.APPLICATION_JSON )
-            .type( MediaType.APPLICATION_FORM_URLENCODED_TYPE )
-            .post(ApiResponse.class, payload);
-
-        assertNotNull( "It has access_token.", apiResponse.getAccessToken() );
-        assertNotNull( "It has expires_in.", apiResponse.getProperties().get( "expires_in" ) );
-    }
-
-
-    @Test
-    public void clientCredentialsFlowWithHeaderAuthorizationAndPayload() throws Exception {
-        String orgName=clientSetup.getOrganizationName().toLowerCase();
-        String appName=clientSetup.getAppName().toLowerCase();
-        //Create the organization resource
-        OrganizationResource orgResource=clientSetup.getRestClient().management().orgs().organization(clientSetup.getOrganizationName());
-
-        //retrieve the credentials
-        Credentials orgCredentials=orgResource.credentials().get();
-        String clientId = orgCredentials.getClientId();
-        String clientSecret = orgCredentials.getClientSecret();
-
-        String clientCredentials = clientId + ":" + clientSecret;
-        String token = Base64.encodeToString( clientCredentials.getBytes() );
-
-        Map<String, String> payload = hashMap("grant_type", "client_credentials");
-
-        ApiResponse apiResponse=resource().path(String.format("/%s/%s/token", orgName, appName))
+        //GET the token endpoint, adding the basic auth header
+        Token apiResponse = clientSetup.getRestClient().management().token().getResource(false)
+            //add the auth header
             .header("Authorization", "Basic " + token)
             .accept(MediaType.APPLICATION_JSON)
-            .type( MediaType.APPLICATION_JSON_TYPE )
-            .post(ApiResponse.class, payload);
+            .post(Token.class, hashMap("grant_type", "client_credentials"));
 
-        assertNotNull( "It has access_token.", apiResponse.getAccessToken() );
-        assertNotNull( "It has expires_in.", apiResponse.getProperties().get("expires_in") );
+        //Assert that a valid token with a valid TTL is returned
+        assertNotNull("A valid response was returned.", apiResponse);
+        assertNull("There is no error.", apiResponse.getError());
+        assertNotNull("It has access_token.", apiResponse.getAccessToken());
+        assertNotNull("It has expires_in.", apiResponse.getExpirationDate());
+    }
+
+    /**
+     * Retrieve an access token using HTTP Basic authentication
+     *
+     * @throws Exception
+     */
+    @Test
+    public void clientCredentialsFlowWithHeaderAuthorization() throws Exception {
+        //retrieve the credentials
+        Credentials orgCredentials = getAppCredentials();
+        String clientId = orgCredentials.getClientId();
+        String clientSecret = orgCredentials.getClientSecret();
+
+        Token token = clientSetup.getRestClient().management().token().post(new Token("client_credentials", clientId, clientSecret));
+
+        //GET the token endpoint, adding authorization header
+        Token apiResponse = this.app().token().getResource(false)
+            //add the auth header
+            .header("Authorization", "Bearer " + token.getAccessToken())
+            .accept(MediaType.APPLICATION_JSON)
+            .type(MediaType.APPLICATION_JSON_TYPE)
+            .post(Token.class, hashMap("grant_type", "client_credentials"));
+
+        //Assert that a valid token with a valid TTL is returned
+        assertNotNull("A valid response was returned.", apiResponse);
+        assertNull("There is no error.", apiResponse.getError());
+        assertNotNull("It has access_token.", apiResponse.getAccessToken());
+        assertNotNull("It has expires_in.", apiResponse.getExpirationDate());
+    }
+
+    /**
+     * Retrieve an authentication token using form input
+     *
+     * @throws Exception
+     */
+    @Test
+    public void clientCredentialsFlowWithPayload() throws Exception {
+        //retrieve the credentials
+        Credentials orgCredentials = getOrgCredentials();
+        String clientId = orgCredentials.getClientId();
+        String clientSecret = orgCredentials.getClientSecret();
+
+        //Create form input
+        Form payload = new Form();
+        payload.add("grant_type", "client_credentials");
+        payload.add("client_id", clientId);
+        payload.add("client_secret", clientSecret);
+
+        //POST the form to the application token endpoint
+        Token apiResponse = this.app().token().getResource(false)
+            .accept(MediaType.APPLICATION_JSON)
+            .type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
+            .post(Token.class, payload);
+
+        //Assert that a valid token with a valid TTL is returned
+        assertNotNull("It has access_token.", apiResponse.getAccessToken());
+        assertNotNull("It has expires_in.", apiResponse.getExpirationDate());
     }
 
 
+    /**
+     * Retrieve an authentication token using a combination of form input and payload
+     *
+     * @throws Exception
+     */
+    @Test
+    public void clientCredentialsFlowWithHeaderAuthorizationAndPayload() throws Exception {
+        //retrieve the credentials
+        Credentials orgCredentials = getOrgCredentials();
+        String clientId = orgCredentials.getClientId();
+        String clientSecret = orgCredentials.getClientSecret();
+
+        //Encode the credentials
+        String clientCredentials = clientId + ":" + clientSecret;
+        String token = Base64.encodeToString(clientCredentials.getBytes());
+
+        //POST the form to the application token endpoint along with the payload
+        Token apiResponse = this.app().token().getResource(false)
+            .header("Authorization", "Basic " + token)
+            .accept(MediaType.APPLICATION_JSON)
+            .type(MediaType.APPLICATION_JSON_TYPE)
+            .post(Token.class, hashMap("grant_type", "client_credentials"));
+
+        //Assert that a valid token with a valid TTL is returned
+        assertNotNull("It has access_token.", apiResponse.getAccessToken());
+        assertNotNull("It has expires_in.", apiResponse.getExpirationDate());
+    }
+
+    /**
+     * Ensure that the Apigee Mobile Analytics config returns valid JSON
+     *
+     * @throws IOException
+     */
     @Test
     public void validateApigeeApmConfigAPP() throws IOException {
-        String orgName=clientSetup.getOrganizationName().toLowerCase();
-        String appName=clientSetup.getAppName().toLowerCase();
+        String orgName = clientSetup.getOrganizationName().toLowerCase();
+        String appName = clientSetup.getAppName().toLowerCase();
 
         try {
-            JsonNode node = mapper.readTree(resource().path(String.format("/%s/%s/apm/apigeeMobileConfig",orgName, appName))
-                .accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE )
-                .get(String.class));
+            //GET the APM endpoint
+            String response = resource().path(String.format("/%s/%s/apm/apigeeMobileConfig", orgName, appName))
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE)
+                .get(String.class);
+            //Parse the response
+            JsonNode node = mapper.readTree(response);
 
             //if things are kosher then JSON should have value for instaOpsApplicationId
-            assertTrue( "it's valid json for APM", node.has( "instaOpsApplicationId" ) );
-        }
-        catch ( UniformInterfaceException uie ) {
-            ClientResponse response = uie.getResponse();
-            //Validate that API exists
+            assertTrue("it's valid json for APM", node.has("instaOpsApplicationId"));
+        } catch (UniformInterfaceException uie) {
+            //Validate that APM config exists
             assertNotEquals("APM Config API exists", Status.NOT_FOUND, uie.getResponse().getStatus()); //i.e It should not be "Not Found"
         }
     }
 
 
+    /**
+     * Retrieve an application token using organization credentials
+     *
+     * @throws Exception
+     */
     @Test
     public void appTokenFromOrgCreds() throws Exception {
-
-        String orgName=clientSetup.getOrganizationName().toLowerCase();
-        String appName=clientSetup.getAppName().toLowerCase();
-        //Create the organization resource
-        OrganizationResource orgResource=clientSetup.getRestClient().management().orgs().organization(clientSetup.getOrganizationName());
-
-        //retrieve the credentials
-        Credentials orgCredentials=orgResource.credentials().get();
+        //retrieve the organization credentials
+        Credentials orgCredentials = getOrgCredentials();
         String clientId = orgCredentials.getClientId();
         String clientSecret = orgCredentials.getClientSecret();
 
-        TokenResponse tokenResponse=resource().path(String.format("/%s/%s/token",orgName, appName))
-            .queryParam("client_id", clientId)
-            .queryParam("client_secret", clientSecret)
-            .queryParam("grant_type", "client_credentials")
-            .accept( MediaType.APPLICATION_JSON )
-            .type( MediaType.APPLICATION_JSON_TYPE )
-            .get(TokenResponse.class);
+        //use the org credentials to create an application token
+        Token token = this.app().token().post(new Token("client_credentials", clientId, clientSecret));
 
-//        Token token=this.app().token().post(new Token("client_credentials", clientId, clientSecret));
+        //Assert that we received an authorization token
+        assertNotNull(token);
 
-        String accessToken = tokenResponse.getAccessToken();
-
-        int ttl = Long.valueOf(tokenResponse.getExpiresIn()).intValue();
-
+        int ttl = token.getExpirationDate().intValue();
         //check it's 1 day, should be the same as the default
-        assertEquals( 604800, ttl );
+        assertEquals(604800, ttl);
 
-        ApiResponse apiResponse=resource().path(String.format("/%s/%s/users",orgName, appName))
-            .queryParam( "access_token", accessToken )
-            .accept( MediaType.APPLICATION_JSON )
-            .type( MediaType.APPLICATION_JSON_TYPE )
-            .get(ApiResponse.class);
-
-        assertNull(apiResponse.getError());
+        //retrieve the users collection for the application using the new token
+        ApiResponse response = this.app().collection("users").getResource(true, token).get(ApiResponse.class);
+        //assert that we did not receive an error
+        assertNull(response.getError());
     }
 
 
+    /**
+     * Retrieve an application token using application credentials
+     *
+     * @throws Exception
+     */
     @Test
     public void appTokenFromAppCreds() throws Exception {
-        String orgName=clientSetup.getOrganizationName().toLowerCase();
-        String appName=clientSetup.getAppName().toLowerCase();
-
-        //retrieve the credentials
-        Credentials appCredentials=this.app().credentials().get();
+        //retrieve the app credentials
+        Credentials appCredentials = getAppCredentials();
         String clientId = appCredentials.getClientId();
         String clientSecret = appCredentials.getClientSecret();
 
-        TokenResponse tokenResponse=resource().path(String.format("/%s/%s/token",orgName, appName))
-            .queryParam( "client_id", clientId )
-            .queryParam( "client_secret", clientSecret )
-            .queryParam( "grant_type", "client_credentials" )
-            .accept( MediaType.APPLICATION_JSON )
-            .type( MediaType.APPLICATION_JSON_TYPE )
-            .get(TokenResponse.class);
+        Token token = this.app().token().post(new Token("client_credentials", clientId, clientSecret));
+        //Assert that we received an authorization token
+        assertNotNull(token);
+        assertNotNull(token.getAccessToken());
+        assertNotNull(token.getExpirationDate());
 
-        assertNotNull(tokenResponse);
-//        Token token=this.app().token().post(new Token("client_credentials", clientId, clientSecret));
-
-        String accessToken = tokenResponse.getAccessToken();
-//
-        int ttl = (int)tokenResponse.getExpiresIn();
-
+        int ttl = token.getExpirationDate().intValue();
         //check it's 1 day, should be the same as the default
-        assertEquals( 604800, ttl );
+        assertEquals(604800, ttl);
 
-        refreshIndex();
+        //retrieve the users collection for the application using the new token
+        ApiResponse response = this.app().collection("users").getResource(true, token).get(ApiResponse.class);
+        //assert that we did not receive an error
+        assertNull(response.getError());
+    }
 
-//        Collection users=this.app().collection("users").get(new QueryParameters().addParam("access_token", accessToken), false);
-        Collection users=resource().path(String.format("/%s/%s/users",orgName, appName))
-            .queryParam( "access_token", accessToken )
-            .accept( MediaType.APPLICATION_JSON )
-            .type( MediaType.APPLICATION_JSON_TYPE )
-            .get(Collection.class);
+    /**
+     * Get the client credentials for the current app
+     *
+     * @return Credentials
+     * @throws IOException
+     */
+    public Credentials getAppCredentials() throws IOException {
+        return this.app().credentials().get();
+    }
 
-        assertNotNull( users );
+    /**
+     * Get the client credentials for the current organization
+     *
+     * @return Credentials
+     * @throws IOException
+     */
+    public Credentials getOrgCredentials() throws IOException {
+        String orgName = clientSetup.getOrganizationName().toLowerCase();
+        return clientSetup.getRestClient().management().orgs().organization(orgName).credentials().get();
 
     }
 }
