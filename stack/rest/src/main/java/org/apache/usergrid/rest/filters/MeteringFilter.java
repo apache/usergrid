@@ -34,6 +34,7 @@ import javax.ws.rs.core.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.persistence.EntityManager;
@@ -90,6 +91,7 @@ public class MeteringFilter implements ContainerRequestFilter, ContainerResponse
 
 
     @Autowired
+    @Qualifier("properties")
     public void setProperties( Properties properties ) {
         this.properties = properties;
     }
