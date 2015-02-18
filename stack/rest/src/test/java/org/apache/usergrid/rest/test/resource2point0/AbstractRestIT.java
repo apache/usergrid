@@ -21,7 +21,13 @@ import java.net.URI;
 import java.net.URLClassLoader;
 import java.util.Arrays;
 
+import org.jboss.arquillian.container.test.api.Deployment;
+import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.shrinkwrap.api.ShrinkWrap;
+import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.jboss.shrinkwrap.resolver.api.maven.archive.importer.MavenImporter;
 import org.junit.Rule;
+import org.junit.runner.RunWith;
 
 import org.apache.usergrid.rest.ITSetup;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.ApplicationsResource;
@@ -50,6 +56,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * How would we get the client from here
  */
+@RunWith( Arquillian.class )
 public class AbstractRestIT extends JerseyTest {
 
     private static ClientConfig clientConfig = new DefaultClientConfig();
@@ -76,6 +83,21 @@ public class AbstractRestIT extends JerseyTest {
         descriptor = new WebAppDescriptor.Builder( "org.apache.usergrid.rest" )
                 .clientConfig( clientConfig ).build();
         dumpClasspath( AbstractRestIT.class.getClassLoader() );
+    }
+
+
+    //We set testable = false so we deploy the archive to the server and test it locally
+    @Deployment( testable = false )
+    public static WebArchive createTestArchive() {
+
+        //we use the MavenImporter from shrinkwrap to just produce whatever maven would build then test with it
+
+        //set maven to be in offline mode
+
+        System.setProperty( "org.apache.maven.offline", "true" );
+
+        return ShrinkWrap.create( MavenImporter.class ).loadPomFromFile( "pom.xml", "arquillian-tomcat" )
+                         .importBuildOutput().as( WebArchive.class );
     }
 
     public static void dumpClasspath( ClassLoader loader ) {
