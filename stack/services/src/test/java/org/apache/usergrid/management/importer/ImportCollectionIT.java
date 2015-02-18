@@ -173,7 +173,10 @@ public class ImportCollectionIT {
         // create a collection of "thing" entities in the first application, export to S3
         try {
 
-            final EntityManager emApp1 = setup.getEmf().getEntityManager( applicationId );
+            final UUID targetAppId = setup.getMgmtSvc().createApplication(
+                organization.getUuid(), "target" + RandomStringUtils.randomAlphanumeric(10)).getId();
+
+            final EntityManager emApp1 = setup.getEmf().getEntityManager( targetAppId );
             Map<UUID, Entity> thingsMap = new HashMap<>();
             List<Entity> things = new ArrayList<>();
             createTestEntities(emApp1, thingsMap, things, "thing");
@@ -184,11 +187,10 @@ public class ImportCollectionIT {
             // create new second application, import the data from S3
 
             final UUID appId2 = setup.getMgmtSvc().createApplication(
-                organization.getUuid(), "second").getId();
+                organization.getUuid(), "second" + RandomStringUtils.randomAlphanumeric(10)).getId();
 
             final EntityManager emApp2 = setup.getEmf().getEntityManager(appId2);
             importCollections(emApp2);
-
 
             // make sure that it worked
 
@@ -260,7 +262,10 @@ public class ImportCollectionIT {
 
         // create collection of things in first application, export them to S3
 
-        final EntityManager emApp1 = setup.getEmf().getEntityManager( applicationId );
+        final UUID targetAppId = setup.getMgmtSvc().createApplication(
+            organization.getUuid(), "target" + RandomStringUtils.randomAlphanumeric(10)).getId();
+
+        final EntityManager emApp1 = setup.getEmf().getEntityManager( targetAppId );
 
         Map<UUID, Entity> thingsMap = new HashMap<>();
         List<Entity> things = new ArrayList<>();
@@ -317,6 +322,9 @@ public class ImportCollectionIT {
 
         try {
 
+            String targetAppName = "import-test-target-" + RandomStringUtils.randomAlphanumeric(10);
+            UUID targetAppId = setup.getMgmtSvc().createApplication(organization.getUuid(), targetAppName).getId();
+
             // create 4 applications each with collection of 10 things, export all to S3
             logger.debug("\n\nCreating 10 applications with 10 entities each\n");
 
@@ -336,7 +344,7 @@ public class ImportCollectionIT {
             // import all those exports from S3 into the default test application
             logger.debug("\n\nImporting\n");
 
-            final EntityManager emDefaultApp = setup.getEmf().getEntityManager(applicationId);
+            final EntityManager emDefaultApp = setup.getEmf().getEntityManager(targetAppId);
             importCollections(emDefaultApp);
 
             // we should now have 100 Entities in the default app
@@ -383,19 +391,22 @@ public class ImportCollectionIT {
 
         // import bad JSON from from the S3 bucket
 
-        final EntityManager emDefaultApp = setup.getEmf().getEntityManager( applicationId );
-        UUID importId = importCollections(emDefaultApp);
+        String appName = "import-test-" + RandomStringUtils.randomAlphanumeric(10);
+        UUID appId = setup.getMgmtSvc().createApplication(organization.getUuid(), appName).getId();
+
+        final EntityManager em = setup.getEmf().getEntityManager( appId );
+        UUID importId = importCollections(em);
 
 
         // check that we got an informative error message back
 
-        List<Entity> importedThings = emDefaultApp.getCollection(
-            emDefaultApp.getApplicationId(), "things", null, Level.ALL_PROPERTIES).getEntities();
+        List<Entity> importedThings = em.getCollection(
+            em.getApplicationId(), "things", null, Level.ALL_PROPERTIES).getEntities();
 
         assertTrue("No entities should have been imported", importedThings.isEmpty());
 
         ImportService importService = setup.getImportService();
-        Results results = importService.getFileImports( applicationId, importId, null, null );
+        Results results = importService.getFileImports( appId, importId, null, null );
 
         assertEquals( "There is one", 1, results.size() );
 
@@ -404,8 +415,7 @@ public class ImportCollectionIT {
 
         FileImport fileImport = (FileImport)results.getEntity();
 
-        assertEquals( "File name is correct",
-            "testimport-bad-json.json", fileImport.getFileName());
+        assertTrue( fileImport.getFileName().endsWith("testimport-bad-json.json"));
 
         assertTrue( "Error message is correct",
             fileImport.getErrorMessage().startsWith("Unexpected character ('<' (code 60))"));
@@ -418,10 +428,8 @@ public class ImportCollectionIT {
 
         // upload good and badly formatted files to our S3 bucket
 
-        File cwd = new File(".");
-        String basePath = cwd.getAbsolutePath();
-        basePath = basePath.substring( 0 , basePath.length() - 1 );
-        basePath = basePath + "src" + File.separator + "test" + File.separator + "resource" + File.separator;
+        String basePath = System.getProperty("target.directory")
+            + File.separator + "test-classes" + File.separator;
 
         List<String> filenames = new ArrayList<>( 3 );
         filenames.add( basePath + "testimport-with-connections.json" );
@@ -437,15 +445,16 @@ public class ImportCollectionIT {
 
         // import all those files into the default test application
 
-        final EntityManager emDefaultApp = setup.getEmf().getEntityManager( applicationId );
+        String targetAppName = "import-test-target-" + RandomStringUtils.randomAlphanumeric(10);
+        UUID targetAppId = setup.getMgmtSvc().createApplication(organization.getUuid(), targetAppName).getId();
+
+        final EntityManager emDefaultApp = setup.getEmf().getEntityManager( targetAppId );
         UUID importId = importCollections(emDefaultApp);
 
         {
             List<Entity> importedThings = emDefaultApp.getCollection(
                 emDefaultApp.getApplicationId(), "connfails", null, Level.ALL_PROPERTIES).getEntities();
             assertTrue( !importedThings.isEmpty());
-
-            //
             assertEquals( 1, importedThings.size() );
         }
 
@@ -473,7 +482,7 @@ public class ImportCollectionIT {
         Thread.sleep(3000);
 
         ImportService importService = setup.getImportService();
-        Results results = importService.getFileImports( applicationId, importId, null, null );
+        Results results = importService.getFileImports( targetAppId, importId, null, null );
 
         assertEquals( "There four file imports", 4, results.size() );
 
