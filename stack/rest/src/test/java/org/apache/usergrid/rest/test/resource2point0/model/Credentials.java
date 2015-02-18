@@ -25,20 +25,23 @@ import java.util.Map;
 /**
  */
 public class Credentials extends Entity {
-    public Credentials(){}
-    public Credentials(ApiResponse response) {
-        setResponse( response, "credentials");
+    public Credentials() {
     }
-    public Credentials mapOrgResponse(Map<String,Object> map){
+
+    public Credentials(ApiResponse response) {
+        setResponse(response, "credentials");
+    }
+
+    public Credentials mapOrgResponse(Map<String, Object> map) {
         putAll((Map<String, Object>) map.get("credentials"));
         return this;
     }
 
     public String getClientSecret() {
-        return (String)get("secret");
+        return (String) get("secret");
     }
 
     public String getClientId() {
-        return (String)get("id");
+        return (String) get("id");
     }
 }

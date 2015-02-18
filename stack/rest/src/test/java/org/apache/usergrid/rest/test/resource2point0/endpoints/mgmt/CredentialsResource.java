@@ -31,21 +31,24 @@ import javax.ws.rs.core.MediaType;
 
 /**
  */
-public class CredentialsResource  extends NamedResource {
+public class CredentialsResource extends NamedResource {
 
-   public CredentialsResource( final ClientContext context, final UrlResource parent ) {
-       super( "credentials", context, parent );
-   }
-    public Credentials get(final QueryParameters parameters, final boolean useToken){
-        WebResource resource  = getResource(useToken);
+    public CredentialsResource(final ClientContext context, final UrlResource parent) {
+        super("credentials", context, parent);
+    }
+
+    public Credentials get(final QueryParameters parameters, final boolean useToken) {
+        WebResource resource = getResource(useToken);
         resource = addParametersToResource(resource, parameters);
         ApiResponse response = resource.type(MediaType.APPLICATION_JSON_TYPE).accept(MediaType.APPLICATION_JSON)
             .get(ApiResponse.class);
         return new Credentials(response);
     }
-    public Credentials get(final QueryParameters parameters){
+
+    public Credentials get(final QueryParameters parameters) {
         return get(parameters, true);
     }
+
     public Credentials get() {
         return get(null, true);
     }
