@@ -26,6 +26,8 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.UriInfo;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.security.tokens.TokenService;
@@ -88,6 +90,7 @@ public abstract class SecurityFilter implements ContainerRequestFilter {
 
 
     @Autowired
+    @Qualifier("properties")
     public void setProperties( Properties properties ) {
         this.properties = properties;
     }

@@ -194,7 +194,8 @@ public class ImportServiceImpl implements ImportService {
     }
 
     @Override
-    public Results getFileImports(final UUID applicationId, final UUID importId, @Nullable  final String ql, @Nullable final String cursor ) {
+    public Results getFileImports(final UUID applicationId, final UUID importId,
+                                  @Nullable  final String ql, @Nullable final String cursor ) {
 
         Preconditions.checkNotNull( applicationId, "applicationId must be specified" );
                Preconditions.checkNotNull( importId, "importId must be specified" );
@@ -381,7 +382,7 @@ public class ImportServiceImpl implements ImportService {
             query.setConnectionType( IMPORT_FILE_INCLUDES_CONNECTION );
             query.setLimit(MAX_FILE_IMPORTS);
 
-            //TODO, this won't work with more than 100 files
+            // TODO, this won't work with more than 100 files
             Results entities = rootEM.searchConnectedEntities( importRoot, query );
             return entities.size();
 
