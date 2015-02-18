@@ -29,19 +29,32 @@
     <!--</configuration>-->
     <!--</container>-->
 
+    <!--<container qualifier="tomcat" default="true">-->
+        <!--<configuration>-->
+            <!--<property name="bindHttpPort">8080</property>-->
+            <!--<property name="bindAddress">localhost</property>-->
+            <!--<property name="javaVmArguments">-Xmx512m -XX:MaxPermSize=128m</property>-->
+            <!--<property name="catalinaHome">${catalina.home}</property>-->
+            <!--<property name="user">usergrid</property>-->
+            <!--<property name="pass">testpassword</property>-->
+            <!--&lt;!&ndash;This is a workaround for this issue https://issues.jboss.org/browse/ARQ-1814&ndash;&gt;-->
+            <!--<property name="catalinaBase">${catalina.home}</property>-->
+            <!--<property name="allowConnectingToRunningServer">true</property>-->
+        <!--</configuration>-->
+    <!--</container>-->
+
+
     <container qualifier="tomcat" default="true">
         <configuration>
-            <property name="bindHttpPort">8080</property>
-            <property name="bindAddress">localhost</property>
-            <property name="javaVmArguments">-Xmx512m -XX:MaxPermSize=128m</property>
-            <property name="catalinaHome">${catalina.home}</property>
+            <property name="host">${catalina.host}</property>
             <property name="user">usergrid</property>
             <property name="pass">testpassword</property>
             <!--This is a workaround for this issue https://issues.jboss.org/browse/ARQ-1814-->
             <property name="catalinaBase">${catalina.home}</property>
-            <property name="allowConnectingToRunningServer">true</property>
+            <property name="jmxPort">${catalina.jmx.port}</property>
         </configuration>
     </container>
+
 
 </arquillian>
 

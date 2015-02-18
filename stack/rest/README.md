@@ -82,6 +82,17 @@ To test, add the following configuration to the TOMCAT_HOME/conf/tomcat-users.xm
 
 See the [documentation here](https://docs.jboss.org/author/display/ARQ/Tomcat+7.0+-+Managed) for more setup information.
 
+Also, you will need to set the runtime to allow JMX deployments.  [Add the following](https://docs.jboss.org/author/display/ARQ/Tomcat+7.0+-+Remote) java runtime options to your tomcat instance.
+
+
+```
+JAVA_OPTS="$JAVA_OPTS -Dcom.sun.management.jmxremote.port=8089 "
+JAVA_OPTS="$JAVA_OPTS -Dcom.sun.management.jmxremote.ssl=false "
+JAVA_OPTS="$JAVA_OPTS -Dcom.sun.management.jmxremote.authenticate=false"
+```
+
+
+
 
 Add the following properties to you maven settings.xml
 
