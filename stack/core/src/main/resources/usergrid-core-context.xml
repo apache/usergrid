@@ -184,7 +184,6 @@
     <bean id="jobSchedulerBackgroundService" class="org.apache.usergrid.batch.service.JobSchedulerService">
       <property name="jobFactory" ref="jobFactory" />
       <property name="jobAccessor" ref="schedulerService" />
-      <property name="metricsFactory" ref="metricsFactory"/>
       <property name="workerSize" value="${usergrid.scheduler.job.workers}" />
       <property name="interval" value="${usergrid.scheduler.job.interval}" />
       <property name="maxFailCount" value="${usergrid.scheduler.job.maxfail}" />
@@ -196,8 +195,7 @@
     </bean>
 
     <bean id="jobFactory" class="org.apache.usergrid.batch.UsergridJobFactory" />
-
-    <bean id="metricsFactory" class="org.apache.usergrid.metrics.MetricsFactory" scope="singleton"/>
+ 
 
     <context:component-scan base-package="org.apache.usergrid.batch.job" />
     <context:annotation-config />

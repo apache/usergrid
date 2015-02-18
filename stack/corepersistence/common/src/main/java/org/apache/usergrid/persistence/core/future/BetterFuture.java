@@ -14,36 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence.index;
-
-import org.apache.usergrid.persistence.core.future.BetterFuture;
-import org.apache.usergrid.persistence.index.impl.IndexBatchBufferImpl;
-import org.elasticsearch.action.delete.DeleteRequestBuilder;
-import org.elasticsearch.action.index.IndexRequestBuilder;
-import rx.Observable;
+package org.apache.usergrid.persistence.core.future;
 
 import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 
 /**
- * * Buffer index requests into sets to send,
+ * Future without the exception nastiness
  */
-public interface IndexBatchBuffer {
+public  class BetterFuture<T>{
+    FutureTask<T> future;
+    public BetterFuture(Callable<T> callable){
+        future = new FutureTask<>(callable);
+    }
 
-    /**
-     * put request into buffer, retu
-     *
-     * @param builder
-     */
-    public BetterFuture put(IndexRequestBuilder builder);
+    public void done(){
+        future.run();
+    }
 
-    /**
-     * put request into buffer
-     *
-     * @param builder
-     */
-    public BetterFuture put(DeleteRequestBuilder builder);
-
-
+    public T get(){
+        try {
+            return future.get();
+        }catch (Exception e){
+            throw new RuntimeException(e);
+        }
+    }
 }

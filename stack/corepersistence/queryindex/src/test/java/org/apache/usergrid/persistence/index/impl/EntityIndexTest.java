@@ -21,6 +21,8 @@ package org.apache.usergrid.persistence.index.impl;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.persistence.index.query.CandidateResult;
@@ -53,9 +55,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.*;
 
 
 @RunWith(EsRunner.class)
@@ -64,11 +64,8 @@ public class EntityIndexTest extends BaseIT {
 
     private static final Logger log = LoggerFactory.getLogger( EntityIndexTest.class );
 
-
     @Inject
     public EntityIndexFactory eif;
-
-
 
     @Test
     public void testIndex() throws IOException {
@@ -88,6 +85,49 @@ public class EntityIndexTest extends BaseIT {
         entityIndex.refresh();
 
         testQueries( indexScope, searchTypes,  entityIndex );
+    }
+
+    @Test
+    public void testIndexThreads() throws IOException {
+        final Id appId = new SimpleId( "application" );
+
+        final ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
+
+        long now = System.currentTimeMillis();
+        final int threads = 1000;
+        final EntityIndex entityIndex = eif.createEntityIndex( applicationScope );
+        final IndexScope indexScope = new IndexScopeImpl(appId, "things");
+        final String entityType = "thing";
+        entityIndex.initializeIndex();
+        final CountDownLatch latch = new CountDownLatch(threads);
+        final AtomicLong failTime=new AtomicLong(0);
+        for(int i=0;i<threads;i++) {
+            Thread thread = new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        insertJsonBlob(entityIndex, entityType, indexScope, "/sample-small.json", 1, 0);
+                        entityIndex.refresh();
+                    } catch (Exception e) {
+                        synchronized (failTime) {
+                            if (failTime.get() == 0) {
+                                failTime.set(System.currentTimeMillis());
+                            }
+                        }
+                        System.out.println(e.toString());
+                        fail("threw exception");
+                    }finally {
+                        latch.countDown();
+                    }
+                }
+            });
+            thread.start();
+        }
+        try {
+            latch.await();
+        }catch (InterruptedException ie){
+            throw new RuntimeException(ie);
+        }
+        assertTrue("system must have failed at "+(failTime.get() - now) ,failTime.get()==0);
     }
 
     @Test

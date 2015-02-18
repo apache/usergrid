@@ -18,15 +18,12 @@
  */
 package org.apache.usergrid.persistence.index.impl;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.google.common.util.concurrent.Futures;
+import org.apache.usergrid.persistence.core.future.BetterFuture;
 import org.apache.usergrid.persistence.index.*;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
@@ -93,6 +90,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
     private final FailureMonitor failureMonitor;
 
     private final AliasedEntityIndex entityIndex;
+    private final ConcurrentLinkedQueue<BetterFuture> promises;
 
 
     public EsEntityIndexBatchImpl(final ApplicationScope applicationScope, final Client client,final IndexBatchBuffer indexBatchBuffer,
@@ -106,13 +104,12 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         this.indexIdentifier = IndexingUtils.createIndexIdentifier(config, applicationScope);
         this.alias = indexIdentifier.getAlias();
         this.refresh = config.isForcedRefresh();
+        this.promises = new ConcurrentLinkedQueue<>();
     }
 
 
     @Override
     public EntityIndexBatch index( final IndexScope indexScope, final Entity entity ) {
-
-
         IndexValidationUtils.validateIndexScope( indexScope );
         ValidationUtils.verifyEntityWrite( entity );
 
@@ -141,7 +138,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         final String entityType = entity.getId().getType();
         IndexRequestBuilder builder =
                 client.prepareIndex(alias.getWriteAlias(), entityType, indexId).setSource( entityAsMap );
-        indexBatchBuffer.put(builder);
+        promises.add(indexBatchBuffer.put(builder));
         return this;
     }
 
@@ -187,7 +184,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
                    public Object call(String index) {
                        try {
                            DeleteRequestBuilder builder = client.prepareDelete(index, entityType, indexId).setRefresh(refresh);
-                           indexBatchBuffer.put(builder);
+                           promises.add(indexBatchBuffer.put(builder));
                        }catch (Exception e){
                            log.error("failed to deindex",e);
                            throw e;
@@ -220,14 +217,29 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
     @Override
     public void execute() {
-        indexBatchBuffer.flush();
+//        indexBatchBuffer.flush();
+        Observable.from(promises)
+                .doOnNext(new Action1<BetterFuture>() {
+                    @Override
+                    public void call(BetterFuture betterFuture) {
+                        betterFuture.get();
+                    }
+                }).toBlocking().lastOrDefault(null);
+        promises.clear();
     }
 
 
 
     @Override
     public void executeAndRefresh() {
-        indexBatchBuffer.flushAndRefresh();
+//        indexBatchBuffer.flushAndRefresh();
+        Iterator<BetterFuture> iterator = promises.iterator();
+        while(iterator.hasNext()){
+            iterator.next().get();
+        }
+        promises.clear();
+        entityIndex.refresh();
+
     }
 
 

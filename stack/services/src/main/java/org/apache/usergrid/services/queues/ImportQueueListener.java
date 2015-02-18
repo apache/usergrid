@@ -20,13 +20,14 @@ package org.apache.usergrid.services.queues;
 import java.util.List;
 import java.util.Properties;
 
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.apache.usergrid.management.importer.ImportService;
 import org.apache.usergrid.management.importer.ImportServiceImpl;
-import org.apache.usergrid.metrics.MetricsFactory;
+
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.queue.QueueMessage;
 import org.apache.usergrid.services.ServiceManagerFactory;
@@ -53,8 +54,8 @@ public class ImportQueueListener extends QueueListener {
 
     @Inject
     public ImportQueueListener( final ServiceManagerFactory smf, final EntityManagerFactory emf,
-                                final MetricsFactory metricsService, final Injector injector, final Properties props ) {
-        super( smf, emf, metricsService, injector,  props );
+                                final Injector injector, final Properties props ) {
+        super( smf, emf, injector,  props );
     }
 
 

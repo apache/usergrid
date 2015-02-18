@@ -20,9 +20,11 @@ import com.codahale.metrics.Counter;
 import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import org.apache.usergrid.persistence.core.future.BetterFuture;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.index.IndexBatchBuffer;
 import org.apache.usergrid.persistence.index.IndexFig;
+import org.elasticsearch.action.WriteConsistencyLevel;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -34,145 +36,178 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
 import rx.Subscriber;
-import rx.Subscription;
+import rx.functions.Action0;
 import rx.functions.Action1;
 
-import java.util.Iterator;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 
 /**
- * Classy class class.
+ * Buffer index requests into sets to send.
  */
 @Singleton
 public class IndexBatchBufferImpl implements IndexBatchBuffer {
 
     private static final Logger log = LoggerFactory.getLogger(IndexBatchBufferImpl.class);
-    private final Client client;
-    private final FailureMonitor failureMonitor;
-    private final IndexFig config;
-    private final boolean refresh;
-    private final int timeout;
-    private final int bufferSize;
     private final MetricsFactory metricsFactory;
-    private final Timer flushTimer;
     private final Counter indexSizeCounter;
+    private final Client client;
+    private final FailureMonitorImpl failureMonitor;
+    private final IndexFig config;
+    private final Timer flushTimer;
+    private final ArrayBlockingQueue<RequestBuilderContainer> blockingQueue;
+    private Observable<List<RequestBuilderContainer>> consumer;
     private Producer producer;
-    private Subscription producerObservable;
-    private ArrayBlockingQueue blockingQueue;
 
     @Inject
-    public IndexBatchBufferImpl(final IndexFig config, final EsProvider provider, MetricsFactory metricsFactory){
+    public IndexBatchBufferImpl(final IndexFig config, final EsProvider provider, final MetricsFactory metricsFactory){
         this.metricsFactory = metricsFactory;
-        this.client = provider.getClient();
-        this.failureMonitor = new FailureMonitorImpl( config, provider );
-        this.config = config;
-        this.producer = new Producer();
-        this.refresh = config.isForcedRefresh();
-        this.timeout = config.getIndexBufferTimeout();
-        this.bufferSize = config.getIndexBufferSize();
         this.flushTimer = metricsFactory.getTimer(IndexBatchBuffer.class, "index.buffer.flush");
         this.indexSizeCounter =  metricsFactory.getCounter(IndexBatchBuffer.class, "index.buffer.size");
-        blockingQueue = new ArrayBlockingQueue(500);
-        init();
+        this.config = config;
+        this.blockingQueue = new ArrayBlockingQueue<>(config.getIndexBatchSize());
+        this.failureMonitor = new FailureMonitorImpl(config,provider);
+        this.producer = new Producer();
+        this.client = provider.getClient();
+
+        consumer();
     }
 
-
-
-    private void init() {
-        this.producerObservable = Observable.create(producer)
-                .doOnNext(new Action1<RequestBuilderContainer>() {
-                    @Override
-                    public void call(RequestBuilderContainer container) {
-                        try {
-                            blockingQueue.offer(container, 2500, TimeUnit.MILLISECONDS);
-                        }catch (InterruptedException ie){
-                            throw new RuntimeException(ie);
-                        }
-                    }
-                })
-                .buffer(timeout, TimeUnit.MILLISECONDS, bufferSize)
+    private void consumer() {
+        //batch up sets of some size and send them in batch
+        this.consumer = Observable.create(producer)
+                .buffer(config.getIndexBufferTimeout(), TimeUnit.MILLISECONDS, config.getIndexBufferSize())
                 .doOnNext(new Action1<List<RequestBuilderContainer>>() {
                     @Override
-                    public void call(List<RequestBuilderContainer> builderContainerList) {
+                    public void call(List<RequestBuilderContainer> containerList) {
+                        for (RequestBuilderContainer container : containerList) {
+                            blockingQueue.add(container);
+                        }
                         flushTimer.time();
-                        indexSizeCounter.dec(builderContainerList.size());
-                        execute();
+                        indexSizeCounter.dec(containerList.size());
+                        execute(config.isForcedRefresh());
                     }
-                })
-                .subscribe();
+                });
+        consumer.subscribe();
     }
 
-    public void put(IndexRequestBuilder builder){
+    @Override
+    public BetterFuture<ShardReplicationOperationRequestBuilder> put(IndexRequestBuilder builder){
+        RequestBuilderContainer container = new RequestBuilderContainer(builder);
         metricsFactory.getCounter(IndexBatchBuffer.class,"index.buffer.size").inc();
-        producer.put(new RequestBuilderContainer(builder));
+        producer.put(container);
+        return container.getFuture();
     }
 
-    public void put(DeleteRequestBuilder builder){
+    @Override
+    public BetterFuture<ShardReplicationOperationRequestBuilder> put(DeleteRequestBuilder builder){
+        RequestBuilderContainer container = new RequestBuilderContainer(builder);
         metricsFactory.getCounter(IndexBatchBuffer.class,"index.buffer.size").inc();
-        producer.put(new RequestBuilderContainer(builder));
+        producer.put(container);
+        return container.getFuture();
     }
 
-    public void flushAndRefresh(){
-        execute(true);
-    }
-    public void flush(){
-        execute();
-    }
 
-    private void execute(){
-        execute(this.refresh);
-    }
 
+    private static class RequestBuilderContainer{
+        private final ShardReplicationOperationRequestBuilder builder;
+        private final BetterFuture<ShardReplicationOperationRequestBuilder> containerFuture;
+
+        public RequestBuilderContainer(ShardReplicationOperationRequestBuilder builder){
+            final RequestBuilderContainer parent = this;
+            this.builder = builder;
+            this.containerFuture = new BetterFuture<>(new Callable<ShardReplicationOperationRequestBuilder>() {
+                @Override
+                public ShardReplicationOperationRequestBuilder call() throws Exception {
+                    return parent.getBuilder();
+                }
+            });
+        }
+
+        public ShardReplicationOperationRequestBuilder getBuilder(){
+            return builder;
+        }
+        private void done(){
+            containerFuture.done();
+        }
+        public BetterFuture<ShardReplicationOperationRequestBuilder> getFuture(){
+            return containerFuture;
+        }
+    }
     /**
      * Execute the request, check for errors, then re-init the batch for future use
      */
-    private synchronized void execute(boolean refresh ) {
-        try {
-            BulkRequestBuilder bulkRequest = client.prepareBulk();
-            bulkRequest.setRefresh(refresh);
-            int count = bufferSize;
-            while (blockingQueue.size() > 0 && count-- > 0) {
-                RequestBuilderContainer container = (RequestBuilderContainer)blockingQueue.take();
-                ShardReplicationOperationRequestBuilder builder = container.getBuilder();
-                if (builder instanceof IndexRequestBuilder) {
-                    bulkRequest.add((IndexRequestBuilder) builder);
-                }
-                if (builder instanceof DeleteRequestBuilder) {
-                    bulkRequest.add((DeleteRequestBuilder) builder);
-                }
-            }
-            //nothing to do, we haven't added anthing to the index
-            if (bulkRequest.numberOfActions() == 0) {
-                return;
-            }
+    private void execute( boolean refresh) {
 
-            final BulkResponse responses;
+        if (blockingQueue.size() == 0) {
+            return;
+        }
 
-            try {
-                responses = bulkRequest.execute().actionGet();
-            } catch (Throwable t) {
-                log.error("Unable to communicate with elasticsearch");
-                failureMonitor.fail("Unable to execute batch", t);
-                throw t;
+        BulkRequestBuilder bulkRequest = initRequest(refresh);
+
+        Collection<RequestBuilderContainer> containerCollection = new ArrayList<>(config.getIndexBatchSize());
+        blockingQueue.drainTo(containerCollection);
+        int count = 0;
+        //clear the queue or proceed to buffersize
+        for (RequestBuilderContainer container : containerCollection) {
+
+            ShardReplicationOperationRequestBuilder builder = container.getBuilder();
+            //only handle two types of requests for now, annoyingly there is no base class implementation on BulkRequest
+            if (builder instanceof IndexRequestBuilder) {
+                bulkRequest.add((IndexRequestBuilder) builder);
+            }
+            if (builder instanceof DeleteRequestBuilder) {
+                bulkRequest.add((DeleteRequestBuilder) builder);
             }
 
-            failureMonitor.success();
+            if (count++ == config.getIndexBatchSize()) {
+                sendRequest(bulkRequest);
+                bulkRequest = initRequest(refresh);
 
-            for (BulkItemResponse response : responses) {
-                if (response.isFailed()) {
-                    throw new RuntimeException("Unable to index documents.  Errors are :"
-                            + response.getFailure().getMessage());
-                }
             }
-        }catch (InterruptedException ie){
-            log.error("Problem taking messages off of queue",ie);
-            throw new RuntimeException(ie);
+        }
+        sendRequest(bulkRequest);
+        for (RequestBuilderContainer container : containerCollection) {
+            container.done();
         }
     }
+
+    private BulkRequestBuilder initRequest(boolean refresh) {
+        BulkRequestBuilder bulkRequest = client.prepareBulk();
+        bulkRequest.setConsistencyLevel(WriteConsistencyLevel.fromString(config.getWriteConsistencyLevel()));
+        bulkRequest.setRefresh(refresh);
+        return bulkRequest;
+    }
+
+    private void sendRequest(BulkRequestBuilder bulkRequest) {
+        //nothing to do, we haven't added anthing to the index
+        if (bulkRequest.numberOfActions() == 0) {
+            return;
+        }
+
+        final BulkResponse responses;
+
+        try {
+            responses = bulkRequest.execute().actionGet();
+        } catch (Throwable t) {
+            log.error("Unable to communicate with elasticsearch");
+            failureMonitor.fail("Unable to execute batch", t);
+            throw t;
+        }
+
+        failureMonitor.success();
+
+        for (BulkItemResponse response : responses) {
+            if (response.isFailed()) {
+                throw new RuntimeException("Unable to index documents.  Errors are :"
+                        + response.getFailure().getMessage());
+            }
+        }
+    }
+
 
     private static class Producer implements Observable.OnSubscribe<RequestBuilderContainer> {
 
@@ -185,18 +220,6 @@ public class IndexBatchBufferImpl implements IndexBatchBuffer {
 
         public void put(RequestBuilderContainer r){
             subscriber.onNext(r);
-        }
-    }
-
-    private static class RequestBuilderContainer{
-        private final ShardReplicationOperationRequestBuilder builder;
-
-        public RequestBuilderContainer(ShardReplicationOperationRequestBuilder builder){
-            this.builder = builder;
-        }
-
-        public ShardReplicationOperationRequestBuilder getBuilder(){
-            return builder;
         }
     }
 
