@@ -22,6 +22,7 @@ import javax.ws.rs.core.MediaType;
 import com.sun.jersey.api.client.WebResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.NamedResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.UrlResource;
+import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource2point0.model.Token;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
@@ -44,6 +45,21 @@ public class TokenResource extends NamedResource {
     public Token post() {
         Token token = getResource().type(MediaType.APPLICATION_JSON_TYPE)
             .accept(MediaType.APPLICATION_JSON).post(Token.class);
+        this.context.setToken(token);
+        return token;
+    }
+
+    /**
+     * Obtains an access token and sets the token for the context to use in later calls
+     *
+     * @return
+     */
+    public Token post(QueryParameters params) {
+        WebResource resource  = getResource();
+        resource = addParametersToResource(resource, params);
+        Token token = resource.type(MediaType.APPLICATION_JSON_TYPE).accept(MediaType.APPLICATION_JSON)
+            .get(Token.class);
+
         this.context.setToken(token);
         return token;
     }
