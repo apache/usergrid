@@ -279,7 +279,7 @@ public class ImportCollectionIT {
             // create new second application and import those things from S3
 
             final UUID appId2 = setup.getMgmtSvc().createApplication(
-                organization.getUuid(), "second").getId();
+                organization.getUuid(), "second" + RandomStringUtils.randomAlphanumeric(10)).getId();
 
             final EntityManager emApp2 = setup.getEmf().getEntityManager(appId2);
             importCollections(emApp2);
