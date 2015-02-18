@@ -17,18 +17,9 @@
  * under the License.
  */
 
+
 package org.apache.usergrid.persistence.entities;
-
-
-import java.util.UUID;
-
 import javax.xml.bind.annotation.XmlRootElement;
-
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-
-import org.apache.usergrid.persistence.TypedEntity;
-import org.apache.usergrid.persistence.annotations.EntityProperty;
-
 
 /**
  * Contains state information for an entity within a FileImport the failed to load
