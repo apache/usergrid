@@ -117,19 +117,17 @@
       <mockito.version>1.10.8</mockito.version>
 
       <!-- only use half the cores on the machine for testing -->
-        <usergrid.it.parallel>methods</usergrid.it.parallel>
-        <usergrid.it.reuseForks>true</usergrid.it.reuseForks>
-      <usergrid.it.forkCount>.5C</usergrid.it.forkCount>
+      <usergrid.it.parallel>methods</usergrid.it.parallel>
+      <usergrid.it.reuseForks>true</usergrid.it.reuseForks>
+      <usergrid.it.forkCount>1</usergrid.it.forkCount>
       <usergrid.it.threads>2</usergrid.it.threads>
-
 
       <metrics.version>3.0.0</metrics.version>
       <rx.version>0.19.6</rx.version>
-        <surefire.plugin.version>2.18.1</surefire.plugin.version>
-        <powermock.version>1.6.1</powermock.version>
+      <surefire.plugin.version>2.18.1</surefire.plugin.version>
+      <powermock.version>1.6.1</powermock.version>
 
-
-           <maven.build.timestamp.format>yyyy-MM-dd'T'HH-mm-ss'Z'</maven.build.timestamp.format>
+      <maven.build.timestamp.format>yyyy-MM-dd'T'HH-mm-ss'Z'</maven.build.timestamp.format>
 
     </properties>
 
