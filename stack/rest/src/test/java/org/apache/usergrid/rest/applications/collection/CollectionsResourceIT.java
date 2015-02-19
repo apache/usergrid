@@ -17,33 +17,29 @@
 package org.apache.usergrid.rest.applications.collection;
 
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.ws.rs.core.MediaType;
-
+import java.io.IOException;
+import java.util.NoSuchElementException;
 import com.fasterxml.jackson.databind.JsonNode;
-import org.junit.Assert;
+import com.sun.jersey.api.client.UniformInterfaceException;
+import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource2point0.model.Collection;
+import org.apache.usergrid.rest.test.resource2point0.model.Entity;
+
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.rest.AbstractRestIT;
-import org.apache.usergrid.utils.UUIDUtils;
 
-import com.sun.jersey.api.client.UniformInterfaceException;
-import java.io.IOException;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.apache.usergrid.utils.MapUtils.hashMap;
+import static org.junit.Assert.*;
 
 
 /**
  * @author zznate
  * @author tnine
+ * @author rockerston
+ *
+ *  misc tests for collections
  */
 @Concurrent()
 public class CollectionsResourceIT extends AbstractRestIT {
@@ -51,23 +47,71 @@ public class CollectionsResourceIT extends AbstractRestIT {
     private static Logger log = LoggerFactory.getLogger( CollectionsResourceIT.class );
 
 
+    /***
+     *
+     * Test to make sure we get a 400 back when posting to a bad path
+     *
+     */
     @Test
     public void postToBadPath() throws IOException {
-        Map<String, String> payload = hashMap( "name", "Austin" ).map( "state", "TX" );
-        JsonNode node = null;
+
+        String app = "fakeapp";
+        String org = this.clientSetup.getOrganizationName();
+        String entity = "fakeentity";
+        //try to do a GET on a bad path
         try {
-            node = mapper.readTree( resource().path( "/test-organization/test-organization/test-app/cities" )
-                    .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
+            this.clientSetup.getRestClient().org(org).app(app).collection("cities").get();
+            fail("Call to bad path exists, but it should not");
+        } catch (UniformInterfaceException e) {
+            //verify the correct error was returned
+            JsonNode node = mapper.readTree( e.getResponse().getEntity( String.class ));
+            assertEquals( "service_resource_not_found", node.get( "error" ).textValue() );
         }
-        catch ( UniformInterfaceException e ) {
-            assertEquals( "Should receive a 400 Not Found", 400, e.getResponse().getStatus() );
+
+        //try to do a POST on a bad path
+        Entity payload = new Entity();
+        payload.put("name", "Austin");
+        payload.put("state", "TX");
+        try {
+            this.clientSetup.getRestClient().org(org).app(app).collection("cities").post(payload);
+            fail("Call to bad path exists, but it should not");
+        } catch (UniformInterfaceException e) {
+            //verify the correct error was returned
+            JsonNode node = mapper.readTree( e.getResponse().getEntity( String.class ));
+            assertEquals( "service_resource_not_found", node.get( "error" ).textValue() );
         }
+
+        //try to do a PUT on a bad path
+        try {
+            this.clientSetup.getRestClient().org(org).app(app).collection("cities").entity(entity).put(payload);
+            fail("Call to bad path exists, but it should not");
+        } catch (UniformInterfaceException e) {
+            //verify the correct error was returned
+            JsonNode node = mapper.readTree( e.getResponse().getEntity( String.class ));
+            assertEquals( "service_resource_not_found", node.get( "error" ).textValue() );
+        }
+
+        //try to do a delete on a bad path
+        try {
+            this.clientSetup.getRestClient().org(org).app(app).collection("cities").entity(entity).delete();
+            fail("Call to bad path exists, but it should not");
+        } catch (UniformInterfaceException e) {
+            //verify the correct error was returned
+            JsonNode node = mapper.readTree( e.getResponse().getEntity( String.class ));
+            assertEquals( "service_resource_not_found", node.get( "error" ).textValue() );
+        }
+
     }
 
-
+    @Ignore("Not sure that this test makes any sense")
     @Test
     public void postToEmptyCollection() throws IOException {
+/*
+        Entity payload = new Entity();
+        Entity entity = this.app().collection("cities").post(payload);
+        assertNull(entity.get("name"));
+
+
         Map<String, String> payload = new HashMap<String, String>();
 
         JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/cities" ).queryParam( "access_token", access_token )
@@ -75,60 +119,80 @@ public class CollectionsResourceIT extends AbstractRestIT {
                         .post( String.class, payload ));
         assertNull( getEntity( node, 0 ) );
         assertNull( node.get( "count" ) );
+*/
     }
 
 
     /**
-     * emails with "me" in them are causing errors. Test we can post to a colleciton after creating a user with this
-     * email
-     * <p/>
-     * USERGRID-689
+     * Test posts with a user level token on a path with permissions
      */
     @Test
     public void permissionWithMeInString() throws Exception {
-        // user is created get a token
-        createUser( "sumeet.agarwal@usergrid.com", "sumeet.agarwal@usergrid.com", "secret", "Sumeet Agarwal" );
-        refreshIndex("test-organization", "test-app");
 
-        String token = userToken( "sumeet.agarwal@usergrid.com", "secret" );
-
+        // create user
+        String username = "sumeet.agarwal@usergrid.com";
+        String email = "sumeet.agarwal@usergrid.com";
+        String password = "secret";
+        String name = "Sumeet Agarwal";
+        Entity payload = new Entity();
+        payload.put("username", username);
+        payload.put("email", email);
+        payload.put("password", password);
+        payload.put("name", name);
+        Entity user = this.app().collection("users").post(payload);
+        assertEquals(user.get("username"), username);
+        assertEquals(user.get("email"), email);
+        this.refreshIndex();
 
         //create a permission with the path "me" in it
-        Map<String, String> data = new HashMap<String, String>();
+        payload = new Entity();
+        payload.put( "permission", "get,post,put,delete:/users/sumeet.agarwal@usergrid.com/**" );
+        //POST to /users/sumeet.agarwal@usergrid.com/permissions
+        Entity permission = this.app().collection("users").entity(user).collection("permissions").post(payload);
+        assertEquals(permission.get("data"), "get,post,put,delete:/users/sumeet.agarwal@usergrid.com/**");
 
-        data.put( "permission", "get,post,put,delete:/users/sumeet.agarwal@usergrid.com/**" );
+        //delete the default role, which would allow all authenticated requests
+        this.app().collection("role").uniqueID("Default").delete();
 
-        String path = "/test-organization/test-app/users/sumeet.agarwal@usergrid.com/permissions";
-        JsonNode posted = mapper.readTree( resource().path( path ).queryParam( "access_token", token ).accept( MediaType.APPLICATION_JSON )
-                        .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, data ));
-
+        //log our new user in
+        this.getAppUserToken(username, password);
 
         //now post data
-        data = new HashMap<String, String>();
+        payload = new Entity();
+        String profileName = "profile-sumeet";
+        payload.put( "name", profileName );
+        payload.put( "firstname", "sumeet" );
+        payload.put( "lastname", "agarwal" );
+        payload.put( "mobile", "122" );
+        Entity nestProfile = this.app().collection("nestprofiles").post(payload);
+        assertEquals(nestProfile.get("name"), profileName);
 
-        data.put( "name", "profile-sumeet" );
-        data.put( "firstname", "sumeet" );
-        data.put( "lastname", "agarwal" );
-        data.put( "mobile", "122" );
+        this.refreshIndex();
 
+        Entity nestprofileReturned = this.app().collection("nestprofiles").entity(nestProfile).get();
+        assertEquals(nestprofileReturned.get("name"), name);
 
-        posted = mapper.readTree( resource().path( "/test-organization/test-app/nestprofiles" ).queryParam( "access_token", token )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                .post( String.class, data ));
-
-        refreshIndex("test-organization", "test-app");
-
-        JsonNode response = mapper.readTree( resource().path( "/test-organization/test-app/nestprofiles" ).queryParam( "access_token", token )
-                        .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                        .get( String.class ));
-
-        assertNotNull( getEntity( response, 0 ) );
-        assertNotNull( response.get( "count" ) );
     }
 
 
     @Test
     public void stringWithSpaces() throws IOException {
+
+        // create user
+        String username = "sumeet.agarwal@usergrid.com";
+        String email = "sumeet.agarwal@usergrid.com";
+        String password = "secret";
+        String name = "Sumeet Agarwal";
+        Entity payload = new Entity();
+        payload.put("username", username);
+        payload.put("email", email);
+        payload.put("password", password);
+        payload.put("name", name);
+        Entity user = this.app().collection("users").post(payload);
+        assertEquals(user.get("username"), username);
+        assertEquals(user.get("email"), email);
+        this.refreshIndex();
+
         Map<String, String> payload = hashMap( "summaryOverview", "My Summary" ).map( "caltype", "personal" );
 
         JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/calendarlists" )
