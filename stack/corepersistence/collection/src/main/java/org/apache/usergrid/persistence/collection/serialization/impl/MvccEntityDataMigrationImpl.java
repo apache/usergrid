@@ -24,6 +24,7 @@ import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.EntitySet;
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntityMigrationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
@@ -41,6 +42,7 @@ import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
@@ -88,23 +90,22 @@ public class MvccEntityDataMigrationImpl implements CollectionDataMigration {
                                 CollectionScope currentScope = idScope.getCollectionScope();
                                 //for each element in the history in the previous version,
                                 // copy it to the CF in v2
-                                Iterator<MvccEntity> allVersions = migration.from()
-                                    .loadDescendingHistory(currentScope, idScope.getId(), now,
-                                        1000);
+                                EntitySet allVersions = migration.from()
+                                    .load( currentScope, Collections.singleton( idScope.getId() ), now );
+                                final MvccEntity version = allVersions.getEntity( idScope.getId() );
 
-                                while (allVersions.hasNext()) {
-                                    final MvccEntity version = allVersions.next();
+                               final MutationBatch versionBatch =
+                                   migration.to().write(currentScope, version);
 
-                                    final MutationBatch versionBatch =
-                                        migration.to().write(currentScope, version);
+                               totalBatch.mergeShallow(versionBatch);
 
-                                    totalBatch.mergeShallow(versionBatch);
+                                throw new UnsupportedOperationException( "TODO, make this more functional in flushing" );
 
-                                    if (atomicLong.incrementAndGet() % 50 == 0) {
-                                        executeBatch(totalBatch, observer, atomicLong);
-                                    }
-                                }
-                                executeBatch(totalBatch, observer, atomicLong);
+//                               if (atomicLong.incrementAndGet() % 50 == 0) {
+//                                   executeBatch(totalBatch, observer, atomicLong);
+//                               }
+
+//                                executeBatch(totalBatch, observer, atomicLong);
                             }
 
                             return idScope.getId();

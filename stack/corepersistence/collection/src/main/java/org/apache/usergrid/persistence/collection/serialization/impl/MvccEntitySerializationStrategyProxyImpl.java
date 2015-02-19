@@ -84,27 +84,6 @@ public abstract class MvccEntitySerializationStrategyProxyImpl implements MvccEn
     }
 
 
-    @Override
-    public Iterator<MvccEntity> loadDescendingHistory( final CollectionScope context, final Id entityId,
-                                                       final UUID version, final int fetchSize ) {
-        if ( isOldVersion() ) {
-            return previous.loadDescendingHistory( context, entityId, version, fetchSize );
-        }
-
-        return current.loadDescendingHistory( context, entityId, version, fetchSize );
-    }
-
-
-    @Override
-    public Iterator<MvccEntity> loadAscendingHistory( final CollectionScope context, final Id entityId,
-                                                      final UUID version, final int fetchSize ) {
-        if ( isOldVersion() ) {
-            return previous.loadAscendingHistory( context, entityId, version, fetchSize );
-        }
-
-        return current.loadAscendingHistory( context, entityId, version, fetchSize );
-    }
-
 
     @Override
     public MutationBatch mark( final CollectionScope context, final Id entityId, final UUID version ) {

@@ -109,13 +109,10 @@ public abstract class MvccEntitySerializationStrategyV2Test extends MvccEntitySe
         getMvccEntitySerializationStrategy().write( context, mvccEntity ).execute();
 
         //now load it
-        final Iterator<MvccEntity> loaded =
-                getMvccEntitySerializationStrategy().loadDescendingHistory( context, id, version, 100 );
+        final MvccEntity loadedEntity =
+                getMvccEntitySerializationStrategy().load( context, id );
 
 
-        assertTrue( loaded.hasNext() );
-
-        final MvccEntity loadedEntity = loaded.next();
 
         assertLargeEntity( mvccEntity, loadedEntity );
 

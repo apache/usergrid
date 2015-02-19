@@ -55,31 +55,16 @@ public interface MvccEntitySerializationStrategy extends Migration {
      */
     public EntitySet load(CollectionScope scope, Collection<Id> entityIds, UUID maxVersion);
 
-    /**
-     * Load a list, from highest to lowest of the entity with versions <= version up to maxSize elements
-     *
-     * @param context   The context to persist the entity into
-     * @param entityId  The entity id to load
-     * @param version   The max version to seek from.  I.E a stored version <= this argument
-     * @param fetchSize The fetch size to return for each trip to cassandra.
-     * @return An iterator of entities ordered from max(UUID)=> min(UUID).  The return value should be null
-     * safe and return an empty list when there are no matches
-     */
-    public Iterator<MvccEntity> loadDescendingHistory(CollectionScope context, Id entityId, UUID version,
-                                                      int fetchSize);
 
     /**
-     * Load a historical list of entities, from lowest to highest entity with versions < version up to maxSize elements
-     *
-     * @param context   The context to persist the entity into
-     * @param entityId  The entity id to load
-     * @param version   The max version to seek to.  I.E a stored version < this argument
-     * @param fetchSize The fetch size to return for each trip to cassandra.
-     * @return An iterator of entities ordered from min(UUID)=> max(UUID).  The return value should be null
-     * safe and return an empty list when there are no matches
+     * Load a single entity.  A convenience method.  when multiple entiites are to be loaded, DO NOT use this method
+     * it will be horribly inefficient on network I/o
+     * @param scope
+     * @param entityId
+     * @return
      */
-    public Iterator<MvccEntity> loadAscendingHistory(CollectionScope context, Id entityId, UUID version,
-                                                     int fetchSize);
+    public MvccEntity load(CollectionScope scope, Id entityId);
+
 
     /**
      * Mark this  this version as deleted from the persistence store, but keep the version to mark that is has been cleared This
