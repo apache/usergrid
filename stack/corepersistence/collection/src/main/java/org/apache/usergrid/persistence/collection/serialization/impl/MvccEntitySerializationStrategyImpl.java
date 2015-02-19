@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
@@ -39,17 +40,16 @@ import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.exception.DataCorruptionException;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
-import org.apache.usergrid.persistence.collection.serialization.EntityRepair;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
-import org.apache.usergrid.persistence.core.astyanax.ColumnNameIterator;
 import org.apache.usergrid.persistence.core.astyanax.ColumnParser;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -83,7 +83,6 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
     protected final Keyspace keyspace;
     protected final SerializationFig serializationFig;
     protected final CassandraFig cassandraFig;
-    protected final EntityRepair repair;
     private final MultiTennantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID>  columnFamily;
 
 
@@ -93,8 +92,7 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
         this.keyspace = keyspace;
         this.serializationFig = serializationFig;
         this.cassandraFig = cassandraFig;
-        this.repair = new EntityRepairImpl( this, serializationFig );
-        this.columnFamily = getColumnFamily();
+         this.columnFamily = getColumnFamily();
     }
 
 
@@ -241,10 +239,7 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
                                    final MvccEntity parsedEntity =
                                            new MvccColumnParser( entityId, getEntitySerializer() ).parseColumn( column );
 
-                                   //we *might* need to repair, it's not clear so check before loading into result sets
-                                   final MvccEntity maybeRepaired = repair.maybeRepair( collectionScope, parsedEntity );
-
-                                entitySet.addEntity( maybeRepaired );
+                                    entitySet.addEntity( parsedEntity );
                                }
 
 
@@ -258,6 +253,13 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
 
     }
 
+
+    @Override
+    public MvccEntity load( final CollectionScope scope, final Id entityId ) {
+        final EntitySet results = load( scope, Collections.singleton( entityId ), UUIDGenerator.newTimeUUID() );
+
+        return results.getEntity( entityId );
+    }
 
 
     @Override

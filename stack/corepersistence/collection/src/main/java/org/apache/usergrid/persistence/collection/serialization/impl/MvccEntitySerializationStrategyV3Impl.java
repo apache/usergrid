@@ -23,7 +23,6 @@ import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeExc
 import org.apache.usergrid.persistence.collection.exception.DataCorruptionException;
 import org.apache.usergrid.persistence.collection.exception.EntityTooLargeException;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
-import org.apache.usergrid.persistence.collection.serialization.EntityRepair;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
@@ -92,7 +91,6 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
     protected final Keyspace keyspace;
     protected final SerializationFig serializationFig;
     protected final CassandraFig cassandraFig;
-    protected final EntityRepair repair;
 
 
     @Inject
@@ -101,7 +99,6 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
         this.keyspace = keyspace;
         this.serializationFig = serializationFig;
         this.cassandraFig = cassandraFig;
-        this.repair = new EntityRepairImpl( this, serializationFig );
         this.entitySerializer = new EntitySerializer( serializationFig );
     }
 
@@ -256,12 +253,8 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
                                     final MvccEntity parsedEntity =
                                             new MvccColumnParser( entityId, entitySerializer ).parseColumn( column );
 
-                                    //we *might* need to repair, it's not clear so check before loading into result
-                                    // sets
-                                    final MvccEntity maybeRepaired =
-                                            repair.maybeRepair( collectionScope, parsedEntity );
 
-                                    entitySet.addEntity( maybeRepaired );
+                                    entitySet.addEntity( parsedEntity );
                                 }
 
 

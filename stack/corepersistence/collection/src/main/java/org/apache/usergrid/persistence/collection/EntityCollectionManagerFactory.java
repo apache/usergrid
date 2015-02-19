@@ -40,22 +40,5 @@ public interface EntityCollectionManagerFactory {
         createCollectionManager( CollectionScope collectionScope );
 
 
-
-    /**
-     * Create a new EntityCollectionManagerSync for the given context.
-     * The EntityCollectionManager can safely be used on the current thread
-     * and will shard responses.  The returned instance should not be shared
-     * among threads it will not be guaranteed to be thread safe.
-     * This implementation will be synchronous. Try to use the org.apache.usergrid.persistence.core.consistency
-     * implementation if possible
-     *
-     * @param collectionScope The collectionScope collectionScope to use when
-     * creating the collectionScope manager
-     *
-     * @return The collectionScope manager to perform operations within the provided context
-     */
-    public EntityCollectionManagerSync
-        createCollectionManagerSync( CollectionScope collectionScope );
-
     void invalidate();
 }

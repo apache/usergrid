@@ -77,12 +77,21 @@ public abstract class MvccEntitySerializationStrategyProxyImpl implements MvccEn
     @Override
     public EntitySet load( final CollectionScope scope, final Collection<Id> entityIds, final UUID maxVersion ) {
         if ( isOldVersion() ) {
-            return previous.load( scope, entityIds, maxVersion );
-        }
+                    return previous.load( scope, entityIds, maxVersion );
+                }
 
-        return current.load( scope, entityIds, maxVersion );
+                return current.load( scope, entityIds, maxVersion );
     }
 
+
+    @Override
+    public MvccEntity load( final CollectionScope scope, final Id entityId ) {
+        if ( isOldVersion() ) {
+            return previous.load( scope, entityId );
+        }
+
+        return current.load( scope, entityId );
+    }
 
 
     @Override
