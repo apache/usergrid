@@ -81,7 +81,7 @@ public class ResetSuperUser extends ToolBase {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * org.apache.usergrid.tools.ToolBase#runTool(org.apache.commons.cli.CommandLine)
      */
@@ -100,5 +100,8 @@ public class ResetSuperUser extends ToolBase {
         logger.info( "Starting superuser provision" );
 
         managementService.provisionSuperuser();
+
+        logger.info( "Finished superuser provision" );
+
     }
 }

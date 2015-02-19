@@ -50,7 +50,7 @@ import static org.apache.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 
 
 /**
- * Base class for Usergrid Tools commands. Any class that implements this can be called with 
+ * Base class for Usergrid Tools commands. Any class that implements this can be called with
  * java -jar {jarname} org.apache.usergrid.tools.{classname}.
  */
 public abstract class ToolBase {
@@ -95,7 +95,13 @@ public abstract class ToolBase {
 
         if ( line.hasOption( "host" ) ) {
             System.setProperty( "cassandra.url", line.getOptionValue( "host" ) );
+        }
+
+        if( line.hasOption( "eshost" )){
             System.setProperty( "elasticsearch.hosts", line.getOptionValue( "eshost" ) );
+        }
+
+        if( line.hasOption( "escluster" )){
             System.setProperty( "elasticsearch.cluster_name", line.getOptionValue( "escluster" ) );
         }
 
