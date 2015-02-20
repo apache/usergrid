@@ -81,6 +81,14 @@ public class UniqueValueSerializationStrategyImplTest {
         UniqueValue retrieved = fields.getValue( field.getName() );
         Assert.assertNotNull( retrieved );
         assertEquals( stored, retrieved );
+
+        UniqueValueSet allFieldsWritten = strategy.loadAllSavedValues( scope, entityId );
+
+        //test this interface. In most cases, we won't know the field name, so we want them all
+        UniqueValue allFieldsValue = allFieldsWritten.getValue( field.getName() );
+        Assert.assertNotNull( allFieldsValue );
+        assertEquals( stored, allFieldsValue );
+
     }
 
 

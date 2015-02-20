@@ -231,6 +231,13 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
     }
 
 
+    @Override
+    public UniqueValueSet loadAllSavedValues( final CollectionScope colScope, final Id entityId)
+            throws ConnectionException {
+        throw new UnsupportedOperationException( "Implement me" );
+    }
+
+
     /**
      * Simple callback to perform puts and deletes with a common row setup code
      */

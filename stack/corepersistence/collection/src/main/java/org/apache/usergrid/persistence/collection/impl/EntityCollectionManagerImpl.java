@@ -278,10 +278,9 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
             @Override
             public Id call( Field field ) {
                 try {
-                    UniqueValueSet set = uniqueValueSerializationStrategy.load( collectionScope, fields );
-                    UniqueValue value = set.getValue( field.getName() );
-                    Id id = value == null ? null : value.getEntityId();
-                    return id;
+                    final UniqueValueSet set = uniqueValueSerializationStrategy.load( collectionScope, fields );
+                    final UniqueValue value = set.getValue( field.getName() );
+                    return value == null ? null : value.getEntityId();
                 }
                 catch ( ConnectionException e ) {
                     logger.error( "Failed to getIdField", e );
