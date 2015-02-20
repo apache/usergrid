@@ -17,12 +17,17 @@
 package org.apache.usergrid.management.importer;
 
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import com.google.common.hash.Hashing;
+import com.google.common.io.Files;
 import org.jclouds.ContextBuilder;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.BlobStoreContext;
@@ -47,7 +52,8 @@ public class S3Upload {
 
     private static final Logger logger = LoggerFactory.getLogger( S3Upload.class );
 
-    public void copyToS3( String accessKey, String secretKey, String bucketName, List<String> filenames ) {
+    public void copyToS3( String accessKey, String secretKey, String bucketName, List<String> filenames )
+        throws FileNotFoundException {
 
         Properties overrides = new Properties();
         overrides.setProperty( "s3" + ".identity", accessKey );
@@ -77,16 +83,16 @@ public class S3Upload {
 
         Iterator<String> fileNameIterator = filenames.iterator();
 
-        while(fileNameIterator.hasNext()) {
+        while (fileNameIterator.hasNext()) {
 
             String filename = fileNameIterator.next();
-            InputStream fileStream = S3Upload.class.getResourceAsStream( "/" + filename );
-
+            File uploadFile = new File( filename );
+            
             try {
                 BlobStore blobStore = context.getBlobStore();
                 BlobBuilder blobBuilder = blobStore.blobBuilder( filename )
-                    .payload( fileStream )
-                    .calculateMD5()
+                    .payload( uploadFile )
+                    .contentMD5(Files.hash( uploadFile, Hashing.md5()))
                     .contentType( "application/json" );
                 Blob blob = blobBuilder.build();
 

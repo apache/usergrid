@@ -21,6 +21,8 @@ import io.gatling.http.Predef._
 import org.apache.usergrid.datagenerators.{EntityDataGenerator, FeederGenerator}
 import org.apache.usergrid.settings.{Headers, Utils, Settings}
 
+import scala.util.parsing.json.JSONObject
+
 /**
  * Provides CRUD methods for custom entities
  *
@@ -30,7 +32,7 @@ import org.apache.usergrid.settings.{Headers, Utils, Settings}
 object EntityScenarios {
 
   val getEntity = exec(
-    http("GET custom entityr")
+    http("GET custom entity")
       .get(Settings.baseAppUrl+"/${collectionType}/${entityName}")
       .headers(Headers.jsonAuthorized)
       .check(status.is(200))
@@ -46,7 +48,7 @@ object EntityScenarios {
 
 
   val deleteEntity = exec(
-    http("DELETE custom entityr")
+    http("DELETE custom entity")
       .get(Settings.baseAppUrl+"/${collectionType}/${entityName}")
       .headers(Headers.jsonAuthorized)
       .check(status.is(200))
@@ -54,11 +56,17 @@ object EntityScenarios {
 
   val postEntity = exec(
     http("Post custom entity")
-      //.post(Settings.baseUrl+"/${collectionType}")
-      .post(Settings.baseAppUrl+"/freds")
-      //.body(StringBody(EntityDataGenerator.generateCustomEntity().toString()))
-      .body(StringBody("{\"property\":\"fred\"}"))
+      .post(Settings.baseAppUrl+"/"+ Settings.collectionType)
+      .body(StringBody("""${entity}"""))
       .headers(Headers.jsonAnonymous)
+      .check(status.is(200))
+  )
+  
+  val postEntityWithToken = exec(
+    http("Post custom entity")
+      .post(Settings.baseAppUrl+"/"+ Settings.collectionType)
+      .body(StringBody("""${entity}"""))
+      .headers(Headers.jsonAuthorized)
       .check(status.is(200))
   )
 

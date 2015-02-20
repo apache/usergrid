@@ -196,6 +196,56 @@ public class IndexResource extends AbstractContextResource {
     }
 
     @RequireSystemAccess
+    @PUT
+    @Path( "rebuildinternal" )
+    public JSONWithPadding rebuildInternalIndexes(
+        @Context UriInfo ui,
+        @PathParam( "applicationId" ) String applicationIdStr,
+        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback,
+        @QueryParam( "delay" ) @DefaultValue( "10" ) final long delay )  throws Exception {
+
+
+        final UUID appId = UUIDUtils.tryExtractUUID(applicationIdStr);
+        ApiResponse response = createApiResponse();
+        response.setAction( "rebuild indexes started" );
+
+        final EntityManagerFactory.ProgressObserver po = new EntityManagerFactory.ProgressObserver() {
+
+            @Override
+            public void onProgress( final EntityRef entity ) {
+                logger.info( "Indexing entity {}:{}", entity.getType(), entity.getUuid() );
+            }
+
+
+            @Override
+            public long getWriteDelayTime() {
+                return delay;
+            }
+        };
+
+        final Thread rebuild = new Thread() {
+
+            @Override
+            public void run() {
+                try {
+                    emf.rebuildInternalIndexes( po );
+                }
+                catch ( Exception e ) {
+                    logger.error( "Unable to re-index internals", e );
+                }
+            }
+        };
+
+        rebuild.setName( String.format( "Index rebuild for app %s", appId ) );
+        rebuild.setDaemon( true );
+        rebuild.start();
+
+        response.setSuccess();
+
+        return new JSONWithPadding( response, callback );
+    }
+
+    @RequireSystemAccess
     @POST
     @Path( RootResource.APPLICATION_ID_PATH )
     public JSONWithPadding addIndex(@Context UriInfo ui,

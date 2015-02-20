@@ -33,7 +33,8 @@
     <properties>
         <usergrid.rest.threads>8</usergrid.rest.threads>
         <guice.version>4.0-beta5</guice.version>
-        <catalina.home>OVERRIDE_ME_IN_SETTINGS>XML</catalina.home>
+        <catalina.host>localhost</catalina.host>
+        <catalina.jmx.port>8089</catalina.jmx.port>
     </properties>
 
 
@@ -84,12 +85,19 @@
            <!--</dependency>-->
 
                 <!-- managed -->
+                <!--<dependency>-->
+                      <!--<groupId>org.jboss.arquillian.container</groupId>-->
+                      <!--<artifactId>arquillian-tomcat-managed-7</artifactId>-->
+                      <!--<version>1.0.0.CR7</version>-->
+                      <!--<scope>test</scope>-->
+                    <!--</dependency>-->
+
+                <!-- remote -->
                 <dependency>
-                      <groupId>org.jboss.arquillian.container</groupId>
-                      <artifactId>arquillian-tomcat-managed-7</artifactId>
-                      <version>1.0.0.CR7</version>
-                      <scope>test</scope>
-                    </dependency>
+                    <groupId>org.jboss.arquillian.container</groupId>
+                    <artifactId>arquillian-tomcat-remote-7</artifactId>
+                    <version>1.0.0.CR7</version>
+                </dependency>
 
             </dependencies>
 

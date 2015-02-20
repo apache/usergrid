@@ -20,6 +20,7 @@ package org.apache.usergrid.management.importer;
 import com.amazonaws.SDKGlobalConfiguration;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.lucene.document.StringField;
 import org.jclouds.ContextBuilder;
@@ -36,10 +37,8 @@ import org.jclouds.netty.config.NettyPayloadModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.nio.file.Files;
 import java.util.*;
 
 
@@ -75,13 +74,22 @@ public class S3ImportImpl implements S3Import {
             throw new RuntimeException(
                 "Blob file name " + blobFileName + " not found in bucket " + bucketName );
         }
-        File tempFile = File.createTempFile( bucketName, RandomStringUtils.randomAlphabetic(10));
-        FileOutputStream fop = new FileOutputStream(tempFile);
-        blob.getPayload().writeTo(fop);
-        fop.close();
-        tempFile.deleteOnExit();
 
-        return tempFile;
+        FileOutputStream fop = null;
+        File tempFile;
+        try {
+            tempFile = File.createTempFile(bucketName, RandomStringUtils.randomAlphabetic(10));
+            tempFile.deleteOnExit();
+            fop = new FileOutputStream(tempFile);
+            InputStream is = blob.getPayload().openStream();
+            IOUtils.copyLarge(is, fop);
+            return tempFile;
+
+        } finally {
+            if ( fop != null ) {
+                fop.close();
+            }
+        }
     }
 
 

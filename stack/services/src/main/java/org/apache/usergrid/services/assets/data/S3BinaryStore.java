@@ -24,11 +24,17 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.google.common.hash.HashCode;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
+import com.google.common.io.Files;
 import org.jclouds.ContextBuilder;
 import org.jclouds.blobstore.AsyncBlobStore;
 import org.jclouds.blobstore.BlobStore;
@@ -117,8 +123,10 @@ public class S3BinaryStore implements BinaryStore {
         if ( written < FIVE_MB ) { // total smaller than 5mb
 
             BlobStore blobStore = getContext().getBlobStore();
-            BlobBuilder.PayloadBlobBuilder bb =
-                    blobStore.blobBuilder( uploadFileName ).payload( data ).calculateMD5().contentType( mimeType );
+            BlobBuilder.PayloadBlobBuilder bb = blobStore.blobBuilder(uploadFileName)
+                .payload(data)
+                .contentMD5(Hashing.md5().newHasher().putBytes( data ).hash())
+                .contentType(mimeType);
 
             fileMetadata.put( AssetUtils.CONTENT_LENGTH, written );
             if ( fileMetadata.get( AssetUtils.CONTENT_DISPOSITION ) != null ) {
@@ -149,8 +157,10 @@ public class S3BinaryStore implements BinaryStore {
                 IOUtils.closeQuietly( os );
             }
 
-            BlobBuilder.PayloadBlobBuilder bb =
-                    blobStore.blobBuilder( uploadFileName ).payload( tempFile ).calculateMD5().contentType( mimeType );
+            BlobBuilder.PayloadBlobBuilder bb = blobStore.blobBuilder( uploadFileName )
+                .payload(tempFile)
+                .contentMD5(Files.hash(tempFile, Hashing.md5()))
+                .contentType(mimeType);
 
             fileMetadata.put( AssetUtils.CONTENT_LENGTH, written );
             if ( fileMetadata.get( AssetUtils.CONTENT_DISPOSITION ) != null ) {

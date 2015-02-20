@@ -81,6 +81,8 @@ public abstract class AbstractRestIT extends JerseyTest {
 
     protected static final AppDescriptor descriptor;
 
+    //TODO, this needs removed.  Instead we need to hook into the arquillian event lifecycle
+    //to invoke /system/database/setup from the REST tier.
     public static ITSetup setup = new ITSetup(  );
 
     //private static final URI baseURI = setup.getBaseURI();
@@ -102,7 +104,7 @@ public abstract class AbstractRestIT extends JerseyTest {
 
 
     //We set testable = false so we deploy the archive to the server and test it locally
-    @Deployment(testable = false)
+    @Deployment( testable = false )
     public static WebArchive createTestArchive() {
 
         //we use the MavenImporter from shrinkwrap to just produce whatever maven would build then test with it
@@ -111,9 +113,8 @@ public abstract class AbstractRestIT extends JerseyTest {
 
         System.setProperty( "org.apache.maven.offline", "true" );
 
-      return  ShrinkWrap.create(MavenImporter.class)
-          .loadPomFromFile("pom.xml", "arquillian-tomcat" ).importBuildOutput().as(WebArchive.class);
-
+        return ShrinkWrap.create( MavenImporter.class ).loadPomFromFile( "pom.xml", "arquillian-tomcat" )
+                         .importBuildOutput().as( WebArchive.class );
     }
 
 

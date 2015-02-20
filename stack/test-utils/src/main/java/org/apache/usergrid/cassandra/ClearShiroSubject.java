@@ -22,6 +22,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.mgt.*;
+import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.subject.support.SubjectThreadState;
 
@@ -37,11 +39,27 @@ public class ClearShiroSubject extends ExternalResource {
         Subject subject = SecurityUtils.getSubject();
 
         if ( subject == null ) {
+
             LOG.info( "Shiro Subject was null. No need to clear." );
             return;
         }
 
         new SubjectThreadState( subject ).clear();
+
         LOG.info( "Shiro Subject was NOT null. Subject has been cleared." );
+    }
+
+    public void clear(){
+        Subject subject = SecurityUtils.getSubject();
+
+        if ( subject == null ) {
+
+            LOG.info( "Shiro Subject was null. No need to clear manually." );
+            return;
+        }
+
+        new SubjectThreadState( subject ).clear();
+
+        LOG.info( "Shiro Subject was NOT null. Subject has been cleared manually." );
     }
 }
