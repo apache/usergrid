@@ -34,16 +34,18 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.Application;
 import org.apache.usergrid.CoreApplication;
-import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.corepersistence.CpSetup;
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.core.guicyfig.SetConfigTestBypass;
 import org.apache.usergrid.utils.JsonUtils;
 
+import com.google.inject.Injector;
+
 import static org.junit.Assert.assertEquals;
 
 
-@Concurrent()
+
+
 public class LargeEntityIT extends AbstractCoreIT {
     private static final Logger LOG = LoggerFactory.getLogger( LargeEntityIT.class );
 
@@ -62,7 +64,7 @@ public class LargeEntityIT extends AbstractCoreIT {
     @org.junit.Before
     public void setUp() {
 
-        serializationFig = CpSetup.getInjector().getInstance( SerializationFig.class );
+        serializationFig = SpringResource.getInstance().getBean( Injector.class ).getInstance( SerializationFig.class );
 
         setMaxEntitySize = serializationFig.getMaxEntitySize();
     }
@@ -82,7 +84,7 @@ public class LargeEntityIT extends AbstractCoreIT {
 
         LOG.debug( "testLargeEntityCrud" );
 
-        SetConfigTestBypass.setValueByPass( serializationFig, "getMaxEntitySize", 641814 + "" );
+        SetConfigTestBypass.setValueByPass( serializationFig, "getMaxEntitySize", 641834 + "" );
 
 
         final URL resource = this.getClass().getClassLoader().getResource( TEST_DATA_FILE );

@@ -22,6 +22,11 @@
 package org.apache.usergrid.persistence.core.guice;
 
 
+import org.apache.usergrid.persistence.core.rx.AllEntitiesInSystemObservable;
+import org.apache.usergrid.persistence.core.rx.AllEntitiesInSystemTestObservable;
+import org.apache.usergrid.persistence.core.rx.ApplicationObservable;
+import org.apache.usergrid.persistence.core.rx.ApplicationsTestObservable;
+
 /**
  * Module for testing common frameworks
  */
@@ -29,6 +34,10 @@ public class TestCommonModule extends TestModule {
 
     @Override
     protected void configure() {
+        bind(ApplicationObservable.class).to(ApplicationsTestObservable.class);
+
+        bind(AllEntitiesInSystemObservable.class).to(AllEntitiesInSystemTestObservable.class);
         install(new CommonModule());
     }
+
 }

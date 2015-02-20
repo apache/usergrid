@@ -18,10 +18,10 @@ package org.apache.usergrid.services;
 
 
 import org.junit.Test;
-import org.apache.usergrid.cassandra.Concurrent;
 
 
-@Concurrent()
+
+
 public class ApplicationsServiceIT extends AbstractServiceIT {
     @Test
     public void testPermissions() throws Exception {

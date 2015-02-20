@@ -23,15 +23,20 @@ package org.apache.usergrid.corepersistence.migration;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.core.rx.AllEntitiesInSystemObservable;
+import org.apache.usergrid.persistence.core.scope.ApplicationEntityGroup;
+import org.apache.usergrid.persistence.core.scope.EntityIdScope;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
 import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.corepersistence.CpSetup;
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.corepersistence.EntityWriteHelper;
 import org.apache.usergrid.corepersistence.ManagerCache;
-import org.apache.usergrid.corepersistence.rx.AllEntitiesInSystemObservable;
+import org.apache.usergrid.corepersistence.rx.impl.AllEntitiesInSystemObservableImpl;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
@@ -44,14 +49,16 @@ import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import com.google.inject.Injector;
 import com.netflix.astyanax.Keyspace;
 
+import net.jcip.annotations.NotThreadSafe;
+
 import rx.functions.Action1;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import org.junit.Ignore;
 
 
+@NotThreadSafe
 public class EntityTypeMappingMigrationIT extends AbstractCoreIT {
 
 
@@ -69,19 +76,20 @@ public class EntityTypeMappingMigrationIT extends AbstractCoreIT {
      * Rule to do the resets we need
      */
     @Rule
-    public MigrationTestRule migrationTestRule = new MigrationTestRule( 
-            app, CpSetup.getInjector() ,EntityTypeMappingMigration.class  );
-
+    public MigrationTestRule migrationTestRule = new MigrationTestRule(
+            app,  SpringResource.getInstance().getBean( Injector.class ) ,EntityTypeMappingMigration.class  );
+    private AllEntitiesInSystemObservable allEntitiesInSystemObservable;
 
 
     @Before
     public void setup() {
-        injector = CpSetup.getInjector();
+        injector =  SpringResource.getInstance().getBean( Injector.class );
         emf = setup.getEmf();
         entityTypeMappingMigration = injector.getInstance( EntityTypeMappingMigration.class );
         keyspace = injector.getInstance( Keyspace.class );
         managerCache = injector.getInstance( ManagerCache.class );
         dataMigrationManager = injector.getInstance( DataMigrationManager.class );
+        allEntitiesInSystemObservable = injector.getInstance(AllEntitiesInSystemObservable.class);
     }
 
 
@@ -114,62 +122,60 @@ public class EntityTypeMappingMigrationIT extends AbstractCoreIT {
         keyspace.truncateColumnFamily( MapSerializationImpl.MAP_ENTRIES );
         keyspace.truncateColumnFamily( MapSerializationImpl.MAP_KEYS );
 
-        app.createApplication( 
-                GraphShardVersionMigrationIT.class.getSimpleName()+ UUIDGenerator.newTimeUUID(), 
+        app.createApplication(
+                GraphShardVersionMigrationIT.class.getSimpleName()+ UUIDGenerator.newTimeUUID(),
                 "migrationTest" );
 
 
 
         final TestProgressObserver progressObserver = new TestProgressObserver();
 
-        entityTypeMappingMigration.migrate( progressObserver );
+        entityTypeMappingMigration.migrate(allEntitiesInSystemObservable.getAllEntitiesInSystem(1000), progressObserver).toBlocking().last();
 
-
-        AllEntitiesInSystemObservable.getAllEntitiesInSystem( managerCache, 1000 )
-            .doOnNext( new Action1<AllEntitiesInSystemObservable.ApplicationEntityGroup>() {
+        allEntitiesInSystemObservable.getAllEntitiesInSystem(1000)
+            .doOnNext(new Action1<ApplicationEntityGroup<CollectionScope>>() {
                 @Override
                 public void call(
-                        final AllEntitiesInSystemObservable.ApplicationEntityGroup entity ) {
+                    final ApplicationEntityGroup<CollectionScope> entity) {
                     //ensure that each one has a type
 
                     final EntityManager em = emf.getEntityManager(
-                            entity.applicationScope.getApplication().getUuid() );
+                        entity.applicationScope.getApplication().getUuid());
 
-                    for ( final Id id : entity.entityIds ) {
+                    for (final EntityIdScope<CollectionScope> idScope : entity.entityIds) {
+                        final Id id = idScope.getId();
                         try {
-                            final Entity returned = em.get( id.getUuid() );
+                            final Entity returned = em.get(id.getUuid());
 
                             //we seem to occasionally get phantom edges.  If this is the
                             // case we'll store the type _> uuid mapping, but we won't have
                             // anything to load
 
-                            if ( returned != null ) {
-                                assertEquals( id.getUuid(), returned.getUuid() );
-                                assertEquals( id.getType(), returned.getType() );
-                            }
-                            else {
-                                final String type = managerCache.getMapManager( CpNamingUtils
-                                        .getEntityTypeMapScope(
-                                                entity.applicationScope.getApplication() ) )
-                                                                .getString( id.getUuid()
-                                                                            .toString() );
+                            if (returned != null) {
+                                assertEquals(id.getUuid(), returned.getUuid());
+                                assertEquals(id.getType(), returned.getType());
+                            } else {
+                                final String type = managerCache.getMapManager(CpNamingUtils
+                                    .getEntityTypeMapScope(
+                                        entity.applicationScope.getApplication()))
+                                    .getString(id.getUuid()
+                                        .toString());
 
-                                assertEquals( id.getType(), type );
+                                assertEquals(id.getType(), type);
                             }
-                        }
-                        catch ( Exception e ) {
-                            throw new RuntimeException( "Unable to get entity " + id
-                                    + " by UUID, migration failed", e );
-                        }
+                        } catch (Exception e) {
+                            throw new RuntimeException("Unable to get entity " + id
+                                + " by UUID, migration failed", e);
+                                    }
 
-                        allEntities.remove( id );
-                    }
+                                    allEntities.remove(id);
+                                }
+                            }
+                        }).toBlocking().lastOrDefault(null);
+
+
+                    assertEquals("Every element should have been encountered", 0, allEntities.size());
+                    assertFalse("Progress observer should not have failed", progressObserver.getFailed());
+                    assertTrue("Progress observer should have update messages", progressObserver.getUpdates().size() > 0);
                 }
-            } ).toBlocking().lastOrDefault( null );
-
-
-        assertEquals( "Every element should have been encountered", 0, allEntities.size() );
-        assertFalse( "Progress observer should not have failed", progressObserver.getFailed() );
-        assertTrue( "Progress observer should have update messages", progressObserver.getUpdates().size() > 0 );
-    }
-}
+            }

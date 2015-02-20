@@ -35,7 +35,7 @@ import org.junit.Assert;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
-import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.util.LogEntryMock;
@@ -61,7 +61,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import org.mockito.internal.util.collections.Sets;
 
 
 /**
@@ -79,7 +78,7 @@ public class EntityVersionCleanupTaskTest {
 
 
     @Test(timeout=10000)
-    public void noListenerOneVersion() 
+    public void noListenerOneVersion()
             throws ExecutionException, InterruptedException, ConnectionException {
 
 
@@ -109,7 +108,7 @@ public class EntityVersionCleanupTaskTest {
 
         final Id applicationId = new SimpleId( "application" );
 
-        final CollectionScope appScope = new CollectionScopeImpl( 
+        final CollectionScope appScope = new CollectionScopeImpl(
                 applicationId, applicationId, "users" );
 
         final Id entityId = new SimpleId( "user" );
@@ -148,10 +147,10 @@ public class EntityVersionCleanupTaskTest {
 
         final List<MvccEntity> mel = new ArrayList<MvccEntity>();
 
-        mel.add( new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(), 
+        mel.add( new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(),
                 MvccEntity.Status.DELETED, Optional.fromNullable((Entity)null)) );
 
-        mel.add( new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(), 
+        mel.add( new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(),
                 MvccEntity.Status.DELETED, Optional.fromNullable((Entity)null)) );
 
         when( ess.loadDescendingHistory(
@@ -175,7 +174,7 @@ public class EntityVersionCleanupTaskTest {
      * Tests the cleanup task on the first version created
      */
     @Test(timeout=10000)
-    public void noListenerNoVersions() 
+    public void noListenerNoVersions()
             throws ExecutionException, InterruptedException, ConnectionException {
 
 
@@ -208,14 +207,14 @@ public class EntityVersionCleanupTaskTest {
         final Id applicationId = new SimpleId( "application" );
 
 
-        final CollectionScope appScope = new CollectionScopeImpl( 
+        final CollectionScope appScope = new CollectionScopeImpl(
                 applicationId, applicationId, "users" );
 
         final Id entityId = new SimpleId( "user" );
 
 
         //mock up a single log entry for our first test
-        final LogEntryMock logEntryMock = LogEntryMock.createLogEntryMock( 
+        final LogEntryMock logEntryMock = LogEntryMock.createLogEntryMock(
                 mvccLogEntrySerializationStrategy, appScope, entityId, 1 );
 
 
@@ -249,10 +248,10 @@ public class EntityVersionCleanupTaskTest {
 
         final List<MvccEntity> mel = new ArrayList<MvccEntity>();
 
-        mel.add( new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(), 
+        mel.add( new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(),
                 MvccEntity.Status.DELETED, Optional.fromNullable((Entity)null)) );
 
-        mel.add( new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(), 
+        mel.add( new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(),
                 MvccEntity.Status.DELETED, Optional.fromNullable((Entity)null)) );
 
         when( ess.loadDescendingHistory( same( appScope ), same( entityId ), any(UUID.class), any(Integer.class) ) )
@@ -267,7 +266,7 @@ public class EntityVersionCleanupTaskTest {
 
 
         // These last two verify statements do not make sense. We cannot assert that the entity
-        // and log batches are never called. Even if there are no listeners the entity delete 
+        // and log batches are never called. Even if there are no listeners the entity delete
         // cleanup task will still run to do the normal cleanup.
         //
         // verify( entityBatch, never() ).execute();
@@ -276,7 +275,7 @@ public class EntityVersionCleanupTaskTest {
 
 
     @Test(timeout=10000)
-    public void singleListenerSingleVersion() 
+    public void singleListenerSingleVersion()
             throws ExecutionException, InterruptedException, ConnectionException {
 
 
@@ -317,14 +316,14 @@ public class EntityVersionCleanupTaskTest {
         final Id applicationId = new SimpleId( "application" );
 
 
-        final CollectionScope appScope = new CollectionScopeImpl( 
+        final CollectionScope appScope = new CollectionScopeImpl(
                 applicationId, applicationId, "users" );
 
         final Id entityId = new SimpleId( "user" );
 
 
         //mock up a single log entry for our first test
-        final LogEntryMock logEntryMock = LogEntryMock.createLogEntryMock( 
+        final LogEntryMock logEntryMock = LogEntryMock.createLogEntryMock(
                 mvccLogEntrySerializationStrategy, appScope, entityId, sizeToReturn + 1 );
 
 
@@ -361,10 +360,10 @@ public class EntityVersionCleanupTaskTest {
 
         final List<MvccEntity> mel = new ArrayList<MvccEntity>();
 
-        mel.add( new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(), 
+        mel.add( new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(),
                 MvccEntity.Status.DELETED, Optional.fromNullable((Entity)null)) );
 
-        mel.add( new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(), 
+        mel.add( new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(),
                 MvccEntity.Status.DELETED, Optional.fromNullable((Entity)null)) );
 
         when( ess.loadDescendingHistory( same( appScope ), same( entityId ), any(UUID.class), any(Integer.class) ) )
@@ -421,7 +420,7 @@ public class EntityVersionCleanupTaskTest {
         final int sizeToReturn = 10;
 
 
-        final CountDownLatch latch = new CountDownLatch( 
+        final CountDownLatch latch = new CountDownLatch(
                 sizeToReturn/serializationFig.getBufferSize() * 3 );
 
         final EntityVersionDeletedTest listener1 = new EntityVersionDeletedTest( latch );
@@ -436,13 +435,13 @@ public class EntityVersionCleanupTaskTest {
 
         final Id applicationId = new SimpleId( "application" );
 
-        final CollectionScope appScope = new CollectionScopeImpl( 
+        final CollectionScope appScope = new CollectionScopeImpl(
                 applicationId, applicationId, "users" );
 
         final Id entityId = new SimpleId( "user" );
 
         // mock up a single log entry for our first test
-        final LogEntryMock logEntryMock = LogEntryMock.createLogEntryMock( 
+        final LogEntryMock logEntryMock = LogEntryMock.createLogEntryMock(
                 mvccLogEntrySerializationStrategy, appScope, entityId, sizeToReturn + 1 );
 
         final UUID version = logEntryMock.getEntries().iterator().next().getVersion();
@@ -474,10 +473,10 @@ public class EntityVersionCleanupTaskTest {
 
         Entity entity = new Entity( entityId );
 
-        mel.add( new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(), 
+        mel.add( new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(),
                 MvccEntity.Status.DELETED, Optional.of(entity)) );
 
-        mel.add( new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(), 
+        mel.add( new MvccEntityImpl( entityId, UUIDGenerator.newTimeUUID(),
                 MvccEntity.Status.DELETED, Optional.of(entity)) );
 
         when( ess.loadDescendingHistory( same( appScope ), same( entityId ), any(UUID.class), any(Integer.class) ) )
@@ -543,7 +542,7 @@ public class EntityVersionCleanupTaskTest {
 
         final int listenerCount = 5;
 
-        final CountDownLatch latch = new CountDownLatch( 
+        final CountDownLatch latch = new CountDownLatch(
                 sizeToReturn/serializationFig.getBufferSize() * listenerCount );
         final Semaphore waitSemaphore = new Semaphore( 0 );
 
@@ -565,14 +564,14 @@ public class EntityVersionCleanupTaskTest {
         final Id applicationId = new SimpleId( "application" );
 
 
-        final CollectionScope appScope = new CollectionScopeImpl( 
+        final CollectionScope appScope = new CollectionScopeImpl(
                 applicationId, applicationId, "users" );
 
         final Id entityId = new SimpleId( "user" );
 
 
         //mock up a single log entry for our first test
-        final LogEntryMock logEntryMock = LogEntryMock.createLogEntryMock( 
+        final LogEntryMock logEntryMock = LogEntryMock.createLogEntryMock(
                 mvccLogEntrySerializationStrategy, appScope, entityId, sizeToReturn + 1 );
 
 
@@ -768,7 +767,7 @@ public class EntityVersionCleanupTaskTest {
 
 
         @Override
-        public void versionDeleted( final CollectionScope scope, final Id entityId, 
+        public void versionDeleted( final CollectionScope scope, final Id entityId,
                 final List<MvccEntity> entityVersion ) {
             invocationLatch.countDown();
         }
@@ -786,7 +785,7 @@ public class EntityVersionCleanupTaskTest {
 
 
         @Override
-        public void versionDeleted( final CollectionScope scope, final Id entityId, 
+        public void versionDeleted( final CollectionScope scope, final Id entityId,
                 final List<MvccEntity> entityVersion ) {
 
             //wait for unblock to happen before counting down invocation latches

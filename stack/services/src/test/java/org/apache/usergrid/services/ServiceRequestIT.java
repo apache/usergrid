@@ -31,31 +31,26 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
-import org.apache.usergrid.cassandra.CassandraResource;
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
-import org.apache.usergrid.cassandra.Concurrent;
+
 import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 
 import static org.apache.usergrid.services.ServiceParameter.filter;
 import static org.apache.usergrid.services.ServiceParameter.parameters;
 
 
-@Concurrent()
+
 public class ServiceRequestIT {
 
     private static final Logger logger = LoggerFactory.getLogger( ServiceRequestIT.class );
 
-    @ClassRule
-    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
-
-    @ClassRule
-    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
 
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @Rule
-    public ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource, elasticSearchResource );
+    public ServiceITSetup setup = new ServiceITSetupImpl( );
 
 
     @Test

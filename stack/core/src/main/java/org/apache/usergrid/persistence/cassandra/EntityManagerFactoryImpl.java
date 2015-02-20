@@ -118,18 +118,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
 
     /*
      * (non-Javadoc)
-     * 
-     * @see org.apache.usergrid.core.Datastore#getImplementationDescription()
-     */
-    @Override
-    public String getImplementationDescription() {
-        return IMPLEMENTATION_DESCRIPTION;
-    }
-
-
-    /*
-     * (non-Javadoc)
-     * 
+     *
      * @see org.apache.usergrid.core.Datastore#getEntityDao(java.util.UUID,
      * java.util.UUID)
      */
@@ -181,7 +170,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.usergrid.core.Datastore#createApplication(java.lang.String)
      */
     @Override
@@ -192,7 +181,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.usergrid.core.Datastore#createApplication(java.lang.String,
      * java.util.Map)
      */
@@ -218,11 +207,11 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
         return applicationId;
     }
 
-    
+
     @Override
     public void deleteApplication(UUID applicationId) throws Exception {
         // TODO implement deleteApplication in Usergrid 1 code base (master branch?)
-        throw new UnsupportedOperationException("Not supported."); 
+        throw new UnsupportedOperationException("Not supported.");
     }
 
 
@@ -420,7 +409,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
 
     @Override
     public UUID getDefaultAppId() {
-        return DEFAULT_APPLICATION_ID; 
+        return DEFAULT_APPLICATION_ID;
     }
 
     @Override
@@ -435,17 +424,17 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
 
     @Override
     public void rebuildInternalIndexes(ProgressObserver po) throws Exception {
-        throw new UnsupportedOperationException("Not supported."); 
+        throw new UnsupportedOperationException("Not supported.");
     }
 
     @Override
     public void rebuildAllIndexes(ProgressObserver po) throws Exception {
-        throw new UnsupportedOperationException("Not supported."); 
+        throw new UnsupportedOperationException("Not supported.");
     }
 
     @Override
     public void rebuildApplicationIndexes(UUID appId, ProgressObserver po) throws Exception {
-        throw new UnsupportedOperationException("Not supported."); 
+        throw new UnsupportedOperationException("Not supported.");
     }
 
 
@@ -475,7 +464,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
 
     @Override
     public void rebuildCollectionIndex(UUID appId, String collection, ProgressObserver po) {
-        throw new UnsupportedOperationException("Not supported."); 
+        throw new UnsupportedOperationException("Not supported.");
     }
 
     @Override
@@ -485,6 +474,6 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
 
     @Override
     public Health getEntityStoreHealth() {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

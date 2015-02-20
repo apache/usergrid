@@ -17,25 +17,44 @@
 package org.apache.usergrid.persistence.cassandra;
 
 
-import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.cassandra.CassandraResource;
-import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.persistence.*;
-import org.apache.usergrid.persistence.cassandra.util.TraceTag;
-import org.apache.usergrid.persistence.cassandra.util.TraceTagManager;
-import org.apache.usergrid.persistence.cassandra.util.TraceTagReporter;
-import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
-import org.junit.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import org.apache.commons.lang3.RandomStringUtils;
 
-import static org.junit.Assert.*;
+import org.apache.usergrid.AbstractCoreIT;
+import org.apache.usergrid.persistence.cassandra.util.TraceTag;
+import org.apache.usergrid.persistence.cassandra.util.TraceTagManager;
+import org.apache.usergrid.persistence.cassandra.util.TraceTagReporter;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.SimpleEntityRef;
+import org.apache.usergrid.persistence.cassandra.util.TraceTag;
+import org.apache.usergrid.persistence.cassandra.util.TraceTagManager;
+import org.apache.usergrid.persistence.cassandra.util.TraceTagReporter;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+import org.apache.usergrid.setup.ConcurrentProcessSingleton;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 
-@Concurrent()
 public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
     @SuppressWarnings("PointlessBooleanExpression")
@@ -44,15 +63,9 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
     private static final Logger logger = LoggerFactory.getLogger( EntityManagerFactoryImplIT.class );
 
 
-    @ClassRule
-    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
-
-    @ClassRule
-    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
-
 
     public EntityManagerFactoryImplIT() {
-        emf = cassandraResource.getBean( EntityManagerFactory.class );
+        emf = ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( EntityManagerFactory.class );
     }
 
 
@@ -83,17 +96,17 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
     @Before
     public void initTracing() {
-        traceTagManager = cassandraResource.getBean(
-                "traceTagManager", TraceTagManager.class );
-        traceTagReporter = cassandraResource.getBean(
-                "traceTagReporter", TraceTagReporter.class );
+        traceTagManager = ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( "traceTagManager",
+            TraceTagManager.class );
+        traceTagReporter = ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( "traceTagReporter",
+            TraceTagReporter.class );
     }
 
 
     @Test
     public void testDeleteApplication() throws Exception {
 
-        String rand = RandomStringUtils.randomAlphabetic(20);
+        String rand = UUIDGenerator.newTimeUUID().toString();
 
         // create an application with a collection and an entity
 
@@ -138,7 +151,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
         logger.info( "EntityDaoTest.testCreateAndGet" );
 
         UUID applicationId = createApplication( "EntityManagerFactoryImplIT", "testCreateAndGet"
-                + RandomStringUtils.randomAlphabetic(20)  );
+                + UUIDGenerator.newTimeUUID()  );
         logger.info( "Application id " + applicationId );
 
         EntityManager em = emf.getEntityManager( applicationId );

@@ -33,7 +33,7 @@ import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.VersionSet;
 import org.apache.usergrid.persistence.collection.guice.Write;
 import org.apache.usergrid.persistence.collection.guice.WriteUpdate;
-import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccValidationUtils;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
@@ -113,23 +113,22 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     private final TaskExecutor taskExecutor;
 
     private final Keyspace keyspace;
-    private SerializationFig config;
 
 
     @Inject
-    public EntityCollectionManagerImpl( 
-        @Write final WriteStart                    writeStart, 
+    public EntityCollectionManagerImpl(
+        @Write final WriteStart                    writeStart,
         @WriteUpdate final WriteStart              writeUpdate,
         final WriteUniqueVerify                    writeVerifyUnique,
         final WriteOptimisticVerify                writeOptimisticVerify,
-        final WriteCommit                          writeCommit, 
+        final WriteCommit                          writeCommit,
         final RollbackAction                       rollback,
-        final MarkStart                            markStart, 
+        final MarkStart                            markStart,
         final MarkCommit                           markCommit,
         @ProxyImpl final MvccEntitySerializationStrategy entitySerializationStrategy,
         final UniqueValueSerializationStrategy     uniqueValueSerializationStrategy,
         final MvccLogEntrySerializationStrategy    mvccLogEntrySerializationStrategy,
-        final Keyspace                             keyspace, 
+        final Keyspace                             keyspace,
         final SerializationFig                     config,
         final EntityVersionCleanupFactory          entityVersionCleanupFactory,
         final EntityVersionCreatedFactory          entityVersionCreatedFactory,
@@ -154,7 +153,6 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         this.markCommit = markCommit;
 
         this.keyspace = keyspace;
-        this.config = config;
 
         this.entityVersionCleanupFactory = entityVersionCleanupFactory;
         this.entityVersionCreatedFactory = entityVersionCreatedFactory;
@@ -182,9 +180,9 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
         Observable<CollectionIoEvent<MvccEntity>> observable = stageRunner( writeData, writeStart );
 
-        // execute all validation stages concurrently.  Needs refactored when this is done.  
+        // execute all validation stages concurrently.  Needs refactored when this is done.
         // https://github.com/Netflix/RxJava/issues/627
-        // observable = Concurrent.concurrent( observable, Schedulers.io(), new WaitZip(), 
+        // observable = Concurrent.concurrent( observable, Schedulers.io(), new WaitZip(),
         //                  writeVerifyUnique, writeOptimisticVerify );
 
         return observable.map(writeCommit).doOnNext(new Action1<Entity>() {
@@ -233,16 +231,16 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getUuid(), "Entity id uuid required in load stage" );
         Preconditions.checkNotNull( entityId.getType(), "Entity id type required in load stage" );
 
-        return load( Collections.singleton( entityId ) ).map( new Func1<EntitySet, Entity>() {
+        return load( Collections.singleton( entityId ) ).flatMap( new Func1<EntitySet, Observable<Entity>>() {
             @Override
-            public Entity call( final EntitySet entitySet ) {
+            public Observable<Entity> call( final EntitySet entitySet ) {
                 final MvccEntity entity = entitySet.getEntity( entityId );
 
-                if ( entity == null ) {
-                    return null;
+                if ( entity == null || !entity.getEntity().isPresent()) {
+                    return Observable.empty();
                 }
 
-                return entity.getEntity().orNull();
+                return Observable.just( entity.getEntity().get() );
             }
         } );
     }

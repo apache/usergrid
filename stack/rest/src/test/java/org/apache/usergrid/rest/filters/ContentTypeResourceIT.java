@@ -28,7 +28,7 @@ import javax.ws.rs.core.MediaType;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import org.apache.usergrid.cassandra.Concurrent;
+
 import org.apache.usergrid.rest.AbstractRestIT;
 import org.apache.usergrid.rest.TestContextSetup;
 import org.apache.usergrid.utils.JsonUtils;
@@ -57,7 +57,6 @@ import static org.apache.usergrid.utils.MapUtils.hashMap;
 
 // @Ignore("Client login is causing tests to fail due to socket closure by grizzly.  Need to re-enable once we're not
 // using grizzly to test")
-@Concurrent()
 public class ContentTypeResourceIT extends AbstractRestIT {
 
     @Rule

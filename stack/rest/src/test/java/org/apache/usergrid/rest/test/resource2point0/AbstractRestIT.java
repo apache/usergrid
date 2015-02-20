@@ -21,19 +21,19 @@ import java.net.URI;
 import java.net.URLClassLoader;
 import java.util.Arrays;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.usergrid.rest.test.resource2point0.endpoints.ApplicationsResource;
-import org.apache.usergrid.rest.test.resource2point0.endpoints.OrganizationResource;
-import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
-import org.apache.usergrid.rest.test.resource2point0.model.Entity;
-import org.apache.usergrid.rest.test.resource2point0.model.Token;
-import org.junit.ClassRule;
 import org.junit.Rule;
 
 import org.apache.usergrid.rest.ITSetup;
-import org.apache.usergrid.rest.RestITSuite;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.ApplicationsResource;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.OrganizationResource;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.ManagementResource;
+import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
+import org.apache.usergrid.rest.test.resource2point0.model.Entity;
+import org.apache.usergrid.rest.test.resource2point0.model.Token;
+import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
@@ -55,8 +55,8 @@ public class AbstractRestIT extends JerseyTest {
     private static ClientConfig clientConfig = new DefaultClientConfig();
 
 
-    @ClassRule
-    public static ITSetup setup = new ITSetup( RestITSuite.cassandraResource );
+
+    public static ITSetup setup = new ITSetup(  );
 //
 //    TODO: Allow the client to be setup seperately
     @Rule
@@ -113,6 +113,10 @@ public class AbstractRestIT extends JerseyTest {
     protected ApplicationsResource app(){
         return clientSetup.restClient.org(clientSetup.getOrganization().getName()).app(clientSetup.getAppName());
 
+    }
+
+    protected ManagementResource management(){
+        return clientSetup.restClient.management();
     }
 
     protected ClientContext context(){

@@ -18,6 +18,10 @@
 #
 
 #Install keyspaces
+# Build environment for scripts
+. /etc/profile.d/aws-credentials.sh
+. /etc/profile.d/usergrid-env.sh
+
 pushd /etc/apt/sources.list.d
 
 #Run the cassandra cql to create the keyspaces.  Note this only works for the
@@ -48,17 +52,22 @@ CASS_REGION=${EC2_REGION%-1}
 #Update the keyspace replication and run the cql
 sed -i.bak "s/KEYSPACE_REGION/${CASS_REGION}/g" /usr/share/usergrid/cql/update_locks.cql
 
+sed -i.bak "s/REPLICATION_FACTOR/${CASSANDRA_REPLICATION_FACTOR}/g" /usr/share/usergrid/cql/update_locks.cql
+
+
 /usr/bin/cassandra-cli -h ${CASSHOST} -f  /usr/share/usergrid/cql/update_locks.cql
 
 
 #Update the keyspace region and run the cql
 sed -i.bak "s/KEYSPACE_REGION/${CASS_REGION}/g" /usr/share/usergrid/cql/update_usergrid.cql
+sed -i.bak "s/REPLICATION_FACTOR/${CASSANDRA_REPLICATION_FACTOR}/g" /usr/share/usergrid/cql/update_usergrid.cql
 
 /usr/bin/cassandra-cli -h ${CASSHOST} -f  /usr/share/usergrid/cql/update_usergrid.cql
 
 
 #Update the keyspace region and run the cql
 sed -i.bak "s/KEYSPACE_REGION/${CASS_REGION}/g" /usr/share/usergrid/cql/update_usergrid_applications.cql
+sed -i.bak "s/REPLICATION_FACTOR/${CASSANDRA_REPLICATION_FACTOR}/g" /usr/share/usergrid/cql/update_usergrid_applications.cql
 
 /usr/bin/cassandra-cli -h ${CASSHOST} -f  /usr/share/usergrid/cql/update_usergrid_applications.cql
 

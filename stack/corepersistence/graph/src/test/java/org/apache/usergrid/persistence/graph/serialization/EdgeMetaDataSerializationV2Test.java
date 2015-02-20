@@ -22,9 +22,9 @@
 package org.apache.usergrid.persistence.graph.serialization;
 
 
+import org.apache.usergrid.persistence.core.guice.V2Impl;
 import org.junit.runner.RunWith;
 
-import org.apache.usergrid.persistence.core.guice.CurrentImpl;
 import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
@@ -40,7 +40,7 @@ import static org.junit.Assert.assertTrue;
 public class EdgeMetaDataSerializationV2Test extends EdgeMetadataSerializationTest {
 
     @Inject
-    @CurrentImpl
+    @V2Impl
     protected EdgeMetadataSerialization serialization;
 
 

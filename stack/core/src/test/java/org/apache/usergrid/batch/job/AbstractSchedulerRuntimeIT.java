@@ -26,16 +26,19 @@ import org.junit.ClassRule;
 
 import org.apache.usergrid.batch.service.JobSchedulerService;
 import org.apache.usergrid.batch.service.SchedulerService;
-import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.cassandra.SchemaManager;
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 
 import com.google.common.util.concurrent.Service.State;
+
+import net.jcip.annotations.NotThreadSafe;
 
 
 /**
  * Class to test job runtimes
  */
+@NotThreadSafe
 public class AbstractSchedulerRuntimeIT {
 
     protected static final int DEFAULT_COUNT = 10;
@@ -46,7 +49,7 @@ public class AbstractSchedulerRuntimeIT {
 
 
     @ClassRule
-    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
+    public static SpringResource springResource = SpringResource.getInstance();
 
 
     @ClassRule
@@ -67,7 +70,7 @@ public class AbstractSchedulerRuntimeIT {
 
 //        elasticSearchResource.before();
 
-        SchemaManager sm = cassandraResource.getBean("coreManager", SchemaManager.class);
+        SchemaManager sm = springResource.getBean("coreManager", SchemaManager.class);
         sm.create();
         sm.populateBaseData();
     }
@@ -77,23 +80,24 @@ public class AbstractSchedulerRuntimeIT {
 //        elasticSearchResource.after();
     }
 
-    
+
     @Before
     @SuppressWarnings( "all" )
     public void setup() {
 
-        props = cassandraResource.getBean( "properties", Properties.class );
-        scheduler = cassandraResource.getBean( SchedulerService.class );
+        props = springResource.getBean( "properties", Properties.class );
+        scheduler = springResource.getBean( SchedulerService.class );
 
         if ( System.getProperties().containsKey( COUNT_PROP ) ) {
             count = Integer.getInteger( System.getProperty( COUNT_PROP ) );
         }
 
         // start the scheduler after we're all set up
-        JobSchedulerService jobScheduler = cassandraResource.getBean( JobSchedulerService.class );
+        JobSchedulerService jobScheduler = springResource.getBean( JobSchedulerService.class );
         jobScheduler.setJobListener( listener );
         if ( jobScheduler.state() != State.RUNNING ) {
-            jobScheduler.startAndWait();
+            jobScheduler.startAsync();
+            jobScheduler.awaitRunning();
         }
     }
 

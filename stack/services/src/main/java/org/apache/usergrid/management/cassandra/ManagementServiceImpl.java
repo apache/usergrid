@@ -31,11 +31,9 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
 import org.apache.shiro.UnavailableSecurityManagerException;
-
 import org.apache.usergrid.locking.Lock;
 import org.apache.usergrid.locking.LockManager;
 import org.apache.usergrid.management.AccountCreationProps;
@@ -142,10 +140,7 @@ import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_USE
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_USER_CONFIRMATION_URL;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_USER_RESETPW_URL;
 import static org.apache.usergrid.persistence.CredentialsInfo.getCredentialsSecret;
-import static org.apache.usergrid.persistence.Schema.DICTIONARY_CREDENTIALS;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_PATH;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_SECRET;
+import static org.apache.usergrid.persistence.Schema.*;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
 import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_ACTOR;
 import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_ACTOR_NAME;

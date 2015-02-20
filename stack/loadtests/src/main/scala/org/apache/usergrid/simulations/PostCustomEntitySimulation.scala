@@ -37,8 +37,8 @@ class PostCustomEntitySimulation extends Simulation {
 
   if(!Settings.skipSetup) {
     println("Begin setup")
-    Setup.setupOrg()
-    Setup.setupApplication()
+    //Setup.setupOrg()
+    //Setup.setupApplication()
     println("End Setup")
   }else{
     println("Skipping Setup")
@@ -48,14 +48,16 @@ class PostCustomEntitySimulation extends Simulation {
   val collectionType:String = "restaurants"
   val rampTime:Int = Settings.rampTime
   val throttle:Int = Settings.throttle
-  val feeder = FeederGenerator.generateCustomEntityFeeder(numEntities).queue
+  val feeder = FeederGenerator.generateCustomEntityInfinite(0)
   val httpConf = Settings.httpConf
 
   val scnToRun = scenario("POST custom entities")
     .feed(feeder)
-    .exec(TokenScenarios.getManagementToken)
     .exec(EntityScenarios.postEntity)
 
-  setUp(scnToRun.inject(atOnceUsers(numEntities)).throttle(reachRps(throttle) in (rampTime.seconds)).protocols(httpConf)).maxDuration(Settings.duration)
+  setUp(scnToRun.inject(
+    rampUsers(Settings.maxPossibleUsers) over Settings.rampTime,
+    constantUsersPerSec(Settings.maxPossibleUsers) during Settings.duration
+  ).protocols(httpConf)).maxDuration(Settings.duration)
 
 }

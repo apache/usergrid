@@ -17,30 +17,21 @@
 package org.apache.usergrid.persistence;
 
 
-import java.util.concurrent.TimeUnit;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.Application;
-import org.apache.usergrid.CoreApplication;
-
-import com.codahale.metrics.Meter;
-import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.Slf4jReporter;
-import com.google.inject.Injector;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.corepersistence.CpSetup;
+import java.util.concurrent.TimeUnit;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.apache.usergrid.AbstractCoreIT;
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
@@ -50,13 +41,19 @@ import org.apache.usergrid.persistence.index.impl.EsEntityIndexImpl;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
+
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Slf4jReporter;
+import com.google.inject.Injector;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 
 //@RunWith(JukitoRunner.class)
 //@UseModules({ GuiceModule.class })
-@Concurrent()
+
 public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
     private static final Logger logger = LoggerFactory.getLogger(PerformanceEntityRebuildIndexTest.class );
 
@@ -67,8 +64,6 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
     private static final long WRITE_DELAY_MS = 10;
 
-    @Rule
-    public Application app = new CoreApplication( setup );
 
 
     @Before
@@ -157,7 +152,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
         logger.info("Created {} entities", entityCount);
         em.refreshIndex();
 
-        // ----------------- test that we can read them, should work fine 
+        // ----------------- test that we can read them, should work fine
 
         logger.debug("Read the data");
         readData("testTypes", entityCount );
@@ -183,7 +178,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
         final String meterName = this.getClass().getSimpleName() + ".rebuildIndex";
         final Meter meter = registry.meter( meterName );
-        
+
         EntityManagerFactory.ProgressObserver po = new EntityManagerFactory.ProgressObserver() {
             int counter = 0;
 
@@ -220,16 +215,16 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
         }
 
         // ----------------- test that we can read them
-        
+
         readData( "testTypes", entityCount );
     }
 
-    /** 
+    /**
      * Delete index for all applications, just need the one to get started.
      */
     private void deleteIndex( UUID appUuid ) {
 
-        Injector injector = CpSetup.getInjector();
+        Injector injector = SpringResource.getInstance().getBean( Injector.class );
         EntityIndexFactory eif = injector.getInstance( EntityIndexFactory.class );
 
         Id appId = new SimpleId( appUuid, "application");
@@ -277,7 +272,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
         }
 
         if ( expected != -1 && expected != count ) {
-            throw new RuntimeException("Did not get expected " 
+            throw new RuntimeException("Did not get expected "
                     + expected + " entities, instead got " + count );
         }
         return count;

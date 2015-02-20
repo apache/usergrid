@@ -47,7 +47,7 @@ public class EntityCollectionManagerFactoryTest {
     }
 
 
-    @Test(expected = ProvisionException.class)
+    @Test(expected = NullPointerException.class)
     public void nullInput() {
         entityCollectionManagerFactory.createCollectionManager( null );
     }

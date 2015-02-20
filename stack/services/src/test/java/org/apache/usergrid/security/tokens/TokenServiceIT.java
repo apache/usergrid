@@ -21,7 +21,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -31,12 +30,10 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.NewOrgAppAdminRule;
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
-import org.apache.usergrid.cassandra.CassandraResource;
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
-import org.apache.usergrid.cassandra.Concurrent;
+
 import org.apache.usergrid.management.ApplicationInfo;
-import org.apache.usergrid.management.OrganizationInfo;
-import org.apache.usergrid.management.OrganizationOwnerInfo;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.entities.Application;
@@ -54,25 +51,18 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 
-@Concurrent()
+
 public class TokenServiceIT {
 
     static Logger log = LoggerFactory.getLogger( TokenServiceIT.class );
 
-    // app-level data generated only once
-    private static UserInfo adminUser;
+    // app-level data generated only once per test
+    private UserInfo adminUser;
 
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
-
     @ClassRule
-    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
-
-    @ClassRule
-    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
-
-    @ClassRule
-    public static ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource, elasticSearchResource );
+    public static ServiceITSetup setup = new ServiceITSetupImpl(  );
 
 
     @Rule

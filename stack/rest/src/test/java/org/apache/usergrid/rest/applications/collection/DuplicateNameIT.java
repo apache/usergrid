@@ -16,21 +16,16 @@
 
 package org.apache.usergrid.rest.applications.collection;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import java.io.IOException;
-import java.util.Map;
-import org.apache.usergrid.corepersistence.TestGuiceModule;
-import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
-import org.apache.usergrid.rest.AbstractRestIT;
-import org.apache.usergrid.rest.TestContextSetup;
-import org.apache.usergrid.rest.test.resource.CustomCollection;
-import org.apache.usergrid.utils.MapUtils;
-import static org.junit.Assert.fail;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.apache.usergrid.rest.AbstractRestIT;
+import org.apache.usergrid.rest.TestContextSetup;
+
+import static org.junit.Assert.fail;
 
 
 public class DuplicateNameIT extends AbstractRestIT {
@@ -43,30 +38,32 @@ public class DuplicateNameIT extends AbstractRestIT {
     @Test
     public void duplicateNamePrevention() {
 
-        CustomCollection things = context.application().customCollection( "things" );
+        fail("This test is incorrectly written and should not use direct serialization to test duplicate names");
 
-        Map<String, String> entity = MapUtils.hashMap( "name", "enzo" );
-
-        try {
-            things.create( entity );
-        } catch (IOException ex) {
-            logger.error("Cannot create entity", ex);
-        }
-
-        refreshIndex( context.getAppUuid() );
-
-        Injector injector = Guice.createInjector( new TestGuiceModule( null ) ); 
-        SerializationFig sfig = injector.getInstance( SerializationFig.class );
-
-        // wait for any temporary unique value records to timeout
-        try { Thread.sleep( sfig.getTimeout() * 1100 ); } catch (InterruptedException ignored) {} 
-
-        try {
-            things.create( entity );
-            fail("Should not have created duplicate entity");
-            
-        } catch (Exception ex) {
-            // good
-        }
+//        CustomCollection things = context.application().customCollection( "things" );
+//
+//        Map<String, String> entity = MapUtils.hashMap( "name", "enzo" );
+//
+//        try {
+//            things.create( entity );
+//        } catch (IOException ex) {
+//            logger.error("Cannot create entity", ex);
+//        }
+//
+//        refreshIndex( context.getAppUuid() );
+//
+//        Injector injector = Guice.createInjector( new TestGuiceModule( null ) );
+//        SerializationFig sfig = injector.getInstance( SerializationFig.class );
+//
+//        // wait for any temporary unique value records to timeout
+//        try { Thread.sleep( sfig.getTimeout() * 1100 ); } catch (InterruptedException ignored) {}
+//
+//        try {
+//            things.create( entity );
+//            fail("Should not have created duplicate entity");
+//
+//        } catch (Exception ex) {
+//            // good
+//        }
     }
 }

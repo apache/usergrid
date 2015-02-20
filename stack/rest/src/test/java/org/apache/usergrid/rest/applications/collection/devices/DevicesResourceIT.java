@@ -27,7 +27,7 @@ import org.apache.usergrid.rest.test.resource2point0.endpoints.CollectionEndpoin
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.junit.Test;
-import org.apache.usergrid.cassandra.Concurrent;
+
 
 import com.sun.jersey.api.client.UniformInterfaceException;
 import java.io.IOException;
@@ -38,7 +38,7 @@ import static org.junit.Assert.fail;
 import org.junit.Ignore;
 
 
-@Concurrent()
+
 public class DevicesResourceIT extends AbstractRestIT {
 
     @Test

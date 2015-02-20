@@ -63,9 +63,9 @@ import static org.junit.Assert.fail;
 @RunWith( ITRunner.class )
 @UseModules( TestCollectionModule.class )
 public class EntityCollectionManagerIT {
+
     @Inject
     private EntityCollectionManagerFactory factory;
-
 
     @Inject
     @Rule
@@ -411,7 +411,7 @@ public class EntityCollectionManagerIT {
     @Test
     public void updateVersioning() {
 
-        // create entity 
+        // create entity
         Entity origEntity = new Entity( new SimpleId( "testUpdate" ) );
         origEntity.setField( new StringField( "testField", "value" ) );
 
@@ -420,7 +420,7 @@ public class EntityCollectionManagerIT {
         EntityCollectionManager manager = factory.createCollectionManager( context );
         Entity returned = manager.write( origEntity ).toBlocking().lastOrDefault( null );
 
-        // note its version 
+        // note its version
         UUID oldVersion = returned.getVersion();
 
         // partial update entity but with new entity that has version = null

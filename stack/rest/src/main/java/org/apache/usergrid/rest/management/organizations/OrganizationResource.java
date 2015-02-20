@@ -17,37 +17,20 @@
 package org.apache.usergrid.rest.management.organizations;
 
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
-
+import com.sun.jersey.api.json.JSONWithPadding;
+import com.sun.jersey.api.view.Viewable;
 import org.apache.amber.oauth2.common.exception.OAuthSystemException;
-import org.apache.amber.oauth2.common.message.OAuthResponse;
 
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.management.ActivationState;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.export.ExportService;
+import org.apache.usergrid.management.importer.ImportService;
+import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.entities.Export;
+import org.apache.usergrid.persistence.entities.Import;
+import org.apache.usergrid.persistence.queue.impl.UsergridAwsCredentials;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.applications.ServiceResource;
@@ -59,15 +42,27 @@ import org.apache.usergrid.rest.utils.JSONPUtils;
 import org.apache.usergrid.security.oauth.ClientCredentialsInfo;
 import org.apache.usergrid.security.tokens.exceptions.TokenException;
 import org.apache.usergrid.services.ServiceResults;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
-import com.sun.jersey.api.json.JSONWithPadding;
-import com.sun.jersey.api.view.Viewable;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 
-import static javax.servlet.http.HttpServletResponse.SC_ACCEPTED;
-import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
-import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
-import static javax.servlet.http.HttpServletResponse.SC_OK;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import static javax.servlet.http.HttpServletResponse.*;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.index.query.Query.Level;
 
 
 @Component("org.apache.usergrid.rest.management.organizations.OrganizationResource")
@@ -287,7 +282,8 @@ public class OrganizationResource extends AbstractContextResource {
 
         logger.debug( "executePostJson" );
 
-        OAuthResponse response = null;
+        UsergridAwsCredentials uac = new UsergridAwsCredentials();
+
         UUID jobUUID = null;
         Map<String, String> uuidRet = new HashMap<String, String>();
 
@@ -309,18 +305,13 @@ public class OrganizationResource extends AbstractContextResource {
 
 
             String bucketName = ( String ) storage_info.get( "bucket_location" );
-            String accessId = ( String ) storage_info.get( "s3_access_id" );
-            String secretKey = ( String ) storage_info.get( "s3_key" );
+            uac.getAWSAccessKeyIdJson( storage_info );
+            uac.getAWSSecretKeyJson( storage_info );
 
             if(bucketName == null) {
                 throw new NullPointerException( "Could not find field 'bucketName'" );
             }
-            if(accessId == null) {
-                throw new NullPointerException( "Could not find field 's3_access_id'" );
-            }
-            if(secretKey == null) {
-                throw new NullPointerException( "Could not find field 's3_key'" );
-            }
+
 
             json.put( "organizationId",organization.getUuid());
 
@@ -362,4 +353,6 @@ public class OrganizationResource extends AbstractContextResource {
 
         return Response.status( SC_OK ).entity( entity).build();
     }
+
+
 }

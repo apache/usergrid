@@ -98,7 +98,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
     private final AliasedEntityIndex entityIndex;
 
 
-    public EsEntityIndexBatchImpl( final ApplicationScope applicationScope, final Client client, 
+    public EsEntityIndexBatchImpl( final ApplicationScope applicationScope, final Client client,
             final IndexFig config, final int autoFlushSize, final FailureMonitor failureMonitor, final AliasedEntityIndex entityIndex ) {
 
         this.applicationScope = applicationScope;
@@ -118,6 +118,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
 
         IndexValidationUtils.validateIndexScope( indexScope );
+        ValidationUtils.verifyEntityWrite( entity );
 
         final String context = createContextName( indexScope );
         final String entityType = entity.getId().getType();
@@ -167,15 +168,15 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
 
         if ( log.isDebugEnabled() ) {
-            log.debug( "De-indexing entity {}:{} in scope\n   app {}\n   owner {}\n   " 
+            log.debug( "De-indexing entity {}:{} in scope\n   app {}\n   owner {}\n   "
                 + "name {} context{}, type {},",
                 new Object[] {
-                    id.getType(), 
-                    id.getUuid(), 
-                    applicationScope.getApplication(), 
+                    id.getType(),
+                    id.getUuid(),
+                    applicationScope.getApplication(),
                     indexScope.getOwner(),
-                    indexScope.getName(), 
-                    context, 
+                    indexScope.getName(),
+                    context,
                     entityType
                 } );
         }
@@ -257,7 +258,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
         for ( BulkItemResponse response : responses ) {
             if ( response.isFailed() ) {
-                throw new RuntimeException( "Unable to index documents.  Errors are :" 
+                throw new RuntimeException( "Unable to index documents.  Errors are :"
                         + response.getFailure().getMessage() );
             }
         }
@@ -294,7 +295,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         //add the context for filtering later
         entityMap.put( ENTITY_CONTEXT_FIELDNAME, context );
 
-        //but the fieldname we have to prefix because we use query equality to seek this later.  
+        //but the fieldname we have to prefix because we use query equality to seek this later.
         // TODO see if we can make this more declarative
         entityMap.put( ENTITYID_ID_FIELDNAME, IndexingUtils.idString(entity.getId()).toLowerCase());
 
@@ -321,7 +322,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
             if ( f instanceof ListField ) {
                 List list = ( List ) field.getValue();
-                entityMap.put( field.getName().toLowerCase(), 
+                entityMap.put( field.getName().toLowerCase(),
                         new ArrayList( processCollectionForMap( list ) ) );
 
                 if ( !list.isEmpty() ) {
@@ -333,12 +334,12 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
             }
             else if ( f instanceof ArrayField ) {
                 List list = ( List ) field.getValue();
-                entityMap.put( field.getName().toLowerCase(), 
+                entityMap.put( field.getName().toLowerCase(),
                         new ArrayList( processCollectionForMap( list ) ) );
             }
             else if ( f instanceof SetField ) {
                 Set set = ( Set ) field.getValue();
-                entityMap.put( field.getName().toLowerCase(), 
+                entityMap.put( field.getName().toLowerCase(),
                         new ArrayList( processCollectionForMap( set ) ) );
             }
             else if ( f instanceof EntityObjectField ) {
@@ -362,8 +363,8 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
                 locMap.put( "lon", locField.getValue().getLongitude() );
                 entityMap.put( GEO_PREFIX + field.getName().toLowerCase(), locMap );
             }
-            else if (  f instanceof DoubleField 
-                    || f instanceof FloatField 
+            else if (  f instanceof DoubleField
+                    || f instanceof FloatField
                     || f instanceof IntegerField
                     || f instanceof LongField ) {
 

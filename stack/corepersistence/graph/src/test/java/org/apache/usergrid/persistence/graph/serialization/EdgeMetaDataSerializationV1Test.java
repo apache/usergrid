@@ -39,9 +39,9 @@ package org.apache.usergrid.persistence.graph.serialization;/*
  */
 
 
+import org.apache.usergrid.persistence.core.guice.V1Impl;
 import org.junit.runner.RunWith;
 
-import org.apache.usergrid.persistence.core.guice.PreviousImpl;
 import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
@@ -57,7 +57,7 @@ import static org.junit.Assert.assertTrue;
 public class EdgeMetaDataSerializationV1Test extends EdgeMetadataSerializationTest {
 
     @Inject
-    @PreviousImpl
+    @V1Impl
     protected EdgeMetadataSerialization serialization;
 
 

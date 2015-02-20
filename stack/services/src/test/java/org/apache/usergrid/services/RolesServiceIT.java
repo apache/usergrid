@@ -23,7 +23,7 @@ import java.util.Set;
 
 import org.junit.Test;
 
-import org.apache.usergrid.cassandra.Concurrent;
+
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.entities.Role;
 import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
@@ -37,7 +37,7 @@ import static org.junit.Assert.assertTrue;
 
 
 /** @author tnine */
-@Concurrent()
+
 public class RolesServiceIT extends AbstractServiceIT {
 
     /** Happy path test */
@@ -200,12 +200,12 @@ public class RolesServiceIT extends AbstractServiceIT {
         assertEquals( 1, results.size() );
 
         app.getEntityManager().refreshIndex();
-        
+
         // check role is gone
         Role role = app.get( app.getAlias( "role", "manager" ), Role.class );
         assertNull( role );
 
-        // check permissions are gone 
+        // check permissions are gone
         Set<String> permissions = app.getRolePermissions( "manager" );
         assertEquals( 0, permissions.size() );
     }

@@ -26,10 +26,7 @@
 
   <!-- Override these properties in your settings.xml in an active profile -->
   <properties>
-    <services.it.forkCount>3</services.it.forkCount>
-    <services.it.reuseForks>false</services.it.reuseForks>
-    <services.it.parallel>suites</services.it.parallel>
-    <services.it.threadCount>2</services.it.threadCount>
+
   </properties>
 
   <artifactId>usergrid-services</artifactId>
@@ -56,7 +53,7 @@
         <directory>src/main/resources</directory>
         <filtering>true</filtering>
         <includes>
-          <include>**/*.xml</include>
+            <include>**/*.xml</include>
         </includes>
       </resource>
       <resource>
@@ -72,6 +69,7 @@
           <include>**/*.xml</include>
           <include>**/*.properties</include>
           <include>**/*.p12</include>
+          <include>**/*.json</include>
         </includes>
       </testResource>
       <testResource>
@@ -80,50 +78,42 @@
     </testResources>
 
     <plugins>
-    <plugin>
+        <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
+            <version>${surefire.plugin.version}</version>
+
             <configuration>
-              <systemPropertyVariables>
-                <storage-config>${basedir}/src/test/conf</storage-config>
-                <target.directory>${project.build.directory}</target.directory>
-              </systemPropertyVariables>
-              <parallel>classes</parallel>
-              <forkCount>${services.it.forkCount}</forkCount>
-              <reuseForks>${services.it.reuseForks}</reuseForks>
-              <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}</argLine>
-              <includes>
-                <include>**/*IT.java</include>
-                <include>**/*Test.java</include>
-              </includes>
+                <systemPropertyVariables>
+                    <storage-config>${basedir}/src/test/conf</storage-config>
+                    <target.directory>${project.build.directory}</target.directory>
+                </systemPropertyVariables>
+                <parallel>${usergrid.it.parallel}</parallel>
+                <forkCount>${usergrid.it.forkCount}</forkCount>
+                <threadCount>${usergrid.it.threads}</threadCount>
+                <reuseForks>${usergrid.it.reuseForks}</reuseForks>
+                <argLine>-Dtest.barrier.timestamp=${maven.build.timestamp} -Dtest.clean.storage=true -Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}
+                </argLine>
+                <includes>
+                    <include>**/*IT.java</include>
+                    <include>**/*Test.java</include>
+                </includes>
 
-              <!-- exclude our serial tests -->
-              <excludes>
-                <exclude>**/*Scheduler*IT.java</exclude>
-                <exclude>**/*Notification*IT.java</exclude>
-              </excludes>
+                <!-- exclude our serial tests -->
+                <excludes>
+                    <exclude>**/*Scheduler*IT.java</exclude>
+                    <exclude>**/*Notification*IT.java</exclude>
+                </excludes>
             </configuration>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.maven.surefire</groupId>
+                    <artifactId>surefire-junit47</artifactId>
+                    <version>${surefire.plugin.version}</version>
+                </dependency>
+            </dependencies>
 
-            <!-- Serial execution -->
-            <executions>
-                   <execution>
-                       <id>single-thread-test</id>
-                       <phase>test</phase>
-                       <goals>
-                           <goal>test</goal>
-                       </goals>
-                       <configuration>
-                           <includes>
-                               <include>**/*Scheduler*IT.java</include>
-                               <include>**/*Notification*IT.java</include>
-                           </includes>
-                           <threadCount>1</threadCount>
-                       </configuration>
-                   </execution>
-               </executions>
-
-            <version>2.15</version>
-          </plugin>
+        </plugin>
     </plugins>
   </build>
 

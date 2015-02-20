@@ -24,14 +24,34 @@ import java.util.UUID;
  */
 public interface Setup {
 
+    /**
+     * Initialize all configuration for the system setup.  DO NOT actually create any keyspaces.
+     * @throws Exception
+     */
     void init() throws Exception;
 
+    /**
+     * Setup the management keyspaces
+     * @throws Exception
+     */
     public void setupSystemKeyspace() throws Exception;
 
+    /**
+     * Setup the application keyspaces
+     * @throws Exception
+     */
     public void setupStaticKeyspace() throws Exception;
 
+    /**
+     * Returns true if both keyspaces exist
+     * @return
+     */
     public boolean keyspacesExist();
 
+    /**
+     * Bootstrap the root application to allow the system to function.
+     * @throws Exception
+     */
     public void createDefaultApplications() throws Exception;
 
     public void setupApplicationKeyspace(UUID applicationId, String appName) throws Exception;

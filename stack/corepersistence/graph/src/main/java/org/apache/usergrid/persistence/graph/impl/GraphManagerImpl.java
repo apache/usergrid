@@ -96,7 +96,7 @@ public class GraphManagerImpl implements GraphManager {
                              final GraphFig graphFig,
                              final EdgeDeleteListener edgeDeleteListener,
                              final NodeDeleteListener nodeDeleteListener,
-                             @Assisted final ApplicationScope scope) {
+                             final ApplicationScope scope) {
 
 
         ValidationUtils.validateApplicationScope( scope );

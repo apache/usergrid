@@ -35,7 +35,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.lang.StringUtils;
 
-import org.apache.usergrid.corepersistence.rx.AllEntitiesInSystemObservable;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.AbstractEntity;
 import org.apache.usergrid.persistence.Entity;
@@ -51,24 +50,22 @@ import org.apache.usergrid.persistence.cassandra.CounterUtils;
 import org.apache.usergrid.persistence.cassandra.Setup;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
-import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
+import org.apache.usergrid.persistence.core.rx.AllEntitiesInSystemObservable;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.exceptions.ApplicationAlreadyExistsException;
+import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
+import org.apache.usergrid.persistence.exceptions.OrganizationAlreadyExistsException;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
-import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
-import org.apache.usergrid.persistence.index.AliasedEntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.map.MapManagerFactory;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.utils.UUIDUtils;
@@ -89,8 +86,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     private static final Logger logger = LoggerFactory.getLogger( CpEntityManagerFactory.class );
 
-    public static String IMPLEMENTATION_DESCRIPTION = "Core Persistence Entity Manager Factory 1.0";
-
     private ApplicationContext applicationContext;
 
     private Setup setup = null;
@@ -110,20 +105,39 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             }
         });
 
-
     private ManagerCache managerCache;
+
+    private AllEntitiesInSystemObservable allEntitiesInSystemObservable;
+
     private DataMigrationManager dataMigrationManager;
 
-    CassandraService cass;
-    CounterUtils counterUtils;
+    private CassandraService cassandraService;
+    private CounterUtils counterUtils;
+    private Injector injector;
 
 
     public CpEntityManagerFactory(
-            CassandraService cass, CounterUtils counterUtils) {
+            final CassandraService cassandraService, final CounterUtils counterUtils, final Injector injector) {
 
-        this.cass = cass;
+        this.cassandraService = cassandraService;
         this.counterUtils = counterUtils;
+        this.injector = injector;
+        this.managerCache = injector.getInstance( ManagerCache.class );
+        this.dataMigrationManager = injector.getInstance( DataMigrationManager.class );
+
+
     }
+
+
+    public CounterUtils getCounterUtils() {
+        return counterUtils;
+    }
+
+
+    public CassandraService getCassandraService() {
+        return cassandraService;
+    }
+
 
 
     private void init() {
@@ -150,10 +164,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     public ManagerCache getManagerCache() {
 
         if ( managerCache == null ) {
-
-            // TODO: better solution for getting injector?
-            Injector injector = CpSetup.getInjector();
-
             managerCache = injector.getInstance( ManagerCache.class );
 
             dataMigrationManager = injector.getInstance( DataMigrationManager.class );
@@ -161,11 +171,12 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         return managerCache;
     }
 
-
-    @Override
-    public String getImplementationDescription() throws Exception {
-        return IMPLEMENTATION_DESCRIPTION;
+    private AllEntitiesInSystemObservable getAllEntitiesObservable(){
+        if(allEntitiesInSystemObservable==null)
+            allEntitiesInSystemObservable = injector.getInstance(AllEntitiesInSystemObservable.class);
+        return allEntitiesInSystemObservable;
     }
+
 
 
     @Override
@@ -249,9 +260,18 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
             // create new org because the specified one does not exist
             final String orgName = organizationName;
-            Entity orgInfo = em.create("organization", new HashMap<String, Object>() {{
-                put( PROPERTY_NAME, orgName );
-            }});
+
+            final Entity orgInfo;
+
+            try {
+                orgInfo = em.create( "organization", new HashMap<String, Object>() {{
+                    put( PROPERTY_NAME, orgName );
+                }} );
+            }
+            catch ( DuplicateUniquePropertyExistsException e ) {
+                throw new OrganizationAlreadyExistsException( orgName );
+            }
+
             em.refreshIndex();
             orgUuid = orgInfo.getUuid();
         }
@@ -264,7 +284,12 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             put( "applicationUuid", appId );
             put( "organizationUuid", orgId );
         }};
-        Entity appInfo = em.create( "appinfo", appInfoMap );
+
+        try{
+             em.create( "appinfo", appInfoMap );
+        }catch(DuplicateUniquePropertyExistsException e){
+                       throw new ApplicationAlreadyExistsException( appName );
+                   }
         em.refreshIndex();
 
         // create application entity
@@ -426,8 +451,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             if ( e == null ) {
                 logger.warn("Applicaion {} in index but not found in collections", targetId );
                 continue;
-            } 
-            
+            }
+
             appMap.put(
                 (String)e.getField( PROPERTY_NAME ).getValue(),
                 (UUID)e.getField( "applicationUuid" ).getValue());
@@ -564,11 +589,11 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     @Override
     public void setApplicationContext( ApplicationContext applicationContext ) throws BeansException {
         this.applicationContext = applicationContext;
-        try {
-            setup();
-        } catch (Exception ex) {
-            logger.error("Error setting up EMF", ex);
-        }
+//        try {
+//            setup();
+//        } catch (Exception ex) {
+//            logger.error("Error setting up EMF", ex);
+//        }
     }
 
 
@@ -576,16 +601,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     public long performEntityCount() {
         //TODO, this really needs to be a task that writes this data somewhere since this will get
         //progressively slower as the system expands
-        return AllEntitiesInSystemObservable.getAllEntitiesInSystem( managerCache, 1000 ).longCount().toBlocking().last();
+        return (Long) getAllEntitiesObservable().getAllEntitiesInSystem(1000).longCount().toBlocking().last();
     }
 
-
-    /**
-     * @param managerCache the managerCache to set
-     */
-    public void setManagerCache(CpManagerCache managerCache) {
-        this.managerCache = managerCache;
-    }
 
 
     @Override
@@ -608,7 +626,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
      */
     public Setup getSetup() {
         if ( setup == null ) {
-            setup = new CpSetup( this, cass );
+            setup = new CpSetup( this, cassandraService, injector );
         }
         return setup;
     }
@@ -643,17 +661,16 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     private List<EntityIndex> getManagementIndexes() {
 
-        return Arrays.asList(
-            getManagerCache().getEntityIndex(
-                new ApplicationScopeImpl( new SimpleId( CpNamingUtils.SYSTEM_APP_ID, "application" ))),
+        return Arrays.asList( managerCache.getEntityIndex(
+                new ApplicationScopeImpl( new SimpleId( CpNamingUtils.SYSTEM_APP_ID, "application" ) ) ),
 
             // management app
-            getManagerCache().getEntityIndex(
-                new ApplicationScopeImpl( new SimpleId( getManagementAppId(), "application" ))),
+            managerCache
+                .getEntityIndex( new ApplicationScopeImpl( new SimpleId( getManagementAppId(), "application" ) ) ),
 
             // default app TODO: do we need this in two-dot-o
-            getManagerCache().getEntityIndex(
-                new ApplicationScopeImpl( new SimpleId( getDefaultAppId(), "application" ))));
+            managerCache
+                .getEntityIndex( new ApplicationScopeImpl( new SimpleId( getDefaultAppId(), "application" ) ) ) );
     }
 
 
@@ -688,10 +705,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         //explicitly invoke create index, we don't know if it exists or not in ES during a rebuild.
         em.createIndex();
+        em.reindex(po);
+
         Application app = em.getApplication();
-
-        em.reindex( po );
-
         logger.info("\n\nRebuilt index for application {} id {}\n", app.getName(), appId );
     }
 
@@ -737,7 +753,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     @Override
     public void addIndex(final UUID applicationId,final String indexSuffix,final int shards,final int replicas){
-        EntityIndex entityIndex = getManagerCache().getEntityIndex(CpNamingUtils.getApplicationScope(applicationId));
+        EntityIndex entityIndex = managerCache.getEntityIndex(CpNamingUtils.getApplicationScope(applicationId));
         entityIndex.addIndex(indexSuffix, shards, replicas);
     }
 

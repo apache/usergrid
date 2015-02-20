@@ -19,6 +19,7 @@ package org.apache.usergrid.persistence.collection.guice;
 
 
 
+import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerFactoryImpl;
 import org.safehaus.guicyfig.GuicyFigModule;
 
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
@@ -27,8 +28,10 @@ import org.apache.usergrid.persistence.collection.EntityCollectionManagerSync;
 import org.apache.usergrid.persistence.collection.EntityDeletedFactory;
 import org.apache.usergrid.persistence.collection.EntityVersionCleanupFactory;
 import org.apache.usergrid.persistence.collection.EntityVersionCreatedFactory;
+import org.apache.usergrid.persistence.collection.cache.EntityCacheFig;
 import org.apache.usergrid.persistence.collection.event.EntityDeleted;
 import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
+import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerFactoryImpl;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerImpl;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerSyncImpl;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
@@ -51,6 +54,7 @@ import com.google.inject.Singleton;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.multibindings.Multibinder;
 import org.apache.usergrid.persistence.collection.event.EntityVersionCreated;
+import org.apache.usergrid.persistence.model.entity.Entity;
 
 
 /**
@@ -81,10 +85,10 @@ public class CollectionModule extends AbstractModule {
         Multibinder.newSetBinder( binder(), EntityDeleted.class );
 
         // create a guice factor for getting our collection manager
-        install( new FactoryModuleBuilder()
-            .implement( EntityCollectionManager.class, EntityCollectionManagerImpl.class )
-            .implement( EntityCollectionManagerSync.class, EntityCollectionManagerSyncImpl.class )
-            .build( EntityCollectionManagerFactory.class ) );
+       bind(EntityCollectionManagerFactory.class).to(EntityCollectionManagerFactoryImpl.class);
+
+        //bind this to our factory
+        install( new GuicyFigModule( EntityCacheFig.class ) );
 
         bind( UniqueValueSerializationStrategy.class ).to( UniqueValueSerializationStrategyImpl.class );
         bind( ChangeLogGenerator.class).to( ChangeLogGeneratorImpl.class);
@@ -116,7 +120,7 @@ public class CollectionModule extends AbstractModule {
     @Provides
     @CollectionTaskExecutor
     public TaskExecutor collectionTaskExecutor(final SerializationFig serializationFig){
-        return new NamedTaskExecutorImpl( "collectiontasks", 
+        return new NamedTaskExecutorImpl( "collectiontasks",
                 serializationFig.getTaskPoolThreadSize(), serializationFig.getTaskPoolQueueSize() );
     }
 

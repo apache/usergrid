@@ -18,6 +18,7 @@ package org.apache.usergrid.corepersistence;
 
 import java.util.concurrent.ExecutionException;
 
+import com.amazonaws.services.cloudfront.model.InvalidArgumentException;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
@@ -45,35 +46,7 @@ public class CpManagerCache implements ManagerCache {
 
     // TODO: consider making these cache sizes and timeouts configurable
 
-    private LoadingCache<CollectionScope, EntityCollectionManager> ecmCache =
-            CacheBuilder.newBuilder().maximumSize( 1000 )
-                        .build( new CacheLoader<CollectionScope, EntityCollectionManager>() {
-                                    public EntityCollectionManager load( CollectionScope scope ) {
-                                        return ecmf.createCollectionManager( scope );
-                                    }
-                                } );
 
-    private LoadingCache<ApplicationScope, EntityIndex> eiCache =
-            CacheBuilder.newBuilder().maximumSize( 1000 ).build( new CacheLoader<ApplicationScope, EntityIndex>() {
-                                                                     public EntityIndex load( ApplicationScope scope ) {
-                                                                         return eif.createEntityIndex( scope );
-                                                                     }
-                                                                 } );
-
-    private LoadingCache<ApplicationScope, GraphManager> gmCache =
-            CacheBuilder.newBuilder().maximumSize( 1000 ).build( new CacheLoader<ApplicationScope, GraphManager>() {
-                                                                     public GraphManager load(
-                                                                             ApplicationScope scope ) {
-                                                                         return gmf.createEdgeManager( scope );
-                                                                     }
-                                                                 } );
-
-    private LoadingCache<MapScope, MapManager> mmCache =
-            CacheBuilder.newBuilder().maximumSize( 1000 ).build( new CacheLoader<MapScope, MapManager>() {
-                                                                     public MapManager load( MapScope scope ) {
-                                                                         return mmf.createMapManager( scope );
-                                                                     }
-                                                                 } );
 
 
     @Inject
@@ -89,53 +62,36 @@ public class CpManagerCache implements ManagerCache {
 
     @Override
     public EntityCollectionManager getEntityCollectionManager( CollectionScope scope ) {
-        try {
-            return ecmCache.get( scope );
-        }
-        catch ( ExecutionException ex ) {
-            throw new RuntimeException( "Error getting manager", ex );
-        }
+
+        //cache is now in the colletion manager level
+        return ecmf.createCollectionManager( scope );
     }
 
 
     @Override
     public EntityIndex getEntityIndex( ApplicationScope appScope ) {
-        try {
-            return eiCache.get( appScope );
-        }
-        catch ( ExecutionException ex ) {
-            throw new RuntimeException( "Error getting manager", ex );
-        }
+
+            return eif.createEntityIndex( appScope );
+
     }
 
 
     @Override
     public GraphManager getGraphManager( ApplicationScope appScope ) {
-        try {
-            return gmCache.get( appScope );
-        }
-        catch ( ExecutionException ex ) {
-            throw new RuntimeException( "Error getting manager", ex );
-        }
+        return gmf.createEdgeManager(appScope);
     }
 
 
     @Override
     public MapManager getMapManager( MapScope mapScope ) {
-        try {
-            return mmCache.get( mapScope );
-        }
-        catch ( ExecutionException ex ) {
-            throw new RuntimeException( "Error getting manager", ex );
-        }
+        return mmf.createMapManager(mapScope);
     }
-
 
     @Override
     public void invalidate() {
-        ecmCache.invalidateAll();
-        eiCache.invalidateAll();
-        gmCache.invalidateAll();
-        mmCache.invalidateAll();
+        ecmf.invalidate();
+        eif.invalidate();
+        gmf.invalidate();
+        mmf.invalidate();
     }
 }

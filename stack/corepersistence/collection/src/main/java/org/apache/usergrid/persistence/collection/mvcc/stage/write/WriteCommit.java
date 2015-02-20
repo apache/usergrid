@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.exception.WriteCommitException;
-import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.MvccLogEntry;
@@ -53,7 +53,7 @@ import rx.functions.Func1;
 
 
 /**
- * This phase should invoke any finalization, and mark the entity as committed in the 
+ * This phase should invoke any finalization, and mark the entity as committed in the
  * data store before returning
  */
 @Singleton

@@ -78,7 +78,7 @@ public class EdgeMetaDataSerializationProxyV1Test extends EdgeMetadataSerializat
     @Override
     protected EdgeMetadataSerialization getSerializationImpl() {
 
-        assertTrue( serialization instanceof EdgeMetadataSerializationProxyImpl );
+        assertTrue( serialization instanceof EdgeMetadataSerializationProxyImpl);
 
         return serialization;
     }

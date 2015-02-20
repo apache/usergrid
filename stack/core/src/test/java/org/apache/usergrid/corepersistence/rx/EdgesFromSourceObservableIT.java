@@ -21,14 +21,13 @@ package org.apache.usergrid.corepersistence.rx;
 
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 
+import org.apache.usergrid.persistence.graph.serialization.EdgesObservable;
 import org.junit.Test;
 
 import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.corepersistence.CpSetup;
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.corepersistence.EntityWriteHelper;
 import org.apache.usergrid.corepersistence.ManagerCache;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
@@ -40,9 +39,10 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
-import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
+
+import com.google.inject.Injector;
 
 import rx.functions.Action1;
 
@@ -60,24 +60,19 @@ public class EdgesFromSourceObservableIT extends AbstractCoreIT {
     @Test
     public void testEntities() throws Exception {
 
+        EdgesObservable edgesToTargetObservable = SpringResource.getInstance().getBean(Injector.class).getInstance(EdgesObservable.class);
         final EntityManager em = app.getEntityManager();
         final Application createdApplication = em.getApplication();
-
-
 
         final String type1 = "targetthings";
         final String type2 = "sourcethings";
         final int size = 10;
-
-
 
         final Set<Id> sourceIdentities = EntityWriteHelper.createTypes( em, type2, size );
 
 
         final Entity entity = em.create( type1, new HashMap<String, Object>(){{put("property", "value");}} );
                   final Id target = new SimpleId( entity.getUuid(), entity.getType() );
-
-
 
 
         for ( Id source : sourceIdentities ) {
@@ -88,7 +83,7 @@ public class EdgesFromSourceObservableIT extends AbstractCoreIT {
         //this is hacky, but our context integration b/t guice and spring is a mess.  We need to clean this up when we
         //clean up our wiring
         //
-        ManagerCache managerCache = CpSetup.getInjector().getInstance( ManagerCache.class );
+        ManagerCache managerCache =  SpringResource.getInstance().getBean( Injector.class ).getInstance( ManagerCache.class );
 
 
         final ApplicationScope scope = CpNamingUtils.getApplicationScope( app.getId() );
@@ -96,7 +91,7 @@ public class EdgesFromSourceObservableIT extends AbstractCoreIT {
 
         final GraphManager gm = managerCache.getGraphManager( scope );
 
-        EdgesToTargetObservable.getEdgesToTarget( gm, target ).doOnNext( new Action1<Edge>() {
+        edgesToTargetObservable.edgesToTarget( gm, target ).doOnNext( new Action1<Edge>() {
             @Override
             public void call( final Edge edge ) {
                 final String edgeType = edge.getType();

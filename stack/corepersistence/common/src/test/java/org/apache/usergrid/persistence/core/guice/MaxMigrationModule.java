@@ -20,6 +20,7 @@
 package org.apache.usergrid.persistence.core.guice;
 
 
+import org.apache.usergrid.persistence.core.migration.data.ApplicationDataMigration;
 import org.apache.usergrid.persistence.core.migration.data.DataMigration;
 
 import com.google.inject.AbstractModule;

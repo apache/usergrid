@@ -21,6 +21,7 @@ package org.apache.usergrid.persistence.index;
 
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.core.CPManager;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
@@ -32,13 +33,18 @@ import java.util.Map;
 /**
  * Provides indexing of Entities within a scope.
  */
-public interface EntityIndex {
+public interface EntityIndex extends CPManager {
 
     /**
-     * This should ONLY ever be called once on application create.  
+     * This should ONLY ever be called once on application create.
      * Otherwise we're introducing slowness into our system
      */
     public void initializeIndex();
+
+    /**
+     * Delete the index from ES
+     */
+    public void deleteIndex();
 
     /**
      * Create an index and add to alias, will create alias and remove any old index from write alias if alias already exists
@@ -95,13 +101,13 @@ public interface EntityIndex {
      * Check health of cluster.
      */
     public Health getClusterHealth();
-    
+
     /**
      * Check health of this specific index.
      */
     public Health getIndexHealth();
-    
-    public void deleteIndex();
+
+
 
 }
 

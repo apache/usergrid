@@ -1,6 +1,6 @@
 {
   "name": "usergrid-portal",
-  "version": "2.0.16",
+  "version": "2.0.14",
   "ignore": [
     ".jshintrc",
     "**/*.txt",

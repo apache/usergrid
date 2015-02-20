@@ -17,12 +17,11 @@
 package org.apache.usergrid.batch.job;
 
 
-import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.persistence.entities.JobData;
-import org.apache.usergrid.persistence.entities.JobStat;
-
 import org.junit.Ignore;
 import org.junit.Test;
+
+import org.apache.usergrid.persistence.entities.JobData;
+import org.apache.usergrid.persistence.entities.JobStat;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -31,7 +30,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Class to test job runtimes
  */
-@Concurrent
+
 @Ignore("These tests no longer work with shared spring context. Need to re-evaluate")
 public class SchedulerRuntime4IT extends AbstractSchedulerRuntimeIT {
     /**
@@ -46,7 +45,7 @@ public class SchedulerRuntime4IT extends AbstractSchedulerRuntimeIT {
 
         long customRetry = sleepTime * 2;
 
-        DelayExecution job = cassandraResource.getBean( "delayExecution", DelayExecution.class );
+        DelayExecution job = springResource.getBean( "delayExecution", DelayExecution.class );
 
         job.setTimeout( customRetry );
 

@@ -60,4 +60,8 @@ public interface MigrationInfoSerialization extends Migration {
      * @return The integer that's saved
      */
     public int getStatusCode();
+
+    public int getCurrentVersion();
+
+    public void invalidate();
 }

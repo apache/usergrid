@@ -24,15 +24,6 @@
     <version>2.0.0-SNAPSHOT</version>
   </parent>
 
-  <properties>
-    <!-- Up to 30x parallelism can be used -->
-    <core.it.forkCount>3</core.it.forkCount>
-    <core.it.reuseForks>false</core.it.reuseForks>
-    <core.it.parallel>suites</core.it.parallel>
-    <core.it.threadCount>2</core.it.threadCount>
-    <core.it.suite.concurrency>1</core.it.suite.concurrency>
-  </properties>
-
   <artifactId>usergrid-core</artifactId>
   <name>Usergrid Core</name>
   <description>Core services for Usergrid system.</description>
@@ -47,90 +38,6 @@
     </plugins>
   </reporting>
 
-  <profiles>
-    <profile>
-      <id>default</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-
-            <configuration>
-              <systemPropertyVariables>
-                <storage-config>${basedir}/src/test/conf</storage-config>
-                <target.directory>${project.build.directory}</target.directory>
-                <suite.concurrency>${core.it.suite.concurrency}</suite.concurrency>
-              </systemPropertyVariables>
-
-              <parallel>${core.it.parallel}</parallel>
-              <forkCount>${core.it.forkCount}</forkCount>
-              <threadCount>${core.it.forkCount}</threadCount>
-              <reuseForks>${core.it.reuseForks}</reuseForks>
-              <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}
-              </argLine>
-
-              <includes>
-                <include>**/ConcurrentCore*Suite.java</include>
-                <include>**/SchedulerTestSuite.java</include>
-                <include>**/SchedulerRuntime*IT.java</include>
-                <include>**/*IT.java</include>
-                <include>**/*Test.java</include>
-              </includes>
-              
-              <excludes>
-                <exclude>**/Core*Suite.java</exclude>
-                <exclude>**/ConcurrentSchedulerITSuite.java</exclude>
-                <exclude>**/ConcurrentSchedulerTestSuite.java</exclude>
-                <exclude>**/AppArgsTest.java</exclude>
-                <exclude>**/UsergridJobFactoryTest.java</exclude>
-                <exclude>**/BulkJobExecutionUnitTest.java</exclude>
-
-                <!-- Need to exclude Suite tests to prevent double execution -->
-
-                <!-- <exclude>**/HectorLockManagerIT.java</exclude> -->
-                <exclude>**/UsergridSystemMonitorIT.java</exclude>
-                <exclude>**/CollectionIT.java</exclude>
-                <exclude>**/CounterIT.java</exclude>
-                <exclude>**/EntityConnectionsIT.java</exclude>
-                <exclude>**/EntityDictionaryIT.java</exclude>
-                <exclude>**/EntityManagerIT.java</exclude>
-                <exclude>**/GeoIT.java</exclude>
-                <exclude>**/IndexIT.java</exclude>
-                <exclude>**/MessagesIT.java</exclude>
-                <exclude>**/PermissionsIT.java</exclude>
-                <exclude>**/PathQueryIT.java</exclude>
-                <exclude>**/EntityManagerFactoryImplIT.java</exclude>
-
-                <exclude>**/ZookeeperLockManagerTest.java</exclude>
-                <exclude>**/QueuePathsTest.java</exclude>
-                <exclude>**/QueryProcessorTest.java</exclude>
-                <exclude>**/SimpleIndexBucketLocatorImplTest.java</exclude>
-                <exclude>**/EntityTest.java</exclude>
-                <exclude>**/QueryTest.java</exclude>
-                <exclude>**/QueryUtilsTest.java</exclude>
-                <exclude>**/SchemaTest.java</exclude>
-                <exclude>**/UtilsTest.java</exclude>
-                <exclude>**/IntersectionIteratorTest.java</exclude>
-                <exclude>**/SubtractionIteratorTest.java</exclude>
-                <exclude>**/UnionIteratorTest.java</exclude>
-                <exclude>**/GrammarTreeTest.java</exclude>
-                <exclude>**/LongLiteralTest.java</exclude>
-                <exclude>**/StringLiteralTest.java</exclude>
-
-                <!-- excludes all the iterator query integration tests -->
-                <exclude>**/org/apache/usergrid/persistence/query/*IT.java</exclude>
-              </excludes>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-
-  </profiles>
 
   <build>
 
@@ -147,7 +54,6 @@
                 </includes>
             </resource>
         </resources>
-
     <testResources>
       <testResource>
         <directory>src/test/resources</directory>
@@ -169,27 +75,37 @@
 
     <plugins>
 
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <systemPropertyVariables>
-            <storage-config>${basedir}/src/test/conf</storage-config>
-            <target.directory>${project.build.directory}</target.directory>
-          </systemPropertyVariables>
-          <parallel>classes</parallel>
-          <forkCount>${core.it.forkCount}</forkCount>
-          <reuseForks>${core.it.reuseForks}</reuseForks>
-          <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}</argLine>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>${surefire.plugin.version}</version>
+            <configuration>
+                <systemPropertyVariables>
+                    <storage-config>${basedir}/src/test/conf</storage-config>
+                    <target.directory>${project.build.directory}</target.directory>
+                </systemPropertyVariables>
+                <parallel>methods</parallel>
+                <forkCount>${usergrid.it.forkCount}</forkCount>
+                <threadCount>${usergrid.it.threads}</threadCount>
+                <reuseForks>true</reuseForks>
+                <argLine>-Dtest.barrier.timestamp=${maven.build.timestamp} -Dtest.clean.storage=true -Xmx${ug.heapmax}
+                    -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8
+                    -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}
+                </argLine>
+                <includes>
+                    <include>**/*IT.java</include>
+                    <include>**/*Test.java</include>
+                </includes>
 
-          <includes>
-            <include>**/*IT.java</include>
-            <include>**/*Test.java</include>
-          </includes>
-
-        </configuration>
-        <version>2.15</version>
-      </plugin>
+            </configuration>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.maven.surefire</groupId>
+                    <artifactId>surefire-junit47</artifactId>
+                    <version>${surefire.plugin.version}</version>
+                </dependency>
+            </dependencies>
+        </plugin>
 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

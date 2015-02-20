@@ -29,9 +29,9 @@ import org.junit.Test;
 import org.apache.usergrid.NewOrgAppAdminRule;
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
-import org.apache.usergrid.cassandra.CassandraResource;
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
-import org.apache.usergrid.cassandra.Concurrent;
+
 import org.apache.usergrid.management.cassandra.ManagementServiceImpl;
 import org.apache.usergrid.management.exceptions.RecentlyUsedPasswordException;
 import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
@@ -46,21 +46,15 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 
-@Concurrent()
+
 public class OrganizationIT {
 
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
-    @ClassRule
-    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
 
     @ClassRule
-    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
-
-
-    @ClassRule
-    public static ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource, elasticSearchResource );
+    public static ServiceITSetup setup = new ServiceITSetupImpl();
 
     @Rule
     public NewOrgAppAdminRule newOrgAppAdminRule = new NewOrgAppAdminRule( setup );
@@ -72,7 +66,9 @@ public class OrganizationIT {
                 setup.getMgmtSvc().createAdminUser( uniqueUsername(), "Ed Anuff", uniqueEmail(), "test", false, false );
         assertNotNull( user );
 
-        OrganizationInfo organization = setup.getMgmtSvc().createOrganization( uniqueOrg(), user, false );
+        final String orgName =  uniqueOrg();
+
+        OrganizationInfo organization = setup.getMgmtSvc().createOrganization( orgName, user, false );
         assertNotNull( organization );
 
         setup.getEmf().getEntityManager( setup.getSmf().getManagementAppId() ).refreshIndex();
@@ -94,7 +90,7 @@ public class OrganizationIT {
 
         OrganizationInfo organization2 = setup.getMgmtSvc().getOrganizationForApplication( applicationId );
         assertNotNull( organization2 );
-        assertEquals( "wrong organization name", "OrganizationIT", organization2.getName() );
+        assertEquals( "wrong organization name", organization.getName(), organization2.getName() );
 
         boolean verified = setup.getMgmtSvc().verifyAdminUserPassword( user.getUuid(), "test" );
         assertTrue( verified );

@@ -19,6 +19,8 @@ package org.apache.usergrid.services.notifications;
 import com.codahale.metrics.*;
 import com.codahale.metrics.Timer;
 import com.google.common.cache.*;
+import com.google.inject.Injector;
+
 import org.apache.usergrid.corepersistence.CpSetup;
 import org.apache.usergrid.metrics.MetricsFactory;
 
@@ -37,6 +39,8 @@ import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+
+
 
 public class QueueListener  {
     public  final int MESSAGE_TRANSACTION_TIMEOUT =  25 * 1000;
@@ -73,20 +77,24 @@ public class QueueListener  {
     private int consecutiveCallsToRemoveDevices;
 
     public QueueListener(ServiceManagerFactory smf, EntityManagerFactory emf, MetricsFactory metricsService, Properties props){
-        this.queueManagerFactory = CpSetup.getInjector().getInstance(QueueManagerFactory.class);
+        this.queueManagerFactory = smf.getApplicationContext().getBean( Injector.class ).getInstance(QueueManagerFactory.class);
         this.smf = smf;
         this.emf = emf;
         this.metricsService = metricsService;
         this.properties = props;
-        this.queueScopeFactory = CpSetup.getInjector().getInstance(QueueScopeFactory.class);
+        this.queueScopeFactory = smf.getApplicationContext().getBean( Injector.class ).getInstance(QueueScopeFactory.class);
 
     }
 
-    @PostConstruct
-    public void start(){
-        boolean shouldRun = new Boolean(properties.getProperty("usergrid.notifications.listener.run", "true"));
 
-        if(shouldRun) {
+    /**
+     * Start the service and begin consuming messages
+     */
+    public void start(){
+        //TODO refactor this into a central component that will start/stop services
+//        boolean shouldRun = new Boolean(properties.getProperty("usergrid.notifications.listener.run", "false"));
+
+
             LOG.info("QueueListener: starting.");
             int threadCount = 0;
 
@@ -123,9 +131,9 @@ public class QueueListener  {
                 LOG.error("QueueListener: failed to start:", e);
             }
             LOG.info("QueueListener: done starting.");
-        }else{
-            LOG.info("QueueListener: never started due to config value usergrid.notifications.listener.run.");
-        }
+//        }else{
+//            LOG.info("QueueListener: never started due to config value usergrid.notifications.listener.run.");
+//        }
 
     }
 
@@ -159,9 +167,12 @@ public class QueueListener  {
                     HashMap<UUID, List<QueueMessage>> messageMap = new HashMap<>(messages.size());
                     //group messages into hash map by app id
                     for (QueueMessage message : messages) {
+                        //TODO: stop copying around this area as it gets notification specific.
                         ApplicationQueueMessage queueMessage = (ApplicationQueueMessage) message.getBody();
                         UUID applicationId = queueMessage.getApplicationId();
+                        //Groups queue messages by application Id, ( they are all probably going to the same place )
                         if (!messageMap.containsKey(applicationId)) {
+                            //For each app id it sends the set.
                             List<QueueMessage> applicationQueueMessages = new ArrayList<QueueMessage>();
                             applicationQueueMessages.add(message);
                             messageMap.put(applicationId, applicationQueueMessages);

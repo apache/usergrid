@@ -20,17 +20,14 @@
 
 package org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt;
 
-import org.apache.usergrid.batch.service.App;
-import org.apache.usergrid.rest.test.resource2point0.endpoints.NamedResource;
-import org.apache.usergrid.rest.test.resource2point0.endpoints.UrlResource;
-import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
-import org.apache.usergrid.rest.test.resource2point0.model.Application;
-import org.apache.usergrid.rest.test.resource2point0.model.Organization;
-import org.apache.usergrid.rest.test.resource2point0.model.Token;
-import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 import javax.ws.rs.core.MediaType;
-import java.util.Map;
+
+import org.apache.usergrid.rest.test.resource2point0.endpoints.NamedResource;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.UrlResource;
+import org.apache.usergrid.rest.test.resource2point0.model.Application;
+import org.apache.usergrid.rest.test.resource2point0.model.*;
+import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 /**
  * Classy class class.
@@ -40,9 +37,31 @@ public class ApplicationResource extends NamedResource {
         super("applications", context, parent);
     }
 
+    public ApplicationResource( final String name, final ClientContext context, final UrlResource parent ) {
+        super( name, context, parent );
+    }
+
+    public ApplicationResource addToPath( String pathPart ) {
+        return new ApplicationResource( pathPart, context, this );
+    }
+
+
     public void post(Application application) {
         getResource(true).type(MediaType.APPLICATION_JSON_TYPE)
                 .accept(MediaType.APPLICATION_JSON).post(application);
     }
 
+    public Entity post(Entity payload){
+        ApiResponse response = getResource(true).type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
+            .post(ApiResponse.class, payload);
+        return new Entity(response);
+    }
+
+
+    public Entity get() {
+        ApiResponse response = getResource(true).type(MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
+            .get(ApiResponse.class);
+
+        return new Entity(response);
+    }
 }

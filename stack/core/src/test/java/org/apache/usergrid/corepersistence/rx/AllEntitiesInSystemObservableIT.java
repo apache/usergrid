@@ -23,12 +23,19 @@ package org.apache.usergrid.corepersistence.rx;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.usergrid.corepersistence.rx.impl.AllEntitiesInSystemObservableImpl;
+import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.core.rx.AllEntitiesInSystemObservable;
+import org.apache.usergrid.persistence.core.rx.ApplicationObservable;
+import org.apache.usergrid.persistence.core.scope.ApplicationEntityGroup;
+import org.apache.usergrid.persistence.core.scope.EntityIdScope;
+import org.apache.usergrid.persistence.graph.serialization.TargetIdObservable;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.corepersistence.CpSetup;
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.corepersistence.EntityWriteHelper;
 import org.apache.usergrid.corepersistence.ManagerCache;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
@@ -37,6 +44,8 @@ import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.model.entity.Id;
+
+import com.google.inject.Injector;
 
 import rx.functions.Action1;
 
@@ -54,6 +63,9 @@ public class AllEntitiesInSystemObservableIT extends AbstractCoreIT {
 
     @Test
     public void testEntities() throws Exception {
+        Injector injector =  SpringResource.getInstance().getBean(Injector.class);
+        AllEntitiesInSystemObservable allEntitiesInSystemObservableImpl =injector.getInstance(AllEntitiesInSystemObservable.class);
+        TargetIdObservable targetIdObservable = injector.getInstance(TargetIdObservable.class);
 
         final EntityManager em = app.getEntityManager();
 
@@ -83,7 +95,7 @@ public class AllEntitiesInSystemObservableIT extends AbstractCoreIT {
         //this is hacky, but our context integration b/t guice and spring is a mess.  We need to clean this up when we
         //clean up our wiring
         //
-        ManagerCache managerCache = CpSetup.getInjector().getInstance( ManagerCache.class );
+        ManagerCache managerCache =  SpringResource.getInstance().getBean( Injector.class ).getInstance( ManagerCache.class );
 
 
         final ApplicationScope scope = CpNamingUtils.getApplicationScope( app.getId() );
@@ -92,9 +104,9 @@ public class AllEntitiesInSystemObservableIT extends AbstractCoreIT {
 
         final GraphManager gm = managerCache.getGraphManager( scope );
 
-        AllEntitiesInSystemObservable.getAllEntitiesInSystem( managerCache, 1000 ).doOnNext( new Action1<AllEntitiesInSystemObservable.ApplicationEntityGroup>() {
+        allEntitiesInSystemObservableImpl.getAllEntitiesInSystem( 1000).doOnNext( new Action1<ApplicationEntityGroup<CollectionScope>>() {
             @Override
-            public void call( final AllEntitiesInSystemObservable.ApplicationEntityGroup entity ) {
+            public void call( final ApplicationEntityGroup<CollectionScope> entity ) {
 
                 assertNotNull(entity);
                 assertNotNull(entity.applicationScope);
@@ -105,14 +117,14 @@ public class AllEntitiesInSystemObservableIT extends AbstractCoreIT {
                     return;
                 }
 
-                for(Id id: entity.entityIds) {
+                for(EntityIdScope<CollectionScope> idScope : entity.entityIds) {
 
                     //we should only emit each node once
-                    if ( id.getType().equals( type1 ) ) {
-                        assertTrue( "Element should be present on removal", type1Identities.remove( id ) );
+                    if ( idScope.getId().getType().equals( type1 ) ) {
+                        assertTrue( "Element should be present on removal", type1Identities.remove(idScope.getId() ) );
                     }
-                    else if ( id.getType().equals( type2 ) ) {
-                        assertTrue( "Element should be present on removal", type2Identities.remove( id ) );
+                    else if ( idScope.getId().getType().equals( type2 ) ) {
+                        assertTrue( "Element should be present on removal", type2Identities.remove(idScope.getId() ) );
                     }
                 }
             }
@@ -125,7 +137,7 @@ public class AllEntitiesInSystemObservableIT extends AbstractCoreIT {
 
         //test connections
 
-        TargetIdObservable.getTargetNodes( gm, source ).doOnNext( new Action1<Id>() {
+        targetIdObservable.getTargetNodes( gm, source ).doOnNext( new Action1<Id>() {
             @Override
             public void call( final Id target ) {
 

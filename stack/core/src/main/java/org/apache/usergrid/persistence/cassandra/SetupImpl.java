@@ -60,19 +60,14 @@ public class SetupImpl implements Setup {
 
     public synchronized void init() throws Exception {
         cass.init();
-        setupSystemKeyspace();
-        setupStaticKeyspace();
-        createDefaultApplications();
     }
 
 
     public void createDefaultApplications() throws Exception {
         // TODO unique check?
-        ( ( EntityManagerFactory ) emf ).initializeApplication( 
-                DEFAULT_ORGANIZATION, emf.getDefaultAppId(), DEFAULT_APPLICATION, null );
+        emf.initializeApplication( DEFAULT_ORGANIZATION, emf.getDefaultAppId(), DEFAULT_APPLICATION, null );
 
-        ( ( EntityManagerFactory ) emf ).initializeApplication( 
-                DEFAULT_ORGANIZATION, emf.getManagementAppId(), MANAGEMENT_APPLICATION, null );
+        emf.initializeApplication( DEFAULT_ORGANIZATION, emf.getManagementAppId(), MANAGEMENT_APPLICATION, null );
     }
 
 
@@ -85,16 +80,16 @@ public class SetupImpl implements Setup {
 
         logger.info( "Initialize system keyspace" );
 
-        cass.createColumnFamily( SYSTEM_KEYSPACE, createColumnFamilyDefinition( 
+        cass.createColumnFamily( SYSTEM_KEYSPACE, createColumnFamilyDefinition(
                 SYSTEM_KEYSPACE, APPLICATIONS_CF, ComparatorType.BYTESTYPE ) );
 
-        cass.createColumnFamily( SYSTEM_KEYSPACE, createColumnFamilyDefinition( 
+        cass.createColumnFamily( SYSTEM_KEYSPACE, createColumnFamilyDefinition(
                 SYSTEM_KEYSPACE, PROPERTIES_CF, ComparatorType.BYTESTYPE ) );
 
-        cass.createColumnFamily( SYSTEM_KEYSPACE, createColumnFamilyDefinition( 
+        cass.createColumnFamily( SYSTEM_KEYSPACE, createColumnFamilyDefinition(
                 SYSTEM_KEYSPACE, TOKENS_CF, ComparatorType.BYTESTYPE ) );
 
-        cass.createColumnFamily( SYSTEM_KEYSPACE, createColumnFamilyDefinition( 
+        cass.createColumnFamily( SYSTEM_KEYSPACE, createColumnFamilyDefinition(
                 SYSTEM_KEYSPACE, PRINCIPAL_TOKEN_CF, ComparatorType.UUIDTYPE ) );
 
         logger.info( "System keyspace initialized" );
@@ -110,16 +105,16 @@ public class SetupImpl implements Setup {
      * @throws Exception the exception
      */
     @Override
-    public void setupApplicationKeyspace( 
+    public void setupApplicationKeyspace(
             final UUID applicationId, String applicationName ) throws Exception {
 
         if ( !USE_VIRTUAL_KEYSPACES ) {
             String app_keyspace = keyspaceForApplication( applicationId );
 
-            logger.info( "Creating application keyspace " + app_keyspace + " for " 
+            logger.info( "Creating application keyspace " + app_keyspace + " for "
                     + applicationName + " application" );
 
-            cass.createColumnFamily( app_keyspace, createColumnFamilyDefinition( 
+            cass.createColumnFamily( app_keyspace, createColumnFamilyDefinition(
                     SYSTEM_KEYSPACE, APPLICATIONS_CF, ComparatorType.BYTESTYPE ) );
 
             cass.createColumnFamilies( app_keyspace, getCfDefs( ApplicationCF.class, app_keyspace));
@@ -177,10 +172,10 @@ public class SetupImpl implements Setup {
 
     static class SystemDefaults {
 
-        private static final Application managementApp = 
+        private static final Application managementApp =
                 new Application( EntityManagerFactoryImpl.MANAGEMENT_APPLICATION_ID);
 
-        private static final Application defaultApp = 
+        private static final Application defaultApp =
                 new Application( EntityManagerFactoryImpl.DEFAULT_APPLICATION_ID);
 
         static {
