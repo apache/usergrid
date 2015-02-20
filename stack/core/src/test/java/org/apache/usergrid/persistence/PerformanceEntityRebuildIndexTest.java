@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -60,7 +61,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
     private static final MetricRegistry registry = new MetricRegistry();
     private Slf4jReporter reporter;
 
-    private static final long RUNTIME_MS = TimeUnit.SECONDS.toMillis( 3 );
+    private static final long RUNTIME_MS = TimeUnit.SECONDS.toMillis( 10 );
 
     private static final long WRITE_DELAY_MS = 10;
 
@@ -92,7 +93,10 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
         logger.info("Started rebuildIndex()");
 
-        final EntityManager em = app.getEntityManager();
+        String rand = RandomStringUtils.randomAlphanumeric(5);
+        final UUID appId = setup.createApplication("org_" + rand, "app_" + rand);
+
+        final EntityManager em = setup.getEmf().getEntityManager( appId );
 
         // ----------------- create a bunch of entities
 
@@ -101,40 +105,50 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
             put("key2", 2000 );
             put("key3", "Some value");
         }};
-        Map<String, Object> cat1map = new HashMap<String, Object>() {{
-            put("name", "enzo");
-            put("color", "orange");
-        }};
-        Map<String, Object> cat2map = new HashMap<String, Object>() {{
-            put("name", "marquee");
-            put("color", "grey");
-        }};
-        Map<String, Object> cat3map = new HashMap<String, Object>() {{
-            put("name", "bertha");
-            put("color", "tabby");
-        }};
 
-        Entity cat1 = em.create("cat", cat1map );
-        Entity cat2 = em.create("cat", cat2map );
-        Entity cat3 = em.create("cat", cat3map );
+//        Map<String, Object> cat1map = new HashMap<String, Object>() {{
+//            put("name", "enzo");
+//            put("color", "orange");
+//        }};
+//        Map<String, Object> cat2map = new HashMap<String, Object>() {{
+//            put("name", "marquee");
+//            put("color", "grey");
+//        }};
+//        Map<String, Object> cat3map = new HashMap<String, Object>() {{
+//            put("name", "bertha");
+//            put("color", "tabby");
+//        }};
+//
+//        Entity cat1 = em.create("cat", cat1map );
+//        Entity cat2 = em.create("cat", cat2map );
+//        Entity cat3 = em.create("cat", cat3map );
 
         final long stopTime = System.currentTimeMillis() + RUNTIME_MS;
 
         List<EntityRef> entityRefs = new ArrayList<EntityRef>();
         int entityCount = 0;
+        int herderCount  = 0;
+        int shepardCount = 0;
         while ( System.currentTimeMillis() < stopTime ) {
 
             final Entity entity;
 
             try {
                 entityMap.put("key", entityCount );
-                entity = em.create("testType", entityMap );
+
+                if ( entityCount % 2 == 0 ) {
+                    entity = em.create("catherder", entityMap);
+                    herderCount++;
+                } else {
+                    entity = em.create("catshepard", entityMap);
+                    shepardCount++;
+                }
 
                 em.refreshIndex();
 
-                em.createConnection(entity, "herds", cat1);
-                em.createConnection(entity, "herds", cat2);
-                em.createConnection(entity, "herds", cat3);
+//                em.createConnection(entity, "herds", cat1);
+//                em.createConnection(entity, "herds", cat2);
+//                em.createConnection(entity, "herds", cat3);
 
             } catch (Exception ex) {
                 throw new RuntimeException("Error creating entity", ex);
@@ -155,24 +169,25 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
         // ----------------- test that we can read them, should work fine
 
         logger.debug("Read the data");
-        readData("testTypes", entityCount );
+        readData( em, "catherders", herderCount, 0);
+        readData( em, "catshepards", shepardCount, 0);
 
         // ----------------- delete the system and application indexes
 
-        logger.debug("Deleting app index and system app index");
-        deleteIndex( CpNamingUtils.SYSTEM_APP_ID );
+        logger.debug("Deleting app index index");
+        //deleteIndex( CpNamingUtils.SYSTEM_APP_ID );
         deleteIndex( em.getApplicationId() );
 
         // ----------------- test that we can read them, should fail
 
         logger.debug("Reading data, should fail this time ");
         try {
-            readData( "testTypes", entityCount );
+            readData( em,  "testTypes", entityCount, 0 );
             fail("should have failed to read data");
 
         } catch (Exception expected) {}
 
-        // ----------------- rebuild index
+        // ----------------- rebuild index for catherders only
 
         logger.debug("Preparing to rebuild all indexes");;
 
@@ -203,7 +218,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
         try {
 
-            setup.getEmf().rebuildApplicationIndexes( em.getApplicationId(), po );
+            setup.getEmf().rebuildCollectionIndex( em.getApplicationId(), "catherders", false, po );
 
             reporter.report();
             registry.remove( meterName );
@@ -214,9 +229,10 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
             fail();
         }
 
-        // ----------------- test that we can read them
+        // ----------------- test that we can read the catherder collection and not the catshepard
 
-        readData( "testTypes", entityCount );
+        readData( em, "catherders", herderCount, 0 );
+        readData( em, "catshepards", 0, 0 );
     }
 
 
@@ -225,7 +241,10 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
         logger.info("Started rebuildIndex()");
 
-        final EntityManager em = app.getEntityManager();
+        String rand = RandomStringUtils.randomAlphanumeric(5);
+        final UUID appId = setup.createApplication("org_" + rand, "app_" + rand);
+
+        final EntityManager em = setup.getEmf().getEntityManager(appId);
 
         // ----------------- create a bunch of entities
 
@@ -288,19 +307,19 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
         // ----------------- test that we can read them, should work fine
 
         logger.debug("Read the data");
-        readData("testTypes", entityCount );
+        readData( em, "testTypes", entityCount, 3 );
 
         // ----------------- delete the system and application indexes
 
         logger.debug("Deleting app index and system app index");
-        deleteIndex( CpNamingUtils.SYSTEM_APP_ID );
+        //deleteIndex( CpNamingUtils.SYSTEM_APP_ID );
         deleteIndex( em.getApplicationId() );
 
         // ----------------- test that we can read them, should fail
 
         logger.debug("Reading data, should fail this time ");
         try {
-            readData( "testTypes", entityCount );
+            readData( em, "testTypes", entityCount, 3 );
             fail("should have failed to read data");
 
         } catch (Exception expected) {}
@@ -349,7 +368,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
         // ----------------- test that we can read them
 
-        readData( "testTypes", entityCount );
+        readData( em, "testTypes", entityCount, 3 );
     }
 
     /**
@@ -369,9 +388,9 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
     }
 
 
-    private int readData( String collectionName, int expected ) throws Exception {
+    private int readData( EntityManager em,
+        String collectionName, int expectedEntities, int expectedConnections ) throws Exception {
 
-        EntityManager em = app.getEntityManager();
         em.refreshIndex();
 
         Query q = Query.fromQL("select * where key1=1000");
@@ -387,7 +406,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
                 Results catResults = em.searchConnectedEntities(e,
                     Query.fromQL("select *").setConnectionType( "herds" ));
-                assertEquals( 3, catResults.size() );
+                assertEquals( expectedConnections, catResults.size() );
 
                 if ( count % 100 == 0 ) {
                     logger.info( "read {} entities", count);
@@ -405,9 +424,9 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
             }
         }
 
-        if ( expected != -1 && expected != count ) {
+        if ( expectedEntities != -1 && expectedEntities != count ) {
             throw new RuntimeException("Did not get expected "
-                    + expected + " entities, instead got " + count );
+                    + expectedEntities + " entities, instead got " + count );
         }
         return count;
     }

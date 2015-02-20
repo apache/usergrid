@@ -704,7 +704,7 @@ public interface EntityManager {
     public void flushManagerCaches();
 
     void reindexCollection(
-        EntityManagerFactory.ProgressObserver po, String collectionName) throws Exception;
+        EntityManagerFactory.ProgressObserver po, String collectionName, boolean reverse) throws Exception;
 
     public void reindex( final EntityManagerFactory.ProgressObserver po ) throws Exception;
 

@@ -2932,7 +2932,9 @@ public class EntityManagerImpl implements EntityManager {
     }
 
     @Override
-    public void reindexCollection(EntityManagerFactory.ProgressObserver po, String collectionName) throws Exception {
+    public void reindexCollection(
+        EntityManagerFactory.ProgressObserver po, String collectionName, boolean reverse) throws Exception {
+
         throw new UnsupportedOperationException("Not supported.");
     }
 

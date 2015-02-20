@@ -56,15 +56,17 @@ public class CpWalker {
 
 
     public void walkCollections(final CpEntityManager em, final EntityRef start,
-                                String collectionName, final CpVisitor visitor) throws Exception {
+        String collectionName, boolean reverse, final CpVisitor visitor) throws Exception {
 
-        doWalkCollections( em, collectionName, new SimpleId( start.getUuid(), start.getType() ), visitor );
+        doWalkCollections(
+            em, collectionName, reverse, new SimpleId( start.getUuid(), start.getType() ), visitor );
     }
 
 
     private void doWalkCollections(
             final CpEntityManager em,
             final String collectionName,
+            final boolean reverse,
             final Id applicationId,
             final CpVisitor visitor ) {
 
@@ -80,12 +82,20 @@ public class CpWalker {
                 applicationScope.getApplication().getUuid()
             } );
 
-        // only search edge types that start with collections
+        final SearchByEdgeType.Order order;
+        if ( reverse ) {
+            order = SearchByEdgeType.Order.ASCENDING;
+        } else {
+            order = SearchByEdgeType.Order.DESCENDING;
+        }
 
         final String edgeType;
-        if ( collectionName != null ) {
+        if ( collectionName == null ) {
+            // only search edge types that end with collections suffix
             edgeType = CpNamingUtils.EDGE_COLL_SUFFIX;
+
         } else {
+            // only search edges to one collection
             edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( collectionName );
         }
 
@@ -99,7 +109,7 @@ public class CpWalker {
                 logger.debug( "Loading edges of type {} from node {}", edgeType, applicationId );
 
                 return gm.loadEdgesFromSource(  new SimpleSearchByEdgeType(
-                    applicationId, edgeType, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING, null ) );
+                    applicationId, edgeType, Long.MAX_VALUE, order , null ) );
 
             }
 

@@ -2745,11 +2745,12 @@ public class CpEntityManager implements EntityManager {
      */
     @Override
     public void reindexCollection(
-        final EntityManagerFactory.ProgressObserver po, String collectionName) throws Exception {
+        final EntityManagerFactory.ProgressObserver po, String collectionName, boolean reverse) throws Exception {
 
         CpWalker walker = new CpWalker( );
 
-        walker.walkCollections( this, application, collectionName, new CpVisitor() {
+        walker.walkCollections(
+            this, application, collectionName, reverse, new CpVisitor() {
 
             @Override
             public void visitCollectionEntry( EntityManager em, String collName, Entity entity ) {
@@ -2759,9 +2760,9 @@ public class CpEntityManager implements EntityManager {
                     po.onProgress( entity );
                 }
                 catch ( WriteOptimisticVerifyException wo ) {
-                    //swallow this, it just means this was already updated, which accomplishes our task.  Just ignore.
-                    logger.warn( "Someone beat us to updating entity {} in collection {}.  Ignoring.", entity.getName(),
-                        collName );
+                    // swallow this, it just means this was already updated, which accomplishes our task
+                    logger.warn( "Someone beat us to updating entity {} in collection {}.  Ignoring.",
+                        entity.getName(), collName );
                 }
                 catch ( Exception ex ) {
                     logger.error( "Error repersisting entity", ex );
@@ -2778,23 +2779,23 @@ public class CpEntityManager implements EntityManager {
 
         CpWalker walker = new CpWalker( );
 
-        walker.walkCollections( this, application, null, new CpVisitor() {
+        walker.walkCollections( this, application, null, false, new CpVisitor() {
 
             @Override
             public void visitCollectionEntry( EntityManager em, String collName, Entity entity ) {
 
-                try {
-                    em.update( entity );
-                    po.onProgress( entity );
-                }
-                catch ( WriteOptimisticVerifyException wo ) {
-                    //swallow this, it just means this was already updated, which accomplishes our task.  Just ignore.
-                    logger.warn( "Someone beat us to updating entity {} in collection {}.  Ignoring.", entity.getName(),
-                            collName );
-                }
-                catch ( Exception ex ) {
-                    logger.error( "Error repersisting entity", ex );
-                }
+            try {
+                em.update( entity );
+                po.onProgress( entity );
+            }
+            catch ( WriteOptimisticVerifyException wo ) {
+                //swallow this, it just means this was already updated, which accomplishes our task.
+                logger.warn( "Someone beat us to updating entity {} in collection {}.  Ignoring.",
+                    entity.getName(), collName );
+            }
+            catch ( Exception ex ) {
+                logger.error( "Error repersisting entity", ex );
+            }
             }
         } );
     }

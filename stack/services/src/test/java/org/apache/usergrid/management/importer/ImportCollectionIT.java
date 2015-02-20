@@ -110,7 +110,8 @@ public class ImportCollectionIT {
         bucketPrefix = System.getProperty( "bucketName" );
 
         // start the scheduler after we're all set up
-        JobSchedulerService jobScheduler = ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( JobSchedulerService.class );
+        JobSchedulerService jobScheduler = ConcurrentProcessSingleton.getInstance()
+            .getSpringResource().getBean( JobSchedulerService.class );
         if ( jobScheduler.state() != Service.State.RUNNING ) {
             jobScheduler.startAsync();
             jobScheduler.awaitRunning();
@@ -481,7 +482,8 @@ public class ImportCollectionIT {
 
         ImportService importService = setup.getImportService();
 
-        Import importEntity = importService.schedule(em.getApplication().getUuid(),  new HashMap<String, Object>() {{
+        Import importEntity = importService.schedule(em.getApplication().getUuid(),
+            new HashMap<String, Object>() {{
             put( "path", organization.getName() + em.getApplication().getName() );
             put( "organizationId", organization.getUuid() );
             put( "applicationId", em.getApplication().getUuid() );

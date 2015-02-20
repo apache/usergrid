@@ -423,6 +423,11 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
     }
 
     @Override
+    public void rebuildCollectionIndex(UUID appId, String collection, boolean reverse, ProgressObserver po) throws Exception {
+        throw new UnsupportedOperationException("Not supported.");
+    }
+
+    @Override
     public void rebuildInternalIndexes(ProgressObserver po) throws Exception {
         throw new UnsupportedOperationException("Not supported.");
     }
@@ -459,12 +464,6 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
     @Override
     public void setMigrationVersion( final int version ) {
         throw new UnsupportedOperationException("Not supported in v1");
-    }
-
-
-    @Override
-    public void rebuildCollectionIndex(UUID appId, String collection, ProgressObserver po) {
-        throw new UnsupportedOperationException("Not supported.");
     }
 
     @Override
