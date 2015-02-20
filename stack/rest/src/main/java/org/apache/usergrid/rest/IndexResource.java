@@ -142,7 +142,7 @@ public class IndexResource extends AbstractContextResource {
                     emf.rebuildApplicationIndexes( appId, po );
                 }
                 catch ( Exception e ) {
-                    logger.error( "Unable to re-index application" );
+                    logger.error( "Unable to re-index application", e );
                 }
             }
         };

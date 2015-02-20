@@ -230,19 +230,22 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getUuid(), "Entity id uuid required in load stage" );
         Preconditions.checkNotNull( entityId.getType(), "Entity id type required in load stage" );
 
-        return load( Collections.singleton( entityId ) ).map( new Func1<EntitySet, Entity>() {
+        return load( Collections.singleton( entityId ) ).flatMap( new Func1<EntitySet, Observable<Entity>>() {
             @Override
-            public Entity call( final EntitySet entitySet ) {
+            public Observable<Entity> call( final EntitySet entitySet ) {
                 final MvccEntity entity = entitySet.getEntity( entityId );
 
-                if ( entity == null ) {
-                    return null;
+                if ( entity == null || !entity.getEntity().isPresent() ) {
+                    return Observable.empty();
                 }
 
-                return entity.getEntity().orNull();
+                return Observable.from( entity.getEntity().get() );
             }
         } );
     }
+
+
+
 
 
     @Override

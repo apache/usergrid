@@ -100,7 +100,7 @@ public class CachedEntityCollectionManager implements EntityCollectionManager {
             return Observable.just( entity );
         }
 
-        return Observable.empty();
+        return targetEntityCollectionManager.load( entityId ).doOnNext( cacheAdd );
 
     }
 
