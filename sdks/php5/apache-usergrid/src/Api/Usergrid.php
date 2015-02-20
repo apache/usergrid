@@ -89,7 +89,13 @@ class Usergrid
      * @var array
      */
     protected $headers = [];
+    /**
+     * @var null
+     */
     private $org_name;
+    /**
+     * @var null
+     */
     private $app_name;
 
     /**

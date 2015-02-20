@@ -44,7 +44,17 @@ class ApacheUsergridServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        $this->package('apache/usergrid', 'apache/usergrid', __DIR__ . '/..');
+        // Publish config file to config folder . It's tagged with `config` so if you only want ot
+        // publish the config files and not the manifest files then use --tag=config when calling vendor:publish
+        $this->publishes([
+            dirname(dirname(__FILE__)).'/config/config.php' => config_path('usergrid.php')
+        ], 'config');
+
+        // Publish the Guzzle Web service descriptor files if you would like to edit or extend them
+        // its been tagged with `manifest` so call vendor:publish --tag=manifest
+        $this->publishes([
+            dirname(dirname(__FILE__)).'/Manifests/' => base_path('/resources/manifests/')
+        ], 'manifests');
     }
 
     /**
@@ -65,8 +75,8 @@ class ApacheUsergridServiceProvider extends ServiceProvider
         $this->app['usergrid'] = $this->app->share(function ($app) {
 
             /** Note: I had to move this to here from the register function as the below config values would not get set and would be null
-             * unless I has this with the package namespace missing but doing that would mean that it would not find the  enable_oauth2_plugin
-             * value .. This has been driving me crazy as I tried to read the config values from a rout and they would not show up
+             * unless I had this with the package namespace missing but doing that would mean that it would not find the  enable_oauth2_plugin
+             * value .. This has been driving me crazy as I tried to read the config values from a route and they would not show up
              * then I did . Also this would not find the config values if the boot function did not have the package method called with
              * all 3 args
              * $enable_oauth2_plugin = $this->app['config']->get('usergrid.enable_oauth2_plugin');
@@ -77,7 +87,7 @@ class ApacheUsergridServiceProvider extends ServiceProvider
              * $this->createGuzzleOauth2Plugin();
              * }
              */
-            $enable_oauth2_plugin = $app['config']->get('apache/usergrid::usergrid.enable_oauth2_plugin');
+            $enable_oauth2_plugin = $app['config']->get('usergrid.enable_oauth2_plugin');
 
             //check if user managed oauth auth flow
             if ($enable_oauth2_plugin) {
@@ -85,15 +95,15 @@ class ApacheUsergridServiceProvider extends ServiceProvider
                 $this->createGuzzleOauth2Plugin();
             }
 
-            $baseUrl = $app['config']->get('apache/usergrid::usergrid.url');
+            $baseUrl = $app['config']->get('usergrid.url');
 
-            $orgName = $app['config']->get('apache/usergrid::usergrid.orgName');
+            $orgName = $app['config']->get('usergrid.orgName');
 
-            $appName = $app['config']->get('apache/usergrid::usergrid.appName');
+            $appName = $app['config']->get('usergrid.appName');
 
-            $manifestPath = $app['config']->get('apache/usergrid::usergrid.manifestPath');
+            $manifestPath = $app['config']->get('usergrid.manifestPath');
 
-            $version = $app['config']->get('apache/usergrid::usergrid.version');
+            $version = $app['config']->get('usergrid.version');
 
             return new Usergrid($orgName, $appName, $manifestPath, $version, $baseUrl, $this->oauth2Plugin);
         });
@@ -105,28 +115,28 @@ class ApacheUsergridServiceProvider extends ServiceProvider
     protected function createGuzzleOauth2Plugin()
     {
 
-        $base_url = $this->app['config']->get('apache/usergrid::usergrid.url');
+        $base_url = $this->app['config']->get('usergrid.url');
 
-        $org_name = $this->app['config']->get('apache/usergrid::usergrid.orgName');
+        $org_name = $this->app['config']->get('usergrid.orgName');
 
-        $app_name = $this->app['config']->get('apache/usergrid::usergrid.appName');
+        $app_name = $this->app['config']->get('usergrid.appName');
 
-        $grant_type = $this->app['config']->get('apache/usergrid::usergrid.grant_type');
+        $grant_type = $this->app['config']->get('usergrid.grant_type');
 
-        $client_id = $this->app['config']->get('apache/usergrid::usergrid.clientId');
+        $client_id = $this->app['config']->get('usergrid.clientId');
 
-        $client_secret = $this->app['config']->get('apache/usergrid::usergrid.clientSecret');
+        $client_secret = $this->app['config']->get('usergrid.clientSecret');
 
-        $username = $this->app['config']->get('apache/usergrid::usergrid.username');
+        $username = $this->app['config']->get('usergrid.username');
 
-        $password = $this->app['config']->get('apache/usergrid::usergrid.password');
+        $password = $this->app['config']->get('usergrid.password');
 
 
-        if ($this->app['config']->get('apache/usergrid::usergrid.auth_type') == 'organization') {
+        if ($this->app['config']->get('usergrid.auth_type') == 'organization') {
 
             $url = $base_url . '/management/token';
 
-        } elseif ($this->app['config']->get('apache/usergrid::usergrid.auth_type') == 'application') {
+        } elseif ($this->app['config']->get('usergrid.auth_type') == 'application') {
             $url = $base_url . '/' . $org_name . '/' . $app_name . '/token';
         }
 
