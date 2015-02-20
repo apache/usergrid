@@ -117,22 +117,32 @@ public class IndexResource extends AbstractContextResource {
 
         final UUID appId = UUIDUtils.tryExtractUUID(applicationIdStr);
         ApiResponse response = createApiResponse();
-        response.setAction( "rebuild indexes" );
+        response.setAction( "rebuild indexes started" );
+
+        final EntityManagerFactory.ProgressObserver po = new EntityManagerFactory.ProgressObserver() {
+
+            @Override
+            public void onProgress( final EntityRef entity ) {
+                logger.info( "Indexing entity {}:{}", entity.getType(), entity.getUuid() );
+            }
 
 
-        final EntityManager em = emf.getEntityManager( appId );
+            @Override
+            public long getWriteDelayTime() {
+                return delay;
+            }
+        };
 
-        final Set<String> collectionNames = em.getApplicationCollections();
 
         final Thread rebuild = new Thread() {
 
             @Override
             public void run() {
-                for ( String collectionName : collectionNames )
-
-
-                {
-                    rebuildCollection( appId, collectionName, delay );
+                try {
+                    emf.rebuildApplicationIndexes( appId, po );
+                }
+                catch ( Exception e ) {
+                    logger.error( "Unable to re-index application" );
                 }
             }
         };
