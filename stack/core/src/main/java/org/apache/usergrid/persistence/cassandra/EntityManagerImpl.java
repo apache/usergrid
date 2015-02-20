@@ -2932,6 +2932,11 @@ public class EntityManagerImpl implements EntityManager {
     }
 
     @Override
+    public void reindexCollection(EntityManagerFactory.ProgressObserver po, String collectionName) throws Exception {
+        throw new UnsupportedOperationException("Not supported.");
+    }
+
+    @Override
     public void reindex(EntityManagerFactory.ProgressObserver po) throws Exception {
         throw new UnsupportedOperationException("Not supported.");
     }

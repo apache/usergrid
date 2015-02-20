@@ -32,8 +32,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,10 +103,6 @@ import org.apache.usergrid.utils.StringUtils;
 import org.apache.usergrid.utils.UUIDUtils;
 
 import com.google.common.base.Preconditions;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.CacheLoader.InvalidCacheLoadException;
-import com.google.common.cache.LoadingCache;
 import com.netflix.hystrix.exception.HystrixRuntimeException;
 import com.yammer.metrics.annotation.Metered;
 
@@ -150,7 +144,6 @@ import static org.apache.usergrid.persistence.Schema.PROPERTY_TYPE;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 import static org.apache.usergrid.persistence.Schema.TYPE_ENTITY;
-import static org.apache.usergrid.persistence.SimpleEntityRef.getUuid;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.APPLICATION_AGGREGATE_COUNTERS;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_COMPOSITE_DICTIONARIES;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_COUNTERS;
@@ -2746,6 +2739,38 @@ public class CpEntityManager implements EntityManager {
     }
 
 
+
+    /**
+     * Completely reindex the named collection in the application associated with this EntityManager.
+     */
+    @Override
+    public void reindexCollection(
+        final EntityManagerFactory.ProgressObserver po, String collectionName) throws Exception {
+
+        CpWalker walker = new CpWalker( );
+
+        walker.walkCollections( this, application, collectionName, new CpVisitor() {
+
+            @Override
+            public void visitCollectionEntry( EntityManager em, String collName, Entity entity ) {
+
+                try {
+                    em.update( entity );
+                    po.onProgress( entity );
+                }
+                catch ( WriteOptimisticVerifyException wo ) {
+                    //swallow this, it just means this was already updated, which accomplishes our task.  Just ignore.
+                    logger.warn( "Someone beat us to updating entity {} in collection {}.  Ignoring.", entity.getName(),
+                        collName );
+                }
+                catch ( Exception ex ) {
+                    logger.error( "Error repersisting entity", ex );
+                }
+            }
+        } );
+    }
+
+
     /**
      * Completely reindex the application associated with this EntityManager.
      */
@@ -2753,7 +2778,7 @@ public class CpEntityManager implements EntityManager {
 
         CpWalker walker = new CpWalker( );
 
-        walker.walkCollections( this, application, new CpVisitor() {
+        walker.walkCollections( this, application, null, new CpVisitor() {
 
             @Override
             public void visitCollectionEntry( EntityManager em, String collName, Entity entity ) {

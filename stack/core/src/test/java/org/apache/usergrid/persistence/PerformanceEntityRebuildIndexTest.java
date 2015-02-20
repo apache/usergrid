@@ -88,6 +88,139 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
 
     @Test
+    public void rebuildOneCollectionIndex() throws Exception {
+
+        logger.info("Started rebuildIndex()");
+
+        final EntityManager em = app.getEntityManager();
+
+        // ----------------- create a bunch of entities
+
+        Map<String, Object> entityMap = new HashMap<String, Object>() {{
+            put("key1", 1000 );
+            put("key2", 2000 );
+            put("key3", "Some value");
+        }};
+        Map<String, Object> cat1map = new HashMap<String, Object>() {{
+            put("name", "enzo");
+            put("color", "orange");
+        }};
+        Map<String, Object> cat2map = new HashMap<String, Object>() {{
+            put("name", "marquee");
+            put("color", "grey");
+        }};
+        Map<String, Object> cat3map = new HashMap<String, Object>() {{
+            put("name", "bertha");
+            put("color", "tabby");
+        }};
+
+        Entity cat1 = em.create("cat", cat1map );
+        Entity cat2 = em.create("cat", cat2map );
+        Entity cat3 = em.create("cat", cat3map );
+
+        final long stopTime = System.currentTimeMillis() + RUNTIME_MS;
+
+        List<EntityRef> entityRefs = new ArrayList<EntityRef>();
+        int entityCount = 0;
+        while ( System.currentTimeMillis() < stopTime ) {
+
+            final Entity entity;
+
+            try {
+                entityMap.put("key", entityCount );
+                entity = em.create("testType", entityMap );
+
+                em.refreshIndex();
+
+                em.createConnection(entity, "herds", cat1);
+                em.createConnection(entity, "herds", cat2);
+                em.createConnection(entity, "herds", cat3);
+
+            } catch (Exception ex) {
+                throw new RuntimeException("Error creating entity", ex);
+            }
+
+            entityRefs.add(new SimpleEntityRef( entity.getType(), entity.getUuid() ) );
+            if ( entityCount % 10 == 0 ) {
+                logger.info("Created {} entities", entityCount );
+            }
+
+            entityCount++;
+            try { Thread.sleep( WRITE_DELAY_MS ); } catch (InterruptedException ignored ) {}
+        }
+
+        logger.info("Created {} entities", entityCount);
+        em.refreshIndex();
+
+        // ----------------- test that we can read them, should work fine
+
+        logger.debug("Read the data");
+        readData("testTypes", entityCount );
+
+        // ----------------- delete the system and application indexes
+
+        logger.debug("Deleting app index and system app index");
+        deleteIndex( CpNamingUtils.SYSTEM_APP_ID );
+        deleteIndex( em.getApplicationId() );
+
+        // ----------------- test that we can read them, should fail
+
+        logger.debug("Reading data, should fail this time ");
+        try {
+            readData( "testTypes", entityCount );
+            fail("should have failed to read data");
+
+        } catch (Exception expected) {}
+
+        // ----------------- rebuild index
+
+        logger.debug("Preparing to rebuild all indexes");;
+
+        final String meterName = this.getClass().getSimpleName() + ".rebuildIndex";
+        final Meter meter = registry.meter( meterName );
+
+        EntityManagerFactory.ProgressObserver po = new EntityManagerFactory.ProgressObserver() {
+            int counter = 0;
+
+            @Override
+            public void onProgress( final EntityRef entity ) {
+
+                meter.mark();
+                logger.debug("Indexing {}:{}", entity.getType(), entity.getUuid());
+                if ( !logger.isDebugEnabled() && counter % 100 == 0 ) {
+                    logger.info("Reindexed {} entities", counter );
+                }
+                counter++;
+            }
+
+
+
+            @Override
+            public long getWriteDelayTime() {
+                return 0;
+            }
+        };
+
+        try {
+
+            setup.getEmf().rebuildApplicationIndexes( em.getApplicationId(), po );
+
+            reporter.report();
+            registry.remove( meterName );
+            logger.info("Rebuilt index");
+
+        } catch (Exception ex) {
+            logger.error("Error rebuilding index", ex);
+            fail();
+        }
+
+        // ----------------- test that we can read them
+
+        readData( "testTypes", entityCount );
+    }
+
+
+    @Test
     public void rebuildIndex() throws Exception {
 
         logger.info("Started rebuildIndex()");
@@ -252,7 +385,8 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
                 assertEquals( 2000, e.getProperty("key2"));
 
-                Results catResults = em.searchConnectedEntities(e, Query.fromQL("select *").setConnectionType( "herds" ));
+                Results catResults = em.searchConnectedEntities(e,
+                    Query.fromQL("select *").setConnectionType( "herds" ));
                 assertEquals( 3, catResults.size() );
 
                 if ( count % 100 == 0 ) {

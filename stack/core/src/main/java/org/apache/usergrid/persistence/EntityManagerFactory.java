@@ -130,32 +130,29 @@ public interface EntityManagerFactory {
 
     /**
      * Return the migration status message
-     * @return
      */
     public String getMigrateDataStatus();
 
     /**
      * Return the current migration version of the system
-     * @return
      */
     public int getMigrateDataVersion();
 
     /**
      * Force the migration version to the specified version
-     * @param version
      */
     public void setMigrationVersion(int version);
 
     /**
      * Perform a realtime count of every entity in the system.  This can be slow as it traverses the entire system graph
-     * @return
      */
     public long performEntityCount();
 
     /** For testing purposes */
     public void flushEntityManagerCaches();
 
-    public void rebuildCollectionIndex(UUID appId, String collection, ProgressObserver object);
+    void rebuildCollectionIndex(
+        UUID appId, String collection, boolean reverse, ProgressObserver po) throws Exception;
 
     /**
      * Add a new index to the application for scale

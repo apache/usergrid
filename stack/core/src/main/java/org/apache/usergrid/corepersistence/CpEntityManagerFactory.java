@@ -597,7 +597,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     public long performEntityCount() {
         //TODO, this really needs to be a task that writes this data somewhere since this will get
         //progressively slower as the system expands
-        return AllEntitiesInSystemObservable.getAllEntitiesInSystem( managerCache, 1000 ).longCount().toBlocking().last();
+        return AllEntitiesInSystemObservable
+            .getAllEntitiesInSystem( managerCache, 1000 ).longCount().toBlocking().last();
     }
 
 
@@ -744,8 +745,19 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     }
 
     @Override
-    public void rebuildCollectionIndex(UUID appId, String collection, ProgressObserver po ) {
-        throw new UnsupportedOperationException( "Not supported yet." );
+    public void rebuildCollectionIndex(
+        UUID appId, String collectionName, boolean reverse, ProgressObserver po ) throws Exception  {
+
+        EntityManager em = getEntityManager( appId );
+
+        //explicitly invoke create index, we don't know if it exists or not in ES during a rebuild.
+        em.createIndex();
+        Application app = em.getApplication();
+
+        em.reindexCollection( po, collectionName, reverse );
+
+        logger.info("\n\nRebuilt index for application {} id {} collection {}\n",
+            new Object[] { app.getName(), appId, collectionName } );
     }
 
     @Override
