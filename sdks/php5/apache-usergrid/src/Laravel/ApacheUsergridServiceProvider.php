@@ -53,7 +53,7 @@ class ApacheUsergridServiceProvider extends ServiceProvider
         // Publish the Guzzle Web service descriptor files if you would like to edit or extend them
         // its been tagged with `manifest` so call vendor:publish --tag=manifest
         $this->publishes([
-            dirname(dirname(__FILE__)).'/Manifests/' => base_path('/resources/manifests/')
+            dirname(dirname(__FILE__)).'/Manifests/' => base_path('/storage/manifests/')
         ], 'manifests');
     }
 
