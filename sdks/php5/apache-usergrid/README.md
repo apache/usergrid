@@ -10,14 +10,9 @@ install as composer package by adding this to your composer.json file.
     "apache-usergrid" : "dev-master" 
 ```
 
-and add the URL to the repositories section within your composer.json file.
 
-```
-    "repositories": [{
-        "type" : "vcs",
-        "url" : "https://apps4u@bitbucket.org/apps4u/apache-usergrid.git"
-    }]
-```
+This has now been uploaded to https://packagist.org
+
 
 import the classes ``` include autoload.php ``` then create a new instance of the class with a path to you config file
 or native use just create a config file
@@ -73,9 +68,20 @@ or native use just create a config file
 
 ### Laravel
 
-In Laravel once you have install the composer package you then publish the config file like ```php artisan config:publish apache/usergrid ``` which will publish the config file to the app/config/packages/apache/usergrid/config.php 
-then add your client_id and secret to the config file the set the service provider in the app/config.php providers array ```Apache\Usergrid\Laravel\ApacheUsergridServiceProvider``` and add the alias to
-the aliases array ```'Usergrid' => 'Apache\Usergrid\Laravel\Facades\Usergrid``` to be able to access class via a Facade. Example for Laravel
+In Laravel once you have install the composer package you then publish the config file, With Laravel 5 their has been changes in the way config files and assets are published.
+So now if you want to publish the config file only you can run 
+
+    php artisan vendor:publish --tag='config'
+this will publish the usergrid.php config file to the config folder. If you also want to extend the Guzzle web service descriptors then you can publish the manifest folder to the resources folder by calling
+
+    php artisan vendor:publish --tag='manifests'
+This will publish the manifests folder into your resources folder. For this new publish feature to work you must first add the service provider to the providers array in the config/app.php 
+
+    Apache\Usergrid\Laravel\ApacheUsergridServiceProvider
+and for the Facades you can add this 
+
+    'Usergrid' => 'Apache\Usergrid\Laravel\Facades\Usergrid'
+to the aliases array which will let you use the Static facades calling method like .
 
 ```
     $collection = Usergrid::application()->EntityGet(['collection' => 'shops']);
