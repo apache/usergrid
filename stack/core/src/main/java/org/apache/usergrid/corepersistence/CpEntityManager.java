@@ -2751,7 +2751,7 @@ public class CpEntityManager implements EntityManager {
      */
     public void reindex( final EntityManagerFactory.ProgressObserver po ) throws Exception {
 
-        CpWalker walker = new CpWalker( po.getWriteDelayTime() );
+        CpWalker walker = new CpWalker( );
 
         walker.walkCollections( this, application, new CpVisitor() {
 

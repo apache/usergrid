@@ -83,6 +83,9 @@ public class CpSetup implements Setup {
     @Override
     public void init() throws Exception {
         //a no op, creating the injector creates the connections
+        setupStaticKeyspace();
+        setupSystemKeyspace();
+        createDefaultApplications();
 
     }
 

@@ -52,7 +52,6 @@ public class OrganizationIT {
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
-
     @ClassRule
     public static ServiceITSetup setup = new ServiceITSetupImpl();
 
@@ -62,53 +61,54 @@ public class OrganizationIT {
 
     @Test
     public void testCreateOrganization() throws Exception {
-        UserInfo user =
-                setup.getMgmtSvc().createAdminUser( uniqueUsername(), "Ed Anuff", uniqueEmail(), "test", false, false );
-        assertNotNull( user );
+//        UserInfo user =
+//                setup.getMgmtSvc().createAdminUser( uniqueUsername(), "Ed Anuff", uniqueEmail(), "test", false, false );
+//        assertNotNull( user );
 
         final String orgName =  uniqueOrg();
-
-        OrganizationInfo organization = setup.getMgmtSvc().createOrganization( orgName, user, false );
+        OrganizationOwnerInfo organization = newOrgAppAdminRule.createOwnerAndOrganization( orgName, uniqueUsername(), uniqueEmail(),"Ed Anuff", "test" ); //setup.getMgmtSvc().getOrganizationsForAdminUser( organization.getOwner().getUuid() );
+        //createOrganization( orgName, user, false );
         assertNotNull( organization );
 
         setup.getEmf().getEntityManager( setup.getSmf().getManagementAppId() ).refreshIndex();
-
-        Map<UUID, String> userOrganizations = setup.getMgmtSvc().getOrganizationsForAdminUser( user.getUuid() );
+        Map<UUID, String> userOrganizations = setup.getMgmtSvc().getOrganizationsForAdminUser(
+            organization.getOwner().getUuid() );
         assertEquals( "wrong number of organizations", 1, userOrganizations.size() );
 
-        List<UserInfo> users = setup.getMgmtSvc().getAdminUsersForOrganization( organization.getUuid() );
+        List<UserInfo> users = setup.getMgmtSvc().getAdminUsersForOrganization(
+            organization.getOrganization().getUuid() );
         assertEquals( "wrong number of users", 1, users.size() );
 
-        UUID applicationId = setup.getMgmtSvc().createApplication( organization.getUuid(), "ed-application" ).getId();
+        UUID applicationId = setup.getMgmtSvc().createApplication( organization.getOrganization().getUuid(), "ed-application" ).getId();
         assertNotNull( applicationId );
 
         setup.getEmf().getEntityManager( setup.getSmf().getManagementAppId() ).refreshIndex();
         setup.getEmf().getEntityManager( applicationId ).refreshIndex();
 
-        Map<UUID, String> applications = setup.getMgmtSvc().getApplicationsForOrganization( organization.getUuid() );
+        Map<UUID, String> applications = setup.getMgmtSvc().getApplicationsForOrganization( organization.getOrganization().getUuid() );
         assertEquals( "wrong number of applications", 1, applications.size() );
 
         OrganizationInfo organization2 = setup.getMgmtSvc().getOrganizationForApplication( applicationId );
         assertNotNull( organization2 );
         assertEquals( "wrong organization name", orgName, organization2.getName() );
 
-        boolean verified = setup.getMgmtSvc().verifyAdminUserPassword( user.getUuid(), "test" );
+        boolean verified = setup.getMgmtSvc().verifyAdminUserPassword( organization.getOwner().getUuid(), "test" );
         assertTrue( verified );
 
         setup.getMgmtSvc().activateOrganization( organization2 );
 
         setup.getEmf().getEntityManager( setup.getSmf().getManagementAppId() ).refreshIndex();
 
-        UserInfo u = setup.getMgmtSvc().verifyAdminUserPasswordCredentials( user.getUuid().toString(), "test" );
+        UserInfo u = setup.getMgmtSvc().verifyAdminUserPasswordCredentials( organization.getOwner().getUuid().toString(), "test" );
         assertNotNull( u );
 
-        String token = setup.getMgmtSvc().getAccessTokenForAdminUser( user.getUuid(), 0 );
+        String token = setup.getMgmtSvc().getAccessTokenForAdminUser( organization.getOwner().getUuid(), 0 );
         assertNotNull( token );
 
         AuthPrincipalInfo principal =
                 ( ( ManagementServiceImpl ) setup.getMgmtSvc() ).getPrincipalFromAccessToken( token, null, null );
         assertNotNull( principal );
-        assertEquals( user.getUuid(), principal.getUuid() );
+        assertEquals( organization.getOwner().getUuid(), principal.getUuid() );
 
         UserInfo new_user = setup.getMgmtSvc()
                                  .createAdminUser(uniqueUsername(), "Test User", uniqueEmail(),

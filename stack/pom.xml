@@ -117,19 +117,17 @@
       <mockito.version>1.10.8</mockito.version>
 
       <!-- only use half the cores on the machine for testing -->
-        <usergrid.it.parallel>methods</usergrid.it.parallel>
-        <usergrid.it.reuseForks>true</usergrid.it.reuseForks>
-      <usergrid.it.forkCount>.5C</usergrid.it.forkCount>
+      <usergrid.it.parallel>methods</usergrid.it.parallel>
+      <usergrid.it.reuseForks>true</usergrid.it.reuseForks>
+      <usergrid.it.forkCount>1</usergrid.it.forkCount>
       <usergrid.it.threads>2</usergrid.it.threads>
-
 
       <metrics.version>3.0.0</metrics.version>
       <rx.version>0.19.6</rx.version>
-        <surefire.plugin.version>2.18.1</surefire.plugin.version>
-        <powermock.version>1.6.1</powermock.version>
+      <surefire.plugin.version>2.18.1</surefire.plugin.version>
+      <powermock.version>1.6.1</powermock.version>
 
-
-           <maven.build.timestamp.format>yyyy-MM-dd'T'HH-mm-ss'Z'</maven.build.timestamp.format>
+      <maven.build.timestamp.format>yyyy-MM-dd'T'HH-mm-ss'Z'</maven.build.timestamp.format>
 
     </properties>
 
@@ -938,12 +936,6 @@
 
       <dependency>
         <groupId>org.codehaus.jackson</groupId>
-        <artifactId>jackson-xc</artifactId>
-        <version>${jackson-version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.codehaus.jackson</groupId>
         <artifactId>jackson-smile</artifactId>
         <version>${jackson-version}</version>
       </dependency>
@@ -1484,24 +1476,6 @@
 
                 <plugin>
                   <groupId>org.apache.maven.plugins</groupId>
-                  <artifactId>maven-compiler-plugin</artifactId>
-                  <version>3.2</version>
-                  <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
-                    <optimize>true</optimize>
-                    <showDeprecation>true</showDeprecation>
-                    <debug>true</debug>
-                    <!-- uncomment when building for more detailed profiling information <debuglevel>lines,vars,source</debuglevel> -->
-                    <encoding>UTF-8</encoding>
-                    <showWarnings>true</showWarnings>
-                  </configuration>
-                </plugin>
-
-
-
-                <plugin>
-                  <groupId>org.apache.maven.plugins</groupId>
                   <artifactId>maven-jar-plugin</artifactId>
                   <version>2.5</version>
                   <executions>
@@ -1525,6 +1499,7 @@
                           <parallel>${usergrid.it.parallel}</parallel>
                           <forkCount>${usergrid.it.forkCount}</forkCount>
                           <reuseForks>${usergrid.it.reuseForks}</reuseForks>
+                          <threadCount>${usergrid.it.forkCount}</threadCount>
                           <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin}  -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}
                           </argLine>
                       </configuration>
@@ -1532,21 +1507,14 @@
                       <!-- TODO, we may need an exclusion.  Appears to be a classloader bug
                       http://stackoverflow.com/questions/27225140/intermittent-noclassdeffounderror-when-running-a-maven-surefire-build-in-jenkins
                       -->
-                      <dependencies>
-                          <dependency>
-                              <groupId>org.apache.maven.surefire</groupId>
-                              <artifactId>surefire-junit47</artifactId>
-                              <version>${surefire.plugin.version}</version>
-                          </dependency>
-                      </dependencies>
+                      <!--<dependencies>-->
+                          <!--<dependency>-->
+                              <!--<groupId>org.apache.maven.surefire</groupId>-->
+                              <!--<artifactId>surefire-junit47</artifactId>-->
+                              <!--<version>${surefire.plugin.version}</version>-->
+                          <!--</dependency>-->
+                      <!--</dependencies>-->
                   </plugin>
-
-
-
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>sonar-maven-plugin</artifactId>
-      </plugin>
 
 
         <plugin>
@@ -1680,6 +1648,7 @@
       </plugin>
     </plugins>
   </reporting>
+
 
     <!--<repositories>-->
         <!--<repository>-->
