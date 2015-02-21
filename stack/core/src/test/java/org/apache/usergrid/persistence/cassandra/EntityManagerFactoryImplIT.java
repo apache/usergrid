@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.*;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -33,11 +34,6 @@ import org.slf4j.LoggerFactory;
 import org.apache.commons.lang3.RandomStringUtils;
 
 import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.cassandra.util.TraceTag;
 import org.apache.usergrid.persistence.cassandra.util.TraceTagManager;
 import org.apache.usergrid.persistence.cassandra.util.TraceTagReporter;
@@ -123,9 +119,26 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
         em.refreshIndex();
 
+        // TODO: this assertion should work!
+        //assertNotNull( "cannot lookup app by name", setup.getEmf().lookupApplication("test-app-" + rand) );
+
         // delete the application
 
         setup.getEmf().deleteApplication( applicationId );
+
+        em.refreshIndex();
+
+        boolean found = false;
+        Map<String, UUID> deletedApps = emf.getDeletedApplications();
+        for ( String appName : deletedApps.keySet() ) {
+            UUID appId = deletedApps.get( appName );
+            if ( appId.equals( applicationId )) {
+                found = true;
+                break;
+            }
+        }
+
+        assertTrue("Deleted app not found in deleted apps collection", found );
 
         // attempt to get entities in application's collections in various ways should all fail
 
@@ -138,6 +151,49 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
             assertNotEquals( appName, "test-app-" + rand );
         }
 
+        // restore the app
+
+        emf.restoreApplication( applicationId );
+
+        emf.rebuildAllIndexes(new EntityManagerFactory.ProgressObserver() {
+            @Override
+            public void onProgress(EntityRef entity) {
+                logger.debug("Reindexing {}:{}", entity.getType(), entity.getUuid() );
+            }
+
+            @Override
+            public long getWriteDelayTime() {
+                return 0;
+            }
+        });
+
+        // test to see that app now works and is happy
+
+        // it should not be found in the deleted apps collection
+        found = false;
+        deletedApps = emf.getDeletedApplications();
+        for ( String appName : deletedApps.keySet() ) {
+            UUID appId = deletedApps.get( appName );
+            if ( appId.equals( applicationId )) {
+                found = true;
+                break;
+            }
+        }
+        assertFalse("Restored app found in deleted apps collection", found);
+
+        found = false;
+        appMap = setup.getEmf().getApplications();
+        for ( String appName : appMap.keySet() ) {
+            UUID appId = appMap.get( appName );
+            if ( appId.equals( applicationId )) {
+                found = true;
+                break;
+            }
+        }
+        assertTrue("Restored app not found in apps collection", found);
+
+        // TODO: this assertion should work!
+        //assertNotNull(setup.getEmf().lookupApplication("test-app-" + rand));
     }
 
 

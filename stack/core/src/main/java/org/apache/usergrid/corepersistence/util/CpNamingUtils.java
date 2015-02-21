@@ -66,6 +66,9 @@ public class CpNamingUtils {
      * The app infos entity object type. This holds the app name, appId, and org name
      */
     public static final String APPINFOS = "appinfos";
+
+    public static final String DELETED_APPINFOS = "deleted_appinfos";
+
     /**
      * The name of the map that holds our entity id->type mapping
      */

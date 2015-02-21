@@ -45,11 +45,10 @@
             <id>arquillian-tomcat</id>
 
             <activation>
-                <activeByDefault>true</activeByDefault>
+                <activeByDefault>false</activeByDefault>
             </activation>
 
             <dependencies>
-
 
                 <!--embedded mode-->
                 <!--<dependency>-->
@@ -429,26 +428,26 @@
 
         <!-- Some arquillian dependency runs and old version of guice. We're overridding it here so that we include
           the right value into the test scope -->
-        <dependency>
-          <groupId>com.google.inject</groupId>
-          <artifactId>guice</artifactId>
-          <version>${guice.version}</version>
-            <scope>test</scope>
-        </dependency>
+        <!--<dependency>-->
+          <!--<groupId>com.google.inject</groupId>-->
+          <!--<artifactId>guice</artifactId>-->
+          <!--<version>${guice.version}</version>-->
+            <!--<scope>test</scope>-->
+        <!--</dependency>-->
 
-        <dependency>
-          <groupId>com.google.inject.extensions</groupId>
-          <artifactId>guice-multibindings</artifactId>
-          <version>${guice.version}</version>
-            <scope>test</scope>
-        </dependency>
+        <!--<dependency>-->
+          <!--<groupId>com.google.inject.extensions</groupId>-->
+          <!--<artifactId>guice-multibindings</artifactId>-->
+          <!--<version>${guice.version}</version>-->
+            <!--<scope>test</scope>-->
+        <!--</dependency>-->
 
-        <dependency>
-          <groupId>com.google.inject.extensions</groupId>
-          <artifactId>guice-assistedinject</artifactId>
-          <version>${guice.version}</version>
-            <scope>test</scope>
-        </dependency>
+        <!--<dependency>-->
+          <!--<groupId>com.google.inject.extensions</groupId>-->
+          <!--<artifactId>guice-assistedinject</artifactId>-->
+          <!--<version>${guice.version}</version>-->
+            <!--<scope>test</scope>-->
+        <!--</dependency>-->
 
 
         <!-- documentation here
@@ -462,10 +461,6 @@
               <scope>test</scope>
               <type>pom</type>
             </dependency>
-
-
-
-
 
         <!--  use the external test client.  Just depend on the maven jetty plugin to launch jetty -->
         <dependency>

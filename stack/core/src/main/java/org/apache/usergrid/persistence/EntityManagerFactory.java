@@ -19,6 +19,8 @@ package org.apache.usergrid.persistence;
 
 import java.util.Map;
 import java.util.UUID;
+
+import com.yammer.metrics.annotation.Metered;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.springframework.context.ApplicationContext;
@@ -95,7 +97,10 @@ public interface EntityManagerFactory {
      *
      * @throws Exception the exception
      */
+    @Metered(group = "core", name = "EntityManagerFactory_getApplication")
     public abstract Map<String, UUID> getApplications() throws Exception;
+
+    public Map<String, UUID> getDeletedApplications() throws Exception;
 
     public abstract void setup() throws Exception;
 
@@ -164,6 +169,8 @@ public interface EntityManagerFactory {
     public void addIndex(final UUID appId,final String suffix,final int shards,final int replicas);
 
     public Health getEntityStoreHealth();
+
+    void restoreApplication(UUID applicationId) throws Exception;
 
     public interface ProgressObserver {
 

@@ -1565,12 +1565,14 @@
                     <exclude>**/aws.properties</exclude>
                     <exclude>**/tempExport*</exclude>
                     <exclude>loadtests/loadtest_setup.sh</exclude>
-                    <exclude>loadtests/gatling/user-files/request-bodies/**</exclude>
+		    <exclude>loadtests/gatling/user-files/request-bodies/**</exclude>
+
                     <!-- other -->
                     <exclude>**/m2/**</exclude>
                     <exclude>**/*.asc</exclude>
                     <exclude>**/dummy.txt</exclude>
-                    <exclude>**/cloudbees.xml</exclude>
+		    <exclude>**/cloudbees.xml</exclude>
+		    <exclude>**/catalina_base/**</exclude>
                     <exlude>loadtests/gatling/lib/**</exlude>
                     <exlude>loadtests/gatling/user-files/**</exlude>
 

@@ -218,7 +218,11 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
         try {
 
+            // do it forwards
             setup.getEmf().rebuildCollectionIndex( em.getApplicationId(), "catherders", false, po );
+
+            // and backwards, just to make sure both cases are covered
+            setup.getEmf().rebuildCollectionIndex( em.getApplicationId(), "catherders", true, po );
 
             reporter.report();
             registry.remove( meterName );
@@ -312,8 +316,12 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
         // ----------------- delete the system and application indexes
 
         logger.debug("Deleting app index and system app index");
-        //deleteIndex( CpNamingUtils.SYSTEM_APP_ID );
+
         deleteIndex( em.getApplicationId() );
+
+        // deleting sytem app index will interfere with other concurrently running tests
+        //deleteIndex( CpNamingUtils.SYSTEM_APP_ID );
+
 
         // ----------------- test that we can read them, should fail
 
@@ -335,7 +343,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
             int counter = 0;
 
             @Override
-               public void onProgress( final EntityRef entity ) {
+            public void onProgress( final EntityRef entity ) {
 
                 meter.mark();
                 logger.debug("Indexing {}:{}", entity.getType(), entity.getUuid());
@@ -345,8 +353,6 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
                 counter++;
             }
 
-
-
             @Override
             public long getWriteDelayTime() {
                 return 0;
@@ -354,6 +360,8 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
         };
 
         try {
+
+            setup.getEmf().rebuildInternalIndexes( po );
 
             setup.getEmf().rebuildApplicationIndexes( em.getApplicationId(), po );
 
