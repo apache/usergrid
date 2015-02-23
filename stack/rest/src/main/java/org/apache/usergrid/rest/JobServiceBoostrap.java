@@ -61,8 +61,7 @@ public class JobServiceBoostrap implements
         if ( Boolean.parseBoolean( start ) ) {
             logger.info( "Starting Scheduler Service..." );
             // start the scheduler service
-            schedulerService.startAsync();
-            schedulerService.awaitRunning();
+            schedulerService.startAndWait();
 
         } else {
             logger.info( "Scheduler Service disabled" );

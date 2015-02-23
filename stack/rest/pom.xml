@@ -32,7 +32,7 @@
     <!-- Override these properties in an active profile within your settings.xml -->
     <properties>
         <usergrid.rest.threads>8</usergrid.rest.threads>
-        <guice.version>4.0-beta5</guice.version>
+        <guice.version>3</guice.version>
         <catalina.host>localhost</catalina.host>
         <catalina.jmx.port>8089</catalina.jmx.port>
     </properties>
@@ -391,7 +391,7 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- arquillian deps -->
+        <!-- Arquillian deps -->
 
         <dependency>
             <groupId>org.codehaus.jackson</groupId>
@@ -400,20 +400,18 @@
             <scope>test</scope>
         </dependency>
 
-
-
         <!--<dependency>-->
-                       <!--<groupId>org.jboss.arquillian.container</groupId>-->
-                       <!--<artifactId>arquillian-tomcat-embedded-7</artifactId>-->
-                       <!--<version>1.1.7.Final</version>-->
-                       <!--<scope>test</scope>-->
-                    <!--</dependency>-->
+            <!--<groupId>org.jboss.arquillian.container</groupId>-->
+            <!--<artifactId>arquillian-tomcat-embedded-7</artifactId>-->
+            <!--<version>1.1.7.Final</version>-->
+            <!--<scope>test</scope>-->
+        <!--</dependency>-->
 
         <dependency>
             <groupId>org.jboss.arquillian</groupId>
             <artifactId>arquillian-bom</artifactId>
             <version>1.1.7.Final</version>
-            <scope>import</scope>
+            <scope>test</scope>
             <type>pom</type>
         </dependency>
 
@@ -424,10 +422,8 @@
             <scope>test</scope>
         </dependency>
 
-
-
-        <!-- Some arquillian dependency runs and old version of guice. We're overridding it here so that we include
-          the right value into the test scope -->
+        <!--Some Arquillian dependency runs and old version of Guice.-->
+        <!--We're overridding it here so that we include the right value into the test scope-->
         <!--<dependency>-->
           <!--<groupId>com.google.inject</groupId>-->
           <!--<artifactId>guice</artifactId>-->
@@ -449,18 +445,14 @@
             <!--<scope>test</scope>-->
         <!--</dependency>-->
 
-
-        <!-- documentation here
-        https://github.com/shrinkwrap/resolver
-        -->
-
+        <!-- documentation here https://github.com/shrinkwrap/resolver -->
         <dependency>
               <groupId>org.jboss.shrinkwrap.resolver</groupId>
               <artifactId>shrinkwrap-resolver-depchain</artifactId>
               <version>2.1.1</version>
               <scope>test</scope>
               <type>pom</type>
-            </dependency>
+        </dependency>
 
         <!--  use the external test client.  Just depend on the maven jetty plugin to launch jetty -->
         <dependency>
