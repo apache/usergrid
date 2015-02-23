@@ -459,7 +459,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     }
 
 
-    @Override
     @Metered(group = "core", name = "EntityManagerFactory_getApplication")
     public Map<String, UUID> getApplications(boolean deleted) throws Exception {
 
