@@ -111,9 +111,10 @@ public class RootResource extends AbstractContextResource implements MetricProce
     @RequireSystemAccess
     @GET
     @Path("applications")
-    public JSONWithPadding getAllApplications( @Context UriInfo ui,
-                                               @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws URISyntaxException {
+    public JSONWithPadding getAllApplications(
+        @Context UriInfo ui,
+        @QueryParam("deleted") @DefaultValue("false") Boolean deleted,
+        @QueryParam("callback") @DefaultValue("callback") String callback ) throws URISyntaxException {
 
         logger.info( "RootResource.getAllApplications" );
 
@@ -122,7 +123,11 @@ public class RootResource extends AbstractContextResource implements MetricProce
 
         Map<String, UUID> applications = null;
         try {
-            applications = emf.getApplications();
+            if ( deleted ) {
+                applications = emf.getDeletedApplications();
+            } else {
+                applications = emf.getApplications();
+            }
             response.setSuccess();
             response.setApplications( applications );
         }
@@ -141,7 +146,7 @@ public class RootResource extends AbstractContextResource implements MetricProce
     public JSONWithPadding getAllApplications2( @Context UriInfo ui,
                                                 @QueryParam("callback") @DefaultValue("callback") String callback )
             throws URISyntaxException {
-        return getAllApplications( ui, callback );
+        return getAllApplications( ui, false, callback );
     }
 
 
@@ -162,16 +167,16 @@ public class RootResource extends AbstractContextResource implements MetricProce
 
     /**
      * Return status of this Usergrid instance in JSON format.
-     * 
+     *
      * By Default this end-point will ignore errors but if you call it with ignore_status=false
      * then it will return HTTP 500 if either the Entity store or the Index for the management
      * application are in a bad state.
-     * 
+     *
      * @param ignoreError Ignore any errors and return status no matter what.
      */
     @GET
     @Path("status")
-    public JSONWithPadding getStatus( 
+    public JSONWithPadding getStatus(
             @QueryParam("ignore_error") @DefaultValue("true") Boolean ignoreError,
             @QueryParam("callback") @DefaultValue("callback") String callback ) {
 
@@ -195,10 +200,10 @@ public class RootResource extends AbstractContextResource implements MetricProce
         node.put( "version", usergridSystemMonitor.getBuildNumber() );
 
         // Hector status, for backwards compatibility
-        node.put( "cassandraAvailable", usergridSystemMonitor.getIsCassandraAlive() ); 
+        node.put( "cassandraAvailable", usergridSystemMonitor.getIsCassandraAlive() );
 
         // Core Persistence Collections module status
-        node.put( "cassandraStatus", emf.getEntityStoreHealth().toString() ); 
+        node.put( "cassandraStatus", emf.getEntityStoreHealth().toString() );
 
         // Core Persistence Query Index module status for Management App Index
         EntityManager em = emf.getEntityManager( emf.getManagementAppId() );

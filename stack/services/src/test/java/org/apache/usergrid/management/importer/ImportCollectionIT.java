@@ -110,8 +110,8 @@ public class ImportCollectionIT {
         bucketPrefix = System.getProperty( "bucketName" );
 
         // start the scheduler after we're all set up
-        JobSchedulerService jobScheduler = ConcurrentProcessSingleton
-            .getInstance().getSpringResource().getBean( JobSchedulerService.class );
+        JobSchedulerService jobScheduler = ConcurrentProcessSingleton.getInstance()
+            .getSpringResource().getBean( JobSchedulerService.class );
 
         if ( jobScheduler.state() != Service.State.RUNNING ) {
             jobScheduler.startAsync();
@@ -499,14 +499,14 @@ public class ImportCollectionIT {
 
         logger.debug("\n\nImport into new app {}\n", em.getApplication().getName() );
 
-        ImportService importService = setup.getImportService();
+        final ImportService importService = setup.getImportService();
 
-        Import importEntity = importService.schedule(em.getApplication().getUuid(),
+        final Import importEntity = importService.schedule(em.getApplication().getUuid(),
             new HashMap<String, Object>() {{
-                put( "path", organization.getName() + em.getApplication().getName() );
-                put( "organizationId", organization.getUuid() );
-                put( "applicationId", em.getApplication().getUuid() );
-                put( "properties", new HashMap<String, Object>() {{
+            put( "path", organization.getName() + em.getApplication().getName() );
+            put( "organizationId", organization.getUuid() );
+            put( "applicationId", em.getApplication().getUuid() );
+            put( "properties", new HashMap<String, Object>() {{
                 put( "storage_provider", "s3" );
                 put( "storage_info", new HashMap<String, Object>() {{
                     put( "s3_access_id",

@@ -330,8 +330,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
         return applications;
     }
 
-
-    @Override
+   @Override
     public boolean setServiceProperty( String name, String value ) {
         try {
             cass.setColumn( cass.getSystemKeyspace(), PROPERTIES_CF, PROPERTIES_CF, name, value );
@@ -423,6 +422,11 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
     }
 
     @Override
+    public void rebuildCollectionIndex(UUID appId, String collection, boolean reverse, ProgressObserver po) throws Exception {
+        throw new UnsupportedOperationException("Not supported.");
+    }
+
+    @Override
     public void rebuildInternalIndexes(ProgressObserver po) throws Exception {
         throw new UnsupportedOperationException("Not supported.");
     }
@@ -461,12 +465,6 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
         throw new UnsupportedOperationException("Not supported in v1");
     }
 
-
-    @Override
-    public void rebuildCollectionIndex(UUID appId, String collection, ProgressObserver po) {
-        throw new UnsupportedOperationException("Not supported.");
-    }
-
     @Override
     public void addIndex(UUID appId, String suffix,final int shards,final int replicas) {
         throw new UnsupportedOperationException("Not supported in v1");
@@ -474,6 +472,22 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
 
     @Override
     public Health getEntityStoreHealth() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException("Not supported in v1.");
     }
+
+    @Override
+    public void restoreApplication(UUID applicationId) throws Exception {
+        throw new UnsupportedOperationException("Not supported in v1");
+    }
+
+    @Override
+    public Map<String, UUID> getDeletedApplications() throws Exception {
+        throw new UnsupportedOperationException("Not supported in v1");
+    }
+
+    @Override
+    public Map<String, UUID> getApplications(boolean deleted) throws Exception {
+        throw new UnsupportedOperationException("Not supported in v1");
+    }
+
 }
