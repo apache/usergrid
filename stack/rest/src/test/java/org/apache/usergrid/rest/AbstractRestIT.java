@@ -65,8 +65,8 @@ import org.slf4j.LoggerFactory;
  * following naming convention: test_[HTTP verb]_[action mapping]_[ok|fail][_[specific
  * failure condition if multiple]
  */
-@ArquillianSuiteDeployment
-@RunWith(Arquillian.class)
+//@ArquillianSuiteDeployment
+//@RunWith(Arquillian.class)
 public abstract class AbstractRestIT extends JerseyTest {
     private static final Logger LOG = LoggerFactory.getLogger( AbstractRestIT.class );
     private static boolean usersSetup = false;
@@ -104,20 +104,20 @@ public abstract class AbstractRestIT extends JerseyTest {
     }
 
 
-    // We set testable = false so we deploy the archive to the server and test it locally
-    @Deployment( testable = false )
-    public static WebArchive createTestArchive() {
-
-        // we use the MavenImporter from shrinkwrap to just produce whatever maven would build then test with it
-
-        // set maven to be in offline mode
-
-        System.setProperty( "org.apache.maven.offline", "true" );
-        return ShrinkWrap.create(MavenImporter.class)
-            .loadPomFromFile( "pom.xml", "arquillian-tomcat" )
-            .importBuildOutput()
-            .as( WebArchive.class );
-    }
+//    // We set testable = false so we deploy the archive to the server and test it locally
+//    @org.jboss.arquillian.container.test.api.Deployment( testable = false )
+//    public static WebArchive createTestArchive() {
+//
+//        // we use the MavenImporter from shrinkwrap to just produce whatever maven would build then test with it
+//
+//        // set maven to be in offline mode
+//
+//        System.setProperty( "org.apache.maven.offline", "true" );
+//        return ShrinkWrap.create(MavenImporter.class)
+//            .loadPomFromFile( "pom.xml", "arquillian-tomcat" )
+//            .importBuildOutput()
+//            .as( WebArchive.class );
+//    }
 
 
     @AfterClass

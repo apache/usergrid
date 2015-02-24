@@ -41,35 +41,26 @@
     <!-- profile that arquillian uses when it builds/starts tomcat -->
     <profiles>
 
-        <profile>
-            <id>arquillian-tomcat</id>
-
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-
-            <dependencies>
-
-                <dependency>
-                    <groupId>org.jboss.arquillian.container</groupId>
-                    <artifactId>arquillian-tomcat-remote-7</artifactId>
-                    <version>1.0.0.CR7</version>
-                    <scope>test</scope>
-                </dependency>
-
-                <!-- only deploy once during tests -->
-                <dependency>
-                    <groupId>org.eu.ingwar.tools</groupId>
-                    <artifactId>arquillian-suite-extension</artifactId>
-                    <version>1.1.2</version>
-                    <scope>test</scope>
-                </dependency>
-
-            </dependencies>
-
-
-        </profile>
-
+        <!--<profile>-->
+            <!--<id>arquillian-tomcat</id>-->
+            <!--<activation>-->
+                <!--<activeByDefault>true</activeByDefault>-->
+            <!--</activation>-->
+            <!--<dependencies>-->
+                <!--<dependency>-->
+                    <!--<groupId>org.jboss.arquillian.container</groupId>-->
+                    <!--<artifactId>arquillian-tomcat-remote-7</artifactId>-->
+                    <!--<version>1.0.0.CR7</version>-->
+                    <!--<scope>test</scope>-->
+                <!--</dependency>-->
+                <!--<dependency>-->
+                    <!--<groupId>org.eu.ingwar.tools</groupId>-->
+                    <!--<artifactId>arquillian-suite-extension</artifactId>-->
+                    <!--<version>1.1.1</version>-->
+                    <!--<scope>test</scope>-->
+                <!--</dependency>-->
+            <!--</dependencies>-->
+        <!--</profile>-->
 
     </profiles>
 
@@ -377,66 +368,35 @@
 
         <!-- Arquillian deps -->
 
-        <dependency>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-xc</artifactId>
-            <version>${jackson-version}</version>
-            <scope>test</scope>
-        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>org.codehaus.jackson</groupId>-->
+            <!--<artifactId>jackson-xc</artifactId>-->
+            <!--<version>${jackson-version}</version>-->
+            <!--<scope>test</scope>-->
+        <!--</dependency>-->
 
         <!--<dependency>-->
-            <!--<groupId>org.jboss.arquillian.container</groupId>-->
-            <!--<artifactId>arquillian-tomcat-embedded-7</artifactId>-->
+            <!--<groupId>org.jboss.arquillian</groupId>-->
+            <!--<artifactId>arquillian-bom</artifactId>-->
+            <!--<version>1.1.7.Final</version>-->
+            <!--<scope>test</scope>-->
+            <!--<type>pom</type>-->
+        <!--</dependency>-->
+
+        <!--<dependency>-->
+            <!--<groupId>org.jboss.arquillian.junit</groupId>-->
+            <!--<artifactId>arquillian-junit-container</artifactId>-->
             <!--<version>1.1.7.Final</version>-->
             <!--<scope>test</scope>-->
         <!--</dependency>-->
 
-        <dependency>
-            <groupId>org.jboss.arquillian</groupId>
-            <artifactId>arquillian-bom</artifactId>
-            <version>1.1.7.Final</version>
-            <scope>test</scope>
-            <type>pom</type>
-        </dependency>
-
-        <dependency>
-            <groupId>org.jboss.arquillian.junit</groupId>
-            <artifactId>arquillian-junit-container</artifactId>
-            <version>1.1.7.Final</version>
-            <scope>test</scope>
-        </dependency>
-
-        <!--Some Arquillian dependency runs and old version of Guice.-->
-        <!--We're overridding it here so that we include the right value into the test scope-->
         <!--<dependency>-->
-          <!--<groupId>com.google.inject</groupId>-->
-          <!--<artifactId>guice</artifactId>-->
-          <!--<version>${guice.version}</version>-->
-            <!--<scope>test</scope>-->
+              <!--<groupId>org.jboss.shrinkwrap.resolver</groupId>-->
+              <!--<artifactId>shrinkwrap-resolver-depchain</artifactId>-->
+              <!--<version>2.1.1</version>-->
+              <!--<scope>test</scope>-->
+              <!--<type>pom</type>-->
         <!--</dependency>-->
-
-        <!--<dependency>-->
-          <!--<groupId>com.google.inject.extensions</groupId>-->
-          <!--<artifactId>guice-multibindings</artifactId>-->
-          <!--<version>${guice.version}</version>-->
-            <!--<scope>test</scope>-->
-        <!--</dependency>-->
-
-        <!--<dependency>-->
-          <!--<groupId>com.google.inject.extensions</groupId>-->
-          <!--<artifactId>guice-assistedinject</artifactId>-->
-          <!--<version>${guice.version}</version>-->
-            <!--<scope>test</scope>-->
-        <!--</dependency>-->
-
-        <!-- documentation here https://github.com/shrinkwrap/resolver -->
-        <dependency>
-              <groupId>org.jboss.shrinkwrap.resolver</groupId>
-              <artifactId>shrinkwrap-resolver-depchain</artifactId>
-              <version>2.1.1</version>
-              <scope>test</scope>
-              <type>pom</type>
-        </dependency>
 
         <!--  use the external test client.  Just depend on the maven jetty plugin to launch jetty -->
         <dependency>
