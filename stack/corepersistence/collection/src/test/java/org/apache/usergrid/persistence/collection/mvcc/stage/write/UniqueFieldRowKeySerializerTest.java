@@ -23,7 +23,7 @@ import java.nio.ByteBuffer;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.apache.usergrid.persistence.collection.serialization.impl.FieldSerializer;
+import org.apache.usergrid.persistence.collection.serialization.impl.UniqueFieldRowKeySerializer;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.model.field.IntegerField;
 
@@ -31,7 +31,7 @@ import com.netflix.astyanax.model.CompositeBuilder;
 import com.netflix.astyanax.model.CompositeParser;
 import com.netflix.astyanax.model.Composites;
 
-public class FieldSerializerTest {
+public class UniqueFieldRowKeySerializerTest {
 
     @Test
     public void testBasicOperation() {
@@ -39,14 +39,14 @@ public class FieldSerializerTest {
         Field original = new IntegerField( "count", 5 );
 
         CompositeBuilder builder = Composites.newCompositeBuilder();
-        FieldSerializer fs = new FieldSerializer();
+        UniqueFieldRowKeySerializer fs = new UniqueFieldRowKeySerializer();
         fs.toComposite( builder, original );
         ByteBuffer serializer = builder.build();
 
         CompositeParser parser = Composites.newCompositeParser( serializer );
-        
+
         Field deserialized = fs.fromComposite( parser );
 
         Assert.assertEquals( original, deserialized );
-    } 
+    }
 }

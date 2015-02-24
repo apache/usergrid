@@ -35,10 +35,11 @@ import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
 import org.apache.usergrid.persistence.core.astyanax.ColumnTypes;
+import org.apache.usergrid.persistence.core.astyanax.FieldBufferSerializer;
+import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
-import org.apache.usergrid.persistence.core.migration.schema.Migration;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
@@ -51,6 +52,7 @@ import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.model.Column;
 import com.netflix.astyanax.model.Row;
+import com.netflix.astyanax.serializers.UUIDSerializer;
 import com.netflix.astyanax.util.RangeBuilder;
 
 
@@ -61,15 +63,31 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
 
     private static final Logger log = LoggerFactory.getLogger( UniqueValueSerializationStrategyImpl.class );
 
-    // TODO: use "real" field serializer here instead once it is ready
+
     private static final CollectionScopedRowKeySerializer<Field> ROW_KEY_SER =
-            new CollectionScopedRowKeySerializer<>( FieldSerializer.get() );
+            new CollectionScopedRowKeySerializer<>( UniqueFieldRowKeySerializer.get() );
 
     private static final EntityVersionSerializer ENTITY_VERSION_SER = new EntityVersionSerializer();
 
     private static final MultiTennantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Field>>, EntityVersion> CF_UNIQUE_VALUES =
             new MultiTennantColumnFamily<>( "Unique_Values", ROW_KEY_SER,
                     ENTITY_VERSION_SER );
+
+    private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
+
+
+
+
+       private static final CollectionScopedRowKeySerializer<Id> ENTITY_ROW_KEY_SER =
+               new CollectionScopedRowKeySerializer<>( ID_SER );
+
+
+       private static final MultiTennantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> CF_ENTITY_UNIQUE_VALUE =
+               new MultiTennantColumnFamily<>( "Entity_Unique_Values", ENTITY_ROW_KEY_SER, UUIDSerializer.get() );
+
+       private static final FieldBufferSerializer FIELD_BUFFER_SERIALIZER = FieldBufferSerializer.get();
+
+
 
     protected final Keyspace keyspace;
 

@@ -25,6 +25,7 @@ import org.apache.usergrid.persistence.model.field.BooleanField;
 import org.apache.usergrid.persistence.model.field.DoubleField;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.model.field.FieldTypeName;
+import org.apache.usergrid.persistence.model.field.FloatField;
 import org.apache.usergrid.persistence.model.field.IntegerField;
 import org.apache.usergrid.persistence.model.field.LongField;
 import org.apache.usergrid.persistence.model.field.StringField;
@@ -39,10 +40,10 @@ import com.netflix.astyanax.model.CompositeParser;
 /**
  * Serialize Field for use as part of row-key in Unique Values Column Family.
  */
-public class FieldSerializer implements CompositeFieldSerializer<Field> {
+public class UniqueFieldRowKeySerializer implements CompositeFieldSerializer<Field> {
 
 
-    private static final FieldSerializer INSTANCE = new FieldSerializer();
+    private static final UniqueFieldRowKeySerializer INSTANCE = new UniqueFieldRowKeySerializer();
 
 
     @Override
@@ -58,6 +59,7 @@ public class FieldSerializer implements CompositeFieldSerializer<Field> {
         switch ( fieldType ) {
             case BOOLEAN:
             case DOUBLE:
+            case FLOAT:
             case INTEGER:
             case LONG:
             case STRING:
@@ -65,7 +67,7 @@ public class FieldSerializer implements CompositeFieldSerializer<Field> {
                 break;
             default:
                 throw new RuntimeException(
-                        String.format( "Type %s is not a supported type for unique values", fieldType ) );
+                    String.format( "Type %s is not a supported type for unique values", fieldType ) );
         }
 
 
@@ -95,6 +97,8 @@ public class FieldSerializer implements CompositeFieldSerializer<Field> {
                 return new BooleanField( name, Boolean.parseBoolean( value ) );
             case DOUBLE:
                 return new DoubleField( name, Double.parseDouble( value ) );
+            case FLOAT:
+                return new FloatField( name, Float.parseFloat( value ) );
             case INTEGER:
                 return new IntegerField( name, Integer.parseInt( value ) );
             case LONG:
@@ -112,7 +116,7 @@ public class FieldSerializer implements CompositeFieldSerializer<Field> {
     /**
      * Get the singleton serializer
      */
-    public static FieldSerializer get() {
+    public static UniqueFieldRowKeySerializer get() {
         return INSTANCE;
     }
 }
