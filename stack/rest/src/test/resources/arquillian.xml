@@ -24,12 +24,6 @@
     xsi:schemaLocation="http://jboss.org/schema/arquillian http://jboss.org/schema/arquillian/arquillian_1_0.xsd">
 
     <!--<container qualifier="tomcat" default="true">-->
-    <!--<configuration>-->
-    <!--<property name="unpackArchive">true</property>-->
-    <!--</configuration>-->
-    <!--</container>-->
-
-    <!--<container qualifier="tomcat" default="true">-->
         <!--<configuration>-->
             <!--<property name="bindHttpPort">8080</property>-->
             <!--<property name="bindAddress">localhost</property>-->
@@ -43,10 +37,10 @@
         <!--</configuration>-->
     <!--</container>-->
 
-
     <container qualifier="tomcat" default="true">
         <configuration>
             <property name="host">${catalina.host}</property>
+            <property name="httpPort">8080</property>
             <property name="user">usergrid</property>
             <property name="pass">testpassword</property>
             <!--This is a workaround for this issue https://issues.jboss.org/browse/ARQ-1814-->
@@ -54,6 +48,4 @@
         </configuration>
     </container>
 
-
 </arquillian>
-

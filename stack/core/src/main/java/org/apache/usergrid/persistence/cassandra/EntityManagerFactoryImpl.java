@@ -485,9 +485,4 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
         throw new UnsupportedOperationException("Not supported in v1");
     }
 
-    @Override
-    public Map<String, UUID> getApplications(boolean deleted) throws Exception {
-        throw new UnsupportedOperationException("Not supported in v1");
-    }
-
 }
