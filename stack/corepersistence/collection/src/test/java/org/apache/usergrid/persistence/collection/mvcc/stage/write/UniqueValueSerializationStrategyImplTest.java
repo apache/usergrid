@@ -19,8 +19,10 @@ package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
 
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.collection.serialization.impl.UniqueFieldEntry;
 import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.test.UseModules;
 import org.junit.Assert;
@@ -49,6 +51,7 @@ import com.google.inject.Inject;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 
 @RunWith(ITRunner.class)
@@ -82,12 +85,15 @@ public class UniqueValueSerializationStrategyImplTest {
         Assert.assertNotNull( retrieved );
         assertEquals( stored, retrieved );
 
-        UniqueValueSet allFieldsWritten = strategy.loadAllSavedValues( scope, entityId );
+        Iterator<UniqueFieldEntry> allFieldsWritten = strategy.getAllUniqueFields( scope, entityId );
+
+        assertTrue(allFieldsWritten.hasNext());
 
         //test this interface. In most cases, we won't know the field name, so we want them all
-        UniqueValue allFieldsValue = allFieldsWritten.getValue( field.getName() );
+        UniqueFieldEntry allFieldsValue = allFieldsWritten.next();
         Assert.assertNotNull( allFieldsValue );
-        assertEquals( stored, allFieldsValue );
+        assertEquals( stored, allFieldsValue.getField() );
+        assertEquals(version, allFieldsValue.getVersion());
 
     }
 

@@ -37,6 +37,9 @@ import rx.schedulers.Schedulers;
 
 import java.util.Set;
 import java.util.UUID;
+
+import org.apache.commons.lang.NotImplementedException;
+
 import org.apache.usergrid.persistence.core.guice.ProxyImpl;
 
 
@@ -103,10 +106,13 @@ public class EntityDeletedTask implements Task<Void> {
         fireEvents();
         final MutationBatch entityDelete = entitySerializationStrategy.delete(collectionScope, entityId, version);
         final MutationBatch logDelete = logEntrySerializationStrategy.delete(collectionScope, entityId, version);
-        entityDelete.execute();
-        logDelete.execute();
 
-        return null;
+        throw new NotImplementedException( "Implement unique cleanup here" );
+//
+//        entityDelete.execute();
+//        logDelete.execute();
+//
+//        return null;
     }
 
 

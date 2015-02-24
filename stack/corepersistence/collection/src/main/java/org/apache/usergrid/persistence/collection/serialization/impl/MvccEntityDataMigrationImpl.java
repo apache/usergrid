@@ -86,37 +86,36 @@ public class MvccEntityDataMigrationImpl implements CollectionDataMigration {
 
                             MigrationStrategy.MigrationRelationship<MvccEntitySerializationStrategy> migration = entityMigrationStrategy.getMigration();
 
-                            if (idScope.getCollectionScope() instanceof CollectionScope) {
-                                CollectionScope currentScope = idScope.getCollectionScope();
-                                //for each element in the history in the previous version,
-                                // copy it to the CF in v2
-                                EntitySet allVersions = migration.from()
-                                    .load( currentScope, Collections.singleton( idScope.getId() ), now );
-                                final MvccEntity version = allVersions.getEntity( idScope.getId() );
 
-                               final MutationBatch versionBatch =
-                                   migration.to().write(currentScope, version);
+                            CollectionScope currentScope = idScope.getCollectionScope();
+                            //for each element in the history in the previous version,
+                            // copy it to the CF in v2
+                            EntitySet allVersions = migration.from()
+                                .load( currentScope, Collections.singleton( idScope.getId() ), now );
 
-                               totalBatch.mergeShallow(versionBatch);
+                            final MvccEntity version = allVersions.getEntity( idScope.getId() );
 
-                                throw new UnsupportedOperationException( "TODO, make this more functional in flushing" );
+                           final MutationBatch versionBatch =
+                               migration.to().write(currentScope, version);
+
+                           totalBatch.mergeShallow(versionBatch);
+
+                            throw new UnsupportedOperationException( "TODO, make this more functional in flushing" );
 
 //                               if (atomicLong.incrementAndGet() % 50 == 0) {
 //                                   executeBatch(totalBatch, observer, atomicLong);
 //                               }
 
 //                                executeBatch(totalBatch, observer, atomicLong);
-                            }
 
-                            return idScope.getId();
+//      return idScope.getId();
                         }
-                    })
-                    .buffer(100)
-                    .doOnNext(new Action1<List<Id>>() {
-                        @Override
-                        public void call(List<Id> ids) {
-                            executeBatch(totalBatch, observer, atomicLong);
 
+
+                    } ).buffer(100).doOnNext( new Action1<List<Id>>() {
+                        @Override
+                        public void call( List<Id> ids ) {
+                            executeBatch( totalBatch, observer, atomicLong );
                         }
                     });
             }

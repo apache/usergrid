@@ -52,6 +52,7 @@ import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.model.Column;
 import com.netflix.astyanax.model.Row;
+import com.netflix.astyanax.serializers.DynamicCompositeSerializer;
 import com.netflix.astyanax.serializers.UUIDSerializer;
 import com.netflix.astyanax.util.RangeBuilder;
 
@@ -65,27 +66,25 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
 
 
     private static final CollectionScopedRowKeySerializer<Field> ROW_KEY_SER =
-            new CollectionScopedRowKeySerializer<>( UniqueFieldRowKeySerializer.get() );
+        new CollectionScopedRowKeySerializer<>( UniqueFieldRowKeySerializer.get() );
 
     private static final EntityVersionSerializer ENTITY_VERSION_SER = new EntityVersionSerializer();
 
-    private static final MultiTennantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Field>>, EntityVersion> CF_UNIQUE_VALUES =
-            new MultiTennantColumnFamily<>( "Unique_Values", ROW_KEY_SER,
-                    ENTITY_VERSION_SER );
+    private static final MultiTennantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Field>>, EntityVersion>
+        CF_UNIQUE_VALUES = new MultiTennantColumnFamily<>( "Unique_Values", ROW_KEY_SER, ENTITY_VERSION_SER );
 
     private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
 
 
+    private static final CollectionScopedRowKeySerializer<Id> ENTITY_ROW_KEY_SER =
+        new CollectionScopedRowKeySerializer<>( ID_SER );
 
 
-       private static final CollectionScopedRowKeySerializer<Id> ENTITY_ROW_KEY_SER =
-               new CollectionScopedRowKeySerializer<>( ID_SER );
+    private static final MultiTennantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UniqueFieldEntry>
+        CF_ENTITY_UNIQUE_VALUE =
+        new MultiTennantColumnFamily<>( "Entity_Unique_Values", ENTITY_ROW_KEY_SER, UniqueFieldEntrySerializer.get() );
 
-
-       private static final MultiTennantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> CF_ENTITY_UNIQUE_VALUE =
-               new MultiTennantColumnFamily<>( "Entity_Unique_Values", ENTITY_ROW_KEY_SER, UUIDSerializer.get() );
-
-       private static final FieldBufferSerializer FIELD_BUFFER_SERIALIZER = FieldBufferSerializer.get();
+    private static final FieldBufferSerializer FIELD_BUFFER_SERIALIZER = FieldBufferSerializer.get();
 
 
 
@@ -250,9 +249,8 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
 
 
     @Override
-    public UniqueValueSet loadAllSavedValues( final CollectionScope colScope, final Id entityId)
-            throws ConnectionException {
-        throw new UnsupportedOperationException( "Implement me" );
+    public Iterator<UniqueFieldEntry> getAllUniqueFields( final CollectionScope scope, final Id entityId ) {
+        return null;
     }
 
 

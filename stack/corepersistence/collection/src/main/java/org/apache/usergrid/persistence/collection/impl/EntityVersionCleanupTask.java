@@ -47,6 +47,9 @@ import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import java.util.Set;
+
+import org.apache.commons.lang.NotImplementedException;
+
 import org.apache.usergrid.persistence.core.guice.ProxyImpl;
 
 import rx.Observable;
@@ -134,6 +137,8 @@ public class EntityVersionCleanupTask implements Task<Void> {
 
                     @Override
                     public void call( final Subscriber<? super MvccLogEntry> subscriber ) {
+
+                        throw new NotImplementedException( "Implement me" );
 
                         //TODO, make this a collector so it iterates on itself (if possible)
 //                        List<MvccLogEntry> entities = logEntrySerializationStrategy.load( scope, entityId, version, 1000 );
