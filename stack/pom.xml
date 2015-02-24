@@ -97,6 +97,7 @@
 
       <amber-version>0.22-incubating</amber-version>
       <cassandra-version>1.2.18</cassandra-version>
+      <guava.version>14.0.1</guava.version>
       <hector-om-version>3.0-03</hector-om-version>
       <hector-version>1.1-4</hector-version>
       <hector-test-version>1.1-4</hector-test-version>
@@ -111,7 +112,7 @@
       <shiro-version>1.2.3</shiro-version>
       <slf4j-version>1.6.1</slf4j-version>
       <snakeyaml-version>1.8</snakeyaml-version>
-      <tomcat-version>7.0.52</tomcat-version>
+      <tomcat-version>7.0.59</tomcat-version>
       <antlr.version>3.4</antlr.version>
       <tika.version>1.4</tika.version>
       <mockito.version>1.10.8</mockito.version>
@@ -818,7 +819,7 @@
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
-        <version>18.0</version>
+        <version>${guava.version}</version>
       </dependency>
 
       <dependency>
@@ -1568,6 +1569,7 @@
 		    <exclude>loadtests/gatling/user-files/request-bodies/**</exclude>
 
                     <!-- other -->
+                    <exclude>**/catalina_base/**</exclude>
                     <exclude>**/m2/**</exclude>
                     <exclude>**/*.asc</exclude>
                     <exclude>**/dummy.txt</exclude>

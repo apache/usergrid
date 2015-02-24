@@ -99,8 +99,7 @@ public class ImportServiceIT {
             .getInstance().getSpringResource().getBean( JobSchedulerService.class );
 
         if ( jobScheduler.state() != Service.State.RUNNING ) {
-            jobScheduler.startAsync();
-            jobScheduler.awaitRunning();
+            jobScheduler.startAndWait();
         }
 
         //creates sample test application

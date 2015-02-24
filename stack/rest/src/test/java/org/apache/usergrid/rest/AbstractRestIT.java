@@ -64,7 +64,6 @@ import org.slf4j.LoggerFactory;
  * following naming convention: test_[HTTP verb]_[action mapping]_[ok|fail][_[specific
  * failure condition if multiple]
  */
-//
 @RunWith( Arquillian.class )
 public abstract class AbstractRestIT extends JerseyTest {
     private static final Logger LOG = LoggerFactory.getLogger( AbstractRestIT.class );
@@ -81,8 +80,8 @@ public abstract class AbstractRestIT extends JerseyTest {
 
     protected static final AppDescriptor descriptor;
 
-    //TODO, this needs removed.  Instead we need to hook into the arquillian event lifecycle
-    //to invoke /system/database/setup from the REST tier.
+    // TODO, this needs to be removed.  Instead we need to hook into the Arquillian event lifecycle
+    // to invoke /system/database/setup from the REST tier.
     public static ITSetup setup = new ITSetup(  );
 
     //private static final URI baseURI = setup.getBaseURI();
@@ -103,18 +102,19 @@ public abstract class AbstractRestIT extends JerseyTest {
     }
 
 
-    //We set testable = false so we deploy the archive to the server and test it locally
+    // We set testable = false so we deploy the archive to the server and test it locally
     @Deployment( testable = false )
     public static WebArchive createTestArchive() {
 
-        //we use the MavenImporter from shrinkwrap to just produce whatever maven would build then test with it
+        // we use the MavenImporter from shrinkwrap to just produce whatever maven would build then test with it
 
-        //set maven to be in offline mode
+        // set maven to be in offline mode
 
         System.setProperty( "org.apache.maven.offline", "true" );
-
-        return ShrinkWrap.create( MavenImporter.class ).loadPomFromFile( "pom.xml", "arquillian-tomcat" )
-                         .importBuildOutput().as( WebArchive.class );
+        return ShrinkWrap.create( MavenImporter.class )
+            .loadPomFromFile( "pom.xml", "arquillian-tomcat" )
+            .importBuildOutput()
+            .as( WebArchive.class );
     }
 
 

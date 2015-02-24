@@ -68,14 +68,11 @@ To test, add the following configuration to the TOMCAT_HOME/conf/tomcat-users.xm
 ```xml
 <tomcat-users>
     <role rolename="manager-gui"/>
-    <tomcat-users>
-        <role rolename="manager-gui"/>
-        <role rolename="manager-jmx"/>
-        <role rolename="manager-script"/>
-        <role rolename="manager-status"/>
-       <!-- this username and password is set into src/test/resources/arquillian.xml -->
-        <user username="usergrid" password="testpassword" roles="manager-script, manager-jmx, manager-gui, manager-status"/>
-    </tomcat-users>
+    <role rolename="manager-jmx"/>
+    <role rolename="manager-script"/>
+    <role rolename="manager-status"/>
+    <!-- this username and password is set into src/test/resources/arquillian.xml -->
+    <user username="usergrid" password="testpassword" roles="manager-script, manager-jmx, manager-gui, manager-status"/>
 </tomcat-users>
 ```
 
