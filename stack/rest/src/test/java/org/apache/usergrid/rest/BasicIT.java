@@ -24,6 +24,7 @@ import javax.ws.rs.core.MultivaluedMap;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import org.eu.ingwar.tools.arquillian.extension.suite.annotations.ArquillianSuiteDeployment;
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -258,7 +259,7 @@ public class BasicIT extends AbstractRestIT {
             err_thrown = true;
         }
         assertTrue( "Error should have been thrown", err_thrown );
-        
+
         // test set app user pin
 
         MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
@@ -270,7 +271,7 @@ public class BasicIT extends AbstractRestIT {
                 .post( String.class, formData ));
 
         refreshIndex(orgName, appName);
-        
+
         node = mapper.readTree( resource()
                 .path( "/"+orgName+"/"+appName+"/token" )
                 .queryParam( "grant_type", "pin" )

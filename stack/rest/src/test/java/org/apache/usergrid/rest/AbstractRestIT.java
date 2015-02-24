@@ -40,6 +40,7 @@ import org.apache.usergrid.java.client.Client;
 import static org.apache.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 
+import org.eu.ingwar.tools.arquillian.extension.suite.annotations.ArquillianSuiteDeployment;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.Archive;
@@ -64,7 +65,8 @@ import org.slf4j.LoggerFactory;
  * following naming convention: test_[HTTP verb]_[action mapping]_[ok|fail][_[specific
  * failure condition if multiple]
  */
-@RunWith( Arquillian.class )
+@ArquillianSuiteDeployment
+@RunWith(Arquillian.class)
 public abstract class AbstractRestIT extends JerseyTest {
     private static final Logger LOG = LoggerFactory.getLogger( AbstractRestIT.class );
     private static boolean usersSetup = false;
@@ -111,12 +113,11 @@ public abstract class AbstractRestIT extends JerseyTest {
         // set maven to be in offline mode
 
         System.setProperty( "org.apache.maven.offline", "true" );
-        return ShrinkWrap.create( MavenImporter.class )
+        return ShrinkWrap.create(MavenImporter.class)
             .loadPomFromFile( "pom.xml", "arquillian-tomcat" )
             .importBuildOutput()
             .as( WebArchive.class );
     }
-
 
 
     @AfterClass

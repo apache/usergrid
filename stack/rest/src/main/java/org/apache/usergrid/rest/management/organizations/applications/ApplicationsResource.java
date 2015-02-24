@@ -142,6 +142,7 @@ public class ApplicationsResource extends AbstractContextResource {
 
     @RequireOrganizationAccess
     @Path(RootResource.APPLICATION_ID_PATH)
+    @PUT
     public ApplicationResource restoreApplicationFromOrganizationByApplicationId(
         @Context UriInfo ui,
         @PathParam( "applicationId" )
