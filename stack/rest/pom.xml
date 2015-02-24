@@ -151,8 +151,23 @@
                     <argLine>-Dtest.barrier.timestamp=${maven.build.timestamp} -Dtest.clean.storage=true -Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}
                     </argLine>
                     <includes>
-                        <include>**/*IT.java</include>
-                        <include>**/*Test.java</include>
+
+                        <!--<include>**/*IT.java</include>-->
+                        <!--<include>**/*Test.java</include>-->
+
+                        <!-- how many tests can we run before Tomcat JVM throws OOM / PermGen exceptions -->
+
+                        <include>**/org/apache/usergrid/rest/BasicIT.java</include>
+
+                        <!--<include>**/org/apache/usergrid/rest/*IT.java</include>-->
+                        <!--<include>**/org/apache/usergrid/rest/*Test.java</include>-->
+
+                        <!--<include>**/org/apache/usergrid/rest/management/**/*IT.java</include>-->
+                        <!--<include>**/org/apache/usergrid/rest/management/**/*Test.java</include>-->
+
+                        <!--<include>**/org/apache/usergrid/rest/applications/collection/**/*IT.java</include>-->
+                        <!--<include>**/org/apache/usergrid/rest/applications/collection/**/*Test.java</include>-->
+
                     </includes>
 
                 </configuration>
