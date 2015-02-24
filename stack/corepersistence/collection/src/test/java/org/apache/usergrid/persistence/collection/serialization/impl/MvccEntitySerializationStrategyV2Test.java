@@ -110,7 +110,7 @@ public abstract class MvccEntitySerializationStrategyV2Test extends MvccEntitySe
 
         //now load it
         final MvccEntity loadedEntity =
-                getMvccEntitySerializationStrategy().load( context, id );
+                getMvccEntitySerializationStrategy().load( context, id ).get();
 
 
 

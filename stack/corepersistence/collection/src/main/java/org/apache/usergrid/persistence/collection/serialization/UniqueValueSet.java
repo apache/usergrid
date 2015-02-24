@@ -33,9 +33,4 @@ public interface UniqueValueSet extends Iterable<UniqueValue> {
      */
     public UniqueValue getValue(final String fieldName);
 
-    /**
-     * Get the field names of all fields in the unique set
-     * @return
-     */
-    public Set<String> getFieldNames();
 }

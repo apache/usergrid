@@ -12,6 +12,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.cassandra.db.marshal.BooleanType;
 import org.apache.cassandra.db.marshal.BytesType;
 import org.apache.cassandra.db.marshal.ReversedType;
 import org.apache.cassandra.db.marshal.UUIDType;
@@ -43,6 +44,8 @@ import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.smile.SmileFactory;
+import com.fasterxml.uuid.UUIDComparator;
+import com.fasterxml.uuid.impl.UUIDUtil;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -56,6 +59,7 @@ import com.netflix.astyanax.model.Row;
 import com.netflix.astyanax.model.Rows;
 import com.netflix.astyanax.serializers.AbstractSerializer;
 import com.netflix.astyanax.serializers.BooleanSerializer;
+import com.netflix.astyanax.util.TimeUUIDUtils;
 
 import rx.Observable;
 import rx.Scheduler;
@@ -109,8 +113,9 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
         Preconditions.checkNotNull( entity, "entity is required" );
 
         final Id entityId = entity.getId();
+        final UUID version = entity.getVersion();
 
-        return doWrite( collectionScope, entityId, new RowOp() {
+        return doWrite( collectionScope, entityId, version, new RowOp() {
             @Override
             public void doOp( final ColumnListMutation<Boolean> colMutation ) {
                 colMutation.putColumn( COL_VALUE,
@@ -267,10 +272,38 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
 
     @Override
-    public MvccEntity load( final CollectionScope scope, final Id entityId ) {
+    public Iterator<MvccEntity> loadDescendingHistory( final CollectionScope collectionScope, final Id entityId,
+                                                       final UUID version, final int fetchSize ) {
+
+        Preconditions.checkNotNull( collectionScope, "collectionScope is required" );
+        Preconditions.checkNotNull( entityId, "entity id is required" );
+        Preconditions.checkNotNull( version, "version is required" );
+        Preconditions.checkArgument( fetchSize > 0, "max Size must be greater than 0" );
+
+
+
+        throw new UnsupportedOperationException( "This version does not support loading history" );
+    }
+
+
+    @Override
+    public Iterator<MvccEntity> loadAscendingHistory( final CollectionScope collectionScope, final Id entityId,
+                                                      final UUID version, final int fetchSize ) {
+
+        Preconditions.checkNotNull( collectionScope, "collectionScope is required" );
+        Preconditions.checkNotNull( entityId, "entity id is required" );
+        Preconditions.checkNotNull( version, "version is required" );
+        Preconditions.checkArgument( fetchSize > 0, "max Size must be greater than 0" );
+
+        throw new UnsupportedOperationException( "This version does not support loading history" );
+    }
+
+
+    @Override
+    public Optional<MvccEntity> load( final CollectionScope scope, final Id entityId ) {
         final EntitySet results = load( scope, Collections.singleton( entityId ), UUIDGenerator.newTimeUUID() );
 
-        return results.getEntity( entityId );
+        return Optional.fromNullable( results.getEntity( entityId ));
     }
 
 
@@ -280,13 +313,13 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
         Preconditions.checkNotNull( entityId, "entity id is required" );
         Preconditions.checkNotNull( version, "version is required" );
 
-        final Optional<Entity> value = Optional.absent();
 
-        return doWrite( collectionScope, entityId, new RowOp() {
+        TimeUUIDUtils.getMicrosTimeFromUUID(version);
+        return doWrite( collectionScope, entityId, version, new RowOp() {
             @Override
             public void doOp( final ColumnListMutation<Boolean> colMutation ) {
-                colMutation.putColumn( COL_VALUE, entitySerializer
-                        .toByteBuffer( new EntityWrapper( MvccEntity.Status.COMPLETE, version, Optional.<Entity>absent() ) ) );
+                colMutation.putColumn( COL_VALUE, entitySerializer.toByteBuffer(
+                    new EntityWrapper( MvccEntity.Status.COMPLETE, version, Optional.<Entity>absent() ) ) );
             }
         } );
     }
@@ -299,7 +332,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
         Preconditions.checkNotNull( version, "version is required" );
 
 
-        return doWrite( collectionScope, entityId, new RowOp() {
+        return doWrite( collectionScope, entityId, version, new RowOp() {
             @Override
             public void doOp( final ColumnListMutation<Boolean> colMutation ) {
                 colMutation.deleteColumn( Boolean.TRUE );
@@ -315,7 +348,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
         //row for fast seeks
         MultiTennantColumnFamilyDefinition cf =
                 new MultiTennantColumnFamilyDefinition( CF_ENTITY_DATA, BytesType.class.getSimpleName(),
-                        ReversedType.class.getSimpleName() + "(" + UUIDType.class.getSimpleName() + ")",
+                        BooleanType.class.getSimpleName() ,
                         BytesType.class.getSimpleName(), MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
 
 
@@ -326,7 +359,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
     /**
      * Do the write on the correct row for the entity id with the operation
      */
-    private MutationBatch doWrite( final CollectionScope collectionScope, final Id entityId, final RowOp op ) {
+    private MutationBatch doWrite( final CollectionScope collectionScope, final Id entityId, final UUID version, final RowOp op ) {
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
         final Id applicationId = collectionScope.getApplication();
@@ -340,8 +373,9 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
         final ScopedRowKey<CollectionPrefixedKey<Id>> rowKey =
                 ScopedRowKey.fromKey( applicationId, collectionPrefixedKey );
 
+        final long timestamp = version.timestamp();
 
-        op.doOp( batch.withRow( CF_ENTITY_DATA, rowKey ) );
+        op.doOp( batch.withRow( CF_ENTITY_DATA, rowKey ).setTimestamp( timestamp  ) );
 
         return batch;
     }
@@ -459,6 +493,10 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
             builder.addByte( VERSION );
 
+
+            //write our version
+            builder.addUUID( wrapper.version );
+
             //mark this version as empty
             if ( !wrapper.entity.isPresent() ) {
                 //we're empty
@@ -467,10 +505,6 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
                 return FIELD_BUFFER_SERIALIZER.toByteBuffer( builder.build() );
             }
-
-
-            //write our version
-            builder.addUUID( wrapper.version );
 
 
             //we have an entity

@@ -43,6 +43,7 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImp
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
+import org.apache.usergrid.persistence.core.astyanax.ColumnNameIterator;
 import org.apache.usergrid.persistence.core.astyanax.ColumnParser;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
@@ -255,10 +256,70 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
 
 
     @Override
-    public MvccEntity load( final CollectionScope scope, final Id entityId ) {
+    public Iterator<MvccEntity> loadDescendingHistory( final CollectionScope collectionScope, final Id entityId,
+                                                       final UUID version, final int fetchSize ) {
+
+        Preconditions.checkNotNull( collectionScope, "collectionScope is required" );
+        Preconditions.checkNotNull( entityId, "entity id is required" );
+        Preconditions.checkNotNull( version, "version is required" );
+        Preconditions.checkArgument( fetchSize > 0, "max Size must be greater than 0" );
+
+
+        final Id applicationId = collectionScope.getApplication();
+        final Id ownerId = collectionScope.getOwner();
+        final String collectionName = collectionScope.getName();
+
+        final CollectionPrefixedKey<Id> collectionPrefixedKey =
+                new CollectionPrefixedKey<>( collectionName, ownerId, entityId );
+
+
+        final ScopedRowKey<CollectionPrefixedKey<Id>> rowKey =
+                ScopedRowKey.fromKey( applicationId, collectionPrefixedKey );
+
+
+        RowQuery<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> query =
+                keyspace.prepareQuery( columnFamily ).getKey( rowKey )
+                        .withColumnRange( version, null, false, fetchSize );
+
+        return new ColumnNameIterator( query, new MvccColumnParser( entityId, getEntitySerializer() ), false );
+    }
+
+
+    @Override
+    public Iterator<MvccEntity> loadAscendingHistory( final CollectionScope collectionScope, final Id entityId,
+                                                      final UUID version, final int fetchSize ) {
+
+        Preconditions.checkNotNull( collectionScope, "collectionScope is required" );
+        Preconditions.checkNotNull( entityId, "entity id is required" );
+        Preconditions.checkNotNull( version, "version is required" );
+        Preconditions.checkArgument( fetchSize > 0, "max Size must be greater than 0" );
+
+
+        final Id applicationId = collectionScope.getApplication();
+        final Id ownerId = collectionScope.getOwner();
+        final String collectionName = collectionScope.getName();
+
+        final CollectionPrefixedKey<Id> collectionPrefixedKey =
+                new CollectionPrefixedKey<>( collectionName, ownerId, entityId );
+
+
+        final ScopedRowKey<CollectionPrefixedKey<Id>> rowKey =
+                ScopedRowKey.fromKey( applicationId, collectionPrefixedKey );
+
+
+        RowQuery<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> query =
+                keyspace.prepareQuery( columnFamily ).getKey( rowKey )
+                        .withColumnRange( null, version, true, fetchSize );
+
+        return new ColumnNameIterator( query, new MvccColumnParser( entityId, getEntitySerializer() ), false );
+    }
+
+
+    @Override
+    public Optional<MvccEntity> load( final CollectionScope scope, final Id entityId ) {
         final EntitySet results = load( scope, Collections.singleton( entityId ), UUIDGenerator.newTimeUUID() );
 
-        return results.getEntity( entityId );
+        return Optional.fromNullable( results.getEntity( entityId ));
     }
 
 
@@ -267,8 +328,6 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
         Preconditions.checkNotNull( collectionScope, "collectionScope is required" );
         Preconditions.checkNotNull( entityId, "entity id is required" );
         Preconditions.checkNotNull( version, "version is required" );
-
-        final Optional<Entity> value = Optional.absent();
 
         return doWrite( collectionScope, entityId, new RowOp() {
             @Override

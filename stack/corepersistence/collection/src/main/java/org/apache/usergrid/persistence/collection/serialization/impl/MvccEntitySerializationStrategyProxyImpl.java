@@ -16,6 +16,7 @@
  */
 package org.apache.usergrid.persistence.collection.serialization.impl;
 
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
@@ -84,8 +85,30 @@ public abstract class MvccEntitySerializationStrategyProxyImpl implements MvccEn
     }
 
 
+
     @Override
-    public MvccEntity load( final CollectionScope scope, final Id entityId ) {
+    public Iterator<MvccEntity> loadDescendingHistory( final CollectionScope context, final Id entityId,
+                                                       final UUID version, final int fetchSize ) {
+        if ( isOldVersion() ) {
+            return previous.loadDescendingHistory( context, entityId, version, fetchSize );
+        }
+
+        return current.loadDescendingHistory( context, entityId, version, fetchSize );
+    }
+
+
+    @Override
+    public Iterator<MvccEntity> loadAscendingHistory( final CollectionScope context, final Id entityId,
+                                                      final UUID version, final int fetchSize ) {
+        if ( isOldVersion() ) {
+            return previous.loadAscendingHistory( context, entityId, version, fetchSize );
+        }
+
+        return current.loadAscendingHistory( context, entityId, version, fetchSize );
+    }
+
+    @Override
+    public Optional<MvccEntity> load( final CollectionScope scope, final Id entityId ) {
         if ( isOldVersion() ) {
             return previous.load( scope, entityId );
         }

@@ -78,7 +78,7 @@ public abstract class MvccEntitySerializationStrategyV3Test extends MvccEntitySe
 
         //now load it
         final MvccEntity loadedEntity =
-                getMvccEntitySerializationStrategy().load( context, id );
+                getMvccEntitySerializationStrategy().load( context, id ).get();
 
 
         assertLargeEntity( mvccEntity, loadedEntity );

@@ -337,7 +337,7 @@ public abstract class MvccEntitySerializationStrategyImplTest {
         final Id applicationId = new SimpleId( "application" );
         final String name = "test";
 
-        CollectionScope context = new CollectionScopeImpl(organizationId, applicationId, name );
+        CollectionScope context = new CollectionScopeImpl( organizationId, applicationId, name );
 
 
         final UUID entityId = UUIDGenerator.newTimeUUID();
@@ -359,7 +359,8 @@ public abstract class MvccEntitySerializationStrategyImplTest {
 
         //now load it back
 
-        MvccEntity returnedV1 = serializationStrategy.load( context, Collections.singleton( id ) , version1 ).getEntity( id );
+        MvccEntity returnedV1 =
+            serializationStrategy.load( context, Collections.singleton( id ), version1 ).getEntity( id );
 
         assertEquals( "Mvcc entities are the same", saved, returnedV1 );
 
@@ -379,7 +380,8 @@ public abstract class MvccEntitySerializationStrategyImplTest {
 
         serializationStrategy.write( context, savedV2 ).execute();
 
-        MvccEntity returnedV2 = serializationStrategy.load( context, Collections.singleton( id ) , version2 ).getEntity( id );
+        MvccEntity returnedV2 =
+            serializationStrategy.load( context, Collections.singleton( id ), version2 ).getEntity( id );
 
         assertEquals( "Mvcc entities are the same", savedV2, returnedV2 );
 
@@ -388,46 +390,85 @@ public abstract class MvccEntitySerializationStrategyImplTest {
 
         UUID version3 = UUIDGenerator.newTimeUUID();
 
-        serializationStrategy.mark( context,  id , version3 ).execute();
+        serializationStrategy.mark( context, id, version3 ).execute();
 
 
         final Optional<Entity> empty = Optional.absent();
 
         MvccEntity clearedV3 = new MvccEntityImpl( id, version3, MvccEntity.Status.COMPLETE, empty );
 
-        MvccEntity returnedV3 = serializationStrategy.load( context, Collections.singleton( id ) , version3 ).getEntity( id );
+        MvccEntity returnedV3 =
+            serializationStrategy.load( context, Collections.singleton( id ), version3 ).getEntity( id );
 
         assertEquals( "entities are the same", clearedV3, returnedV3 );
 
         //now ask for up to 10 versions from the current version, we should get cleared, v2, v1
         UUID current = UUIDGenerator.newTimeUUID();
 
-        MvccEntity first = serializationStrategy.load( context, id );
+        MvccEntity first = serializationStrategy.load( context, id ).get();
 
-        assertEquals( clearedV3, first);
+        assertEquals( clearedV3, first );
 
 
         //now delete v2 and v1, we should still get v3
-        serializationStrategy.delete( context, id , version1 ).execute();
-        serializationStrategy.delete( context, id , version2 ).execute();
+        serializationStrategy.delete( context, id, version1 ).execute();
+        serializationStrategy.delete( context, id, version2 ).execute();
 
-        first = serializationStrategy.load( context, id );
+        first = serializationStrategy.load( context, id ).get();
 
-         assertEquals( clearedV3, first );
+        assertEquals( clearedV3, first );
 
 
         //now get it, should be gone
-        serializationStrategy.delete( context,  id , version3 ).execute();
+        serializationStrategy.delete( context, id, version3 ).execute();
 
 
-        first = serializationStrategy.load( context, id );
+        assertFalse("Not loaded", serializationStrategy.load( context, id ).isPresent());
 
-        assertNull("Not loaded", first);
+    }
+
+    @Test
+    public void loadAscendingHistory()  throws ConnectionException  {
+        final Id organizationId = new SimpleId("organization");
+        final Id applicationId = new SimpleId("application");
+        final String name = "test";
+
+        CollectionScope context = new CollectionScopeImpl(organizationId, applicationId, name);
+
+
+        final UUID entityId = UUIDGenerator.newTimeUUID();
+        final UUID version1 = UUIDGenerator.newTimeUUID();
+        final String type = "test";
+
+        final Id id = new SimpleId(entityId, type);
+        Entity entityv1 = new Entity(id);
+        EntityUtils.setVersion(entityv1, version1);
+        MvccEntity saved = new MvccEntityImpl(id, version1, MvccEntity.Status.COMPLETE, Optional.of(entityv1));
+        //persist the entity
+        serializationStrategy.write(context, saved).execute();
+
+        //now write a new version of it
+        Entity entityv2 = new Entity(id);
+        UUID version2 = UUIDGenerator.newTimeUUID();
+        EntityUtils.setVersion(entityv1, version2);
+        MvccEntity savedV2 = new MvccEntityImpl(id, version2, MvccEntity.Status.COMPLETE, Optional.of(entityv2));
+        serializationStrategy.write(context, savedV2).execute();
+
+        Iterator<MvccEntity> entities = serializationStrategy.loadAscendingHistory( context, id, savedV2.getVersion(),
+                20 );
+        assertTrue(entities.hasNext());
+        assertEquals(saved.getVersion(), entities.next().getVersion());
+        assertEquals(savedV2.getVersion(), entities.next().getVersion());
+        assertFalse(entities.hasNext());
 
     }
 
 
-    @Test
+    /**
+     * We no longer support partial writes, ensure that an exception is thrown when this occurs
+     * @throws ConnectionException
+     */
+    @Test(expected = UnsupportedOperationException.class)
     public void writeLoadDeletePartial() throws ConnectionException {
 
         final Id organizationId = new SimpleId( "organization" );
@@ -469,67 +510,6 @@ public abstract class MvccEntitySerializationStrategyImplTest {
         //persist the entity
         serializationStrategy.write( context, saved ).execute();
 
-        //now load it back
-
-        MvccEntity returned = serializationStrategy.load( context, Collections.singleton( id ) , version ).getEntity( id );
-
-        assertEquals( "Mvcc entities are the same", saved, returned );
-
-
-        assertEquals( id, returned.getId() );
-
-
-        Field<Boolean> boolFieldReturned = returned.getEntity().get().getField( boolField.getName() );
-
-        assertEquals( boolField, boolFieldReturned );
-
-        Field<Double> doubleFieldReturned = returned.getEntity().get().getField( doubleField.getName() );
-
-        assertEquals( doubleField, doubleFieldReturned );
-
-        Field<Integer> intFieldReturned = returned.getEntity().get().getField( intField.getName() );
-
-        assertEquals( intField, intFieldReturned );
-
-        Field<Long> longFieldReturned = returned.getEntity().get().getField( longField.getName() );
-
-        assertEquals( longField, longFieldReturned );
-
-        Field<String> stringFieldReturned = returned.getEntity().get().getField( stringField.getName() );
-
-        assertEquals( stringField, stringFieldReturned );
-
-        Field<UUID> uuidFieldReturned = returned.getEntity().get().getField( uuidField.getName() );
-
-        assertEquals( uuidField, uuidFieldReturned );
-
-
-        Set<Field> results = new HashSet<Field>();
-        results.addAll( returned.getEntity().get().getFields());
-
-
-        assertTrue( results.contains( boolField ) );
-        assertTrue( results.contains( doubleField ) );
-        assertTrue( results.contains( intField ) );
-        assertTrue( results.contains( longField ) );
-        assertTrue( results.contains( stringField ) );
-        assertTrue( results.contains( uuidField ) );
-
-        assertEquals( 6, results.size() );
-
-
-        assertEquals( id, entity.getId() );
-        assertEquals( version, entity.getVersion() );
-
-
-        //now delete it
-        serializationStrategy.delete( context, id , version ).execute();
-
-        //now get it, should be gone
-
-        returned = serializationStrategy.load( context, Collections.singleton( id ) , version ).getEntity( id );
-
-        assertNull( returned );
     }
 
 
@@ -593,6 +573,40 @@ public abstract class MvccEntitySerializationStrategyImplTest {
                 .load( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), Collections.<Id>singleton( new SimpleId( "test" )), null );
     }
 
+
+    @Test(expected = NullPointerException.class)
+    public void loadListParamContext() throws ConnectionException {
+        serializationStrategy.loadDescendingHistory( null, new SimpleId( "test" ), UUIDGenerator.newTimeUUID(), 1 );
+    }
+
+
+    @Test(expected = NullPointerException.class)
+    public void loadListParamEntityId() throws ConnectionException {
+
+        serializationStrategy
+                .loadDescendingHistory(
+                        new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), null,
+                        UUIDGenerator.newTimeUUID(), 1 );
+    }
+
+
+    @Test(expected = NullPointerException.class)
+    public void loadListParamVersion() throws ConnectionException {
+
+        serializationStrategy
+                .loadDescendingHistory(
+                        new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" ),
+                        new SimpleId( "test" ), null, 1 );
+    }
+
+
+    @Test(expected = IllegalArgumentException.class)
+    public void loadListParamSize() throws ConnectionException {
+
+        serializationStrategy.loadDescendingHistory(
+                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" ),
+                new SimpleId( "test" ), UUIDGenerator.newTimeUUID(), 0 );
+    }
 
 
     /**
