@@ -31,13 +31,12 @@ import java.util.Properties;
  * Simple class that starts the job store after the application context has been fired up. We don't
  * want to start the service until all of spring has been initialized in our webapp context
  */
-//@Component( "jobServiceBoostrap" )
 public class JobServiceBoostrap implements
         ApplicationListener<ContextRefreshedEvent> {
 
     private static final Logger logger = LoggerFactory.getLogger( JobServiceBoostrap.class );
 
-    private static final String START_SCHEDULER_PROP = "usergrid.scheduler.enabled";
+    public static final String START_SCHEDULER_PROP = "usergrid.scheduler.enabled";
 
     @Autowired
     private JobSchedulerService schedulerService;
@@ -60,7 +59,6 @@ public class JobServiceBoostrap implements
         String start = properties.getProperty( START_SCHEDULER_PROP, "true" );
         if ( Boolean.parseBoolean( start ) ) {
             logger.info( "Starting Scheduler Service..." );
-            // start the scheduler service
             schedulerService.startAndWait();
 
         } else {

@@ -45,7 +45,7 @@
             <id>arquillian-tomcat</id>
 
             <activation>
-                <activeByDefault>false</activeByDefault>
+                <activeByDefault>true</activeByDefault>
             </activation>
 
             <dependencies>
@@ -96,6 +96,7 @@
                     <groupId>org.jboss.arquillian.container</groupId>
                     <artifactId>arquillian-tomcat-remote-7</artifactId>
                     <version>1.0.0.CR7</version>
+                    <scope>test</scope>
                 </dependency>
 
             </dependencies>
