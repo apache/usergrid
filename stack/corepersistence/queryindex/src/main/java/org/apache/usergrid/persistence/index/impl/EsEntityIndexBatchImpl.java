@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.common.util.concurrent.Futures;
 import org.apache.usergrid.persistence.core.future.BetterFuture;
+import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.apache.usergrid.persistence.index.*;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
@@ -104,6 +105,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         this.indexIdentifier = IndexingUtils.createIndexIdentifier(config, applicationScope);
         this.alias = indexIdentifier.getAlias();
         this.refresh = config.isForcedRefresh();
+        //constrained
         this.promises = new ConcurrentLinkedQueue<>();
     }
 
@@ -147,10 +149,10 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
     public EntityIndexBatch deindex( final IndexScope indexScope, final Id id, final UUID version) {
 
         IndexValidationUtils.validateIndexScope( indexScope );
-        ValidationUtils.verifyIdentity( id );
+        ValidationUtils.verifyIdentity(id);
         ValidationUtils.verifyVersion( version );
 
-        final String context = createContextName( indexScope );
+        final String context = createContextName(indexScope);
         final String entityType = id.getType();
 
         final String indexId = createIndexDocId( id, version, context );
@@ -193,7 +195,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
                    }
                }).toBlocking().last();
 
-        log.debug( "Deindexed Entity with index id " + indexId );
+        log.debug("Deindexed Entity with index id " + indexId);
 
 
         return this;
@@ -213,35 +215,41 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         return deindex( indexScope, entity.getId(), entity.getVersion() );
     }
 
-
-
     @Override
     public void execute() {
-//        indexBatchBuffer.flush();
-        Observable.from(promises)
+       flushFutures();
+    }
+
+    @Override
+    public void executeAndRefresh() {
+        flushFutures();
+        entityIndex.refresh();
+    }
+
+    private void flushFutures() {
+        ObservableIterator<BetterFuture> iterator = new ObservableIterator<BetterFuture>("futures") {
+            @Override
+            protected Iterator<BetterFuture> getIterator() {
+                return promises.iterator();
+            }
+        };
+        Observable.create(iterator)
                 .doOnNext(new Action1<BetterFuture>() {
                     @Override
                     public void call(BetterFuture betterFuture) {
                         betterFuture.get();
                     }
-                }).toBlocking().lastOrDefault(null);
-        promises.clear();
+                })
+                .buffer(100)
+                .doOnNext(new Action1<List<BetterFuture>>() {
+                    @Override
+                    public void call(List<BetterFuture> betterFutures) {
+                        promises.removeAll(betterFutures);
+                    }
+                })
+                .toBlocking()
+                .lastOrDefault(null);
     }
-
-
-
-    @Override
-    public void executeAndRefresh() {
-//        indexBatchBuffer.flushAndRefresh();
-        Iterator<BetterFuture> iterator = promises.iterator();
-        while(iterator.hasNext()){
-            iterator.next().get();
-        }
-        promises.clear();
-        entityIndex.refresh();
-
-    }
-
 
     /**
      * Set the entity as a map with the context

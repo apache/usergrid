@@ -59,6 +59,7 @@ public class IndexBatchBufferImpl implements IndexBatchBuffer {
     private final IndexFig config;
     private final Timer flushTimer;
     private final ArrayBlockingQueue<RequestBuilderContainer> blockingQueue;
+    private final Counter bufferCounter;
     private Observable<List<RequestBuilderContainer>> consumer;
     private Producer producer;
 
@@ -72,7 +73,7 @@ public class IndexBatchBufferImpl implements IndexBatchBuffer {
         this.failureMonitor = new FailureMonitorImpl(config,provider);
         this.producer = new Producer();
         this.client = provider.getClient();
-
+        bufferCounter = metricsFactory.getCounter(IndexBatchBuffer.class,"index.buffer.size");
         consumer();
     }
 
@@ -97,7 +98,7 @@ public class IndexBatchBufferImpl implements IndexBatchBuffer {
     @Override
     public BetterFuture<ShardReplicationOperationRequestBuilder> put(IndexRequestBuilder builder){
         RequestBuilderContainer container = new RequestBuilderContainer(builder);
-        metricsFactory.getCounter(IndexBatchBuffer.class,"index.buffer.size").inc();
+        bufferCounter.inc();
         producer.put(container);
         return container.getFuture();
     }
@@ -105,7 +106,7 @@ public class IndexBatchBufferImpl implements IndexBatchBuffer {
     @Override
     public BetterFuture<ShardReplicationOperationRequestBuilder> put(DeleteRequestBuilder builder){
         RequestBuilderContainer container = new RequestBuilderContainer(builder);
-        metricsFactory.getCounter(IndexBatchBuffer.class,"index.buffer.size").inc();
+        bufferCounter.inc();
         producer.put(container);
         return container.getFuture();
     }
