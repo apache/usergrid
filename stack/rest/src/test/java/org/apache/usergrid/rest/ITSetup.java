@@ -35,43 +35,35 @@ import org.apache.usergrid.setup.ConcurrentProcessSingleton;
 /** A {@link org.junit.rules.TestRule} that sets up services. */
 public class ITSetup  {
 
-    private ServiceManagerFactory smf;
+    private static ITSetup instance;
+
     private EntityManagerFactory emf;
-    private ApplicationCreator applicationCreator;
-    private TokenService tokenService;
-    private SignInProviderFactory providerFactory;
     private Properties properties;
     private ManagementService managementService;
-    private TomcatResource tomcatResource;
 
-    private URI uri;
 
     private SpringResource springResource;
 
 
-    public ITSetup( ) {
+    private ITSetup( ) {
 
         this.springResource = ConcurrentProcessSingleton.getInstance().getSpringResource();
 
         emf =                springResource.getBean( EntityManagerFactory.class );
-        smf =                springResource.getBean( ServiceManagerFactory.class );
-        tokenService =       springResource.getBean( TokenService.class );
-        providerFactory =    springResource.getBean( SignInProviderFactory.class );
-        applicationCreator = springResource.getBean( ApplicationCreator.class );
         managementService =  springResource.getBean( ManagementService.class );
+        properties = springResource.getBean( "properties", Properties.class );
 
-        tomcatResource = TomcatResource.instance;
-        tomcatResource.setWebAppsPath( "src/main/webapp" );
 
-        // Initialize Jersey Client
-        //TODO, make this port a resource that's filtered by maven build for the port number
-        uri = UriBuilder.fromUri("http://localhost/").port( 8080 ).build();
     }
 
+    public static synchronized ITSetup getInstance(){
+        if(instance == null){
+            instance = new ITSetup();
+        }
 
-    public int getTomcatPort() {
-        return 8080;
+        return instance;
     }
+
 
 
     public ManagementService getMgmtSvc() {
@@ -83,28 +75,8 @@ public class ITSetup  {
         return emf;
     }
 
-
-    public ServiceManagerFactory getSmf() {
-        return smf;
-    }
-
-
-    public ApplicationCreator getAppCreator() {
-        return applicationCreator;
-    }
-
-
-    public TokenService getTokenSvc() {
-        return tokenService;
-    }
-
-
     public Properties getProps() {
         return properties;
     }
 
-
-    public SignInProviderFactory getProviderFactory() {
-        return providerFactory;
-    }
 }

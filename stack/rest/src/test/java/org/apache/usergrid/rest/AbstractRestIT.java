@@ -28,6 +28,9 @@ import com.sun.jersey.test.framework.JerseyTest;
 import com.sun.jersey.test.framework.WebAppDescriptor;
 import com.sun.jersey.test.framework.spi.container.TestContainerFactory;
 import org.apache.usergrid.java.client.Client;
+import org.apache.usergrid.management.ManagementService;
+import org.apache.usergrid.setup.ConcurrentProcessSingleton;
+
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Rule;
@@ -64,6 +67,9 @@ public abstract class AbstractRestIT extends JerseyTest {
     private static final Logger LOG = LoggerFactory.getLogger( AbstractRestIT.class );
     private static boolean usersSetup = false;
 
+    protected static TomcatRuntime tomcatRuntime = TomcatRuntime.getInstance();
+
+    protected static final ITSetup setup = ITSetup.getInstance();
 
     private static ClientConfig clientConfig = new DefaultClientConfig();
 
@@ -75,10 +81,6 @@ public abstract class AbstractRestIT extends JerseyTest {
 
     protected static final AppDescriptor descriptor;
 
-    public static ITSetup setup = new ITSetup();
-
-    @Rule
-    public TomcatResource tomcatResource = new TomcatResource();
 
     //private static final URI baseURI = setup.getBaseURI();
 
@@ -186,7 +188,7 @@ public abstract class AbstractRestIT extends JerseyTest {
         setUserPassword( "ed@anuff.com", "sesame" );
 
         client = new Client( "test-organization", "test-app" ).withApiUrl(
-                UriBuilder.fromUri( "http://localhost/" ).port( setup.getTomcatPort() ).build().toString() );
+                UriBuilder.fromUri( "http://localhost/" ).port(tomcatRuntime.getPort() ).build().toString() );
 
         org.apache.usergrid.java.client.response.ApiResponse response =
                 client.authorizeAppUser( "ed@anuff.com", "sesame" );
@@ -206,7 +208,7 @@ public abstract class AbstractRestIT extends JerseyTest {
     @Override
     protected URI getBaseURI() {
         try {
-            return new URI("http://localhost:" + tomcatResource.getPort());
+            return new URI("http://localhost:" + tomcatRuntime.getPort());
         } catch (URISyntaxException e) {
             throw new RuntimeException("Error determining baseURI", e);
         }

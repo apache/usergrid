@@ -43,6 +43,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.rest.AbstractRestIT;
+import org.apache.usergrid.rest.ITSetup;
 import org.apache.usergrid.rest.TestContextSetup;
 import org.apache.usergrid.rest.test.security.TestAppUser;
 import org.apache.usergrid.rest.test.security.TestUser;
@@ -70,6 +71,8 @@ import static org.apache.usergrid.utils.MapUtils.hashMap;
 public class RegistrationIT extends AbstractRestIT {
 
     private static final Logger logger = LoggerFactory.getLogger( RegistrationIT.class );
+
+    private static final ITSetup setup = ITSetup.getInstance();
 
     @Rule
     public TestContextSetup context = new TestContextSetup( this );
@@ -100,7 +103,7 @@ public class RegistrationIT extends AbstractRestIT {
             context.createAppForOrg();
 
             final UUID owner_uuid = context.getActiveUser().getUuid();
-            
+
 //            refreshIndex("test-organization", "test-app");
 //
 //            UUID owner_uuid =
@@ -309,7 +312,7 @@ public class RegistrationIT extends AbstractRestIT {
             String adminUserName = "AdminUserFromOtherOrg";
             String adminUserEmail = "AdminUserFromOtherOrg@otherorg.com";
 
-            UserInfo adminUser = setup.getMgmtSvc().createAdminUser( 
+            UserInfo adminUser = setup.getMgmtSvc().createAdminUser(
                     adminUserEmail, adminUserEmail, adminUserEmail, "password1", true, false );
 
             refreshIndex("test-organization", "test-app");
@@ -323,7 +326,7 @@ public class RegistrationIT extends AbstractRestIT {
             // this should NOT send resetpwd link in email to newly added org admin user(that
             // already exists in usergrid) only "User Invited To Organization" email
             String adminToken = adminToken();
-            JsonNode node = postAddAdminToOrg( "test-organization", 
+            JsonNode node = postAddAdminToOrg( "test-organization",
                     adminUserEmail, "password1", adminToken );
             String uuid = node.get( "data" ).get( "user" ).get( "uuid" ).textValue();
             UUID userId = UUID.fromString( uuid );

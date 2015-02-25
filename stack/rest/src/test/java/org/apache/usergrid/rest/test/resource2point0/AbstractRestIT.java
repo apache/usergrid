@@ -28,7 +28,7 @@ import com.sun.jersey.test.framework.JerseyTest;
 import com.sun.jersey.test.framework.WebAppDescriptor;
 import com.sun.jersey.test.framework.spi.container.TestContainerFactory;
 import org.apache.usergrid.rest.ITSetup;
-import org.apache.usergrid.rest.TomcatResource;
+import org.apache.usergrid.rest.TomcatRuntime;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.ApplicationsResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.OrganizationResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.ManagementResource;
@@ -53,12 +53,10 @@ public class AbstractRestIT extends JerseyTest {
 
     private static ClientConfig clientConfig = new DefaultClientConfig();
 
-    @Rule
-    public TomcatResource tomcatResource = new TomcatResource();
+    public static TomcatRuntime tomcatRuntime = TomcatRuntime.getInstance();
 
-    public static ITSetup setup = new ITSetup(  );
-//
-//    TODO: Allow the client to be setup seperately
+
+
     @Rule
     public ClientSetup clientSetup = new ClientSetup( this.getBaseURI().toString() );
 
@@ -112,7 +110,7 @@ public class AbstractRestIT extends JerseyTest {
     @Override
     protected URI getBaseURI() {
         try {
-            return new URI("http://localhost:" + tomcatResource.getPort());
+            return new URI("http://localhost:" + tomcatRuntime.getPort());
         } catch (URISyntaxException e) {
             throw new RuntimeException("Error determining baseURI", e);
         }
