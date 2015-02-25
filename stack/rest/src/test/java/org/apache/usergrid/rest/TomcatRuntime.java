@@ -42,7 +42,7 @@ public class TomcatRuntime extends ExternalResource {
     private static final Logger log = LoggerFactory.getLogger( TomcatRuntime.class );
 
 
-    private static final String WEBAPPS_PATH = "src/main/webapp";
+    private static final String WEBAPP_PATH = System.getProperty("webapp.directory");
 
     private static TomcatRuntime instance;
 
@@ -54,7 +54,7 @@ public class TomcatRuntime extends ExternalResource {
         //before we run tomcat, we need to cleanup our data
         ConcurrentProcessSingleton.getInstance();
 
-        tomcat = new TomcatInstance( WEBAPPS_PATH );
+        tomcat = new TomcatInstance( WEBAPP_PATH );
         tomcat.startTomcat();
 
         //stop on JVM shutdown

@@ -33,7 +33,7 @@
 		<property name="locations">
 			<list>
 				<value>classpath:/usergrid-default.properties</value>
-                <value>classpath:/usergrid-deployment.properties</value>
+                <value>${usergrid-custom-spring-properties}</value>
 			</list>
 		</property>
 	</bean>
