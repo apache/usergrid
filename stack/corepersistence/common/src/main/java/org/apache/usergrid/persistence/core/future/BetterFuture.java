@@ -22,21 +22,22 @@ import java.util.concurrent.FutureTask;
 /**
  * Future without the exception nastiness
  */
-public  class BetterFuture<T>{
-    FutureTask<T> future;
+public  class BetterFuture<T> extends FutureTask<T> {
     public BetterFuture(Callable<T> callable){
-        future = new FutureTask<>(callable);
+        super(callable);
     }
 
     public void done(){
-        future.run();
+        run();
     }
 
     public T get(){
         try {
-            return future.get();
+            return super.get();
         }catch (Exception e){
             throw new RuntimeException(e);
         }
     }
+
+
 }

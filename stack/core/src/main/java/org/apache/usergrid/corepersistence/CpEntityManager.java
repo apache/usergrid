@@ -33,6 +33,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.core.future.BetterFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
@@ -975,11 +976,11 @@ public class CpEntityManager implements EntityManager {
         } );
 
 
-        ei.createBatch().index( defaultIndexScope, cpEntity ).execute();
-
+        BetterFuture future = ei.createBatch().index( defaultIndexScope, cpEntity ).execute();
         // update in all containing collections and connection indexes
         CpRelationManager rm = ( CpRelationManager ) getRelationManager( entityRef );
         rm.updateContainingCollectionAndCollectionIndexes( cpEntity );
+        future.get();
     }
 
 
@@ -2829,7 +2830,7 @@ public class CpEntityManager implements EntityManager {
         //
         //        batch.index(appAllTypesScope, memberEntity);
 
-        batch.execute();
+        batch.execute().get();
     }
 }
 

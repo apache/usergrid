@@ -121,15 +121,27 @@ public interface IndexFig extends GuicyFig {
     @Default("2")
     int getIndexCacheMaxWorkers();
 
+    /**
+     * how long to wait before the buffer flushes to send
+     * @return
+     */
     @Default("250")
     @Key( INDEX_BUFFER_TIMEOUT )
     int getIndexBufferTimeout();
 
-    @Default("100")
+    /**
+     * size of the buffer to build up before you send results
+     * @return
+     */
+    @Default("300")
     @Key( INDEX_BUFFER_SIZE )
     int getIndexBufferSize();
 
-    @Default("300")
+    /**
+     * Request batch size for ES
+     * @return
+     */
+    @Default("100")
     @Key( INDEX_BATCH_SIZE)
     int getIndexBatchSize();
 

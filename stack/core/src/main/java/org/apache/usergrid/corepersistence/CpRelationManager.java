@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.core.future.BetterFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
@@ -441,7 +442,7 @@ public class CpRelationManager implements RelationManager {
                 } ).count().toBlocking().lastOrDefault( 0 );
 
 
-        entityIndexBatch.execute();
+        entityIndexBatch.execute().get();
 
         logger.debug( "updateContainingCollectionsAndCollections() updated {} indexes", count );
     }
@@ -834,7 +835,7 @@ public class CpRelationManager implements RelationManager {
 
         batch.deindex( itemScope, cpHeadEntity );
 
-        batch.execute();
+        BetterFuture future = batch.execute();
 
         // remove edge from collection to item
         GraphManager gm = managerCache.getGraphManager( applicationScope );
@@ -870,8 +871,8 @@ public class CpRelationManager implements RelationManager {
                 }
             }
         }
+        future.get();
     }
-
 
     @Override
     public void copyRelationships(String srcRelationName, EntityRef dstEntityRef,
@@ -1060,12 +1061,14 @@ public class CpRelationManager implements RelationManager {
 //        batch.index( allTypesIndexScope, targetEntity );
 
 
-        batch.execute();
+        BetterFuture future = batch.execute();
 
         Keyspace ko = cass.getApplicationKeyspace( applicationId );
         Mutator<ByteBuffer> m = createMutator( ko, be );
         batchUpdateEntityConnection( m, false, connection, UUIDGenerator.newTimeUUID() );
         batchExecute( m, CassandraService.RETRY_COUNT );
+
+        future.get();
 
         return connection;
     }
@@ -1291,7 +1294,7 @@ public class CpRelationManager implements RelationManager {
 //
 //        batch.deindex( allTypesIndexScope, targetEntity );
 
-        batch.execute();
+        batch.execute().get();
     }
 
 

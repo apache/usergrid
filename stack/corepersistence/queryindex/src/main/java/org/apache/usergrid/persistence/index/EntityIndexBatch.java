@@ -64,11 +64,13 @@ public interface EntityIndexBatch {
 
     /**
      * Execute the batch
+     * @return future to guarantee execution
      */
     public BetterFuture execute();
 
     /**
      * Execute the batch and force the refresh
+     * @return future to guarantee execution
      */
     public BetterFuture executeAndRefresh();
 }
