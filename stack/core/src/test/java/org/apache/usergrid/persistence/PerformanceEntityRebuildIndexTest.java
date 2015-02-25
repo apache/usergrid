@@ -202,7 +202,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
                 meter.mark();
                 logger.debug("Indexing {}:{}", entity.getType(), entity.getUuid());
-                if ( !logger.isDebugEnabled() && counter % 100 == 0 ) {
+                if ( counter % 100 == 0 ) {
                     logger.info("Reindexed {} entities", counter );
                 }
                 counter++;
@@ -210,10 +210,6 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
 
 
-            @Override
-            public long getWriteDelayTime() {
-                return 0;
-            }
         };
 
         try {
@@ -347,16 +343,13 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
                 meter.mark();
                 logger.debug("Indexing {}:{}", entity.getType(), entity.getUuid());
-                if ( !logger.isDebugEnabled() && counter % 100 == 0 ) {
+                if ( counter % 100 == 0 ) {
                     logger.info("Reindexed {} entities", counter );
                 }
                 counter++;
             }
 
-            @Override
-            public long getWriteDelayTime() {
-                return 0;
-            }
+
         };
 
         try {
