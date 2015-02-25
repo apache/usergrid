@@ -72,11 +72,6 @@ public class IndexResource extends AbstractContextResource {
                 logger.info( "Indexing entity {}:{} ", entity.getType(), entity.getUuid() );
             }
 
-
-            @Override
-            public long getWriteDelayTime() {
-                return 0;
-            }
         };
 
 
@@ -127,10 +122,6 @@ public class IndexResource extends AbstractContextResource {
             }
 
 
-            @Override
-            public long getWriteDelayTime() {
-                return delay;
-            }
         };
 
 
@@ -165,8 +156,7 @@ public class IndexResource extends AbstractContextResource {
         @PathParam( "applicationId" ) final String applicationIdStr,
         @PathParam( "collectionName" ) final String collectionName,
         @QueryParam( "reverse" ) @DefaultValue( "false" ) final Boolean reverse,
-        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback,
-        @QueryParam( "delay" ) @DefaultValue( "10" ) final long delay ) throws Exception {
+        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback) throws Exception {
 
         final UUID appId = UUIDUtils.tryExtractUUID( applicationIdStr );
         ApiResponse response = createApiResponse();
@@ -177,7 +167,7 @@ public class IndexResource extends AbstractContextResource {
             public void run() {
 
                 try {
-                    rebuildCollection( appId, collectionName, reverse, delay );
+                    rebuildCollection( appId, collectionName, reverse );
                 } catch (Exception e) {
 
                     // TODO: handle this in rebuildCollection() instead
@@ -216,11 +206,6 @@ public class IndexResource extends AbstractContextResource {
                 logger.info( "Indexing entity {}:{}", entity.getType(), entity.getUuid() );
             }
 
-
-            @Override
-            public long getWriteDelayTime() {
-                return delay;
-            }
         };
 
         final Thread rebuild = new Thread() {
@@ -276,8 +261,7 @@ public class IndexResource extends AbstractContextResource {
     private void rebuildCollection(
         final UUID applicationId,
         final String collectionName,
-        final boolean reverse,
-        final long delay ) throws Exception {
+        final boolean reverse) throws Exception {
 
         EntityManagerFactory.ProgressObserver po = new EntityManagerFactory.ProgressObserver() {
 
@@ -285,10 +269,7 @@ public class IndexResource extends AbstractContextResource {
             public void onProgress( final EntityRef entity ) {
                 logger.info( "Indexing entity {}:{}", entity.getType(), entity.getUuid() );
             }
-            @Override
-            public long getWriteDelayTime() {
-                return delay;
-            }
+
         };
 
         logger.info( "Reindexing for app id: {} and collection {}", applicationId, collectionName );

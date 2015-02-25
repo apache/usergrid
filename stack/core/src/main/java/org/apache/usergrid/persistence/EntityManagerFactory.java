@@ -176,10 +176,5 @@ public interface EntityManagerFactory {
 
         public void onProgress( EntityRef entity);
 
-        /**
-         * Get the write delay time from the progress observer.  Used to throttle writes
-         * @return
-         */
-        public long getWriteDelayTime();
     }
 }

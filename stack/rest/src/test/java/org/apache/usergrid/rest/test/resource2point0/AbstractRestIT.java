@@ -17,27 +17,6 @@
 package org.apache.usergrid.rest.test.resource2point0;
 
 
-import java.net.URI;
-import java.net.URLClassLoader;
-import java.util.Arrays;
-
-import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.importer.MavenImporter;
-import org.junit.Rule;
-import org.junit.runner.RunWith;
-
-import org.apache.usergrid.rest.ITSetup;
-import org.apache.usergrid.rest.test.resource2point0.endpoints.ApplicationsResource;
-import org.apache.usergrid.rest.test.resource2point0.endpoints.OrganizationResource;
-import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.ManagementResource;
-import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
-import org.apache.usergrid.rest.test.resource2point0.model.Entity;
-import org.apache.usergrid.rest.test.resource2point0.model.Token;
-import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -48,26 +27,38 @@ import com.sun.jersey.test.framework.AppDescriptor;
 import com.sun.jersey.test.framework.JerseyTest;
 import com.sun.jersey.test.framework.WebAppDescriptor;
 import com.sun.jersey.test.framework.spi.container.TestContainerFactory;
+import org.apache.usergrid.rest.ITSetup;
+import org.apache.usergrid.rest.TomcatRuntime;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.ApplicationsResource;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.OrganizationResource;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.ManagementResource;
+import org.apache.usergrid.rest.test.resource2point0.model.Token;
+import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
+import org.junit.Rule;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLClassLoader;
+import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
 
 
 
 /**
- * How would we get the client from here
+ * Base class for REST tests.
  */
-@RunWith( Arquillian.class )
+//@RunWith( Arquillian.class )
 public class AbstractRestIT extends JerseyTest {
 
     private static ClientConfig clientConfig = new DefaultClientConfig();
 
+    public static TomcatRuntime tomcatRuntime = TomcatRuntime.getInstance();
 
 
-    public static ITSetup setup = new ITSetup(  );
-//
-//    TODO: Allow the client to be setup seperately
+
     @Rule
-    public ClientSetup clientSetup = new ClientSetup(setup.getBaseURI().toString());
+    public ClientSetup clientSetup = new ClientSetup( this.getBaseURI().toString() );
 
     protected static final AppDescriptor descriptor;
 
@@ -86,19 +77,19 @@ public class AbstractRestIT extends JerseyTest {
     }
 
 
-    //We set testable = false so we deploy the archive to the server and test it locally
-    @Deployment( testable = false )
-    public static WebArchive createTestArchive() {
-
-        //we use the MavenImporter from shrinkwrap to just produce whatever maven would build then test with it
-
-        //set maven to be in offline mode
-
-        System.setProperty( "org.apache.maven.offline", "true" );
-
-        return ShrinkWrap.create( MavenImporter.class ).loadPomFromFile( "pom.xml", "arquillian-tomcat" )
-                         .importBuildOutput().as( WebArchive.class );
-    }
+//    //We set testable = false so we deploy the archive to the server and test it locally
+//    @Deployment( testable = false )
+//    public static WebArchive createTestArchive() {
+//
+//        //we use the MavenImporter from shrinkwrap to just produce whatever maven would build then test with it
+//
+//        //set maven to be in offline mode
+//
+//        System.setProperty( "org.apache.maven.offline", "true" );
+//
+//        return ShrinkWrap.create( MavenImporter.class ).loadPomFromFile( "pom.xml", "arquillian-tomcat" )
+//                         .importBuildOutput().as( WebArchive.class );
+//    }
 
     public static void dumpClasspath( ClassLoader loader ) {
         System.out.println( "Classloader " + loader + ":" );
@@ -118,7 +109,11 @@ public class AbstractRestIT extends JerseyTest {
 
     @Override
     protected URI getBaseURI() {
-        return setup.getBaseURI();
+        try {
+            return new URI("http://localhost:" + tomcatRuntime.getPort());
+        } catch (URISyntaxException e) {
+            throw new RuntimeException("Error determining baseURI", e);
+        }
     }
 
     @Override

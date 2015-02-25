@@ -358,12 +358,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.rebuildApplicationIndexes(applicationId, new ProgressObserver() {
             @Override
             public void onProgress(EntityRef entity) {
-                logger.debug("Restored entity {}:{}", entity.getType(), entity.getUuid());
+                logger.info("Restored entity {}:{}", entity.getType(), entity.getUuid());
             }
-            @Override
-            public long getWriteDelayTime() {
-                return 0;
-            }
+
         });
     }
 
