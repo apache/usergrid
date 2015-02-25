@@ -66,7 +66,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         } catch (UniformInterfaceException e) {
             //verify the correct error was returned
             JsonNode node = mapper.readTree( e.getResponse().getEntity( String.class ));
-            assertEquals( "service_resource_not_found", node.get( "error" ).textValue() );
+            assertEquals( "organization_application_not_found", node.get( "error" ).textValue() );
         }
 
         //try to do a POST on a bad path
@@ -79,7 +79,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         } catch (UniformInterfaceException e) {
             //verify the correct error was returned
             JsonNode node = mapper.readTree( e.getResponse().getEntity( String.class ));
-            assertEquals( "service_resource_not_found", node.get( "error" ).textValue() );
+            assertEquals( "organization_application_not_found", node.get( "error" ).textValue() );
         }
 
         //try to do a PUT on a bad path
@@ -89,7 +89,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         } catch (UniformInterfaceException e) {
             //verify the correct error was returned
             JsonNode node = mapper.readTree( e.getResponse().getEntity( String.class ));
-            assertEquals( "service_resource_not_found", node.get( "error" ).textValue() );
+            assertEquals( "organization_application_not_found", node.get( "error" ).textValue() );
         }
 
         //try to do a delete on a bad path
@@ -99,7 +99,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         } catch (UniformInterfaceException e) {
             //verify the correct error was returned
             JsonNode node = mapper.readTree( e.getResponse().getEntity( String.class ));
-            assertEquals( "service_resource_not_found", node.get( "error" ).textValue() );
+            assertEquals( "organization_application_not_found", node.get( "error" ).textValue() );
         }
 
     }
@@ -179,11 +179,11 @@ public class CollectionsResourceIT extends AbstractRestIT {
     @Test
     public void stringWithSpaces() throws IOException {
 
+        // create entity with a property with spaces
         String collection = "calendarlists";
-        // create user
-        Entity payload = new Entity();
         String summaryOverview = "My Summary";
         String calType = "personal";
+        Entity payload = new Entity();
         payload.put("summaryOverview", summaryOverview);
         payload.put("caltype", calType);
         Entity calendarlistOne = this.app().collection(collection).post(payload);
