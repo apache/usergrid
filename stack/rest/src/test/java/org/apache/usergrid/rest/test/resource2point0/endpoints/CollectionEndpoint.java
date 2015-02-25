@@ -53,7 +53,7 @@ public class CollectionEndpoint extends NamedResource {
 
 
     public EntityEndpoint entity(final String identifier ){
-        return new EntityEndpoint(identifier, context, this);
+        return uniqueID(identifier);
     }
 
     public CollectionEndpoint withAcceptHeader(final String acceptHeader) {

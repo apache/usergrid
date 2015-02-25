@@ -272,7 +272,7 @@ public class GroupResourceIT extends AbstractRestIT {
         this.refreshIndex();
 
         //3. add role to the group
-        Entity response = this.app().collection("role").entity(role).connection().collection("groups").entity(group).post();
+        Entity response = this.app().collection("roles").entity(role).connection().collection("groups").entity(group).post();
         assertEquals(response.get("name"), groupName);
         this.refreshIndex();
 

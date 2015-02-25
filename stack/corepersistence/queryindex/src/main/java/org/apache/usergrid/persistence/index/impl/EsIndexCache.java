@@ -45,6 +45,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+
 /**
  * Cache for Es index operations
  */
@@ -58,8 +59,10 @@ public class EsIndexCache {
 
     @Inject
     public EsIndexCache(final EsProvider provider, final IndexFig indexFig) {
+        
         this.refreshExecutors = MoreExecutors
                 .listeningDecorator(Executors.newScheduledThreadPool(indexFig.getIndexCacheMaxWorkers()));
+        
         aliasIndexCache = CacheBuilder.newBuilder().maximumSize(1000)
                 .refreshAfterWrite(5,TimeUnit.MINUTES)
                 .build(new CacheLoader<String, String[]>() {
@@ -78,17 +81,16 @@ public class EsIndexCache {
                     public String[] load(final String aliasName) {
                         final AdminClient adminClient = provider.getClient().admin();
                         //remove write alias, can only have one
-                        ImmutableOpenMap<String, List<AliasMetaData>> aliasMap = adminClient.indices().getAliases(new GetAliasesRequest(aliasName)).actionGet().getAliases();
+                        ImmutableOpenMap<String, List<AliasMetaData>> aliasMap = 
+                           adminClient.indices().getAliases(new GetAliasesRequest(aliasName)).actionGet().getAliases();
                         return aliasMap.keys().toArray(String.class);
                     }
                 }) ;
     }
 
+    
     /**
      * Get indexes for an alias
-     * @param alias
-     * @param aliasType
-     * @return
      */
     public String[] getIndexes(IndexIdentifier.IndexAlias alias, AliasedEntityIndex.AliasType aliasType) {
         String[] indexes;
@@ -101,9 +103,9 @@ public class EsIndexCache {
         return indexes;
     }
 
+    
     /**
      * clean up cache
-     * @param alias
      */
     public void invalidate(IndexIdentifier.IndexAlias alias){
         aliasIndexCache.invalidate(alias.getWriteAlias());
