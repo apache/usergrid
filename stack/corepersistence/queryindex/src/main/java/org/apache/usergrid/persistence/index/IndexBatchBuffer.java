@@ -34,16 +34,11 @@ public interface IndexBatchBuffer {
     /**
      * put request into buffer, retu
      *
-     * @param builder
+     * @param container
      */
-    public BetterFuture put(IndexRequestBuilder builder);
+    public BetterFuture put(RequestBuilderContainer container);
 
-    /**
-     * put request into buffer
-     *
-     * @param builder
-     */
-    public BetterFuture put(DeleteRequestBuilder builder);
+
 
 
 }

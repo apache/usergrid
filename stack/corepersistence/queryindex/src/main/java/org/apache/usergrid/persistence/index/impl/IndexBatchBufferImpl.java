@@ -24,6 +24,7 @@ import org.apache.usergrid.persistence.core.future.BetterFuture;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.index.IndexBatchBuffer;
 import org.apache.usergrid.persistence.index.IndexFig;
+import org.apache.usergrid.persistence.index.RequestBuilderContainer;
 import org.elasticsearch.action.WriteConsistencyLevel;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
@@ -38,9 +39,11 @@ import rx.Observable;
 import rx.Subscriber;
 import rx.functions.Action0;
 import rx.functions.Action1;
+import rx.functions.Func1;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -96,81 +99,56 @@ public class IndexBatchBufferImpl implements IndexBatchBuffer {
     }
 
     @Override
-    public BetterFuture<ShardReplicationOperationRequestBuilder> put(IndexRequestBuilder builder){
-        RequestBuilderContainer container = new RequestBuilderContainer(builder);
-        bufferCounter.inc();
-        producer.put(container);
-        return container.getFuture();
-    }
-
-    @Override
-    public BetterFuture<ShardReplicationOperationRequestBuilder> put(DeleteRequestBuilder builder){
-        RequestBuilderContainer container = new RequestBuilderContainer(builder);
+    public BetterFuture put(RequestBuilderContainer container){
         bufferCounter.inc();
         producer.put(container);
         return container.getFuture();
     }
 
 
-
-    private static class RequestBuilderContainer{
-        private final ShardReplicationOperationRequestBuilder builder;
-        private final BetterFuture<ShardReplicationOperationRequestBuilder> containerFuture;
-
-        public RequestBuilderContainer(ShardReplicationOperationRequestBuilder builder){
-            final RequestBuilderContainer parent = this;
-            this.builder = builder;
-            this.containerFuture = new BetterFuture<>(new Callable<ShardReplicationOperationRequestBuilder>() {
-                @Override
-                public ShardReplicationOperationRequestBuilder call() throws Exception {
-                    return parent.getBuilder();
-                }
-            });
-        }
-
-        public ShardReplicationOperationRequestBuilder getBuilder(){
-            return builder;
-        }
-        private void done(){
-            containerFuture.done();
-        }
-        public BetterFuture<ShardReplicationOperationRequestBuilder> getFuture(){
-            return containerFuture;
-        }
-    }
     /**
      * Execute the request, check for errors, then re-init the batch for future use
      */
-    private void execute( boolean refresh) {
+    private void execute(final boolean refresh) {
 
         if (blockingQueue.size() == 0) {
             return;
         }
 
-        BulkRequestBuilder bulkRequest = initRequest(refresh);
 
         Collection<RequestBuilderContainer> containerCollection = new ArrayList<>(config.getIndexBatchSize());
         blockingQueue.drainTo(containerCollection);
-        int count = 0;
         //clear the queue or proceed to buffersize
-        for (RequestBuilderContainer container : containerCollection) {
+        Observable.from(containerCollection)
+                .flatMap(new Func1<RequestBuilderContainer, Observable<ShardReplicationOperationRequestBuilder>>() {
+                    @Override
+                    public Observable<ShardReplicationOperationRequestBuilder> call(RequestBuilderContainer requestBuilderContainer) {
+                        return Observable.from(requestBuilderContainer.getBuilder())
+                                .map(new Func1<ShardReplicationOperationRequestBuilder, ShardReplicationOperationRequestBuilder>() {
+                                    @Override
+                                    public ShardReplicationOperationRequestBuilder call(ShardReplicationOperationRequestBuilder builder) {
+                                        return builder;
+                                    }
+                                });
+                    }
+                })
+                .buffer(config.getIndexBatchSize())
+                .doOnNext(new Action1<List<ShardReplicationOperationRequestBuilder>>() {
+                    @Override
+                    public void call(List<ShardReplicationOperationRequestBuilder> builders) {
+                        final BulkRequestBuilder bulkRequest = initRequest(refresh);
+                        for(ShardReplicationOperationRequestBuilder builder : builders) {
+                            if (builder instanceof IndexRequestBuilder) {
+                                bulkRequest.add((IndexRequestBuilder) builder);
+                            }
+                            if (builder instanceof DeleteRequestBuilder) {
+                                bulkRequest.add((DeleteRequestBuilder) builder);
+                            }
+                            sendRequest(bulkRequest);
+                        }
+                    }
+                }).toBlocking().lastOrDefault(null);
 
-            ShardReplicationOperationRequestBuilder builder = container.getBuilder();
-            //only handle two types of requests for now, annoyingly there is no base class implementation on BulkRequest
-            if (builder instanceof IndexRequestBuilder) {
-                bulkRequest.add((IndexRequestBuilder) builder);
-            }
-            if (builder instanceof DeleteRequestBuilder) {
-                bulkRequest.add((DeleteRequestBuilder) builder);
-            }
-
-            if (count++ == config.getIndexBatchSize()) {
-                sendRequest(bulkRequest);
-                bulkRequest = initRequest(refresh);
-
-            }
-        }
-        sendRequest(bulkRequest);
         for (RequestBuilderContainer container : containerCollection) {
             container.done();
         }

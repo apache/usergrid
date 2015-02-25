@@ -91,7 +91,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
     private final FailureMonitor failureMonitor;
 
     private final AliasedEntityIndex entityIndex;
-    private final ConcurrentLinkedQueue<BetterFuture> promises;
+    private final RequestBuilderContainer container;
 
 
     public EsEntityIndexBatchImpl(final ApplicationScope applicationScope, final Client client,final IndexBatchBuffer indexBatchBuffer,
@@ -106,7 +106,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         this.alias = indexIdentifier.getAlias();
         this.refresh = config.isForcedRefresh();
         //constrained
-        this.promises = new ConcurrentLinkedQueue<>();
+        this.container = new RequestBuilderContainer();
     }
 
 
@@ -140,7 +140,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         final String entityType = entity.getId().getType();
         IndexRequestBuilder builder =
                 client.prepareIndex(alias.getWriteAlias(), entityType, indexId).setSource( entityAsMap );
-        promises.add(indexBatchBuffer.put(builder));
+        container.add(builder);
         return this;
     }
 
@@ -186,7 +186,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
                    public Object call(String index) {
                        try {
                            DeleteRequestBuilder builder = client.prepareDelete(index, entityType, indexId).setRefresh(refresh);
-                           promises.add(indexBatchBuffer.put(builder));
+                           container.add(builder);
                        }catch (Exception e){
                            log.error("failed to deindex",e);
                            throw e;
@@ -197,14 +197,12 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
         log.debug("Deindexed Entity with index id " + indexId);
 
-
         return this;
     }
 
 
     @Override
     public EntityIndexBatch deindex( final IndexScope indexScope, final Entity entity ) {
-
         return deindex( indexScope, entity.getId(), entity.getVersion() );
     }
 
@@ -217,38 +215,14 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
     @Override
     public void execute() {
-       flushFutures();
+        indexBatchBuffer.put(container);
     }
 
     @Override
     public void executeAndRefresh() {
-        flushFutures();
+        BetterFuture future = indexBatchBuffer.put(container);
+        future.get();
         entityIndex.refresh();
-    }
-
-    private void flushFutures() {
-        ObservableIterator<BetterFuture> iterator = new ObservableIterator<BetterFuture>("futures") {
-            @Override
-            protected Iterator<BetterFuture> getIterator() {
-                return promises.iterator();
-            }
-        };
-        Observable.create(iterator)
-                .doOnNext(new Action1<BetterFuture>() {
-                    @Override
-                    public void call(BetterFuture betterFuture) {
-                        betterFuture.get();
-                    }
-                })
-                .buffer(100)
-                .doOnNext(new Action1<List<BetterFuture>>() {
-                    @Override
-                    public void call(List<BetterFuture> betterFutures) {
-                        promises.removeAll(betterFutures);
-                    }
-                })
-                .toBlocking()
-                .lastOrDefault(null);
     }
 
     /**
