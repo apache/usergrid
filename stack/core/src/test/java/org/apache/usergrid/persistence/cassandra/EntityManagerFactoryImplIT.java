@@ -50,8 +50,6 @@ import static org.junit.Assert.assertTrue;
 
 public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
-    @SuppressWarnings("PointlessBooleanExpression")
-    public static final boolean USE_DEFAULT_DOMAIN = !CassandraService.USE_VIRTUAL_KEYSPACES;
 
     private static final Logger logger = LoggerFactory.getLogger( EntityManagerFactoryImplIT.class );
 
@@ -80,9 +78,6 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
 
     public UUID createApplication( String organizationName, String applicationName ) throws Exception {
-        if ( USE_DEFAULT_DOMAIN ) {
-            return emf.getDefaultAppId();
-        }
         return emf.createApplication( organizationName, applicationName );
     }
 

@@ -39,14 +39,14 @@ import me.prettyprint.hector.api.ddl.ComparatorType;
 
 import static me.prettyprint.hector.api.factory.HFactory.createColumnFamilyDefinition;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.getCfDefs;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.APPLICATIONS_CF;
+//import static org.apache.usergrid.persistence.cassandra.CassandraService.APPLICATIONS_CF;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.DEFAULT_APPLICATION;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.DEFAULT_ORGANIZATION;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.PRINCIPAL_TOKEN_CF;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.PROPERTIES_CF;
+//import static org.apache.usergrid.persistence.cassandra.CassandraService.PROPERTIES_CF;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.TOKENS_CF;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.USE_VIRTUAL_KEYSPACES;
+//import static org.apache.usergrid.persistence.cassandra.CassandraService.USE_VIRTUAL_KEYSPACES;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.getApplicationKeyspace;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.keyspaceForApplication;
 
@@ -145,11 +145,11 @@ public class CpSetup implements Setup {
 
         migrate();
 
-        cass.createColumnFamily( getApplicationKeyspace(),
-            createColumnFamilyDefinition( getApplicationKeyspace(), APPLICATIONS_CF, ComparatorType.BYTESTYPE ) );
-
-        cass.createColumnFamily( getApplicationKeyspace(),
-            createColumnFamilyDefinition( getApplicationKeyspace(), PROPERTIES_CF, ComparatorType.BYTESTYPE ) );
+//        cass.createColumnFamily( getApplicationKeyspace(),
+//            createColumnFamilyDefinition( getApplicationKeyspace(), APPLICATIONS_CF, ComparatorType.BYTESTYPE ) );
+//
+//        cass.createColumnFamily( getApplicationKeyspace(),
+//            createColumnFamilyDefinition( getApplicationKeyspace(), PROPERTIES_CF, ComparatorType.BYTESTYPE ) );
 
         cass.createColumnFamily( getApplicationKeyspace(),
             createColumnFamilyDefinition( getApplicationKeyspace(), TOKENS_CF, ComparatorType.BYTESTYPE ) );
@@ -176,19 +176,18 @@ public class CpSetup implements Setup {
 
         // Need this legacy stuff for queues
 
-        if ( !USE_VIRTUAL_KEYSPACES ) {
 
-            String app_keyspace = keyspaceForApplication( applicationId );
+//            String app_keyspace = keyspaceForApplication( applicationId );
 
-            logger.info( "Creating application keyspace " + app_keyspace + " for " + applicationName + " application" );
+//            logger.info( "Creating application keyspace " + app_keyspace + " for " + applicationName + " application" );
+//
+//            cass.createColumnFamily( app_keyspace,
+//                createColumnFamilyDefinition( getApplicationKeyspace(), APPLICATIONS_CF, ComparatorType.BYTESTYPE ) );
+//
+//            cass.createColumnFamilies( app_keyspace, getCfDefs( ApplicationCF.class, app_keyspace ) );
+//
+//            cass.createColumnFamilies( app_keyspace, getCfDefs( QueuesCF.class, app_keyspace ) );
 
-            cass.createColumnFamily( app_keyspace,
-                createColumnFamilyDefinition( getApplicationKeyspace(), APPLICATIONS_CF, ComparatorType.BYTESTYPE ) );
-
-            cass.createColumnFamilies( app_keyspace, getCfDefs( ApplicationCF.class, app_keyspace ) );
-
-            cass.createColumnFamilies( app_keyspace, getCfDefs( QueuesCF.class, app_keyspace ) );
-        }
     }
 
 
@@ -199,20 +198,20 @@ public class CpSetup implements Setup {
 
         // Need this legacy stuff for queues
 
-        if ( USE_VIRTUAL_KEYSPACES ) {
+      //  if ( USE_VIRTUAL_KEYSPACES ) {
 
             logger.info( "Creating static application keyspace " + getApplicationKeyspace() );
 
-            cass.createColumnFamily( getApplicationKeyspace(),
-                createColumnFamilyDefinition( getApplicationKeyspace(), APPLICATIONS_CF,
-                    ComparatorType.BYTESTYPE ) );
+//            cass.createColumnFamily( getApplicationKeyspace(),
+//                createColumnFamilyDefinition( getApplicationKeyspace(), APPLICATIONS_CF,
+//                    ComparatorType.BYTESTYPE ) );
 
             cass.createColumnFamilies( getApplicationKeyspace(),
                 getCfDefs( ApplicationCF.class, getApplicationKeyspace() ) );
 
             cass.createColumnFamilies( getApplicationKeyspace(),
                 getCfDefs( QueuesCF.class, getApplicationKeyspace() ) );
-        }
+       // }
     }
 
 

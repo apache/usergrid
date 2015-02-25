@@ -62,8 +62,8 @@ import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addInsertToMutator;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.asMap;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.batchExecute;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.APPLICATIONS_CF;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.PROPERTIES_CF;
+//import static org.apache.usergrid.persistence.cassandra.CassandraService.APPLICATIONS_CF;
+//import static org.apache.usergrid.persistence.cassandra.CassandraService.PROPERTIES_CF;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.RETRY_COUNT;
 import static org.apache.usergrid.utils.ConversionUtils.uuid;
 import static org.apache.usergrid.persistence.cassandra.Serializers.*;
@@ -189,22 +189,8 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
     public UUID createApplication( String organizationName, String name, Map<String, Object> properties )
             throws Exception {
 
-        String appName = buildAppName( organizationName, name );
+        throw new UnsupportedOperationException( "We no longer support the 1.0 entity manager anymore" );
 
-        HColumn<String, ByteBuffer> column =
-                cass.getColumn( cass.getUsergridApplicationKeyspace(), APPLICATIONS_CF, appName, PROPERTY_UUID );
-        if ( column != null ) {
-            throw new ApplicationAlreadyExistsException( name );
-            // UUID uuid = uuid(column.getValue());
-            // return uuid;
-        }
-
-        UUID applicationId = UUIDUtils.newTimeUUID();
-        logger.info( "New application id " + applicationId.toString() );
-
-        initializeApplication( organizationName, applicationId, appName, properties );
-
-        return applicationId;
     }
 
 
@@ -220,69 +206,20 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
     }
 
 
-    public UUID initializeApplication( String organizationName, UUID applicationId, String name,
-                                       Map<String, Object> properties ) throws Exception {
-
-        String appName = buildAppName( organizationName, name );
-        // check for pre-existing
-        if ( lookupApplication( appName ) != null ) {
-            throw new ApplicationAlreadyExistsException( appName );
-        }
-        if ( properties == null ) {
-            properties = new TreeMap<String, Object>( CASE_INSENSITIVE_ORDER );
-        }
-
-        properties.put( PROPERTY_NAME, appName );
-
-        getSetup().setupApplicationKeyspace( applicationId, appName );
-
-        Keyspace ko = cass.getUsergridApplicationKeyspace();
-        Mutator<ByteBuffer> m = CountingMutator.createFlushingMutator( ko, be );
-
-        long timestamp = cass.createTimestamp();
-
-        addInsertToMutator( m, APPLICATIONS_CF, appName, PROPERTY_UUID, applicationId, timestamp );
-        addInsertToMutator( m, APPLICATIONS_CF, appName, PROPERTY_NAME, appName, timestamp );
-
-        batchExecute( m, RETRY_COUNT );
-
-        EntityManager em = getEntityManager( applicationId );
-        em.create( TYPE_APPLICATION, APPLICATION_ENTITY_CLASS, properties );
-
-        em.resetRoles();
-
-        return applicationId;
-    }
-
-
     @Override
     public UUID importApplication( String organizationName, UUID applicationId, String name,
                                    Map<String, Object> properties ) throws Exception {
 
-        name = buildAppName( organizationName, name );
+        throw new UnsupportedOperationException( "We no longer support the 1.0 entity manager anymore" );
 
-        HColumn<String, ByteBuffer> column =
-                cass.getColumn( cass.getUsergridApplicationKeyspace(), APPLICATIONS_CF, name, PROPERTY_UUID );
-        if ( column != null ) {
-            throw new ApplicationAlreadyExistsException( name );
-            // UUID uuid = uuid(column.getValue());
-            // return uuid;
-        }
-
-        return initializeApplication( organizationName, applicationId, name, properties );
     }
 
 
     @Override
     @Metered(group = "core", name = "EntityManagerFactory_lookupApplication_byName")
     public UUID lookupApplication( String name ) throws Exception {
-        name = name.toLowerCase();
-        HColumn<String, ByteBuffer> column =
-                cass.getColumn( cass.getUsergridApplicationKeyspace(), APPLICATIONS_CF, name, PROPERTY_UUID );
-        if ( column != null ) {
-            return uuid( column.getValue() );
-        }
-        return null;
+        throw new UnsupportedOperationException( "We no longer support the 1.0 entity manager anymore" );
+
     }
 
 
@@ -297,86 +234,48 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
      */
     @Metered(group = "core", name = "EntityManagerFactory_getApplication")
     public Application getApplication( String name ) throws Exception {
-        name = name.toLowerCase();
-        HColumn<String, ByteBuffer> column =
-                cass.getColumn( cass.getUsergridApplicationKeyspace(), APPLICATIONS_CF, name, PROPERTY_UUID );
-        if ( column == null ) {
-            return null;
-        }
+        throw new UnsupportedOperationException( "We no longer support the 1.0 entity manager anymore" );
 
-        UUID applicationId = uuid( column.getValue() );
-
-        EntityManager em = getEntityManager( applicationId );
-        return ( ( EntityManagerImpl ) em ).getEntity( applicationId, Application.class );
     }
 
 
     @Override
     public Map<String, UUID> getApplications() throws Exception {
-        Map<String, UUID> applications = new TreeMap<String, UUID>( CASE_INSENSITIVE_ORDER );
-        Keyspace ko = cass.getUsergridApplicationKeyspace();
-        RangeSlicesQuery<String, String, UUID> q = createRangeSlicesQuery( ko, se, se, ue );
-        q.setKeys( "", "\uFFFF" );
-        q.setColumnFamily( APPLICATIONS_CF );
-        q.setColumnNames( PROPERTY_UUID );
-        q.setRowCount( 10000 );
-        QueryResult<OrderedRows<String, String, UUID>> r = q.execute();
-        Rows<String, String, UUID> rows = r.get();
-        for ( Row<String, String, UUID> row : rows ) {
-            ColumnSlice<String, UUID> slice = row.getColumnSlice();
-            HColumn<String, UUID> column = slice.getColumnByName( PROPERTY_UUID );
-            applications.put( row.getKey(), column.getValue() );
-        }
-        return applications;
+        throw new UnsupportedOperationException( "We no longer support the 1.0 entity manager anymore" );
+
     }
 
    @Override
     public boolean setServiceProperty( String name, String value ) {
-        try {
-            cass.setColumn( cass.getUsergridApplicationKeyspace(), PROPERTIES_CF, PROPERTIES_CF, name, value );
-            return true;
-        }
-        catch ( Exception e ) {
-            logger.error( "Unable to set property " + name + ": " + e.getMessage() );
-        }
-        return false;
+       throw new UnsupportedOperationException( "We no longer support the 1.0 entity manager anymore" );
+
     }
 
 
     @Override
     public boolean deleteServiceProperty( String name ) {
-        try {
-            cass.deleteColumn( cass.getUsergridApplicationKeyspace(), PROPERTIES_CF, PROPERTIES_CF, name );
-            return true;
-        }
-        catch ( Exception e ) {
-            logger.error( "Unable to delete property " + name + ": " + e.getMessage() );
-        }
-        return false;
+        throw new UnsupportedOperationException( "We no longer support the 1.0 entity manager anymore" );
+
+    }
+
+
+    @Override
+    public UUID initializeApplication( final String orgName, final UUID appId, final String appName,
+                                       final Map<String, Object> props ) throws Exception {
+        return null;
     }
 
 
     @Override
     public boolean updateServiceProperties( Map<String, String> properties ) {
-        try {
-            cass.setColumns( cass.getUsergridApplicationKeyspace(), PROPERTIES_CF, PROPERTIES_CF.getBytes(), properties );
-            return true;
-        }
-        catch ( Exception e ) {
-            logger.error( "Unable to update properties: " + e.getMessage() );
-        }
-        return false;
+        throw new UnsupportedOperationException( "We no longer support the 1.0 entity manager anymore" );
+
     }
 
 
     @Override
     public Map<String, String> getServiceProperties() {
-        try {
-            return asMap( cass.getAllColumns( cass.getUsergridApplicationKeyspace(), PROPERTIES_CF, PROPERTIES_CF, se, se ) );
-        }
-        catch ( Exception e ) {
-            logger.error( "Unable to load properties: " + e.getMessage() );
-        }
+
         return null;
     }
 
