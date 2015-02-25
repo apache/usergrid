@@ -37,7 +37,6 @@
         <catalina.jmx.port>8089</catalina.jmx.port>
     </properties>
 
-
     <!-- profile that arquillian uses when it builds/starts tomcat -->
     <profiles>
 
