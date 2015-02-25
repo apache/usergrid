@@ -24,7 +24,7 @@ import org.apache.usergrid.persistence.core.future.BetterFuture;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.index.IndexBatchBuffer;
 import org.apache.usergrid.persistence.index.IndexFig;
-import org.apache.usergrid.persistence.index.RequestBuilderContainer;
+import org.apache.usergrid.persistence.index.IndexOperationMessage;
 import org.elasticsearch.action.WriteConsistencyLevel;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
@@ -37,14 +37,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
 import rx.Subscriber;
-import rx.functions.Action0;
 import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -64,7 +60,7 @@ public class IndexBatchBufferImpl implements IndexBatchBuffer {
     private final IndexFig config;
     private final Timer flushTimer;
     private final Counter bufferCounter;
-    private Observable<List<RequestBuilderContainer>> consumer;
+    private Observable<List<IndexOperationMessage>> consumer;
     private Producer producer;
 
     @Inject
@@ -84,16 +80,16 @@ public class IndexBatchBufferImpl implements IndexBatchBuffer {
         //batch up sets of some size and send them in batch
         this.consumer = Observable.create(producer)
                 .subscribeOn(Schedulers.io())
-                .doOnNext(new Action1<RequestBuilderContainer>() {
+                .doOnNext(new Action1<IndexOperationMessage>() {
                     @Override
-                    public void call(RequestBuilderContainer requestBuilderContainer) {
+                    public void call(IndexOperationMessage requestBuilderContainer) {
                         queueSize.addAndGet(requestBuilderContainer.getBuilder().size());
                     }
                 })
                 .buffer(config.getIndexBufferTimeout(), TimeUnit.MILLISECONDS, config.getIndexBufferSize())
-                .doOnNext(new Action1<List<RequestBuilderContainer>>() {
+                .doOnNext(new Action1<List<IndexOperationMessage>>() {
                     @Override
-                    public void call(List<RequestBuilderContainer> containerList) {
+                    public void call(List<IndexOperationMessage> containerList) {
                         flushTimer.time();
                         indexSizeCounter.dec(containerList.size());
                         if(containerList.size()>0){
@@ -105,7 +101,7 @@ public class IndexBatchBufferImpl implements IndexBatchBuffer {
     }
 
     @Override
-    public BetterFuture put(RequestBuilderContainer container){
+    public BetterFuture put(IndexOperationMessage container){
         bufferCounter.inc();
         producer.put(container);
         return container.getFuture();
@@ -115,7 +111,7 @@ public class IndexBatchBufferImpl implements IndexBatchBuffer {
     /**
      * Execute the request, check for errors, then re-init the batch for future use
      */
-    private void execute(final List<RequestBuilderContainer> containers) {
+    private void execute(final List<IndexOperationMessage> containers) {
 
         if (containers == null || containers.size() == 0) {
             return;
@@ -125,12 +121,9 @@ public class IndexBatchBufferImpl implements IndexBatchBuffer {
         //clear the queue or proceed to buffer size
         Observable.from(containers)
                 .subscribeOn(Schedulers.io())
-                .flatMap(new Func1<RequestBuilderContainer, Observable<ShardReplicationOperationRequestBuilder>>() {
+                .flatMap(new Func1<IndexOperationMessage, Observable<ShardReplicationOperationRequestBuilder>>() {
                     @Override
-                    public Observable<ShardReplicationOperationRequestBuilder> call(RequestBuilderContainer requestBuilderContainer) {
-                        if (requestBuilderContainer.isForceRefresh()){
-                            isForceRefresh.set(true);
-                        }
+                    public Observable<ShardReplicationOperationRequestBuilder> call(IndexOperationMessage requestBuilderContainer) {
                         return Observable.from(requestBuilderContainer.getBuilder())
                                 .map(new Func1<ShardReplicationOperationRequestBuilder, ShardReplicationOperationRequestBuilder>() {
                                     @Override
@@ -157,7 +150,7 @@ public class IndexBatchBufferImpl implements IndexBatchBuffer {
                     }
                 }).toBlocking().lastOrDefault(null);
 
-        for (RequestBuilderContainer container : containers) {
+        for (IndexOperationMessage container : containers) {
             container.done();
         }
     }
@@ -196,16 +189,16 @@ public class IndexBatchBufferImpl implements IndexBatchBuffer {
     }
 
 
-    private static class Producer implements Observable.OnSubscribe<RequestBuilderContainer> {
+    private static class Producer implements Observable.OnSubscribe<IndexOperationMessage> {
 
-        private Subscriber<? super RequestBuilderContainer> subscriber;
+        private Subscriber<? super IndexOperationMessage> subscriber;
 
         @Override
-        public void call(Subscriber<? super RequestBuilderContainer> subscriber) {
+        public void call(Subscriber<? super IndexOperationMessage> subscriber) {
             this.subscriber = subscriber;
         }
 
-        public void put(RequestBuilderContainer r){
+        public void put(IndexOperationMessage r){
             subscriber.onNext(r);
         }
     }

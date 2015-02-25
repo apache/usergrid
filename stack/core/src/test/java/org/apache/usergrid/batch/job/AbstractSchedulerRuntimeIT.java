@@ -96,7 +96,7 @@ public class AbstractSchedulerRuntimeIT {
         JobSchedulerService jobScheduler = springResource.getBean( JobSchedulerService.class );
         jobScheduler.setJobListener( listener );
         if ( jobScheduler.state() != State.RUNNING ) {
-//            jobScheduler.startAndWait();
+           jobScheduler.startAndWait();
         }
     }
 

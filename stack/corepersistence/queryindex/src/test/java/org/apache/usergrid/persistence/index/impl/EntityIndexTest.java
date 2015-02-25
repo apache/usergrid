@@ -95,8 +95,8 @@ public class EntityIndexTest extends BaseIT {
         final ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
 
         long now = System.currentTimeMillis();
-        final int threads = 1000;
-        final int size = 50;
+        final int threads = 20;
+        final int size = 20;
         final EntityIndex entityIndex = eif.createEntityIndex( applicationScope );
         final IndexScope indexScope = new IndexScopeImpl(appId, "things");
         final String entityType = "thing";
@@ -209,7 +209,7 @@ public class EntityIndexTest extends BaseIT {
         EntityIndexBatch entityIndexBatch = entityIndex.createBatch();
         entityIndexBatch.deindex(indexScope, crs.get(0));
         entityIndexBatch.deindex(indexScope, crs.get(1));
-        entityIndexBatch.executeAndRefresh().get();
+        entityIndexBatch.execute().get();
         entityIndex.refresh();
 
         //Hilda Youn
@@ -222,7 +222,8 @@ public class EntityIndexTest extends BaseIT {
         List<Object> sampleJson = mapper.readValue( is, new TypeReference<List<Object>>() {} );
         EntityIndexBatch batch = entityIndex.createBatch();
         insertJsonBlob(sampleJson,batch, entityType, indexScope, max,startIndex);
-        batch.executeAndRefresh().get();
+        batch.execute().get();
+        entityIndex.refresh();
     }
 
     private void insertJsonBlob(List<Object> sampleJson, EntityIndexBatch batch, String entityType, IndexScope indexScope,final int max,final int startIndex) throws IOException {
@@ -285,7 +286,8 @@ public class EntityIndexTest extends BaseIT {
         EntityUtils.setVersion( entity, UUIDGenerator.newTimeUUID() );
         entity.setField(new UUIDField(IndexingUtils.ENTITYID_ID_FIELDNAME, UUID.randomUUID()));
 
-        entityIndex.createBatch().index(indexScope , entity ).executeAndRefresh().get();
+        entityIndex.createBatch().index(indexScope , entity ).execute().get();
+        entityIndex.refresh();
 
         CandidateResults candidateResults = entityIndex.search( indexScope, SearchTypes.fromTypes(entity.getId().getType()),
                 Query.fromQL( "name contains 'Ferrari*'" ) );
@@ -293,7 +295,7 @@ public class EntityIndexTest extends BaseIT {
 
         EntityIndexBatch batch = entityIndex.createBatch();
         batch.deindex(indexScope, entity).execute().get();
-        batch.executeAndRefresh().get();
+        batch.execute().get();
         entityIndex.refresh();
 
         candidateResults = entityIndex.search( indexScope, SearchTypes.fromTypes(entity.getId().getType()), Query.fromQL( "name contains 'Ferrari*'" ) );
@@ -437,7 +439,8 @@ public class EntityIndexTest extends BaseIT {
         batch.index( indexScope,  user );
         user.setField( new StringField( "address3", "apt 508" ) );
         batch.index( indexScope,  user);
-        batch.executeAndRefresh().get();
+        batch.execute().get();
+        entityIndex.refresh();
 
         CandidateResults results = entityIndex.getEntityVersions(indexScope,  user.getId() );
 
@@ -476,7 +479,8 @@ public class EntityIndexTest extends BaseIT {
         EntityIndexBatch batch = ei.createBatch();
 
         batch.index( appScope, user);
-        batch.executeAndRefresh().get();
+        batch.execute().get();
+        ei.refresh();
 
         Query query = new Query();
         query.addEqualityFilter( "username", "edanuff" );
@@ -484,7 +488,8 @@ public class EntityIndexTest extends BaseIT {
         assertEquals( user.getId(), r.get( 0 ).getId() );
 
         batch.deindex(appScope, user.getId(), user.getVersion() );
-        batch.executeAndRefresh().get();
+        batch.execute().get();
+        ei.refresh();
 
         // EntityRef
         query = new Query();
@@ -544,7 +549,8 @@ public class EntityIndexTest extends BaseIT {
         EntityUtils.setVersion( fred, UUIDGenerator.newTimeUUID() );
         batch.index( appScope, fred);
 
-        batch.executeAndRefresh().get();
+        batch.execute().get();
+        ei.refresh();
 
         final SearchTypes searchTypes = SearchTypes.fromTypes( "user" );
 

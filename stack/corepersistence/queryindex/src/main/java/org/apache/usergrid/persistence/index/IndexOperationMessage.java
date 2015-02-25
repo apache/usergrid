@@ -26,19 +26,17 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 /**
  * Classy class class.
  */
-public  class RequestBuilderContainer{
+public  class IndexOperationMessage {
     private final ConcurrentLinkedQueue<ShardReplicationOperationRequestBuilder> builders;
-    private final BetterFuture<Iterator<ShardReplicationOperationRequestBuilder>> containerFuture;
+    private final BetterFuture<IndexOperationMessage> containerFuture;
 
-    private  boolean forceRefresh = false;
-
-    public RequestBuilderContainer(){
-        final RequestBuilderContainer parent = this;
+    public IndexOperationMessage(){
+        final IndexOperationMessage parent = this;
         builders = new ConcurrentLinkedQueue<>();
-        this.containerFuture = new BetterFuture<>(new Callable<Iterator<ShardReplicationOperationRequestBuilder>>() {
+        this.containerFuture = new BetterFuture<>(new Callable<IndexOperationMessage>() {
             @Override
-            public Iterator<ShardReplicationOperationRequestBuilder> call() throws Exception {
-                return parent.getBuilder().iterator();
+            public IndexOperationMessage call() throws Exception {
+                return parent;
             }
         });
     }
@@ -52,14 +50,8 @@ public  class RequestBuilderContainer{
     public void done(){
         containerFuture.done();
     }
-    public BetterFuture<Iterator<ShardReplicationOperationRequestBuilder>> getFuture(){
+    public BetterFuture<IndexOperationMessage> getFuture(){
         return containerFuture;
     }
 
-    public boolean isForceRefresh() {
-        return forceRefresh;
-    }
-    public void setForceRefresh(boolean forceRefresh) {
-        this.forceRefresh = forceRefresh;
-    }
 }

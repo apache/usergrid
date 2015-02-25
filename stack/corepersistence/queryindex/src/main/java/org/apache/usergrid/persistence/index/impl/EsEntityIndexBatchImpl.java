@@ -19,16 +19,9 @@
 package org.apache.usergrid.persistence.index.impl;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.atomic.AtomicInteger;
 
-import com.google.common.util.concurrent.Futures;
 import org.apache.usergrid.persistence.core.future.BetterFuture;
-import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.apache.usergrid.persistence.index.*;
-import org.elasticsearch.action.bulk.BulkItemResponse;
-import org.elasticsearch.action.bulk.BulkRequestBuilder;
-import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequestBuilder;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.client.Client;
@@ -56,11 +49,8 @@ import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.field.UUIDField;
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
 
-import com.google.common.base.Joiner;
 import rx.Observable;
-import rx.functions.Action1;
 import rx.functions.Func1;
-import rx.schedulers.Schedulers;
 
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ANALYZED_STRING_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.BOOLEAN_PREFIX;
@@ -71,7 +61,6 @@ import static org.apache.usergrid.persistence.index.impl.IndexingUtils.NUMBER_PR
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.STRING_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createContextName;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createIndexDocId;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createContextName;
 
 
 public class EsEntityIndexBatchImpl implements EntityIndexBatch {
@@ -90,7 +79,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
     private final IndexBatchBuffer indexBatchBuffer;
 
     private final AliasedEntityIndex entityIndex;
-    private RequestBuilderContainer container;
+    private IndexOperationMessage container;
 
 
     public EsEntityIndexBatchImpl(final ApplicationScope applicationScope, final Client client,final IndexBatchBuffer indexBatchBuffer,
@@ -104,7 +93,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         this.alias = indexIdentifier.getAlias();
         this.refresh = config.isForcedRefresh();
         //constrained
-        this.container = new RequestBuilderContainer();
+        this.container = new IndexOperationMessage();
     }
 
 
@@ -213,16 +202,8 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
     @Override
     public BetterFuture execute() {
-        RequestBuilderContainer tempContainer = container;
-        container = new RequestBuilderContainer();
-        return indexBatchBuffer.put(tempContainer);
-    }
-
-    @Override
-    public BetterFuture executeAndRefresh() {
-        container.setForceRefresh(true);
-        RequestBuilderContainer tempContainer = container;
-        container = new RequestBuilderContainer();
+        IndexOperationMessage tempContainer = container;
+        container = new IndexOperationMessage();
         return indexBatchBuffer.put(tempContainer);
     }
 
@@ -363,6 +344,5 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         }
         return processed;
     }
-
 
 }

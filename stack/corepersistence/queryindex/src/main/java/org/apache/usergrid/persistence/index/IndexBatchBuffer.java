@@ -17,14 +17,6 @@
 package org.apache.usergrid.persistence.index;
 
 import org.apache.usergrid.persistence.core.future.BetterFuture;
-import org.apache.usergrid.persistence.index.impl.IndexBatchBufferImpl;
-import org.elasticsearch.action.delete.DeleteRequestBuilder;
-import org.elasticsearch.action.index.IndexRequestBuilder;
-import rx.Observable;
-
-import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
 
 /**
  * * Buffer index requests into sets to send,
@@ -36,7 +28,7 @@ public interface IndexBatchBuffer {
      *
      * @param container
      */
-    public BetterFuture put(RequestBuilderContainer container);
+    public BetterFuture put(IndexOperationMessage container);
 
 
 

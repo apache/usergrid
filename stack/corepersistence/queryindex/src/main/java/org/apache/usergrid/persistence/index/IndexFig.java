@@ -133,7 +133,7 @@ public interface IndexFig extends GuicyFig {
      * size of the buffer to build up before you send results
      * @return
      */
-    @Default("300")
+    @Default("1000")
     @Key( INDEX_BUFFER_SIZE )
     int getIndexBufferSize();
 
@@ -141,7 +141,7 @@ public interface IndexFig extends GuicyFig {
      * Request batch size for ES
      * @return
      */
-    @Default("100")
+    @Default("1000")
     @Key( INDEX_BATCH_SIZE)
     int getIndexBatchSize();
 

@@ -23,6 +23,7 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.usergrid.persistence.core.future.BetterFuture;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
@@ -280,8 +281,9 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
     @Override
     public EntityIndexBatch createBatch() {
-        return new EsEntityIndexBatchImpl(
+        EntityIndexBatch batch = new EsEntityIndexBatchImpl(
                 applicationScope, esProvider.getClient(),indexBatchBuffer, config, this );
+        return batch;
     }
 
 
@@ -432,6 +434,10 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
     public void refresh() {
 
+        BetterFuture future = indexBatchBuffer.put(new IndexOperationMessage());
+        future.get();
+        //loop through all batches and retrieve promises and call get
+
         final RetryOperation retryOperation = new RetryOperation() {
             @Override
             public boolean doOp() {
@@ -579,7 +585,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
         if ( response.isAcknowledged() ) {
             logger.info( "Deleted index: read {} write {}", alias.getReadAlias(), alias.getWriteAlias());
             //invlaidate the alias
-            aliasCache.invalidate( alias );
+            aliasCache.invalidate(alias);
         }
         else {
             logger.info( "Failed to delete index: read {} write {}", alias.getReadAlias(), alias.getWriteAlias());

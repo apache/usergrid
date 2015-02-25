@@ -980,7 +980,6 @@ public class CpEntityManager implements EntityManager {
         // update in all containing collections and connection indexes
         CpRelationManager rm = ( CpRelationManager ) getRelationManager( entityRef );
         rm.updateContainingCollectionAndCollectionIndexes( cpEntity );
-        future.get();
     }
 
 
@@ -2830,7 +2829,7 @@ public class CpEntityManager implements EntityManager {
         //
         //        batch.index(appAllTypesScope, memberEntity);
 
-        batch.execute().get();
+        batch.execute();
     }
 }
 

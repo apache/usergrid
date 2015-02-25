@@ -442,7 +442,7 @@ public class CpRelationManager implements RelationManager {
                 } ).count().toBlocking().lastOrDefault( 0 );
 
 
-        entityIndexBatch.execute().get();
+        entityIndexBatch.execute();
 
         logger.debug( "updateContainingCollectionsAndCollections() updated {} indexes", count );
     }
@@ -871,7 +871,6 @@ public class CpRelationManager implements RelationManager {
                 }
             }
         }
-        future.get();
     }
 
     @Override
@@ -1067,8 +1066,6 @@ public class CpRelationManager implements RelationManager {
         Mutator<ByteBuffer> m = createMutator( ko, be );
         batchUpdateEntityConnection( m, false, connection, UUIDGenerator.newTimeUUID() );
         batchExecute( m, CassandraService.RETRY_COUNT );
-
-        future.get();
 
         return connection;
     }
@@ -1294,7 +1291,7 @@ public class CpRelationManager implements RelationManager {
 //
 //        batch.deindex( allTypesIndexScope, targetEntity );
 
-        batch.execute().get();
+        batch.execute();
     }
 
 
