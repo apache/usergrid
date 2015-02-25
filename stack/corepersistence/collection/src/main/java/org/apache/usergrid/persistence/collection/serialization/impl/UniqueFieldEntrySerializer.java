@@ -26,6 +26,7 @@ package org.apache.usergrid.persistence.collection.serialization.impl;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.core.astyanax.ColumnTypes;
 import org.apache.usergrid.persistence.core.astyanax.DynamicCompositeParserImpl;
 import org.apache.usergrid.persistence.model.field.BooleanField;
 import org.apache.usergrid.persistence.model.field.DoubleField;
@@ -43,6 +44,8 @@ import com.netflix.astyanax.model.Composites;
 import com.netflix.astyanax.model.DynamicComposite;
 import com.netflix.astyanax.serializers.AbstractSerializer;
 import com.netflix.astyanax.serializers.DynamicCompositeSerializer;
+import com.netflix.astyanax.serializers.StringSerializer;
+import com.netflix.astyanax.serializers.UUIDSerializer;
 
 
 /**
@@ -51,6 +54,8 @@ import com.netflix.astyanax.serializers.DynamicCompositeSerializer;
 public class UniqueFieldEntrySerializer extends AbstractSerializer<UniqueFieldEntry> {
 
 
+    private static final UUIDSerializer UUID_SERIALIZER = UUIDSerializer.get();
+    private static final StringSerializer STRING_SERIALIZER = StringSerializer.get();
     private static final UniqueFieldEntrySerializer INSTANCE = new UniqueFieldEntrySerializer();
 
 
@@ -58,8 +63,6 @@ public class UniqueFieldEntrySerializer extends AbstractSerializer<UniqueFieldEn
 
     @Override
     public ByteBuffer toByteBuffer( final UniqueFieldEntry value ) {
-
-        CompositeBuilder builder = Composites.newDynamicCompositeBuilder();
 
 
         final UUID version = value.getVersion();
@@ -69,12 +72,15 @@ public class UniqueFieldEntrySerializer extends AbstractSerializer<UniqueFieldEn
         final String fieldValue = field.getValue().toString().toLowerCase();
 
 
-        builder.addUUID( version );
-        builder.addString( field.getName() );
-        builder.addString( fieldValue );
-        builder.addString( fieldType.name() );
+        DynamicComposite composite = new DynamicComposite(  );
 
-        return builder.build();
+        //we want to sort ascending to descending by version
+        composite.addComponent( version,  UUID_SERIALIZER, ColumnTypes.UUID_TYPE_REVERSED);
+        composite.addComponent( field.getName(), STRING_SERIALIZER );
+        composite.addComponent( fieldValue, STRING_SERIALIZER );
+        composite.addComponent( fieldType.name() , STRING_SERIALIZER);
+
+        return composite.serialize();
     }
 
 
