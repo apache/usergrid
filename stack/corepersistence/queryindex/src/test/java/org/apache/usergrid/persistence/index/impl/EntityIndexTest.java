@@ -467,18 +467,21 @@ public class EntityIndexTest extends BaseIT {
 
         EntityIndexBatch batch = ei.createBatch();
 
-        batch.index( appScope, user ).executeAndRefresh();
+        batch.index( appScope, user );
+        batch.executeAndRefresh();
+
         Query query = new Query();
         query.addEqualityFilter( "username", "edanuff" );
         CandidateResults r = ei.search( appScope, SearchTypes.fromTypes( "edanuff" ), query );
         assertEquals( user.getId(), r.get( 0 ).getId() );
 
-        batch.deindex(appScope, user.getId(), user.getVersion() ).executeAndRefresh();
-
+        batch.deindex(appScope, user.getId(), user.getVersion() );
+        batch.executeAndRefresh();
 
         // EntityRef
         query = new Query();
         query.addEqualityFilter( "username", "edanuff" );
+
         r = ei.search(appScope,SearchTypes.fromTypes( "edanuff" ),  query );
 
         assertFalse( r.iterator().hasNext() );

@@ -40,12 +40,15 @@ import rx.Subscriber;
 import rx.functions.Action0;
 import rx.functions.Action1;
 import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 
 /**
@@ -55,24 +58,20 @@ import java.util.concurrent.*;
 public class IndexBatchBufferImpl implements IndexBatchBuffer {
 
     private static final Logger log = LoggerFactory.getLogger(IndexBatchBufferImpl.class);
-    private final MetricsFactory metricsFactory;
     private final Counter indexSizeCounter;
     private final Client client;
     private final FailureMonitorImpl failureMonitor;
     private final IndexFig config;
     private final Timer flushTimer;
-    private final ArrayBlockingQueue<RequestBuilderContainer> blockingQueue;
     private final Counter bufferCounter;
     private Observable<List<RequestBuilderContainer>> consumer;
     private Producer producer;
 
     @Inject
     public IndexBatchBufferImpl(final IndexFig config, final EsProvider provider, final MetricsFactory metricsFactory){
-        this.metricsFactory = metricsFactory;
         this.flushTimer = metricsFactory.getTimer(IndexBatchBuffer.class, "index.buffer.flush");
         this.indexSizeCounter =  metricsFactory.getCounter(IndexBatchBuffer.class, "index.buffer.size");
         this.config = config;
-        this.blockingQueue = new ArrayBlockingQueue<>(config.getIndexBatchSize());
         this.failureMonitor = new FailureMonitorImpl(config,provider);
         this.producer = new Producer();
         this.client = provider.getClient();
@@ -81,18 +80,25 @@ public class IndexBatchBufferImpl implements IndexBatchBuffer {
     }
 
     private void consumer() {
+        final AtomicLong queueSize = new AtomicLong();
         //batch up sets of some size and send them in batch
         this.consumer = Observable.create(producer)
+                .subscribeOn(Schedulers.io())
+                .doOnNext(new Action1<RequestBuilderContainer>() {
+                    @Override
+                    public void call(RequestBuilderContainer requestBuilderContainer) {
+                        queueSize.addAndGet(requestBuilderContainer.getBuilder().size());
+                    }
+                })
                 .buffer(config.getIndexBufferTimeout(), TimeUnit.MILLISECONDS, config.getIndexBufferSize())
                 .doOnNext(new Action1<List<RequestBuilderContainer>>() {
                     @Override
                     public void call(List<RequestBuilderContainer> containerList) {
-                        for (RequestBuilderContainer container : containerList) {
-                            blockingQueue.add(container);
-                        }
                         flushTimer.time();
                         indexSizeCounter.dec(containerList.size());
-                        execute(config.isForcedRefresh());
+                        if(containerList.size()>0){
+                            execute(containerList);
+                        }
                     }
                 });
         consumer.subscribe();
@@ -109,20 +115,22 @@ public class IndexBatchBufferImpl implements IndexBatchBuffer {
     /**
      * Execute the request, check for errors, then re-init the batch for future use
      */
-    private void execute(final boolean refresh) {
+    private void execute(final List<RequestBuilderContainer> containers) {
 
-        if (blockingQueue.size() == 0) {
+        if (containers == null || containers.size() == 0) {
             return;
         }
 
-
-        Collection<RequestBuilderContainer> containerCollection = new ArrayList<>(config.getIndexBatchSize());
-        blockingQueue.drainTo(containerCollection);
+        final AtomicBoolean isForceRefresh = new AtomicBoolean(config.isForcedRefresh());
         //clear the queue or proceed to buffersize
-        Observable.from(containerCollection)
+        Observable.from(containers)
+                .subscribeOn(Schedulers.io())
                 .flatMap(new Func1<RequestBuilderContainer, Observable<ShardReplicationOperationRequestBuilder>>() {
                     @Override
                     public Observable<ShardReplicationOperationRequestBuilder> call(RequestBuilderContainer requestBuilderContainer) {
+                        if (requestBuilderContainer.isForceRefresh()){
+                            isForceRefresh.set(true);
+                        }
                         return Observable.from(requestBuilderContainer.getBuilder())
                                 .map(new Func1<ShardReplicationOperationRequestBuilder, ShardReplicationOperationRequestBuilder>() {
                                     @Override
@@ -136,20 +144,20 @@ public class IndexBatchBufferImpl implements IndexBatchBuffer {
                 .doOnNext(new Action1<List<ShardReplicationOperationRequestBuilder>>() {
                     @Override
                     public void call(List<ShardReplicationOperationRequestBuilder> builders) {
-                        final BulkRequestBuilder bulkRequest = initRequest(refresh);
-                        for(ShardReplicationOperationRequestBuilder builder : builders) {
+                        final BulkRequestBuilder bulkRequest = initRequest(isForceRefresh.get());
+                        for (ShardReplicationOperationRequestBuilder builder : builders) {
                             if (builder instanceof IndexRequestBuilder) {
                                 bulkRequest.add((IndexRequestBuilder) builder);
                             }
                             if (builder instanceof DeleteRequestBuilder) {
                                 bulkRequest.add((DeleteRequestBuilder) builder);
                             }
-                            sendRequest(bulkRequest);
                         }
+                        sendRequest(bulkRequest);
                     }
                 }).toBlocking().lastOrDefault(null);
 
-        for (RequestBuilderContainer container : containerCollection) {
+        for (RequestBuilderContainer container : containers) {
             container.done();
         }
     }

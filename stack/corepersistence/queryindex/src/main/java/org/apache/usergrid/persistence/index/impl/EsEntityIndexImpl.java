@@ -281,7 +281,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     @Override
     public EntityIndexBatch createBatch() {
         return new EsEntityIndexBatchImpl(
-                applicationScope, esProvider.getClient(),indexBatchBuffer, config, failureMonitor, this );
+                applicationScope, esProvider.getClient(),indexBatchBuffer, config, this );
     }
 
 

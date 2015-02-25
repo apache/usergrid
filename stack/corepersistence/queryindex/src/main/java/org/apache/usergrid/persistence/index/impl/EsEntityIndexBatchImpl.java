@@ -88,19 +88,17 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
     private final IndexIdentifier indexIdentifier;
 
     private final IndexBatchBuffer indexBatchBuffer;
-    private final FailureMonitor failureMonitor;
 
     private final AliasedEntityIndex entityIndex;
-    private final RequestBuilderContainer container;
+    private RequestBuilderContainer container;
 
 
     public EsEntityIndexBatchImpl(final ApplicationScope applicationScope, final Client client,final IndexBatchBuffer indexBatchBuffer,
-            final IndexFig config, final FailureMonitor failureMonitor, final AliasedEntityIndex entityIndex ) {
+            final IndexFig config, final AliasedEntityIndex entityIndex ) {
 
         this.applicationScope = applicationScope;
         this.client = client;
         this.indexBatchBuffer = indexBatchBuffer;
-        this.failureMonitor = failureMonitor;
         this.entityIndex = entityIndex;
         this.indexIdentifier = IndexingUtils.createIndexIdentifier(config, applicationScope);
         this.alias = indexIdentifier.getAlias();
@@ -214,15 +212,20 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
     }
 
     @Override
-    public void execute() {
-        indexBatchBuffer.put(container);
+    public BetterFuture execute() {
+        RequestBuilderContainer tempContainer = container;
+        container = new RequestBuilderContainer();
+        BetterFuture future = indexBatchBuffer.put(tempContainer);
+        return future;
     }
 
     @Override
     public void executeAndRefresh() {
-        BetterFuture future = indexBatchBuffer.put(container);
+        container.setForceRefresh(true);
+        RequestBuilderContainer tempContainer = container;
+        container = new RequestBuilderContainer();
+        BetterFuture future = indexBatchBuffer.put(tempContainer);
         future.get();
-        entityIndex.refresh();
     }
 
     /**

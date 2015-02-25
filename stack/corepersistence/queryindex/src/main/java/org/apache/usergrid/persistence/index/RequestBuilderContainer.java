@@ -30,6 +30,8 @@ public  class RequestBuilderContainer{
     private final ConcurrentLinkedQueue<ShardReplicationOperationRequestBuilder> builders;
     private final BetterFuture<Iterator<ShardReplicationOperationRequestBuilder>> containerFuture;
 
+    private  boolean forceRefresh = false;
+
     public RequestBuilderContainer(){
         final RequestBuilderContainer parent = this;
         builders = new ConcurrentLinkedQueue<>();
@@ -52,5 +54,12 @@ public  class RequestBuilderContainer{
     }
     public BetterFuture<Iterator<ShardReplicationOperationRequestBuilder>> getFuture(){
         return containerFuture;
+    }
+
+    public boolean isForceRefresh() {
+        return forceRefresh;
+    }
+    public void setForceRefresh(boolean forceRefresh) {
+        this.forceRefresh = forceRefresh;
     }
 }

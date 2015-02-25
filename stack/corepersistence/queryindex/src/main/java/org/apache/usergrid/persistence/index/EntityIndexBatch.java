@@ -20,6 +20,7 @@ package org.apache.usergrid.persistence.index;/*
 
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.core.future.BetterFuture;
 import org.apache.usergrid.persistence.index.query.CandidateResult;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -64,7 +65,7 @@ public interface EntityIndexBatch {
     /**
      * Execute the batch
      */
-    public void execute();
+    public BetterFuture execute();
 
     /**
      * Execute the batch and force the refresh
