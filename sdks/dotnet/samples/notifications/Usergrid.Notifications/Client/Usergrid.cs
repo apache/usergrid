@@ -48,13 +48,15 @@ namespace Usergrid.Notifications.Client
         /// <param name="org"></param>
         /// <param name="app"></param>
         /// <param name="channel"></param>
-        internal Usergrid(string serverUrl, string org, string app, string notifier)
+        internal Usergrid(string serverUrl, string org, string app, string userId, string password,string notifier)
         {
             string serverUrlWithSlash = serverUrl.EndsWith("/", StringComparison.CurrentCulture) ? serverUrl : serverUrl + "/";
             this.appUrl = String.Format("{0}{1}/{2}/", serverUrlWithSlash, org, app);
             this.managementUrl = serverUrlWithSlash + "management/";
             this.client = new HttpClient();
-            this.push = new PushClient(this,notifier);
+            Authenticate(userId, password, false).ContinueWith(task => {
+                this.push = new PushClient(this, userId, notifier);
+            });
         }
 
         public async Task Authenticate(string user, string password, bool isManagement)
@@ -69,7 +71,7 @@ namespace Usergrid.Notifications.Client
             if (response.StatusIsOk)
             {
                 this.token = response.GetValue("access_token").Value<String>();
-                client.DefaultRequestHeaders.Add("X-Authorization", token);
+                client.DefaultRequestHeaders.Add("Authorization", "Bearer "+ token);
             }
             else
             {
@@ -89,7 +91,7 @@ namespace Usergrid.Notifications.Client
 
         public async Task<EntityResponse> SendAsync(HttpMethod method, string url, object obj, bool useManagementUrl)
         {
-            HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Post, (useManagementUrl ? this.managementUrl : this.appUrl) + url);
+            HttpRequestMessage message = new HttpRequestMessage(method, (useManagementUrl ? this.managementUrl : this.appUrl) + url);
             if (obj != null)
             {
                 message.Content = getJsonBody(obj);
