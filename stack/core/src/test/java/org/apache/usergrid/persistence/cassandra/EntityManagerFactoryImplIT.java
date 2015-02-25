@@ -160,11 +160,6 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
             public void onProgress(EntityRef entity) {
                 logger.debug("Reindexing {}:{}", entity.getType(), entity.getUuid() );
             }
-
-            @Override
-            public long getWriteDelayTime() {
-                return 0;
-            }
         });
 
         // test to see that app now works and is happy
