@@ -116,7 +116,7 @@ public class PartialUpdateTest extends AbstractRestIT {
         updateProps.put("employer", "ACME Corporation");
 
         try { //  PUT /users/fred   put /users/uuid
-            userNode = this.app().collection("users").entity(props.getString("username")).put(updateProps);
+            userNode = this.app().collection("users").entity(props.get("username").toString()).put(updateProps);
 
         } catch (UniformInterfaceException uie) {
             fail("Update failed due to: " + uie.getResponse().getEntity(String.class));
