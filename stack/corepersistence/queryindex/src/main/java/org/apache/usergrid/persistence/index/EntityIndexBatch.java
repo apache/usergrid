@@ -70,5 +70,5 @@ public interface EntityIndexBatch {
     /**
      * Execute the batch and force the refresh
      */
-    public void executeAndRefresh();
+    public BetterFuture executeAndRefresh();
 }

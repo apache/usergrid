@@ -203,7 +203,7 @@ public class EntityIndexTest extends BaseIT {
         EntityIndexBatch entityIndexBatch = entityIndex.createBatch();
         entityIndexBatch.deindex(indexScope, crs.get(0));
         entityIndexBatch.deindex(indexScope, crs.get(1));
-        entityIndexBatch.executeAndRefresh();
+        entityIndexBatch.executeAndRefresh().get();
         entityIndex.refresh();
 
         //Hilda Youn
@@ -239,14 +239,14 @@ public class EntityIndexTest extends BaseIT {
             batch.index(indexScope, entity);
 
             if(count %1000 == 0){
-                batch.execute();
+                batch.execute().get();
             }
             if ( ++count > max ) {
                 break;
             }
         }
 
-        batch.executeAndRefresh();
+        batch.executeAndRefresh().get();
         timer.stop();
         log.info( "Total time to index {} entries {}ms, average {}ms/entry",
                 new Object[] { count, timer.getTime(), timer.getTime() / count } );
@@ -277,15 +277,15 @@ public class EntityIndexTest extends BaseIT {
         EntityUtils.setVersion( entity, UUIDGenerator.newTimeUUID() );
         entity.setField(new UUIDField(IndexingUtils.ENTITYID_ID_FIELDNAME, UUID.randomUUID()));
 
-        entityIndex.createBatch().index(indexScope , entity ).executeAndRefresh();
+        entityIndex.createBatch().index(indexScope , entity ).executeAndRefresh().get();
 
         CandidateResults candidateResults = entityIndex.search( indexScope, SearchTypes.fromTypes(entity.getId().getType()),
                 Query.fromQL( "name contains 'Ferrari*'" ) );
         assertEquals( 1, candidateResults.size() );
 
         EntityIndexBatch batch = entityIndex.createBatch();
-        batch.deindex(indexScope, entity).execute();
-        batch.executeAndRefresh();
+        batch.deindex(indexScope, entity).execute().get();
+        batch.executeAndRefresh().get();
         entityIndex.refresh();
 
         candidateResults = entityIndex.search( indexScope, SearchTypes.fromTypes(entity.getId().getType()), Query.fromQL( "name contains 'Ferrari*'" ) );
@@ -429,7 +429,7 @@ public class EntityIndexTest extends BaseIT {
         batch.index( indexScope,  user );
         user.setField( new StringField( "address3", "apt 508" ) );
         batch.index( indexScope,  user );
-        batch.executeAndRefresh();
+        batch.executeAndRefresh().get();
 
         CandidateResults results = entityIndex.getEntityVersions(indexScope,  user.getId() );
 
@@ -468,7 +468,7 @@ public class EntityIndexTest extends BaseIT {
         EntityIndexBatch batch = ei.createBatch();
 
         batch.index( appScope, user );
-        batch.executeAndRefresh();
+        batch.executeAndRefresh().get();
 
         Query query = new Query();
         query.addEqualityFilter( "username", "edanuff" );
@@ -476,7 +476,7 @@ public class EntityIndexTest extends BaseIT {
         assertEquals( user.getId(), r.get( 0 ).getId() );
 
         batch.deindex(appScope, user.getId(), user.getVersion() );
-        batch.executeAndRefresh();
+        batch.executeAndRefresh().get();
 
         // EntityRef
         query = new Query();
@@ -536,7 +536,7 @@ public class EntityIndexTest extends BaseIT {
         EntityUtils.setVersion( fred, UUIDGenerator.newTimeUUID() );
         batch.index( appScope, fred );
 
-        batch.executeAndRefresh();
+        batch.executeAndRefresh().get();
 
         final SearchTypes searchTypes = SearchTypes.fromTypes( "user" );
 

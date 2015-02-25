@@ -215,17 +215,15 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
     public BetterFuture execute() {
         RequestBuilderContainer tempContainer = container;
         container = new RequestBuilderContainer();
-        BetterFuture future = indexBatchBuffer.put(tempContainer);
-        return future;
+        return indexBatchBuffer.put(tempContainer);
     }
 
     @Override
-    public void executeAndRefresh() {
+    public BetterFuture executeAndRefresh() {
         container.setForceRefresh(true);
         RequestBuilderContainer tempContainer = container;
         container = new RequestBuilderContainer();
-        BetterFuture future = indexBatchBuffer.put(tempContainer);
-        future.get();
+        return indexBatchBuffer.put(tempContainer);
     }
 
     /**
