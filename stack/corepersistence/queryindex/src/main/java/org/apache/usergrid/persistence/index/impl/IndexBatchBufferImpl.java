@@ -122,7 +122,7 @@ public class IndexBatchBufferImpl implements IndexBatchBuffer {
         }
 
         final AtomicBoolean isForceRefresh = new AtomicBoolean(config.isForcedRefresh());
-        //clear the queue or proceed to buffersize
+        //clear the queue or proceed to buffer size
         Observable.from(containers)
                 .subscribeOn(Schedulers.io())
                 .flatMap(new Func1<RequestBuilderContainer, Observable<ShardReplicationOperationRequestBuilder>>() {
