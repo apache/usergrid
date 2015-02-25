@@ -97,7 +97,6 @@ public class CassandraService {
    // public static String SYSTEM_KEYSPACE = "Usergrid";
 
     public static String applicationKeyspace;
-    public static final boolean USE_VIRTUAL_KEYSPACES = true;
 
     public static final String APPLICATIONS_CF = "Applications";
     public static final String PROPERTIES_CF = "Properties";
@@ -238,35 +237,18 @@ public class CassandraService {
 
     /** @return keyspace for application UUID */
     public static String keyspaceForApplication( UUID applicationId ) {
-        if ( USE_VIRTUAL_KEYSPACES ) {
             return getApplicationKeyspace();
-        }
-        else {
-            return "Application_" + applicationId.toString().replace( '-', '_' );
-        }
     }
 
 
     public static UUID prefixForApplication( UUID applicationId ) {
-        if ( USE_VIRTUAL_KEYSPACES ) {
             return applicationId;
-        }
-        else {
-            return null;
-        }
     }
 
 
     public Keyspace getKeyspace( String keyspace, UUID prefix ) {
-        Keyspace ko = null;
-        if ( USE_VIRTUAL_KEYSPACES && ( prefix != null ) ) {
-            ko = createVirtualKeyspace( keyspace, prefix, ue, cluster, consistencyLevelPolicy,
+        Keyspace ko = createVirtualKeyspace( keyspace, prefix, ue, cluster, consistencyLevelPolicy,
                     ON_FAIL_TRY_ALL_AVAILABLE, accessMap );
-        }
-        else {
-            ko = HFactory.createKeyspace( keyspace, cluster, consistencyLevelPolicy, ON_FAIL_TRY_ALL_AVAILABLE,
-                    accessMap );
-        }
         return ko;
     }
 
