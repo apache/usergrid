@@ -27,35 +27,28 @@ import com.sun.jersey.test.framework.AppDescriptor;
 import com.sun.jersey.test.framework.JerseyTest;
 import com.sun.jersey.test.framework.WebAppDescriptor;
 import com.sun.jersey.test.framework.spi.container.TestContainerFactory;
+import org.apache.usergrid.java.client.Client;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.Rule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.UriBuilder;
-import org.apache.usergrid.java.client.Client;
+
 import static org.apache.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
-
-import org.eu.ingwar.tools.arquillian.extension.suite.annotations.ArquillianSuiteDeployment;
-import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.shrinkwrap.api.Archive;
-import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.Maven;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.importer.MavenImporter;
-import org.junit.AfterClass;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.runner.RunWith;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 /**
@@ -82,9 +75,10 @@ public abstract class AbstractRestIT extends JerseyTest {
 
     protected static final AppDescriptor descriptor;
 
-    // TODO, this needs to be removed.  Instead we need to hook into the Arquillian event lifecycle
-    // to invoke /system/database/setup from the REST tier.
-    public static ITSetup setup = new ITSetup(  );
+    public static ITSetup setup = new ITSetup();
+
+    @Rule
+    public TomcatResource tomcatResource = new TomcatResource();
 
     //private static final URI baseURI = setup.getBaseURI();
 
@@ -211,7 +205,11 @@ public abstract class AbstractRestIT extends JerseyTest {
 
     @Override
     protected URI getBaseURI() {
-        return setup.getBaseURI();
+        try {
+            return new URI("http://localhost:" + tomcatResource.getPort());
+        } catch (URISyntaxException e) {
+            throw new RuntimeException("Error determining baseURI", e);
+        }
     }
 
 

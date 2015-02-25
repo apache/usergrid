@@ -42,6 +42,7 @@ public class ITSetup  {
     private SignInProviderFactory providerFactory;
     private Properties properties;
     private ManagementService managementService;
+    private TomcatResource tomcatResource;
 
     private URI uri;
 
@@ -52,10 +53,6 @@ public class ITSetup  {
 
         this.springResource = ConcurrentProcessSingleton.getInstance().getSpringResource();
 
-        //start tomcat
-
-
-
         emf =                springResource.getBean( EntityManagerFactory.class );
         smf =                springResource.getBean( ServiceManagerFactory.class );
         tokenService =       springResource.getBean( TokenService.class );
@@ -63,14 +60,13 @@ public class ITSetup  {
         applicationCreator = springResource.getBean( ApplicationCreator.class );
         managementService =  springResource.getBean( ManagementService.class );
 
+        tomcatResource = TomcatResource.instance;
+        tomcatResource.setWebAppsPath( "src/main/webapp" );
 
         // Initialize Jersey Client
         //TODO, make this port a resource that's filtered by maven build for the port number
         uri = UriBuilder.fromUri("http://localhost/").port( 8080 ).build();
-
-
     }
-
 
 
     public int getTomcatPort() {
@@ -110,10 +106,5 @@ public class ITSetup  {
 
     public SignInProviderFactory getProviderFactory() {
         return providerFactory;
-    }
-
-
-    public URI getBaseURI() {
-        return uri;
     }
 }
