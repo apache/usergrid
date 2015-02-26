@@ -37,7 +37,8 @@ import java.util.Properties;
 
 
 /**
- * Shutdown job service when context is destroyed (useful when testing).
+ * Shutdown job service when context is destroyed.
+ * (Added for Arquillian testing purposes when we have to deploy, re-deploy, etc.)
  */
 public class ShutdownListener implements ServletContextListener {
     private static final Logger logger = LoggerFactory.getLogger(ShutdownListener.class);
@@ -66,8 +67,9 @@ public class ShutdownListener implements ServletContextListener {
             properties.getProperty(JobServiceBoostrap.START_SCHEDULER_PROP, "true"));
 
         if ( started ) {
-            schedulerService.stopAndWait();
-            logger.info( "Stopping Scheduler Service..." );
+            schedulerService.stopAsync();
+            schedulerService.awaitTerminated();
+            logger.info( "Stopped Scheduler Service..." );
         }
     }
 }

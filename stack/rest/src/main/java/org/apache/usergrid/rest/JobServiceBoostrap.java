@@ -39,7 +39,7 @@ public class JobServiceBoostrap implements
     public static final String START_SCHEDULER_PROP = "usergrid.scheduler.enabled";
 
     @Autowired
-    private JobSchedulerService schedulerService;
+    private JobSchedulerService jobScheduler;
 
     @Autowired
     private Properties properties;
@@ -59,7 +59,8 @@ public class JobServiceBoostrap implements
         String start = properties.getProperty( START_SCHEDULER_PROP, "true" );
         if ( Boolean.parseBoolean( start ) ) {
             logger.info( "Starting Scheduler Service..." );
-            schedulerService.startAndWait();
+            jobScheduler.startAsync();
+            jobScheduler.awaitRunning();
 
         } else {
             logger.info( "Scheduler Service disabled" );

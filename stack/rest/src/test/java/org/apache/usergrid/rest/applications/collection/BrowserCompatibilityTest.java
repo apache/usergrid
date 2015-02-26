@@ -18,6 +18,7 @@ package org.apache.usergrid.rest.applications.collection;
 
 
 import java.io.IOException;
+<<<<<<< HEAD
 
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
@@ -36,7 +37,7 @@ import static org.junit.Assert.assertEquals;
  * Simple tests to test querying at the REST tier
  */
 
-public class BrowserCompatibilityTest extends AbstractRestIT {
+public class BrowserCompatibilityTest extends org.apache.usergrid.rest.test.resource2point0.AbstractRestIT {
 
 
     /**

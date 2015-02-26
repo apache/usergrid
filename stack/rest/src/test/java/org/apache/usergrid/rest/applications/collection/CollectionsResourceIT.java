@@ -18,7 +18,6 @@ package org.apache.usergrid.rest.applications.collection;
 
 
 import java.io.IOException;
-import java.util.NoSuchElementException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
@@ -188,7 +187,10 @@ public class CollectionsResourceIT extends AbstractRestIT {
         Entity calendarlistOne = this.app().collection(collection).post(payload);
         assertEquals(calendarlistOne.get("summaryOverview"), summaryOverview);
         assertEquals(calendarlistOne.get("caltype"), calType);
+<<<<<<< HEAD
         String calendarlistOneUUID = calendarlistOne.getAsString("uuid");
+=======
+>>>>>>> 567db37ca03daa621dfde0c29f803b9384da5e7e
         this.refreshIndex();
 
         //post a second entity

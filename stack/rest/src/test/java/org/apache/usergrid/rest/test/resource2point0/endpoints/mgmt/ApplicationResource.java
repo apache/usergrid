@@ -20,7 +20,6 @@
 
 package org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt;
 
-
 import javax.ws.rs.core.MediaType;
 
 import org.apache.usergrid.rest.test.resource2point0.endpoints.NamedResource;
@@ -29,11 +28,12 @@ import org.apache.usergrid.rest.test.resource2point0.model.Application;
 import org.apache.usergrid.rest.test.resource2point0.model.*;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
+
 /**
  * Classy class class.
  */
 public class ApplicationResource extends NamedResource {
-    public ApplicationResource( ClientContext context, UrlResource parent) {
+    public ApplicationResource(ClientContext context, UrlResource parent) {
         super("applications", context, parent);
     }
 
@@ -48,7 +48,7 @@ public class ApplicationResource extends NamedResource {
 
     public void post(Application application) {
         getResource(true).type(MediaType.APPLICATION_JSON_TYPE)
-                .accept(MediaType.APPLICATION_JSON).post(application);
+            .accept(MediaType.APPLICATION_JSON).post(application);
     }
 
     public Entity post(Entity payload){

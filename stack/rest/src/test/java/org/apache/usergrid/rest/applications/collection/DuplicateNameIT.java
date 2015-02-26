@@ -16,9 +16,6 @@
 
 package org.apache.usergrid.rest.applications.collection;
 
-
-
-
 import com.sun.jersey.api.client.UniformInterfaceException;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
@@ -38,33 +35,6 @@ public class DuplicateNameIT extends AbstractRestIT {
     @Test
     public void duplicateNamePrevention() {
 
-        fail("This test is incorrectly written and should not use direct serialization to test duplicate names");
-
-//        CustomCollection things = context.application().customCollection( "things" );
-//
-//        Map<String, String> entity = MapUtils.hashMap( "name", "enzo" );
-//
-//        try {
-//            things.create( entity );
-//        } catch (IOException ex) {
-//            logger.error("Cannot create entity", ex);
-//        }
-//
-//        refreshIndex( context.getAppUuid() );
-//
-//        Injector injector = Guice.createInjector( new TestGuiceModule( null ) );
-//        SerializationFig sfig = injector.getInstance( SerializationFig.class );
-//
-//        // wait for any temporary unique value records to timeout
-//        try { Thread.sleep( sfig.getTimeout() * 1100 ); } catch (InterruptedException ignored) {}
-//
-//        try {
-//            things.create( entity );
-//            fail("Should not have created duplicate entity");
-//
-//        } catch (Exception ex) {
-//            // good
-//        }
         String collectionName = "things";
         Entity entity = new Entity();
         entity.put("name", "enzo");

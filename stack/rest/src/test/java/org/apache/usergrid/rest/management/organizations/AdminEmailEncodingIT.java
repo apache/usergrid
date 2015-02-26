@@ -17,7 +17,6 @@
 package org.apache.usergrid.rest.management.organizations;
 
 
-
 import com.sun.jersey.api.client.UniformInterfaceException;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.model.Application;
@@ -32,9 +31,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.UUID;
 
+import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
 
 /**
  * Tests for admin emails with + signs create accounts correctly, and can get tokens in both the POST and GET forms of
@@ -42,7 +40,6 @@ import static org.junit.Assert.assertNotNull;
  *
  * @author tnine
  */
-
 public class AdminEmailEncodingIT extends AbstractRestIT {
     private static Logger log = LoggerFactory.getLogger(AdminEmailEncodingIT.class);
 
@@ -91,9 +88,13 @@ public class AdminEmailEncodingIT extends AbstractRestIT {
      * Given an organization name and an arbitrary character or string,
      * ensure that an organization and admin user can be created when
      * the given string is a part of the admin email address
+<<<<<<< HEAD
+     * @param symbol
+=======
      *
      * @param symbol
      * @throws IOException
+>>>>>>> b4727f1db4b3e3e312b6f40d25a42ee66246cfd7
      */
     private void doTest(String symbol) throws UniformInterfaceException {
 
