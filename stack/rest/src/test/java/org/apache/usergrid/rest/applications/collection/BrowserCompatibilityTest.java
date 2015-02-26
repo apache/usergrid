@@ -18,7 +18,6 @@ package org.apache.usergrid.rest.applications.collection;
 
 
 import java.io.IOException;
-<<<<<<< HEAD
 
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
