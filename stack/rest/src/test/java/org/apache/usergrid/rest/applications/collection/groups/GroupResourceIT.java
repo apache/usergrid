@@ -532,7 +532,7 @@ public class GroupResourceIT extends AbstractRestIT {
         // update that group by giving it a new title and using UUID in URL
         String evenNewerTitle = "Even New Title";
         group.put("title", newTitle);
-        String uuid = group.getString("uuid");
+        String uuid = group.getAsString("uuid");
         groupResponse = this.app().collection("groups").uniqueID(uuid).put(group);
         assertEquals(groupResponse.get("title"), evenNewerTitle);
         this.refreshIndex();

@@ -136,7 +136,7 @@ public class EntityConnectionIndexImplTest extends BaseIT {
         batch.index( searchScope, oj );
         batch.index( otherIndexScope, oj );
 
-        batch.executeAndRefresh();
+        batch.execute().get();
         personLikesIndex.refresh();
 
 
@@ -267,7 +267,7 @@ public class EntityConnectionIndexImplTest extends BaseIT {
         batch.index( searchScope, oj );
         batch.index( otherIndexScope, oj );
 
-        batch.executeAndRefresh();
+        batch.execute().get();
         personLikesIndex.refresh();
 
         EsTestUtils.waitForTasks( personLikesIndex );
@@ -287,7 +287,8 @@ public class EntityConnectionIndexImplTest extends BaseIT {
         batch.deindex( searchScope, egg );
         batch.deindex( searchScope, muffin );
         batch.deindex( searchScope, oj );
-        batch.executeAndRefresh();
+        batch.execute().get();
+        personLikesIndex.refresh();
 
         likes = personLikesIndex.search( searchScope,
                 SearchTypes.fromTypes( muffin.getId().getType(), egg.getId().getType(), oj.getId().getType() ),

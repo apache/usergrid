@@ -135,10 +135,12 @@ public class Entity implements Serializable, Map<String,Object> {
         //All values are strings , so doing the cast here saves doing the cast elsewhere
         return getDynamicProperties().get( key );
     }
+
     public Map<String, Map<String, Object>> getMap(Object key){
         return (LinkedHashMap<String, Map<String, Object>>) getDynamicProperties().get( key );
     }
-    public String getString( final Object key ) {
+
+    public String getAsString( final Object key ) {
         //All values are strings , so doing the cast here saves doing the cast elsewhere
         return (String) getDynamicProperties().get( key );
     }
@@ -201,6 +203,11 @@ public class Entity implements Serializable, Map<String,Object> {
     }
 
     public Entity chainPut(final String key, final Object value){
+        put(key,value);
+        return this;
+    }
+
+    public Entity withProp(final String key, final Object value){
         put(key,value);
         return this;
     }
