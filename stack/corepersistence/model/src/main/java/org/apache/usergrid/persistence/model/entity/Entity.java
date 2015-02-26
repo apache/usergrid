@@ -131,4 +131,9 @@ public class Entity extends EntityObject {
                 ", version=" + version +
                 '}';
     }
+
+    public boolean hasVersion(){
+        return getVersion() != null;
+    }
+
 }

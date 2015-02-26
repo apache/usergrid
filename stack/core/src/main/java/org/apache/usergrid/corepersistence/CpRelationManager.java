@@ -118,6 +118,7 @@ import rx.functions.Func1;
 import static java.util.Arrays.asList;
 
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
+import static org.apache.usergrid.corepersistence.util.CpEntityMapUtils.entityToCpEntity;
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getCollectionScopeNameFromEntityType;
 import static org.apache.usergrid.persistence.Schema.COLLECTION_ROLES;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTED_ENTITIES;
@@ -233,8 +234,13 @@ public class CpRelationManager implements RelationManager {
         }
 
         Id entityId = new SimpleId( headEntity.getUuid(), headEntity.getType() );
-        this.cpHeadEntity = ((CpEntityManager)em).load(
-            new CpEntityManager.EntityScope( headEntityScope, entityId));
+
+//        if(headEntity instanceof Entity){
+//            cpHeadEntity = entityToCpEntity( (Entity)headEntity, headEntity.getUuid() );
+//        }else {
+            this.cpHeadEntity =
+                ( ( CpEntityManager ) em ).load( new CpEntityManager.EntityScope( headEntityScope, entityId ) );
+//        }
 
         // commented out because it is possible that CP entity has not been created yet
         Assert.notNull( cpHeadEntity, "cpHeadEntity cannot be null" );
@@ -409,14 +415,14 @@ public class CpRelationManager implements RelationManager {
                         if ( CpNamingUtils.isCollectionEdgeType( edge.getType() ) ) {
 
                             String collName = CpNamingUtils.getCollectionName( edge.getType() );
-                            indexScope = new IndexScopeImpl( 
+                            indexScope = new IndexScopeImpl(
                                 new SimpleId( sourceEntity.getUuid(), sourceEntity.getType()),
                                 CpNamingUtils.getCollectionScopeNameFromCollectionName( collName ));
                         }
                         else {
 
                             String connName = CpNamingUtils.getConnectionType( edge.getType() );
-                            indexScope = new IndexScopeImpl( 
+                            indexScope = new IndexScopeImpl(
                                 new SimpleId( sourceEntity.getUuid(), sourceEntity.getType() ),
                                 CpNamingUtils.getConnectionScopeName( connName ) );
                         }
@@ -600,14 +606,14 @@ public class CpRelationManager implements RelationManager {
     }
 
 
-    public Entity addToCollection( String collName, EntityRef itemRef, boolean connectBack ) 
+    public Entity addToCollection( String collName, EntityRef itemRef, boolean connectBack )
             throws Exception {
 
         CollectionScope memberScope = getCollectionScopeNameFromEntityType(
                 applicationScope.getApplication(), itemRef.getType());
 
-        Id entityId = new SimpleId( itemRef.getUuid(), itemRef.getType() ); 
-        org.apache.usergrid.persistence.model.entity.Entity memberEntity = 
+        Id entityId = new SimpleId( itemRef.getUuid(), itemRef.getType() );
+        org.apache.usergrid.persistence.model.entity.Entity memberEntity =
             ((CpEntityManager)em).load( new CpEntityManager.EntityScope( memberScope, entityId));
 
         return addToCollection(collName, itemRef, memberEntity, connectBack);
@@ -697,7 +703,7 @@ public class CpRelationManager implements RelationManager {
         //            headEntityScope.getName()});
 
         if ( connectBack && collection != null && collection.getLinkedCollection() != null ) {
-            getRelationManager( itemEntity ).addToCollection( 
+            getRelationManager( itemEntity ).addToCollection(
                     collection.getLinkedCollection(), headEntity, cpHeadEntity, false );
             getRelationManager( itemEntity ).addToCollection(
                     collection.getLinkedCollection(), headEntity, false );
@@ -819,7 +825,7 @@ public class CpRelationManager implements RelationManager {
 
         batch.deindex( indexScope, memberEntity );
 
-        // remove collection from item index 
+        // remove collection from item index
         IndexScope itemScope = new IndexScopeImpl(
             memberEntity.getId(),
             CpNamingUtils.getCollectionScopeNameFromCollectionName(
@@ -830,7 +836,7 @@ public class CpRelationManager implements RelationManager {
 
         batch.execute();
 
-        // remove edge from collection to item 
+        // remove edge from collection to item
         GraphManager gm = managerCache.getGraphManager( applicationScope );
         Edge collectionToItemEdge = new SimpleEdge(
                 cpHeadEntity.getId(),
@@ -938,8 +944,8 @@ public class CpRelationManager implements RelationManager {
         query.setEntityType( collection.getType() );
         query = adjustQuery( query );
 
-        // Because of possible stale entities, which are filtered out by buildResults(), 
-        // we loop until the we've got enough results to satisfy the query limit. 
+        // Because of possible stale entities, which are filtered out by buildResults(),
+        // we loop until the we've got enough results to satisfy the query limit.
 
         int maxQueries = 10; // max re-queries to satisfy query limit
 
@@ -1336,7 +1342,7 @@ public class CpRelationManager implements RelationManager {
             headEntity = em.validate( headEntity );
 
 
-            IndexScope indexScope = new IndexScopeImpl( 
+            IndexScope indexScope = new IndexScopeImpl(
                     cpHeadEntity.getId(), CpNamingUtils.getConnectionScopeName( connectionType ) );
 
             final SearchTypes searchTypes = SearchTypes.fromNullableTypes( connectedEntityType );
@@ -1458,7 +1464,7 @@ public class CpRelationManager implements RelationManager {
 
                 Identifier ident = query.getSingleIdentifier();
 
-                // an email was specified.  An edge case that only applies to users.  
+                // an email was specified.  An edge case that only applies to users.
                 // This is fulgy to put here, but required.
                 if ( query.getEntityType().equals( User.ENTITY_TYPE ) && ident.isEmail() ) {
 
@@ -1568,7 +1574,7 @@ public class CpRelationManager implements RelationManager {
      * @param crs Candidates to be considered for results
      * @param collName Name of collection or null if querying all types
      */
-    private Results buildResults( final IndexScope indexScope, final Query query, 
+    private Results buildResults( final IndexScope indexScope, final Query query,
             final CandidateResults crs, final String collName ) {
 
         logger.debug( "buildResults() for {} from {} candidates", collName, crs.size() );
@@ -1605,7 +1611,7 @@ public class CpRelationManager implements RelationManager {
         IndexUpdate indexUpdate = batchStartIndexUpdate( batch, entity, setName, elementValue,
                 timestampUuid, true, true, removeFromSet, false );
 
-        // Update collections 
+        // Update collections
 
         Map<String, Set<CollectionInfo>> containers =
                 getDefaultSchema().getContainersIndexingDictionary( entity.getType(), setName );
@@ -1950,7 +1956,7 @@ public class CpRelationManager implements RelationManager {
 
                 final ConnectedEntityRef sourceEntity = ( ConnectedEntityRef ) connection;
 
-                //we need to create a connection ref from the source entity (found via reverse edge) 
+                //we need to create a connection ref from the source entity (found via reverse edge)
                 // to the entity we're about to update.  This is the index that needs updated
                 final ConnectionRefImpl connectionRef =
                         new ConnectionRefImpl( sourceEntity, connectionType, indexUpdate.getEntity() );

@@ -24,11 +24,12 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
 import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.corepersistence.CpSetup;
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.corepersistence.EntityWriteHelper;
 import org.apache.usergrid.corepersistence.ManagerCache;
 import org.apache.usergrid.corepersistence.rx.AllEntitiesInSystemObservable;
@@ -44,14 +45,16 @@ import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import com.google.inject.Injector;
 import com.netflix.astyanax.Keyspace;
 
+import net.jcip.annotations.NotThreadSafe;
+
 import rx.functions.Action1;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import org.junit.Ignore;
 
 
+@NotThreadSafe
 public class EntityTypeMappingMigrationIT extends AbstractCoreIT {
 
 
@@ -69,14 +72,14 @@ public class EntityTypeMappingMigrationIT extends AbstractCoreIT {
      * Rule to do the resets we need
      */
     @Rule
-    public MigrationTestRule migrationTestRule = new MigrationTestRule( 
-            app, CpSetup.getInjector() ,EntityTypeMappingMigration.class  );
+    public MigrationTestRule migrationTestRule = new MigrationTestRule(
+            app,  SpringResource.getInstance().getBean( Injector.class ) ,EntityTypeMappingMigration.class  );
 
 
 
     @Before
     public void setup() {
-        injector = CpSetup.getInjector();
+        injector =  SpringResource.getInstance().getBean( Injector.class );
         emf = setup.getEmf();
         entityTypeMappingMigration = injector.getInstance( EntityTypeMappingMigration.class );
         keyspace = injector.getInstance( Keyspace.class );
@@ -114,8 +117,8 @@ public class EntityTypeMappingMigrationIT extends AbstractCoreIT {
         keyspace.truncateColumnFamily( MapSerializationImpl.MAP_ENTRIES );
         keyspace.truncateColumnFamily( MapSerializationImpl.MAP_KEYS );
 
-        app.createApplication( 
-                GraphShardVersionMigrationIT.class.getSimpleName()+ UUIDGenerator.newTimeUUID(), 
+        app.createApplication(
+                GraphShardVersionMigrationIT.class.getSimpleName()+ UUIDGenerator.newTimeUUID(),
                 "migrationTest" );
 
 

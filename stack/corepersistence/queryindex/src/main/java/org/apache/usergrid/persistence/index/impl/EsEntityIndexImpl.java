@@ -55,6 +55,7 @@ import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.index.query.*;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.elasticsearch.indices.IndexMissingException;
+import org.elasticsearch.indices.InvalidAliasNameException;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.sort.FieldSortBuilder;
@@ -108,7 +109,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     private static final String VERIFY_TYPE = "verification";
 
     private static final ImmutableMap<String, Object> DEFAULT_PAYLOAD =
-            ImmutableMap.<String, Object>of( "field", "test" );
+            ImmutableMap.<String, Object>builder().put( "field", "test" ).put(IndexingUtils.ENTITYID_ID_FIELDNAME, UUIDGenerator.newTimeUUID().toString()).build();
 
     private static final MatchAllQueryBuilder MATCH_ALL_QUERY_BUILDER = QueryBuilders.matchAllQuery();
 
@@ -194,14 +195,14 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
             isAck = adminClient.indices().prepareAliases().addAlias(
                     indexName, alias.getReadAlias()).execute().actionGet().isAcknowledged();
             logger.info("Created new read Alias Name [{}] ACK=[{}]", alias.getReadAlias(), isAck);
-            
+
             // add write alias
             isAck = adminClient.indices().prepareAliases().addAlias(
                     indexName, alias.getWriteAlias()).execute().actionGet().isAcknowledged();
             logger.info("Created new write Alias Name [{}] ACK=[{}]", alias.getWriteAlias(), isAck);
-            
+
             aliasCache.invalidate(alias);
-            
+
         } catch (Exception e) {
             logger.warn("Failed to create alias ", e);
         }
@@ -235,7 +236,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
                      .setSource(DEFAULT_PAYLOAD).get();
 
                 logger.info( "Successfully created new document with docId {} "
-                     + "in index read {} write {} and type {}", 
+                     + "in index read {} write {} and type {}",
                         tempId, alias.getReadAlias(), alias.getWriteAlias(), VERIFY_TYPE );
 
                 // delete all types, this way if we miss one it will get cleaned up
@@ -255,7 +256,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
 
     /**
-     * Setup ElasticSearch type mappings as a template that applies to all new indexes. 
+     * Setup ElasticSearch type mappings as a template that applies to all new indexes.
      * Applies to all indexes that* start with our prefix.
      */
     private void createMappings() throws IOException {
@@ -277,13 +278,13 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
     @Override
     public EntityIndexBatch createBatch() {
-        return new EsEntityIndexBatchImpl( 
+        return new EsEntityIndexBatchImpl(
                 applicationScope, esProvider.getClient(), config, 1000, failureMonitor, this );
     }
 
 
     @Override
-    public CandidateResults search( final IndexScope indexScope, final SearchTypes searchTypes, 
+    public CandidateResults search( final IndexScope indexScope, final SearchTypes searchTypes,
             final Query query ) {
 
         final String context = IndexingUtils.createContextName(indexScope);
@@ -322,8 +323,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
                 }
 
                 // we do not know the type of the "order by" property and so we do not know what
-                // type prefix to use. So, here we add an order by clause for every possible type 
-                // that you can order by: string, number and boolean and we ask ElasticSearch 
+                // type prefix to use. So, here we add an order by clause for every possible type
+                // that you can order by: string, number and boolean and we ask ElasticSearch
                 // to ignore any fields that are not present.
 
                 final String stringFieldName = STRING_PREFIX + sp.getPropertyName();
@@ -433,9 +434,12 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
             @Override
             public boolean doOp() {
                 try {
-                    String[] indexes = ArrayUtils.addAll( getIndexes(AliasType.Write), getIndexes(AliasType.Write) );
+                    String[] indexes = ArrayUtils.addAll(
+                        getIndexes(AliasType.Read),
+                        getIndexes(AliasType.Write) );
+
                     if ( indexes.length == 0 ) {
-                        logger.debug( "Not refreshing indexes, none found for app {}", 
+                        logger.debug( "Not refreshing indexes, none found for app {}",
                                 applicationScope.getApplication().getUuid() );
                         return true;
                     }
@@ -472,7 +476,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
         final String context = IndexingUtils.createContextName(scope);
         final SearchTypes searchTypes = SearchTypes.fromTypes( id.getType() );
 
-        final QueryBuilder queryBuilder = 
+        final QueryBuilder queryBuilder =
                 QueryBuilders.termQuery( IndexingUtils.ENTITY_CONTEXT_FIELDNAME, context );
 
         final SearchRequestBuilder srb = esProvider.getClient().prepareSearch( alias.getReadAlias() )
@@ -519,7 +523,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     @Override
     public void deletePreviousVersions( final Id entityId, final UUID version ) {
 
-        String idString = IndexingUtils.idString( entityId ).toLowerCase(); 
+        String idString = IndexingUtils.idString( entityId ).toLowerCase();
 
         final FilteredQueryBuilder fqb = QueryBuilders.filteredQuery(
                 QueryBuilders.termQuery(ENTITYID_ID_FIELDNAME, idString),
@@ -541,7 +545,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     /**
      * Validate the response doesn't contain errors, if it does, fail fast at the first error we encounter
      */
-    private void checkDeleteByQueryResponse( 
+    private void checkDeleteByQueryResponse(
             final QueryBuilder query, final DeleteByQueryResponse response ) {
 
         for ( IndexDeleteByQueryResponse indexDeleteByQueryResponse : response ) {
@@ -550,9 +554,9 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
             for ( ShardOperationFailedException failedException : failures ) {
                 throw new IndexException( String.format("Unable to delete by query %s. "
                         + "Failed with code %d and reason %s on shard %s in index %s",
-                    query.toString(), 
+                    query.toString(),
                     failedException.status().getStatus(),
-                    failedException.reason(), 
+                    failedException.reason(),
                     failedException.shardId(),
                     failedException.index() ) );
             }
@@ -572,6 +576,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
         if ( response.isAcknowledged() ) {
             logger.info( "Deleted index: read {} write {}", alias.getReadAlias(), alias.getWriteAlias());
+            //invlaidate the alias
+            aliasCache.invalidate( alias );
         }
         else {
             logger.info( "Failed to delete index: read {} write {}", alias.getReadAlias(), alias.getWriteAlias());

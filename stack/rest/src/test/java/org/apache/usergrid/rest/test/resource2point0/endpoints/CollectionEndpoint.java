@@ -18,18 +18,22 @@ package org.apache.usergrid.rest.test.resource2point0.endpoints;
 
 import com.sun.jersey.api.client.WebResource;
 import org.apache.usergrid.rest.test.resource2point0.model.*;
+import org.apache.usergrid.rest.test.resource2point0.model.Collection;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 import org.apache.usergrid.services.ServiceParameter;
+import org.apache.usergrid.utils.StringUtils;
 
 import javax.ws.rs.core.MediaType;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 
 /**
  * //myorg/myapp/mycollection
  */
 public class CollectionEndpoint extends NamedResource {
+
+    protected List<String> acceptHeaders = new ArrayList<String> ();
+
     public CollectionEndpoint(String name, ClientContext context, UrlResource parent) {
         super(name, context, parent);
     }
@@ -52,6 +56,10 @@ public class CollectionEndpoint extends NamedResource {
         return uniqueID(identifier);
     }
 
+    public CollectionEndpoint withAcceptHeader(final String acceptHeader) {
+        this.acceptHeaders.add(acceptHeader);
+        return this;
+    }
 
     /**
      *
@@ -99,9 +107,15 @@ public class CollectionEndpoint extends NamedResource {
     }
 
     public Collection get(final QueryParameters parameters, final boolean useToken){
+
+        String acceptHeader = MediaType.APPLICATION_JSON;
+        if (this.acceptHeaders.size() > 0) {
+           acceptHeader = StringUtils.join(this.acceptHeaders, ',');
+        }
+
         WebResource resource  = getResource(useToken);
         resource = addParametersToResource(resource, parameters);
-        ApiResponse response = resource.type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
+        ApiResponse response = resource.type( MediaType.APPLICATION_JSON_TYPE ).accept(acceptHeader)
                 .get(ApiResponse.class);
 
         return new Collection(response);
@@ -124,6 +138,11 @@ public class CollectionEndpoint extends NamedResource {
      */
     //TODO: add queryParameters here
     public Collection getNextPage(Collection collection, QueryParameters passedParameters ,final boolean useToken) {
+        String acceptHeader = MediaType.APPLICATION_JSON;
+        if (this.acceptHeaders.size() > 0) {
+            acceptHeader = StringUtils.join(this.acceptHeaders, ',');
+        }
+
         WebResource resource = getResource(useToken);
         QueryParameters queryParameters = passedParameters;
         if( queryParameters == null){
@@ -133,7 +152,7 @@ public class CollectionEndpoint extends NamedResource {
         queryParameters.setCursor(collection.getCursor());
         resource = addParametersToResource(resource, queryParameters);
 
-        ApiResponse response = resource.type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
+        ApiResponse response = resource.type( MediaType.APPLICATION_JSON_TYPE ).accept(acceptHeader)
                 .get(ApiResponse.class);
 
         return new Collection(response);
@@ -160,9 +179,14 @@ public class CollectionEndpoint extends NamedResource {
     }
 
     public ApiResponse delete(final QueryParameters parameters, final boolean useToken){
+        String acceptHeader = MediaType.APPLICATION_JSON;
+        if (this.acceptHeaders.size() > 0) {
+            acceptHeader = StringUtils.join(this.acceptHeaders, ',');
+        }
+
         WebResource resource  = getResource(useToken);
         resource = addParametersToResource(resource, parameters);
-        return resource.type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
+        return resource.type( MediaType.APPLICATION_JSON_TYPE ).accept(acceptHeader)
                 .delete(ApiResponse.class);
     }
 
@@ -176,19 +200,31 @@ public class CollectionEndpoint extends NamedResource {
      *
      */
     public Entity post(Entity payload){
-        ApiResponse response = getResource(true).type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
+        String acceptHeader = MediaType.APPLICATION_JSON;
+        if (this.acceptHeaders.size() > 0) {
+            acceptHeader = StringUtils.join(this.acceptHeaders, ',');
+        }
+        ApiResponse response = getResource(true).type( MediaType.APPLICATION_JSON_TYPE ).accept(acceptHeader)
                 .post(ApiResponse.class, payload);
         return new Entity(response);
     }
 
     public Entity post(){
-        ApiResponse response = getResource(true).type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
+        String acceptHeader = MediaType.APPLICATION_JSON;
+        if (this.acceptHeaders.size() > 0) {
+            acceptHeader = StringUtils.join(this.acceptHeaders, ',');
+        }
+        ApiResponse response = getResource(true).type( MediaType.APPLICATION_JSON_TYPE ).accept(acceptHeader)
                 .post(ApiResponse.class);
         return new Entity(response);
     }
 
     public ApiResponse post(List<Entity> entityList){
-        ApiResponse response = getResource(true).type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
+        String acceptHeader = MediaType.APPLICATION_JSON;
+        if (this.acceptHeaders.size() > 0) {
+            acceptHeader = StringUtils.join(this.acceptHeaders, ',');
+        }
+        ApiResponse response = getResource(true).type( MediaType.APPLICATION_JSON_TYPE ).accept(acceptHeader)
                 .post(ApiResponse.class,entityList);
         return response;
     }
@@ -208,9 +244,13 @@ public class CollectionEndpoint extends NamedResource {
     }
 
     public ApiResponse put(final QueryParameters parameters, final boolean useToken, Entity entity){
+        String acceptHeader = MediaType.APPLICATION_JSON;
+        if (this.acceptHeaders.size() > 0) {
+            acceptHeader = StringUtils.join(this.acceptHeaders, ',');
+        }
         WebResource resource  = getResource(useToken);
         addParametersToResource(getResource(), parameters);
-        return resource.type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
+        return resource.type( MediaType.APPLICATION_JSON_TYPE ).accept(acceptHeader)
                 .put(ApiResponse.class, entity);
     }
 

@@ -18,46 +18,55 @@ package org.apache.usergrid.rest.test.resource2point0.model;
 
 
 import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
  * Token model that contains the operations that can be done on a token.
  */
-public class Token extends Entity{
+public class Token extends Entity {
 
     private User user;
 
-    public Token(){
+    public Token() {
 
     }
 
-    public Token( String username, String password){
-        this.put("grant_type","password");
+    public Token(String username, String password) {
+        this.put("grant_type", "password");
         this.put("username", username);
         this.put("password", password);
     }
 
     /**
      * Constructor for admin/application user ( difference is in the path )
+     *
      * @param grantType
      * @param username
      * @param password
      */
-    public Token(String grantType, String username, String password){
-        this.put("grant_type",grantType);
-        this.put("username", username);
-        this.put("password", password);
+    public Token(String grantType, String username, String password) {
+        this.put("grant_type", grantType);
+        if ("client_credentials".equals(grantType)) {
+            this.put("client_id", username);
+            this.put("client_secret", password);
+        } else {
+            this.put("username", username);
+            this.put("password", password);
+        }
     }
 
-    public String getAccessToken(){
+    public String getAccessToken() {
         return (String) this.get("access_token");
     }
 
-    public Long getExpriationDate(){
-        return (Long) this.get("expires_in");
+    public String getGrantType() {
+        return (String) this.get("grant_type");
     }
 
-    public Long getPasswordChanged(){
+    public Long getExpirationDate() {
+        return ((Integer) this.get("expires_in")).longValue();
+    }
+
+    public Long getPasswordChanged() {
         return (Long) this.get("passwordChanged");
     }
 
@@ -66,7 +75,7 @@ public class Token extends Entity{
     }
 
     public User getUser() {
-        return user != null ? user : new User((LinkedHashMap)get("user"));
+        return user != null ? user : new User((LinkedHashMap) get("user"));
     }
 }
 

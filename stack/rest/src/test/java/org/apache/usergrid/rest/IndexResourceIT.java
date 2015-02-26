@@ -68,7 +68,7 @@ public class IndexResourceIT extends AbstractRestIT {
                     .queryParam("access_token", superToken)
                     .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE)
                     .post(String.class, data));
-        }catch (Exception e){
+        } catch (Exception e) {
             LOG.error("failed", e);
             fail(e.toString());
         }

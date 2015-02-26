@@ -23,13 +23,13 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.persistence.entities.SampleEntity;
-
 import org.usergrid.Simple;
 
+import org.apache.usergrid.persistence.entities.SampleEntity;
+
+import static org.apache.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.apache.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 
 
 public class SchemaTest {

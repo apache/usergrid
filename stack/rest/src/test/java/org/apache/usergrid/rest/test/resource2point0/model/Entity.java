@@ -79,6 +79,10 @@ public class Entity implements Serializable, Map<String,Object> {
                 this.putAll( entity );
             }
         }
+        //TODO: added bit for import tests and other tests that only put a single thing into properties
+        else if (response.getProperties() != null){
+            this.putAll( response.getProperties() );
+        }
     }
 
     //For the owner , should have different cases that looks at the different types it could be
@@ -131,7 +135,12 @@ public class Entity implements Serializable, Map<String,Object> {
         //All values are strings , so doing the cast here saves doing the cast elsewhere
         return getDynamicProperties().get( key );
     }
-    public String getString( final Object key ) {
+
+    public Map<String, Map<String, Object>> getMap(Object key){
+        return (LinkedHashMap<String, Map<String, Object>>) getDynamicProperties().get( key );
+    }
+
+    public String getAsString( final Object key ) {
         //All values are strings , so doing the cast here saves doing the cast elsewhere
         return (String) getDynamicProperties().get( key );
     }
@@ -194,6 +203,11 @@ public class Entity implements Serializable, Map<String,Object> {
     }
 
     public Entity chainPut(final String key, final Object value){
+        put(key,value);
+        return this;
+    }
+
+    public Entity withProp(final String key, final Object value){
         put(key,value);
         return this;
     }

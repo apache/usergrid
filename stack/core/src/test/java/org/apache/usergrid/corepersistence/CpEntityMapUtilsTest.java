@@ -16,26 +16,30 @@
 
 package org.apache.usergrid.corepersistence;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.ListField;
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 public class CpEntityMapUtilsTest {
@@ -51,21 +55,21 @@ public class CpEntityMapUtilsTest {
                 add( new LinkedHashMap<String, Object>() {{ put("name", "fred"); }});
                 add( new LinkedHashMap<String, Object>() {{ put("name", "gertrude"); }});
                 add( new LinkedHashMap<String, Object>() {{ put("name", "mina"); }});
-            }});            
+            }});
             put( "blockedBy", new ArrayList<Object>() {{
                 add( new LinkedHashMap<String, Object>() {{ put("name", "isabell"); }});
             }});
             put( "location", new LinkedHashMap<String, Object>() {{
                 put("latitude", 37.776753 );
                 put("longitude", -122.407846 );
-            }}); 
+            }});
         }};
 
         Entity cpEntity = CpEntityMapUtils.fromMap( properties, "user", true );
         assertUserWithBlocks( cpEntity );
     }
 
-        
+
     @Test
     public void testSerialization() throws JsonProcessingException, IOException {
 
@@ -76,17 +80,17 @@ public class CpEntityMapUtilsTest {
                 add( new LinkedHashMap<String, Object>() {{ put("name", "fred"); }});
                 add( new LinkedHashMap<String, Object>() {{ put("name", "gertrude"); }});
                 add( new LinkedHashMap<String, Object>() {{ put("name", "mina"); }});
-            }});            
+            }});
             put( "blockedBy", new ArrayList<Object>() {{
                 add( new LinkedHashMap<String, Object>() {{ put("name", "isabell"); }});
             }});
             put( "location", new LinkedHashMap<String, Object>() {{
                 put("latitude", 37.776753 );
                 put("longitude", -122.407846 );
-            }}); 
+            }});
         }};
 
-        org.apache.usergrid.persistence.model.entity.Entity entity = 
+        org.apache.usergrid.persistence.model.entity.Entity entity =
             new org.apache.usergrid.persistence.model.entity.Entity(
                 new SimpleId( "user" ) );
         entity = CpEntityMapUtils.fromMap( entity, properties, null, true );
@@ -109,7 +113,7 @@ public class CpEntityMapUtilsTest {
 
 
     private void assertUserWithBlocks( org.apache.usergrid.persistence.model.entity.Entity e ) {
-        
+
         assertTrue( e.getField("block") instanceof ListField );
         assertTrue( e.getField("block").getValue() instanceof List );
         List blockList = (List)e.getField("block").getValue();

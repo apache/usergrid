@@ -27,39 +27,50 @@ import com.sun.jersey.test.framework.AppDescriptor;
 import com.sun.jersey.test.framework.JerseyTest;
 import com.sun.jersey.test.framework.WebAppDescriptor;
 import com.sun.jersey.test.framework.spi.container.TestContainerFactory;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.usergrid.java.client.Client;
+import org.apache.usergrid.management.ApplicationInfo;
+import org.apache.usergrid.management.OrganizationInfo;
+import org.apache.usergrid.management.OrganizationOwnerInfo;
+
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.UriBuilder;
-import org.apache.usergrid.java.client.Client;
+
 import static org.apache.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
-import org.junit.AfterClass;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 /**
- * Base class for testing Usergrid Jersey-based REST API. Implementations should model the 
- * paths mapped, not the method names. For example, to test the the "password" mapping on 
- * applications.users.UserResource for a PUT method, the test method(s) should following the 
+ * Base class for testing Usergrid Jersey-based REST API. Implementations should model the
+ * paths mapped, not the method names. For example, to test the the "password" mapping on
+ * applications.users.UserResource for a PUT method, the test method(s) should following the
  * following naming convention: test_[HTTP verb]_[action mapping]_[ok|fail][_[specific
  * failure condition if multiple]
  */
-//@Concurrent()
+//@ArquillianSuiteDeployment
+//@RunWith(Arquillian.class)
 public abstract class AbstractRestIT extends JerseyTest {
     private static final Logger LOG = LoggerFactory.getLogger( AbstractRestIT.class );
     private static boolean usersSetup = false;
 
+    protected static TomcatRuntime tomcatRuntime = TomcatRuntime.getInstance();
+
+    protected static final ITSetup setup = ITSetup.getInstance();
 
     private static ClientConfig clientConfig = new DefaultClientConfig();
 
@@ -71,8 +82,6 @@ public abstract class AbstractRestIT extends JerseyTest {
 
     protected static final AppDescriptor descriptor;
 
-    @ClassRule
-    public static ITSetup setup = new ITSetup( RestITSuite.cassandraResource );
 
     //private static final URI baseURI = setup.getBaseURI();
 
@@ -92,6 +101,22 @@ public abstract class AbstractRestIT extends JerseyTest {
     }
 
 
+//    // We set testable = false so we deploy the archive to the server and test it locally
+//    @org.jboss.arquillian.container.test.api.Deployment( testable = false )
+//    public static WebArchive createTestArchive() {
+//
+//        // we use the MavenImporter from shrinkwrap to just produce whatever maven would build then test with it
+//
+//        // set maven to be in offline mode
+//
+//        System.setProperty( "org.apache.maven.offline", "true" );
+//        return ShrinkWrap.create(MavenImporter.class)
+//            .loadPomFromFile( "pom.xml", "arquillian-tomcat" )
+//            .importBuildOutput()
+//            .as( WebArchive.class );
+//    }
+
+
     @AfterClass
     public static void teardown() {
         access_token = null;
@@ -100,21 +125,43 @@ public abstract class AbstractRestIT extends JerseyTest {
     }
 
 
-    /** Hook to get the token for our base user */
-    @Before
-    public void acquireToken() throws Exception {
+    public ApplicationInfo appInfo = null;
+    public OrganizationInfo orgInfo = null;
+    public String orgAppPath = null;
+    public String username = null;
+    public String userEmail = null;
 
-//        setupUsers();
-//
-//        refreshIndex("test-organization", "test-app");
-//
-//        LOG.info( "acquiring token" );
-//        access_token = userToken( "ed@anuff.com", "sesame" );
-//        LOG.info( "with token: {}", access_token );
-//
-//        loginClient();
-//
-//        refreshIndex("test-organization", "test-app");
+    /** Quick fix to get old style test working again. We need them! */
+    @Before
+    public void setupOrgApp() throws Exception {
+
+        setup.getMgmtSvc().setup();
+
+        String rand = RandomStringUtils.randomAlphanumeric(5);
+
+        orgInfo = setup.getMgmtSvc().getOrganizationByName("test-organization");
+        if ( orgInfo == null  ) {
+            OrganizationOwnerInfo orgOwnerInfo = setup.getMgmtSvc().createOwnerAndOrganization(
+                "test-organization" + rand, "test", "test", "test@usergrid.org", rand, false, false);
+            orgInfo = orgOwnerInfo.getOrganization();
+        }
+
+        appInfo = setup.getMgmtSvc().createApplication(orgInfo.getUuid(), "app-" + rand);
+        refreshIndex( orgInfo.getName(), appInfo.getName() );
+
+        orgAppPath = appInfo.getName() + "/";
+        adminToken();
+
+        setupUsers();
+        refreshIndex( orgInfo.getName(), appInfo.getName() );
+
+        loginClient();
+        refreshIndex( orgInfo.getName(), appInfo.getName() );
+
+        LOG.info( "acquiring token" );
+        access_token = userToken( userEmail, "sesame" );
+        LOG.info( "with token: {}", access_token );
+
     }
 
 
@@ -135,39 +182,35 @@ public abstract class AbstractRestIT extends JerseyTest {
     }
 
 
-    protected void setupUsers() {
+    protected void setupUsers() throws Exception {
 
         LOG.info("Entering setupUsers");
 
-        if ( usersSetup ) {
-            LOG.info("Leaving setupUsers: already setup");
-            return;
-        }
+//        if ( usersSetup ) {
+//            LOG.info("Leaving setupUsers: already setup");
+//            return;
+//        }
 
-        //
-        createUser( "edanuff", "ed@anuff.com", "sesame", "Ed Anuff" ); // client.setApiUrl(apiUrl);
+        String rand = RandomStringUtils.randomAlphanumeric(5);
+        username = "user-" + rand;
+        userEmail = username + "@example.com";
 
-        usersSetup = true;
-        LOG.info("Leaving setupUsers success");
+        createUser( username, userEmail, "sesame", "User named " + rand);
+
+        //usersSetup = true;
+        LOG.info("Leaving setupUsers, setup user: " + userEmail );
     }
 
 
     public void loginClient() throws Exception {
-        // now create a client that logs in ed
 
-        // TODO T.N. This is a filthy hack and I should be ashamed of it (which
-        // I am). There's a bug in the grizzly server when it's restarted per
-        // test, and until we can upgrade versions this is the workaround. Backs
-        // off with each attempt to allow the server to catch up
+        String appNameOnly = appInfo.getName().split("/")[1];
 
+        client = new Client( "test-organization", appNameOnly ).withApiUrl(
+                UriBuilder.fromUri( "http://localhost/" ).port(tomcatRuntime.getPort() ).build().toString() );
 
-        setUserPassword( "ed@anuff.com", "sesame" );
-
-        client = new Client( "test-organization", "test-app" ).withApiUrl(
-                UriBuilder.fromUri( "http://localhost/" ).port( setup.getTomcatPort() ).build().toString() );
-
-        org.apache.usergrid.java.client.response.ApiResponse response = 
-                client.authorizeAppUser( "ed@anuff.com", "sesame" );
+        org.apache.usergrid.java.client.response.ApiResponse response =
+            client.authorizeAppUser( userEmail, "sesame" );
 
         assertTrue( response != null && response.getError() == null );
     }
@@ -183,7 +226,11 @@ public abstract class AbstractRestIT extends JerseyTest {
 
     @Override
     protected URI getBaseURI() {
-        return setup.getBaseURI();
+        try {
+            return new URI("http://localhost:" + tomcatRuntime.getPort());
+        } catch (URISyntaxException e) {
+            throw new RuntimeException("Error determining baseURI", e);
+        }
     }
 
 
@@ -198,10 +245,8 @@ public abstract class AbstractRestIT extends JerseyTest {
     protected String userToken( String name, String password ) throws Exception {
 
         try {
-            setUserPassword( "ed@anuff.com", "sesame" );
-
-            JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/token" )
-                    .queryParam( "grant_type", "password" )
+            JsonNode node = mapper.readTree( resource().path( orgAppPath + "token" )
+                    .queryParam("grant_type", "password")
                     .queryParam( "username", name )
                     .queryParam( "password", password ).accept( MediaType.APPLICATION_JSON )
                     .get( String.class ));
@@ -220,7 +265,7 @@ public abstract class AbstractRestIT extends JerseyTest {
     public void createUser( String username, String email, String password, String name ) {
 
         try {
-            JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/token" )
+            JsonNode node = mapper.readTree( resource().path( orgAppPath + "token" )
                 .queryParam( "grant_type", "password" )
                 .queryParam( "username", username )
                 .queryParam( "password", password )
@@ -243,7 +288,7 @@ public abstract class AbstractRestIT extends JerseyTest {
             .map( "password", password )
             .map( "pin", "1234" );
 
-        resource().path( "/test-organization/test-app/users" )
+        resource().path( orgAppPath + "users" )
             .queryParam( "access_token", adminAccessToken )
             .accept( MediaType.APPLICATION_JSON )
             .type( MediaType.APPLICATION_JSON )
@@ -258,12 +303,12 @@ public abstract class AbstractRestIT extends JerseyTest {
         adminToken();
 
         // change the password as admin. The old password isn't required
-        JsonNode node = mapper.readTree( resource().path( 
-                String.format( "/test-organization/test-app/users/%s/password", username ) )
-                .queryParam( "access_token", adminAccessToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, data ));
-
-        assertNull( getError( node ) );
+        JsonNode node = mapper.readTree(
+            resource().path( String.format( orgAppPath + "users/%s/password", username ) )
+                .queryParam("access_token", adminAccessToken)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE)
+                .post(String.class, data));
     }
 
 
@@ -296,7 +341,7 @@ public abstract class AbstractRestIT extends JerseyTest {
 
         } catch (IOException ex) {
             throw new RuntimeException("Unable to parse response", ex);
-        } 
+        }
 
         String mgmToken = node.get( "access_token" ).textValue();
         LOG.info( "got mgmt token: {}", mgmToken );
@@ -357,7 +402,7 @@ public abstract class AbstractRestIT extends JerseyTest {
 
     /** convenience to return a ready WebResource.Builder in a single call */
     protected WebResource.Builder appPath( String path ) {
-        return resource().path( "/test-organization/test-app/" + path )
+        return resource().path( orgAppPath + "" + path )
                 .queryParam( "access_token", access_token )
                 .accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE );
@@ -421,7 +466,7 @@ public abstract class AbstractRestIT extends JerseyTest {
                 .queryParam( "app_id", appId.toString() )
                 .accept( MediaType.APPLICATION_JSON )
                 .post();
-            
+
         } catch ( Exception e) {
             LOG.debug("Error refreshing index", e);
             return;
@@ -436,6 +481,9 @@ public abstract class AbstractRestIT extends JerseyTest {
 
         LOG.debug("Refreshing index for app {}/{}", orgName, appName );
 
+        // be nice if somebody accidentally passed in orgName/appName
+        appName = appName.contains("/") ? appInfo.getName().split("/")[1] : appName;
+
         try {
 
             resource().path( "/refreshindex" )
@@ -443,7 +491,7 @@ public abstract class AbstractRestIT extends JerseyTest {
                 .queryParam( "app_name", appName )
                 .accept( MediaType.APPLICATION_JSON )
                 .post();
-                    
+
         } catch ( Exception e) {
             LOG.debug("Error refreshing index", e);
             return;

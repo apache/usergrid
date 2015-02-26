@@ -34,7 +34,7 @@ import org.apache.usergrid.persistence.model.entity.SimpleId;
 import rx.Observable;
 import rx.functions.Action1;
 import rx.functions.Func1;
-
+import rx.schedulers.Schedulers;
 
 
 /**
@@ -44,27 +44,31 @@ public class CpWalker {
 
     private static final Logger logger = LoggerFactory.getLogger( CpWalker.class );
 
-    private final long writeDelayMs;
 
 
     /**
      * Wait the set amount of time between successive writes.
-     * @param writeDelayMs
+     * @param
      */
-    public CpWalker(final long writeDelayMs){
-         this.writeDelayMs = writeDelayMs;
+    public CpWalker(){
+
     }
 
 
-    public void walkCollections( final CpEntityManager em, final EntityRef start, 
-            final CpVisitor visitor ) throws Exception {
+    public void walkCollections(final CpEntityManager em, final EntityRef start,
+        String collectionName, boolean reverse, final CpVisitor visitor) throws Exception {
 
-        doWalkCollections( em, new SimpleId( start.getUuid(), start.getType() ), visitor );
+        doWalkCollections(
+            em, collectionName, reverse, new SimpleId( start.getUuid(), start.getType() ), visitor );
     }
 
 
-    private void doWalkCollections( 
-            final CpEntityManager em, final Id applicationId, final CpVisitor visitor ) {
+    private void doWalkCollections(
+            final CpEntityManager em,
+            final String collectionName,
+            final boolean reverse,
+            final Id applicationId,
+            final CpVisitor visitor ) {
 
         final ApplicationScope applicationScope = em.getApplicationScope();
 
@@ -78,10 +82,25 @@ public class CpWalker {
                 applicationScope.getApplication().getUuid()
             } );
 
-        //only search edge types that start with collections
+        final SearchByEdgeType.Order order;
+        if ( reverse ) {
+            order = SearchByEdgeType.Order.ASCENDING;
+        } else {
+            order = SearchByEdgeType.Order.DESCENDING;
+        }
+
+        final String edgeType;
+        if ( collectionName == null ) {
+            // only search edge types that end with collections suffix
+            edgeType = CpNamingUtils.EDGE_COLL_SUFFIX;
+
+        } else {
+            // only search edges to one collection
+            edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( collectionName );
+        }
 
         Observable<String> edgeTypes = gm.getEdgeTypesFromSource(
-            new SimpleSearchEdgeType( applicationId, CpNamingUtils.EDGE_COLL_SUFFIX, null ) );
+            new SimpleSearchEdgeType( applicationId, edgeType, null ) );
 
         edgeTypes.flatMap( new Func1<String, Observable<Edge>>() {
             @Override
@@ -89,45 +108,45 @@ public class CpWalker {
 
                 logger.debug( "Loading edges of type {} from node {}", edgeType, applicationId );
 
-                return gm.loadEdgesFromSource( new SimpleSearchByEdgeType( 
-                    applicationId,
-                    edgeType,
-                    Long.MAX_VALUE,
-                    SearchByEdgeType.Order.DESCENDING,
-                    null ) );
+                return gm.loadEdgesFromSource(  new SimpleSearchByEdgeType(
+                    applicationId, edgeType, Long.MAX_VALUE, order , null ) );
+
             }
-        } ).doOnNext( new Action1<Edge>() {
+
+        } ).parallel( new Func1<Observable<Edge>, Observable<Edge>>() {
 
             @Override
-            public void call( Edge edge ) {
+            public Observable<Edge> call( final Observable<Edge> edgeObservable ) { // process edges in parallel
+                return edgeObservable.doOnNext( new Action1<Edge>() { // visit and update then entity
 
-                logger.info( "Re-indexing edge {}", edge );
+                    @Override
+                    public void call( Edge edge ) {
 
-                EntityRef targetNodeEntityRef = new SimpleEntityRef( 
-                        edge.getTargetNode().getType(), edge.getTargetNode().getUuid() );
+                        logger.info( "Re-indexing edge {}", edge );
 
-                Entity entity;
-                try {
-                    entity = em.get( targetNodeEntityRef );
-                }
-                catch ( Exception ex ) {
-                    logger.error( "Error getting sourceEntity {}:{}, continuing", 
-                            targetNodeEntityRef.getType(), targetNodeEntityRef.getUuid() );
-                    return;
-                }
+                        EntityRef targetNodeEntityRef = new SimpleEntityRef(
+                            edge.getTargetNode().getType(),
+                            edge.getTargetNode().getUuid() );
 
+                        Entity entity;
+                        try {
+                            entity = em.get( targetNodeEntityRef );
+                        }
+                        catch ( Exception ex ) {
+                            logger.error( "Error getting sourceEntity {}:{}, continuing",
+                                targetNodeEntityRef.getType(),
+                                targetNodeEntityRef.getUuid() );
+                            return;
+                        }
 
-                String collName = CpNamingUtils.getCollectionName( edge.getType() );
-
-                visitor.visitCollectionEntry( em, collName, entity );
-
-                try {
-                    Thread.sleep( writeDelayMs );
-                }
-                catch ( InterruptedException e ) {
-                    throw new RuntimeException( "Unable to wait" );
-                }
+                        String collName = CpNamingUtils.getCollectionName( edge.getType() );
+                        visitor.visitCollectionEntry( em, collName, entity );
+                    }
+                } );
             }
-        } ).toBlocking().lastOrDefault( null ); // end foreach on edges
+        }, Schedulers.io() )
+
+        // wait for it to complete
+        .toBlocking().lastOrDefault( null ); // end foreach on edges
     }
 }

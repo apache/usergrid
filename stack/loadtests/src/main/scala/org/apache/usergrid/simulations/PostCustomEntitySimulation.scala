@@ -28,34 +28,53 @@ import java.nio.file.{Paths, Files}
 import io.gatling.core.Predef._
 import org.apache.usergrid.datagenerators.FeederGenerator
 import scala.concurrent.duration._
-import org.apache.usergrid.settings.{Headers, Settings}
+import org.apache.usergrid.settings.{Utils, Headers, Settings}
 
 /**
- * Classy class class.
+ * PostCustomEntitySimulation - creates lots of custom entities
+ * 
+ * Run this way:
+ * mvn gatling:execute -DrampTime=10 -DmaxPossibleUsers=10 -Dduration=120 -Dorg=yourorgname -Dapp=sandbox -Dbaseurl=https://api.usergrid.com -DadminUser=yourusername -DadminPassword='yourpassword' -Dgatling.simulationClass=org.apache.usergrid.simulations.PostCustomEntitySimulation -DcollectionType=yourcollection
+ * 
+ *
  */
 class PostCustomEntitySimulation extends Simulation {
 
   if(!Settings.skipSetup) {
     println("Begin setup")
-    Setup.setupOrg()
-    Setup.setupApplication()
+    println("These aren't the droids you are looking for...")
+    //exec(TokenScenarios.getManagementToken)
     println("End Setup")
   }else{
     println("Skipping Setup")
   }
 
   val numEntities:Int = Settings.numEntities
-  val collectionType:String = "restaurants"
+  val collectionType = Settings.collectionType
+  println("collection type = " + collectionType)
   val rampTime:Int = Settings.rampTime
   val throttle:Int = Settings.throttle
-  val feeder = FeederGenerator.generateCustomEntityFeeder(numEntities).queue
+  val feeder = FeederGenerator.generateCustomEntityInfinite(0)
   val httpConf = Settings.httpConf
 
   val scnToRun = scenario("POST custom entities")
     .feed(feeder)
-    .exec(TokenScenarios.getManagementToken)
     .exec(EntityScenarios.postEntity)
+  
+  /*
+  val scnToRun = scenario("POST custom entities")
+    .feed(feeder)
+    .doIfOrElse(session => session("token").as[String].nonEmpty(session)) {
+      exec(EntityScenarios.postEntityWithToken)
+    } {
+      exec(EntityScenarios.postEntity)
+    }
+*/
 
-  setUp(scnToRun.inject(atOnceUsers(numEntities)).throttle(reachRps(throttle) in (rampTime.seconds)).protocols(httpConf)).maxDuration(Settings.duration)
+
+  setUp(scnToRun.inject(
+    rampUsers(Settings.maxPossibleUsers) over Settings.rampTime,
+    constantUsersPerSec(Settings.maxPossibleUsers) during Settings.duration
+  ).protocols(httpConf)).maxDuration(Settings.duration)
 
 }

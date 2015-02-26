@@ -17,42 +17,45 @@
 package org.apache.usergrid.persistence.cassandra;
 
 
-import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.cassandra.CassandraResource;
-import org.apache.usergrid.cassandra.Concurrent;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
 import org.apache.usergrid.persistence.*;
-import org.apache.usergrid.persistence.cassandra.util.TraceTag;
-import org.apache.usergrid.persistence.cassandra.util.TraceTagManager;
-import org.apache.usergrid.persistence.cassandra.util.TraceTagReporter;
-import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
-import org.junit.*;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import org.apache.commons.lang3.RandomStringUtils;
 
-import static org.junit.Assert.*;
+import org.apache.usergrid.AbstractCoreIT;
+import org.apache.usergrid.persistence.cassandra.util.TraceTag;
+import org.apache.usergrid.persistence.cassandra.util.TraceTagManager;
+import org.apache.usergrid.persistence.cassandra.util.TraceTagReporter;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+import org.apache.usergrid.setup.ConcurrentProcessSingleton;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 
-@Concurrent()
 public class EntityManagerFactoryImplIT extends AbstractCoreIT {
-
-    @SuppressWarnings("PointlessBooleanExpression")
-    public static final boolean USE_DEFAULT_DOMAIN = !CassandraService.USE_VIRTUAL_KEYSPACES;
 
     private static final Logger logger = LoggerFactory.getLogger( EntityManagerFactoryImplIT.class );
 
 
-    @ClassRule
-    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
-
-    @ClassRule
-    public static ElasticSearchResource elasticSearchResource = new ElasticSearchResource();
-
 
     public EntityManagerFactoryImplIT() {
-        emf = cassandraResource.getBean( EntityManagerFactory.class );
+        emf = ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( EntityManagerFactory.class );
     }
 
 
@@ -74,26 +77,23 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
 
     public UUID createApplication( String organizationName, String applicationName ) throws Exception {
-        if ( USE_DEFAULT_DOMAIN ) {
-            return emf.getDefaultAppId();
-        }
         return emf.createApplication( organizationName, applicationName );
     }
 
 
     @Before
     public void initTracing() {
-        traceTagManager = cassandraResource.getBean(
-                "traceTagManager", TraceTagManager.class );
-        traceTagReporter = cassandraResource.getBean(
-                "traceTagReporter", TraceTagReporter.class );
+        traceTagManager = ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( "traceTagManager",
+            TraceTagManager.class );
+        traceTagReporter = ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( "traceTagReporter",
+            TraceTagReporter.class );
     }
 
 
     @Test
     public void testDeleteApplication() throws Exception {
 
-        String rand = RandomStringUtils.randomAlphabetic(20);
+        String rand = UUIDGenerator.newTimeUUID().toString();
 
         // create an application with a collection and an entity
 
@@ -113,9 +113,26 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
         em.refreshIndex();
 
+        // TODO: this assertion should work!
+        //assertNotNull( "cannot lookup app by name", setup.getEmf().lookupApplication("test-app-" + rand) );
+
         // delete the application
 
         setup.getEmf().deleteApplication( applicationId );
+
+        em.refreshIndex();
+
+        boolean found = false;
+        Map<String, UUID> deletedApps = emf.getDeletedApplications();
+        for ( String appName : deletedApps.keySet() ) {
+            UUID appId = deletedApps.get( appName );
+            if ( appId.equals( applicationId )) {
+                found = true;
+                break;
+            }
+        }
+
+        assertTrue("Deleted app not found in deleted apps collection", found );
 
         // attempt to get entities in application's collections in various ways should all fail
 
@@ -128,6 +145,44 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
             assertNotEquals( appName, "test-app-" + rand );
         }
 
+        // restore the app
+
+        emf.restoreApplication( applicationId );
+
+        emf.rebuildAllIndexes(new EntityManagerFactory.ProgressObserver() {
+            @Override
+            public void onProgress(EntityRef entity) {
+                logger.debug("Reindexing {}:{}", entity.getType(), entity.getUuid() );
+            }
+        });
+
+        // test to see that app now works and is happy
+
+        // it should not be found in the deleted apps collection
+        found = false;
+        deletedApps = emf.getDeletedApplications();
+        for ( String appName : deletedApps.keySet() ) {
+            UUID appId = deletedApps.get( appName );
+            if ( appId.equals( applicationId )) {
+                found = true;
+                break;
+            }
+        }
+        assertFalse("Restored app found in deleted apps collection", found);
+
+        found = false;
+        appMap = setup.getEmf().getApplications();
+        for ( String appName : appMap.keySet() ) {
+            UUID appId = appMap.get( appName );
+            if ( appId.equals( applicationId )) {
+                found = true;
+                break;
+            }
+        }
+        assertTrue("Restored app not found in apps collection", found);
+
+        // TODO: this assertion should work!
+        //assertNotNull(setup.getEmf().lookupApplication("test-app-" + rand));
     }
 
 
@@ -138,7 +193,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
         logger.info( "EntityDaoTest.testCreateAndGet" );
 
         UUID applicationId = createApplication( "EntityManagerFactoryImplIT", "testCreateAndGet"
-                + RandomStringUtils.randomAlphabetic(20)  );
+                + UUIDGenerator.newTimeUUID()  );
         logger.info( "Application id " + applicationId );
 
         EntityManager em = emf.getEntityManager( applicationId );

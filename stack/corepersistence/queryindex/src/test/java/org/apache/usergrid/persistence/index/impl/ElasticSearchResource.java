@@ -19,30 +19,19 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
-import java.io.File;
-import java.io.IOException;
 import java.util.Properties;
 
-import org.elasticsearch.common.settings.ImmutableSettings;
-import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.node.Node;
-import org.elasticsearch.node.NodeBuilder;
 import org.safehaus.guicyfig.Env;
 import org.safehaus.guicyfig.EnvironResource;
-import org.safehaus.guicyfig.GuicyFigModule;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.RandomStringUtils;
-import org.apache.usergrid.persistence.core.util.AvailablePortFinder;
+
 import org.apache.usergrid.persistence.index.IndexFig;
 
-import com.amazonaws.util.StringUtils;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 
-
+/**
+ * Sets elasticsearch variables into the environment
+ *
+ * TODO make static
+ */
 public class ElasticSearchResource extends EnvironResource {
 
 
@@ -50,33 +39,36 @@ public class ElasticSearchResource extends EnvironResource {
     private static String host;
 
 
-
-
     public ElasticSearchResource() {
         super( Env.UNIT );
         try {
             Properties props = new Properties();
             props.load( ClassLoader.getSystemResourceAsStream( "project.properties" ) );
-            host=(String)props.getProperty( "elasticsearch.host", "127.0.0.1" );
-            port=Integer.valueOf(props.getProperty( "elasticsearch.port", "9300" )).intValue();
-            String forkString = props.getProperty("elasticsearch.startup", "external");
-        } catch (Exception ex) {
-            throw new RuntimeException("Error getting properties", ex);
+            host = props.getProperty( "elasticsearch.host", "127.0.0.1" );
+            port = Integer.valueOf( props.getProperty( "elasticsearch.port", "9300" ) ).intValue();
+        }
+        catch ( Exception ex ) {
+            throw new RuntimeException( "Error getting properties", ex );
         }
     }
 
 
+    /**
+     * Start the resources
+     */
+    public void start() {
+        before();
+    }
+
+
     @Override
-    protected void before() throws Throwable {
-            System.setProperty( IndexFig.ELASTICSEARCH_HOSTS, host );
-            System.setProperty( IndexFig.ELASTICSEARCH_PORT, port+"" );    }
-
-
+    protected void before() {
+        System.setProperty( IndexFig.ELASTICSEARCH_HOSTS, host );
+        System.setProperty( IndexFig.ELASTICSEARCH_PORT, port + "" );
+    }
 
 
     public static int getPort() {
         return port;
     }
-
-
 }

@@ -24,7 +24,7 @@
 	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
 
 	<import resource="classpath:/usergrid-services-context.xml" />
-	
+
 	<context:component-scan base-package="org.apache.usergrid.rest" />
 
 
@@ -56,7 +56,9 @@
 		<property name="realm" ref="realm" />
 	</bean>
 
-	<bean id="cacheManager" class="org.apache.shiro.cache.MemoryConstrainedCacheManager" />
+    <bean id="cacheManager" class="org.apache.shiro.cache.MemoryConstrainedCacheManager" />
+
+    <bean id="jobServiceBootstrap" class="org.apache.usergrid.rest.JobServiceBoostrap" />
 
 	<!-- override the task executor -->
 	<bean id="taskExecutor"

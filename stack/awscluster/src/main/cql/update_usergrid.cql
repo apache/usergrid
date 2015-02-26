@@ -16,7 +16,7 @@
  * directory of this distribution.
  */
 
-update keyspace Usergrid with placement_strategy = 'NetworkTopologyStrategy' and strategy_options = {KEYSPACE_REGION : 3} and durable_writes = true;
+update keyspace Usergrid with placement_strategy = 'NetworkTopologyStrategy' and strategy_options = {KEYSPACE_REGION : REPLICATION_FACTOR} and durable_writes = true;
 
 use Usergrid;
 

@@ -39,7 +39,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.cassandra.Concurrent;
+
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.rest.applications.utils.UserRepo;
@@ -62,7 +62,7 @@ import static org.junit.Assert.fail;
  * @author zznate
  * @author tnine
  */
-@Concurrent()
+
 public class UserResourceIT extends AbstractRestIT {
 
     private static Logger log = LoggerFactory.getLogger(UserResourceIT.class);

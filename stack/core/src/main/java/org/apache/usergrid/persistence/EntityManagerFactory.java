@@ -19,28 +19,21 @@ package org.apache.usergrid.persistence;
 
 import java.util.Map;
 import java.util.UUID;
+
+import com.yammer.metrics.annotation.Metered;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.springframework.context.ApplicationContext;
 
 
 /**
- * The interface that specifies the operations that can be performed on the Usergrid Datastore. 
- * This interface is designed to be implemented by different backends. Although these 
- * operations are meant to take advantage of the capabilities of Cassandra, they should be 
- * implementable using other relational databases such as MySql or NoSQL databases such as GAE or 
+ * The interface that specifies the operations that can be performed on the Usergrid Datastore.
+ * This interface is designed to be implemented by different backends. Although these
+ * operations are meant to take advantage of the capabilities of Cassandra, they should be
+ * implementable using other relational databases such as MySql or NoSQL databases such as GAE or
  * MongoDB.
  */
 public interface EntityManagerFactory {
-
-    /**
-     * A string description provided by the implementing class.
-     *
-     * @return description text
-     *
-     * @throws Exception the exception
-     */
-    public abstract String getImplementationDescription() throws Exception;
 
     /**
      * Gets the entity manager.
@@ -63,7 +56,7 @@ public interface EntityManagerFactory {
     public abstract UUID createApplication( String organizationName, String name ) throws Exception;
 
     /**
-     * Creates a Application entity. All entities except for applications must be attached to a 
+     * Creates a Application entity. All entities except for applications must be attached to a
      * Application.
      *
      * @param name the name of the application to create.
@@ -104,7 +97,10 @@ public interface EntityManagerFactory {
      *
      * @throws Exception the exception
      */
+    @Metered(group = "core", name = "EntityManagerFactory_getApplication")
     public abstract Map<String, UUID> getApplications() throws Exception;
+
+    public Map<String, UUID> getDeletedApplications() throws Exception;
 
     public abstract void setup() throws Exception;
 
@@ -116,9 +112,9 @@ public interface EntityManagerFactory {
 
     public abstract boolean deleteServiceProperty( String name );
 
-    public UUID initializeApplication( 
+    public UUID initializeApplication(
         String orgName, UUID appId, String appName, Map<String, Object> props) throws Exception;
-            
+
     public UUID getManagementAppId();
 
     public UUID getDefaultAppId();
@@ -126,7 +122,7 @@ public interface EntityManagerFactory {
     public void refreshIndex();
 
     public void rebuildAllIndexes( ProgressObserver po ) throws Exception;
-    
+
     public void rebuildInternalIndexes( ProgressObserver po ) throws Exception;
 
     public void rebuildApplicationIndexes( UUID appId, ProgressObserver po ) throws Exception;
@@ -139,34 +135,29 @@ public interface EntityManagerFactory {
 
     /**
      * Return the migration status message
-     * @return
      */
     public String getMigrateDataStatus();
 
     /**
      * Return the current migration version of the system
-     * @return
      */
     public int getMigrateDataVersion();
 
     /**
      * Force the migration version to the specified version
-     * @param version
      */
     public void setMigrationVersion(int version);
 
-    public void setApplicationContext(ApplicationContext ac);
-
     /**
      * Perform a realtime count of every entity in the system.  This can be slow as it traverses the entire system graph
-     * @return
      */
     public long performEntityCount();
 
     /** For testing purposes */
     public void flushEntityManagerCaches();
 
-    public void rebuildCollectionIndex(UUID appId, String collection, ProgressObserver object);
+    void rebuildCollectionIndex(
+        UUID appId, String collection, boolean reverse, ProgressObserver po) throws Exception;
 
     /**
      * Add a new index to the application for scale
@@ -179,14 +170,11 @@ public interface EntityManagerFactory {
 
     public Health getEntityStoreHealth();
 
+    void restoreApplication(UUID applicationId) throws Exception;
+
     public interface ProgressObserver {
 
         public void onProgress( EntityRef entity);
 
-        /**
-         * Get the write delay time from the progress observer.  Used to throttle writes
-         * @return
-         */
-        public long getWriteDelayTime();
     }
 }

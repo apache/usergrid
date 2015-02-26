@@ -21,6 +21,7 @@ import java.nio.ByteBuffer;
 import java.util.UUID;
 
 import org.junit.Test;
+
 import org.apache.usergrid.utils.UUIDUtils;
 
 import static junit.framework.Assert.assertNull;

@@ -23,16 +23,18 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.cassandra.CassandraResource;
-import org.apache.usergrid.corepersistence.CpSetup;
+
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.mq.QueueManagerFactory;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.IndexBucketLocator;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
 import org.apache.usergrid.persistence.core.migration.schema.MigrationException;
-import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
+import org.apache.usergrid.setup.ConcurrentProcessSingleton;
 import org.apache.usergrid.utils.JsonUtils;
+
+import com.google.inject.Injector;
 
 
 public class CoreITSetupImpl implements CoreITSetup {
@@ -42,14 +44,18 @@ public class CoreITSetupImpl implements CoreITSetup {
     protected QueueManagerFactory qmf;
     protected IndexBucketLocator indexBucketLocator;
     protected CassandraService cassandraService;
-    protected CassandraResource cassandraResource;
-    protected ElasticSearchResource elasticSearchResource;
-    protected boolean enabled = false;
+
+    protected SpringResource springResource;
 
 
-    public CoreITSetupImpl( CassandraResource cassandraResource, ElasticSearchResource elasticSearchResource ) {
-        this.cassandraResource = cassandraResource;
-        this.elasticSearchResource = elasticSearchResource;
+    public CoreITSetupImpl( ) {
+        springResource = ConcurrentProcessSingleton.getInstance().getSpringResource();
+
+        cassandraService = springResource.getBean( CassandraService.class );
+        emf = springResource.getBean( EntityManagerFactory.class );
+        qmf = springResource.getBean( QueueManagerFactory.class );
+        indexBucketLocator = springResource.getBean( IndexBucketLocator.class );
+
     }
 
 
@@ -83,29 +89,12 @@ public class CoreITSetupImpl implements CoreITSetup {
      */
     protected void before( Description description ) throws Throwable {
         LOG.info( "Setting up for {}", description.getDisplayName() );
-        initialize();
+
+
+
+
     }
 
-
-    private void initialize() {
-        if ( !enabled ) {
-            cassandraService = cassandraResource.getBean( CassandraService.class );
-            emf = cassandraResource.getBean( EntityManagerFactory.class );
-            qmf = cassandraResource.getBean( QueueManagerFactory.class );
-            indexBucketLocator = cassandraResource.getBean( IndexBucketLocator.class );
-
-            //run the migration
-            try {
-                CpSetup.getInjector().getInstance( DataMigrationManager.class ).migrate();
-            }
-            catch ( MigrationException e ) {
-                throw new RuntimeException( "Unable to run migration", e );
-            }
-
-            enabled = true;
-
-        }
-    }
 
 
     /** Override to tear down your specific external resource. */
@@ -116,49 +105,30 @@ public class CoreITSetupImpl implements CoreITSetup {
 
     @Override
     public EntityManagerFactory getEmf() {
-        if ( emf == null ) {
-            initialize();
-        }
-
         return emf;
     }
 
 
     @Override
     public QueueManagerFactory getQmf() {
-        if ( qmf == null ) {
-            initialize();
-        }
-
-        return qmf;
+         return qmf;
     }
 
 
     @Override
     public IndexBucketLocator getIbl() {
-        if ( indexBucketLocator == null ) {
-            initialize();
-        }
-
-        return indexBucketLocator;
+          return indexBucketLocator;
     }
 
 
     @Override
     public CassandraService getCassSvc() {
-        if ( cassandraService == null ) {
-            initialize();
-        }
-
         return cassandraService;
     }
 
 
     @Override
     public UUID createApplication( String organizationName, String applicationName ) throws Exception {
-        if ( emf == null ) {
-            emf = cassandraResource.getBean( EntityManagerFactory.class );
-        }
 
         if ( USE_DEFAULT_APPLICATION ) {
             return emf.getDefaultAppId();

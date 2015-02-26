@@ -23,10 +23,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.usergrid.CoreApplication;
+import org.apache.usergrid.CoreITSetup;
+import org.apache.usergrid.CoreITSetupImpl;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.index.query.Query;
 
@@ -36,7 +41,7 @@ import static org.junit.Assert.assertEquals;
 /**
  *
  */
-public class IntersectionTransitivePagingIT extends AbstractIteratingQueryIT {
+public class IntersectionTransitivePagingIT{
 
     private static final Logger LOG = LoggerFactory.getLogger( IntersectionTransitivePagingIT.class );
 
@@ -45,6 +50,14 @@ public class IntersectionTransitivePagingIT extends AbstractIteratingQueryIT {
 
     private static final int PAGE_SIZE = 300;
 
+
+
+
+    @ClassRule
+    public static CoreITSetup setup = new CoreITSetupImpl();
+
+    @Rule
+    public CoreApplication app = new CoreApplication( setup );
 
     @Test
     public void testUnionPagingCollection() throws Exception {
@@ -77,7 +90,7 @@ public class IntersectionTransitivePagingIT extends AbstractIteratingQueryIT {
         io.doSetup();
 
 
-        int writeSize = PAGE_SIZE*4;
+        int writeSize =200;
 
         List<UUID> expected = new ArrayList<UUID>(writeSize);
 
