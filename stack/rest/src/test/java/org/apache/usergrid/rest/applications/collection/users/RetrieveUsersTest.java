@@ -37,12 +37,6 @@ import org.slf4j.LoggerFactory;
 import static org.junit.Assert.assertEquals;
 
 
-/**
- * // TODO: Document this
- *
- * @author ApigeeCorporation
- * @since 4.0
- */
 public class RetrieveUsersTest extends AbstractRestIT {
     private static final Logger log = LoggerFactory.getLogger( RetrieveUsersTest.class );
 
@@ -50,10 +44,10 @@ public class RetrieveUsersTest extends AbstractRestIT {
 
     @Test // USERGRID-1222
     public void queryForUsername() throws IOException {
+
         CollectionEndpoint users =this.app().collection( "users" );
 
         Entity props = new Entity();
-
         props.put( "username", "Alica" );
         users.post(props);
 

@@ -105,7 +105,8 @@ public class ExportServiceIT {
 
             JobSchedulerService jobScheduler = ConcurrentProcessSingleton.getInstance().getSpringResource().getBean(JobSchedulerService.class);
             if (jobScheduler.state() != Service.State.RUNNING) {
-                jobScheduler.startAndWait();
+                jobScheduler.startAsync();
+                jobScheduler.awaitRunning();
             }
         } catch ( Exception e ) {
             logger.warn("Ignoring error starting jobScheduler, already started?", e);

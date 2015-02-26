@@ -114,9 +114,9 @@ public class ImportCollectionIT {
             .getSpringResource().getBean( JobSchedulerService.class );
 
         if ( jobScheduler.state() != Service.State.RUNNING ) {
-            jobScheduler.startAndWait();
+            jobScheduler.startAsync();
+            jobScheduler.awaitRunning();
         }
-
     }
 
 

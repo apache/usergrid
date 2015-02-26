@@ -135,6 +135,9 @@ public class Entity implements Serializable, Map<String,Object> {
         //All values are strings , so doing the cast here saves doing the cast elsewhere
         return getDynamicProperties().get( key );
     }
+    public Map<String, Map<String, Object>> getMap(Object key){
+        return (LinkedHashMap<String, Map<String, Object>>) getDynamicProperties().get( key );
+    }
     public String getString( final Object key ) {
         //All values are strings , so doing the cast here saves doing the cast elsewhere
         return (String) getDynamicProperties().get( key );

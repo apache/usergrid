@@ -90,7 +90,8 @@ public class ImportResourceIT extends AbstractRestIT {
         // start the scheduler after we're all set up
         JobSchedulerService jobScheduler = ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( JobSchedulerService.class );
         if (jobScheduler.state() != Service.State.RUNNING) {
-            jobScheduler.startAndWait();
+            jobScheduler.startAsync();
+            jobScheduler.awaitRunning();
         }
 
     }

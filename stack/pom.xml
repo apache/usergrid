@@ -98,7 +98,8 @@
 
       <amber-version>0.22-incubating</amber-version>
       <cassandra-version>1.2.18</cassandra-version>
-      <guava.version>14.0.1</guava.version>
+      <guava.version>18.0</guava.version>
+      <guice.version>4.0-beta5</guice.version>
       <hector-om-version>3.0-03</hector-om-version>
       <hector-version>1.1-4</hector-version>
       <hector-test-version>1.1-4</hector-test-version>
