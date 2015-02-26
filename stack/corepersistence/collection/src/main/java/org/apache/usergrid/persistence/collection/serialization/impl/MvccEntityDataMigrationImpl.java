@@ -19,10 +19,12 @@
  */
 package org.apache.usergrid.persistence.collection.serialization.impl;
 
-import com.google.inject.Inject;
-import com.netflix.astyanax.Keyspace;
-import com.netflix.astyanax.MutationBatch;
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntitySet;
 import org.apache.usergrid.persistence.collection.MvccEntity;
@@ -33,20 +35,20 @@ import org.apache.usergrid.persistence.core.migration.data.DataMigration;
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationException;
 import org.apache.usergrid.persistence.core.migration.schema.MigrationStrategy;
 import org.apache.usergrid.persistence.core.scope.ApplicationEntityGroup;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.EntityIdScope;
-import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+
+import com.google.inject.Inject;
+import com.netflix.astyanax.Keyspace;
+import com.netflix.astyanax.MutationBatch;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+
 import rx.Observable;
 import rx.functions.Action1;
 import rx.functions.Func1;
+import rx.functions.Func2;
 import rx.schedulers.Schedulers;
 
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Data migration strategy for entities
@@ -56,74 +58,102 @@ public class MvccEntityDataMigrationImpl implements CollectionDataMigration {
     private final Keyspace keyspace;
     private final MvccEntityMigrationStrategy entityMigrationStrategy;
 
+
     @Inject
-    public MvccEntityDataMigrationImpl(Keyspace keyspace, MvccEntityMigrationStrategy serializationStrategy){
+    public MvccEntityDataMigrationImpl( Keyspace keyspace, MvccEntityMigrationStrategy serializationStrategy ) {
 
         this.keyspace = keyspace;
         this.entityMigrationStrategy = serializationStrategy;
     }
 
+
     @Override
-    public Observable migrate(final  Observable<ApplicationEntityGroup> applicationEntityGroupObservable, final DataMigration.ProgressObserver observer) {
+    public Observable migrate( final Observable<ApplicationEntityGroup> applicationEntityGroupObservable,
+                               final DataMigration.ProgressObserver observer ) {
         final AtomicLong atomicLong = new AtomicLong();
-        final MutationBatch totalBatch = keyspace.prepareMutationBatch();
 
 
+        //capture the time the test starts
         final UUID now = UUIDGenerator.newTimeUUID();
 
-        return applicationEntityGroupObservable.flatMap(new Func1<ApplicationEntityGroup, Observable<Id>>() {
+        return applicationEntityGroupObservable.flatMap( new Func1<ApplicationEntityGroup, Observable<Long>>() {
             @Override
-            public Observable call(final ApplicationEntityGroup applicationEntityGroup) {
+            public Observable<Long> call( final ApplicationEntityGroup applicationEntityGroup ) {
                 final List<EntityIdScope<CollectionScope>> entityIds = applicationEntityGroup.entityIds;
 
                 //go through each entity in the system, and load it's entire
                 // history
-                return Observable.from(entityIds)
-                    .subscribeOn(Schedulers.io())
-                    .map(new Func1<EntityIdScope<CollectionScope>, Id>() {
-                        @Override
-                        public Id call(EntityIdScope<CollectionScope> idScope) {
-
-                            MigrationStrategy.MigrationRelationship<MvccEntitySerializationStrategy> migration = entityMigrationStrategy.getMigration();
+                return Observable.from( entityIds ).subscribeOn( Schedulers.io() )
+                                 .parallel( new Func1<Observable<EntityIdScope<CollectionScope>>, Observable<Long>>() {
 
 
-                            CollectionScope currentScope = idScope.getCollectionScope();
-                            //for each element in the history in the previous version,
-                            // copy it to the CF in v2
-                            EntitySet allVersions = migration.from()
-                                .load( currentScope, Collections.singleton( idScope.getId() ), now );
+                                     //process the ids in parallel
+                                     @Override
+                                     public Observable<Long> call(
+                                             final Observable<EntityIdScope<CollectionScope>> entityIdScopeObservable
+                                                                 ) {
 
-                            final MvccEntity version = allVersions.getEntity( idScope.getId() );
+                                         final MutationBatch totalBatch = keyspace.prepareMutationBatch();
 
-                           final MutationBatch versionBatch =
-                               migration.to().write(currentScope, version);
+                                         return entityIdScopeObservable.doOnNext(
+                                                 new Action1<EntityIdScope<CollectionScope>>() {
 
-                           totalBatch.mergeShallow(versionBatch);
+                                                     //load the entity and add it to the toal mutation
+                                                     @Override
+                                                     public void call( final EntityIdScope<CollectionScope> idScope ) {
 
-                            throw new UnsupportedOperationException( "TODO, make this more functional in flushing" );
-
-//                               if (atomicLong.incrementAndGet() % 50 == 0) {
-//                                   executeBatch(totalBatch, observer, atomicLong);
-//                               }
-
-//                                executeBatch(totalBatch, observer, atomicLong);
-
-//      return idScope.getId();
-                        }
+                                                         //load the entity
+                                                         MigrationStrategy
+                                                                 .MigrationRelationship<MvccEntitySerializationStrategy>
+                                                                 migration = entityMigrationStrategy.getMigration();
 
 
-                    } ).buffer(100).doOnNext( new Action1<List<Id>>() {
-                        @Override
-                        public void call( List<Id> ids ) {
-                            executeBatch( totalBatch, observer, atomicLong );
-                        }
-                    });
+                                                         CollectionScope currentScope = idScope.getCollectionScope();
+                                                         //for each element in the history in the previous
+                                                         // version,
+                                                         // copy it to the CF in v2
+                                                         EntitySet allVersions = migration.from().load( currentScope,
+                                                                 Collections.singleton( idScope.getId() ), now );
+
+                                                         final MvccEntity version =
+                                                                 allVersions.getEntity( idScope.getId() );
+
+                                                         final MutationBatch versionBatch =
+                                                                 migration.to().write( currentScope, version );
+
+                                                         totalBatch.mergeShallow( versionBatch );
+                                                     }
+                                                 } )
+                                                 //every 100 flush the mutation
+                                                 .buffer( 100 ).doOnNext(
+                                                         new Action1<List<EntityIdScope<CollectionScope>>>() {
+                                                             @Override
+                                                             public void call(
+                                                                     final List<EntityIdScope<CollectionScope>> ids ) {
+                                                                 atomicLong.addAndGet( 100 );
+                                                                 executeBatch( totalBatch, observer, atomicLong );
+                                                             }
+                                                         } )
+                                                         //count the results
+                                                 .reduce( 0l,
+                                                         new Func2<Long, List<EntityIdScope<CollectionScope>>, Long>() {
+                                                             @Override
+                                                             public Long call( final Long aLong,
+                                                                               final
+                                                                               List<EntityIdScope<CollectionScope>>
+                                                                                       ids ) {
+                                                                 return aLong + ids.size();
+                                                             }
+                                                         } );
+                                     }
+                                 } );
             }
-        });
-
+        } );
     }
 
-    protected void executeBatch( final MutationBatch batch, final DataMigration.ProgressObserver po, final AtomicLong count ) {
+
+    protected void executeBatch( final MutationBatch batch, final DataMigration.ProgressObserver po,
+                                 final AtomicLong count ) {
         try {
             batch.execute();
 
@@ -135,10 +165,12 @@ public class MvccEntityDataMigrationImpl implements CollectionDataMigration {
         }
     }
 
+
     @Override
     public int getVersion() {
         return entityMigrationStrategy.getVersion();
     }
+
 
     @Override
     public MigrationType getType() {

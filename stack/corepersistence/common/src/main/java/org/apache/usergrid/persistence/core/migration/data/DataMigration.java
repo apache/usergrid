@@ -46,9 +46,10 @@ public interface DataMigration <T> {
     /**
      * Migrate the data to the specified version
      * @param observer
+     * @Return an observable containing the count of the number of elements migrated
      * @throws Throwable
      */
-    public Observable migrate(final Observable<T> applicationEntityGroup,final ProgressObserver observer) throws Throwable;
+    public Observable<Long> migrate(final Observable<T> applicationEntityGroup,final ProgressObserver observer) throws Throwable;
 
     /**
      * Get the version of this migration.  It must be unique.
