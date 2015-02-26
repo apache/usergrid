@@ -85,7 +85,7 @@ public class CoreSchemaManager implements SchemaManager {
     public void destroy() {
         LOG.info( "dropping keyspaces" );
         try {
-            cluster.dropKeyspace( CassandraService.SYSTEM_KEYSPACE );
+            cluster.dropKeyspace( CassandraService.getApplicationKeyspace() );
         }
         catch ( RuntimeException ire ) {
             //swallow if it just doesn't exist
@@ -93,7 +93,7 @@ public class CoreSchemaManager implements SchemaManager {
 
 
         try {
-            cluster.dropKeyspace( CassandraService.STATIC_APPLICATION_KEYSPACE );
+            cluster.dropKeyspace( CassandraService.getApplicationKeyspace() );
         }
         catch ( RuntimeException ire ) {
             //swallow if it just doesn't exist

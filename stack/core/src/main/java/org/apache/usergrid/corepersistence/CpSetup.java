@@ -45,10 +45,8 @@ import static org.apache.usergrid.persistence.cassandra.CassandraService.DEFAULT
 import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.PRINCIPAL_TOKEN_CF;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.PROPERTIES_CF;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.STATIC_APPLICATION_KEYSPACE;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.SYSTEM_KEYSPACE;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.TOKENS_CF;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.USE_VIRTUAL_KEYSPACES;
+import static org.apache.usergrid.persistence.cassandra.CassandraService.getApplicationKeyspace;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.keyspaceForApplication;
 
 
@@ -146,17 +144,17 @@ public class CpSetup implements Setup {
 
         migrate();
 
-        cass.createColumnFamily( SYSTEM_KEYSPACE,
-            createColumnFamilyDefinition( SYSTEM_KEYSPACE, APPLICATIONS_CF, ComparatorType.BYTESTYPE ) );
+        cass.createColumnFamily( getApplicationKeyspace(),
+            createColumnFamilyDefinition( getApplicationKeyspace(), APPLICATIONS_CF, ComparatorType.BYTESTYPE ) );
 
-        cass.createColumnFamily( SYSTEM_KEYSPACE,
-            createColumnFamilyDefinition( SYSTEM_KEYSPACE, PROPERTIES_CF, ComparatorType.BYTESTYPE ) );
+        cass.createColumnFamily( getApplicationKeyspace(),
+            createColumnFamilyDefinition( getApplicationKeyspace(), PROPERTIES_CF, ComparatorType.BYTESTYPE ) );
 
-        cass.createColumnFamily( SYSTEM_KEYSPACE,
-            createColumnFamilyDefinition( SYSTEM_KEYSPACE, TOKENS_CF, ComparatorType.BYTESTYPE ) );
+        cass.createColumnFamily( getApplicationKeyspace(),
+            createColumnFamilyDefinition( getApplicationKeyspace(), TOKENS_CF, ComparatorType.BYTESTYPE ) );
 
-        cass.createColumnFamily( SYSTEM_KEYSPACE,
-            createColumnFamilyDefinition( SYSTEM_KEYSPACE, PRINCIPAL_TOKEN_CF, ComparatorType.UUIDTYPE ) );
+        cass.createColumnFamily( getApplicationKeyspace(),
+            createColumnFamilyDefinition( getApplicationKeyspace(), PRINCIPAL_TOKEN_CF, ComparatorType.UUIDTYPE ) );
 
         logger.info( "System keyspace initialized" );
     }
@@ -174,22 +172,6 @@ public class CpSetup implements Setup {
     public void setupApplicationKeyspace( final UUID applicationId, String applicationName ) throws Exception {
 
         migrate();
-
-        // Need this legacy stuff for queues
-
-        if ( !USE_VIRTUAL_KEYSPACES ) {
-
-            String app_keyspace = keyspaceForApplication( applicationId );
-
-            logger.info( "Creating application keyspace " + app_keyspace + " for " + applicationName + " application" );
-
-            cass.createColumnFamily( app_keyspace,
-                createColumnFamilyDefinition( SYSTEM_KEYSPACE, APPLICATIONS_CF, ComparatorType.BYTESTYPE ) );
-
-            cass.createColumnFamilies( app_keyspace, getCfDefs( ApplicationCF.class, app_keyspace ) );
-
-            cass.createColumnFamilies( app_keyspace, getCfDefs( QueuesCF.class, app_keyspace ) );
-        }
     }
 
 
@@ -200,20 +182,18 @@ public class CpSetup implements Setup {
 
         // Need this legacy stuff for queues
 
-        if ( USE_VIRTUAL_KEYSPACES ) {
+        logger.info( "Creating static application keyspace " + getApplicationKeyspace() );
 
-            logger.info( "Creating static application keyspace " + STATIC_APPLICATION_KEYSPACE );
+        cass.createColumnFamily( getApplicationKeyspace(),
+            createColumnFamilyDefinition( getApplicationKeyspace(), APPLICATIONS_CF,
+                ComparatorType.BYTESTYPE ) );
 
-            cass.createColumnFamily( STATIC_APPLICATION_KEYSPACE,
-                createColumnFamilyDefinition( STATIC_APPLICATION_KEYSPACE, APPLICATIONS_CF,
-                    ComparatorType.BYTESTYPE ) );
+        cass.createColumnFamilies( getApplicationKeyspace(),
+            getCfDefs( ApplicationCF.class, getApplicationKeyspace() ) );
 
-            cass.createColumnFamilies( STATIC_APPLICATION_KEYSPACE,
-                getCfDefs( ApplicationCF.class, STATIC_APPLICATION_KEYSPACE ) );
+        cass.createColumnFamilies( getApplicationKeyspace(),
+            getCfDefs( QueuesCF.class, getApplicationKeyspace() ) );
 
-            cass.createColumnFamilies( STATIC_APPLICATION_KEYSPACE,
-                getCfDefs( QueuesCF.class, STATIC_APPLICATION_KEYSPACE ) );
-        }
     }
 
 
