@@ -122,13 +122,6 @@ public class CachedEntityCollectionManager implements EntityCollectionManager {
         return targetEntityCollectionManager.load( entityIds );
     }
 
-
-    @Override
-    public Observable<Entity> update( final Entity entity ) {
-        return targetEntityCollectionManager.update( entity ).doOnNext( cacheAdd );
-    }
-
-
     @Override
     public Health getHealth() {
         return targetEntityCollectionManager.getHealth();

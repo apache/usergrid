@@ -69,13 +69,6 @@ public interface EntityCollectionManager extends CPManager {
     public Observable<EntitySet> load(Collection<Id> entityIds);
 
     /**
-     * Takes the change and reloads an entity with all changes applied in this entity applied.
-     * The resulting entity from calling load will be the previous version of this entity plus
-     * the entity in this object applied to it.
-     */
-    public Observable<Entity> update ( Entity entity );
-
-    /**
      * Returns health of entity data store.
      */
     public Health getHealth();

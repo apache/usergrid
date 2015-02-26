@@ -290,45 +290,6 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         } );
     }
 
-
-    @Override
-    public Observable<Entity> update( final Entity entity ) {
-
-        logger.debug( "Starting update process" );
-
-        //do our input validation
-        Preconditions.checkNotNull( entity, "Entity is required in the new stage of the mvcc write" );
-
-        final Id entityId = entity.getId();
-
-
-        ValidationUtils.verifyIdentity( entityId );
-
-        // create our observable and start the write
-        CollectionIoEvent<Entity> writeData = new CollectionIoEvent<Entity>( collectionScope, entity );
-
-
-        Observable<CollectionIoEvent<MvccEntity>> observable = stageRunner( writeData, writeUpdate );
-
-
-        return observable.map( writeCommit ).doOnNext( new Action1<Entity>() {
-            @Override
-            public void call( final Entity entity ) {
-                logger.debug( "sending entity to the queue" );
-
-                //we an update, signal the fix
-                taskExecutor.submit(entityVersionCreatedFactory.getTask(collectionScope,entity));
-
-                //TODO T.N Change this to fire a task
-                //                Observable.from( new CollectionIoEvent<Id>(collectionScope,
-                // entityId ) ).map( load ).subscribeOn( Schedulers.io() ).subscribe();
-
-
-            }
-        } ).doOnError( rollback );
-    }
-
-
     // fire the stages
     public Observable<CollectionIoEvent<MvccEntity>> stageRunner( CollectionIoEvent<Entity> writeData,
                                                                   WriteStart writeState ) {

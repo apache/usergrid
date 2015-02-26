@@ -34,6 +34,7 @@ import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.exception.DataCorruptionException;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
+import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
@@ -96,17 +97,21 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
     public static final int COL_VALUE = 0x0;
 
 
-    protected final Keyspace keyspace;
+    private final Keyspace keyspace;
+    private final SerializationFig serializationFig;
+
 
 
     /**
      * Construct serialization strategy for keyspace.
      *
      * @param keyspace Keyspace in which to store Unique Values.
+     * @param serializationFig
      */
     @Inject
-    public UniqueValueSerializationStrategyImpl( final Keyspace keyspace ) {
+    public UniqueValueSerializationStrategyImpl( final Keyspace keyspace, final SerializationFig serializationFig ) {
         this.keyspace = keyspace;
+        this.serializationFig = serializationFig;
     }
 
 
@@ -325,7 +330,7 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
 
         RowQuery<ScopedRowKey<CollectionPrefixedKey<Id>>, UniqueFieldEntry> query =
                 keyspace.prepareQuery( CF_ENTITY_UNIQUE_VALUES ).getKey( rowKey ).withColumnRange(
-                    ( UniqueFieldEntry ) null, null, false, 1000 );
+                    ( UniqueFieldEntry ) null, null, false, serializationFig.getBufferSize() );
 
         return new ColumnNameIterator( query, new UniqueEntryParser( entityId ), false );
 
