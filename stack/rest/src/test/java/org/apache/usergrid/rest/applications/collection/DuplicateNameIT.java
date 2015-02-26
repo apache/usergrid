@@ -17,24 +17,24 @@
 package org.apache.usergrid.rest.applications.collection;
 
 
-import org.junit.Rule;
+
+
+import com.sun.jersey.api.client.UniformInterfaceException;
+import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.rest.AbstractRestIT;
-import org.apache.usergrid.rest.TestContextSetup;
-
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 
 public class DuplicateNameIT extends AbstractRestIT {
 
-    private static final Logger logger = LoggerFactory.getLogger( DuplicateNameIT.class );
-
-    @Rule
-    public TestContextSetup context = new TestContextSetup( this );
-
+    /**
+     * Test to ensure that an error is returned when
+     * attempting to POST multiple entities to the
+     * same collection with the same name
+     */
     @Test
     public void duplicateNamePrevention() {
 
@@ -65,5 +65,20 @@ public class DuplicateNameIT extends AbstractRestIT {
 //        } catch (Exception ex) {
 //            // good
 //        }
+        String collectionName = "things";
+        Entity entity = new Entity();
+        entity.put("name", "enzo");
+        //Create an entity named "enzo" in the "things" collection
+        entity = this.app().collection(collectionName).post(entity);
+        refreshIndex();
+        try {
+            // Try to create a second entity in "things" with the name "enzo".
+            this.app().collection(collectionName).post(entity);
+            // fail if the POST did not return an exception
+            fail("Should not have created duplicate entity");
+        } catch (UniformInterfaceException uie) {
+            //Check for an exception
+            assertEquals(400, uie.getResponse().getStatus());
+        }
     }
 }
