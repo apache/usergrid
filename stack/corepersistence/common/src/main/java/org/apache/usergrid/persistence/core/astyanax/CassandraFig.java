@@ -53,9 +53,9 @@ public interface CassandraFig extends GuicyFig {
     @Default( "Usergrid" )
     String getClusterName();
 
-    @Key( "collections.keyspace" )
-    @Default( "Usergrid_Collections" )
-    String getKeyspaceName();
+    @Key( "cassandra.keyspace.application" )
+    @Default( "Usergrid_Applications" )
+    String getApplicationKeyspace();
 
     @Key( "cassandra.port" )
     @Default( "9160" )
@@ -71,8 +71,8 @@ public interface CassandraFig extends GuicyFig {
 
     @Key("cassandra.discovery")
     @Default( "RING_DESCRIBE" )
-    String getDiscoveryType();    
-    
+    String getDiscoveryType();
+
     @Key("cassandra.embedded")
     @Default( "false" )
     boolean isEmbedded();
