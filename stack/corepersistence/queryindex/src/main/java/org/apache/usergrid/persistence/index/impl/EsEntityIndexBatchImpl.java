@@ -127,7 +127,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         final String entityType = entity.getId().getType();
         IndexRequestBuilder builder =
                 client.prepareIndex(alias.getWriteAlias(), entityType, indexId).setSource( entityAsMap );
-        container.add(builder);
+        container.addOperation(builder);
         return this;
     }
 
@@ -173,7 +173,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
                    public Object call(String index) {
                        try {
                            DeleteRequestBuilder builder = client.prepareDelete(index, entityType, indexId).setRefresh(refresh);
-                           container.add(builder);
+                           container.addOperation(builder);
                        }catch (Exception e){
                            log.error("failed to deindex",e);
                            throw e;

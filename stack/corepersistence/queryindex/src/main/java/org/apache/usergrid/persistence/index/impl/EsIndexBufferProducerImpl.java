@@ -20,6 +20,7 @@
 package org.apache.usergrid.persistence.index.impl;
 
 import com.codahale.metrics.Counter;
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.usergrid.persistence.core.future.BetterFuture;
@@ -48,7 +49,8 @@ public class EsIndexBufferProducerImpl implements IndexBufferProducer {
     }
 
     public BetterFuture put(IndexOperationMessage message){
-        indexSizeCounter.inc(message.getBuilder().size());
+        Preconditions.checkNotNull(message,"Message cannot be null");
+        indexSizeCounter.inc(message.getOperations().size());
         subscriber.onNext(message);
         return message.getFuture();
     }

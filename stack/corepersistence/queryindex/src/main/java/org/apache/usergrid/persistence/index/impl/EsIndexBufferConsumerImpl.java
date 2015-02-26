@@ -45,7 +45,6 @@ import rx.schedulers.Schedulers;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Consumer for IndexOperationMessages
@@ -69,22 +68,15 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
         this.failureMonitor = new FailureMonitorImpl(config,provider);
         this.client = provider.getClient();
 
-        final AtomicLong queueSize = new AtomicLong();
         //batch up sets of some size and send them in batch
         this.consumer = Observable.create(producer)
             .subscribeOn(Schedulers.io())
-            .doOnNext(new Action1<IndexOperationMessage>() {
-                @Override
-                public void call(IndexOperationMessage requestBuilderContainer) {
-                    queueSize.addAndGet(requestBuilderContainer.getBuilder().size());
-                }
-            })
             .buffer(config.getIndexBufferTimeout(), TimeUnit.MILLISECONDS, config.getIndexBufferSize())
             .doOnNext(new Action1<List<IndexOperationMessage>>() {
                 @Override
                 public void call(List<IndexOperationMessage> containerList) {
                     flushTimer.time();
-                    if(containerList.size()>0){
+                    if (containerList.size() > 0) {
                         execute(containerList);
                     }
                 }
@@ -107,13 +99,7 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
             .flatMap(new Func1<IndexOperationMessage, Observable<ShardReplicationOperationRequestBuilder>>() {
                 @Override
                 public Observable<ShardReplicationOperationRequestBuilder> call(IndexOperationMessage operationMessage) {
-                    return Observable.from(operationMessage.getBuilder())
-                        .map(new Func1<ShardReplicationOperationRequestBuilder, ShardReplicationOperationRequestBuilder>() {
-                            @Override
-                            public ShardReplicationOperationRequestBuilder call(ShardReplicationOperationRequestBuilder builder) {
-                                return builder;
-                            }
-                        });
+                    return Observable.from(operationMessage.getOperations());
                 }
             });
 
@@ -123,17 +109,21 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
             .doOnNext(new Action1<List<ShardReplicationOperationRequestBuilder>>() {
                 @Override
                 public void call(List<ShardReplicationOperationRequestBuilder> builders) {
-                    final BulkRequestBuilder bulkRequest = initRequest();
-                    for (ShardReplicationOperationRequestBuilder builder : builders) {
-                        indexSizeCounter.dec();
-                        if (builder instanceof IndexRequestBuilder) {
-                            bulkRequest.add((IndexRequestBuilder) builder);
+                    try {
+                        final BulkRequestBuilder bulkRequest = initRequest();
+                        for (ShardReplicationOperationRequestBuilder builder : builders) {
+                            indexSizeCounter.dec();
+                            if (builder instanceof IndexRequestBuilder) {
+                                bulkRequest.add((IndexRequestBuilder) builder);
+                            }
+                            if (builder instanceof DeleteRequestBuilder) {
+                                bulkRequest.add((DeleteRequestBuilder) builder);
+                            }
                         }
-                        if (builder instanceof DeleteRequestBuilder) {
-                            bulkRequest.add((DeleteRequestBuilder) builder);
-                        }
+                        sendRequest(bulkRequest);
+                    }catch (Exception e){
+                        log.error("Failed while sending bulk",e);
                     }
-                    sendRequest(bulkRequest);
                 }
             })
             .toBlocking().lastOrDefault(null);

@@ -41,12 +41,22 @@ public  class IndexOperationMessage {
         });
     }
 
-    public void add(ShardReplicationOperationRequestBuilder builder){
+    public void addOperation(ShardReplicationOperationRequestBuilder builder){
         builders.add(builder);
     }
-    public ConcurrentLinkedQueue<ShardReplicationOperationRequestBuilder> getBuilder(){
+
+    /**
+     * return operations for the message
+     * @return
+     */
+    public ConcurrentLinkedQueue<ShardReplicationOperationRequestBuilder> getOperations(){
         return builders;
     }
+
+    /**
+     * return the promise
+     * @return
+     */
     public BetterFuture<IndexOperationMessage> getFuture(){
         return containerFuture;
     }
