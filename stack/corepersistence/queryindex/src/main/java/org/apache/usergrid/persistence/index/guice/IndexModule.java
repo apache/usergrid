@@ -19,14 +19,12 @@
 
 package org.apache.usergrid.persistence.index.guice;
 
-import org.apache.usergrid.persistence.index.IndexBatchBuffer;
-import org.apache.usergrid.persistence.index.IndexFig;
+import org.apache.usergrid.persistence.index.*;
 import com.google.inject.AbstractModule;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
-import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.impl.EsEntityIndexImpl;
-import org.apache.usergrid.persistence.index.impl.IndexBatchBufferImpl;
+import org.apache.usergrid.persistence.index.impl.EsIndexBufferConsumerImpl;
+import org.apache.usergrid.persistence.index.impl.EsIndexBufferProducerImpl;
 import org.safehaus.guicyfig.GuicyFigModule;
 
 
@@ -42,7 +40,8 @@ public class IndexModule extends AbstractModule {
                 .implement(EntityIndex.class, EsEntityIndexImpl.class)
                 .build(EntityIndexFactory.class));
 
-        bind(IndexBatchBuffer.class).to(IndexBatchBufferImpl.class);
+        bind(IndexBufferProducer.class).to(EsIndexBufferProducerImpl.class);
+        bind(IndexBufferConsumer.class).to(EsIndexBufferConsumerImpl.class).asEagerSingleton();
 
     }
 

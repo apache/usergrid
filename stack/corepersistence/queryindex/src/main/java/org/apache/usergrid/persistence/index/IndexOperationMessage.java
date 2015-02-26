@@ -24,7 +24,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
- * Classy class class.
+ * Container for index operations.
  */
 public  class IndexOperationMessage {
     private final ConcurrentLinkedQueue<ShardReplicationOperationRequestBuilder> builders;
@@ -46,9 +46,6 @@ public  class IndexOperationMessage {
     }
     public ConcurrentLinkedQueue<ShardReplicationOperationRequestBuilder> getBuilder(){
         return builders;
-    }
-    public void done(){
-        containerFuture.done();
     }
     public BetterFuture<IndexOperationMessage> getFuture(){
         return containerFuture;

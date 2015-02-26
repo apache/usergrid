@@ -87,7 +87,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
     private final IndexIdentifier.IndexAlias alias;
     private final IndexIdentifier indexIdentifier;
-    private final IndexBatchBuffer indexBatchBuffer;
+    private final IndexBufferProducer indexBatchBufferProducer;
 
     /**
      * We purposefully make this per instance. Some indexes may work, while others may fail
@@ -119,8 +119,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
 
     @Inject
-    public EsEntityIndexImpl( @Assisted final ApplicationScope appScope, final IndexFig config, final IndexBatchBuffer indexBatchBuffer, final EsProvider provider, final EsIndexCache indexCache) {
-        this.indexBatchBuffer = indexBatchBuffer;
+    public EsEntityIndexImpl( @Assisted final ApplicationScope appScope, final IndexFig config, final IndexBufferProducer indexBatchBufferProducer, final EsProvider provider, final EsIndexCache indexCache) {
+        this.indexBatchBufferProducer = indexBatchBufferProducer;
         ValidationUtils.validateApplicationScope( appScope );
         this.applicationScope = appScope;
         this.esProvider = provider;
@@ -282,7 +282,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     @Override
     public EntityIndexBatch createBatch() {
         EntityIndexBatch batch = new EsEntityIndexBatchImpl(
-                applicationScope, esProvider.getClient(),indexBatchBuffer, config, this );
+                applicationScope, esProvider.getClient(),indexBatchBufferProducer, config, this );
         return batch;
     }
 
@@ -434,7 +434,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
     public void refresh() {
 
-        BetterFuture future = indexBatchBuffer.put(new IndexOperationMessage());
+        BetterFuture future = indexBatchBufferProducer.put(new IndexOperationMessage());
         future.get();
         //loop through all batches and retrieve promises and call get
 

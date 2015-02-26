@@ -76,18 +76,18 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
     private final IndexIdentifier.IndexAlias alias;
     private final IndexIdentifier indexIdentifier;
 
-    private final IndexBatchBuffer indexBatchBuffer;
+    private final IndexBufferProducer indexBatchBufferProducer;
 
     private final AliasedEntityIndex entityIndex;
     private IndexOperationMessage container;
 
 
-    public EsEntityIndexBatchImpl(final ApplicationScope applicationScope, final Client client,final IndexBatchBuffer indexBatchBuffer,
+    public EsEntityIndexBatchImpl(final ApplicationScope applicationScope, final Client client,final IndexBufferProducer indexBatchBufferProducer,
             final IndexFig config, final AliasedEntityIndex entityIndex ) {
 
         this.applicationScope = applicationScope;
         this.client = client;
-        this.indexBatchBuffer = indexBatchBuffer;
+        this.indexBatchBufferProducer = indexBatchBufferProducer;
         this.entityIndex = entityIndex;
         this.indexIdentifier = IndexingUtils.createIndexIdentifier(config, applicationScope);
         this.alias = indexIdentifier.getAlias();
@@ -204,7 +204,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
     public BetterFuture execute() {
         IndexOperationMessage tempContainer = container;
         container = new IndexOperationMessage();
-        return indexBatchBuffer.put(tempContainer);
+        return indexBatchBufferProducer.put(tempContainer);
     }
 
     /**
