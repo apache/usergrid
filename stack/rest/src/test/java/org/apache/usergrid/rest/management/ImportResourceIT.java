@@ -153,7 +153,7 @@ public class ImportResourceIT extends AbstractRestIT {
             .addToPath(entity.getUuid().toString())
             .get();
 
-        assertNotNull(entity.getString("state"));
+        assertNotNull(entity.getAsString("state"));
     }
 
     /**
@@ -452,7 +452,7 @@ public class ImportResourceIT extends AbstractRestIT {
 
         final Entity includesEntity = importGetIncludesResponse.getEntities().get( 0 );
 
-        assertEquals( "testImportCorrect.testCol.1.json", includesEntity.getString( "fileName" ) );
+        assertEquals( "testImportCorrect.testCol.1.json", includesEntity.getAsString( "fileName" ) );
         assertEquals(1, includesEntity.get( "importedConnectionCount" ));
         assertEquals(1, includesEntity.get( "importedEntityCount" ));
 

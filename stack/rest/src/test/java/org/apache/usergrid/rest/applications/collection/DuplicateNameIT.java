@@ -16,16 +16,6 @@
 
 package org.apache.usergrid.rest.applications.collection;
 
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.apache.usergrid.rest.TestContextSetup;
-
-import static org.junit.Assert.fail;
-
 import com.sun.jersey.api.client.UniformInterfaceException;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
