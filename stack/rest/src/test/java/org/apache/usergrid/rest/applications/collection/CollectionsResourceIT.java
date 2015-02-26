@@ -187,10 +187,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         Entity calendarlistOne = this.app().collection(collection).post(payload);
         assertEquals(calendarlistOne.get("summaryOverview"), summaryOverview);
         assertEquals(calendarlistOne.get("caltype"), calType);
-<<<<<<< HEAD
-        String calendarlistOneUUID = calendarlistOne.getAsString("uuid");
-=======
->>>>>>> 567db37ca03daa621dfde0c29f803b9384da5e7e
+
         this.refreshIndex();
 
         //post a second entity
