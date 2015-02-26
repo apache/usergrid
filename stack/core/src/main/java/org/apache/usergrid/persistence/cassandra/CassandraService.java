@@ -247,8 +247,15 @@ public class CassandraService {
 
 
     public Keyspace getKeyspace( String keyspace, UUID prefix ) {
-        Keyspace ko = createVirtualKeyspace( keyspace, prefix, ue, cluster, consistencyLevelPolicy,
+        Keyspace ko = null;
+        if ( ( prefix != null ) ) {
+            ko = createVirtualKeyspace( keyspace, prefix, ue, cluster, consistencyLevelPolicy,
                     ON_FAIL_TRY_ALL_AVAILABLE, accessMap );
+        }
+        else {
+            ko = HFactory.createKeyspace( keyspace, cluster, consistencyLevelPolicy, ON_FAIL_TRY_ALL_AVAILABLE,
+                    accessMap );
+        }
         return ko;
     }
 
@@ -262,7 +269,7 @@ public class CassandraService {
 
     /** The Usergrid_Applications keyspace directly */
     public Keyspace getUsergridApplicationKeyspace() {
-        return getKeyspace( getApplicationKeyspace(), null );
+        return getKeyspace( getApplicationKeyspace(),  null );
     }
 
 

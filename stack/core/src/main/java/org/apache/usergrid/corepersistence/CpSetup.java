@@ -172,19 +172,6 @@ public class CpSetup implements Setup {
     public void setupApplicationKeyspace( final UUID applicationId, String applicationName ) throws Exception {
 
         migrate();
-
-        // Need this legacy stuff for queues
-
-        String app_keyspace = keyspaceForApplication( applicationId );
-
-        logger.info( "Creating application keyspace " + app_keyspace + " for " + applicationName + " application" );
-
-        cass.createColumnFamily( app_keyspace,
-            createColumnFamilyDefinition( getApplicationKeyspace(), APPLICATIONS_CF, ComparatorType.BYTESTYPE ) );
-
-        cass.createColumnFamilies( app_keyspace, getCfDefs( ApplicationCF.class, app_keyspace ) );
-
-        cass.createColumnFamilies( app_keyspace, getCfDefs( QueuesCF.class, app_keyspace ) );
     }
 
 

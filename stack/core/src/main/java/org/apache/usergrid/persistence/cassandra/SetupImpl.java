@@ -103,18 +103,9 @@ public class SetupImpl implements Setup {
      * @throws Exception the exception
      */
     @Override
-    public void setupApplicationKeyspace(final UUID applicationId, String applicationName ) throws Exception {
-
-        String app_keyspace = keyspaceForApplication( applicationId );
-
-        logger.info( "Creating application keyspace " + app_keyspace + " for "
-                + applicationName + " application" );
-
-        cass.createColumnFamily( app_keyspace, createColumnFamilyDefinition(
-                getApplicationKeyspace(), APPLICATIONS_CF, ComparatorType.BYTESTYPE ) );
-
-        cass.createColumnFamilies( app_keyspace, getCfDefs( ApplicationCF.class, app_keyspace));
-        cass.createColumnFamilies( app_keyspace, getCfDefs( QueuesCF.class, app_keyspace ) );
+    public void setupApplicationKeyspace(
+            final UUID applicationId, String applicationName ) throws Exception {
+        logger.info("This method no longer needed due to using virtual keyspaces all the time.");
     }
 
 
