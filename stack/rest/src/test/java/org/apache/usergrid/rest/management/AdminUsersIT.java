@@ -41,6 +41,7 @@ import org.jvnet.mock_javamail.Mailbox;
 
 
 import org.apache.usergrid.management.MockImapClient;
+import org.apache.usergrid.persistence.index.utils.StringUtils;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.RestClient;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.*;
@@ -205,175 +206,97 @@ public class AdminUsersIT extends AbstractRestIT {
 
     }
 
+
+    /**
+     * Test that a unconfirmed admin cannot log in.
+     * TODO:test for parallel test that changing the properties here won't affect other tests
+     * @throws Exception
+     */
     @Test
-    public void testUnconfirmedAdminLoginRET()  throws Exception{
+    public void testUnconfirmedAdminLogin()  throws Exception{
 
-        Map<String,Object> testPropertiesMap = new HashMap<>(  );
-
-        testPropertiesMap.put( PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false" );
-        testPropertiesMap.put( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false" );
-        testPropertiesMap.put( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "true" );
-        testPropertiesMap.put( PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com" );
-        testPropertiesMap.put( PROPERTIES_NOTIFY_ADMIN_OF_ACTIVATION, "true" );
-
-        Entity testPropertiesPayload = new Entity( testPropertiesMap );
-
-        clientSetup.getRestClient().testPropertiesResource().post(testPropertiesPayload);
-
-        refreshIndex();
-
-        ApiResponse apiResponse = clientSetup.getRestClient().testPropertiesResource().get();
-
-        assertEquals( "true" ,apiResponse.getProperties().get( PROPERTIES_NOTIFY_ADMIN_OF_ACTIVATION ) );
-        assertEquals( "sysadmin-1@mockserver.com" ,apiResponse.getProperties().get(PROPERTIES_SYSADMIN_EMAIL));
-        assertEquals( "true" ,apiResponse.getProperties().get( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION ) );
-        assertEquals( "false" ,apiResponse.getProperties().get( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS ) );
-        assertEquals( "false" ,apiResponse.getProperties().get( PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS ) );
-
-        Organization organization = createOrgPayload( "testUnconfirmedAdminLogin", null );
-
-        Organization organizationResponse = clientSetup.getRestClient().management().orgs().post( organization );
-
-        assertNotNull( organizationResponse );
-
-        User adminUser = organizationResponse.getOwner();
-
-        assertNotNull( adminUser );
-        assertFalse( "adminUser should not be activated yet", adminUser.getActivated());
-        assertFalse( "adminUser should not be confirmed yet", adminUser.getConfirmed());
-
-
-        QueryParameters queryParameters = new QueryParameters();
-        queryParameters.addParam( "grant_type","password").addParam( "username",adminUser.getUsername() )
-                       .addParam( "password",organization.getPassword() );
-
-        //Token adminToken = new Token( "password",adminUser.getUsername(),organization.getName() );
-
-
+        ApiResponse originalTestPropertiesResponse = clientSetup.getRestClient().testPropertiesResource().get();
+        Entity originalTestProperties = new Entity( originalTestPropertiesResponse );
         try {
+            //Set runtime enviroment to the following settings
+            Map<String, Object> testPropertiesMap = new HashMap<>();
 
-            Token tokenReturned = management().token().get( queryParameters );
+            testPropertiesMap.put( PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false" );
+            testPropertiesMap.put( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false" );
+            //Requires admins to do email confirmation before they can log in.
+            testPropertiesMap.put( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "true" );
+            testPropertiesMap.put( PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com" );
+
+            Entity testPropertiesPayload = new Entity( testPropertiesMap );
+
+            //Send rest call to the /testProperties endpoint to persist property changes
+            clientSetup.getRestClient().testPropertiesResource().post( testPropertiesPayload );
+
+            refreshIndex();
+
+            //Retrieve properties and ensure that they are set correctly.
+            ApiResponse apiResponse = clientSetup.getRestClient().testPropertiesResource().get();
+
+            assertEquals( "sysadmin-1@mockserver.com", apiResponse.getProperties().get( PROPERTIES_SYSADMIN_EMAIL ) );
+            assertEquals( "true", apiResponse.getProperties().get( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION ) );
+            assertEquals( "false", apiResponse.getProperties().get( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS ) );
+            assertEquals( "false", apiResponse.getProperties().get( PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS ) );
+
+            //Create organization for the admin user to be confirmed
+            Organization organization = createOrgPayload( "testUnconfirmedAdminLogin", null );
+
+            Organization organizationResponse = clientSetup.getRestClient().management().orgs().post( organization );
+
+            assertNotNull( organizationResponse );
+
+            //Ensure that adminUser has the correct properties set.
+            User adminUser = organizationResponse.getOwner();
+
+            assertNotNull( adminUser );
+            assertFalse( "adminUser should not be activated yet", adminUser.getActivated() );
+            assertFalse( "adminUser should not be confirmed yet", adminUser.getConfirmed() );
+
+
+            QueryParameters queryParameters = new QueryParameters();
+            queryParameters.addParam( "grant_type", "password" ).addParam( "username", adminUser.getUsername() )
+                           .addParam( "password", organization.getPassword() );
+
+
+            //Check that the adminUser cannot log in and fails with a 403
+            try {
+                management().token().get( queryParameters );
+                fail( "Admin user should not be able to log in." );
+            }
+            catch ( UniformInterfaceException uie ) {
+                assertEquals( "Admin user should have failed with 403", 403, uie.getResponse().getStatus() );
+            }
+
+            //Create mocked inbox
+            List<Message> inbox = Mailbox.get( organization.getEmail() );
+            assertFalse( inbox.isEmpty() );
+
+            MockImapClient client = new MockImapClient( "mockserver.com", "test-user-46", "somepassword" );
+            client.processMail();
+
+            //Get email with confirmation token and extract token
+            Message confirmation = inbox.get( 0 );
+            assertEquals( "User Account Confirmation: " + organization.getEmail(), confirmation.getSubject() );
+            String token = getTokenFromMessage( confirmation );
+
+            //Make rest call with extracted token to confirm the admin user.
+            management().users().user( adminUser.getUuid().toString() ).confirm()
+                        .get( new QueryParameters().addParam( "token", token ) );
+
+
+            //Try the previous call and verify that the admin user can retrieve login token
+            Token retToken = management().token().get( queryParameters );
+
+            assertNotNull( retToken );
+            assertNotNull( retToken.getAccessToken() );
+        }finally {
+            clientSetup.getRestClient().testPropertiesResource().post( originalTestProperties );
         }
-        catch(Exception e){
-            //catch forbbiedn here
-        }
-
-        List<Message> inbox = Mailbox.get( organization.getEmail() );
-        assertFalse( inbox.isEmpty() );
-
-        MockImapClient client = new MockImapClient( "mockserver.com", "test-user-46", "somepassword" );
-        client.processMail();
-
-        Message confirmation = inbox.get( 0 );
-        assertEquals( "User Account Confirmation: " + organization.getEmail(), confirmation.getSubject() );
-
-        //String token = getTokenFromMessage(confirmation);
-
     }
-
-
-//    @Test
-//    public void testUnconfirmedAdminLogin() throws Exception {
-//
-//        // Setup properties to require confirmation of users
-//        // -------------------------------------------
-//
-//        Map<String, String> originalProperties = getRemoteTestProperties();
-//
-//        try {
-//            setTestProperty( PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false" );
-//            setTestProperty( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false" );
-//            setTestProperty( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "true" );
-//            setTestProperty( PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com" );
-//            setTestProperty( PROPERTIES_NOTIFY_ADMIN_OF_ACTIVATION, "true" );
-//
-//            assertTrue( setup.getMgmtSvc().newAdminUsersRequireConfirmation() );
-//            assertFalse( setup.getMgmtSvc().newAdminUsersNeedSysAdminApproval() );
-//
-//            // Setup org/app/user variables and create them
-//            // -------------------------------------------
-//            String orgName = this.getClass().getName();
-//            String appName = "testUnconfirmedAdminLogin";
-//            String userName = "TestUser";
-//            String email = "test-user-46@mockserver.com";
-//            String passwd = "testpassword";
-//            OrganizationOwnerInfo orgOwner;
-//
-//            orgOwner = setup.getMgmtSvc().createOwnerAndOrganization(
-//                    orgName, userName, appName, email, passwd, false, false );
-//            assertNotNull( orgOwner );
-//            String returnedUsername = orgOwner.getOwner().getUsername();
-//            assertEquals( userName, returnedUsername );
-//
-//            UserInfo adminUserInfo = setup.getMgmtSvc().getAdminUserByUsername( userName );
-//            assertNotNull( adminUserInfo );
-//            assertFalse( "adminUser should not be activated yet", adminUserInfo.isActivated() );
-//            assertFalse( "adminUser should not be confirmed yet", adminUserInfo.isConfirmed() );
-//
-//            // Attempt to authenticate but this should fail
-//            // -------------------------------------------
-//            JsonNode node;
-//            try {
-//                node = mapper.readTree( resource().path( "/management/token" )
-//                                                  .queryParam( "grant_type", "password" )
-//                                                  .queryParam( "username", userName )
-//                                                  .queryParam( "password", passwd )
-//                                                  .accept( MediaType.APPLICATION_JSON ).get( String.class ));
-//
-//                fail( "Unconfirmed users should not be authorized to authenticate." );
-//            }
-//            catch ( UniformInterfaceException e ) {
-//                node = mapper.readTree( e.getResponse().getEntity( String.class ));
-//                assertEquals( "invalid_grant", node.get( "error" ).textValue() );
-//                assertEquals( "User must be confirmed to authenticate",
-//                        node.get( "error_description" ).textValue() );
-//                LOG.info( "Unconfirmed user was not authorized to authenticate!" );
-//            }
-//
-//            // Confirm the getting account confirmation email for unconfirmed user
-//            // -------------------------------------------
-//            List<Message> inbox = Mailbox.get( email );
-//            assertFalse( inbox.isEmpty() );
-//
-//            MockImapClient client = new MockImapClient( "mockserver.com", "test-user-46", "somepassword" );
-//            client.processMail();
-//
-//            Message confirmation = inbox.get( 0 );
-//            assertEquals( "User Account Confirmation: " + email, confirmation.getSubject() );
-//
-//            // Extract the token to confirm the user
-//            // -------------------------------------------
-//            String token = getTokenFromMessage( confirmation );
-//            LOG.info( token );
-//
-//            ActivationState state = setup.getMgmtSvc().handleConfirmationTokenForAdminUser(
-//                    orgOwner.getOwner().getUuid(), token );
-//            assertEquals( ActivationState.ACTIVATED, state );
-//
-//            Message activation = inbox.get( 1 );
-//            assertEquals( "User Account Activated", activation.getSubject() );
-//
-//            client = new MockImapClient( "mockserver.com", "test-user-46", "somepassword" );
-//            client.processMail();
-//
-//            refreshIndex(orgName, appName);
-//
-//            // Attempt to authenticate again but this time should pass
-//            // -------------------------------------------
-//
-//            node = mapper.readTree( resource().path( "/management/token" )
-//                                              .queryParam( "grant_type", "password" )
-//                                              .queryParam( "username", userName )
-//                                              .queryParam( "password", passwd )
-//                                              .accept( MediaType.APPLICATION_JSON ).get( String.class ));
-//
-//            assertNotNull( node );
-//            LOG.info( "Authentication succeeded after confirmation: {}.", node.toString() );
-//        }
-//        finally {
-//            setTestProperties( originalProperties );
-//        }
-//    }
 
 //
 //    @Test
@@ -452,10 +375,10 @@ public class AdminUsersIT extends AbstractRestIT {
 //    }
 //
 //
-//    private String getTokenFromMessage( Message msg ) throws IOException, MessagingException {
-//        String body = ( ( MimeMultipart ) msg.getContent() ).getBodyPart( 0 ).getContent().toString();
-//        return StringUtils.substringAfterLast( body, "token=" );
-//    }
+    private String getTokenFromMessage( Message msg ) throws IOException, MessagingException {
+        String body = ( ( MimeMultipart ) msg.getContent() ).getBodyPart( 0 ).getContent().toString();
+        return StringUtils.substringAfterLast( body, "token=" );
+    }
 //
 //
 //    @Test

@@ -16,44 +16,31 @@
  */
 package org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt;
 
+
 import javax.ws.rs.core.MediaType;
 
 import org.apache.usergrid.rest.test.resource2point0.endpoints.NamedResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.UrlResource;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
-import org.apache.usergrid.rest.test.resource2point0.model.Entity;
+import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 import com.sun.jersey.api.client.WebResource;
 
 
 /**
- * Relations to the following endpoint
- * /management/users/"username"
- * Store endpoints relating to specific users
+ * For confirming users
  */
-public class UserResource extends NamedResource {
-
-    public UserResource( final String name, final ClientContext context, final UrlResource parent ) {
-        super( name, context, parent );
+public class ConfirmResource extends NamedResource {
+    public ConfirmResource( final ClientContext context, final UrlResource parent ) {
+        super( "confirm", context, parent );
     }
 
-    public ConfirmResource confirm() {
-        return new ConfirmResource(context,this);
-    }
+    public void get(QueryParameters queryParameters){
+        WebResource resource = getResource();
+        resource = addParametersToResource( resource, queryParameters );
+        String obj = resource.type( MediaType.TEXT_HTML_TYPE )
+                                       .accept( MediaType.TEXT_HTML).get( String.class );
 
-    public PasswordResource password() {
-        return new PasswordResource( context, this );
-    }
-
-    public FeedResource feed() {
-        return new FeedResource( context, this );
-    }
-
-    public Entity get() {
-        WebResource resource = getResource( true );
-        ApiResponse response = resource.type( MediaType.APPLICATION_JSON_TYPE )
-                                       .accept( MediaType.APPLICATION_JSON ).get( ApiResponse.class );
-        return new Entity(response);
     }
 }
