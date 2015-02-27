@@ -298,43 +298,41 @@ public class AdminUsersIT extends AbstractRestIT {
         }
     }
 
-//
-//    @Test
-//    public void testSystemAdminNeedsNoConfirmation() throws Exception {
-//
-//        Map<String, String> originalProperties = getRemoteTestProperties();
-//
-//        try {
-//            // require comfirmation of new admin users
-//            setTestProperty( PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false" );
-//            setTestProperty( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false" );
-//            setTestProperty( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "true" );
-//
-//            assertTrue( setup.getMgmtSvc().newAdminUsersRequireConfirmation() );
-//            assertFalse( setup.getMgmtSvc().newAdminUsersNeedSysAdminApproval() );
-//
-//            String sysadminUsername = ( String ) setup.getMgmtSvc().getProperties()
-//                                                      .get( AccountCreationProps.PROPERTIES_SYSADMIN_LOGIN_EMAIL );
-//
-//            String sysadminPassword = ( String ) setup.getMgmtSvc().getProperties()
-//                                                      .get( AccountCreationProps.PROPERTIES_SYSADMIN_LOGIN_PASSWORD );
-//
-//            // sysadmin login should suceed despite confirmation setting
-//            JsonNode node;
-//            try {
-//                node = mapper.readTree( resource().path( "/management/token" ).queryParam( "grant_type", "password" )
-//                                                  .queryParam( "username", sysadminUsername ).queryParam( "password", sysadminPassword )
-//                                                  .accept( MediaType.APPLICATION_JSON ).get( String.class ));
-//            }
-//            catch ( UniformInterfaceException e ) {
-//                fail( "Sysadmin should need no confirmation" );
-//            }
-//        }
-//        finally {
-//            setTestProperties( originalProperties );
-//        }
-//    }
-//
+
+    /**
+     * Test that the system admin doesn't need a confirmation email
+     * @throws Exception
+     */
+    @Test
+    public void testSystemAdminNeedsNoConfirmation() throws Exception{
+        //Save original properties to return them to normal at the end of the test
+        ApiResponse originalTestPropertiesResponse = clientSetup.getRestClient().testPropertiesResource().get();
+        Entity originalTestProperties = new Entity( originalTestPropertiesResponse );
+        try {
+            //Set runtime enviroment to the following settings
+            Map<String, Object> testPropertiesMap = new HashMap<>();
+
+            testPropertiesMap.put( PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false" );
+            testPropertiesMap.put( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false" );
+            //Requires admins to do email confirmation before they can log in.
+            testPropertiesMap.put( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "true" );
+
+            Entity testPropertiesPayload = new Entity( testPropertiesMap );
+
+            //Send rest call to the /testProperties endpoint to persist property changes
+            clientSetup.getRestClient().testPropertiesResource().post( testPropertiesPayload );
+            refreshIndex();
+
+            Token superuserToken = management().token().post(
+                new Token( clientSetup.getSuperuserName(), clientSetup.getSuperuserPassword() ) );
+
+            assertNotNull( "We should have gotten a valid token back" ,superuserToken );
+        }finally{
+            clientSetup.getRestClient().testPropertiesResource().post( originalTestProperties );
+
+        }
+    }
+    
 //
 //    @Test
 //    public void testTestUserNeedsNoConfirmation() throws Exception {
