@@ -21,7 +21,6 @@ package org.apache.usergrid.persistence.core.guice;
 
 
 import org.apache.usergrid.persistence.core.migration.data.ApplicationDataMigration;
-import org.apache.usergrid.persistence.core.migration.data.DataMigration;
 import org.apache.usergrid.persistence.core.scope.ApplicationEntityGroup;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import rx.Observable;

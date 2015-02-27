@@ -24,8 +24,6 @@
 package org.apache.usergrid.persistence.core.migration.data.newimpls;
 
 
-import org.apache.usergrid.persistence.core.migration.data.DataMigration;
-
 
 /**
  * A simple interface to return migration plugins.  All versions within this migration plugin should have a name
@@ -34,7 +32,7 @@ public interface MigrationPlugin {
 
 
     /**
-     * Get the name of the plugin
+     * Get the name of the plugin.  Must be unique
      * @return
      */
     public String getName();
@@ -42,6 +40,12 @@ public interface MigrationPlugin {
     /**
      * Run any migrations that may need to be run in this plugin
      */
-    public void run(DataMigration.ProgressObserver observer);
+    public void run(ProgressObserver observer);
+
+    /**
+     * Get the maximum migration version this plugin implements
+     * @return
+     */
+    public int getMaxVersion();
 
 }

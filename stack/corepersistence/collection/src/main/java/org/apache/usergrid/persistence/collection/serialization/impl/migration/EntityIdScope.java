@@ -17,14 +17,33 @@
  *  * directory of this distribution.
  *
  */
-package org.apache.usergrid.persistence.collection.mvcc;
+package org.apache.usergrid.persistence.collection.serialization.impl.migration;
 
-import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
-import org.apache.usergrid.persistence.core.migration.schema.MigrationStrategy;
+import java.util.Collection;
+
+import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 /**
- * Encapsulates the migration path between versions
+ * Tuple containing collectionscope and entityid
  */
-public interface MvccEntityMigrationStrategy extends MigrationStrategy<MvccEntitySerializationStrategy> {
+public class EntityIdScope{
+    private final Id id;
+    private final CollectionScope collectionScope;
 
+    public EntityIdScope(CollectionScope collectionScope, Id id){
+        this.id = id;
+        this.collectionScope = collectionScope;
+    }
+
+
+    public Id getId() {
+        return id;
+    }
+
+
+    public CollectionScope getCollectionScope() {
+        return collectionScope;
+    }
 }

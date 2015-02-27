@@ -25,23 +25,17 @@ package org.apache.usergrid.persistence.core.migration.data.newimpls;
 
 
 /**
- * Data migration.  The internal version to migrate
- *
- * @param <T>
+ * Simple relationship that defines the current state of the source and destination data versions
  */
-public interface DataMigration2<T> {
+public class MigrationRelationship<T extends VersionedData> {
 
-    /**
-     * Perform the migration, returning an observable with a single emitted value
-     * @param migrationDataProvider
-     */
-    public void migrate(MigrationDataProvider<T> migrationDataProvider, ProgressObserver observer);
-
-    /**
-     * Get the version of this migration. It should be unique within the scope of the plugin
-     * @return
-     */
-    public int getVersion();
+    //public so it's FAST.  It's also immutable
+    public final T from;
+    public final T to;
 
 
+    public MigrationRelationship( T from, T to ) {
+        this.from = from;
+        this.to = to;
+    }
 }

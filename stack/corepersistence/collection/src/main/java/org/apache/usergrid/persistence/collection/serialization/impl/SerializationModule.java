@@ -22,9 +22,15 @@ import org.apache.usergrid.persistence.collection.mvcc.MvccEntityMigrationStrate
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
-import org.apache.usergrid.persistence.core.guice.*;
-import org.apache.usergrid.persistence.core.migration.data.CollectionDataMigration;
-import org.apache.usergrid.persistence.core.migration.data.DataMigration;
+import org.apache.usergrid.persistence.collection.serialization.impl.migration.CollectionMigrationPlugin;
+import org.apache.usergrid.persistence.collection.serialization.impl.migration.MvccEntityDataMigrationImpl;
+import org.apache.usergrid.persistence.core.guice.ProxyImpl;
+import org.apache.usergrid.persistence.core.guice.V1Impl;
+import org.apache.usergrid.persistence.core.guice.V1ProxyImpl;
+import org.apache.usergrid.persistence.core.guice.V2Impl;
+import org.apache.usergrid.persistence.core.guice.V3Impl;
+import org.apache.usergrid.persistence.core.migration.data.newimpls.DataMigration2;
+import org.apache.usergrid.persistence.core.migration.data.newimpls.MigrationPlugin;
 import org.apache.usergrid.persistence.core.migration.schema.Migration;
 
 import com.google.inject.AbstractModule;
@@ -56,10 +62,16 @@ public class SerializationModule extends AbstractModule {
         bind(MvccEntitySerializationStrategy.class ).annotatedWith(ProxyImpl.class)
                                                      .to(MvccEntitySerializationStrategyProxyV2Impl.class);
 
-        Multibinder<DataMigration> dataMigrationMultibinder =  Multibinder.newSetBinder( binder(), DataMigration.class );
+
+
+
+        Multibinder<DataMigration2> dataMigrationMultibinder =  Multibinder.newSetBinder( binder(), DataMigration2.class );
         dataMigrationMultibinder.addBinding().to( MvccEntityDataMigrationImpl.class );
 
-        bind( MvccEntityMigrationStrategy.class ).to(MvccEntitySerializationStrategyProxyV2Impl.class);
+
+        Multibinder.newSetBinder( binder(), MigrationPlugin.class).addBinding().to( CollectionMigrationPlugin.class );
+
+
 
         bind( MvccLogEntrySerializationStrategy.class ).to( MvccLogEntrySerializationStrategyImpl.class );
         bind( UniqueValueSerializationStrategy.class ).to( UniqueValueSerializationStrategyImpl.class );

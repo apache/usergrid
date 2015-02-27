@@ -21,7 +21,7 @@ package org.apache.usergrid.persistence.core.rx;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationEntityGroup;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.model.entity.Id;
+
 import rx.Observable;
 
 

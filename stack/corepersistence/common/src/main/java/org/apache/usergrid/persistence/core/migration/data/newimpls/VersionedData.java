@@ -25,23 +25,14 @@ package org.apache.usergrid.persistence.core.migration.data.newimpls;
 
 
 /**
- * Data migration.  The internal version to migrate
- *
- * @param <T>
+ * Marker interface for implementations that may migrate their internal format
  */
-public interface DataMigration2<T> {
+public interface VersionedData {
 
     /**
-     * Perform the migration, returning an observable with a single emitted value
-     * @param migrationDataProvider
-     */
-    public void migrate(MigrationDataProvider<T> migrationDataProvider, ProgressObserver observer);
-
-    /**
-     * Get the version of this migration. It should be unique within the scope of the plugin
+     * Get the version of the implementation
      * @return
      */
-    public int getVersion();
-
+    public int getImplementationVersion();
 
 }

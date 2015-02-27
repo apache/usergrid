@@ -19,6 +19,9 @@
 package org.apache.usergrid.persistence.core.migration.data;
 
 
+import java.util.List;
+import java.util.Set;
+
 import org.apache.usergrid.persistence.core.migration.schema.MigrationException;
 
 
@@ -43,13 +46,13 @@ public interface DataMigrationManager {
      * Get the current version of the schema
      * @return
      */
-    public int getCurrentVersion();
+    public int getCurrentVersion(final String pluginName);
 
     /**
      * Reset the system version to the version specified
      * @param version
      */
-    public void resetToVersion(final int version);
+    public void resetToVersion(final String pluginName, final int version);
 
     /**
      * Invalidate the cache for versions
@@ -60,5 +63,11 @@ public interface DataMigrationManager {
     /**
      * Return that last status of the migration
      */
-    public String getLastStatus();
+    public String getLastStatus(final String pluginName);
+
+    /**
+     * Return a list of all plugin names
+     * @return
+     */
+    public Set<String> getPluginNames();
 }

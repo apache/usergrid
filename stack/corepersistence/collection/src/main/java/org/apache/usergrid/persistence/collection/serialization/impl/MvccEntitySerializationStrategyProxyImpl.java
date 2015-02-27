@@ -35,27 +35,24 @@ import java.util.*;
 
 /**
  * Version 4 implementation of entity serialization. This will proxy writes and reads so that during
- * migration data goes to both sources and is read from the old source. After the ugprade completes,
+ * migration data goes to both sources and is read from the old source. After the upgrade completes,
  * it will be available from the new source
  */
-public abstract class MvccEntitySerializationStrategyProxyImpl implements MvccEntitySerializationStrategy, MvccEntityMigrationStrategy {
+public class MvccEntitySerializationStrategyProxyImpl implements MvccEntitySerializationStrategy {
 
 
     protected final Keyspace keyspace;
-    protected final MvccEntitySerializationStrategy previous;
-    protected final MvccEntitySerializationStrategy current;
     private final MigrationInfoSerialization migrationInfoSerialization;
+    private final
 
 
     @Inject
     public MvccEntitySerializationStrategyProxyImpl(final Keyspace keyspace,
-                                                    final MvccEntitySerializationStrategy previous,
-                                                    final MvccEntitySerializationStrategy current,
+                                                    final Set<MvccEntitySerializationStrategy> allVersions,
                                                     final MigrationInfoSerialization migrationInfoSerialization) {
 
         this.keyspace = keyspace;
-        this.previous = previous;
-        this.current = current;
+
         this.migrationInfoSerialization = migrationInfoSerialization;
     }
 
@@ -159,5 +156,10 @@ public abstract class MvccEntitySerializationStrategyProxyImpl implements MvccEn
         return Collections.emptyList();
     }
 
+
+    @Override
+    public int getImplementationVersion() {
+        return 0;
+    }
 }
 
