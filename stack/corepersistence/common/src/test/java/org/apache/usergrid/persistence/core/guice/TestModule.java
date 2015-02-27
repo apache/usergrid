@@ -25,8 +25,6 @@ import java.io.IOException;
 import com.google.inject.AbstractModule;
 import com.netflix.config.ConfigurationManager;
 
-import org.apache.usergrid.persistence.core.scope.ApplicationEntityGroup;
-
 
 public abstract class TestModule extends AbstractModule {
     static {

@@ -54,11 +54,6 @@ public interface DataMigrationManager {
      */
     public void resetToVersion(final String pluginName, final int version);
 
-    /**
-     * Invalidate the cache for versions
-     */
-    public void invalidate();
-
 
     /**
      * Return that last status of the migration

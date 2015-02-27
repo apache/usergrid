@@ -16,21 +16,27 @@
  */
 package org.apache.usergrid.persistence.collection.serialization.impl;
 
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.UUID;
+
+import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.EntitySet;
+import org.apache.usergrid.persistence.collection.MvccEntity;
+import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.impl.migration.CollectionMigrationPlugin;
+import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
+import org.apache.usergrid.persistence.core.migration.data.MigrationInfoCache;
+import org.apache.usergrid.persistence.core.migration.data.newimpls.MigrationRelationship;
+import org.apache.usergrid.persistence.core.migration.data.newimpls.VersionedMigrationSet;
+import org.apache.usergrid.persistence.model.entity.Id;
+
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.EntitySet;
-import org.apache.usergrid.persistence.collection.MvccEntity;
-import org.apache.usergrid.persistence.collection.mvcc.MvccEntityMigrationStrategy;
-import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
-import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
-import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
-import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerialization;
-import org.apache.usergrid.persistence.model.entity.Id;
-
-import java.util.*;
 
 
 /**
@@ -42,43 +48,49 @@ public class MvccEntitySerializationStrategyProxyImpl implements MvccEntitySeria
 
 
     protected final Keyspace keyspace;
-    private final MigrationInfoSerialization migrationInfoSerialization;
-    private final
+    private final VersionedMigrationSet<MvccEntitySerializationStrategy> versions;
+    private final MigrationInfoCache migrationInfoCache;
 
 
     @Inject
-    public MvccEntitySerializationStrategyProxyImpl(final Keyspace keyspace,
-                                                    final Set<MvccEntitySerializationStrategy> allVersions,
-                                                    final MigrationInfoSerialization migrationInfoSerialization) {
+    public MvccEntitySerializationStrategyProxyImpl( final Keyspace keyspace,
+                                                     final VersionedMigrationSet<MvccEntitySerializationStrategy> allVersions,
+                                                     final MigrationInfoCache migrationInfoCache ) {
 
         this.keyspace = keyspace;
-
-        this.migrationInfoSerialization = migrationInfoSerialization;
+        this.migrationInfoCache = migrationInfoCache;
+        this.versions = allVersions;
     }
 
 
     @Override
     public MutationBatch write( final CollectionScope context, final MvccEntity entity ) {
-        if ( isOldVersion() ) {
+
+        final MigrationRelationship<MvccEntitySerializationStrategy> migration = getMigrationRelationShip();
+
+        if ( migration.needsMigration() ) {
             final MutationBatch aggregateBatch = keyspace.prepareMutationBatch();
 
-            aggregateBatch.mergeShallow( previous.write( context, entity ) );
-            aggregateBatch.mergeShallow( current.write( context, entity ) );
+            aggregateBatch.mergeShallow( migration.from.write( context, entity ) );
+            aggregateBatch.mergeShallow( migration.to.write( context, entity ) );
 
             return aggregateBatch;
         }
 
-        return current.write( context, entity );
+        return migration.to.write( context, entity );
     }
 
 
     @Override
     public EntitySet load( final CollectionScope scope, final Collection<Id> entityIds, final UUID maxVersion ) {
-        if ( isOldVersion() ) {
-                    return previous.load( scope, entityIds, maxVersion );
-                }
 
-                return current.load( scope, entityIds, maxVersion );
+        final MigrationRelationship<MvccEntitySerializationStrategy> migration = getMigrationRelationShip();
+
+        if ( migration.needsMigration() ) {
+            return migration.from.load( scope, entityIds, maxVersion );
+        }
+
+        return migration.to.load( scope, entityIds, maxVersion );
     }
 
 
@@ -86,68 +98,84 @@ public class MvccEntitySerializationStrategyProxyImpl implements MvccEntitySeria
     @Override
     public Iterator<MvccEntity> loadDescendingHistory( final CollectionScope context, final Id entityId,
                                                        final UUID version, final int fetchSize ) {
-        if ( isOldVersion() ) {
-            return previous.loadDescendingHistory( context, entityId, version, fetchSize );
+
+        final MigrationRelationship<MvccEntitySerializationStrategy> migration = getMigrationRelationShip();
+
+        if ( migration.needsMigration()) {
+            return migration.from.loadDescendingHistory( context, entityId, version, fetchSize );
         }
 
-        return current.loadDescendingHistory( context, entityId, version, fetchSize );
+        return migration.to.loadDescendingHistory( context, entityId, version, fetchSize );
     }
 
 
     @Override
     public Iterator<MvccEntity> loadAscendingHistory( final CollectionScope context, final Id entityId,
                                                       final UUID version, final int fetchSize ) {
-        if ( isOldVersion() ) {
-            return previous.loadAscendingHistory( context, entityId, version, fetchSize );
+
+        final MigrationRelationship<MvccEntitySerializationStrategy> migration = getMigrationRelationShip();
+
+        if ( migration.needsMigration() ) {
+            return migration.from.loadAscendingHistory( context, entityId, version, fetchSize );
         }
 
-        return current.loadAscendingHistory( context, entityId, version, fetchSize );
+        return migration.to.loadAscendingHistory( context, entityId, version, fetchSize );
     }
 
     @Override
     public Optional<MvccEntity> load( final CollectionScope scope, final Id entityId ) {
-        if ( isOldVersion() ) {
-            return previous.load( scope, entityId );
+
+        final MigrationRelationship<MvccEntitySerializationStrategy> migration = getMigrationRelationShip();
+
+        if ( migration.needsMigration() ) {
+            return migration.from.load( scope, entityId );
         }
 
-        return current.load( scope, entityId );
+        return migration.to.load( scope, entityId );
     }
 
 
     @Override
     public MutationBatch mark( final CollectionScope context, final Id entityId, final UUID version ) {
-        if ( isOldVersion() ) {
+
+        final MigrationRelationship<MvccEntitySerializationStrategy> migration = getMigrationRelationShip();
+
+        if ( migration.needsMigration() ) {
             final MutationBatch aggregateBatch = keyspace.prepareMutationBatch();
 
-            aggregateBatch.mergeShallow( previous.mark( context, entityId, version ) );
-            aggregateBatch.mergeShallow( current.mark( context, entityId, version ) );
+            aggregateBatch.mergeShallow( migration.from.mark( context, entityId, version ) );
+            aggregateBatch.mergeShallow( migration.to.mark( context, entityId, version ) );
 
             return aggregateBatch;
         }
 
-        return current.mark( context, entityId, version );
+        return migration.to.mark( context, entityId, version );
     }
 
 
     @Override
     public MutationBatch delete( final CollectionScope context, final Id entityId, final UUID version ) {
-        if ( isOldVersion() ) {
+
+        final MigrationRelationship<MvccEntitySerializationStrategy> migration = getMigrationRelationShip();
+
+        if ( migration.needsMigration() ) {
             final MutationBatch aggregateBatch = keyspace.prepareMutationBatch();
 
-            aggregateBatch.mergeShallow( previous.delete( context, entityId, version ) );
-            aggregateBatch.mergeShallow( current.delete( context, entityId, version ) );
+            aggregateBatch.mergeShallow( migration.from.delete( context, entityId, version ) );
+            aggregateBatch.mergeShallow( migration.to.delete( context, entityId, version ) );
 
             return aggregateBatch;
         }
 
-        return current.delete( context, entityId, version );
+        return migration.to.delete( context, entityId, version );
     }
 
     /**
      * Return true if we're on an old version
      */
-    private boolean isOldVersion() {
-        return migrationInfoSerialization.getCurrentVersion() < getVersion();
+    private MigrationRelationship<MvccEntitySerializationStrategy> getMigrationRelationShip() {
+        return this.versions.getMigrationRelationship(
+                migrationInfoCache.getVersion( CollectionMigrationPlugin.PLUGIN_NAME ) );
     }
 
 

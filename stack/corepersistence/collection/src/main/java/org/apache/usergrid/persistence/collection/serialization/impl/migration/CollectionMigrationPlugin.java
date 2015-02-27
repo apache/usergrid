@@ -31,17 +31,24 @@ import org.apache.usergrid.persistence.core.migration.data.newimpls.MigrationDat
 import org.apache.usergrid.persistence.core.migration.data.newimpls.MigrationPlugin;
 import org.apache.usergrid.persistence.core.migration.data.newimpls.ProgressObserver;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
 
 /**
  * Migration plugin for the collection module
  */
+@Singleton
 public class CollectionMigrationPlugin implements MigrationPlugin {
 
+
+    public static final String PLUGIN_NAME =  "collections-entity-data";
 
     private final DataMigration2<EntityIdScope> entityDataMigration;
     private final MigrationDataProvider<EntityIdScope> entityIdScopeDataMigrationProvider;
 
 
+    @Inject
     public CollectionMigrationPlugin( final DataMigration2<EntityIdScope> entityDataMigration,
                                       final MigrationDataProvider<EntityIdScope> entityIdScopeDataMigrationProvider ) {
         this.entityDataMigration = entityDataMigration;
@@ -51,7 +58,7 @@ public class CollectionMigrationPlugin implements MigrationPlugin {
 
     @Override
     public String getName() {
-        return "collections-entity-data";
+        return PLUGIN_NAME;
     }
 
 

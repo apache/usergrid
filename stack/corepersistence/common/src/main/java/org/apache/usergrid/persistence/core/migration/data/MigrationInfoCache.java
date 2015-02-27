@@ -1,5 +1,6 @@
 /*
  *
+ *  *
  *  * Licensed to the Apache Software Foundation (ASF) under one
  *  * or more contributor license agreements.  See the NOTICE file
  *  * distributed with this work for additional information
@@ -16,20 +17,36 @@
  *  * KIND, either express or implied.  See the License for the
  *  * specific language governing permissions and limitations
  *  * under the License.
+ *  *
  *
  */
+package org.apache.usergrid.persistence.core.migration.data;
 
-package org.apache.usergrid.persistence.core.guice;
+
+import org.apache.usergrid.persistence.core.migration.schema.Migration;
 
 
 /**
- * Module for testing common frameworks
+ * A proxy that will cache migration info
  */
-public class TestCommonModule extends TestModule {
+public interface MigrationInfoCache  {
 
-    @Override
-    protected void configure() {
-        install(new CommonModule());
-    }
+    /**
+     * Invalidate the versions in theCache
+     */
+    public void invalidateAll();
+
+    /**
+     * Save the version for the plugin
+     * @param version
+     */
+    public void setVersion( final String pluginName, final int version );
+
+    /**
+     * Return the version
+     * @return
+     */
+    public int getVersion( final String pluginName );
+
 
 }

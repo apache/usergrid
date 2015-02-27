@@ -51,18 +51,6 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
     private final MigrationInfoSerialization migrationInfoSerialization;
 
 
-    /**
-     * Cache to cache versions temporarily
-     */
-    private final LoadingCache<String, Integer> versionCache = CacheBuilder.newBuilder()
-            //cache the local value for 1 minute
-            .expireAfterWrite( 1, TimeUnit.MINUTES ).build( new CacheLoader<String, Integer>() {
-                @Override
-                public Integer load( final String key ) throws Exception {
-                    return migrationInfoSerialization.getVersion( key );
-                }
-            } );
-
 
     @Inject
     public DataMigrationManagerImpl( final Set<MigrationPlugin> plugins,
@@ -120,11 +108,6 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
         return false;
     }
 
-
-    @Override
-    public void invalidate() {
-        versionCache.invalidateAll();
-    }
 
 
     @Override

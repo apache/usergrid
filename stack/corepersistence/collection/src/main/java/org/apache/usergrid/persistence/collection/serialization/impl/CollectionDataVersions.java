@@ -1,5 +1,6 @@
 /*
  *
+ *  *
  *  * Licensed to the Apache Software Foundation (ASF) under one
  *  * or more contributor license agreements.  See the NOTICE file
  *  * distributed with this work for additional information
@@ -16,20 +17,28 @@
  *  * KIND, either express or implied.  See the License for the
  *  * specific language governing permissions and limitations
  *  * under the License.
+ *  *
  *
  */
 
-package org.apache.usergrid.persistence.core.guice;
+package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
 /**
- * Module for testing common frameworks
+ * Versions of data as they exist across our system
  */
-public class TestCommonModule extends TestModule {
+public enum CollectionDataVersions{
+    ONE(1),
+    TWO(2),
+    THREE(3);
 
-    @Override
-    protected void configure() {
-        install(new CommonModule());
+    private final int version;
+
+
+    private CollectionDataVersions( final int version ) {this.version = version;}
+
+
+    public int getVersion() {
+        return version;
     }
-
 }

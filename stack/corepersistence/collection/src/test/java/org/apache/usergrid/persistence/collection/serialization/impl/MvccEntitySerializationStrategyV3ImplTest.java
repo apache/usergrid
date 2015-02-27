@@ -10,7 +10,6 @@ import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
-import org.apache.usergrid.persistence.core.guice.V3Impl;
 import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -30,8 +29,7 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 @UseModules( TestCollectionModule.class )
 public class MvccEntitySerializationStrategyV3ImplTest extends MvccEntitySerializationStrategyV3Test {
     @Inject
-    @V3Impl
-    private MvccEntitySerializationStrategy serializationStrategy;
+    private MvccEntitySerializationStrategyV3Impl serializationStrategy;
 
 
     @Override

@@ -381,6 +381,12 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
     }
 
 
+    @Override
+    public int getImplementationVersion() {
+        return CollectionDataVersions.THREE.getVersion();
+    }
+
+
     /**
      * Simple callback to perform puts and deletes with a common row setup code
      */

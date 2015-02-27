@@ -20,19 +20,14 @@
 package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
-import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.junit.runner.RunWith;
 
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
-import org.apache.usergrid.persistence.core.guice.V1Impl;
+import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
 
 import com.google.inject.Inject;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 
 @RunWith( ITRunner.class )
@@ -40,8 +35,7 @@ import static org.junit.Assert.assertTrue;
 public class MvccEntitySerializationStrategyV1ImplTest extends MvccEntitySerializationStrategyImplTest {
 
     @Inject
-    @V1Impl
-    private MvccEntitySerializationStrategy serializationStrategy;
+    private MvccEntitySerializationStrategyV1Impl serializationStrategy;
 
 
 

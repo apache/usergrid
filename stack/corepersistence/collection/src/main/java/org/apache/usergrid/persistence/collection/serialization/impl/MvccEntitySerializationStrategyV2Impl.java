@@ -91,6 +91,12 @@ public class MvccEntitySerializationStrategyV2Impl extends MvccEntitySerializati
     }
 
 
+    @Override
+    public int getImplementationVersion() {
+        return CollectionDataVersions.TWO.getVersion();
+    }
+
+
     /**
      * We should only ever create this once, since this impl is a singleton
      */

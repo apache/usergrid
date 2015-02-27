@@ -111,9 +111,7 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Entity>
         logMutation.mergeShallow( entityMutation );
 
         // re-write the unique values but this time with no TTL
-        for ( Field field : mvccEntity.getEntity().get().getFields() ) {
-
-            if ( field.isUnique() ) {
+        for ( Field field : EntityUtils.getUniqueFields(mvccEntity.getEntity().get()) ) {
 
                 UniqueValue written  = new UniqueValueImpl( field,
                     entityId,version);
@@ -124,7 +122,6 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Entity>
 
                 // merge into our existing mutation batch
                 logMutation.mergeShallow( mb );
-            }
         }
 
         try {

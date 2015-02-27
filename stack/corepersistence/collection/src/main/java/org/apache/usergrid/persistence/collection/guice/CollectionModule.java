@@ -78,7 +78,7 @@ public class CollectionModule extends AbstractModule {
         Multibinder.newSetBinder( binder(), EntityDeleted.class );
 
         // create a guice factor for getting our collection manager
-       bind(EntityCollectionManagerFactory.class).to(EntityCollectionManagerFactoryImpl.class);
+         bind(EntityCollectionManagerFactory.class).to(EntityCollectionManagerFactoryImpl.class);
 
         //bind this to our factory
         install( new GuicyFigModule( EntityCacheFig.class ) );
@@ -98,6 +98,8 @@ public class CollectionModule extends AbstractModule {
         return writeStart;
     }
 
+
+    //TODO USERGRID-405, remove this, it's no longer supported
     @Provides
     @Singleton
     @Inject
