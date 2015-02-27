@@ -60,6 +60,8 @@ import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_NOT
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_EMAIL;
+import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_TEST_ACCOUNT_ADMIN_USER_EMAIL;
+import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_TEST_ACCOUNT_ADMIN_USER_PASSWORD;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -326,53 +328,52 @@ public class AdminUsersIT extends AbstractRestIT {
             Token superuserToken = management().token().post(
                 new Token( clientSetup.getSuperuserName(), clientSetup.getSuperuserPassword() ) );
 
+
+
             assertNotNull( "We should have gotten a valid token back" ,superuserToken );
         }finally{
             clientSetup.getRestClient().testPropertiesResource().post( originalTestProperties );
 
         }
     }
-    
-//
-//    @Test
-//    public void testTestUserNeedsNoConfirmation() throws Exception {
-//
-//        Map<String, String> originalProperties = getRemoteTestProperties();
-//
-//        try {
-//            // require comfirmation of new admin users
-//            setTestProperty( PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false" );
-//            setTestProperty( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false" );
-//            setTestProperty( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "true" );
-//
-//            assertTrue( setup.getMgmtSvc().newAdminUsersRequireConfirmation() );
-//            assertFalse( setup.getMgmtSvc().newAdminUsersNeedSysAdminApproval() );
-//
-//            String testUserUsername = ( String ) setup.getMgmtSvc().getProperties()
-//                                                      .get( AccountCreationProps
-//                                                              .PROPERTIES_TEST_ACCOUNT_ADMIN_USER_EMAIL );
-//
-//            String testUserPassword = ( String ) setup.getMgmtSvc().getProperties()
-//                                                      .get( AccountCreationProps
-//                                                              .PROPERTIES_TEST_ACCOUNT_ADMIN_USER_PASSWORD );
-//
-//            // test user login should suceed despite confirmation setting
-//            JsonNode node;
-//            try {
-//                node = mapper.readTree( resource().path( "/management/token" ).queryParam( "grant_type", "password" )
-//                                                  .queryParam( "username", testUserUsername ).queryParam( "password", testUserPassword )
-//                                                  .accept( MediaType.APPLICATION_JSON ).get( String.class ));
-//            }
-//            catch ( UniformInterfaceException e ) {
-//                fail( "Test User should need no confirmation" );
-//            }
-//        }
-//        finally {
-//            setTestProperties( originalProperties );
-//        }
-//    }
-//
-//
+
+    /**
+     * Test that the test account doesn't need confirmation and is created automatically.
+     * @throws Exception
+     */
+    @Ignore("Test doesn't pass because the test account isn't getting correct instantiated")
+    @Test
+    public void testTestUserNeedsNoConfirmation() throws Exception{
+        //Save original properties to return them to normal at the end of the test
+        ApiResponse originalTestPropertiesResponse = clientSetup.getRestClient().testPropertiesResource().get();
+        Entity originalTestProperties = new Entity( originalTestPropertiesResponse );
+        try {
+            //Set runtime enviroment to the following settings
+            Map<String, Object> testPropertiesMap = new HashMap<>();
+
+            testPropertiesMap.put( PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false" );
+            testPropertiesMap.put( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false" );
+            //Requires admins to do email confirmation before they can log in.
+            testPropertiesMap.put( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "true" );
+
+            Entity testPropertiesPayload = new Entity( testPropertiesMap );
+
+            //Send rest call to the /testProperties endpoint to persist property changes
+            clientSetup.getRestClient().testPropertiesResource().post( testPropertiesPayload );
+            refreshIndex();
+
+            Token testToken = management().token().post(
+                new Token( originalTestProperties.getAsString( PROPERTIES_TEST_ACCOUNT_ADMIN_USER_EMAIL ),
+                    originalTestProperties.getAsString(  PROPERTIES_TEST_ACCOUNT_ADMIN_USER_PASSWORD ) ));
+
+            assertNotNull( "We should have gotten a valid token back" ,testToken );
+        }finally{
+            clientSetup.getRestClient().testPropertiesResource().post( originalTestProperties );
+
+        }
+    }
+
+
     private String getTokenFromMessage( Message msg ) throws IOException, MessagingException {
         String body = ( ( MimeMultipart ) msg.getContent() ).getBodyPart( 0 ).getContent().toString();
         return StringUtils.substringAfterLast( body, "token=" );
