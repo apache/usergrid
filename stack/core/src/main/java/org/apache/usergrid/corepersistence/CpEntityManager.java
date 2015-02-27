@@ -565,6 +565,9 @@ public class CpEntityManager implements EntityManager {
 
     private Observable deleteAsync( EntityRef entityRef ) throws Exception {
 
+        if(applicationScope == null || entityRef == null){
+            return Observable.empty();
+        }
         CollectionScope collectionScope = getCollectionScopeNameFromEntityType(
                 applicationScope.getApplication(), entityRef.getType()  );
 
@@ -2750,7 +2753,7 @@ public class CpEntityManager implements EntityManager {
         CpWalker walker = new CpWalker( );
 
         walker.walkCollections(
-            this, application, collectionName, reverse, new CpVisitor() {
+            this, getApplication(), collectionName, reverse, new CpVisitor() {
 
             @Override
             public void visitCollectionEntry( EntityManager em, String collName, Entity entity ) {
@@ -2779,7 +2782,7 @@ public class CpEntityManager implements EntityManager {
 
         CpWalker walker = new CpWalker( );
 
-        walker.walkCollections( this, application, null, false, new CpVisitor() {
+        walker.walkCollections( this, getApplication(), null, false, new CpVisitor() {
 
             @Override
             public void visitCollectionEntry( EntityManager em, String collName, Entity entity ) {

@@ -58,8 +58,10 @@ public class CpWalker {
     public void walkCollections(final CpEntityManager em, final EntityRef start,
         String collectionName, boolean reverse, final CpVisitor visitor) throws Exception {
 
-        doWalkCollections(
-            em, collectionName, reverse, new SimpleId( start.getUuid(), start.getType() ), visitor );
+        if(start != null) {
+            doWalkCollections(
+                em, collectionName, reverse, new SimpleId(start.getUuid(), start.getType()), visitor);
+        }
     }
 
 

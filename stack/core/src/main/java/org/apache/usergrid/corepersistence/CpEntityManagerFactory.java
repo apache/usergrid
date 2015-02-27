@@ -317,12 +317,12 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         Query q = Query.fromQL(String.format("select * where applicationUuid = '%s'", applicationId.toString()));
         Results results = em.searchCollection( em.getApplicationRef(), "appinfos", q);
         Entity appToDelete = results.getEntity();
-        em.delete( appToDelete );
-
-        // create new Entity in deleted_appinfos collection, with same UUID and properties as deleted appinfo
-        em.create( "deleted_appinfo", appToDelete.getProperties() );
-
-        em.refreshIndex();
+        if(appToDelete != null) {
+            em.delete(appToDelete);
+            // create new Entity in deleted_appinfos collection, with same UUID and properties as deleted appinfo
+            em.create("deleted_appinfo", appToDelete.getProperties());
+            em.refreshIndex();
+        }
 
         // delete the application's index
         EntityIndex ei = managerCache.getEntityIndex(new ApplicationScopeImpl(
@@ -767,7 +767,11 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         em.reindex( po );
 
-        logger.info("\n\nRebuilt index for application {} id {}\n", app.getName(), appId );
+        if(app!=null) {
+            logger.info("\n\nRebuilt index for application {} id {}\n", app.getName(), appId);
+        }else{
+            logger.info("\n\nDid not rebuild index for application id {}\n",  appId);
+        }
     }
 
 
