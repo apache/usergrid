@@ -37,7 +37,7 @@ import org.springframework.stereotype.Component;
 import org.apache.usergrid.rest.AbstractContextResource;
 
 
-/** 
+/**
  * Set properties at runtime, for testing purposes only and only works with usergrid.test=true.
  */
 @Component

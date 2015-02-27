@@ -38,35 +38,18 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.mock_javamail.Mailbox;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import org.apache.commons.lang.StringUtils;
 
-import org.apache.usergrid.management.AccountCreationProps;
-import org.apache.usergrid.management.ActivationState;
 import org.apache.usergrid.management.MockImapClient;
-import org.apache.usergrid.management.OrganizationInfo;
-import org.apache.usergrid.management.OrganizationOwnerInfo;
-import org.apache.usergrid.management.UserInfo;
-import org.apache.usergrid.rest.TestContextSetup;
-import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
-import org.apache.usergrid.rest.test.resource.mgmt.Organization;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.RestClient;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.*;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.ManagementResource;
+import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
+import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource2point0.model.Token;
-import org.apache.usergrid.rest.test.resource2point0.model.User;
-import org.apache.usergrid.rest.test.security.TestAdminUser;
-import org.apache.usergrid.rest.test.security.TestUser;
-import org.apache.usergrid.security.AuthPrincipalInfo;
-import org.apache.usergrid.security.AuthPrincipalType;
-import org.apache.usergrid.utils.UUIDUtils;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.sun.deploy.util.SessionState;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.representation.Form;
@@ -83,6 +66,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
+import org.apache.usergrid.rest.test.resource2point0.model.Organization;
+import org.apache.usergrid.rest.test.resource2point0.model.User;
 
 
 /**
@@ -219,54 +205,73 @@ public class AdminUsersIT extends AbstractRestIT {
 
     }
 
-    //everything below is MUUserResourceIT
-
     @Test
-    public void testCaseSensitivityAdminUser() throws Exception {
+    public void testUnconfirmedAdminLoginRET()  throws Exception{
 
-        //Create adminUser values
-        Entity adminUserPayload = new Entity();
-        String username = "testCaseSensitivityAdminUser"+ org.apache.usergrid.persistence.index.utils
-            .UUIDUtils
-            .newTimeUUID();
-        adminUserPayload.put( "username", username );
-        adminUserPayload.put( "name", username );
-        adminUserPayload.put( "email", username+"@usergrid.com" );
-        adminUserPayload.put( "password", username );
+        Map<String,Object> testPropertiesMap = new HashMap<>(  );
 
-        //create adminUser
-        //Entity adminUserResponse = restClient.management().orgs().organization( clientSetup.getOrganizationName() ).users().post( adminUserPayload );
-        management.users().post( adminUserPayload );
+        testPropertiesMap.put( PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false" );
+        testPropertiesMap.put( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false" );
+        testPropertiesMap.put( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "true" );
+        testPropertiesMap.put( PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com" );
+        testPropertiesMap.put( PROPERTIES_NOTIFY_ADMIN_OF_ACTIVATION, "true" );
+
+        Entity testPropertiesPayload = new Entity( testPropertiesMap );
+
+        clientSetup.getRestClient().testPropertiesResource().post(testPropertiesPayload);
 
         refreshIndex();
 
-        Entity adminUserResponse = management.users().user( username.toLowerCase() ).get();
-        assertNotNull( adminUserResponse );
+        ApiResponse apiResponse = clientSetup.getRestClient().testPropertiesResource().get();
 
-//        UserInfo mixcaseUser = setup.getMgmtSvc()
-//                                    .createAdminUser( "AKarasulu", "Alex Karasulu", "AKarasulu@Apache.org", "test", true, false );
-//
-//        refreshIndex(context.getOrgName(), context.getAppName());
-//
-//        AuthPrincipalInfo adminPrincipal = new AuthPrincipalInfo(
-//                AuthPrincipalType.ADMIN_USER, mixcaseUser.getUuid(), UUIDUtils.newTimeUUID() );
-//        OrganizationInfo organizationInfo =
-//                setup.getMgmtSvc().createOrganization( "MixedCaseOrg", mixcaseUser, true );
-//
-//        refreshIndex(context.getOrgName(), context.getAppName());
-//
-//        String tokenStr = mgmtToken( "akarasulu@apache.org", "test" );
+        assertEquals( "true" ,apiResponse.getProperties().get( PROPERTIES_NOTIFY_ADMIN_OF_ACTIVATION ) );
+        assertEquals( "sysadmin-1@mockserver.com" ,apiResponse.getProperties().get(PROPERTIES_SYSADMIN_EMAIL));
+        assertEquals( "true" ,apiResponse.getProperties().get( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION ) );
+        assertEquals( "false" ,apiResponse.getProperties().get( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS ) );
+        assertEquals( "false" ,apiResponse.getProperties().get( PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS ) );
 
-        // Should succeed even when we use all lowercase
-//        JsonNode node = mapper.readTree( resource().path( "/management/users/akarasulu@apache.org" )
-//                                                   .queryParam( "access_token", tokenStr )
-//                                                   .accept( MediaType.APPLICATION_JSON )
-//                                                   .type( MediaType.APPLICATION_JSON_TYPE )
-//                                                   .get( String.class ));
+        Organization organization = createOrgPayload( "testUnconfirmedAdminLogin", null );
+
+        Organization organizationResponse = clientSetup.getRestClient().management().orgs().post( organization );
+
+        assertNotNull( organizationResponse );
+
+        User adminUser = organizationResponse.getOwner();
+
+        assertNotNull( adminUser );
+        assertFalse( "adminUser should not be activated yet", adminUser.getActivated());
+        assertFalse( "adminUser should not be confirmed yet", adminUser.getConfirmed());
+
+
+        QueryParameters queryParameters = new QueryParameters();
+        queryParameters.addParam( "grant_type","password").addParam( "username",adminUser.getUsername() )
+                       .addParam( "password",organization.getPassword() );
+
+        //Token adminToken = new Token( "password",adminUser.getUsername(),organization.getName() );
+
+
+        try {
+
+            Token tokenReturned = management().token().get( queryParameters );
+        }
+        catch(Exception e){
+            //catch forbbiedn here
+        }
+
+        List<Message> inbox = Mailbox.get( organization.getEmail() );
+        assertFalse( inbox.isEmpty() );
+
+        MockImapClient client = new MockImapClient( "mockserver.com", "test-user-46", "somepassword" );
+        client.processMail();
+
+        Message confirmation = inbox.get( 0 );
+        assertEquals( "User Account Confirmation: " + organization.getEmail(), confirmation.getSubject() );
+
+        //String token = getTokenFromMessage(confirmation);
 
     }
-//
-//
+
+
 //    @Test
 //    public void testUnconfirmedAdminLogin() throws Exception {
 //
@@ -369,7 +374,7 @@ public class AdminUsersIT extends AbstractRestIT {
 //            setTestProperties( originalProperties );
 //        }
 //    }
-//
+
 //
 //    @Test
 //    public void testSystemAdminNeedsNoConfirmation() throws Exception {
@@ -835,5 +840,17 @@ public class AdminUsersIT extends AbstractRestIT {
 //        catch ( Exception ex ) {
 //        }
 //    }
+
+    /**
+     * Create an organization payload with almost the same value for everyfield.
+     * @param baseName
+     * @param properties
+     * @return
+     */
+    public Organization createOrgPayload(String baseName,Map properties){
+        String orgName = baseName + org.apache.usergrid.persistence.index.utils.UUIDUtils.newTimeUUID();
+        return new Organization( orgName,
+            orgName,orgName+"@usergrid",orgName,orgName, properties);
+    }
 
 }
