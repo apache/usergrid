@@ -16,20 +16,56 @@
  */
 package org.apache.usergrid.rest;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.usergrid.persistence.DynamicEntity;
+import org.apache.usergrid.rest.test.resource2point0.model.Collection;
+import org.apache.usergrid.rest.test.resource2point0.model.Entity;
+import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
+import org.apache.usergrid.utils.MapUtils;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
+
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+
 /**
- * Simplest test verifies if REST test infrastructure is functioning.
+ * Simple test verifies if REST test infrastructure is functioning.
  */
 public class SimplestTest extends org.apache.usergrid.rest.test.resource2point0.AbstractRestIT {
-    private static final Logger log = LoggerFactory.getLogger(SimplestTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(SimplestTest.class);
 
     @Test
     public void getGetToken() {
         assertNotNull( getAdminToken() );
+    }
+
+    @Test
+    public void testEntityPost() {
+
+        Entity cat = new Entity();
+        cat.put("name", "Bertha");
+        cat.put("property1", "value1");
+        Entity savedCat = this.app().collection("cats").post(cat);
+
+        assertEquals( cat.get("property1"), savedCat.get("property1"));
+    }
+
+    @Test
+    public void testEntityPostAndGet() {
+
+        Entity dog = new Entity();
+        dog.put("name", "Pokey");
+        dog.put("property1", "value1");
+        this.app().collection("dogs").post(dog);
+        refreshIndex();
+
+        Collection savedDogs = this.app().collection("dogs").get();
+        Entity savedDog = (Entity)savedDogs.iterator().next();
+        assertEquals( dog.get("property1"), savedDog.get("property1"));
     }
 }

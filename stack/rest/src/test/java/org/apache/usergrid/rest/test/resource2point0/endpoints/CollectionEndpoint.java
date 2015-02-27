@@ -16,14 +16,19 @@
  */
 package org.apache.usergrid.rest.test.resource2point0.endpoints;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.jersey.api.client.WebResource;
 import org.apache.usergrid.rest.test.resource2point0.model.*;
 import org.apache.usergrid.rest.test.resource2point0.model.Collection;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 import org.apache.usergrid.services.ServiceParameter;
 import org.apache.usergrid.utils.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.MediaType;
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.*;
 
 
@@ -31,6 +36,7 @@ import java.util.*;
  * //myorg/myapp/mycollection
  */
 public class CollectionEndpoint extends NamedResource {
+    private static final Logger logger = LoggerFactory.getLogger(CollectionEndpoint.class);
 
     protected List<String> acceptHeaders = new ArrayList<String> ();
 
@@ -62,12 +68,13 @@ public class CollectionEndpoint extends NamedResource {
     }
 
     /**
-     *
+     * <pre>
      * app.collection("users").uniqueID("fred").connection("following").collection("users").uniqueID("barney").post();
      * POST /users/fred/following/users/barney?token=<token>
      *
      * app.collection("users").uniqueID("fred").connection().collection("users").uniqueID("barney").post();
      * POST /users/fred/groups/theitcrowd?token=<token>
+     * </pre>
      */
     public CollectionEndpoint collection(final String identifier){
         return new CollectionEndpoint(identifier, context, this);
@@ -76,10 +83,9 @@ public class CollectionEndpoint extends NamedResource {
 
 
     /**
-     * Get a list of entities
-     * @return
+     * Get a list of entities.
      *
-     * @usage
+     * <pre>
      * //with token
      * app.collection("users").get(); //return entity
      * GET /users?token=<token>
@@ -97,6 +103,7 @@ public class CollectionEndpoint extends NamedResource {
      * GET /users
      *
      * collection = app.collection("users").get(collection);
+     * <pre>
      */
     public Collection get(){
         return get(null, true);
@@ -115,26 +122,37 @@ public class CollectionEndpoint extends NamedResource {
 
         WebResource resource  = getResource(useToken);
         resource = addParametersToResource(resource, parameters);
-        ApiResponse response = resource.type( MediaType.APPLICATION_JSON_TYPE ).accept(acceptHeader)
-                .get(ApiResponse.class);
+
+        // use string type so we can log actual response from server
+        String responseString = resource.type( MediaType.APPLICATION_JSON_TYPE )
+            .accept(acceptHeader)
+            .get(String.class);
+
+        logger.debug("Response from get: " + responseString);
+
+        ObjectMapper mapper = new ObjectMapper();
+        ApiResponse response;
+        try {
+            response = mapper.readValue( new StringReader(responseString), ApiResponse.class);
+        } catch (IOException e) {
+            throw new RuntimeException("Error parsing response", e);
+        }
 
         return new Collection(response);
     }
 
     /**
      * Gets the next page using only default settings with the passed in collection.
-     * @param collection
-     * @param useToken
-     * @return
      *
-     * @usage
+     * <pre>
      * Collection usersCollection =  app.collection("users").get();
      * //iterate through the collection
      * while(usersCollection.hasNext()){
      *  Entity bob = usersCollection.next();
      *     assert("blah",bob.get("words"));
-     * }     *
+     * }
      * usersCollection = app.collections("users").getNextPage(usersCollection.cursor);
+     * </pre>
      */
     //TODO: add queryParameters here
     public Collection getNextPage(Collection collection, QueryParameters passedParameters ,final boolean useToken) {
@@ -159,10 +177,9 @@ public class CollectionEndpoint extends NamedResource {
     }
 
     /**
-     * DELETE on a collection endpoint with query (use DELETE on entity for single entity delete)
+     * DELETE on a collection endpoint with query (use DELETE on entity for single entity delete).
      *
-     * @return ApiResponse
-     *
+     * <pre>
      * //with token
      * app.collection("users").delete(parameters);
      * DELETE /users?ql=select * where created > 0&token=<token>
@@ -173,89 +190,155 @@ public class CollectionEndpoint extends NamedResource {
      *
      * app.collection("users").delete(null, false);
      * DELETE /users
+     * </pre>
      */
     public ApiResponse delete( final QueryParameters parameters ){
         return delete(parameters, true);
     }
 
-    public ApiResponse delete(final QueryParameters parameters, final boolean useToken){
+    public ApiResponse delete(final QueryParameters parameters, final boolean useToken) {
+
         String acceptHeader = MediaType.APPLICATION_JSON;
+
         if (this.acceptHeaders.size() > 0) {
             acceptHeader = StringUtils.join(this.acceptHeaders, ',');
         }
 
         WebResource resource  = getResource(useToken);
         resource = addParametersToResource(resource, parameters);
-        return resource.type( MediaType.APPLICATION_JSON_TYPE ).accept(acceptHeader)
-                .delete(ApiResponse.class);
+        return resource.type( MediaType.APPLICATION_JSON_TYPE )
+            .accept(acceptHeader)
+            .delete(ApiResponse.class);
     }
 
     /**
-     * Post an entity to a collection
-     * @param payload
-     * @return
+     * Post an entity to a collection.
      *
+     * <pre>
      * app.collection("users").post(entity);
      * POST /users {"color","red"}
-     *
+     * </pre>
      */
     public Entity post(Entity payload){
+
         String acceptHeader = MediaType.APPLICATION_JSON;
         if (this.acceptHeaders.size() > 0) {
             acceptHeader = StringUtils.join(this.acceptHeaders, ',');
         }
-        ApiResponse response = getResource(true).type( MediaType.APPLICATION_JSON_TYPE ).accept(acceptHeader)
-                .post(ApiResponse.class, payload);
+
+        // use string type so we can log actual response from server
+        String responseString = getResource(true)
+            .type( MediaType.APPLICATION_JSON_TYPE )
+            .accept(acceptHeader)
+            .post(String.class, payload);
+
+        logger.debug("Response from post: " + responseString);
+
+        ObjectMapper mapper = new ObjectMapper();
+        ApiResponse response;
+        try {
+            response = mapper.readValue( new StringReader(responseString), ApiResponse.class);
+        } catch (IOException e) {
+            throw new RuntimeException("Error parsing response", e);
+        }
+
         return new Entity(response);
     }
 
-    public Entity post(){
+    public Entity post() {
+
         String acceptHeader = MediaType.APPLICATION_JSON;
+
         if (this.acceptHeaders.size() > 0) {
             acceptHeader = StringUtils.join(this.acceptHeaders, ',');
         }
-        ApiResponse response = getResource(true).type( MediaType.APPLICATION_JSON_TYPE ).accept(acceptHeader)
-                .post(ApiResponse.class);
+
+        // use string type so we can log actual response from server
+        String responseString = getResource(true)
+            .type( MediaType.APPLICATION_JSON_TYPE )
+            .accept(acceptHeader)
+            .post(String.class);
+
+        logger.debug("Response from post: " + responseString);
+
+        ObjectMapper mapper = new ObjectMapper();
+        ApiResponse response;
+        try {
+            response = mapper.readValue( new StringReader(responseString), ApiResponse.class);
+        } catch (IOException e) {
+            throw new RuntimeException("Error parsing response", e);
+        }
+
         return new Entity(response);
     }
 
-    public ApiResponse post(List<Entity> entityList){
+    public ApiResponse post(List<Entity> entityList) {
+
         String acceptHeader = MediaType.APPLICATION_JSON;
+
         if (this.acceptHeaders.size() > 0) {
             acceptHeader = StringUtils.join(this.acceptHeaders, ',');
         }
-        ApiResponse response = getResource(true).type( MediaType.APPLICATION_JSON_TYPE ).accept(acceptHeader)
-                .post(ApiResponse.class,entityList);
+
+        // use string type so we can log actual response from server
+        String responseString = getResource(true)
+            .type( MediaType.APPLICATION_JSON_TYPE )
+            .accept(acceptHeader)
+            .post(String.class, entityList );
+
+        logger.debug("Response from post: " + responseString);
+
+        ObjectMapper mapper = new ObjectMapper();
+        ApiResponse response;
+        try {
+            response = mapper.readValue( new StringReader(responseString), ApiResponse.class);
+        } catch (IOException e) {
+            throw new RuntimeException("Error parsing response", e);
+        }
+
         return response;
     }
 
     /**
-     * PUT a payload to a collection
+     * PUT a payload to a collection.
      *
+     * <pre>
      * app.collection("users").put(entity, param);
      * PUT /users?ql=select * where created > 0&token=<token>
      *
      * app.collection("users").put(entity, false, param);
      * PUT /users?ql=select * where created > 0
-     *
+     * </pre>
      */
     public ApiResponse put( final QueryParameters parameters, Entity entity ){
         return put(parameters, true, entity);
     }
 
-    public ApiResponse put(final QueryParameters parameters, final boolean useToken, Entity entity){
+    public ApiResponse put(final QueryParameters parameters, final boolean useToken, Entity entity) {
+
         String acceptHeader = MediaType.APPLICATION_JSON;
         if (this.acceptHeaders.size() > 0) {
             acceptHeader = StringUtils.join(this.acceptHeaders, ',');
         }
+
         WebResource resource  = getResource(useToken);
         addParametersToResource(getResource(), parameters);
-        return resource.type( MediaType.APPLICATION_JSON_TYPE ).accept(acceptHeader)
-                .put(ApiResponse.class, entity);
+
+        // use string type so we can log actual response from server
+        String responseString = resource.type(MediaType.APPLICATION_JSON_TYPE)
+            .accept(acceptHeader)
+            .post(String.class, entity);
+
+        logger.debug("Response from put: " + responseString);
+
+        ObjectMapper mapper = new ObjectMapper();
+        ApiResponse response;
+        try {
+            response = mapper.readValue( new StringReader(responseString), ApiResponse.class);
+        } catch (IOException e) {
+            throw new RuntimeException("Error parsing response", e);
+        }
+
+        return response;
     }
-
-
-
-
-
 }
