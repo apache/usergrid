@@ -40,8 +40,11 @@ import org.junit.Test;
 import org.jvnet.mock_javamail.Mailbox;
 
 
+import org.apache.commons.collections4.map.LinkedMap;
+
 import org.apache.usergrid.management.MockImapClient;
 import org.apache.usergrid.persistence.index.utils.StringUtils;
+import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.RestClient;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.*;
@@ -378,125 +381,47 @@ public class AdminUsersIT extends AbstractRestIT {
         String body = ( ( MimeMultipart ) msg.getContent() ).getBodyPart( 0 ).getContent().toString();
         return StringUtils.substringAfterLast( body, "token=" );
     }
-//
-//
-//    @Test
-//    public void updateManagementUser() throws Exception {
-//        Map<String, String> payload =
-//                hashMap( "email", "uort-user-1@apigee.com" ).map( "username", "uort-user-1" ).map( "name", "Test User" )
-//                                                            .map( "password", "password" ).map( "organization", "uort-org" ).map( "company", "Apigee" );
-//
-//        JsonNode node = mapper.readTree( resource().path( "/management/organizations" ).accept( MediaType.APPLICATION_JSON )
-//                                                   .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
-//        logNode( node );
-//        String userId = node.get( "data" ).get( "owner" ).get( "uuid" ).asText();
-//
-//        assertEquals( "Apigee", node.get( "data" ).get( "owner" ).get( "properties" ).get( "company" ).asText() );
-//
-//        String token = mgmtToken( "uort-user-1@apigee.com", "password" );
-//
-//        node = mapper.readTree( resource().path( String.format( "/management/users/%s", userId ) ).queryParam( "access_token", token )
-//                                          .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
-//
-//        logNode( node );
-//
-//        payload = hashMap( "company", "Usergrid" );
-//        LOG.info( "sending PUT for company update" );
-//        node = mapper.readTree( resource().path( String.format( "/management/users/%s", userId ) ).queryParam( "access_token", token )
-//                                          .type( MediaType.APPLICATION_JSON_TYPE ).put( String.class, payload ));
-//        assertNotNull( node );
-//        node = mapper.readTree( resource().path( String.format( "/management/users/%s", userId ) ).queryParam( "access_token", token )
-//                                          .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
-//        assertEquals( "Usergrid", node.get( "data" ).get( "properties" ).get( "company" ).asText() );
-//
-//
-//        logNode( node );
-//    }
-//
-//
-//    @Test
-//    public void getUser() throws Exception {
-//
-//        // set an organization property
-//        HashMap<String, Object> payload = new HashMap<String, Object>();
-//        Map<String, Object> properties = new HashMap<String, Object>();
-//        properties.put( "securityLevel", 5 );
-//        payload.put( OrganizationsResource.ORGANIZATION_PROPERTIES, properties );
-//
-//
-//        /**
-//         * Get the original org admin before we overwrite the property as a super user
-//         */
-//        final TestUser orgAdmin = context.getActiveUser();
-//        final String orgName = context.getOrgName();
-//        final String superAdminToken = superAdminToken();
-//
-//        TestAdminUser superAdmin = new TestAdminUser( "super", "super", "superuser@usergrid.com" );
-//        superAdmin.setToken( superAdminToken );
-//
-//        Organization org = context.withUser( superAdmin ).management().orgs().organization( orgName );
-//
-//        org.put( payload );
-//
-//
-//        //now get the org
-//        JsonNode node = context.withUser( orgAdmin ).management().users().user( orgAdmin.getUser() ).get();
-//
-//        logNode( node );
-//
-//        JsonNode applications = node.findValue( "applications" );
-//        assertNotNull( applications );
-//        JsonNode users = node.findValue( "users" );
-//        assertNotNull( users );
-//
-//        JsonNode securityLevel = node.findValue( "securityLevel" );
-//        assertNotNull( securityLevel );
-//        assertEquals( 5L, securityLevel.asLong() );
-//    }
-//
-//
-//    @Test
-//    public void getUserShallow() throws Exception {
-//
-//
-//        // set an organization property
-//        HashMap<String, Object> payload = new HashMap<String, Object>();
-//        Map<String, Object> properties = new HashMap<String, Object>();
-//        properties.put( "securityLevel", 5 );
-//        payload.put( OrganizationsResource.ORGANIZATION_PROPERTIES, properties );
-//
-//
-//        /**
-//         * Get the original org admin before we overwrite the property as a super user
-//         */
-//        final TestUser orgAdmin = context.getActiveUser();
-//        final String orgName = context.getOrgName();
-//        final String superAdminToken  = superAdminToken();
-//
-//        TestAdminUser superAdmin = new TestAdminUser( "super", "super", "superuser@usergrid.com" );
-//        superAdmin.setToken( superAdminToken );
-//
-//        Organization org = context.withUser( superAdmin ).management().orgs().organization( orgName );
-//
-//        org.put( payload );
-//
-//
-//        //now get the org
-//        JsonNode node = context.withUser( orgAdmin ).management().users().user( orgAdmin.getUser() ).withParam(
-//                "shallow", "true" ).get();
-//
-//        logNode( node );
-//
-//        JsonNode applications = node.findValue( "applications" );
-//        assertNull( applications );
-//        JsonNode users = node.findValue( "users" );
-//        assertNull( users );
-//
-//        JsonNode securityLevel = node.findValue( "securityLevel" );
-//        assertNotNull( securityLevel );
-//        assertEquals( 5L, securityLevel.asLong() );
-//    }
-//
+
+
+    /**
+     * Update the current management user and make sure the change persists
+     * @throws Exception
+     */
+    @Ignore("Fails because we cannot get a single management user without a Admin level token, but"
+        + "we can put without any of those permissions. This test will work once that issue has been resolved.")
+    @Test
+    public void updateManagementUser() throws Exception {
+
+        Organization newOrg = createOrgPayload( "updateManagementUser", null );
+
+
+        Organization orgReturned = clientSetup.getRestClient().management().orgs().post( newOrg );
+
+        assertNotNull( orgReturned.getOwner() );
+
+        //Add a property to management user
+        Entity userProperty = new Entity(  ).chainPut( "company","usergrid" );
+        management().users().user( newOrg.getUsername() ).put( userProperty );
+
+        Entity userUpdated = updateAdminUser( userProperty, orgReturned );
+
+        assertEquals( "usergrid",userUpdated.getAsString( "company" ) );
+
+        //Update property with new management value.
+        userProperty = new Entity(  ).chainPut( "company","Apigee" );
+
+        userUpdated = updateAdminUser( userProperty, orgReturned);
+
+        assertEquals( "Apigee",userUpdated.getAsString( "company" ) );
+    }
+
+    public Entity updateAdminUser(Entity userProperty, Organization organization){
+        management().users().user( organization.getUsername() ).put( userProperty );
+
+        return management().users().user( organization.getUsername() ).get();
+
+    }
+    
 //
 //    @Test
 //    public void reactivateMultipleSend() throws Exception {
