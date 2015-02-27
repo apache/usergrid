@@ -242,12 +242,6 @@
             <!-- we need this in all scopes, not just test -->
         </dependency>
 
-        <!--  "The artifact junit:junit-dep:jar:4.11 has been relocated to junit:junit:jar:4.11"
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit-dep</artifactId>
-        </dependency>-->
-
         <!-- Test Dependencies -->
 
         <dependency>
@@ -255,11 +249,6 @@
             <artifactId>spring-test</artifactId>
             <scope>test</scope>
         </dependency>
-
-        <!--<dependency>-->
-            <!--<groupId>org.codehaus.jackson</groupId>-->
-            <!--<artifactId>jackson-mapper-asl</artifactId>-->
-        <!--</dependency>-->
 
         <dependency>
             <groupId>org.apache.tomcat.embed</groupId>
