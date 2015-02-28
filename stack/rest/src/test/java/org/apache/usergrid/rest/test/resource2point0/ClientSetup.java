@@ -108,6 +108,8 @@ public class ClientSetup implements TestRule {
 
     public String getUsername(){return username;}
 
+    public String getEmail(){return username+"@usergrid.com";}
+
     public String getPassword(){return password;}
 
     public Organization getOrganization(){return organization;}

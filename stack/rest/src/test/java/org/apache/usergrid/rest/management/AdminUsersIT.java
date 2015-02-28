@@ -421,45 +421,23 @@ public class AdminUsersIT extends AbstractRestIT {
         return management().users().user( organization.getUsername() ).get();
 
     }
+
+
+    /**
+     * Check that we send the reactivate email after calling the reactivate endpoint.
+     * @throws Exception
+     */
+    @Test
+    public void reactivateTest() throws Exception {
+        //call reactivate endpoint on default user
+        clientSetup.getRestClient().management().users().user( clientSetup.getUsername() ).reactivate();
+        refreshIndex();
+
+        //Create mocked inbox
+        List<Message> inbox = Mailbox.get( clientSetup.getEmail());
+        assertFalse( inbox.isEmpty() );
+    }
     
-//
-//    @Test
-//    public void reactivateMultipleSend() throws Exception {
-//
-//        JsonNode node = mapper.readTree( resource().path( "/management/organizations" ).accept( MediaType.APPLICATION_JSON )
-//                                                   .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, buildOrgUserPayload( "reactivate" ) ));
-//
-//        logNode( node );
-//        String email = node.get( "data" ).get( "owner" ).get( "email" ).asText();
-//        String uuid = node.get( "data" ).get( "owner" ).get( "uuid" ).asText();
-//        assertNotNull( email );
-//        assertEquals( "MUUserResourceIT-reactivate@apigee.com", email );
-//
-//        refreshIndex(context.getOrgName(), context.getAppName());
-//
-//        // reactivate should send activation email
-//
-//        node = mapper.readTree( resource().path( String.format( "/management/users/%s/reactivate", uuid ) )
-//                                          .queryParam( "access_token", adminAccessToken ).accept( MediaType.APPLICATION_JSON )
-//                                          .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
-//
-//        refreshIndex(context.getOrgName(), context.getAppName());
-//
-//        List<Message> inbox = org.jvnet.mock_javamail.Mailbox.get( email );
-//
-//        assertFalse( inbox.isEmpty() );
-//        logNode( node );
-//    }
-//
-//
-//    private Map<String, String> buildOrgUserPayload( String caller ) {
-//        String className = this.getClass().getSimpleName();
-//        Map<String, String> payload = hashMap( "email", String.format( "%s-%s@apigee.com", className, caller ) )
-//                .map( "username", String.format( "%s-%s-user", className, caller ) )
-//                .map( "name", String.format( "%s %s", className, caller ) ).map( "password", "password" )
-//                .map( "organization", String.format( "%s-%s-org", className, caller ) );
-//        return payload;
-//    }
 //
 //
 //    @Test
