@@ -973,7 +973,7 @@ public class UserResourceIT extends AbstractRestIT {
         usersResource.post(new User("test_3", "Test3 User", "test_3@test.com", "test123")); // client.setApiUrl(apiUrl);
         refreshIndex();
 
-        Entity appInfo = this.app().get().getResponse().getEntities().get(0);
+        //Entity appInfo = this.app().get().getResponse().getEntities().get(0);
 
         Token token = this.app().token().post(new Token("test_1", "test123"));
 
