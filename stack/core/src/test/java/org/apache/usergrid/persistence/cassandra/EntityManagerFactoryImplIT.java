@@ -39,6 +39,7 @@ import org.apache.usergrid.persistence.cassandra.util.TraceTagManager;
 import org.apache.usergrid.persistence.cassandra.util.TraceTagReporter;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.setup.ConcurrentProcessSingleton;
+import rx.functions.Func0;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -97,7 +98,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
         // create an application with a collection and an entity
 
-        UUID applicationId = setup.createApplication( "test-org-" + rand, "test-app-" + rand );
+        final UUID applicationId = setup.createApplication( "test-org-" + rand, "test-app-" + rand );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
@@ -122,16 +123,35 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
         em.refreshIndex();
 
+        Func0<Boolean> func0 = new Func0<Boolean>() {
+            @Override
+            public Boolean call() {
+                try {
+                    boolean found = false;
+                    Map<String, UUID> deletedApps = emf.getDeletedApplications();
+                    for (String appName : deletedApps.keySet()) {
+                        UUID appId = deletedApps.get(appName);
+                        if (appId.equals(applicationId)) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    return found;
+                }catch (Exception e){
+                    throw new RuntimeException(e);
+                }
+            }
+        };
+
         boolean found = false;
-        Map<String, UUID> deletedApps = emf.getDeletedApplications();
-        for ( String appName : deletedApps.keySet() ) {
-            UUID appId = deletedApps.get( appName );
-            if ( appId.equals( applicationId )) {
-                found = true;
+        for(int i=0;i<5;i++){
+            found = func0.call();
+            if(found){
                 break;
+            } else{
+              Thread.sleep(100);
             }
         }
-
         assertTrue("Deleted app not found in deleted apps collection", found );
 
         // attempt to get entities in application's collections in various ways should all fail
@@ -159,26 +179,17 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
         // test to see that app now works and is happy
 
         // it should not be found in the deleted apps collection
-        found = false;
-        deletedApps = emf.getDeletedApplications();
-        for ( String appName : deletedApps.keySet() ) {
-            UUID appId = deletedApps.get( appName );
-            if ( appId.equals( applicationId )) {
-                found = true;
+        for(int i=0;i<5;i++){
+            found = func0.call();
+            if(!found){
                 break;
+            } else{
+                Thread.sleep(100);
             }
         }
         assertFalse("Restored app found in deleted apps collection", found);
 
-        found = false;
-        appMap = setup.getEmf().getApplications();
-        for ( String appName : appMap.keySet() ) {
-            UUID appId = appMap.get( appName );
-            if ( appId.equals( applicationId )) {
-                found = true;
-                break;
-            }
-        }
+        found = func0.call();
         assertTrue("Restored app not found in apps collection", found);
 
         // TODO: this assertion should work!

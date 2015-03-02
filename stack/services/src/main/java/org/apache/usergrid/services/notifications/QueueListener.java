@@ -41,7 +41,9 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
-
+/**
+ * Singleton listens for notifications queue messages
+ */
 public class QueueListener  {
     public  final int MESSAGE_TRANSACTION_TIMEOUT =  25 * 1000;
     private final QueueManagerFactory queueManagerFactory;
@@ -83,9 +85,7 @@ public class QueueListener  {
         this.metricsService = smf.getApplicationContext().getBean( Injector.class ).getInstance(MetricsFactory.class);
         this.properties = props;
         this.queueScopeFactory = smf.getApplicationContext().getBean( Injector.class ).getInstance(QueueScopeFactory.class);
-
     }
-
 
     /**
      * Start the service and begin consuming messages
@@ -99,6 +99,10 @@ public class QueueListener  {
             int threadCount = 0;
 
             try {
+                boolean shouldRun = new Boolean(properties.getProperty("usergrid.notifications.listener.run","true"));
+                if(!shouldRun){
+                    return;
+                }
                 sleepBetweenRuns = new Long(properties.getProperty("usergrid.notifications.listener.sleep.between", ""+sleepBetweenRuns)).longValue();
                 sleepWhenNoneFound = new Long(properties.getProperty("usergrid.notifications.listener.sleep.after", ""+DEFAULT_SLEEP)).longValue();
                 batchSize = new Integer(properties.getProperty("usergrid.notifications.listener.batchSize", (""+batchSize)));
