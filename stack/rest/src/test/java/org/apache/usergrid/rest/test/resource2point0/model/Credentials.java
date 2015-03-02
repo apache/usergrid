@@ -38,10 +38,10 @@ public class Credentials extends Entity {
     }
 
     public String getClientSecret() {
-        return (String) get("secret");
+        return (String) get("client_secret");
     }
 
     public String getClientId() {
-        return (String) get("id");
+        return (String) get("client_id");
     }
 }
