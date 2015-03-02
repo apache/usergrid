@@ -54,6 +54,10 @@ public class UserResource extends NamedResource {
         return new FeedResource( context, this );
     }
 
+    public ResetResource resetpw() {
+        return new ResetResource(context,this);
+    }
+
     public Entity get() {
         WebResource resource = getResource( true );
         ApiResponse response = resource.type( MediaType.APPLICATION_JSON_TYPE )

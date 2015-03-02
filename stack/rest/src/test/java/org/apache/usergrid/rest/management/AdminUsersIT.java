@@ -54,6 +54,7 @@ import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource2point0.model.Token;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.representation.Form;
@@ -424,7 +425,7 @@ public class AdminUsersIT extends AbstractRestIT {
 
 
     /**
-     * Check that we send the reactivate email after calling the reactivate endpoint.
+     * Check that we send the reactivate email to the user after calling the reactivate endpoint.
      * @throws Exception
      */
     @Test
@@ -433,47 +434,47 @@ public class AdminUsersIT extends AbstractRestIT {
         clientSetup.getRestClient().management().users().user( clientSetup.getUsername() ).reactivate();
         refreshIndex();
 
-        //Create mocked inbox
+        //Create mocked inbox and check to see if you recieved an email in the users inbox.
         List<Message> inbox = Mailbox.get( clientSetup.getEmail());
         assertFalse( inbox.isEmpty() );
     }
-    
-//
-//
-//    @Test
-//    public void checkPasswordReset() throws Exception {
-//
-//        refreshIndex(context.getOrgName(), context.getAppName());
-//
-//        TestUser user = context.getActiveUser();
-//
-//        String email = user.getEmail();
-//        UserInfo userInfo = setup.getMgmtSvc().getAdminUserByEmail( email );
-//        String resetToken = setup.getMgmtSvc().getPasswordResetTokenForAdminUser( userInfo.getUuid(), 15000 );
-//
-//        assertTrue( setup.getMgmtSvc().checkPasswordResetTokenForAdminUser( userInfo.getUuid(), resetToken ) );
-//
-//        refreshIndex(context.getOrgName(), context.getAppName());
-//
-//        Form formData = new Form();
-//        formData.add( "token", resetToken );
-//        formData.add( "password1", "sesame" );
-//        formData.add( "password2", "sesame" );
-//
-//        String html = resource().path( "/management/users/" + userInfo.getUsername() + "/resetpw" )
-//                                .type( MediaType.APPLICATION_FORM_URLENCODED_TYPE ).post( String.class, formData );
-//
-//        assertTrue( html.contains( "password set" ) );
-//
-//        refreshIndex(context.getOrgName(), context.getAppName());
-//
-//        assertFalse( setup.getMgmtSvc().checkPasswordResetTokenForAdminUser( userInfo.getUuid(), resetToken ) );
-//
-//        html = resource().path( "/management/users/" + userInfo.getUsername() + "/resetpw" )
-//                         .type( MediaType.APPLICATION_FORM_URLENCODED_TYPE ).post( String.class, formData );
-//
-//        assertTrue( html.contains( "invalid token" ) );
-//    }
+
+    @Ignore("Test is broken due to viewables not being properly returned in the embedded tomcat")
+    @Test
+    public void checkFormPasswordReset() throws Exception {
+
+
+        String errors = management().users().user( clientSetup.getUsername() ).resetpw().post(null);
+
+
+        //Create mocked inbox
+        List<Message> inbox = Mailbox.get( clientSetup.getEmail() );
+        assertFalse( inbox.isEmpty() );
+
+        MockImapClient client = new MockImapClient( "mockserver.com", "test-user-46", "somepassword" );
+        client.processMail();
+
+        //Get email with confirmation token and extract token
+        Message confirmation = inbox.get( 0 );
+        assertEquals( "User Account Confirmation: " + clientSetup.getEmail(), confirmation.getSubject() );
+        String token = getTokenFromMessage( confirmation );
+
+        Form formData = new Form();
+        formData.add( "token", token );
+        formData.add( "password1", "sesame" );
+        formData.add( "password2", "sesame" );
+
+        String html = management().users().user( clientSetup.getUsername() ).resetpw().post( formData );
+
+        assertTrue( html.contains( "password set" ) );
+
+        refreshIndex();
+
+
+        html = management().users().user( clientSetup.getUsername() ).resetpw().post( formData );
+
+        assertTrue( html.contains( "invalid token" ) );
+    }
 //
 //
 //    @Test
@@ -504,63 +505,52 @@ public class AdminUsersIT extends AbstractRestIT {
 //    }
 //
 //
-//    @Test
-//    public void checkPasswordHistoryConflict() throws Exception {
-//
-//        String[] passwords = new String[] { "password1", "password2", "password3", "password4" };
-//
-//        UserInfo user =
-//                setup.getMgmtSvc().createAdminUser( "edanuff", "Ed Anuff", "ed@anuff.com", passwords[0], true, false );
-//        assertNotNull( user );
-//
-//        refreshIndex(context.getOrgName(), context.getAppName());
-//
-//        OrganizationInfo organization = setup.getMgmtSvc().createOrganization( "ed-organization", user, true );
-//        assertNotNull( organization );
-//
-//        refreshIndex(context.getOrgName(), context.getAppName());
-//
-//        // set history to 1
-//        Map<String, Object> props = new HashMap<String, Object>();
-//        props.put( OrganizationInfo.PASSWORD_HISTORY_SIZE_KEY, 1 );
-//        organization.setProperties( props );
-//        setup.getMgmtSvc().updateOrganization( organization );
-//
-//        refreshIndex(context.getOrgName(), context.getAppName());
-//
-//        UserInfo userInfo = setup.getMgmtSvc().getAdminUserByEmail( "ed@anuff.com" );
-//
-//        Map<String, String> payload = hashMap( "oldpassword", passwords[0] ).map( "newpassword", passwords[0] ); // fail
-//
-//        try {
-//            JsonNode node = mapper.readTree( resource().path( "/management/users/edanuff/password" )
-//                                                       .accept( MediaType.APPLICATION_JSON )
-//                                                       .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
-//            fail( "should fail with conflict" );
-//        }
-//        catch ( UniformInterfaceException e ) {
-//            assertEquals( 409, e.getResponse().getStatus() );
-//        }
-//
-//        payload.put( "newpassword", passwords[1] ); // ok
-//        JsonNode node = mapper.readTree( resource().path( "/management/users/edanuff/password" )
-//                                                   .accept( MediaType.APPLICATION_JSON )
-//                                                   .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
-//        payload.put( "oldpassword", passwords[1] );
-//
-//        refreshIndex(context.getOrgName(), context.getAppName());
-//
-//        payload.put( "newpassword", passwords[0] ); // fail
-//        try {
-//            node = mapper.readTree( resource().path( "/management/users/edanuff/password" )
-//                                              .accept( MediaType.APPLICATION_JSON )
-//                                              .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
-//            fail( "should fail with conflict" );
-//        }
-//        catch ( UniformInterfaceException e ) {
-//            assertEquals( 409, e.getResponse().getStatus() );
-//        }
-//    }
+    @Test
+    public void checkPasswordHistoryConflict() throws Exception {
+
+        String[] passwords = new String[] { clientSetup.getPassword(), "password2" };
+
+        //set the number of old passwords stored to 1
+        Map<String, Object> props = new HashMap<String, Object>();
+        props.put( "passwordHistorySize", 1 );
+        Organization orgPropertiesPayload = new Organization(  );
+
+        orgPropertiesPayload.put("properties", props);
+
+        management().orgs().organization( clientSetup.getOrganizationName() ).put( orgPropertiesPayload );
+
+        //Creates a payload with the same password to verify we cannot change the password to itself.
+         Map<String, Object> payload = new HashMap<>(  );
+         payload.put("oldpassword",passwords[0]);
+         payload.put("newpassword",passwords[0]); //hashMap( "oldpassword", passwords[0] ).map( "newpassword", passwords[0] ); // fail
+
+        try {
+            management().users().user( clientSetup.getUsername() ).password().post( payload );
+
+            fail( "should fail with conflict" );
+        }
+        catch ( UniformInterfaceException e ) {
+            assertEquals( 409, e.getResponse().getStatus() );
+        }
+
+        payload.put( "newpassword", passwords[1] );
+        management().users().user( clientSetup.getUsername() ).password().post( payload );
+
+        refreshIndex();
+
+        payload.put("newpassword",passwords[0]);
+        payload.put( "oldpassword", passwords[1] );
+
+
+        try {
+            management().users().user( clientSetup.getUsername() ).password().post( payload );
+
+            fail( "should fail with conflict" );
+        }
+        catch ( UniformInterfaceException e ) {
+            assertEquals( 409, e.getResponse().getStatus() );
+        }
+    }
 //
 //
 //    @Test
