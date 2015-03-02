@@ -189,7 +189,15 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
         }
         assertFalse("Restored app found in deleted apps collection", found);
 
-        found = func0.call();
+        found = false;
+        appMap = setup.getEmf().getApplications();
+        for ( String appName : appMap.keySet() ) {
+            UUID appId = appMap.get( appName );
+            if ( appId.equals( applicationId )) {
+                found = true;
+                break;
+            }
+        }
         assertTrue("Restored app not found in apps collection", found);
 
         // TODO: this assertion should work!
