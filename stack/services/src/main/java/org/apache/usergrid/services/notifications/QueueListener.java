@@ -99,10 +99,7 @@ public class QueueListener  {
             int threadCount = 0;
 
             try {
-                boolean shouldRun = new Boolean(properties.getProperty("usergrid.notifications.listener.run","true"));
-                if(!shouldRun){
-                    return;
-                }
+
                 sleepBetweenRuns = new Long(properties.getProperty("usergrid.notifications.listener.sleep.between", ""+sleepBetweenRuns)).longValue();
                 sleepWhenNoneFound = new Long(properties.getProperty("usergrid.notifications.listener.sleep.after", ""+DEFAULT_SLEEP)).longValue();
                 batchSize = new Integer(properties.getProperty("usergrid.notifications.listener.batchSize", (""+batchSize)));
@@ -135,10 +132,6 @@ public class QueueListener  {
                 LOG.error("QueueListener: failed to start:", e);
             }
             LOG.info("QueueListener: done starting.");
-//        }else{
-//            LOG.info("QueueListener: never started due to config value usergrid.notifications.listener.run.");
-//        }
-
     }
 
     private void execute(){

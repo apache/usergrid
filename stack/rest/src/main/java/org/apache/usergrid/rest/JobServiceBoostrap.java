@@ -18,6 +18,7 @@ package org.apache.usergrid.rest;
 
 import org.apache.usergrid.batch.service.JobSchedulerService;
 import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.services.notifications.QueueListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +45,9 @@ public class JobServiceBoostrap implements
     @Autowired
     private Properties properties;
 
+    @Autowired
+    private QueueListener notificationsQueueListener;
+
     public JobServiceBoostrap() {
     }
 
@@ -65,6 +69,14 @@ public class JobServiceBoostrap implements
         } else {
             logger.info( "Scheduler Service disabled" );
         }
+
+        boolean shouldRun = new Boolean(properties.getProperty("usergrid.notifications.listener.run","true"));
+        if(shouldRun){
+            notificationsQueueListener.start();
+        }else{
+            logger.info("QueueListener: never started due to config value usergrid.notifications.listener.run.");
+        }
+
     }
 
 }

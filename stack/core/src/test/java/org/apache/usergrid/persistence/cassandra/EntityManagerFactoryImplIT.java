@@ -40,6 +40,7 @@ import org.apache.usergrid.persistence.cassandra.util.TraceTagReporter;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.setup.ConcurrentProcessSingleton;
 import rx.functions.Func0;
+import rx.functions.Func1;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -123,12 +124,11 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
         em.refreshIndex();
 
-        Func0<Boolean> func0 = new Func0<Boolean>() {
+        Func1< Map<String, UUID> ,Boolean> findDeletedApps = new Func1<Map<String, UUID> ,Boolean>() {
             @Override
-            public Boolean call() {
+            public Boolean call( Map<String, UUID> deletedApps) {
                 try {
                     boolean found = false;
-                    Map<String, UUID> deletedApps = emf.getDeletedApplications();
                     for (String appName : deletedApps.keySet()) {
                         UUID appId = deletedApps.get(appName);
                         if (appId.equals(applicationId)) {
@@ -145,11 +145,11 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
         boolean found = false;
         for(int i=0;i<5;i++){
-            found = func0.call();
+            found = findDeletedApps.call(emf.getDeletedApplications());
             if(found){
                 break;
             } else{
-              Thread.sleep(100);
+              Thread.sleep(500);
             }
         }
         assertTrue("Deleted app not found in deleted apps collection", found );
@@ -180,22 +180,21 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
         // it should not be found in the deleted apps collection
         for(int i=0;i<5;i++){
-            found = func0.call();
+            found = findDeletedApps.call(emf.getDeletedApplications());
             if(!found){
                 break;
             } else{
-                Thread.sleep(100);
+                Thread.sleep(500);
             }
         }
         assertFalse("Restored app found in deleted apps collection", found);
 
-        found = false;
-        appMap = setup.getEmf().getApplications();
-        for ( String appName : appMap.keySet() ) {
-            UUID appId = appMap.get( appName );
-            if ( appId.equals( applicationId )) {
-                found = true;
+        for(int i=0;i<5;i++){
+            found = findDeletedApps.call(setup.getEmf().getApplications());
+            if(!found){
                 break;
+            } else{
+                Thread.sleep(500);
             }
         }
         assertTrue("Restored app not found in apps collection", found);
