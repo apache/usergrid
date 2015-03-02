@@ -90,7 +90,7 @@ public class MvccEntitySerializationStrategyV1Impl extends MvccEntitySerializati
 
     @Override
     public int getImplementationVersion() {
-        return CollectionDataVersions.ONE.getVersion();
+        return CollectionDataVersions.ZERO.getVersion();
     }
 
 

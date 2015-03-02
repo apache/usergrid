@@ -42,10 +42,10 @@ public interface MigrationPlugin {
      */
     public void run(ProgressObserver observer);
 
+
     /**
-     * Get the maximum migration version this plugin implements
+     * Get the max version this plugin supports
      * @return
      */
-    public int getMaxVersion();
-
+    int getMaxVersion();
 }

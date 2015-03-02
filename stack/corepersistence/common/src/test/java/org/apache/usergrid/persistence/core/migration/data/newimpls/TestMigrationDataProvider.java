@@ -24,35 +24,38 @@
 package org.apache.usergrid.persistence.core.migration.data.newimpls;
 
 
+import java.util.Collection;
+
+import rx.Observable;
+
+
 /**
- * Data migration.  The internal version to migrate
- *
+ * A simple test class that will emit the provided test data when subscribed
  * @param <T>
  */
-public interface DataMigration2<T> {
+public class TestMigrationDataProvider<T> implements MigrationDataProvider<T> {
+
+
+
+    //default to nothing so that we don't return null
+    private Observable<T> observable = Observable.empty();
+
+
+    public TestMigrationDataProvider(  ) {}
+
+
+    @Override
+    public Observable<T> getData() {
+       return observable;
+    }
+
 
     /**
-     * Perform the migration, returning an observable with a single emitted value
-     * @param currentVersion the current version of the system
-     * @param migrationDataProvider
-     * @param observer The observer to receive updates of the progress
+     * Set this observable to return when invoked
      *
-     * @return The version that the system is now running
+     * @param observable
      */
-    public int migrate(final int currentVersion, MigrationDataProvider<T> migrationDataProvider, ProgressObserver observer);
-
-    /**
-     * Check if this version supports migration from the current system version.  If this returns false,
-     * migrate will not be invoked
-     * @return
-     */
-    public boolean supports(final int currentVersion);
-
-    /**
-     * Get the max version this migration can migrate to
-     * @return
-     */
-    public int getMaxVersion();
-
-
+    public void setObservable( final Observable<T> observable ) {
+        this.observable = observable;
+    }
 }

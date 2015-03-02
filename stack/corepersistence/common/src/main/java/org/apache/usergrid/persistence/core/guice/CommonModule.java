@@ -76,6 +76,8 @@ public class CommonModule extends AbstractModule {
         bind( DataMigrationManager.class ).to( DataMigrationManagerImpl.class );
 
 
+        bind (MigrationInfoCache.class).to( MigrationInfoCacheImpl.class );
+
 
         //do multibindings for migrations
         //create the empty multibinder so other plugins can use it

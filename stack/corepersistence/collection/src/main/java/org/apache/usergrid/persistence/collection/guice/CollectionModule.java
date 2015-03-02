@@ -55,7 +55,7 @@ import com.google.inject.multibindings.Multibinder;
  *
  * @author tnine
  */
-public class CollectionModule extends AbstractModule {
+public abstract class CollectionModule extends AbstractModule {
 
 
     @Override
@@ -85,6 +85,8 @@ public class CollectionModule extends AbstractModule {
 
         bind( UniqueValueSerializationStrategy.class ).to( UniqueValueSerializationStrategyImpl.class );
         bind( ChangeLogGenerator.class).to( ChangeLogGeneratorImpl.class);
+
+        configureMigrationProvider();
 
     }
 
@@ -118,6 +120,14 @@ public class CollectionModule extends AbstractModule {
         return new NamedTaskExecutorImpl( "collectiontasks",
                 serializationFig.getTaskPoolThreadSize(), serializationFig.getTaskPoolQueueSize() );
     }
+
+
+    /**
+     * Gives callers the ability to to configure an instance of
+     *
+     * MigrationDataProvider<EntityIdScope> for providing data migrations
+     */
+    public abstract void configureMigrationProvider();
 
 
 

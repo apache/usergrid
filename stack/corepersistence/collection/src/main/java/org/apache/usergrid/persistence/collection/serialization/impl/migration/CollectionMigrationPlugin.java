@@ -26,6 +26,11 @@ package org.apache.usergrid.persistence.collection.serialization.impl.migration;
 
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.apache.usergrid.persistence.core.migration.data.DataMigrationException;
+import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerialization;
 import org.apache.usergrid.persistence.core.migration.data.newimpls.DataMigration2;
 import org.apache.usergrid.persistence.core.migration.data.newimpls.MigrationDataProvider;
 import org.apache.usergrid.persistence.core.migration.data.newimpls.MigrationPlugin;
@@ -42,17 +47,22 @@ import com.google.inject.Singleton;
 public class CollectionMigrationPlugin implements MigrationPlugin {
 
 
-    public static final String PLUGIN_NAME =  "collections-entity-data";
+    private static final Logger LOG = LoggerFactory.getLogger( CollectionMigrationPlugin.class );
 
-    private final DataMigration2<EntityIdScope> entityDataMigration;
+    public static final String PLUGIN_NAME = "collections-entity-data";
+
+    private final Set<DataMigration2<EntityIdScope>> entityDataMigrations;
     private final MigrationDataProvider<EntityIdScope> entityIdScopeDataMigrationProvider;
+    private final MigrationInfoSerialization migrationInfoSerialization;
 
 
     @Inject
-    public CollectionMigrationPlugin( final DataMigration2<EntityIdScope> entityDataMigration,
-                                      final MigrationDataProvider<EntityIdScope> entityIdScopeDataMigrationProvider ) {
-        this.entityDataMigration = entityDataMigration;
+    public CollectionMigrationPlugin( final Set<DataMigration2<EntityIdScope>> entityDataMigrations,
+                                      final MigrationDataProvider<EntityIdScope> entityIdScopeDataMigrationProvider,
+                                      final MigrationInfoSerialization migrationInfoSerialization ) {
+        this.entityDataMigrations = entityDataMigrations;
         this.entityIdScopeDataMigrationProvider = entityIdScopeDataMigrationProvider;
+        this.migrationInfoSerialization = migrationInfoSerialization;
     }
 
 
@@ -64,12 +74,66 @@ public class CollectionMigrationPlugin implements MigrationPlugin {
 
     @Override
     public void run( final ProgressObserver observer ) {
-       entityDataMigration.migrate( entityIdScopeDataMigrationProvider, observer );
+
+        //run until complete
+        while(runMigration( observer )){
+         LOG.info( "Migration complete, checking for next run" );
+        }
+
     }
 
 
     @Override
     public int getMaxVersion() {
-        return 0;
+
+        int max = 0;
+
+        for(DataMigration2<EntityIdScope> entityMigration: entityDataMigrations){
+            max = Math.max( max, entityMigration.getMaxVersion() );
+        }
+
+        return max;
+    }
+
+
+    /**
+     * Try to run the migration
+     *
+     * @return True if we ran a migration
+     */
+    private boolean runMigration( final ProgressObserver po ) {
+        DataMigration2<EntityIdScope> migrationToExecute = null;
+
+
+        final int version = migrationInfoSerialization.getVersion( PLUGIN_NAME );
+
+        for ( DataMigration2<EntityIdScope> entityMigration : entityDataMigrations ) {
+            if ( entityMigration.supports( version ) ) {
+                if ( migrationToExecute != null ) {
+                    throw new DataMigrationException(
+                            "Two migrations attempted to migration the same version, this is not allowed.  Class '"
+                                    + migrationToExecute.getClass().getName() + "' and class '" + entityMigration
+                                    .getClass().getName()
+                                    + "' both support this version. This means something is wired incorrectly" );
+                }
+
+                migrationToExecute = entityMigration;
+            }
+        }
+
+        if(migrationToExecute == null){
+            LOG.info( "No migrations found to execute" );
+            return false;
+        }
+
+        //run the migration
+        final int newSystemVersion = migrationToExecute.migrate( version, entityIdScopeDataMigrationProvider, po );
+
+        migrationInfoSerialization.setVersion( PLUGIN_NAME, newSystemVersion );
+
+        //signal we've run a migration and return
+        return true;
+
+
     }
 }

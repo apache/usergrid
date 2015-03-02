@@ -28,9 +28,9 @@ package org.apache.usergrid.persistence.collection.serialization.impl;
  * Versions of data as they exist across our system
  */
 public enum CollectionDataVersions{
+    ZERO(0),
     ONE(1),
-    TWO(2),
-    THREE(3);
+    TWO(2);
 
     private final int version;
 

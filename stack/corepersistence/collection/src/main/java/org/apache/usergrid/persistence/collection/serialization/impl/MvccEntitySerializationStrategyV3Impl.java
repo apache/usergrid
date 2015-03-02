@@ -383,7 +383,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
     @Override
     public int getImplementationVersion() {
-        return CollectionDataVersions.THREE.getVersion();
+        return CollectionDataVersions.TWO.getVersion();
     }
 
 

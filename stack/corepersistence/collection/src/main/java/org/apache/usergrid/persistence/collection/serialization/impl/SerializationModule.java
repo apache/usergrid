@@ -34,7 +34,7 @@ import org.apache.usergrid.persistence.core.migration.schema.Migration;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Key;
-import com.google.inject.Provides;
+import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
@@ -54,26 +54,32 @@ public class SerializationModule extends AbstractModule {
         //We've migrated this one, so we need to set up the previous, current, and proxy
 
 
-        bind(MvccEntitySerializationStrategy.class).annotatedWith( ProxyImpl.class ).to( MvccEntitySerializationStrategyProxyImpl.class );
-
-
+        bind( MvccEntitySerializationStrategy.class ).annotatedWith( ProxyImpl.class )
+                                                     .to( MvccEntitySerializationStrategyProxyImpl.class );
 
 
         //bind all 3 implementations
-        bind(MvccEntitySerializationStrategyV1Impl.class);
-        bind(MvccEntitySerializationStrategyV2Impl.class);
-        bind(MvccEntitySerializationStrategyV3Impl.class);
+        bind( MvccEntitySerializationStrategyV1Impl.class );
+        bind( MvccEntitySerializationStrategyV2Impl.class );
+        bind( MvccEntitySerializationStrategyV3Impl.class );
 
+
+        bind( new TypeLiteral<VersionedMigrationSet<MvccEntitySerializationStrategy>>() {} )
+                .toProvider( MvccEntitySerializationStrategyProvider.class );
 
 
         //migrations
         //we want to make sure our generics are retained, so we use a typeliteral
-        Multibinder<DataMigration2<EntityIdScope>> dataMigrationMultibinder =  Multibinder.newSetBinder( binder(), new TypeLiteral<DataMigration2<EntityIdScope>>(){});
+        Multibinder<DataMigration2<EntityIdScope>> dataMigrationMultibinder =
+                Multibinder.newSetBinder( binder(), new TypeLiteral<DataMigration2<EntityIdScope>>() {} );
+
+
         dataMigrationMultibinder.addBinding().to( MvccEntityDataMigrationImpl.class );
 
 
         //wire up the collection migration plugin
-        Multibinder.newSetBinder( binder(), MigrationPlugin.class).addBinding().to( CollectionMigrationPlugin.class );
+        Multibinder.newSetBinder( binder(), MigrationPlugin.class ).addBinding().to( CollectionMigrationPlugin.class );
+
 
 
 
@@ -90,39 +96,53 @@ public class SerializationModule extends AbstractModule {
 
 
         //bind our settings as an eager singleton so it's checked on startup
-        bind(SettingsValidation.class).asEagerSingleton();
+        bind( SettingsValidation.class ).asEagerSingleton();
     }
 
 
-    /**
-     * Configure via explicit declaration the migration path we can follow
-     * @param v1
-     * @param v2
-     * @param v3
-     * @return
-     */
     @Singleton
-    @Inject
-    @Provides
-    public VersionedMigrationSet<MvccEntitySerializationStrategy> getVersions(final MvccEntitySerializationStrategyV1Impl v1, final MvccEntitySerializationStrategyV2Impl v2, final MvccEntitySerializationStrategyV3Impl v3){
+    public static final class MvccEntitySerializationStrategyProvider
+            implements Provider<VersionedMigrationSet<MvccEntitySerializationStrategy>> {
 
 
-        //we must perform a migration from v1 to v3 in order to maintain consistency
-        MigrationRelationship<MvccEntitySerializationStrategy> v1Tov3 = new MigrationRelationship<>( v1, v3 );
-
-        //we must migrate from 2 to 3, this is a bridge that must happen to maintain data consistency
-
-        MigrationRelationship<MvccEntitySerializationStrategy> v2Tov3 = new MigrationRelationship<>( v2, v3 );
+        private final MvccEntitySerializationStrategyV1Impl v1;
+        private final MvccEntitySerializationStrategyV2Impl v2;
+        private final MvccEntitySerializationStrategyV3Impl v3;
 
 
-        //note that we MUST migrate to v3 before our next migration, if v4 and v5 is implemented we will need a v3->v5 and a v4->v5 set
-        MigrationRelationship<MvccEntitySerializationStrategy> current = new MigrationRelationship<MvccEntitySerializationStrategy>( v3, v3 );
+        @Inject
+        public MvccEntitySerializationStrategyProvider( final MvccEntitySerializationStrategyV1Impl v1,
+                                                         final MvccEntitySerializationStrategyV2Impl v2,
+                                                         final MvccEntitySerializationStrategyV3Impl v3 ) {
+            this.v1 = v1;
+            this.v2 = v2;
+            this.v3 = v3;
+        }
 
 
-        //now create our set of versions
-        VersionedMigrationSet<MvccEntitySerializationStrategy> set = new VersionedMigrationSet<>( v1Tov3, v2Tov3, current );
+        @Override
+        public VersionedMigrationSet<MvccEntitySerializationStrategy> get() {
 
-        return set;
+            //we must perform a migration from v1 to v3 in order to maintain consistency
+            MigrationRelationship<MvccEntitySerializationStrategy> v1Tov3 = new MigrationRelationship<>( v1, v3 );
 
+            //we must migrate from 2 to 3, this is a bridge that must happen to maintain data consistency
+
+            MigrationRelationship<MvccEntitySerializationStrategy> v2Tov3 = new MigrationRelationship<>( v2, v3 );
+
+
+            //note that we MUST migrate to v3 before our next migration, if v4 and v5 is implemented we will need a
+            // v3->v5 and a v4->v5 set
+            MigrationRelationship<MvccEntitySerializationStrategy> current =
+                    new MigrationRelationship<MvccEntitySerializationStrategy>( v3, v3 );
+
+
+            //now create our set of versions
+            VersionedMigrationSet<MvccEntitySerializationStrategy> set =
+                    new VersionedMigrationSet<>( v1Tov3, v2Tov3, current );
+
+
+            return set;
+        }
     }
 }
