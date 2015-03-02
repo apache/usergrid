@@ -24,6 +24,7 @@ import org.apache.usergrid.rest.test.resource2point0.model.Organization;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 import javax.ws.rs.core.MediaType;
+import java.util.List;
 import java.util.Map;
 
 
@@ -81,9 +82,10 @@ public class OrganizationResource extends NamedResource {
         return new CredentialsResource(context, this);
     }
 
-    public ApplicationResource apps(String appName){
-        return new ApplicationResource(  appName, context ,this );
+    public ApplicationsResource apps() {
+        return new ApplicationsResource( context, this );
     }
+
 
     public ApplicationResource addToPath( String pathPart ) {
         return new ApplicationResource( pathPart, context, this );
