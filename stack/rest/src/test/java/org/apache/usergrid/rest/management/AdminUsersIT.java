@@ -17,21 +17,15 @@
 
 package org.apache.usergrid.rest.management;
 
-
-/**
- * Created by ApigeeCorporation on 9/17/14.
- */
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMultipart;
-import javax.ws.rs.core.MediaType;
 
 import org.junit.Before;
 import org.junit.Ignore;
@@ -40,14 +34,11 @@ import org.junit.Test;
 import org.jvnet.mock_javamail.Mailbox;
 
 
-import org.apache.commons.collections4.map.LinkedMap;
 
 import org.apache.usergrid.management.MockImapClient;
 import org.apache.usergrid.persistence.index.utils.StringUtils;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
-import org.apache.usergrid.rest.test.resource2point0.RestClient;
-import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.*;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.ManagementResource;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
@@ -60,17 +51,14 @@ import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.representation.Form;
 
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_NOTIFY_ADMIN_OF_ACTIVATION;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_EMAIL;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_TEST_ACCOUNT_ADMIN_USER_EMAIL;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_TEST_ACCOUNT_ADMIN_USER_PASSWORD;
-import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -444,7 +432,7 @@ public class AdminUsersIT extends AbstractRestIT {
     public void checkFormPasswordReset() throws Exception {
 
 
-        String errors = management().users().user( clientSetup.getUsername() ).resetpw().post(null);
+        management().users().user( clientSetup.getUsername() ).resetpw().post(null);
 
 
         //Create mocked inbox
@@ -476,7 +464,7 @@ public class AdminUsersIT extends AbstractRestIT {
         assertTrue( html.contains( "invalid token" ) );
     }
 //
-//
+//     TODO: will work once resetpw viewables work
 //    @Test
 //    @Ignore( "causes problems in build" )
 //    public void passwordResetIncorrectUserName() throws Exception {
@@ -551,8 +539,8 @@ public class AdminUsersIT extends AbstractRestIT {
             assertEquals( 409, e.getResponse().getStatus() );
         }
     }
-//
-//
+
+      //TODO: won't work until resetpw viewables are fixed in the embedded enviroment.
 //    @Test
 //    public void checkPasswordChangeTime() throws Exception {
 //
@@ -610,54 +598,45 @@ public class AdminUsersIT extends AbstractRestIT {
 //    }
 //
 //
-//    /** USERGRID-1960 */
-//    @Test
-//    @Ignore( "Depends on other tests" )
-//    public void listOrgUsersByName() {
-//        JsonNode response = context.management().orgs().organization( context.getOrgName() ).users().get();
-//
-//        //get the response and verify our user is there
-//        JsonNode adminNode = response.get( "data" ).get( 0 );
-//        assertEquals( context.getActiveUser().getEmail(), adminNode.get( "email" ).asText() );
-//        assertEquals( context.getActiveUser().getUser(), adminNode.get( "username" ).asText() );
-//    }
-//
-//    @Test
-//    public void createOrgFromUserConnectionFail() throws Exception {
-//
-//
-//        Map<String, String> payload = hashMap( "email", "orgfromuserconn@apigee.com" ).map( "password", "password" )
-//                                                                                      .map( "organization", "orgfromuserconn" );
-//
-//        JsonNode node = mapper.readTree( resource().path( "/management/organizations" ).accept( MediaType.APPLICATION_JSON )
-//                                                   .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
-//
-//        String userId = node.get( "data" ).get( "owner" ).get( "uuid" ).asText();
-//
-//        assertNotNull( node );
-//
-//        String token = mgmtToken( "orgfromuserconn@apigee.com", "password" );
-//
-//        node = mapper.readTree( resource().path( String.format( "/management/users/%s/", userId ) ).queryParam( "access_token", token )
-//                                          .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
-//
-//        logNode( node );
-//
-//        payload = hashMap( "organization", "Orgfromuserconn" );
-//
-//        // try to create the same org again off the connection
-//        try {
-//            node = mapper.readTree( resource().path( String.format( "/management/users/%s/organizations", userId ) )
-//                                              .queryParam( "access_token", token ).accept( MediaType.APPLICATION_JSON )
-//                                              .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
-//            fail( "Should have thrown unique exception on org name" );
-//        }
-//        catch ( Exception ex ) {
-//        }
-//    }
+    /** USERGRID-1960 */
+    @Test
+    public void listOrgUsersByName() {
+
+        Entity adminUserPayload = new Entity();
+        String username = "listOrgUsersByName"+UUIDUtils.newTimeUUID();
+        adminUserPayload.put( "username", username );
+        adminUserPayload.put( "name", username );
+        adminUserPayload.put( "email", username+"@usergrid.com" );
+        adminUserPayload.put( "password", username );
+
+        management().orgs().organization( clientSetup.getOrganizationName() ).users().post( adminUserPayload );
+
+        refreshIndex();
+
+        Entity adminUsers = management().orgs().organization( clientSetup.getOrganizationName() ).users().get();
+
+        assertEquals("There need to be 2 admin users",2,( ( ArrayList ) adminUsers.getResponse().getData() ).size());
+
+    }
+
+    //TODO: figure out what is the expected behavior from this test. While it fails it is not sure what it should return
+    @Test
+    public void createOrgFromUserConnectionFail() throws Exception {
+
+        Token token = management().token().post( new Token( clientSetup.getUsername(),clientSetup.getPassword() ) );
+        // try to create the same org again off the connection
+        try {
+            management().users().user( clientSetup.getUsername() ).organizations().post( clientSetup.getOrganization(),token );
+
+            fail( "Should have thrown unique exception on org name" );
+        }
+        catch ( UniformInterfaceException uie ) {
+            assertEquals(500,uie.getResponse().getStatus());
+        }
+    }
 
     /**
-     * Create an organization payload with almost the same value for everyfield.
+     * Create an organization payload with almost the same value for every field.
      * @param baseName
      * @param properties
      * @return

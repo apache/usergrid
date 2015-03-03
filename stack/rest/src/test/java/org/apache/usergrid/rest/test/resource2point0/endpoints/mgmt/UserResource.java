@@ -58,6 +58,10 @@ public class UserResource extends NamedResource {
         return new ResetResource(context,this);
     }
 
+    public OrgResource organizations() {
+        return new OrgResource( context, this );
+    }
+
     public Entity get() {
         WebResource resource = getResource( true );
         ApiResponse response = resource.type( MediaType.APPLICATION_JSON_TYPE )

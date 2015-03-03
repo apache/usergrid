@@ -62,4 +62,11 @@ public class UsersResource extends NamedResource {
         return new Entity(response);
     }
 
+    public Entity get() {
+        WebResource resource = getResource(true);
+
+        ApiResponse response = resource.type( MediaType.APPLICATION_JSON_TYPE )
+                                       .accept( MediaType.APPLICATION_JSON ).get( ApiResponse.class);
+        return new Entity(response);
+    }
 }
