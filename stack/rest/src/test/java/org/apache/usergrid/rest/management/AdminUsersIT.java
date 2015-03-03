@@ -493,6 +493,12 @@ public class AdminUsersIT extends AbstractRestIT {
 //    }
 //
 //
+
+
+    /**
+     * Checks that the passwords are stored in the history and that older ones are overwritten.
+     * @throws Exception
+     */
     @Test
     public void checkPasswordHistoryConflict() throws Exception {
 
@@ -512,6 +518,7 @@ public class AdminUsersIT extends AbstractRestIT {
          payload.put("oldpassword",passwords[0]);
          payload.put("newpassword",passwords[0]); //hashMap( "oldpassword", passwords[0] ).map( "newpassword", passwords[0] ); // fail
 
+        //Makes sure we can't replace a password with itself ( as it is the only one in the history )
         try {
             management().users().user( clientSetup.getUsername() ).password().post( payload );
 
@@ -521,6 +528,7 @@ public class AdminUsersIT extends AbstractRestIT {
             assertEquals( 409, e.getResponse().getStatus() );
         }
 
+        //Change the password
         payload.put( "newpassword", passwords[1] );
         management().users().user( clientSetup.getUsername() ).password().post( payload );
 
@@ -529,7 +537,7 @@ public class AdminUsersIT extends AbstractRestIT {
         payload.put("newpassword",passwords[0]);
         payload.put( "oldpassword", passwords[1] );
 
-
+        //Make sure that we can't change the password with itself using a different entry in the history.
         try {
             management().users().user( clientSetup.getUsername() ).password().post( payload );
 
@@ -598,7 +606,11 @@ public class AdminUsersIT extends AbstractRestIT {
 //    }
 //
 //
-    /** USERGRID-1960 */
+
+
+    /**
+     * Make sure we can list the org admin users by name.
+      */
     @Test
     public void listOrgUsersByName() {
 
@@ -609,16 +621,23 @@ public class AdminUsersIT extends AbstractRestIT {
         adminUserPayload.put( "email", username+"@usergrid.com" );
         adminUserPayload.put( "password", username );
 
+        //post new admin user besides the default
         management().orgs().organization( clientSetup.getOrganizationName() ).users().post( adminUserPayload );
 
         refreshIndex();
 
+        //Retrieves the admin users
         Entity adminUsers = management().orgs().organization( clientSetup.getOrganizationName() ).users().get();
 
         assertEquals("There need to be 2 admin users",2,( ( ArrayList ) adminUsers.getResponse().getData() ).size());
 
     }
 
+
+    /**
+     * Makes sure you can't create a already existing organization from a user connection.
+     * @throws Exception
+     */
     //TODO: figure out what is the expected behavior from this test. While it fails it is not sure what it should return
     @Test
     public void createOrgFromUserConnectionFail() throws Exception {
