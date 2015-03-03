@@ -115,6 +115,7 @@ public abstract class AbstractMigrationPlugin<T> implements MigrationPlugin {
         //run the migration
         final int newSystemVersion = migrationToExecute.migrate( version, entityIdScopeDataMigrationProvider, po );
 
+        //write the version
         migrationInfoSerialization.setVersion( getName(), newSystemVersion );
 
         //signal we've run a migration and return

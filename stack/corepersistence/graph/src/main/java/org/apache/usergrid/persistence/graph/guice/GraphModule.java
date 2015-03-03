@@ -85,7 +85,7 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 
 
-public class GraphModule extends AbstractModule {
+public abstract class GraphModule extends AbstractModule {
 
     @Override
     protected void configure() {
@@ -190,6 +190,9 @@ public class GraphModule extends AbstractModule {
         bind( EdgeMetadataSerializationV2Impl.class );
         bind(EdgeMetadataSerialization.class).annotatedWith( ProxyImpl.class ).to( EdgeMetadataSerializationProxyImpl.class  );
 
+        //invoke the migration plugin config
+        configureMigrationProvider();
+
     }
 
 
@@ -230,6 +233,15 @@ public class GraphModule extends AbstractModule {
          return set;
 
      }
+
+
+    /**
+     * Gives callers the ability to to configure an instance of
+     *
+     * MigrationDataProvider<ApplicationScope> for providing data migrations
+     */
+    public abstract void configureMigrationProvider();
+
 
 
 }

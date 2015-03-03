@@ -39,7 +39,6 @@ package org.apache.usergrid.persistence.graph.serialization;/*
  */
 
 
-import org.apache.usergrid.persistence.core.guice.V1Impl;
 import org.junit.runner.RunWith;
 
 import org.apache.usergrid.persistence.core.test.ITRunner;
@@ -49,21 +48,17 @@ import org.apache.usergrid.persistence.graph.serialization.impl.EdgeMetadataSeri
 
 import com.google.inject.Inject;
 
-import static org.junit.Assert.assertTrue;
-
 
 @RunWith( ITRunner.class )
 @UseModules( { TestGraphModule.class } )
 public class EdgeMetaDataSerializationV1Test extends EdgeMetadataSerializationTest {
 
     @Inject
-    @V1Impl
-    protected EdgeMetadataSerialization serialization;
+    protected EdgeMetadataSerializationV1Impl serialization;
 
 
     @Override
     protected EdgeMetadataSerialization getSerializationImpl() {
-        assertTrue(serialization instanceof EdgeMetadataSerializationV1Impl );
         return serialization;
     }
 }

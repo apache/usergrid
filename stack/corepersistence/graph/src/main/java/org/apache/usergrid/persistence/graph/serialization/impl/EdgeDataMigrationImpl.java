@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 import rx.Observable;
 import rx.functions.Action1;
 import rx.functions.Func1;
+import rx.functions.Func2;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
@@ -82,53 +83,53 @@ public class EdgeDataMigrationImpl implements DataMigration2<ApplicationScope> {
         final MigrationRelationship<EdgeMetadataSerialization>
                 migration = allVersions.getMigrationRelationship( currentVersion );
 
-               migrationDataProvider.getData().flatMap(new Func1<ApplicationScope, Observable<?>>() {
+        final Observable<List<Edge>> observable = migrationDataProvider.getData().flatMap(new Func1<ApplicationScope, Observable<List<Edge>>>() {
                   @Override
-                  public Observable call(final ApplicationScope applicationScope) {
-                      final GraphManager gm = graphManagerFactory.createEdgeManager(applicationScope);
-                      final Observable<Edge> edgesFromSource = edgesFromSourceObservable.edgesFromSource(gm, applicationScope.getApplication());
-                      logger.info("Migrating edges scope {}", applicationScope);
+                  public Observable<List<Edge>> call(final ApplicationScope applicationScope) {
+                      final GraphManager gm = graphManagerFactory.createEdgeManager( applicationScope );
+                      final Observable<Edge> edgesFromSource =
+                              edgesFromSourceObservable.edgesFromSource( gm, applicationScope.getApplication() );
+                      logger.info( "Migrating edges scope {}", applicationScope );
 
                       //get each edge from this node as a source
                       return edgesFromSource
 
-                          //for each edge, re-index it in v2  every 1000 edges or less
-                          .buffer( 1000 )
-                          //do the writes of 1k in parallel
-                          .parallel( new Func1<Observable<List<Edge>>, Observable>() {
+                              //for each edge, re-index it in v2  every 1000 edges or less
+                              .buffer( 1000 ).parallel( new Func1<Observable<List<Edge>>, Observable<List<Edge>>>() {
                                   @Override
-                                  public Observable call( final Observable<List<Edge>> listObservable ) {
+                                  public Observable<List<Edge>> call( final Observable<List<Edge>> listObservable ) {
                                       return listObservable.doOnNext( new Action1<List<Edge>>() {
-                                                @Override
-                                                public void call( List<Edge> edges ) {
-                                                    final MutationBatch batch = keyspace.prepareMutationBatch();
+                                          @Override
+                                          public void call( List<Edge> edges ) {
+                                              final MutationBatch batch = keyspace.prepareMutationBatch();
 
-                                                    for ( Edge edge : edges ) {
-                                                        logger.info( "Migrating meta for edge {}", edge );
-                                                        final MutationBatch edgeBatch =
-                                                                migration.to.writeEdge( applicationScope, edge );
-                                                        batch.mergeShallow( edgeBatch );
-                                                    }
+                                              for ( Edge edge : edges ) {
+                                                  logger.info( "Migrating meta for edge {}", edge );
+                                                  final MutationBatch edgeBatch =
+                                                          migration.to.writeEdge( applicationScope, edge );
+                                                  batch.mergeShallow( edgeBatch );
+                                              }
 
-                                                    try {
-                                                        batch.execute();
-                                                    }
-                                                    catch ( ConnectionException e ) {
-                                                        throw new RuntimeException( "Unable to perform migration", e );
-                                                    }
+                                              try {
+                                                  batch.execute();
+                                              }
+                                              catch ( ConnectionException e ) {
+                                                  throw new RuntimeException( "Unable to perform migration", e );
+                                              }
 
-                                                    //update the observer so the admin can see it
-                                                    final long newCount = counter.addAndGet( edges.size() );
+                                              //update the observer so the admin can see it
+                                              final long newCount = counter.addAndGet( edges.size() );
 
-                                                    observer.update( migration.to.getImplementationVersion(),
-                                                            String.format( "Currently running.  Rewritten %d edge types",
-                                                                    newCount ) );
-                                                }
-                                            } );
+                                              observer.update( migration.to.getImplementationVersion(),
+                                                      String.format( "Currently running.  Rewritten %d edge types",
+                                                              newCount ) );
+                                          }
+                                      } );
                                   }
                               } );
-                  }
-              });
+                  }});
+
+        observable.longCount().toBlocking().last();
 
         return migration.to.getImplementationVersion();
 
@@ -139,7 +140,7 @@ public class EdgeDataMigrationImpl implements DataMigration2<ApplicationScope> {
 
     @Override
     public boolean supports( final int currentVersion ) {
-        return currentVersion <= edgeMetadataSerializationV2.getImplementationVersion();
+        return currentVersion < edgeMetadataSerializationV2.getImplementationVersion();
     }
 
 

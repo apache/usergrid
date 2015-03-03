@@ -47,9 +47,6 @@ public class MvccEntitySerializationStrategyProxyV1_3Test extends MvccEntitySeri
     @Inject
     private MvccEntitySerializationStrategyV1Impl mvccEntitySerializationStrategyV1;
 
-    @Inject
-    private VersionedMigrationSet<MvccEntitySerializationStrategy> migrationSet;
-
     @Override
     protected MvccEntitySerializationStrategy getMvccEntitySerializationStrategy() {
         return serializationStrategy;

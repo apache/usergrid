@@ -21,13 +21,11 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 
 /**
- * Classy class class.
+ * Same tests as v2, we just override some methods to ensure they throw the correct exceptions
  */
-
-
 @RunWith( ITRunner.class )
 @UseModules( TestCollectionModule.class )
-public class MvccEntitySerializationStrategyV3ImplTest extends MvccEntitySerializationStrategyV3Test {
+public class MvccEntitySerializationStrategyV3ImplTest extends MvccEntitySerializationStrategyV2Test {
     @Inject
     private MvccEntitySerializationStrategyV3Impl serializationStrategy;
 
@@ -70,4 +68,7 @@ public class MvccEntitySerializationStrategyV3ImplTest extends MvccEntitySeriali
 
         serializationStrategy.loadDescendingHistory( context, entityId, version1, 20 );
     }
+
+
 }
+

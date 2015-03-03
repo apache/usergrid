@@ -32,6 +32,8 @@ import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeMetadataSerializationProxyImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.EdgeMetadataSerializationV2Impl;
+import org.apache.usergrid.persistence.graph.serialization.impl.migration.GraphMigrationPlugin;
 
 import com.google.inject.Inject;
 
@@ -51,6 +53,10 @@ public class EdgeMetaDataSerializationProxyV2Test extends EdgeMetadataSerializat
     protected EdgeMetadataSerialization serialization;
 
     @Inject
+    protected EdgeMetadataSerializationV2Impl edgeMetadataSerializationV2;
+
+
+    @Inject
     protected MigrationInfoSerialization migrationInfoSerialization;
 
     private int existingVersion;
@@ -61,21 +67,24 @@ public class EdgeMetaDataSerializationProxyV2Test extends EdgeMetadataSerializat
      * correctly
      */
     @Before
-    public void setMigrationVersion(){
-        existingVersion = migrationInfoSerialization.getVersion();
+    public void setMigrationVersion() {
+        existingVersion = migrationInfoSerialization.getVersion( GraphMigrationPlugin.PLUGIN_NAME );
 
         //set our version equal to the new version so it only delegates to the new version
-        migrationInfoSerialization.setVersion( EdgeMetadataSerializationProxyImpl.MIGRATION_VERSION );
+        migrationInfoSerialization
+                .setVersion( GraphMigrationPlugin.PLUGIN_NAME, edgeMetadataSerializationV2.getImplementationVersion() );
     }
 
+
     @After
-    public void reSetMigrationVersion(){
-        migrationInfoSerialization.setVersion( existingVersion );
+    public void reSetMigrationVersion() {
+        migrationInfoSerialization.setVersion(GraphMigrationPlugin.PLUGIN_NAME,  existingVersion );
     }
+
 
     @Override
     protected EdgeMetadataSerialization getSerializationImpl() {
-        assertTrue(serialization instanceof EdgeMetadataSerializationProxyImpl);
+        assertTrue( serialization instanceof EdgeMetadataSerializationProxyImpl );
 
         return serialization;
     }

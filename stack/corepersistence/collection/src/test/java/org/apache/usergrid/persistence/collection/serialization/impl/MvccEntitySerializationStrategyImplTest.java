@@ -423,7 +423,7 @@ public abstract class MvccEntitySerializationStrategyImplTest {
         serializationStrategy.delete( context, id, version3 ).execute();
 
 
-        assertFalse("Not loaded", serializationStrategy.load( context, id ).isPresent());
+        assertFalse( "Not loaded", serializationStrategy.load( context, id ).isPresent() );
 
     }
 
@@ -465,7 +465,7 @@ public abstract class MvccEntitySerializationStrategyImplTest {
 
 
     /**
-     * We no longer support partial writes, ensure that an exception is thrown when this occurs
+     * We no longer support partial writes, ensure that an exception is thrown when this occurs after v3
      * @throws ConnectionException
      */
     @Test(expected = UnsupportedOperationException.class)

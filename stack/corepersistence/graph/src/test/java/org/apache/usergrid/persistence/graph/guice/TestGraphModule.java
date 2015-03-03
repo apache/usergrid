@@ -20,12 +20,12 @@ package org.apache.usergrid.persistence.graph.guice;
 
 
 import org.apache.usergrid.persistence.core.guice.CommonModule;
-import org.apache.usergrid.persistence.core.guice.MaxMigrationModule;
 import org.apache.usergrid.persistence.core.guice.TestModule;
-import org.apache.usergrid.persistence.core.rx.AllEntitiesInSystemObservable;
-import org.apache.usergrid.persistence.core.rx.AllEntitiesInSystemTestObservable;
-import org.apache.usergrid.persistence.core.rx.ApplicationObservable;
-import org.apache.usergrid.persistence.core.rx.ApplicationsTestObservable;
+import org.apache.usergrid.persistence.core.migration.data.newimpls.MigrationDataProvider;
+import org.apache.usergrid.persistence.core.migration.data.newimpls.TestMigrationDataProvider;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+
+import com.google.inject.TypeLiteral;
 
 
 /**
@@ -38,18 +38,17 @@ public class TestGraphModule extends TestModule {
         /**
          * Runtime modules
          */
-        bind(ApplicationObservable.class).to(ApplicationsTestObservable.class);
+        install( new CommonModule() );
+        install( new GraphModule() {
 
-        bind(AllEntitiesInSystemObservable.class).to(AllEntitiesInSystemTestObservable.class);
+            @Override
+            public void configureMigrationProvider() {
+                //configure our migration data provider
 
-        install( new CommonModule());
-        install( new GraphModule() );
-
-
-        /**
-         * Test modules
-         */
-        install(new MaxMigrationModule());
-
+                TestMigrationDataProvider<ApplicationScope> migrationDataProvider = new TestMigrationDataProvider<>();
+                bind( new TypeLiteral<MigrationDataProvider<ApplicationScope>>() {} )
+                        .toInstance( migrationDataProvider );
+            }
+        } );
     }
 }
