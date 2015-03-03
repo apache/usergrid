@@ -21,6 +21,10 @@ import org.junit.Test;
 
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
+import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
+import org.apache.usergrid.rest.test.resource2point0.model.Token;
+
+import com.sun.jersey.api.client.UniformInterfaceException;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -32,9 +36,24 @@ public class SystemResourceIT extends AbstractRestIT {
 
     @Test
     public void testSystemDatabaseAlreadyRun() {
-        Entity ent = clientSetup.getRestClient().system().database().setup().get();
+        //try {
+        QueryParameters queryParameters = new QueryParameters();
+        queryParameters.addParam( "access_token",clientSetup.getSuperuserToken().getAccessToken() );
+        Entity result = clientSetup.getRestClient().system().database().setup().get(queryParameters);
+//        }catch(UniformInterfaceException uie) {
+//            asser
+//        }
+//
+        assertNotNull(result);
+        assertNotNull( "ok" ,(String)result.get( "status" ) );
 
-        assertNotNull(ent);
+        result = clientSetup.getRestClient().system().database().setup().get(queryParameters);
+
+        assertNotNull( result );
+        assertNotNull( "ok" ,(String)result.get( "status" ) );
+
+
+
 
     }
 

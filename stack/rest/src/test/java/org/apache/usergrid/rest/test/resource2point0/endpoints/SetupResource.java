@@ -20,7 +20,11 @@ package org.apache.usergrid.rest.test.resource2point0.endpoints;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
+import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
+import org.apache.usergrid.rest.test.resource2point0.model.Token;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
+
+import com.sun.jersey.api.client.WebResource;
 
 
 /**
@@ -32,8 +36,11 @@ public class SetupResource extends NamedResource {
         super("setup",context,parent);
     }
 
-    public Entity get(){
-        return getResource(true).type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
+    public Entity get(QueryParameters queryParameters){
+        WebResource resource = getResource();
+        resource = addParametersToResource( resource, queryParameters );
+
+        return resource.type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
                                 .get( Entity.class );
     }
 }
