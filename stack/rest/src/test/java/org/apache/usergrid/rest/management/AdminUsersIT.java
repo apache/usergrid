@@ -93,16 +93,12 @@ public class AdminUsersIT extends AbstractRestIT {
         passwordPayload.put( "oldpassword", password );
 
         // change the password as admin. The old password isn't required
-        management.users().user( username ).password().post(passwordPayload); //entity( username ).password().post;
+        management.users().user( username ).password().post(passwordPayload);
 
         this.refreshIndex();
 
-
-        //assertNull( getError( node ) );
-
         //Get the token using the new password
         management.token().post( new Token( username, "testPassword" ) );
-        //this.app().token().post(new Token(username, "testPassword"));
 
         //Check that we cannot get the token using the old password
         try {
@@ -164,8 +160,6 @@ public class AdminUsersIT extends AbstractRestIT {
         Map<String, Object> passwordPayload = new HashMap<String, Object>();
         passwordPayload.put( "newpassword", "testPassword" );
 
-
-
         management.users().user( username ).password().post( clientSetup.getSuperuserToken(), passwordPayload );
 
         this.refreshIndex();
@@ -197,7 +191,8 @@ public class AdminUsersIT extends AbstractRestIT {
         ArrayList<Map<String,Object>> feedEntityMap = ( ArrayList ) mgmtUserFeedEntity.get( "entities" );
         assertNotNull( feedEntityMap );
         assertNotNull( feedEntityMap.get( 0 ).get( "title" )  );
-
+        assertTrue("Needs to contain the feed of the specific management user",
+            ((String)(feedEntityMap.get( 0 ).get( "title" ))).contains(clientSetup.getUsername() ));
     }
 
 
@@ -213,6 +208,7 @@ public class AdminUsersIT extends AbstractRestIT {
         Entity originalTestProperties = new Entity( originalTestPropertiesResponse );
         try {
             //Set runtime enviroment to the following settings
+            //TODO: make properties verification its own test.
             Map<String, Object> testPropertiesMap = new HashMap<>();
 
             testPropertiesMap.put( PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false" );
@@ -227,14 +223,6 @@ public class AdminUsersIT extends AbstractRestIT {
             clientSetup.getRestClient().testPropertiesResource().post( testPropertiesPayload );
 
             refreshIndex();
-
-            //Retrieve properties and ensure that they are set correctly.
-            ApiResponse apiResponse = clientSetup.getRestClient().testPropertiesResource().get();
-
-            assertEquals( "sysadmin-1@mockserver.com", apiResponse.getProperties().get( PROPERTIES_SYSADMIN_EMAIL ) );
-            assertEquals( "true", apiResponse.getProperties().get( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION ) );
-            assertEquals( "false", apiResponse.getProperties().get( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS ) );
-            assertEquals( "false", apiResponse.getProperties().get( PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS ) );
 
             //Create organization for the admin user to be confirmed
             Organization organization = createOrgPayload( "testUnconfirmedAdminLogin", null );
@@ -251,12 +239,13 @@ public class AdminUsersIT extends AbstractRestIT {
             assertFalse( "adminUser should not be confirmed yet", adminUser.getConfirmed() );
 
 
+            //Get token grant for new admin user.
             QueryParameters queryParameters = new QueryParameters();
             queryParameters.addParam( "grant_type", "password" ).addParam( "username", adminUser.getUsername() )
                            .addParam( "password", organization.getPassword() );
 
 
-            //Check that the adminUser cannot log in and fails with a 403
+            //Check that the adminUser cannot log in and fails with a 403 due to not being confirmed.
             try {
                 management().token().get( queryParameters );
                 fail( "Admin user should not be able to log in." );
@@ -365,19 +354,12 @@ public class AdminUsersIT extends AbstractRestIT {
         }
     }
 
-
-    private String getTokenFromMessage( Message msg ) throws IOException, MessagingException {
-        String body = ( ( MimeMultipart ) msg.getContent() ).getBodyPart( 0 ).getContent().toString();
-        return StringUtils.substringAfterLast( body, "token=" );
-    }
-
-
     /**
      * Update the current management user and make sure the change persists
      * @throws Exception
      */
-    @Ignore("Fails because we cannot get a single management user without a Admin level token, but"
-        + "we can put without any of those permissions. This test will work once that issue has been resolved.")
+    @Ignore("Fails because we cannot GET a management user with a super user token - only with an Admin level token."
+        + "But, we can PUT with a superuser token. This test will work once that issue has been resolved.")
     @Test
     public void updateManagementUser() throws Exception {
 
@@ -404,7 +386,7 @@ public class AdminUsersIT extends AbstractRestIT {
         assertEquals( "Apigee",userUpdated.getAsString( "company" ) );
     }
 
-    public Entity updateAdminUser(Entity userProperty, Organization organization){
+    private Entity updateAdminUser(Entity userProperty, Organization organization){
         management().users().user( organization.getUsername() ).put( userProperty );
 
         return management().users().user( organization.getUsername() ).get();
@@ -433,7 +415,6 @@ public class AdminUsersIT extends AbstractRestIT {
 
 
         management().users().user( clientSetup.getUsername() ).resetpw().post(null);
-
 
         //Create mocked inbox
         List<Message> inbox = Mailbox.get( clientSetup.getEmail() );
@@ -534,7 +515,7 @@ public class AdminUsersIT extends AbstractRestIT {
 
         refreshIndex();
 
-        payload.put("newpassword",passwords[0]);
+        payload.put( "newpassword", passwords[0] );
         payload.put( "oldpassword", passwords[1] );
 
         //Make sure that we can't change the password with itself using a different entry in the history.
@@ -548,7 +529,7 @@ public class AdminUsersIT extends AbstractRestIT {
         }
     }
 
-      //TODO: won't work until resetpw viewables are fixed in the embedded enviroment.
+      //TODO: won't work until resetpw viewables are fixed in the embedded environment.
 //    @Test
 //    public void checkPasswordChangeTime() throws Exception {
 //
@@ -654,6 +635,39 @@ public class AdminUsersIT extends AbstractRestIT {
         }
     }
 
+    @Test
+    public void testProperties(){
+        ApiResponse originalTestPropertiesResponse = clientSetup.getRestClient().testPropertiesResource().get();
+        Entity originalTestProperties = new Entity( originalTestPropertiesResponse );
+        try {
+            //Set runtime enviroment to the following settings
+            Map<String, Object> testPropertiesMap = new HashMap<>();
+
+            testPropertiesMap.put( PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false" );
+            testPropertiesMap.put( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false" );
+            //Requires admins to do email confirmation before they can log in.
+            testPropertiesMap.put( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "true" );
+            testPropertiesMap.put( PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com" );
+
+            Entity testPropertiesPayload = new Entity( testPropertiesMap );
+
+            //Send rest call to the /testProperties endpoint to persist property changes
+            clientSetup.getRestClient().testPropertiesResource().post( testPropertiesPayload );
+
+            refreshIndex();
+
+            //Retrieve properties and ensure that they are set correctly.
+            ApiResponse apiResponse = clientSetup.getRestClient().testPropertiesResource().get();
+
+            assertEquals( "sysadmin-1@mockserver.com", apiResponse.getProperties().get( PROPERTIES_SYSADMIN_EMAIL ) );
+            assertEquals( "true", apiResponse.getProperties().get( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION ) );
+            assertEquals( "false", apiResponse.getProperties().get( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS ) );
+            assertEquals( "false", apiResponse.getProperties().get( PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS ) );
+        }finally{
+            clientSetup.getRestClient().testPropertiesResource().post( originalTestProperties);
+        }
+    }
+
     /**
      * Create an organization payload with almost the same value for every field.
      * @param baseName
@@ -664,6 +678,19 @@ public class AdminUsersIT extends AbstractRestIT {
         String orgName = baseName + org.apache.usergrid.persistence.index.utils.UUIDUtils.newTimeUUID();
         return new Organization( orgName,
             orgName,orgName+"@usergrid",orgName,orgName, properties);
+    }
+
+
+    /**
+     * Extract token from mocked inbox message.
+     * @param msg
+     * @return
+     * @throws IOException
+     * @throws MessagingException
+     */
+    private String getTokenFromMessage( Message msg ) throws IOException, MessagingException {
+        String body = ( ( MimeMultipart ) msg.getContent() ).getBodyPart( 0 ).getContent().toString();
+        return StringUtils.substringAfterLast( body, "token=" );
     }
 
 }

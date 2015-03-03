@@ -126,7 +126,6 @@ public class ClientSetup implements TestRule {
         return superuserName;
     }
 
-
     public String getSuperuserPassword() {
         return superuserPassword;
     }
