@@ -19,18 +19,15 @@ package org.apache.usergrid.management.cassandra;
 
 import java.util.Set;
 
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
-import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
 
-import org.apache.usergrid.management.ApplicationInfo;
+import org.apache.usergrid.persistence.entities.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationOwnerInfo;
-import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 
 import static org.apache.usergrid.TestHelper.uniqueApp;
 import static org.apache.usergrid.TestHelper.uniqueEmail;

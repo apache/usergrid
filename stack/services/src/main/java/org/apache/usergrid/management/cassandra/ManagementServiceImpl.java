@@ -40,7 +40,7 @@ import org.apache.usergrid.locking.Lock;
 import org.apache.usergrid.locking.LockManager;
 import org.apache.usergrid.management.AccountCreationProps;
 import org.apache.usergrid.management.ActivationState;
-import org.apache.usergrid.management.ApplicationInfo;
+import org.apache.usergrid.persistence.entities.ApplicationInfo;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.OrganizationOwnerInfo;

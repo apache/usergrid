@@ -37,7 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import org.apache.usergrid.management.ApplicationInfo;
+import org.apache.usergrid.persistence.entities.ApplicationInfo;
 import org.apache.usergrid.management.importer.ImportService;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.Results;

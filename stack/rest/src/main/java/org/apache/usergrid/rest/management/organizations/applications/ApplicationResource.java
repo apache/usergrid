@@ -17,34 +17,20 @@
 package org.apache.usergrid.rest.management.organizations.applications;
 
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.SDKGlobalConfiguration;
-import com.amazonaws.auth.AWSCredentials;
 import com.google.common.base.Preconditions;
 import com.sun.jersey.api.json.JSONWithPadding;
 import org.apache.amber.oauth2.common.exception.OAuthSystemException;
 import org.apache.amber.oauth2.common.message.OAuthResponse;
 import org.apache.commons.lang.StringUtils;
 
-import org.apache.usergrid.corepersistence.util.CpNamingUtils;
-import org.apache.usergrid.management.ApplicationInfo;
+import org.apache.usergrid.persistence.entities.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.export.ExportService;
-import org.apache.usergrid.management.importer.ImportService;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.SimpleEntityRef;
-import org.apache.usergrid.persistence.entities.Import;
-import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.queue.impl.SQSQueueManagerImpl;
 import org.apache.usergrid.persistence.queue.impl.UsergridAwsCredentials;
-import org.apache.usergrid.persistence.queue.impl.UsergridAwsCredentialsProvider;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.applications.ServiceResource;
 import org.apache.usergrid.rest.management.organizations.applications.imports.ImportsResource;
-import org.apache.usergrid.rest.security.annotations.RequireAdminUserAccess;
-import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
 import org.apache.usergrid.rest.utils.JSONPUtils;
 import org.apache.usergrid.security.oauth.ClientCredentialsInfo;
@@ -61,7 +47,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 

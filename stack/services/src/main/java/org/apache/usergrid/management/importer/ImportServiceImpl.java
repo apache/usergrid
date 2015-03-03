@@ -184,7 +184,7 @@ public class ImportServiceImpl implements ImportService {
 
 
     private Entity getApplicationEntity(final EntityManager rootEm, final UUID applicationId) throws Exception {
-        final Entity entity = rootEm.get( new SimpleEntityRef( "application_info", applicationId ) );
+        final Entity entity = rootEm.get( new SimpleEntityRef( CpNamingUtils.APPLICATION_INFO, applicationId ) );
 
         if(entity == null){
             throw new EntityNotFoundException( "Cound not find application with id "  + applicationId);

@@ -23,7 +23,7 @@ import javax.ws.rs.core.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import org.apache.usergrid.management.ApplicationInfo;
+import org.apache.usergrid.persistence.entities.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.management.exceptions.ManagementException;
@@ -138,7 +138,7 @@ public class OAuth2AccessTokenSecurityFilter extends SecurityFilter {
                         throw mappableSecurityException( BAD_ACCESS_TOKEN_ERROR );
                     }
 
-                    token = PrincipalCredentialsToken.getFromAdminUserInfoAndAccessToken( 
+                    token = PrincipalCredentialsToken.getFromAdminUserInfoAndAccessToken(
                             user, accessToken, emf.getManagementAppId() );
                 }
                 else if ( AuthPrincipalType.APPLICATION_USER.equals( principal.getType() ) ) {

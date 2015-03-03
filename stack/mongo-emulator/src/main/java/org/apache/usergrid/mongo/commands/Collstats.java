@@ -19,7 +19,7 @@ package org.apache.usergrid.mongo.commands;
 
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.MessageEvent;
-import org.apache.usergrid.management.ApplicationInfo;
+import org.apache.usergrid.persistence.entities.ApplicationInfo;
 import org.apache.usergrid.mongo.MongoChannelHandler;
 import org.apache.usergrid.mongo.protocol.OpQuery;
 import org.apache.usergrid.mongo.protocol.OpReply;

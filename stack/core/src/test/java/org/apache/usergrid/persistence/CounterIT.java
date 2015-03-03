@@ -23,6 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -221,7 +222,8 @@ public class CounterIT extends AbstractCoreIT {
 
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
         properties.put( "name", orgName + "/" + appName );
-        Entity applicationEntity = em.create( applicationId, "application_info", properties );
+        Entity applicationEntity = em.create(
+            applicationId, CpNamingUtils.APPLICATION_INFO, properties );
 
 //Creating connections like below doesn't work.
 //        em.createConnection( new SimpleEntityRef( "group", organizationEntity.getUuid() ), "owns",

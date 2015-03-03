@@ -19,7 +19,7 @@ package org.apache.usergrid.tools;
 
 import java.util.UUID;
 
-import org.apache.usergrid.management.ApplicationInfo;
+import org.apache.usergrid.persistence.entities.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.utils.UUIDUtils;
 
@@ -59,7 +59,7 @@ public class CredExport extends ToolBase {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * org.apache.usergrid.tools.ToolBase#runTool(org.apache.commons.cli.CommandLine)
      */

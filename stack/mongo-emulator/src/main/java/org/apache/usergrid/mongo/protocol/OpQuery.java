@@ -34,7 +34,7 @@ import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.MessageEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.management.ApplicationInfo;
+import org.apache.usergrid.persistence.entities.ApplicationInfo;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.mongo.MongoChannelHandler;
 import org.apache.usergrid.mongo.commands.MongoCommand;
@@ -211,7 +211,7 @@ public class OpQuery extends OpCrud {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.usergrid.mongo.protocol.OpCrud#doOp()
      */
     @Override
@@ -281,8 +281,8 @@ public class OpQuery extends OpCrud {
             return handleAuthFails( this );
         }
 
-        PrincipalCredentialsToken token = 
-                PrincipalCredentialsToken.getFromAdminUserInfoAndPassword( 
+        PrincipalCredentialsToken token =
+                PrincipalCredentialsToken.getFromAdminUserInfoAndPassword(
                         user, key, handler.getEmf().getManagementAppId() );
         Subject subject = SubjectUtils.getSubject();
 

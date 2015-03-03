@@ -37,6 +37,7 @@ import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Results;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.CounterUtils;
@@ -49,6 +50,7 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.entities.Application;
+import org.apache.usergrid.persistence.entities.ApplicationInfo;
 import org.apache.usergrid.persistence.exceptions.ApplicationAlreadyExistsException;
 import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
@@ -250,7 +252,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             }
 
             em.refreshIndex();
-            orgUuid = orgInfo.getUuid();
         }
 
         // create appinfo entry in the system app
@@ -258,12 +259,12 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         final UUID orgId = orgUuid;
         Map<String, Object> appInfoMap = new HashMap<String, Object>() {{
             put( PROPERTY_NAME, appName );
-            put( "applicationUuid", appId );
+            put( PROPERTY_UUID, appId );
             put( "organizationUuid", orgId );
         }};
 
         try {
-            em.create(CpNamingUtils.APPLICATION_INFO, appInfoMap);
+            em.create( appId, CpNamingUtils.APPLICATION_INFO, appInfoMap );
         } catch (DuplicateUniquePropertyExistsException e) {
             throw new ApplicationAlreadyExistsException(appName);
         }
@@ -385,36 +386,17 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     public UUID lookupApplication( String name ) throws Exception {
         init();
 
-        // TODO: why does this not work for restored apps
-
-//        EntityManager em = getEntityManager( CpNamingUtils.SYSTEM_APP_ID );
-//        final EntityRef alias = em.getAlias( CpNamingUtils.APPINFOS, name );
-//        if ( alias == null ) {
-//            return null;
-//        }
-//        final Entity entity = em.get( alias );
-//        if ( entity == null ) {
-//            return null;
-//        }
-//        final UUID property = ( UUID ) entity.getProperty( "applicationUuid" );
-//        return property;
-
-        Query q = Query.fromQL( PROPERTY_NAME + " = '" + name + "'");
-
-        EntityManager em = getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
-
-        Results results = em.searchCollection( em.getApplicationRef(), CpNamingUtils.APPLICATION_INFOS, q);
-
-        if ( results.isEmpty() ) {
+        EntityManager em = getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
+        final EntityRef alias = em.getAlias( CpNamingUtils.APPLICATION_INFO, name );
+        if ( alias == null ) {
             return null;
         }
-
-        Entity entity = results.iterator().next();
-        Object uuidObject = entity.getProperty("applicationUuid");
-        if ( uuidObject instanceof UUID ) {
-            return (UUID)uuidObject;
+        final Entity entity = em.get( alias );
+        if ( entity == null ) {
+            return null;
         }
-        return UUIDUtils.tryExtractUUID( entity.getProperty("applicationUuid").toString() );
+        final UUID property = ( UUID ) entity.getProperty( "uuid" );
+        return property;
     }
 
 
