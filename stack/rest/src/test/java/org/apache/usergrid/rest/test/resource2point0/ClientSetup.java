@@ -41,13 +41,8 @@ import javax.ws.rs.core.MediaType;
 public class ClientSetup implements TestRule {
 
     RestClient restClient;
-
-    protected String username;
-    protected String password;
-    protected String orgName;
-    protected String appName;
-    protected Token superuserToken;
-
+    //TODO: store the password as a string here as well
+    protected String username, orgName, appName;
     protected Organization organization;
     protected Application application;
 
@@ -88,11 +83,7 @@ public class ClientSetup implements TestRule {
         String methodName = description.getMethodName();
         String name = testClass + "." + methodName;
 
-        restClient.superuserSetup();
-        superuserToken = restClient.management().token().post( new Token( "superuser", "superpassword" ) );
-
         username = "user_"+name + UUIDUtils.newTimeUUID();
-        password = username;
         orgName = "org_"+name+UUIDUtils.newTimeUUID();
         appName = "app_"+name+UUIDUtils.newTimeUUID();
 
@@ -106,17 +97,11 @@ public class ClientSetup implements TestRule {
 
     public String getUsername(){return username;}
 
-    public String getPassword(){return password;}
-
     public Organization getOrganization(){return organization;}
 
     public String getOrganizationName(){return orgName;}
 
     public String getAppName() {return appName;}
-
-    public Token getSuperuserToken() {
-        return superuserToken;
-    }
 
     public void refreshIndex() {
         this.restClient.refreshIndex(getOrganizationName(),getAppName());
