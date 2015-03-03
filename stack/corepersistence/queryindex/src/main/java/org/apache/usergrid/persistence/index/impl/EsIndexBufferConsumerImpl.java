@@ -20,6 +20,7 @@
 package org.apache.usergrid.persistence.index.impl;
 
 import com.codahale.metrics.Counter;
+import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -61,10 +62,12 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
     private final Observable<List<IndexOperationMessage>> consumer;
     private final Timer flushTimer;
     private final Counter indexSizeCounter;
+    private final Meter flushMeter;
 
     @Inject
     public EsIndexBufferConsumerImpl(final IndexFig config, final IndexBufferProducer producer, final EsProvider provider, final MetricsFactory metricsFactory){
         this.flushTimer = metricsFactory.getTimer(EsIndexBufferConsumerImpl.class, "index.buffer.flush");
+        this.flushMeter = metricsFactory.getMeter(EsIndexBufferConsumerImpl.class, "index.buffer.meter");
         this.indexSizeCounter =  metricsFactory.getCounter(EsIndexBufferConsumerImpl.class, "index.buffer.size");
         this.config = config;
         this.failureMonitor = new FailureMonitorImpl(config,provider);
@@ -77,9 +80,11 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
             .doOnNext(new Action1<List<IndexOperationMessage>>() {
                 @Override
                 public void call(List<IndexOperationMessage> containerList) {
-                    flushTimer.time();
                     if (containerList.size() > 0) {
+                        flushMeter.mark(containerList.size());
+                        Timer.Context time = flushTimer.time();
                         execute(containerList);
+                        time.stop();
                     }
                 }
             });

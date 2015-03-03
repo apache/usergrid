@@ -385,7 +385,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         do {
             if(count>0){Thread.sleep(200);}
             crs = queryCollectionCp("things", "thing", "select *");
-        } while ( crs.size() == numEntities && count++ < 15 );
+        } while ( crs.size() == numEntities && count++ < 1000 );
 
         Assert.assertEquals("Expect candidates without earlier stale entities", crs.size(),numEntities);
     }
