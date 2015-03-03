@@ -19,6 +19,9 @@
 package org.apache.usergrid.persistence.core.guice;
 
 
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
+import org.apache.usergrid.persistence.core.metrics.MetricsFactoryImpl;
+import org.apache.usergrid.persistence.core.metrics.MetricsFig;
 import org.safehaus.guicyfig.GuicyFigModule;
 
 import org.apache.usergrid.persistence.core.astyanax.AstyanaxKeyspaceProvider;
@@ -71,7 +74,6 @@ public class CommonModule extends AbstractModule {
 
         bind( CassandraConfig.class ).to( CassandraConfigImpl.class );
 
-
         /**
          * Data migration beans
          */
@@ -79,7 +81,9 @@ public class CommonModule extends AbstractModule {
 
         bind( DataMigrationManager.class ).to( DataMigrationManagerImpl.class );
 
+        bind( MetricsFactory.class ).to( MetricsFactoryImpl.class );
 
+        install(new GuicyFigModule(MetricsFig.class));
 
         //do multibindings for migrations
         Multibinder<DataMigration> dataMigrationMultibinder = Multibinder.newSetBinder( binder(), DataMigration.class );

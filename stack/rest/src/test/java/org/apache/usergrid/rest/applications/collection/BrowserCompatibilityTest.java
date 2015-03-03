@@ -18,11 +18,14 @@ package org.apache.usergrid.rest.applications.collection;
 
 
 import java.io.IOException;
+
+import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.junit.Test;
-import org.apache.usergrid.rest.AbstractRestIT;
+
 import org.apache.usergrid.rest.TestContextSetup;
 import org.apache.usergrid.rest.test.resource.CustomCollection;
+
 import org.apache.usergrid.rest.test.resource2point0.model.Collection;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import static junit.framework.Assert.assertNotNull;

@@ -255,6 +255,11 @@
         </dependency>
 
         <dependency>
+            <groupId>com.fasterxml.jackson.jaxrs</groupId>
+            <artifactId>jackson-jaxrs-json-provider</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>com.yammer.metrics</groupId>
             <artifactId>metrics-spring</artifactId>
         </dependency>
@@ -374,38 +379,6 @@
             <artifactId>hector-test</artifactId>
             <scope>test</scope>
         </dependency>
-
-        <dependency>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-xc</artifactId>
-            <version>${jackson-version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <!-- Arquillian deps -->
-
-        <!--<dependency>-->
-            <!--<groupId>org.jboss.arquillian</groupId>-->
-            <!--<artifactId>arquillian-bom</artifactId>-->
-            <!--<version>1.1.7.Final</version>-->
-            <!--<scope>test</scope>-->
-            <!--<type>pom</type>-->
-        <!--</dependency>-->
-
-        <!--<dependency>-->
-            <!--<groupId>org.jboss.arquillian.junit</groupId>-->
-            <!--<artifactId>arquillian-junit-container</artifactId>-->
-            <!--<version>1.1.7.Final</version>-->
-            <!--<scope>test</scope>-->
-        <!--</dependency>-->
-
-        <!--<dependency>-->
-              <!--<groupId>org.jboss.shrinkwrap.resolver</groupId>-->
-              <!--<artifactId>shrinkwrap-resolver-depchain</artifactId>-->
-              <!--<version>2.1.1</version>-->
-              <!--<scope>test</scope>-->
-              <!--<type>pom</type>-->
-        <!--</dependency>-->
 
         <!--  use the external test client.  Just depend on the maven jetty plugin to launch jetty -->
         <dependency>

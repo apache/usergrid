@@ -20,6 +20,7 @@ package org.apache.usergrid.persistence.index;/*
 
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.core.future.BetterFuture;
 import org.apache.usergrid.persistence.index.query.CandidateResult;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -29,41 +30,42 @@ public interface EntityIndexBatch {
 
     /**
      * Create index for Entity
+     *
      * @param indexScope The scope for the index
-     * @param entity Entity to be indexed.
+     * @param entity     Entity to be indexed.
      */
-    public EntityIndexBatch index( final IndexScope indexScope, final Entity entity );
+    public EntityIndexBatch index(final IndexScope indexScope, final Entity entity);
 
     /**
      * Remove index of entity
-     * @param scope The scope for the entity
+     *
+     * @param scope  The scope for the entity
      * @param entity Entity to be removed from index.
      */
-    public EntityIndexBatch deindex(final IndexScope scope, final Entity entity );
+    public EntityIndexBatch deindex(final IndexScope scope, final Entity entity);
 
     /**
      * Remove index of entity.
-     * @param scope The scope to use for removal
+     *
+     * @param scope  The scope to use for removal
      * @param result CandidateResult to be removed from index.
      */
-    public EntityIndexBatch deindex(final IndexScope scope, final CandidateResult result );
+    public EntityIndexBatch deindex(final IndexScope scope, final CandidateResult result);
 
     /**
      * Remove index of entity.
-     * @param scope The scope to remove
-     * @param id Id to be removed from index.
+     *
+     * @param scope   The scope to remove
+     * @param id      Id to be removed from index.
      * @param version Version to be removed from index.
      */
     public EntityIndexBatch deindex(final IndexScope scope, final Id id, final UUID version);
 
 
-        /**
-         * Execute the batch
-         */
-    public void execute();
-
     /**
-     * Execute the batch and force the refresh
+     * Execute the batch
+     * @return future to guarantee execution
      */
-    public void executeAndRefresh();
+    public BetterFuture execute();
+
 }

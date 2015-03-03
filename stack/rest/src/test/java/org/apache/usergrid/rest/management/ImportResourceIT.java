@@ -28,7 +28,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
 import org.apache.usergrid.batch.service.JobSchedulerService;
-import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.management.importer.S3Upload;
 import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;

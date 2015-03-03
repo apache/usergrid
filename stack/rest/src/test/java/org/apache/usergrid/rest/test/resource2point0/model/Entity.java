@@ -1,6 +1,3 @@
-/**
- * Created by ApigeeCorporation on 12/4/14.
- */
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,9 +15,7 @@
  * limitations under the License.
  */
 
-
 package org.apache.usergrid.rest.test.resource2point0.model;
-
 
 import java.io.Serializable;
 import java.util.*;
@@ -38,7 +33,6 @@ import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
  * Contains a model that can be deconstructed from the api response. This is a base level value that contains the bare
  * minumum of what other classes use. Such as . users or groups.
  */
-
 public class Entity implements Serializable, Map<String,Object> {
 
 

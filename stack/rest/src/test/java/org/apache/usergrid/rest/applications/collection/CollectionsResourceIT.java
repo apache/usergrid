@@ -22,8 +22,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.model.Collection;
-import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 
+import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -187,6 +187,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         Entity calendarlistOne = this.app().collection(collection).post(payload);
         assertEquals(calendarlistOne.get("summaryOverview"), summaryOverview);
         assertEquals(calendarlistOne.get("caltype"), calType);
+
         this.refreshIndex();
 
         //post a second entity

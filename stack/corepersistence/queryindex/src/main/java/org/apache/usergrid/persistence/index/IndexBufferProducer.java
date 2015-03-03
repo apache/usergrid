@@ -17,31 +17,20 @@
  *  * directory of this distribution.
  *
  */
+package org.apache.usergrid.persistence.index;
 
-package org.apache.usergrid.rest.test.resource2point0.model;
-
-import java.util.Map;
+import org.apache.usergrid.persistence.core.future.BetterFuture;
+import org.apache.usergrid.persistence.index.IndexOperationMessage;
+import rx.Observable;
+import rx.Subscriber;
 
 /**
+ * Classy class class.
  */
-public class Credentials extends Entity {
-    public Credentials() {
-    }
+public interface IndexBufferProducer extends Observable.OnSubscribe<IndexOperationMessage> {
 
-    public Credentials(ApiResponse response) {
-        setResponse(response, "credentials");
-    }
+    @Override
+    void call(Subscriber<? super IndexOperationMessage> subscriber);
 
-    public Credentials mapOrgResponse(Map<String, Object> map) {
-        putAll((Map<String, Object>) map.get("credentials"));
-        return this;
-    }
-
-    public String getClientSecret() {
-        return (String) get("client_secret");
-    }
-
-    public String getClientId() {
-        return (String) get("client_id");
-    }
+    BetterFuture put(IndexOperationMessage message);
 }

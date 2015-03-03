@@ -17,31 +17,10 @@
  *  * directory of this distribution.
  *
  */
-
-package org.apache.usergrid.rest.test.resource2point0.model;
-
-import java.util.Map;
+package org.apache.usergrid.persistence.index;
 
 /**
+ * Classy class class.
  */
-public class Credentials extends Entity {
-    public Credentials() {
-    }
-
-    public Credentials(ApiResponse response) {
-        setResponse(response, "credentials");
-    }
-
-    public Credentials mapOrgResponse(Map<String, Object> map) {
-        putAll((Map<String, Object>) map.get("credentials"));
-        return this;
-    }
-
-    public String getClientSecret() {
-        return (String) get("client_secret");
-    }
-
-    public String getClientId() {
-        return (String) get("client_id");
-    }
+public interface IndexBufferConsumer {
 }
