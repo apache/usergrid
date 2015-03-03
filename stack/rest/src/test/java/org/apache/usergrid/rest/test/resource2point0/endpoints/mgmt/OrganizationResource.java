@@ -81,9 +81,10 @@ public class OrganizationResource extends NamedResource {
         return new CredentialsResource(context, this);
     }
 
-    public ApplicationResource apps(String appName){
-        return new ApplicationResource(  appName, context ,this );
+    public ApplicationsResource apps() {
+        return new ApplicationsResource( context, this );
     }
+
 
     public ApplicationResource addToPath( String pathPart ) {
         return new ApplicationResource( pathPart, context, this );
