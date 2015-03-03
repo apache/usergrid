@@ -25,6 +25,7 @@ import org.apache.usergrid.rest.test.resource2point0.endpoints.UrlResource;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Organization;
 import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
+import org.apache.usergrid.rest.test.resource2point0.model.Token;
 import org.apache.usergrid.rest.test.resource2point0.model.User;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
@@ -46,7 +47,7 @@ public class OrgResource  extends NamedResource {
     private static final Logger logger = LoggerFactory.getLogger(OrgResource.class);
 
     public OrgResource( final ClientContext context, final UrlResource parent ) {
-        super( "orgs", context, parent );
+        super( "organizations", context, parent );
     }
 
 
@@ -115,6 +116,15 @@ public class OrgResource  extends NamedResource {
         } catch (IOException e) {
             throw new RuntimeException("Error parsing response", e);
         }
+
+        Organization org = new Organization(response);
+        org.setOwner( response );
+
+        return org;
+    }
+    public Organization post(Organization organization, Token token){
+        ApiResponse response = getResource(true,token).type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
+                                            .post( ApiResponse.class,organization );
 
         Organization org = new Organization(response);
         org.setOwner( response );

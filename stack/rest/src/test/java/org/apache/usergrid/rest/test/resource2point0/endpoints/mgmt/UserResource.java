@@ -14,13 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt;
-
 
 import javax.ws.rs.core.MediaType;
 
-import org.apache.usergrid.rest.test.resource2point0.endpoints.EntityEndpoint;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.NamedResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.UrlResource;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
@@ -31,42 +28,53 @@ import com.sun.jersey.api.client.WebResource;
 
 
 /**
- * Handles calls to the users management endpoint
- * Example: /management/orgs/org_name/users
+ * Relations to the following endpoint
+ * /management/users/"username"
+ * Store endpoints relating to specific users
  */
-public class UsersResource extends NamedResource {
-    public UsersResource( final ClientContext context, final UrlResource parent ) {
-        super( "users", context, parent );
+public class UserResource extends NamedResource {
+
+    public UserResource( final String name, final ClientContext context, final UrlResource parent ) {
+        super( name, context, parent );
     }
 
-
-    /**
-     * Should this be here? this would facilitate calling the entity endpoint as a way to get/put things
-     * @param identifier
-     * @return
-     */
-    //TODO: See if this should be reused here or if we should rename it to something else.
-    public EntityEndpoint entity(String identifier) {
-        return new EntityEndpoint(identifier, context, this);
+    public ReactivateResource reactivate() {
+        return new ReactivateResource( context, this );
     }
 
-    public UserResource user(String identifier) {
-        return new UserResource( identifier, context, this );
+    public ConfirmResource confirm() {
+        return new ConfirmResource(context,this);
     }
 
-    public Entity post(Entity userPayload){
-        WebResource resource = getResource(true);
+    public PasswordResource password() {
+        return new PasswordResource( context, this );
+    }
 
-        ApiResponse response = resource.type( MediaType.APPLICATION_JSON_TYPE )
-                .accept( MediaType.APPLICATION_JSON ).post( ApiResponse.class, userPayload);
-        return new Entity(response);
+    public FeedResource feed() {
+        return new FeedResource( context, this );
+    }
+
+    public ResetResource resetpw() {
+        return new ResetResource(context,this);
+    }
+
+    public OrgResource organizations() {
+        return new OrgResource( context, this );
     }
 
     public Entity get() {
+        WebResource resource = getResource( true );
+        ApiResponse response = resource.type( MediaType.APPLICATION_JSON_TYPE )
+                                       .accept( MediaType.APPLICATION_JSON ).get( ApiResponse.class );
+        return new Entity(response);
+    }
+
+    public Entity put(Entity userPayload){
         WebResource resource = getResource(true);
 
         ApiResponse response = resource.type( MediaType.APPLICATION_JSON_TYPE )
-                                       .accept( MediaType.APPLICATION_JSON ).get( ApiResponse.class);
+                                       .accept( MediaType.APPLICATION_JSON ).put( ApiResponse.class, userPayload);
         return new Entity(response);
     }
+
 }
