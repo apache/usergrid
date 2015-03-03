@@ -49,6 +49,13 @@ public interface IndexFig extends GuicyFig {
 
     public static final String ELASTICSEARCH_FORCE_REFRESH = "elasticsearch.force_refresh";
 
+    public static final String INDEX_BUFFER_SIZE = "elasticsearch.buffer_size";
+
+    public static final String INDEX_BUFFER_TIMEOUT = "elasticsearch.buffer_size";
+
+    public static final String INDEX_BATCH_SIZE = "elasticsearch.batch_size";
+
+    public static final String INDEX_WRITE_CONSISTENCY_LEVEL = "elasticsearch.write_consistency_level";
 
     /**
      * the number of times we can fail before we refresh the client
@@ -56,7 +63,7 @@ public interface IndexFig extends GuicyFig {
     public static final String ELASTICSEARCH_FAIL_REFRESH = "elasticsearch.fail_refresh";
 
     public static final String QUERY_LIMIT_DEFAULT = "index.query.limit.default";
-    
+
     @Default( "127.0.0.1" )
     @Key( ELASTICSEARCH_HOSTS )
     String getHosts();
@@ -65,10 +72,10 @@ public interface IndexFig extends GuicyFig {
     @Key( ELASTICSEARCH_PORT )
     int getPort();
 
-    @Default( "usergrid" ) 
+    @Default( "usergrid" )
     @Key( ELASTICSEARCH_CLUSTER_NAME)
     String getClusterName();
-    
+
     @Default( "usergrid" ) // no underbars allowed
     @Key( ELASTICSEARCH_INDEX_PREFIX )
     String getIndexPrefix();
@@ -76,7 +83,7 @@ public interface IndexFig extends GuicyFig {
     @Default( "alias" ) // no underbars allowed
     @Key( ELASTICSEARCH_ALIAS_POSTFIX )
     String getAliasPostfix();
-    
+
     @Default( "1" ) // TODO: does this timeout get extended on each query?
     @Key( QUERY_CURSOR_TIMEOUT_MINUTES )
     int getQueryCursorTimeout();
@@ -90,7 +97,7 @@ public interface IndexFig extends GuicyFig {
     @Key( QUERY_LIMIT_DEFAULT )
     int getQueryLimitDefault();
 
-    @Default( "false" ) 
+    @Default( "false" )
     @Key( ELASTICSEARCH_FORCE_REFRESH )
     public boolean isForcedRefresh();
 
@@ -113,4 +120,32 @@ public interface IndexFig extends GuicyFig {
 
     @Default("2")
     int getIndexCacheMaxWorkers();
+
+    /**
+     * how long to wait before the buffer flushes to send
+     * @return
+     */
+    @Default("250")
+    @Key( INDEX_BUFFER_TIMEOUT )
+    int getIndexBufferTimeout();
+
+    /**
+     * size of the buffer to build up before you send results
+     * @return
+     */
+    @Default("1000")
+    @Key( INDEX_BUFFER_SIZE )
+    int getIndexBufferSize();
+
+    /**
+     * Request batch size for ES
+     * @return
+     */
+    @Default("1000")
+    @Key( INDEX_BATCH_SIZE)
+    int getIndexBatchSize();
+
+    @Default("one")
+    @Key( INDEX_WRITE_CONSISTENCY_LEVEL )
+    String getWriteConsistencyLevel();
 }

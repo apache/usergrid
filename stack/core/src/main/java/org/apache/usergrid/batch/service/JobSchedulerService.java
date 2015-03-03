@@ -25,6 +25,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +37,6 @@ import org.apache.usergrid.batch.JobFactory;
 import org.apache.usergrid.batch.JobNotFoundException;
 import org.apache.usergrid.batch.repository.JobAccessor;
 import org.apache.usergrid.batch.repository.JobDescriptor;
-import org.apache.usergrid.metrics.MetricsFactory;
 
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Timer;

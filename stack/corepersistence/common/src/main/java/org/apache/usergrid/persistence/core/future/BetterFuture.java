@@ -14,22 +14,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.rest;
+package org.apache.usergrid.persistence.core.future;
 
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import static org.junit.Assert.assertNotNull;
+import java.util.concurrent.Callable;
+import java.util.concurrent.FutureTask;
 
 /**
- * Simplest test verifies if REST test infrastructure is functioning.
+ * Future without the exception nastiness
  */
-public class SimplestTest extends org.apache.usergrid.rest.test.resource2point0.AbstractRestIT {
-    private static final Logger log = LoggerFactory.getLogger(SimplestTest.class);
-
-    @Test
-    public void getGetToken() {
-        assertNotNull( getAdminToken() );
+public  class BetterFuture<T> extends FutureTask<T> {
+    public BetterFuture(Callable<T> callable){
+        super(callable);
     }
+
+    public void done(){
+        run();
+    }
+
+    public T get(){
+        try {
+            return super.get();
+        }catch (Exception e){
+            throw new RuntimeException(e);
+        }
+    }
+
+
 }

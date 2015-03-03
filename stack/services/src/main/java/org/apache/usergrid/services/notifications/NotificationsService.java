@@ -23,9 +23,9 @@ import com.codahale.metrics.Timer;
 import com.google.inject.Injector;
 
 import org.apache.usergrid.corepersistence.CpSetup;
-import org.apache.usergrid.metrics.MetricsFactory;
 import org.apache.usergrid.mq.Message;
 import org.apache.usergrid.persistence.*;
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.entities.Notification;
 import org.apache.usergrid.persistence.entities.Notifier;
 import org.apache.usergrid.persistence.entities.Receipt;
@@ -86,7 +86,7 @@ public class NotificationsService extends AbstractCollectionService {
         emf = getApplicationContext().getBean(EntityManagerFactory.class);
 
         Properties props = (Properties)getApplicationContext().getBean("properties");
-        metricsService = getApplicationContext().getBean(MetricsFactory.class);
+        metricsService = getApplicationContext().getBean(Injector.class).getInstance(MetricsFactory.class);
         postMeter = metricsService.getMeter(NotificationsService.class, "requests");
         postTimer = metricsService.getTimer(this.getClass(), "execution_rest");
         JobScheduler jobScheduler = new JobScheduler(sm,em);

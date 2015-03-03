@@ -23,6 +23,7 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.usergrid.persistence.core.future.BetterFuture;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
@@ -86,6 +87,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
     private final IndexIdentifier.IndexAlias alias;
     private final IndexIdentifier indexIdentifier;
+    private final IndexBufferProducer indexBatchBufferProducer;
 
     /**
      * We purposefully make this per instance. Some indexes may work, while others may fail
@@ -117,7 +119,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
 
     @Inject
-    public EsEntityIndexImpl( @Assisted final ApplicationScope appScope, final IndexFig config, final EsProvider provider, final EsIndexCache indexCache) {
+    public EsEntityIndexImpl( @Assisted final ApplicationScope appScope, final IndexFig config, final IndexBufferProducer indexBatchBufferProducer, final EsProvider provider, final EsIndexCache indexCache) {
+        this.indexBatchBufferProducer = indexBatchBufferProducer;
         ValidationUtils.validateApplicationScope( appScope );
         this.applicationScope = appScope;
         this.esProvider = provider;
@@ -278,8 +281,9 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
     @Override
     public EntityIndexBatch createBatch() {
-        return new EsEntityIndexBatchImpl(
-                applicationScope, esProvider.getClient(), config, 1000, failureMonitor, this );
+        EntityIndexBatch batch = new EsEntityIndexBatchImpl(
+                applicationScope, esProvider.getClient(),indexBatchBufferProducer, config, this );
+        return batch;
     }
 
 
@@ -430,6 +434,10 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
     public void refresh() {
 
+        BetterFuture future = indexBatchBufferProducer.put(new IndexOperationMessage());
+        future.get();
+        //loop through all batches and retrieve promises and call get
+
         final RetryOperation retryOperation = new RetryOperation() {
             @Override
             public boolean doOp() {
@@ -577,7 +585,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
         if ( response.isAcknowledged() ) {
             logger.info( "Deleted index: read {} write {}", alias.getReadAlias(), alias.getWriteAlias());
             //invlaidate the alias
-            aliasCache.invalidate( alias );
+            aliasCache.invalidate(alias);
         }
         else {
             logger.info( "Failed to delete index: read {} write {}", alias.getReadAlias(), alias.getWriteAlias());

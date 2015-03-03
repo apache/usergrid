@@ -152,55 +152,47 @@ public class GeoPagingTest extends AbstractRestIT {
   }
 
   /**
-   * Test that geolocation returns entities with consistent ordering
-   * 1. Create several entities
-   * 2. Query a subset of the entities
-   * 3. Test that the entities were returned in the order expected
-   *
-   * @throws IOException
+   * Test that geo-query returns co-located entities in expected order.
    */
   @Test // USERGRID-1401
   public void groupQueriesWithConsistentResults() throws IOException {
 
     int maxRangeLimit = 20;
-    Entity[] saved = new Entity[maxRangeLimit];
-    //Our base entity that the others will derive from
-    Entity actor = new Entity();
-    actor.put("displayName", "Erin");
-    actor.put("location", new MapUtils.HashMapBuilder<String, Double>()
-        .map("latitude", 37.0)
-        .map("longitude", -75.0));
-    Entity props = new Entity();
+    Entity[] cats = new Entity[maxRangeLimit];
 
-    props.put("actor", actor);
-    props.put("verb", "go");
-    props.put("content", "bragh");
     // 1. Create several entities
     for (int i = 0; i < 20; i++) {
-      String newPath = String.format("/kero" + i);
-      props.put("path", newPath);
-      props.put("ordinal", i);
-      saved[i] = this.app().collection("groups").post(props);
+      Entity cat = new Entity();
+      cat.put("name", "cat" + i);
+      cat.put("location", new MapUtils.HashMapBuilder<String, Double>()
+          .map("latitude", 37.0)
+          .map("longitude", -75.0));
+      cat.put("ordinal", i);
+      cats[i] = cat;
+      this.app().collection("cats").post(cat);
     }
     this.refreshIndex();
 
     QueryParameters params = new QueryParameters();
     for (int consistent = 0; consistent < 20; consistent++) {
+
       // 2. Query a subset of the entities
       String query = String.format(
-          "select * where location within 100 of 37, -75 and ordinal >= %d and ordinal < %d",
-          saved[7].get("ordinal"), saved[10].get("ordinal"));
+          "select * where location within 100 of 37, -75 and ordinal >= %s and ordinal < %s",
+          cats[7].get("ordinal"), cats[10].get("ordinal"));
       params.setQuery(query);
-      Collection collection = this.app().collection("groups").get(params);
+      Collection collection = this.app().collection("cats").get(params);
 
       assertEquals(3, collection.getResponse().getEntityCount());
       List entities = collection.getResponse().getEntities();
+
       // 3. Test that the entities were returned in the order expected
       for (int i = 0; i < 3; i++) {
+
         // shouldn't start at 10 since you're excluding it above in the query, it should return 9,8,7
         Entity entity = (Entity)entities.get(i);
-        Entity savedEntity = saved[7 + i];
-        assertEquals(savedEntity.get("uuid"), entity.get("uuid"));
+        Entity savedEntity = cats[7 + i];
+        assertEquals(savedEntity.get("ordinal"), entity.get("ordinal"));
       }
     }
   }

@@ -21,7 +21,10 @@ import java.util.UUID;
 
 import javax.annotation.PostConstruct;
 
+import com.google.inject.Injector;
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.entities.Notification;
+import org.apache.usergrid.persistence.queue.QueueManagerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +32,6 @@ import org.springframework.stereotype.Component;
 
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.batch.job.OnlyOnceJob;
-import org.apache.usergrid.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.entities.JobData;
@@ -46,7 +48,6 @@ public class QueueJob extends OnlyOnceJob {
 
     private static final Logger logger = LoggerFactory.getLogger( QueueJob.class );
 
-    @Autowired
     private MetricsFactory metricsService;
 
     @Autowired
@@ -68,6 +69,7 @@ public class QueueJob extends OnlyOnceJob {
 
     @PostConstruct
     void init() {
+        metricsService = this.smf.getApplicationContext().getBean( Injector.class ).getInstance(MetricsFactory.class);
         histogram = metricsService.getHistogram( QueueJob.class, "cycle" );
         requests = metricsService.getMeter( QueueJob.class, "requests" );
         execution = metricsService.getTimer( QueueJob.class, "execution" );
