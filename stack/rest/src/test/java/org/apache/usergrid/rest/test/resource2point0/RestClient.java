@@ -79,6 +79,9 @@ public class RestClient implements UrlResource {
         return new SystemResource(context, this);
     }
 
+    public TestPropertiesResource testPropertiesResource() {
+        return new TestPropertiesResource( context, this );
+    }
     /**
      * Get the management resource
      */
