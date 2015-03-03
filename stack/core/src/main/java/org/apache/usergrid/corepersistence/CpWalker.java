@@ -140,7 +140,9 @@ public class CpWalker {
                                 targetNodeEntityRef.getUuid() );
                             return;
                         }
-
+                        if(entity == null){
+                            return;
+                        }
                         String collName = CpNamingUtils.getCollectionName( edge.getType() );
                         visitor.visitCollectionEntry( em, collName, entity );
                     }

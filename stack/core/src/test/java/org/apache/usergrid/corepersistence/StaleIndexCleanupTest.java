@@ -135,6 +135,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
     @Ignore("Broken until search connections is fixed")
     public void testStaleIndexCleanup() throws Exception {
 
+
         logger.info( "Started testStaleIndexCleanup()" );
 
         // turn off post processing stuff that cleans up stale entities
@@ -237,7 +238,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
         // query for total number of result candidates = numEntities
         crs = queryCollectionCp( "things", "thing", "select *" );
-        Assert.assertEquals( "Expect stale candidates de-indexed", numEntities, crs.size() );
+        Assert.assertEquals( "Expect stale candidates de-indexed", numEntities, crs.size() );//20,21
     }
 
 
@@ -345,7 +346,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
             things.add( em.create("thing", new HashMap<String, Object>() {{
                 put("name", thingName);
             }}));
-            Thread.sleep( writeDelayMs );
+//            Thread.sleep( writeDelayMs );
         }
         em.refreshIndex();
 
@@ -382,14 +383,11 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         // wait for indexes to be cleared for the deleted entities
         count = 0;
         do {
-            Thread.sleep(100);
+            if(count>0){Thread.sleep(200);}
             crs = queryCollectionCp("things", "thing", "select *");
-            em.refreshIndex();
-        } while ( crs.size() > 0 && count++ < 15 );
+        } while ( crs.size() == numEntities && count++ < 15 );
 
-        // query Core Persistence directly for total number of result candidates
-        crs = queryCollectionCp("things", "thing", "select *");
-        Assert.assertEquals( "Expect candidates without earlier stale entities", numEntities, crs.size() );
+        Assert.assertEquals("Expect candidates without earlier stale entities", crs.size(),numEntities);
     }
 
 

@@ -28,11 +28,13 @@ import org.apache.usergrid.persistence.index.IndexBufferConsumer;
 import org.apache.usergrid.persistence.index.IndexBufferProducer;
 import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.index.IndexOperationMessage;
+import org.elasticsearch.action.ActionRequestBuilder;
 import org.elasticsearch.action.WriteConsistencyLevel;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequestBuilder;
+import org.elasticsearch.action.deletebyquery.DeleteByQueryRequestBuilder;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.support.replication.ShardReplicationOperationRequestBuilder;
 import org.elasticsearch.client.Client;
@@ -94,30 +96,36 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
         }
 
         //process and flatten all the messages to builder requests
-        Observable<ShardReplicationOperationRequestBuilder> flattenMessages = Observable.from(operationMessages)
+        Observable<ActionRequestBuilder> flattenMessages = Observable.from(operationMessages)
             .subscribeOn(Schedulers.io())
-            .flatMap(new Func1<IndexOperationMessage, Observable<ShardReplicationOperationRequestBuilder>>() {
+            .flatMap(new Func1<IndexOperationMessage, Observable<ActionRequestBuilder>>() {
                 @Override
-                public Observable<ShardReplicationOperationRequestBuilder> call(IndexOperationMessage operationMessage) {
+                public Observable<ActionRequestBuilder> call(IndexOperationMessage operationMessage) {
                     return Observable.from(operationMessage.getOperations());
                 }
             });
 
+
+
         //batch shard operations into a bulk request
         flattenMessages
             .buffer(config.getIndexBatchSize())
-            .doOnNext(new Action1<List<ShardReplicationOperationRequestBuilder>>() {
+            .doOnNext(new Action1<List<ActionRequestBuilder>>() {
                 @Override
-                public void call(List<ShardReplicationOperationRequestBuilder> builders) {
+                public void call(List<ActionRequestBuilder> builders) {
                     try {
                         final BulkRequestBuilder bulkRequest = initRequest();
-                        for (ShardReplicationOperationRequestBuilder builder : builders) {
+                        for (ActionRequestBuilder builder : builders) {
                             indexSizeCounter.dec();
                             if (builder instanceof IndexRequestBuilder) {
                                 bulkRequest.add((IndexRequestBuilder) builder);
                             }
                             if (builder instanceof DeleteRequestBuilder) {
                                 bulkRequest.add((DeleteRequestBuilder) builder);
+                            }
+                            if(builder instanceof DeleteByQueryRequestBuilder){
+                                DeleteByQueryRequestBuilder deleteByQueryRequestBuilder = (DeleteByQueryRequestBuilder) builder;
+                                deleteByQueryRequestBuilder.get();
                             }
                         }
                         sendRequest(bulkRequest);

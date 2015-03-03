@@ -41,6 +41,9 @@ import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.setup.ConcurrentProcessSingleton;
 import rx.functions.Func0;
 import rx.functions.Func1;
+import rx.functions.Func2;
+
+import javax.annotation.concurrent.NotThreadSafe;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -49,7 +52,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-
+@NotThreadSafe
 public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
     private static final Logger logger = LoggerFactory.getLogger( EntityManagerFactoryImplIT.class );
@@ -124,13 +127,13 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
         em.refreshIndex();
 
-        Func1< Map<String, UUID> ,Boolean> findDeletedApps = new Func1<Map<String, UUID> ,Boolean>() {
+        Func2<UUID, Map<String, UUID> ,Boolean> findApps = new Func2<UUID,Map<String, UUID> ,Boolean>() {
             @Override
-            public Boolean call( Map<String, UUID> deletedApps) {
+            public Boolean call(UUID applicationId,  Map<String, UUID> apps) {
                 try {
                     boolean found = false;
-                    for (String appName : deletedApps.keySet()) {
-                        UUID appId = deletedApps.get(appName);
+                    for (String appName : apps.keySet()) {
+                        UUID appId = apps.get(appName);
                         if (appId.equals(applicationId)) {
                             found = true;
                             break;
@@ -144,8 +147,8 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
         };
 
         boolean found = false;
-        for(int i=0;i<5;i++){
-            found = findDeletedApps.call(emf.getDeletedApplications());
+        for(int i=0;i<10;i++){
+            found = findApps.call(applicationId,emf.getDeletedApplications());
             if(found){
                 break;
             } else{
@@ -179,8 +182,8 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
         // test to see that app now works and is happy
 
         // it should not be found in the deleted apps collection
-        for(int i=0;i<5;i++){
-            found = findDeletedApps.call(emf.getDeletedApplications());
+        for(int i=0;i<10;i++){
+            found = findApps.call(applicationId,emf.getDeletedApplications());
             if(!found){
                 break;
             } else{
@@ -189,8 +192,8 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
         }
         assertFalse("Restored app found in deleted apps collection", found);
 
-        for(int i=0;i<5;i++){
-            found = findDeletedApps.call(setup.getEmf().getApplications());
+        for(int i=0;i<10;i++){
+            found = findApps.call(applicationId,setup.getEmf().getApplications());
             if(!found){
                 break;
             } else{

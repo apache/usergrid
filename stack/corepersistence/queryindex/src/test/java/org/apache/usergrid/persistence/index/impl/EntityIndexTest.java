@@ -182,7 +182,7 @@ public class EntityIndexTest extends BaseIT {
     }
 
     @Test
-    public void testDeleteByQueryWithAlias() throws IOException {
+    public void testDeleteWithAlias() throws IOException {
         Id appId = new SimpleId( "application" );
 
         ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
