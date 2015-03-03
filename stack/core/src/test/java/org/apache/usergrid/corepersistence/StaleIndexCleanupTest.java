@@ -70,7 +70,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * Test on read style clean-up of stale ElasticSearch indexes.
  */
-@NotThreadSafe
 public class StaleIndexCleanupTest extends AbstractCoreIT {
     private static final Logger logger = LoggerFactory.getLogger( StaleIndexCleanupTest.class );
 
