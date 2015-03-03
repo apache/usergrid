@@ -321,7 +321,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             em.delete(appToDelete);
             // create new Entity in deleted_appinfos collection, with same UUID and properties as deleted appinfo
             em.create("deleted_appinfo", appToDelete.getProperties());
-            em.refreshIndex();
         }
 
         // delete the application's index

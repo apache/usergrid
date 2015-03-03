@@ -336,21 +336,20 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
         final EntityManager em = app.getEntityManager();
 
-        final int numEntities = 20;
-        final int numUpdates = 40;
+        final int numEntities = 10;
+        final int numUpdates = 5;
 
         // create lots of entities
-        final List<Entity> things = new ArrayList<Entity>(numEntities);
+        final List<Entity> dogs = new ArrayList<Entity>(numEntities);
         for ( int i=0; i<numEntities; i++) {
-            final String thingName = "thing" + i;
-            things.add( em.create("thing", new HashMap<String, Object>() {{
-                put("name", thingName);
+            final String dogName = "dog" + i;
+            dogs.add( em.create("dog", new HashMap<String, Object>() {{
+                put("name", dogName);
             }}));
-//            Thread.sleep( writeDelayMs );
         }
         em.refreshIndex();
 
-        CandidateResults crs = queryCollectionCp( "things", "thing", "select *");
+        CandidateResults crs = queryCollectionCp( "dogs", "dog", "select *");
         Assert.assertEquals( "Expect no stale candidates yet", numEntities, crs.size() );
 
         // turn off post processing stuff that cleans up stale entities
@@ -360,16 +359,13 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
         List<Entity> maxVersions = new ArrayList<>(numEntities);
         int count = 0;
-        for ( Entity thing : things ) {
+        for ( Entity dog : dogs ) {
             Entity toUpdate = null;
 
             for ( int j=0; j<numUpdates; j++) {
-                toUpdate = em.get( thing.getUuid() );
+                toUpdate = em.get( dog.getUuid() );
                 toUpdate.setProperty( "property"  + j, RandomStringUtils.randomAlphanumeric(10));
-
                 em.update(toUpdate);
-
-                Thread.sleep( writeDelayMs );
                 count++;
                 if ( count % 100 == 0 ) {
                     logger.info("Updated {} of {} times", count, numEntities * numUpdates);
@@ -383,11 +379,11 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         // wait for indexes to be cleared for the deleted entities
         count = 0;
         do {
-            if(count>0){Thread.sleep(200);}
-            crs = queryCollectionCp("things", "thing", "select *");
-        } while ( crs.size() == numEntities && count++ < 1000 );
+            Thread.sleep(100);
+            crs = queryCollectionCp("dogs", "dog", "select *");
+        } while ( crs.size() == numEntities && count++ < 15 );
 
-        Assert.assertEquals("Expect candidates without earlier stale entities", crs.size(),numEntities);
+        Assert.assertEquals("Expect candidates without earlier stale entities", crs.size(), numEntities);
     }
 
 
