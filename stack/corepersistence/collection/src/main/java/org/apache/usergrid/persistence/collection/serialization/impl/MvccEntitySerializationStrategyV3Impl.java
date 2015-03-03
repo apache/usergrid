@@ -14,8 +14,6 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.cassandra.db.marshal.BooleanType;
 import org.apache.cassandra.db.marshal.BytesType;
-import org.apache.cassandra.db.marshal.ReversedType;
-import org.apache.cassandra.db.marshal.UUIDType;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntitySet;
@@ -44,8 +42,6 @@ import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.smile.SmileFactory;
-import com.fasterxml.uuid.UUIDComparator;
-import com.fasterxml.uuid.impl.UUIDUtil;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -383,7 +379,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
     @Override
     public int getImplementationVersion() {
-        return CollectionDataVersions.TWO.getVersion();
+        return CollectionDataVersions.LOG_REMOVAL.getVersion();
     }
 
 

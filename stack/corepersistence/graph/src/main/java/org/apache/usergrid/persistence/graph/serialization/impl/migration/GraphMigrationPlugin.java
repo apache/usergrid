@@ -21,7 +21,7 @@
  *
  */
 
-package org.apache.usergrid.persistence.collection.serialization.impl.migration;
+package org.apache.usergrid.persistence.graph.serialization.impl.migration;
 
 
 import java.util.Set;
@@ -30,6 +30,7 @@ import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerializ
 import org.apache.usergrid.persistence.core.migration.data.newimpls.AbstractMigrationPlugin;
 import org.apache.usergrid.persistence.core.migration.data.newimpls.DataMigration2;
 import org.apache.usergrid.persistence.core.migration.data.newimpls.MigrationDataProvider;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -39,15 +40,15 @@ import com.google.inject.Singleton;
  * Migration plugin for the collection module
  */
 @Singleton
-public class CollectionMigrationPlugin extends AbstractMigrationPlugin<EntityIdScope> {
+public class GraphMigrationPlugin extends AbstractMigrationPlugin<ApplicationScope> {
 
-    public static final String PLUGIN_NAME = "collections-entity-data";
+    public static final String PLUGIN_NAME = "graph-data";
 
 
 
     @Inject
-    public CollectionMigrationPlugin( final Set<DataMigration2<EntityIdScope>> entityDataMigrations,
-                                      final MigrationDataProvider<EntityIdScope> entityIdScopeDataMigrationProvider,
+    public GraphMigrationPlugin( final Set<DataMigration2<ApplicationScope>> entityDataMigrations,
+                                      final MigrationDataProvider<ApplicationScope> entityIdScopeDataMigrationProvider,
                                       final MigrationInfoSerialization migrationInfoSerialization ) {
         super( entityDataMigrations, entityIdScopeDataMigrationProvider, migrationInfoSerialization );
     }

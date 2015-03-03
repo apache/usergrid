@@ -19,18 +19,17 @@
 package org.apache.usergrid.persistence.graph.guice;
 
 
-import org.apache.usergrid.persistence.core.guice.V1Impl;
-import org.apache.usergrid.persistence.core.guice.V2Impl;
-import org.apache.usergrid.persistence.core.migration.data.ApplicationDataMigration;
-import org.apache.usergrid.persistence.core.migration.data.DataMigration;
-import org.apache.usergrid.persistence.graph.serialization.*;
-import org.apache.usergrid.persistence.graph.serialization.impl.*;
 import org.safehaus.guicyfig.GuicyFigModule;
 
 import org.apache.usergrid.persistence.core.consistency.TimeService;
 import org.apache.usergrid.persistence.core.consistency.TimeServiceImpl;
 import org.apache.usergrid.persistence.core.guice.ProxyImpl;
+import org.apache.usergrid.persistence.core.migration.data.newimpls.DataMigration2;
+import org.apache.usergrid.persistence.core.migration.data.newimpls.MigrationPlugin;
+import org.apache.usergrid.persistence.core.migration.data.newimpls.MigrationRelationship;
+import org.apache.usergrid.persistence.core.migration.data.newimpls.VersionedMigrationSet;
 import org.apache.usergrid.persistence.core.migration.schema.Migration;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.task.NamedTaskExecutorImpl;
 import org.apache.usergrid.persistence.core.task.TaskExecutor;
 import org.apache.usergrid.persistence.graph.GraphFig;
@@ -43,6 +42,21 @@ import org.apache.usergrid.persistence.graph.impl.stage.EdgeMetaRepair;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeMetaRepairImpl;
 import org.apache.usergrid.persistence.graph.impl.stage.NodeDeleteListener;
 import org.apache.usergrid.persistence.graph.impl.stage.NodeDeleteListenerImpl;
+import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
+import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
+import org.apache.usergrid.persistence.graph.serialization.EdgesObservable;
+import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
+import org.apache.usergrid.persistence.graph.serialization.TargetIdObservable;
+import org.apache.usergrid.persistence.graph.serialization.impl.EdgeDataMigrationImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.EdgeMetadataSerializationProxyImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.EdgeMetadataSerializationV1Impl;
+import org.apache.usergrid.persistence.graph.serialization.impl.EdgeMetadataSerializationV2Impl;
+import org.apache.usergrid.persistence.graph.serialization.impl.EdgeSerializationImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.EdgesObservableImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.GraphManagerFactoryImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.NodeSerializationImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.TargetIdObservableImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.migration.GraphMigrationPlugin;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeColumnFamilies;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardStrategy;
@@ -67,6 +81,7 @@ import com.google.inject.Inject;
 import com.google.inject.Key;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 
 
@@ -85,8 +100,6 @@ public class GraphModule extends AbstractModule {
 
         bind( GraphManagerFactory.class ).to(GraphManagerFactoryImpl.class);
 
-        //bind(GraphManager.class).to(GraphManagerImpl.class );
-
         bind(EdgesObservable.class).to(EdgesObservableImpl.class);
 
         bind(TargetIdObservable.class).to(TargetIdObservableImpl.class);
@@ -94,8 +107,6 @@ public class GraphModule extends AbstractModule {
         bind(EdgesObservable.class).to(EdgesObservableImpl.class);
 
         bind(EdgeMetadataSerialization.class).to(EdgeMetadataSerializationProxyImpl.class);
-
-        bind(EdgeMigrationStrategy.class).to(EdgeMetadataSerializationProxyImpl.class);
 
         /**
          * bindings for shard allocations
@@ -117,9 +128,18 @@ public class GraphModule extends AbstractModule {
         bind( EdgeMetaRepair.class ).to( EdgeMetaRepairImpl.class );
         bind( EdgeDeleteRepair.class ).to( EdgeDeleteRepairImpl.class );
 
-        Multibinder<DataMigration> dataMigrationMultibinder =
-            Multibinder.newSetBinder( binder(), DataMigration.class );
+
+        //wire up the edg migration
+        Multibinder<DataMigration2<ApplicationScope>> dataMigrationMultibinder =
+                Multibinder.newSetBinder( binder(), new TypeLiteral<DataMigration2<ApplicationScope>>() {} );
+
+
         dataMigrationMultibinder.addBinding().to( EdgeDataMigrationImpl.class );
+
+
+        //wire up the collection migration plugin
+        Multibinder.newSetBinder( binder(), MigrationPlugin.class ).addBinding().to( GraphMigrationPlugin.class );
+
 
         /**
          * Add our listeners
@@ -158,18 +178,17 @@ public class GraphModule extends AbstractModule {
         migrationBinding.addBinding().to( Key.get( NodeShardCounterSerialization.class ) );
 
         //Get the old version and the new one
-        migrationBinding.addBinding().to( Key.get( EdgeMetadataSerialization.class, V1Impl.class) );
-        migrationBinding.addBinding().to( Key.get( EdgeMetadataSerialization.class, V2Impl.class  ) );
+        migrationBinding.addBinding().to( Key.get( EdgeMetadataSerializationV1Impl.class) );
+        migrationBinding.addBinding().to( Key.get( EdgeMetadataSerializationV2Impl.class ) );
 
 
         /**
          * Migrations of our edge meta serialization
          */
 
-        bind(EdgeMetadataSerialization.class).annotatedWith( V1Impl.class ).to( EdgeMetadataSerializationV1Impl.class  );
-        bind(EdgeMetadataSerialization.class).annotatedWith( V2Impl.class ).to( EdgeMetadataSerializationV2Impl.class  );
+        bind( EdgeMetadataSerializationV1Impl.class );
+        bind( EdgeMetadataSerializationV2Impl.class );
         bind(EdgeMetadataSerialization.class).annotatedWith( ProxyImpl.class ).to( EdgeMetadataSerializationProxyImpl.class  );
-        bind(EdgeMigrationStrategy.class).annotatedWith(ProxyImpl.class).to( EdgeMetadataSerializationProxyImpl.class  );
 
     }
 
@@ -182,6 +201,35 @@ public class GraphModule extends AbstractModule {
         return new NamedTaskExecutorImpl( "graphTaskExecutor", graphFig.getShardAuditWorkerCount(),
                 graphFig.getShardAuditWorkerQueueSize() );
     }
+
+
+
+    /**
+      * Configure via explicit declaration the migration path we can follow
+      * @param v1
+      * @param v2
+      * @return
+      */
+     @Singleton
+     @Inject
+     @Provides
+     public VersionedMigrationSet<EdgeMetadataSerialization> getVersions(final EdgeMetadataSerializationV1Impl v1, final EdgeMetadataSerializationV2Impl v2){
+
+
+         //migrate from v1 to v2
+         MigrationRelationship<EdgeMetadataSerialization> v1Tov2 = new MigrationRelationship<>( v1, v2);
+
+
+         //keep our curent tuple, v2, v2
+         MigrationRelationship<EdgeMetadataSerialization> current = new MigrationRelationship<EdgeMetadataSerialization>( v2, v2 );
+
+
+         //now create our set of versions
+         VersionedMigrationSet<EdgeMetadataSerialization> set = new VersionedMigrationSet<>( v1Tov2, current );
+
+         return set;
+
+     }
 
 
 }

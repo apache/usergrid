@@ -187,7 +187,7 @@ public class MvccEntitySerializationStrategyProxyImpl implements MvccEntitySeria
 
     @Override
     public int getImplementationVersion() {
-        return 0;
+        throw new UnsupportedOperationException("Not supported in the proxy");
     }
 }
 

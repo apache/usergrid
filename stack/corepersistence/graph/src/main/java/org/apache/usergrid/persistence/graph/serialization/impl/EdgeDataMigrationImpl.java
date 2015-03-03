@@ -25,11 +25,14 @@ import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import org.apache.usergrid.persistence.core.migration.data.newimpls.DataMigration2;
 import org.apache.usergrid.persistence.core.migration.data.newimpls.MigrationDataProvider;
+import org.apache.usergrid.persistence.core.migration.data.newimpls.MigrationRelationship;
+import org.apache.usergrid.persistence.core.migration.data.newimpls.ProgressObserver;
+import org.apache.usergrid.persistence.core.migration.data.newimpls.VersionedMigrationSet;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
-import org.apache.usergrid.persistence.graph.serialization.EdgeMigrationStrategy;
+import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgesObservable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,9 +44,8 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Encapsulates data mi
+ * Encapsulates the migration of edge meta data
  */
-
 public class EdgeDataMigrationImpl implements DataMigration2<ApplicationScope> {
 
     private static final Logger logger = LoggerFactory.getLogger(EdgeDataMigrationImpl.class);
@@ -51,29 +53,34 @@ public class EdgeDataMigrationImpl implements DataMigration2<ApplicationScope> {
     private final Keyspace keyspace;
     private final GraphManagerFactory graphManagerFactory;
     private final EdgesObservable edgesFromSourceObservable;
-    private final EdgeMigrationStrategy edgeMigrationStrategy;
+    private final VersionedMigrationSet<EdgeMetadataSerialization> allVersions;
+    private final EdgeMetadataSerializationV2Impl edgeMetadataSerializationV2;
 
     @Inject
-    public EdgeDataMigrationImpl(final Keyspace keyspace,
-                                 final GraphManagerFactory graphManagerFactory,
-                                 final EdgesObservable edgesFromSourceObservable,
-                                 final EdgeMigrationStrategy edgeMigrationStrategy
-    ) {
+    public EdgeDataMigrationImpl( final Keyspace keyspace, final GraphManagerFactory graphManagerFactory,
+                                  final EdgesObservable edgesFromSourceObservable,
+
+                                  final VersionedMigrationSet<EdgeMetadataSerialization> allVersions,
+                                  final EdgeMetadataSerializationV2Impl edgeMetadataSerializationV2 ) {
 
         this.keyspace = keyspace;
         this.graphManagerFactory = graphManagerFactory;
         this.edgesFromSourceObservable = edgesFromSourceObservable;
-        this.edgeMigrationStrategy = edgeMigrationStrategy;
+        this.allVersions = allVersions;
+        this.edgeMetadataSerializationV2 = edgeMetadataSerializationV2;
     }
 
 
 
 
-
     @Override
-    public void migrate( final MigrationDataProvider<ApplicationScope> migrationDataProvider,
-                         final ProgressObserver observer ) {
+       public int migrate( final int currentVersion, final MigrationDataProvider<ApplicationScope> migrationDataProvider,
+                           final ProgressObserver observer ) {
+
         final AtomicLong counter = new AtomicLong();
+
+        final MigrationRelationship<EdgeMetadataSerialization>
+                migration = allVersions.getMigrationRelationship( currentVersion );
 
                migrationDataProvider.getData().flatMap(new Func1<ApplicationScope, Observable<?>>() {
                   @Override
@@ -99,8 +106,7 @@ public class EdgeDataMigrationImpl implements DataMigration2<ApplicationScope> {
                                                     for ( Edge edge : edges ) {
                                                         logger.info( "Migrating meta for edge {}", edge );
                                                         final MutationBatch edgeBatch =
-                                                                edgeMigrationStrategy.getMigration().to()
-                                                                                     .writeEdge( applicationScope, edge );
+                                                                migration.to.writeEdge( applicationScope, edge );
                                                         batch.mergeShallow( edgeBatch );
                                                     }
 
@@ -114,7 +120,7 @@ public class EdgeDataMigrationImpl implements DataMigration2<ApplicationScope> {
                                                     //update the observer so the admin can see it
                                                     final long newCount = counter.addAndGet( edges.size() );
 
-                                                    observer.update( getVersion(),
+                                                    observer.update( migration.to.getImplementationVersion(),
                                                             String.format( "Currently running.  Rewritten %d edge types",
                                                                     newCount ) );
                                                 }
@@ -124,12 +130,22 @@ public class EdgeDataMigrationImpl implements DataMigration2<ApplicationScope> {
                   }
               });
 
+        return migration.to.getImplementationVersion();
+
+    }
+
+
+
+
+    @Override
+    public boolean supports( final int currentVersion ) {
+        return currentVersion <= edgeMetadataSerializationV2.getImplementationVersion();
     }
 
 
     @Override
-    public int getVersion() {
-        return edgeMigrationStrategy.getVersion();
+    public int getMaxVersion() {
+        //we only support up to v2 ATM
+        return edgeMetadataSerializationV2.getImplementationVersion();
     }
-
 }

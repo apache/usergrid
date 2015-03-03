@@ -21,21 +21,20 @@
  *
  */
 
-package org.apache.usergrid.persistence.collection.serialization.impl;
+package org.apache.usergrid.persistence.graph.serialization.impl;
 
 
 /**
  * Versions of data as they exist across our system
  */
-public enum CollectionDataVersions{
+public enum GraphDataVersions {
     INITIAL(0),
-    BUFFER_SHORT_FIX(1),
-    LOG_REMOVAL(2);
+    META_SHARDING(1);
 
     private final int version;
 
 
-    private CollectionDataVersions( final int version ) {this.version = version;}
+    private GraphDataVersions( final int version ) {this.version = version;}
 
 
     public int getVersion() {

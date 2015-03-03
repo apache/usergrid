@@ -73,7 +73,6 @@ public class MvccEntityDataMigrationImpl implements DataMigration2<EntityIdScope
     private final Keyspace keyspace;
     private final VersionedMigrationSet<MvccEntitySerializationStrategy> allVersions;
     private final UniqueValueSerializationStrategy uniqueValueSerializationStrategy;
-    private final MigrationInfoSerialization migrationInfoSerialization;
     private final EntityVersionCleanupFactory entityVersionCleanupFactory;
     private final MvccEntitySerializationStrategyV3Impl mvccEntitySerializationStrategyV3;
 
@@ -82,14 +81,12 @@ public class MvccEntityDataMigrationImpl implements DataMigration2<EntityIdScope
     public MvccEntityDataMigrationImpl( final Keyspace keyspace,
                                         final VersionedMigrationSet<MvccEntitySerializationStrategy> allVersions,
                                         final UniqueValueSerializationStrategy uniqueValueSerializationStrategy,
-                                        final MigrationInfoSerialization migrationInfoSerialization,
                                         final EntityVersionCleanupFactory entityVersionCleanupFactory,
                                         final MvccEntitySerializationStrategyV3Impl mvccEntitySerializationStrategyV3 ) {
 
         this.keyspace = keyspace;
         this.allVersions = allVersions;
         this.uniqueValueSerializationStrategy = uniqueValueSerializationStrategy;
-        this.migrationInfoSerialization = migrationInfoSerialization;
         this.entityVersionCleanupFactory = entityVersionCleanupFactory;
         this.mvccEntitySerializationStrategyV3 = mvccEntitySerializationStrategyV3;
     }

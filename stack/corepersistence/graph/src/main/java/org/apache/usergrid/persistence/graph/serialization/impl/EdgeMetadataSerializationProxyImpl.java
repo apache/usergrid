@@ -27,13 +27,15 @@ import java.util.Collections;
 import java.util.Iterator;
 
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
-import org.apache.usergrid.persistence.core.guice.V1Impl;
-import org.apache.usergrid.persistence.core.guice.V2Impl;
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
+import org.apache.usergrid.persistence.core.migration.data.MigrationInfoCache;
+import org.apache.usergrid.persistence.core.migration.data.newimpls.MigrationRelationship;
+import org.apache.usergrid.persistence.core.migration.data.newimpls.VersionedMigrationSet;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.*;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMigrationStrategy;
+import org.apache.usergrid.persistence.graph.serialization.impl.migration.GraphMigrationPlugin;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.inject.Inject;
@@ -49,90 +51,93 @@ public class EdgeMetadataSerializationProxyImpl implements EdgeMetadataSerializa
 
     private static final Logger logger = LoggerFactory.getLogger(EdgeMetadataSerializationProxyImpl.class);
 
-    private final DataMigrationManager dataMigrationManager;
     private final Keyspace keyspace;
-    private final EdgeMetadataSerialization previous;
-    private final EdgeMetadataSerialization current;
+    private final VersionedMigrationSet<EdgeMetadataSerialization> versions;
+    private final MigrationInfoCache migrationInfoCache;
 
 
     /**
      * Handles routing data to the right implementation, based on the current system migration version
      */
     @Inject
-    public EdgeMetadataSerializationProxyImpl(final DataMigrationManager dataMigrationManager, final Keyspace keyspace,
-                                              @V1Impl final EdgeMetadataSerialization previous,
-                                              @V2Impl final EdgeMetadataSerialization current) {
-        this.dataMigrationManager = dataMigrationManager;
+    public EdgeMetadataSerializationProxyImpl( final Keyspace keyspace,
+                                               final VersionedMigrationSet<EdgeMetadataSerialization> versions,
+                                               final MigrationInfoCache migrationInfoCache ) {
         this.keyspace = keyspace;
-        this.previous = previous;
-        this.current = current;
+        this.versions = versions;
+        this.migrationInfoCache = migrationInfoCache;
     }
 
 
     @Override
     public MutationBatch writeEdge( final ApplicationScope scope, final Edge edge ) {
 
+        final MigrationRelationship<EdgeMetadataSerialization> migration = getMigrationRelationShip();
 
-        if ( isOldVersion() ) {
+
+        if ( migration.needsMigration() ) {
             final MutationBatch aggregateBatch = keyspace.prepareMutationBatch();
 
-            aggregateBatch.mergeShallow( previous.writeEdge( scope, edge ) );
-            aggregateBatch.mergeShallow( current.writeEdge( scope, edge ) );
+            aggregateBatch.mergeShallow( migration.from.writeEdge( scope, edge ) );
+            aggregateBatch.mergeShallow( migration.to.writeEdge( scope, edge ) );
 
             return aggregateBatch;
         }
 
-        return current.writeEdge( scope, edge );
+        return migration.to.writeEdge( scope, edge );
     }
 
 
     @Override
     public MutationBatch removeEdgeTypeFromSource( final ApplicationScope scope, final Edge edge ) {
+        final MigrationRelationship<EdgeMetadataSerialization> migration = getMigrationRelationShip();
 
-        if ( isOldVersion() ) {
+        if ( migration.needsMigration() ) {
             final MutationBatch aggregateBatch = keyspace.prepareMutationBatch();
 
-            aggregateBatch.mergeShallow( previous.removeEdgeTypeFromSource( scope, edge ) );
-            aggregateBatch.mergeShallow( current.removeEdgeTypeFromSource( scope, edge ) );
+            aggregateBatch.mergeShallow( migration.from.removeEdgeTypeFromSource( scope, edge ) );
+            aggregateBatch.mergeShallow( migration.to.removeEdgeTypeFromSource( scope, edge ) );
 
             return aggregateBatch;
         }
 
-        return current.removeEdgeTypeFromSource( scope, edge );
+        return migration.to.removeEdgeTypeFromSource( scope, edge );
     }
 
 
     @Override
     public MutationBatch removeEdgeTypeFromSource( final ApplicationScope scope, final Id sourceNode, final String type,
                                                    final long timestamp ) {
+        final MigrationRelationship<EdgeMetadataSerialization> migration = getMigrationRelationShip();
 
-
-        if ( isOldVersion() ) {
+        if ( migration.needsMigration() ) {
             final MutationBatch aggregateBatch = keyspace.prepareMutationBatch();
 
-            aggregateBatch.mergeShallow( previous.removeEdgeTypeFromSource( scope, sourceNode, type, timestamp ) );
-            aggregateBatch.mergeShallow( current.removeEdgeTypeFromSource( scope, sourceNode, type, timestamp ) );
+            aggregateBatch.mergeShallow( migration.from.removeEdgeTypeFromSource( scope, sourceNode, type, timestamp ) );
+            aggregateBatch.mergeShallow( migration.to.removeEdgeTypeFromSource( scope, sourceNode, type, timestamp ) );
 
             return aggregateBatch;
         }
 
-        return current.removeEdgeTypeFromSource( scope, sourceNode, type, timestamp );
+        return migration.to.removeEdgeTypeFromSource( scope, sourceNode, type, timestamp );
     }
 
 
     @Override
     public MutationBatch removeIdTypeFromSource( final ApplicationScope scope, final Edge edge ) {
 
-        if ( isOldVersion() ) {
+        final MigrationRelationship<EdgeMetadataSerialization> migration = getMigrationRelationShip();
+
+        if ( migration.needsMigration() ) {
             final MutationBatch aggregateBatch = keyspace.prepareMutationBatch();
 
-            aggregateBatch.mergeShallow( previous.removeIdTypeFromSource( scope, edge ) );
-            aggregateBatch.mergeShallow( current.removeIdTypeFromSource( scope, edge ) );
+            aggregateBatch.mergeShallow( migration.from.removeIdTypeFromSource( scope, edge ) );
+            aggregateBatch.mergeShallow( migration.to.removeIdTypeFromSource( scope, edge ) );
 
             return aggregateBatch;
         }
 
-        return current.removeIdTypeFromSource( scope, edge );
+        return migration.to.removeIdTypeFromSource( scope, edge );
     }
 
 
@@ -140,34 +145,37 @@ public class EdgeMetadataSerializationProxyImpl implements EdgeMetadataSerializa
     public MutationBatch removeIdTypeFromSource( final ApplicationScope scope, final Id sourceNode, final String type,
                                                  final String idType, final long timestamp ) {
 
-        if ( isOldVersion() ) {
+        final MigrationRelationship<EdgeMetadataSerialization> migration = getMigrationRelationShip();
+
+        if ( migration.needsMigration() ) {
             final MutationBatch aggregateBatch = keyspace.prepareMutationBatch();
 
             aggregateBatch
-                    .mergeShallow( previous.removeIdTypeFromSource( scope, sourceNode, type, idType, timestamp ) );
-            aggregateBatch.mergeShallow( current.removeIdTypeFromSource( scope, sourceNode, type, idType, timestamp ) );
+                    .mergeShallow( migration.from.removeIdTypeFromSource( scope, sourceNode, type, idType, timestamp ) );
+            aggregateBatch.mergeShallow( migration.to.removeIdTypeFromSource( scope, sourceNode, type, idType, timestamp ) );
 
             return aggregateBatch;
         }
 
-        return current.removeIdTypeFromSource( scope, sourceNode, type, idType, timestamp );
+        return migration.to.removeIdTypeFromSource( scope, sourceNode, type, idType, timestamp );
     }
 
 
     @Override
     public MutationBatch removeEdgeTypeToTarget( final ApplicationScope scope, final Edge edge ) {
 
+        final MigrationRelationship<EdgeMetadataSerialization> migration = getMigrationRelationShip();
 
-        if ( isOldVersion() ) {
+        if ( migration.needsMigration() ) {
             final MutationBatch aggregateBatch = keyspace.prepareMutationBatch();
 
-            aggregateBatch.mergeShallow( previous.removeEdgeTypeToTarget( scope, edge ) );
-            aggregateBatch.mergeShallow( current.removeEdgeTypeToTarget( scope, edge ) );
+            aggregateBatch.mergeShallow( migration.from.removeEdgeTypeToTarget( scope, edge ) );
+            aggregateBatch.mergeShallow( migration.to.removeEdgeTypeToTarget( scope, edge ) );
 
             return aggregateBatch;
         }
 
-        return current.removeEdgeTypeToTarget( scope, edge );
+        return migration.to.removeEdgeTypeToTarget( scope, edge );
     }
 
 
@@ -175,90 +183,102 @@ public class EdgeMetadataSerializationProxyImpl implements EdgeMetadataSerializa
     public MutationBatch removeEdgeTypeToTarget( final ApplicationScope scope, final Id targetNode, final String type,
                                                  final long timestamp ) {
 
-        if ( isOldVersion() ) {
+        final MigrationRelationship<EdgeMetadataSerialization> migration = getMigrationRelationShip();
+
+        if ( migration.needsMigration() ) {
             final MutationBatch aggregateBatch = keyspace.prepareMutationBatch();
 
-            aggregateBatch.mergeShallow( previous.removeEdgeTypeToTarget( scope, targetNode, type, timestamp ) );
-            aggregateBatch.mergeShallow( current.removeEdgeTypeToTarget( scope, targetNode, type, timestamp ) );
+            aggregateBatch.mergeShallow( migration.from.removeEdgeTypeToTarget( scope, targetNode, type, timestamp ) );
+            aggregateBatch.mergeShallow( migration.to.removeEdgeTypeToTarget( scope, targetNode, type, timestamp ) );
 
             return aggregateBatch;
         }
 
-        return current.removeEdgeTypeToTarget( scope, targetNode, type, timestamp );
+        return migration.to.removeEdgeTypeToTarget( scope, targetNode, type, timestamp );
     }
 
 
     @Override
     public MutationBatch removeIdTypeToTarget( final ApplicationScope scope, final Edge edge ) {
 
-        if ( isOldVersion() ) {
+        final MigrationRelationship<EdgeMetadataSerialization> migration = getMigrationRelationShip();
+
+        if ( migration.needsMigration() ) {
             final MutationBatch aggregateBatch = keyspace.prepareMutationBatch();
 
-            aggregateBatch.mergeShallow( previous.removeIdTypeToTarget( scope, edge ) );
-            aggregateBatch.mergeShallow( current.removeIdTypeToTarget( scope, edge ) );
+            aggregateBatch.mergeShallow( migration.from.removeIdTypeToTarget( scope, edge ) );
+            aggregateBatch.mergeShallow( migration.to.removeIdTypeToTarget( scope, edge ) );
 
             return aggregateBatch;
         }
 
-        return current.removeIdTypeToTarget( scope, edge );
+        return migration.to.removeIdTypeToTarget( scope, edge );
     }
 
 
     @Override
     public MutationBatch removeIdTypeToTarget( final ApplicationScope scope, final Id targetNode, final String type,
                                                final String idType, final long timestamp ) {
+        final MigrationRelationship<EdgeMetadataSerialization> migration = getMigrationRelationShip();
 
-
-        if ( isOldVersion() ) {
+        if ( migration.needsMigration() ) {
             final MutationBatch aggregateBatch = keyspace.prepareMutationBatch();
 
-            aggregateBatch.mergeShallow( previous.removeIdTypeToTarget( scope, targetNode, type, idType, timestamp ) );
-            aggregateBatch.mergeShallow( current.removeIdTypeToTarget( scope, targetNode, type, idType, timestamp ) );
+            aggregateBatch.mergeShallow( migration.from.removeIdTypeToTarget( scope, targetNode, type, idType, timestamp ) );
+            aggregateBatch.mergeShallow( migration.to.removeIdTypeToTarget( scope, targetNode, type, idType, timestamp ) );
 
             return aggregateBatch;
         }
 
-        return current.removeIdTypeToTarget( scope, targetNode, type, idType, timestamp );
+        return migration.to.removeIdTypeToTarget( scope, targetNode, type, idType, timestamp );
     }
 
 
     @Override
     public Iterator<String> getEdgeTypesFromSource( final ApplicationScope scope, final SearchEdgeType search ) {
-        if ( isOldVersion() ) {
-            return previous.getEdgeTypesFromSource( scope, search );
+        final MigrationRelationship<EdgeMetadataSerialization> migration = getMigrationRelationShip();
+
+        if ( migration.needsMigration() ) {
+            return migration.from.getEdgeTypesFromSource( scope, search );
         }
 
-        return current.getEdgeTypesFromSource( scope, search );
+        return migration.to.getEdgeTypesFromSource( scope, search );
     }
 
 
     @Override
     public Iterator<String> getIdTypesFromSource( final ApplicationScope scope, final SearchIdType search ) {
-        if ( isOldVersion() ) {
-            return previous.getIdTypesFromSource( scope, search );
+        final MigrationRelationship<EdgeMetadataSerialization> migration = getMigrationRelationShip();
+
+        if ( migration.needsMigration() ) {
+            return migration.from.getIdTypesFromSource( scope, search );
         }
 
-        return current.getIdTypesFromSource( scope, search );
+        return migration.to.getIdTypesFromSource( scope, search );
     }
 
 
     @Override
     public Iterator<String> getEdgeTypesToTarget( final ApplicationScope scope, final SearchEdgeType search ) {
-        if ( isOldVersion() ) {
-            return previous.getEdgeTypesToTarget( scope, search );
+        final MigrationRelationship<EdgeMetadataSerialization> migration = getMigrationRelationShip();
+
+        if ( migration.needsMigration() ) {
+            return migration.from.getEdgeTypesToTarget( scope, search );
         }
 
-        return current.getEdgeTypesToTarget( scope, search );
+        return migration.to.getEdgeTypesToTarget( scope, search );
     }
 
 
     @Override
     public Iterator<String> getIdTypesToTarget( final ApplicationScope scope, final SearchIdType search ) {
-        if ( isOldVersion() ) {
-            return previous.getIdTypesToTarget( scope, search );
+        final MigrationRelationship<EdgeMetadataSerialization> migration = getMigrationRelationShip();
+
+        if ( migration.needsMigration() ) {
+            return migration.from.getIdTypesToTarget( scope, search );
         }
 
-        return current.getIdTypesToTarget( scope, search );
+        return migration.to.getIdTypesToTarget( scope, search );
     }
 
 
@@ -268,21 +288,19 @@ public class EdgeMetadataSerializationProxyImpl implements EdgeMetadataSerializa
     }
 
 
+
+
     /**
      * Return true if we're on an old version
      */
-    private boolean isOldVersion() {
-        return dataMigrationManager.getCurrentVersion() < getVersion();
+    private MigrationRelationship<EdgeMetadataSerialization> getMigrationRelationShip() {
+        return this.versions.getMigrationRelationship(
+                migrationInfoCache.getVersion( GraphMigrationPlugin.PLUGIN_NAME ) );
     }
+
 
     @Override
-    public MigrationRelationship<EdgeMetadataSerialization> getMigration() {
-        return new MigrationRelationship<>(previous,current);
+    public int getImplementationVersion() {
+        throw new UnsupportedOperationException( "Proxies do not have an implementation version" );
     }
-
-    @Override
-    public int getVersion() {
-        return MIGRATION_VERSION;
-    }
-
 }
