@@ -52,8 +52,9 @@ public interface EntityIndex {
      * @param indexSuffix index name
      * @param shards
      * @param replicas
+     * @param writeConsistency
      */
-    public void addIndex(final String indexSuffix, final int shards, final int replicas);
+    public void addIndex(final String indexSuffix, final int shards, final int replicas, final String writeConsistency);
 
     /**
      * Create the index batch.

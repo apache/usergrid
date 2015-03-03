@@ -169,7 +169,7 @@ public class EntityIndexTest extends BaseIT {
 
         testQueries( indexScope, searchTypes,  entityIndex );
 
-        entityIndex.addIndex("v2", 1,0);
+        entityIndex.addIndex("v2", 1,0,"one");
 
         insertJsonBlob(entityIndex, entityType, indexScope, "/sample-large.json",101,100);
 
@@ -199,7 +199,7 @@ public class EntityIndexTest extends BaseIT {
 
         entityIndex.refresh();
 
-        entityIndex.addIndex("v2", 1, 0);
+        entityIndex.addIndex("v2", 1, 0, "one");
 
         insertJsonBlob(entityIndex, entityType, indexScope, "/sample-large.json", 1, 0);
 

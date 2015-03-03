@@ -250,8 +250,10 @@ public class IndexResource extends AbstractContextResource {
             throw new IllegalArgumentException("Please add an indexSuffix to your post");
         }
 
+        String writeConsistency = config.get("writeConsistency") != null ? (String)config.get("writeConsistency") : "one" ;
+
         emf.addIndex(appId, config.get("indexSuffix").toString(),
-            (int) config.get("shards"),(int) config.get("replicas"));
+            (int) config.get("shards"),(int) config.get("replicas"),writeConsistency);
         response.setAction("Add index to alias");
 
         return new JSONWithPadding(response, callback);

@@ -826,9 +826,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     }
 
     @Override
-    public void addIndex(final UUID applicationId,final String indexSuffix,final int shards,final int replicas){
+    public void addIndex(final UUID applicationId,final String indexSuffix,final int shards,final int replicas, final String writeConsistency){
         EntityIndex entityIndex = managerCache.getEntityIndex(CpNamingUtils.getApplicationScope(applicationId));
-        entityIndex.addIndex(indexSuffix, shards, replicas);
+        entityIndex.addIndex(indexSuffix, shards, replicas,writeConsistency);
     }
 
     @Override

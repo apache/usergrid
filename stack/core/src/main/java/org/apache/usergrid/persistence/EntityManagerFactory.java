@@ -165,8 +165,9 @@ public interface EntityManagerFactory {
      * @param suffix unique indentifier for additional index
      * @param shards number of shards
      * @param replicas number of replicas
+     * @param writeConsistency only "one, quorum, or all"
      */
-    public void addIndex(final UUID appId,final String suffix,final int shards,final int replicas);
+    public void addIndex(final UUID appId,final String suffix,final int shards,final int replicas, final String writeConsistency);
 
     public Health getEntityStoreHealth();
 

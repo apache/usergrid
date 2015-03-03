@@ -140,11 +140,11 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     public void initializeIndex() {
         final int numberOfShards = config.getNumberOfShards();
         final int numberOfReplicas = config.getNumberOfReplicas();
-        addIndex(null, numberOfShards, numberOfReplicas);
+        addIndex(null, numberOfShards, numberOfReplicas,config.getWriteConsistencyLevel());
     }
 
     @Override
-    public void addIndex(final String indexSuffix,final int numberOfShards, final int numberOfReplicas) {
+    public void addIndex(final String indexSuffix,final int numberOfShards, final int numberOfReplicas, final String writeConsistency) {
         String normalizedSuffix =  StringUtils.isNotEmpty(indexSuffix) ? indexSuffix : null;
         try {
 
@@ -161,7 +161,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
                 Settings settings = ImmutableSettings.settingsBuilder()
                         .put("index.number_of_shards", numberOfShards)
                         .put("index.number_of_replicas", numberOfReplicas)
-                        .build();
+                        .put("action.write_consistency", writeConsistency)
+                    .build();
                 final CreateIndexResponse cir = admin.indices().prepareCreate(indexName)
                         .setSettings(settings)
                         .execute()
