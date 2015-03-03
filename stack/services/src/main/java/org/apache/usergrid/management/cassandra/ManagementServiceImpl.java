@@ -28,6 +28,8 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -198,11 +200,6 @@ public class ManagementServiceImpl implements ManagementService {
     private static final String TOKEN_TYPE_PASSWORD_RESET = "resetpw";
 
     private static final String TOKEN_TYPE_CONFIRM = "confirm";
-
-    public static final String MANAGEMENT_APPLICATION = "management";
-
-    public static final String APPLICATION_INFO = "application_info";
-
 
     public static final String OAUTH_SECRET_SALT = "super secret oauth value";
 
@@ -665,7 +662,8 @@ public class ManagementServiceImpl implements ManagementService {
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         properties.setProperty( "name", buildAppName( application.getName(), organization ) );
         properties.setProperty( PROPERTY_PATH, organization.getName() );
-        Entity appInfo = em.create( applicationId, APPLICATION_INFO, application.getProperties() );
+        Entity appInfo = em.create(
+            applicationId, CpNamingUtils.APPLICATION_INFO, application.getProperties() );
 
         writeUserToken( smf.getManagementAppId(), appInfo, encryptionService
                 .plainTextCredentials( generateOAuthSecretKey( AuthPrincipalType.APPLICATION ), null, applicationId ) );
@@ -1632,37 +1630,44 @@ public class ManagementServiceImpl implements ManagementService {
         }
 
         if ( properties == null ) {
-            properties = new HashMap<String, Object>();
+            properties = new HashMap<>();
         }
 
         OrganizationInfo organizationInfo = getOrganizationByUuid( organizationId );
-
         UUID applicationId = emf.createApplication( organizationInfo.getName(), applicationName, properties );
 
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-        properties.put( "name", buildAppName( applicationName, organizationInfo ) );
-        properties.put( "appUuid", applicationId );
-        Entity appInfo = em.create( applicationId, APPLICATION_INFO, properties );
-
         em.refreshIndex();
 
-        writeUserToken( smf.getManagementAppId(), appInfo, encryptionService
-                .plainTextCredentials( generateOAuthSecretKey( AuthPrincipalType.APPLICATION ), null,
-                        smf.getManagementAppId() ) );
+        // already done by EMF
+//      properties.put( "name", buildAppName( applicationName, organizationInfo ) );
+//      properties.put( "appUuid", applicationId );
+//      Entity appInfo = em.create(applicationId, CpNamingUtils.APPLICATION_INFO, properties);
+
+        String appName = buildAppName( applicationName, organizationInfo );
+        Query q = Query.fromQL(PROPERTY_NAME + " = '" + appName + "'");
+        Results results = em.searchCollection( em.getApplicationRef(), CpNamingUtils.APPLICATION_INFOS, q);
+        Entity appInfo = results.iterator().next();
+
+        writeUserToken( smf.getManagementAppId(), appInfo,
+            encryptionService.plainTextCredentials( generateOAuthSecretKey( AuthPrincipalType.APPLICATION ),
+                null, smf.getManagementAppId() ) );
+
+        // TODO: migration needed to make sure this gets called for all existing apps
         addApplicationToOrganization( organizationId, applicationId, appInfo );
 
         UserInfo user = null;
-        // if we call this method before the full stack is initialized
-        // we'll get an exception
         try {
             user = SubjectUtils.getUser();
         }
         catch ( UnavailableSecurityManagerException e ) {
+            // occurs in the rare case that this is called before the full stack is initialized
+            logger.warn("Error getting user, organization created activity will not be created", e);
         }
         if ( ( user != null ) && user.isAdminUser() ) {
             postOrganizationActivity( organizationId, user, "create", appInfo, "Application", applicationName,
-                    "<a href=\"mailto:" + user.getEmail() + "\">" + user.getName() + " (" + user.getEmail()
-                            + ")</a> created a new application named " + applicationName, null );
+                "<a href=\"mailto:" + user.getEmail() + "\">" + user.getName() + " (" + user.getEmail()
+                    + ")</a> created a new application named " + applicationName, null );
         }
 
         em.refreshIndex();
@@ -1681,7 +1686,7 @@ public class ManagementServiceImpl implements ManagementService {
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
 
         Results r = em.getConnectingEntities(
-                new SimpleEntityRef(APPLICATION_INFO, applicationInfoId),
+                new SimpleEntityRef(CpNamingUtils.APPLICATION_INFO, applicationInfoId),
                 "owns", "group", Level.ALL_PROPERTIES );
 
         Entity entity = r.getEntity();
@@ -1704,7 +1709,7 @@ public class ManagementServiceImpl implements ManagementService {
 
         final Results results = em.getConnectedEntities(
                 new SimpleEntityRef(Group.ENTITY_TYPE, organizationGroupId),
-                "owns", APPLICATION_INFO, Level.ALL_PROPERTIES );
+                "owns", CpNamingUtils.APPLICATION_INFO, Level.ALL_PROPERTIES );
 
         final PagingResultsIterator itr = new PagingResultsIterator( results );
 
@@ -1789,7 +1794,7 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-        Entity entity = em.get( new SimpleEntityRef( APPLICATION_INFO, applicationId ));
+        Entity entity = em.get( new SimpleEntityRef( CpNamingUtils.APPLICATION_INFO, applicationId ));
 
         if ( entity != null ) {
             return new ApplicationInfo( applicationId, entity.getName() );

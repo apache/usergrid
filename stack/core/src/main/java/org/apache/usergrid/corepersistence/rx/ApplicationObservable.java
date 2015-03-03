@@ -63,25 +63,24 @@ public class ApplicationObservable {
 
 
         final Observable<Id> systemIds = Observable.from( Arrays
-                .asList( generateApplicationId( CpNamingUtils.DEFAULT_APPLICATION_ID ),
-                        generateApplicationId( CpNamingUtils.MANAGEMENT_APPLICATION_ID ),
-                        generateApplicationId( CpNamingUtils.SYSTEM_APP_ID ) ) );
+            .asList( generateApplicationId( CpNamingUtils.DEFAULT_APPLICATION_ID ),
+                generateApplicationId( CpNamingUtils.MANAGEMENT_APPLICATION_ID ) ) );
 
 
-        final ApplicationScope appScope = getApplicationScope( CpNamingUtils.SYSTEM_APP_ID );
+        final ApplicationScope appScope = getApplicationScope( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
 
         final CollectionScope appInfoCollectionScope =
-                new CollectionScopeImpl( appScope.getApplication(), appScope.getApplication(),
-                        CpNamingUtils.getCollectionScopeNameFromCollectionName( CpNamingUtils.APPINFOS ) );
+           new CollectionScopeImpl( appScope.getApplication(), appScope.getApplication(),
+               CpNamingUtils.getCollectionScopeNameFromCollectionName( CpNamingUtils.APPLICATION_INFOS) );
 
         final EntityCollectionManager collectionManager =
-                managerCache.getEntityCollectionManager( appInfoCollectionScope );
+           managerCache.getEntityCollectionManager( appInfoCollectionScope );
 
 
         final GraphManager gm = managerCache.getGraphManager( appScope );
 
 
-        String edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( CpNamingUtils.APPINFOS );
+        String edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( CpNamingUtils.APPLICATION_INFOS );
 
         Id rootAppId = appScope.getApplication();
 

@@ -38,34 +38,31 @@ import org.apache.usergrid.persistence.model.entity.SimpleId;
  */
 public class CpNamingUtils {
 
-    /**
-         * TODO: Why do we have 3?  Can we merge this into a single management app?  It would make administration much
-         * easier and cleaner on the ES side
-         *
-         */
+    // TODO: Why do we have three internal apps?  Can we merge this into a single management app?
+    // It would make administration much easier and cleaner on the ES side
 
-    /**
-     * Edge types for collection suffix
-     */
+    /** Edge types for collection suffix */
     public static final String EDGE_COLL_SUFFIX = "zzzcollzzz";
 
-    /**
-     * Edge types for connection suffix
-     */
+    /** Edge types for connection suffix */
     public static final String EDGE_CONN_SUFFIX = "zzzconnzzz";
-    /** The System Application where we store app and org metadata */
-    public static final UUID SYSTEM_APP_ID =
-            UUID.fromString("b6768a08-b5d5-11e3-a495-10ddb1de66c3");
+
     /** App where we store management info */
     public static final  UUID MANAGEMENT_APPLICATION_ID =
             UUID.fromString("b6768a08-b5d5-11e3-a495-11ddb1de66c8");
+
     /** TODO Do we need this in two-dot-o? */
     public static final  UUID DEFAULT_APPLICATION_ID =
             UUID.fromString("b6768a08-b5d5-11e3-a495-11ddb1de66c9");
+
     /**
      * The app infos entity object type. This holds the app name, appId, and org name
      */
-    public static final String APPINFOS = "appinfos";
+    public static final String APPLICATION_INFO = "appinfo";
+
+    public static final String APPLICATION_INFOS = "appinfos";
+
+    public static final String DELETED_APPINFO = "deleted_appinfo";
 
     public static final String DELETED_APPINFOS = "deleted_appinfos";
 
