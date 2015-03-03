@@ -47,6 +47,8 @@ public class ClientSetup implements TestRule {
     protected String orgName;
     protected String appName;
     protected Token superuserToken;
+    protected String superuserName = "superuser";
+    protected String superuserPassword = "superpassword";
 
     protected Organization organization;
     protected Application application;
@@ -89,7 +91,7 @@ public class ClientSetup implements TestRule {
         String name = testClass + "." + methodName;
 
         restClient.superuserSetup();
-        superuserToken = restClient.management().token().post( new Token( "superuser", "superpassword" ) );
+        superuserToken = restClient.management().token().post( new Token( superuserName, superuserPassword ) );
 
         username = "user_"+name + UUIDUtils.newTimeUUID();
         password = username;
@@ -106,6 +108,8 @@ public class ClientSetup implements TestRule {
 
     public String getUsername(){return username;}
 
+    public String getEmail(){return username+"@usergrid.com";}
+
     public String getPassword(){return password;}
 
     public Organization getOrganization(){return organization;}
@@ -116,6 +120,14 @@ public class ClientSetup implements TestRule {
 
     public Token getSuperuserToken() {
         return superuserToken;
+    }
+
+    public String getSuperuserName() {
+        return superuserName;
+    }
+
+    public String getSuperuserPassword() {
+        return superuserPassword;
     }
 
     public void refreshIndex() {

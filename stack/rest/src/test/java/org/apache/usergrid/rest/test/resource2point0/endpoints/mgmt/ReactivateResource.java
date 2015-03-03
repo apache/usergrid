@@ -14,7 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt;
+
 
 import javax.ws.rs.core.MediaType;
 
@@ -28,53 +30,17 @@ import com.sun.jersey.api.client.WebResource;
 
 
 /**
- * Relations to the following endpoint
- * /management/users/"username"
- * Store endpoints relating to specific users
+ * handles the * /reactivate endpoints
  */
-public class UserResource extends NamedResource {
-
-    public UserResource( final String name, final ClientContext context, final UrlResource parent ) {
-        super( name, context, parent );
+public class ReactivateResource extends NamedResource {
+    public ReactivateResource(final ClientContext context, final UrlResource parent) {
+        super("reactivate",context, parent);
     }
 
-    public ReactivateResource reactivate() {
-        return new ReactivateResource( context, this );
-    }
-
-    public ConfirmResource confirm() {
-        return new ConfirmResource(context,this);
-    }
-
-    public PasswordResource password() {
-        return new PasswordResource( context, this );
-    }
-
-    public FeedResource feed() {
-        return new FeedResource( context, this );
-    }
-
-    public ResetResource resetpw() {
-        return new ResetResource(context,this);
-    }
-
-    public OrgResource organizations() {
-        return new OrgResource( context, this );
-    }
-
-    public Entity get() {
-        WebResource resource = getResource( true );
-        ApiResponse response = resource.type( MediaType.APPLICATION_JSON_TYPE )
-                                       .accept( MediaType.APPLICATION_JSON ).get( ApiResponse.class );
-        return new Entity(response);
-    }
-
-    public Entity put(Entity userPayload){
+    public Entity get(){
         WebResource resource = getResource(true);
-
         ApiResponse response = resource.type( MediaType.APPLICATION_JSON_TYPE )
-                                       .accept( MediaType.APPLICATION_JSON ).put( ApiResponse.class, userPayload);
+                                       .accept( MediaType.APPLICATION_JSON ).get( ApiResponse.class);
         return new Entity(response);
     }
-
 }
