@@ -86,10 +86,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     /** Have we already initialized the index for the management app? */
     private AtomicBoolean indexInitialized = new AtomicBoolean(  );
 
-    /** Keep track of applications that already have indexes to avoid redundant re-creation. */
-    private static final Set<UUID> applicationIndexesCreated = new HashSet<UUID>();
-
-
     // cache of already instantiated entity managers
     private LoadingCache<UUID, EntityManager> entityManagers
         = CacheBuilder.newBuilder().maximumSize(100).build(new CacheLoader<UUID, EntityManager>() {
@@ -156,18 +152,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     }
 
 
-//    public ManagerCache getManagerCache() {
-//
-//        if ( managerCache == null ) {
-//            managerCache = injector.getInstance( ManagerCache.class );
-//
-//            dataMigrationManager = injector.getInstance( DataMigrationManager.class );
-//        }
-//        return managerCache;
-//    }
-
-
-
     @Override
     public EntityManager getEntityManager(UUID applicationId) {
         try {
@@ -184,12 +168,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         EntityManager em = new CpEntityManager();
         em.init( this, applicationId );
-
-        // only need to do this once
-        if ( !applicationIndexesCreated.contains( applicationId ) ) {
-            em.createIndex();
-            applicationIndexesCreated.add( applicationId );
-        }
 
         return em;
     }
@@ -231,7 +209,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     @Override
     public UUID initializeApplication( String organizationName, UUID applicationId, String name,
                                        Map<String, Object> properties ) throws Exception {
-
 
         EntityManager em = getEntityManager( CpNamingUtils.SYSTEM_APP_ID);
 
@@ -279,6 +256,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         }catch(DuplicateUniquePropertyExistsException e){
                        throw new ApplicationAlreadyExistsException( appName );
                    }
+        em.createIndex();
         em.refreshIndex();
 
         // create application entity
@@ -289,6 +267,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         EntityManager appEm = getEntityManager( applicationId );
 
         appEm.create( applicationId, TYPE_APPLICATION, properties );
+        appEm.createIndex();
         appEm.resetRoles();
         appEm.refreshIndex();
 
