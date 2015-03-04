@@ -107,12 +107,10 @@ public class EntityDeletedTask implements Task<Void> {
         final MutationBatch entityDelete = entitySerializationStrategy.delete(collectionScope, entityId, version);
         final MutationBatch logDelete = logEntrySerializationStrategy.delete(collectionScope, entityId, version);
 
-        throw new NotImplementedException( "Implement unique cleanup here" );
+        entityDelete.execute();
+        logDelete.execute();
 //
-//        entityDelete.execute();
-//        logDelete.execute();
-//
-//        return null;
+        return null;
     }
 
 

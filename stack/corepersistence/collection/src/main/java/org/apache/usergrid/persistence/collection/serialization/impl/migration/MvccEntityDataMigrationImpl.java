@@ -20,24 +20,27 @@
 package org.apache.usergrid.persistence.collection.serialization.impl.migration;
 
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityVersionCleanupFactory;
 import org.apache.usergrid.persistence.collection.MvccEntity;
+import org.apache.usergrid.persistence.collection.impl.EntityDeletedTask;
 import org.apache.usergrid.persistence.collection.impl.EntityVersionCleanupTask;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
-import org.apache.usergrid.persistence.collection.serialization.impl.MvccEntitySerializationStrategyImpl;
 import org.apache.usergrid.persistence.collection.serialization.impl.MvccEntitySerializationStrategyV3Impl;
 import org.apache.usergrid.persistence.collection.serialization.impl.UniqueValueImpl;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationException;
-import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerialization;
 import org.apache.usergrid.persistence.core.migration.data.newimpls.DataMigration2;
 import org.apache.usergrid.persistence.core.migration.data.newimpls.MigrationDataProvider;
 import org.apache.usergrid.persistence.core.migration.data.newimpls.MigrationRelationship;
@@ -56,11 +59,8 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import rx.Observable;
 import rx.Subscriber;
-import rx.functions.Action0;
 import rx.functions.Action1;
 import rx.functions.Func1;
-import rx.functions.Func2;
-import rx.observables.GroupedObservable;
 import rx.schedulers.Schedulers;
 
 
@@ -70,6 +70,9 @@ import rx.schedulers.Schedulers;
 @Singleton
 public class MvccEntityDataMigrationImpl implements DataMigration2<EntityIdScope> {
 
+
+    private static final Logger LOGGER = LoggerFactory.getLogger( MvccEntityDataMigrationImpl.class );
+
     private final Keyspace keyspace;
     private final VersionedMigrationSet<MvccEntitySerializationStrategy> allVersions;
     private final UniqueValueSerializationStrategy uniqueValueSerializationStrategy;
@@ -77,12 +80,14 @@ public class MvccEntityDataMigrationImpl implements DataMigration2<EntityIdScope
     private final MvccEntitySerializationStrategyV3Impl mvccEntitySerializationStrategyV3;
 
 
+
     @Inject
     public MvccEntityDataMigrationImpl( final Keyspace keyspace,
                                         final VersionedMigrationSet<MvccEntitySerializationStrategy> allVersions,
                                         final UniqueValueSerializationStrategy uniqueValueSerializationStrategy,
                                         final EntityVersionCleanupFactory entityVersionCleanupFactory,
-                                        final MvccEntitySerializationStrategyV3Impl mvccEntitySerializationStrategyV3 ) {
+                                        final MvccEntitySerializationStrategyV3Impl mvccEntitySerializationStrategyV3
+                                      ) {
 
         this.keyspace = keyspace;
         this.allVersions = allVersions;
@@ -107,7 +112,7 @@ public class MvccEntityDataMigrationImpl implements DataMigration2<EntityIdScope
 
     @Override
     public int migrate( final int currentVersion, final MigrationDataProvider<EntityIdScope> migrationDataProvider,
-                         final ProgressObserver observer ) {
+                        final ProgressObserver observer ) {
 
         final AtomicLong atomicLong = new AtomicLong();
 
@@ -116,272 +121,153 @@ public class MvccEntityDataMigrationImpl implements DataMigration2<EntityIdScope
         final UUID startTime = UUIDGenerator.newTimeUUID();
 
         final MigrationRelationship<MvccEntitySerializationStrategy> migration =
-                allVersions.getMigrationRelationship( currentVersion );
+            allVersions.getMigrationRelationship( currentVersion );
 
 
-        final long migrated = migrationDataProvider.getData().subscribeOn( Schedulers.io() )
-                                                   .parallel( new Func1<Observable<EntityIdScope>, Observable<Long>>() {
+        final Observable<List<EntityToSaveMessage>> migrated =
+            migrationDataProvider.getData().subscribeOn( Schedulers.io() ).parallel(
+                new Func1<Observable<EntityIdScope>, Observable<List<EntityToSaveMessage>>>() {
 
 
-                  //process the ids in parallel
-                  @Override
-                  public Observable<Long> call(
-                          final Observable<EntityIdScope>
-                                  entityIdScopeObservable ) {
+                    //process the ids in parallel
+                    @Override
+                    public Observable<List<EntityToSaveMessage>> call(
+                        final Observable<EntityIdScope> entityIdScopeObservable ) {
 
 
-                      return entityIdScopeObservable.flatMap(
-                              new Func1<EntityIdScope,
-                                      Observable<EntityToSaveMessage>>() {
+                        return entityIdScopeObservable.flatMap(
+                            new Func1<EntityIdScope, Observable<EntityToSaveMessage>>() {
 
 
-                                  @Override
-                                  public
-                                  Observable<EntityToSaveMessage> call(
-                                          final EntityIdScope
-                                                  entityIdScope ) {
+                                @Override
+                                public Observable<EntityToSaveMessage> call( final EntityIdScope entityIdScope ) {
 
-                                      //load the entity
-                                      final CollectionScope
-                                              currentScope =
-                                              entityIdScope
-                                                      .getCollectionScope();
+                                    //load the entity
+                                    final CollectionScope currentScope = entityIdScope.getCollectionScope();
 
 
-                                      //for each element in our
-                                      // history, we need to copy it
-                                      // to v2.
-                                      // Note that
-                                      // this migration
-                                      //won't support anything beyond V2
+                                    //for each element in our
+                                    // history, we need to copy it
+                                    // to v2.
+                                    // Note that
+                                    // this migration
+                                    //won't support anything beyond V2
 
-                                      final Iterator<MvccEntity>
-                                              allVersions =
-                                              migration.from
-                                                      .loadAscendingHistory(
-                                                              currentScope,
-                                                              entityIdScope
-                                                                      .getId(),
-                                                              startTime,
-                                                              100 );
+                                    final Iterator<MvccEntity> allVersions = migration.from
+                                        .loadAscendingHistory( currentScope, entityIdScope.getId(), startTime, 100 );
 
-                                      //emit all the entity versions
-                                      return Observable.create(
-                                              new Observable
-                                                      .OnSubscribe<EntityToSaveMessage>() {
-                                                  @Override
-                                                  public void call(
-                                                          final
-                                                          Subscriber<? super
-                                                                  EntityToSaveMessage> subscriber ) {
+                                    //emit all the entity versions
+                                    return Observable.create( new Observable.OnSubscribe<EntityToSaveMessage>() {
+                                            @Override
+                                            public void call( final Subscriber<? super
+                                                EntityToSaveMessage> subscriber ) {
 
-                                                      while ( allVersions
-                                                              .hasNext() ) {
-                                                          final
-                                                          EntityToSaveMessage
-                                                                  message =
-                                                                  new EntityToSaveMessage(
-                                                                          currentScope,
-                                                                          allVersions
-                                                                                  .next() );
-                                                          subscriber.onNext( message );
-                                                      }
+                                                while ( allVersions.hasNext() ) {
+                                                    final EntityToSaveMessage message =  new EntityToSaveMessage( currentScope, allVersions.next() );
+                                                    subscriber.onNext( message );
+                                                }
 
-                                                      subscriber.onCompleted();
-                                                  }
-                                              } );
-                                  }
-                              } )
+                                                subscriber.onCompleted();
+                                            }
+                                        } );
+                                }
+                            } )
+                            //buffer 10 versions
+                            .buffer( 100 ).doOnNext( new Action1<List<EntityToSaveMessage>>() {
+                                @Override
+                                public void call( final List<EntityToSaveMessage> entities ) {
 
+                                    final MutationBatch totalBatch = keyspace.prepareMutationBatch();
 
-                              //group them by entity id so we can get
-                              // the max for cleanup
-                              .groupBy(
-                                      new Func1<EntityToSaveMessage,
-                                              Id>() {
-                                          @Override
-                                          public Id call(
-                                                  final
-                                                  EntityToSaveMessage
-                                                          entityToSaveMessage ) {
-                                              return entityToSaveMessage.entity
-                                                      .getId();
-                                          }
-                                      } )
-                              //buffer up 10 of groups so we can put them all in a single mutation
-                              .buffer( 10 ).doOnNext(
-                                      new Action1<List<GroupedObservable<Id, EntityToSaveMessage>>>() {
+                                    atomicLong.addAndGet( entities.size() );
 
+                                    List<EntityVersionCleanupTask> entityVersionCleanupTasks = new ArrayList(entities.size());
 
-                                          @Override
-                                          public void call(
-                                                  final
-                                                  List<GroupedObservable<Id, EntityToSaveMessage>> groupedObservables ) {
+                                    for ( EntityToSaveMessage message : entities ) {
+                                        final MutationBatch entityRewrite =
+                                            migration.to.write( message.scope, message.entity );
 
-                                              atomicLong.addAndGet(
-                                                      groupedObservables
-                                                              .size() );
+                                        //add to
+                                        // the
+                                        // total
+                                        // batch
+                                        totalBatch.mergeShallow( entityRewrite );
 
-                                              final MutationBatch
-                                                      totalBatch =
-                                                      keyspace.prepareMutationBatch();
+                                        //write
+                                        // the
+                                        // unique values
+
+                                        if ( !message.entity.getEntity().isPresent() ) {
+                                            return;
+                                        }
+
+                                        final Entity entity = message.entity.getEntity().get();
+
+                                        final Id entityId = entity.getId();
+
+                                        final UUID version = message.entity.getVersion();
+
+                                        // re-write the unique
+                                        // values
+                                        // but this
+                                        // time with
+                                        // no TTL so that cleanup can clean up
+                                        // older values
+                                        for ( Field field : EntityUtils
+                                            .getUniqueFields( message.entity.getEntity().get() ) ) {
+
+                                            UniqueValue written = new UniqueValueImpl( field, entityId, version );
+
+                                            MutationBatch mb =
+                                                uniqueValueSerializationStrategy.write( message.scope, written );
 
 
-                                              //run each of the
-                                              // groups and add
-                                              // it ot the batch
-                                              Observable
-                                                      .from( groupedObservables )
-                                                      //emit the group as an observable
-                                                      .flatMap(
-                                                              new Func1<GroupedObservable<Id, EntityToSaveMessage>, Observable<EntityToSaveMessage>>() {
+                                            // merge into our
+                                            // existing mutation
+                                            // batch
+                                            totalBatch.mergeShallow( mb );
+                                        }
 
+                                        final EntityVersionCleanupTask task = entityVersionCleanupFactory.getTask( message.scope, message.entity.getId(), version );
 
-                                                                  @Override
-                                                                  public Observable<EntityToSaveMessage> call(
-                                                                          final GroupedObservable<Id, EntityToSaveMessage> idEntityToSaveMessageGroupedObservable ) {
-                                                                      return idEntityToSaveMessageGroupedObservable
-                                                                              .asObservable();
-                                                                  }
-                                                              } )
+                                        entityVersionCleanupTasks.add( task );
+                                    }
 
-                                                      //merge and add the batch
-                                                      .doOnNext(
-                                                              new Action1<EntityToSaveMessage>() {
-                                                                  @Override
-                                                                  public void call(
-                                                                          final EntityToSaveMessage message ) {
+                                    executeBatch( migration.to.getImplementationVersion(), totalBatch, observer, atomicLong );
 
-                                                                      final MutationBatch
-                                                                              entityRewrite =
-                                                                              migration.to.write( message.scope,
-                                                                                              message.entity );
+                                    //now run our cleanup task
 
-                                                                      //add to
-                                                                      // the
-                                                                      // total
-                                                                      // batch
-                                                                      totalBatch.mergeShallow( entityRewrite );
+                                    for(EntityVersionCleanupTask entityVersionCleanupTask: entityVersionCleanupTasks){
+                                        try {
+                                            entityVersionCleanupTask.call();
+                                        }
+                                        catch ( Exception e ) {
+                                            LOGGER.error( "Unable to run cleanup task", e );
+                                        }
+                                    }
+                                }
+                            } );
+                    }
+                } );
 
-                                                                      //write
-                                                                      // the
-                                                                      // unique values
-
-                                                                      if ( !message.entity
-                                                                              .getEntity()
-                                                                              .isPresent() ) {
-                                                                          return;
-                                                                      }
-
-                                                                          final Entity
-                                                                                  entity =
-                                                                                  message.entity
-                                                                                          .getEntity()
-                                                                                          .get();
-
-                                                                          final Id
-                                                                                  entityId =
-                                                                                  entity.getId();
-
-                                                                          final UUID
-                                                                                  version =
-                                                                                  message.entity
-                                                                                          .getVersion();
-
-                                                                          // re-write the unique values
-                                                                          // but this
-                                                                          // time with
-                                                                          // no TTL so that cleanup can clean up older values
-                                                                          for ( Field field : EntityUtils
-                                                                                  .getUniqueFields(
-                                                                                          message.entity
-                                                                                                  .getEntity()
-                                                                                                  .get() ) ) {
-
-                                                                              UniqueValue
-                                                                                      written =
-                                                                                      new UniqueValueImpl(
-                                                                                              field,
-                                                                                              entityId,
-                                                                                              version );
-
-                                                                              MutationBatch
-                                                                                      mb =
-                                                                                      uniqueValueSerializationStrategy
-                                                                                              .write( message.scope,
-                                                                                                      written );
-
-
-                                                                              // merge into our
-                                                                              // existing mutation
-                                                                              // batch
-                                                                              totalBatch
-                                                                                      .mergeShallow(
-                                                                                              mb );
-                                                                          }
-                                                                  }
-                                                              } )
-                                                      //once we've streamed everything, flush it
-                                                      .doOnCompleted(
-
-                                                              new Action0() {
-                                                                  @Override
-                                                                  public void call() {
-
-                                                                      executeBatch(migration.to.getImplementationVersion(), totalBatch, observer, atomicLong );
-                                                                  }
-                                                              } )
-                                                      .toBlocking()
-                                                      .last();
-                                          }
-                                      } ).
-                                      reduce( 0l,
-                                              new Func2<Long, List<GroupedObservable<Id, EntityToSaveMessage>>, Long>() {
-
-                                                  @Override
-                                                  public Long call(
-                                                          final Long aLong,
-                                                          final List<GroupedObservable<Id, EntityToSaveMessage>> groupedObservables ) {
-
-                                                      long newCount =
-                                                              aLong;
-
-                                                      for ( GroupedObservable<Id, EntityToSaveMessage> group : groupedObservables ) {
-                                                          newCount +=
-                                                                  group.longCount()
-                                                                       .toBlocking()
-                                                                       .last();
-                                                      }
-
-                                                      return newCount;
-                                                  }
-                                              }
-
-
-                                            );
-                  }}).toBlocking().last();
-
-        //now we update the progress observer
-
-        observer.update( migration.to.getImplementationVersion(), "Finished for this step.  Migrated " + migrated + "entities total. " );
+        migrated.toBlocking().lastOrDefault(null);
 
         return migration.to.getImplementationVersion();
     }
 
 
-    protected void executeBatch( final int targetVersion, final MutationBatch batch, final ProgressObserver po, final AtomicLong count ) {
+    protected void executeBatch( final int targetVersion, final MutationBatch batch, final ProgressObserver po,
+                                 final AtomicLong count ) {
         try {
             batch.execute();
 
-            po.update(targetVersion, "Finished copying " + count + " entities to the new format" );
+            po.update( targetVersion, "Finished copying " + count + " entities to the new format" );
         }
         catch ( ConnectionException e ) {
             po.failed( targetVersion, "Failed to execute mutation in cassandra" );
             throw new DataMigrationException( "Unable to migrate batches ", e );
         }
     }
-
-
 
 
     private static final class EntityToSaveMessage {
@@ -394,4 +280,5 @@ public class MvccEntityDataMigrationImpl implements DataMigration2<EntityIdScope
             this.entity = entity;
         }
     }
+
 }

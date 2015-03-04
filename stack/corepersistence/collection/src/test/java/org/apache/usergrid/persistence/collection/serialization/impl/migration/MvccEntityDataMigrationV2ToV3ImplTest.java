@@ -20,53 +20,30 @@
 package org.apache.usergrid.persistence.collection.serialization.impl.migration;
 
 
-import java.util.UUID;
-
 import org.junit.Rule;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
-import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
-import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.impl.CollectionDataVersions;
 import org.apache.usergrid.persistence.collection.serialization.impl.MvccEntitySerializationStrategyV1Impl;
+import org.apache.usergrid.persistence.collection.serialization.impl.MvccEntitySerializationStrategyV2Impl;
 import org.apache.usergrid.persistence.collection.serialization.impl.MvccEntitySerializationStrategyV3Impl;
-import org.apache.usergrid.persistence.core.guice.DataMigrationResetRule;
 import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
-import org.apache.usergrid.persistence.core.migration.data.TestProgressObserver;
-import org.apache.usergrid.persistence.core.migration.data.newimpls.MigrationDataProvider;
-import org.apache.usergrid.persistence.core.migration.data.newimpls.MigrationRelationship;
 import org.apache.usergrid.persistence.core.migration.data.newimpls.VersionedMigrationSet;
 import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
-import org.apache.usergrid.persistence.model.entity.Entity;
-import org.apache.usergrid.persistence.model.entity.Id;
-import org.apache.usergrid.persistence.model.entity.SimpleId;
-import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.google.inject.Inject;
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import net.jcip.annotations.NotThreadSafe;
-
-import rx.Observable;
-
-import static org.apache.usergrid.persistence.core.util.IdGenerator.createId;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
 
 
 @NotThreadSafe
 @RunWith( ITRunner.class )
 @UseModules( { TestCollectionModule.class } )
-public class MvccEntityDataMigrationV1ToV3ImplTest extends AbstractMvccEntityDataMigrationV1ToV3ImplTest{
+public class MvccEntityDataMigrationV2ToV3ImplTest extends AbstractMvccEntityDataMigrationV1ToV3ImplTest{
 
 
     @Inject
@@ -78,7 +55,7 @@ public class MvccEntityDataMigrationV1ToV3ImplTest extends AbstractMvccEntityDat
     public DataMigrationManager dataMigrationManager;
 
     @Inject
-    private MvccEntitySerializationStrategyV1Impl v1Impl;
+    private MvccEntitySerializationStrategyV2Impl v2Impl;
 
     @Inject
     private MvccEntitySerializationStrategyV3Impl v3Impl;
@@ -100,7 +77,7 @@ public class MvccEntityDataMigrationV1ToV3ImplTest extends AbstractMvccEntityDat
 
     @Override
     protected MvccEntitySerializationStrategy getExpectedSourceImpl() {
-        return v1Impl;
+        return v2Impl;
     }
 
 
@@ -112,7 +89,7 @@ public class MvccEntityDataMigrationV1ToV3ImplTest extends AbstractMvccEntityDat
 
     @Override
     protected CollectionDataVersions getSourceVersion() {
-        return CollectionDataVersions.INITIAL;
+        return CollectionDataVersions.BUFFER_SHORT_FIX;
     }
 
 
