@@ -43,7 +43,7 @@ public class ApplicationsResource extends NamedResource {
         super( "apps", context, parent );
     }
 
-    public OrganizationApplicationResponse getOrganizationApplications() throws IOException {
+    public ManagementResponse getOrganizationApplications() throws IOException {
 
         String responseString = this.getResource()
             .queryParam( "access_token", context.getToken().getAccessToken() )
@@ -53,6 +53,6 @@ public class ApplicationsResource extends NamedResource {
         logger.info("Response: " + responseString);
 
         return mapper.readValue(
-            new StringReader(responseString), OrganizationApplicationResponse.class);
+            new StringReader(responseString), ManagementResponse.class);
     }
 }
