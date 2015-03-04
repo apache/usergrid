@@ -491,13 +491,11 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public void update( Entity entity ) throws Exception {
-        if(entity == null)
-            return;
-        Preconditions.checkNotNull("entity should never be null",entity);
+        Preconditions.checkNotNull(entity,"entity should never be null");
         String type = entity.getType();
-        Preconditions.checkNotNull("entity type should never be null",type);
+        Preconditions.checkNotNull(type,"entity type should never be null");
         Id appId  = getApplicationScope().getApplication();
-        Preconditions.checkNotNull("app scope should never be null",appId);
+        Preconditions.checkNotNull(appId,"app scope should never be null");
         // first, update entity index in its own collection scope
 
         CollectionScope collectionScope = getCollectionScopeNameFromEntityType(appId, type );

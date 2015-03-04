@@ -161,7 +161,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
                 Settings settings = ImmutableSettings.settingsBuilder()
                         .put("index.number_of_shards", numberOfShards)
                         .put("index.number_of_replicas", numberOfReplicas)
-                        .put("action.write_consistency", writeConsistency)
+                        .put("action.write_consistency", writeConsistency )
                     .build();
                 final CreateIndexResponse cir = admin.indices().prepareCreate(indexName)
                         .setSettings(settings)

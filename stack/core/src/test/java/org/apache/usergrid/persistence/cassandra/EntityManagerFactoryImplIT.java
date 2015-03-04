@@ -129,19 +129,15 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
         Func2<UUID, Map<String, UUID> ,Boolean> findApps = new Func2<UUID,Map<String, UUID> ,Boolean>() {
             @Override
             public Boolean call(UUID applicationId,  Map<String, UUID> apps) {
-                try {
-                    boolean found = false;
-                    for (String appName : apps.keySet()) {
-                        UUID appId = apps.get(appName);
-                        if (appId.equals(applicationId)) {
-                            found = true;
-                            break;
-                        }
+                boolean found = false;
+                for (String appName : apps.keySet()) {
+                    UUID appId = apps.get(appName);
+                    if (appId.equals(applicationId)) {
+                        found = true;
+                        break;
                     }
-                    return found;
-                }catch (Exception e){
-                    throw new RuntimeException(e);
                 }
+                return found;
             }
         };
 

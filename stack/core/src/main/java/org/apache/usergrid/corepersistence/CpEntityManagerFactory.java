@@ -315,18 +315,19 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         // remove old appinfo Entity, which is in the System App's appinfos collection
         EntityManager em = getEntityManager(CpNamingUtils.SYSTEM_APP_ID);
         Query q = Query.fromQL(String.format("select * where applicationUuid = '%s'", applicationId.toString()));
-        Results results = em.searchCollection( em.getApplicationRef(), "appinfos", q);
+        Results results = em.searchCollection(em.getApplicationRef(), "appinfos", q);
+
         Entity appToDelete = results.getEntity();
         if(appToDelete != null) {
-            em.delete(appToDelete);
             // create new Entity in deleted_appinfos collection, with same UUID and properties as deleted appinfo
             em.create("deleted_appinfo", appToDelete.getProperties());
-        }
+            em.delete(appToDelete);
 
+        }
         // delete the application's index
-        EntityIndex ei = managerCache.getEntityIndex(new ApplicationScopeImpl(
-            new SimpleId(applicationId, TYPE_APPLICATION)));
+        EntityIndex ei = managerCache.getEntityIndex(new ApplicationScopeImpl(new SimpleId(applicationId, TYPE_APPLICATION)));
         ei.deleteIndex();
+        em.refreshIndex();
     }
 
 
