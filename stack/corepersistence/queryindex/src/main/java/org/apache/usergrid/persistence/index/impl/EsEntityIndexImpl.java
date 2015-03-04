@@ -18,6 +18,8 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.Timer;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -26,6 +28,7 @@ import com.google.inject.assistedinject.Assisted;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.usergrid.persistence.core.future.BetterFuture;
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
@@ -121,9 +124,16 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
     private EsIndexCache aliasCache;
 
+    private final Timer flushTimer;
+
+    //private final Meter flushMeter;
+
+
 
     @Inject
-    public EsEntityIndexImpl( @Assisted final ApplicationScope appScope, final IndexFig config, final IndexBufferProducer indexBatchBufferProducer, final EsProvider provider, final EsIndexCache indexCache) {
+    public EsEntityIndexImpl( @Assisted final ApplicationScope appScope, final IndexFig config,
+                              final IndexBufferProducer indexBatchBufferProducer, final EsProvider provider,
+                              final EsIndexCache indexCache, final MetricsFactory metricsFactory) {
         this.indexBatchBufferProducer = indexBatchBufferProducer;
         ValidationUtils.validateApplicationScope( appScope );
         this.applicationScope = appScope;
@@ -134,6 +144,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
         this.alias = indexIdentifier.getAlias();
         this.failureMonitor = new FailureMonitorImpl( config, provider );
         this.aliasCache = indexCache;
+        this.flushTimer = metricsFactory.getTimer( EsEntityIndexImpl.class, "entity.index.flush" );
     }
 
     @Override
@@ -163,10 +174,13 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
                         .put("index.number_of_replicas", numberOfReplicas)
                         .put("action.write_consistency", writeConsistency )
                     .build();
+
+                Timer.Context timeNewIndexCreation = flushTimer.time();
                 final CreateIndexResponse cir = admin.indices().prepareCreate(indexName)
                         .setSettings(settings)
                         .execute()
                         .actionGet();
+                timeNewIndexCreation.stop();
                 logger.info("Created new Index Name [{}] ACK=[{}]", indexName, cir.isAcknowledged());
             } catch (IndexAlreadyExistsException e) {
                 logger.info("Index Name [{}] already exists", indexName);
