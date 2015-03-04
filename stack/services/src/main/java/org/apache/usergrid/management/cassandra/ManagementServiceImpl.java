@@ -1639,10 +1639,7 @@ public class ManagementServiceImpl implements ManagementService {
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         em.refreshIndex();
 
-        // already done by EMF
-//      properties.put( "name", buildAppName( applicationName, organizationInfo ) );
-//      properties.put( "appUuid", applicationId );
-//      Entity appInfo = em.create(applicationId, CpNamingUtils.APPLICATION_INFO, properties);
+        // TODO: move this logic into the EntityManagerFactory implementation
 
         String appName = buildAppName( applicationName, organizationInfo );
         Query q = Query.fromQL(PROPERTY_NAME + " = '" + appName + "'");

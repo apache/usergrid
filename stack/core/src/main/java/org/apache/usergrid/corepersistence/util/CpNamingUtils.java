@@ -51,20 +51,14 @@ public class CpNamingUtils {
     public static final  UUID MANAGEMENT_APPLICATION_ID =
             UUID.fromString("b6768a08-b5d5-11e3-a495-11ddb1de66c8");
 
-    /** TODO Do we need this in two-dot-o? */
-    public static final  UUID DEFAULT_APPLICATION_ID =
-            UUID.fromString("b6768a08-b5d5-11e3-a495-11ddb1de66c9");
-
     /**
-     * The app infos entity object type. This holds the app name, appId, and org name
+     * Information about applications is stored in the management app using these types
      */
     public static final String APPLICATION_INFO = "application_info";
-
     public static final String APPLICATION_INFOS = "application_infos";
 
-    public static final String DELETED_APPINFO = "deleted_application_info";
-
-    public static final String DELETED_APPINFOS = "deleted_application_infos";
+    public static final String DELETED_APPLICATION_INFO = "deleted_application_info";
+    public static final String DELETED_APPLICATION_INFOS = "deleted_application_infos";
 
     /**
      * The name of the map that holds our entity id->type mapping

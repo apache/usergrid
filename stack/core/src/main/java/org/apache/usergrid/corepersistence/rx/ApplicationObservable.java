@@ -58,14 +58,10 @@ public class ApplicationObservable {
      */
     public static Observable<Id> getAllApplicationIds( final ManagerCache managerCache ) {
 
-        //emit our 3 hard coded applications that are used the manage the system first.
-        //this way consumers can perform whatever work they need to on the root system first
-
-
-        final Observable<Id> systemIds = Observable.from( Arrays
-            .asList( generateApplicationId( CpNamingUtils.DEFAULT_APPLICATION_ID ),
-                generateApplicationId( CpNamingUtils.MANAGEMENT_APPLICATION_ID ) ) );
-
+        // emit internal hard-coded applications first (currently there is only one)
+        // this way consumers can perform whatever work they need to on the root system first
+        final Observable<Id> systemIds = Observable.from(
+            Arrays.asList(  generateApplicationId( CpNamingUtils.MANAGEMENT_APPLICATION_ID ) ) );
 
         final ApplicationScope appScope = getApplicationScope( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
 
@@ -114,7 +110,7 @@ public class ApplicationObservable {
                             @Override
                             public Id call( final org.apache.usergrid.persistence.model.entity.Entity entity ) {
 
-                                final UUID uuid = ( UUID ) entity.getField( "applicationUuid" ).getValue();
+                                final UUID uuid = entity.getId().getUuid();
 
                                 return CpNamingUtils.generateApplicationId( uuid );
                             }

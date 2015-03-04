@@ -406,10 +406,6 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
         return MANAGEMENT_APPLICATION_ID;
     }
 
-    @Override
-    public UUID getDefaultAppId() {
-        return DEFAULT_APPLICATION_ID;
-    }
 
     @Override
     public void refreshIndex() {

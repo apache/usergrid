@@ -129,14 +129,8 @@ public class CoreITSetupImpl implements CoreITSetup {
 
     @Override
     public UUID createApplication( String organizationName, String applicationName ) throws Exception {
-
-        if ( USE_DEFAULT_APPLICATION ) {
-            return emf.getDefaultAppId();
-        }
-
         return emf.createApplication( organizationName, applicationName );
     }
-
 
     @Override
     public void dump( String name, Object obj ) {

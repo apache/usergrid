@@ -132,7 +132,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
             }
         }
 
-        assertTrue("Deleted app not found in deleted apps collection", found );
+        assertTrue( "Deleted app must be found in in deleted apps collection", found );
 
         // attempt to get entities in application's collections in various ways should all fail
 

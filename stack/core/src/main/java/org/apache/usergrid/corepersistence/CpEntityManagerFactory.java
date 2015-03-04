@@ -29,13 +29,8 @@ import org.apache.commons.lang.StringUtils;
 
 import org.apache.usergrid.corepersistence.rx.AllEntitiesInSystemObservable;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
-import org.apache.usergrid.persistence.AbstractEntity;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityFactory;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.*;
+
 import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
@@ -50,7 +45,7 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.entities.Application;
-import org.apache.usergrid.persistence.entities.ApplicationInfo;
+import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.exceptions.ApplicationAlreadyExistsException;
 import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
@@ -92,7 +87,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private static final Set<UUID> applicationIndexesCreated = new HashSet<UUID>();
 
 
-    // cache of already instantiated entity managers
+    // cache of already instantiated oldAppInfo managers
     private LoadingCache<UUID, EntityManager> entityManagers
         = CacheBuilder.newBuilder().maximumSize(100).build(new CacheLoader<UUID, EntityManager>() {
             public EntityManager load(UUID appId) { // no checked exception
@@ -118,7 +113,11 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.managerCache = injector.getInstance( ManagerCache.class );
         this.dataMigrationManager = injector.getInstance( DataMigrationManager.class );
 
-
+        // can be removed after everybody moves to Usergrid 2.0, default is true
+        Properties configProps = cassandraService.getProperties();
+        if ( configProps.getProperty("usergrid.twodoto.appinfo.migration", "true").equals("true")) {
+            migrateOldAppInfos();
+        }
     }
 
 
@@ -164,7 +163,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             return entityManagers.get( applicationId );
         }
         catch ( Exception ex ) {
-            logger.error("Error getting entity manager", ex);
+            logger.error("Error getting oldAppInfo manager", ex);
         }
         return _getEntityManager( applicationId );
     }
@@ -254,13 +253,12 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             em.refreshIndex();
         }
 
-        // create appinfo entry in the system app
+        // create appinfo entry in the management app
         final UUID appId = applicationId;
         final UUID orgId = orgUuid;
         Map<String, Object> appInfoMap = new HashMap<String, Object>() {{
             put( PROPERTY_NAME, appName );
             put( PROPERTY_UUID, appId );
-            put( "organizationUuid", orgId );
         }};
 
         try {
@@ -270,7 +268,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         }
         em.refreshIndex();
 
-        // create application entity
+        // create application oldAppInfo
         if ( properties == null ) {
             properties = new TreeMap<String, Object>( CASE_INSENSITIVE_ORDER );
         }
@@ -299,21 +297,19 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     @Override
     public void deleteApplication(UUID applicationId) throws Exception {
 
-        // remove old appinfo Entity, which is in the System App's appinfos collection
+        // remove old appinfo Entity, which is in the Management App's appinfos collection
         EntityManager em = getEntityManager( this.getManagementAppId() );
-        Query q = Query.fromQL(String.format("select * where applicationUuid = '%s'", applicationId.toString()));
-        Results results = em.searchCollection( em.getApplicationRef(), CpNamingUtils.APPLICATION_INFOS, q );
-        Entity appToDelete = results.getEntity();
-        em.delete( appToDelete );
+        Entity applicationInfo = em.get(new SimpleEntityRef(CpNamingUtils.APPLICATION_INFO, applicationId));
+        em.delete( applicationInfo );
 
         // create new Entity in deleted_appinfos collection, with same UUID and properties as deleted appinfo
-        em.create( CpNamingUtils.DELETED_APPINFO, appToDelete.getProperties() );
+        em.create( applicationId, CpNamingUtils.DELETED_APPLICATION_INFO, applicationInfo.getProperties() );
 
         em.refreshIndex();
 
         // delete the application's index
-        EntityIndex ei = managerCache.getEntityIndex(new ApplicationScopeImpl(
-            new SimpleId(applicationId, TYPE_APPLICATION)));
+        EntityIndex ei = managerCache.getEntityIndex(
+            new ApplicationScopeImpl( new SimpleId(applicationId, TYPE_APPLICATION)) );
         ei.deleteIndex();
     }
 
@@ -323,9 +319,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         // remove old delete_appinfos Entity
         EntityManager em = getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
-        Query q = Query.fromQL(String.format("select * where applicationUuid = '%s'", applicationId.toString()));
-        Results results = em.searchCollection(em.getApplicationRef(), CpNamingUtils.DELETED_APPINFOS, q);
-        Entity appToRestore = results.getEntity();
+        Entity appToRestore = em.get( new SimpleEntityRef( CpNamingUtils.DELETED_APPLICATION_INFO, applicationId ));
 
         if ( appToRestore == null ) {
             throw new EntityNotFoundException("Cannot restore. Deleted Application not found: " + applicationId );
@@ -333,18 +327,15 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         em.delete( appToRestore );
 
-        // restore entity in appinfo collection
-        Map<String, Object> appProps = appToRestore.getProperties();
-        appProps.remove("uuid");
-        Entity restoredApp = em.create(CpNamingUtils.APPLICATION_INFO, appToRestore.getProperties());
-
+        // restore oldAppInfo in appinfo collection
+        em.create( appToRestore.getUuid(), CpNamingUtils.APPLICATION_INFO, appToRestore.getProperties());
         em.refreshIndex();
 
         // rebuild the apps index
         this.rebuildApplicationIndexes(applicationId, new ProgressObserver() {
             @Override
             public void onProgress(EntityRef entity) {
-                logger.info("Restored entity {}:{}", entity.getType(), entity.getUuid());
+                logger.info("Restored oldAppInfo {}:{}", entity.getType(), entity.getUuid());
             }
 
         });
@@ -383,20 +374,67 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
 
     @Override
-    public UUID lookupApplication( String name ) throws Exception {
+    public UUID lookupApplication( final String name ) throws Exception {
         init();
 
+        // attempt to look up APPLICATION_INFO oldAppInfo by name
+
+        UUID applicationId = null;
         EntityManager em = getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
         final EntityRef alias = em.getAlias( CpNamingUtils.APPLICATION_INFO, name );
-        if ( alias == null ) {
-            return null;
+        if ( alias != null ) {
+            Entity entity = em.get(alias);
+            applicationId = (UUID) entity.getProperty("uuid");
         }
-        final Entity entity = em.get( alias );
-        if ( entity == null ) {
-            return null;
-        }
-        final UUID property = ( UUID ) entity.getProperty( "uuid" );
-        return property;
+
+        // below is not necessary if migrateOldAppInfos() has already run
+
+//        if ( applicationId == null ) {
+//
+//            // maybe there is a record in the old and deprecated "appinfos" collection
+//
+//            UUID organizationId = null;
+//
+//            Query q = Query.fromQL( PROPERTY_NAME + " = '" + name + "'");
+//            Results results = em.searchCollection( em.getApplicationRef(), "appinfos" , q);
+//            if ( !results.isEmpty() ) {
+//                Entity entity = results.iterator().next();
+//                Object uuidObject = entity.getProperty("applicationUuid");
+//                if (uuidObject instanceof UUID) {
+//                    applicationId = (UUID)uuidObject;
+//                } else {
+//                    applicationId = UUIDUtils.tryExtractUUID(uuidObject.toString());
+//                }
+//                uuidObject = entity.getProperty("organizationUuid");
+//                if (uuidObject instanceof UUID) {
+//                    organizationId = (UUID)uuidObject;
+//                } else {
+//                    organizationId = UUIDUtils.tryExtractUUID(uuidObject.toString());
+//                }
+//            }
+//
+//            if ( applicationId != null ) {
+//
+//                // copy application information into new APPLICATION_INFO collection
+//
+//                final UUID appId = applicationId;
+//                Map<String, Object> appInfoMap = new HashMap<String, Object>() {{
+//                    put( PROPERTY_NAME, name );
+//                    put( PROPERTY_UUID, appId );
+//                }};
+//
+//                final Entity appInfo;
+//                try {
+//                    appInfo = em.create( appId, CpNamingUtils.APPLICATION_INFO, appInfoMap );
+//                } catch (DuplicateUniquePropertyExistsException e) {
+//                    throw new ApplicationAlreadyExistsException(name);
+//                }
+//                em.createConnection( new SimpleEntityRef( Group.ENTITY_TYPE, organizationId ), "owns", appInfo );
+//                em.refreshIndex();
+//            }
+//        }
+
+        return applicationId;
     }
 
 
@@ -429,8 +467,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         final String scopeName;
         final String edgeType;
         if ( deleted ) {
-            edgeType = CpNamingUtils.getEdgeTypeFromCollectionName(CpNamingUtils.DELETED_APPINFOS);
-            scopeName = CpNamingUtils.getCollectionScopeNameFromCollectionName(CpNamingUtils.DELETED_APPINFOS);
+            edgeType = CpNamingUtils.getEdgeTypeFromCollectionName(CpNamingUtils.DELETED_APPLICATION_INFOS);
+            scopeName = CpNamingUtils.getCollectionScopeNameFromCollectionName(CpNamingUtils.DELETED_APPLICATION_INFOS);
         } else {
             edgeType = CpNamingUtils.getEdgeTypeFromCollectionName(CpNamingUtils.APPLICATION_INFOS );
             scopeName = CpNamingUtils.getCollectionScopeNameFromCollectionName(CpNamingUtils.APPLICATION_INFOS);
@@ -464,16 +502,79 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                         .toBlockingObservable().lastOrDefault(null);
 
             if ( e == null ) {
-                logger.warn("Applicaion {} in index but not found in collections", targetId );
+                logger.warn("Application {} in index but not found in collections", targetId );
                 continue;
             }
 
-            appMap.put(
-                (String)e.getField( PROPERTY_NAME ).getValue(),
-                (UUID)e.getField( "applicationUuid" ).getValue());
+            appMap.put( (String)e.getField( PROPERTY_NAME ).getValue(), e.getId().getUuid());
         }
 
         return appMap;
+    }
+
+
+    private void migrateOldAppInfos() {
+
+        EntityManager em = getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+
+        Query q = Query.fromQL("select *");
+        Results results = null;
+        try {
+            results = em.searchCollection(em.getApplicationRef(), "appinfos", q);
+        } catch (Exception e) {
+            logger.error("Error reading old appinfos collection, not migrating", e);
+            return;
+        }
+
+        if ( !results.isEmpty() ) {
+
+            // applications still found in old appinfos collection, migrate them.
+            logger.info("Migrating old appinfos");
+
+            for ( Entity oldAppInfo : results.getEntities() ) {
+
+                final String appName = oldAppInfo.getName();
+
+                UUID applicationId = null, organizationId = null;
+                Object uuidObject = oldAppInfo.getProperty("applicationUuid");
+                if (uuidObject instanceof UUID) {
+                    applicationId = (UUID) uuidObject;
+                } else {
+                    applicationId = UUIDUtils.tryExtractUUID(uuidObject.toString());
+                }
+                uuidObject = oldAppInfo.getProperty("organizationUuid");
+                if (uuidObject instanceof UUID) {
+                    organizationId = (UUID) uuidObject;
+                } else {
+                    organizationId = UUIDUtils.tryExtractUUID(uuidObject.toString());
+                }
+
+                // create and connect new APPLICATION_INFO oldAppInfo to Organization
+
+                final UUID appId = applicationId;
+                Map<String, Object> appInfoMap = new HashMap<String, Object>() {{
+                    put(PROPERTY_NAME, appName);
+                    put(PROPERTY_UUID, appId);
+                }};
+
+                final Entity appInfo;
+                try {
+                    appInfo = em.create(appId, CpNamingUtils.APPLICATION_INFO, appInfoMap);
+                    em.createConnection(new SimpleEntityRef(Group.ENTITY_TYPE, organizationId), "owns", appInfo);
+                    em.delete( oldAppInfo );
+                    logger.info("Migrated old appinfo for app {}", appName);
+
+                } catch (Exception e) {
+                    logger.error("Error migration application " + appName + " continuing ", e);
+                }
+            }
+
+            em.refreshIndex();
+
+        } else {
+            logger.info("No old appinfos found, no need for migration");
+        }
+
     }
 
 
@@ -628,14 +729,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     }
 
 
-    @Override
-    public UUID getDefaultAppId() {
-        return CpNamingUtils.DEFAULT_APPLICATION_ID;
-    }
-
-
-
-
     /**
      * Gets the setup.
      * @return Setup helper
@@ -678,14 +771,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private List<EntityIndex> getManagementIndexes() {
 
         return Arrays.asList(
-
-            // management app
-            managerCache
-                .getEntityIndex( new ApplicationScopeImpl( new SimpleId( getManagementAppId(), "application" ) ) ),
-
-            // default app TODO: do we need this in two-dot-o
-            managerCache
-                .getEntityIndex( new ApplicationScopeImpl( new SimpleId( getDefaultAppId(), "application" ) ) ) );
+            managerCache.getEntityIndex( // management app
+                new ApplicationScopeImpl(new SimpleId(getManagementAppId(), "application"))));
     }
 
 
@@ -700,7 +787,11 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         logger.info("About to rebuild indexes for {} applications", appMap.keySet().size());
 
         for ( UUID appUuid : appMap.values() ) {
-            rebuildApplicationIndexes( appUuid, po );
+            try {
+                rebuildApplicationIndexes(appUuid, po);
+            } catch ( Exception e) {
+                logger.error("Error rebuilding index for app " + appUuid + " continuing...", e );
+            }
         }
     }
 
@@ -708,7 +799,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     @Override
     public void rebuildInternalIndexes( ProgressObserver po ) throws Exception {
         rebuildApplicationIndexes( CpNamingUtils.MANAGEMENT_APPLICATION_ID, po );
-        rebuildApplicationIndexes( CpNamingUtils.DEFAULT_APPLICATION_ID, po );
     }
 
 

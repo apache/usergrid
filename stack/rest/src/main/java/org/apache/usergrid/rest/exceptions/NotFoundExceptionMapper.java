@@ -14,30 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid;
+package org.apache.usergrid.rest.exceptions;
 
 
-import java.util.UUID;
+import com.sun.jersey.api.NotFoundException;
 
-import org.junit.rules.TestRule;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.Provider;
 
-import org.apache.usergrid.mq.QueueManagerFactory;
-import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.IndexBucketLocator;
-import org.apache.usergrid.persistence.cassandra.CassandraService;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 
 
-public interface CoreITSetup extends TestRule {
+@Provider
+public class NotFoundExceptionMapper extends AbstractExceptionMapper<NotFoundException> {
 
-    EntityManagerFactory getEmf();
-
-    QueueManagerFactory getQmf();
-
-    IndexBucketLocator getIbl();
-
-    CassandraService getCassSvc();
-
-    UUID createApplication( String organizationName, String applicationName ) throws Exception;
-
-    void dump( String name, Object obj );
+    @Override
+    public Response toResponse( NotFoundException e ) {
+        return toResponse( NOT_FOUND, e );
+    }
 }

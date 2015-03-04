@@ -63,8 +63,6 @@ public class SetupImpl implements Setup {
 
     public void createDefaultApplications() throws Exception {
         // TODO unique check?
-        emf.initializeApplication( DEFAULT_ORGANIZATION, emf.getDefaultAppId(), DEFAULT_APPLICATION, null );
-
         emf.initializeApplication( DEFAULT_ORGANIZATION, emf.getManagementAppId(), MANAGEMENT_APPLICATION, null );
     }
 

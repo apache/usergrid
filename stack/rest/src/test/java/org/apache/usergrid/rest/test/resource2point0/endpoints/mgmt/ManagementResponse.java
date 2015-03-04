@@ -28,6 +28,7 @@ public class ManagementResponse {
     private Map<String, Object> data;
     private long timestamp;
     private long duration;
+    private String uri;
 
     public long getDuration() {
         return duration;
@@ -59,5 +60,13 @@ public class ManagementResponse {
 
     public void setAction(String action) {
         this.action = action;
+    }
+
+    public String getUri() {
+        return uri;
+    }
+
+    public void setUri(String uri) {
+        this.uri = uri;
     }
 }

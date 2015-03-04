@@ -99,17 +99,7 @@ public class CpSetup implements Setup {
 
         injector.getInstance( DataMigrationManager.class ).migrate();
 
-        logger.info( "Setting up default applications" );
-
-        try {
-            emf.initializeApplication( DEFAULT_ORGANIZATION, emf.getDefaultAppId(), DEFAULT_APPLICATION, null );
-        }
-        catch ( ApplicationAlreadyExistsException ex ) {
-            logger.warn( "Application {}/{} already exists", DEFAULT_ORGANIZATION, DEFAULT_APPLICATION );
-        }
-        catch ( OrganizationAlreadyExistsException oaee ) {
-            logger.warn( "Organization {} already exists", DEFAULT_ORGANIZATION );
-        }
+        logger.info( "Setting up management app" );
 
         try {
             emf.initializeApplication( DEFAULT_ORGANIZATION, emf.getManagementAppId(), MANAGEMENT_APPLICATION, null );
