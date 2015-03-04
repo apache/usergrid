@@ -18,30 +18,31 @@
  *
  */
 
-package org.apache.usergrid.rest.test.resource2point0.model;
+package org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt;
 
-import java.util.Map;
+
+import javax.ws.rs.core.MediaType;
+
+import org.apache.usergrid.rest.test.resource2point0.endpoints.NamedResource;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.UrlResource;
+import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource2point0.model.Entity;
+import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
+
 
 /**
+ * Contains the REST methods to interacting with the ManagementEndpoints
+ * and the user feeds
  */
-public class Credentials extends Entity {
-    public Credentials() {
+public class FeedResource extends NamedResource {
+    public FeedResource(final ClientContext context, final UrlResource parent) {
+        super ( "feed",context, parent);
     }
 
-    public Credentials(ApiResponse response) {
-        setResponse(response, "credentials");
-    }
+    public Entity get() {
+        return getResource( true ).type( MediaType.APPLICATION_JSON_TYPE )
+            .accept( MediaType.APPLICATION_JSON ).get( Entity.class);
 
-    public Credentials mapOrgResponse(Map<String, Object> map) {
-        putAll((Map<String, Object>) map.get("credentials"));
-        return this;
-    }
 
-    public String getClientSecret() {
-        return (String) get("client_secret");
-    }
-
-    public String getClientId() {
-        return (String) get("client_id");
     }
 }

@@ -20,7 +20,6 @@ package org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt;
 
 import javax.ws.rs.core.MediaType;
 
-import org.apache.usergrid.rest.test.resource2point0.endpoints.EntityEndpoint;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.NamedResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.UrlResource;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
@@ -31,40 +30,15 @@ import com.sun.jersey.api.client.WebResource;
 
 
 /**
- * Handles calls to the users management endpoint
- * Example: /management/orgs/org_name/users
+ * handles the * /reactivate endpoints
  */
-public class UsersResource extends NamedResource {
-    public UsersResource( final ClientContext context, final UrlResource parent ) {
-        super( "users", context, parent );
+public class ReactivateResource extends NamedResource {
+    public ReactivateResource(final ClientContext context, final UrlResource parent) {
+        super("reactivate",context, parent);
     }
 
-
-    /**
-     * Should this be here? this would facilitate calling the entity endpoint as a way to get/put things
-     * @param identifier
-     * @return
-     */
-    //TODO: See if this should be reused here or if we should rename it to something else.
-    public EntityEndpoint entity(String identifier) {
-        return new EntityEndpoint(identifier, context, this);
-    }
-
-    public UserResource user(String identifier) {
-        return new UserResource( identifier, context, this );
-    }
-
-    public Entity post(Entity userPayload){
+    public Entity get(){
         WebResource resource = getResource(true);
-
-        ApiResponse response = resource.type( MediaType.APPLICATION_JSON_TYPE )
-                .accept( MediaType.APPLICATION_JSON ).post( ApiResponse.class, userPayload);
-        return new Entity(response);
-    }
-
-    public Entity get() {
-        WebResource resource = getResource(true);
-
         ApiResponse response = resource.type( MediaType.APPLICATION_JSON_TYPE )
                                        .accept( MediaType.APPLICATION_JSON ).get( ApiResponse.class);
         return new Entity(response);
