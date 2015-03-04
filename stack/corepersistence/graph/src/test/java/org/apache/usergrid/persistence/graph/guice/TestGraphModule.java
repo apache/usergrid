@@ -24,6 +24,7 @@ import org.apache.usergrid.persistence.core.guice.TestModule;
 import org.apache.usergrid.persistence.core.migration.data.newimpls.MigrationDataProvider;
 import org.apache.usergrid.persistence.core.migration.data.newimpls.TestMigrationDataProvider;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.graph.serialization.impl.migration.GraphNode;
 
 import com.google.inject.TypeLiteral;
 
@@ -45,8 +46,8 @@ public class TestGraphModule extends TestModule {
             public void configureMigrationProvider() {
                 //configure our migration data provider
 
-                TestMigrationDataProvider<ApplicationScope> migrationDataProvider = new TestMigrationDataProvider<>();
-                bind( new TypeLiteral<MigrationDataProvider<ApplicationScope>>() {} )
+                TestMigrationDataProvider<GraphNode> migrationDataProvider = new TestMigrationDataProvider<>();
+                bind( new TypeLiteral<MigrationDataProvider<GraphNode>>() {} )
                         .toInstance( migrationDataProvider );
             }
         } );

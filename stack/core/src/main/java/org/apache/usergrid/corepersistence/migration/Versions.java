@@ -22,34 +22,10 @@
 package org.apache.usergrid.corepersistence.migration;
 
 
-import org.apache.usergrid.persistence.core.guice.V2Impl;
-import org.apache.usergrid.persistence.core.guice.V3Impl;
-import org.apache.usergrid.persistence.graph.serialization.EdgeMigrationStrategy;
-
-
 /**
  * Simple class to hold the constants of all versions
  */
 public class Versions {
 
-    /**
-     * Version 1 of our mappings
-     */
-    public static final int VERSION_1 = 1;
-
-    /**
-     * Version 2.  Edge meta changes
-     */
-    public static final int VERSION_2 = EdgeMigrationStrategy.MIGRATION_VERSION;
-
-    /**
-     * Version 3. migrate from entity serialization 1 -> 2
-     */
-    public static final int VERSION_3 = V2Impl.MIGRATION_VERSION;
-
-    /**
-     * Version 4. migrate from entity serialization 1 -> 2
-     */
-    public static final int VERSION_4 = V3Impl.MIGRATION_VERSION;
 
 }

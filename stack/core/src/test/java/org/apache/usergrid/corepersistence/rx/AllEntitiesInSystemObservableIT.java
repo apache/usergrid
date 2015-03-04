@@ -23,26 +23,20 @@ package org.apache.usergrid.corepersistence.rx;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.usergrid.corepersistence.rx.impl.AllEntitiesInSystemObservableImpl;
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.core.rx.AllEntitiesInSystemObservable;
-import org.apache.usergrid.persistence.core.rx.ApplicationObservable;
-import org.apache.usergrid.persistence.core.scope.ApplicationEntityGroup;
-import org.apache.usergrid.persistence.core.scope.EntityIdScope;
-import org.apache.usergrid.persistence.graph.serialization.TargetIdObservable;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.corepersistence.EntityWriteHelper;
 import org.apache.usergrid.corepersistence.ManagerCache;
+import org.apache.usergrid.corepersistence.rx.impl.AllEntitiesInSystemImpl;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.SimpleEntityRef;
+import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphManager;
+import org.apache.usergrid.persistence.graph.serialization.TargetIdObservable;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.inject.Injector;
@@ -59,12 +53,10 @@ import static org.junit.Assert.assertTrue;
  */
 public class AllEntitiesInSystemObservableIT extends AbstractCoreIT {
 
-    private final Logger logger = LoggerFactory.getLogger( AllEntitiesInSystemObservableIT.class );
-
     @Test
     public void testEntities() throws Exception {
         Injector injector =  SpringResource.getInstance().getBean(Injector.class);
-        AllEntitiesInSystemObservable allEntitiesInSystemObservableImpl =injector.getInstance(AllEntitiesInSystemObservable.class);
+        AllEntitiesInSystemImpl allEntitiesInSystemObservableImpl =injector.getInstance(AllEntitiesInSystemImpl.class);
         TargetIdObservable targetIdObservable = injector.getInstance(TargetIdObservable.class);
 
         final EntityManager em = app.getEntityManager();
@@ -99,34 +91,25 @@ public class AllEntitiesInSystemObservableIT extends AbstractCoreIT {
 
 
         final ApplicationScope scope = CpNamingUtils.getApplicationScope( app.getId() );
-        final Id applicationId = scope.getApplication();
 
 
         final GraphManager gm = managerCache.getGraphManager( scope );
 
-        allEntitiesInSystemObservableImpl.getAllEntitiesInSystem( 1000).doOnNext( new Action1<ApplicationEntityGroup<CollectionScope>>() {
+        allEntitiesInSystemObservableImpl.getData().doOnNext( new Action1<EntityIdScope>() {
             @Override
-            public void call( final ApplicationEntityGroup<CollectionScope> entity ) {
-
-                assertNotNull(entity);
-                assertNotNull(entity.applicationScope);
-                assertNotNull(entity.entityIds);
-
-                //not from our test, don't check it
-                if(!applicationId.equals( entity.applicationScope.getApplication() )){
-                    return;
-                }
-
-                for(EntityIdScope<CollectionScope> idScope : entity.entityIds) {
+            public void call( final EntityIdScope entityIdScope ) {
+                assertNotNull(entityIdScope);
+                assertNotNull(entityIdScope.getCollectionScope());
+                assertNotNull(entityIdScope.getId());
 
                     //we should only emit each node once
-                    if ( idScope.getId().getType().equals( type1 ) ) {
-                        assertTrue( "Element should be present on removal", type1Identities.remove(idScope.getId() ) );
+                    if ( entityIdScope.getId().getType().equals( type1 ) ) {
+                        assertTrue( "Element should be present on removal", type1Identities.remove(entityIdScope.getId() ) );
                     }
-                    else if ( idScope.getId().getType().equals( type2 ) ) {
-                        assertTrue( "Element should be present on removal", type2Identities.remove(idScope.getId() ) );
+                    else if ( entityIdScope.getId().getType().equals( type2 ) ) {
+                        assertTrue( "Element should be present on removal", type2Identities.remove(entityIdScope.getId() ) );
                     }
-                }
+
             }
         } ).toBlocking().lastOrDefault( null );
 

@@ -25,8 +25,9 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 import org.apache.usergrid.CoreApplication;
-import org.apache.usergrid.persistence.core.migration.data.DataMigration;
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
+import org.apache.usergrid.persistence.core.migration.data.newimpls.DataMigration2;
+import org.apache.usergrid.persistence.core.migration.data.newimpls.MigrationPlugin;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.google.inject.Injector;
@@ -45,7 +46,7 @@ public class MigrationTestRule extends ExternalResource {
 
     protected final CoreApplication core;
     protected final DataMigrationManager dataMigrationManager;
-    protected final DataMigration dataMigration;
+    protected final DataMigration2 dataMigration;
 
     protected int currentVersion;
 
@@ -55,10 +56,8 @@ public class MigrationTestRule extends ExternalResource {
      *
      * @param core the CoreApplication rule used in this test
      * @param injector The injector used in this test
-     * @param dataMigrationClass The data migration class that is under test
      */
-    public MigrationTestRule( final CoreApplication core, final Injector injector,
-                              final Class<? extends DataMigration> dataMigrationClass ) {
+    public MigrationTestRule( final CoreApplication core, final Injector injector ) {
         this.core = core;
         this.dataMigrationManager = injector.getInstance( DataMigrationManager.class );
         this.dataMigration = injector.getInstance( dataMigrationClass );

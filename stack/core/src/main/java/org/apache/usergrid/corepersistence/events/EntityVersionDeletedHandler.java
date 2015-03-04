@@ -24,6 +24,7 @@ import static org.apache.usergrid.corepersistence.CoreModule.EVENTS_DISABLED;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.MvccEntity;
+import org.apache.usergrid.persistence.collection.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.index.EntityIndex;
@@ -53,9 +54,11 @@ public class EntityVersionDeletedHandler implements EntityVersionDeleted {
     private EntityManagerFactory emf;
 
 
+
     @Override
-    public void versionDeleted(
-            final CollectionScope scope, final Id entityId, final List<MvccEntity> entityVersions) {
+    public void versionDeleted( final CollectionScope scope, final Id entityId,
+                                final List<MvccLogEntry> entityVersions ) {
+
 
         // This check is for testing purposes and for a test that to be able to dynamically turn
         // off and on delete previous versions so that it can test clean-up on read.
@@ -84,13 +87,12 @@ public class EntityVersionDeletedHandler implements EntityVersionDeleted {
                 scope.getName()
         );
 
-        rx.Observable.from(entityVersions)
-            .subscribeOn(Schedulers.io())
+        rx.Observable.from( entityVersions )
             .buffer(serializationFig.getBufferSize())
-            .map(new Func1<List<MvccEntity>, List<MvccEntity>>() {
+            .map(new Func1<List<MvccLogEntry>, List<MvccLogEntry>>() {
                 @Override
-                public List<MvccEntity> call(List<MvccEntity> entityList) {
-                    for (MvccEntity entity : entityList) {
+                public List<MvccLogEntry> call(List<MvccLogEntry> entityList) {
+                    for (MvccLogEntry entity : entityList) {
                         eibatch.deindex(indexScope, entityId, entity.getVersion());
                     }
                     eibatch.execute();
@@ -98,5 +100,6 @@ public class EntityVersionDeletedHandler implements EntityVersionDeleted {
                 }
             }).toBlocking().last();
     }
+
 
 }

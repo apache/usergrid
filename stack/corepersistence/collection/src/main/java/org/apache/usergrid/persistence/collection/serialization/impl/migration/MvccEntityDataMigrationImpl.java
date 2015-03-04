@@ -334,56 +334,6 @@ public class MvccEntityDataMigrationImpl implements DataMigration2<EntityIdScope
                                                       .toBlocking()
                                                       .last();
                                           }
-                                      } ).doOnNext(
-                                      new Action1<List<GroupedObservable<Id, EntityToSaveMessage>>>() {
-                                          @Override
-                                          public void call(
-                                                  final List<GroupedObservable<Id, EntityToSaveMessage>> groupedObservables ) {
-
-                                              for ( final GroupedObservable<Id, EntityToSaveMessage> group : groupedObservables ) {
-
-                                                  //get the highest
-                                                  // entity and run a
-                                                  // cleanup task on it
-                                                  final EntityToSaveMessage
-                                                          maxEntity =
-                                                          group.toBlocking()
-                                                               .last();
-
-                                                  final EntityVersionCleanupTask
-                                                          task =
-                                                          entityVersionCleanupFactory
-                                                                  .getTask(
-                                                                          maxEntity.scope,
-                                                                          maxEntity.entity
-                                                                                  .getId(),
-                                                                          maxEntity.entity
-                                                                                  .getVersion() );
-
-                                                  /**
-                                                   * just run the
-                                                   * call in this
-                                                   * process, we're
-                                                   * already
-                                                   * doing parallel
-                                                   * this forces a
-                                                   * repair of the
-                                                   * unique properties,
-                                                   and will bring us
-                                                   to a consistent
-                                                   state after the
-                                                   */
-
-                                                  try {
-                                                      task.call();
-                                                  }
-                                                  catch ( Exception e ) {
-                                                      throw new RuntimeException(
-                                                              "Unable to run cleanup task",
-                                                              e );
-                                                  }
-                                              }
-                                          }
                                       } ).
                                       reduce( 0l,
                                               new Func2<Long, List<GroupedObservable<Id, EntityToSaveMessage>>, Long>() {

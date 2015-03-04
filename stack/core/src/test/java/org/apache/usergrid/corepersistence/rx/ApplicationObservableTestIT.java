@@ -24,15 +24,15 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.core.rx.ApplicationObservable;
 import org.junit.Test;
 
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.cassandra.SpringResource;
+import org.apache.usergrid.corepersistence.AllApplicationsObservable;
 import org.apache.usergrid.corepersistence.ManagerCache;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.entities.Application;
-import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.inject.Injector;
 
@@ -52,7 +52,7 @@ public class ApplicationObservableTestIT extends AbstractCoreIT {
 
         final Application createdApplication = app.getEntityManager().getApplication();
 
-        ApplicationObservable applicationObservable =SpringResource.getInstance().getBean(Injector.class).getInstance(ApplicationObservable.class);
+        AllApplicationsObservable applicationObservable =SpringResource.getInstance().getBean(Injector.class).getInstance(AllApplicationsObservable.class);
 
         //now our get all apps we expect.  There may be more, but we don't care about those.
         final Set<UUID> applicationIds = new HashSet<UUID>() {{
@@ -67,13 +67,13 @@ public class ApplicationObservableTestIT extends AbstractCoreIT {
         //clean up our wiring
         ManagerCache managerCache = SpringResource.getInstance().getBean( Injector.class ).getInstance( ManagerCache.class );
 
-        Observable<Id> appObservable = applicationObservable.getAllApplicationIds();
+        Observable<ApplicationScope> appObservable = applicationObservable.getAllApplications();
 
-        appObservable.doOnNext( new Action1<Id>() {
+        appObservable.doOnNext( new Action1<ApplicationScope>() {
             @Override
-            public void call( final Id id ) {
-                applicationIds.remove( id.getUuid() );
-                assertEquals("Correct application type expected" ,  Application.ENTITY_TYPE, id.getType() );
+            public void call( final ApplicationScope id ) {
+                applicationIds.remove( id.getApplication().getUuid() );
+                assertEquals("Correct application type expected" ,  Application.ENTITY_TYPE, id.getApplication().getType() );
             }
         } ).toBlocking().lastOrDefault( null );
 

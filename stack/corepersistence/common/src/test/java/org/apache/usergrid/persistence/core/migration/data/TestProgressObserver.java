@@ -17,16 +17,16 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.migration;
+package org.apache.usergrid.persistence.core.migration.data;
 
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.usergrid.persistence.core.migration.data.DataMigration;
+import org.apache.usergrid.persistence.core.migration.data.newimpls.ProgressObserver;
 
 
-public class TestProgressObserver implements DataMigration.ProgressObserver {
+public class TestProgressObserver implements ProgressObserver {
 
     private boolean failed = false;
 

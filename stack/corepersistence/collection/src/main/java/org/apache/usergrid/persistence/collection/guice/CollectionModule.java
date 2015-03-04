@@ -89,28 +89,15 @@ public abstract class CollectionModule extends AbstractModule {
         configureMigrationProvider();
 
     }
-
-    @Provides
-    @Singleton
-    @Inject
-    @Write
-    public WriteStart write (final MvccLogEntrySerializationStrategy logStrategy) {
-        final WriteStart writeStart = new WriteStart( logStrategy, MvccEntity.Status.COMPLETE);
-
-        return writeStart;
-    }
-
-
-    //TODO USERGRID-405, remove this, it's no longer supported
-    @Provides
-    @Singleton
-    @Inject
-    @WriteUpdate
-    public WriteStart writeUpdate (final MvccLogEntrySerializationStrategy logStrategy) {
-        final WriteStart writeStart = new WriteStart( logStrategy, MvccEntity.Status.PARTIAL );
-
-        return writeStart;
-    }
+//
+//    @Provides
+//    @Singleton
+//    @Inject
+//    public WriteStart write (final MvccLogEntrySerializationStrategy logStrategy) {
+//        final WriteStart writeStart = new WriteStart( logStrategy, MvccEntity.Status.COMPLETE);
+//
+//        return writeStart;
+//    }
 
     @Inject
     @Singleton

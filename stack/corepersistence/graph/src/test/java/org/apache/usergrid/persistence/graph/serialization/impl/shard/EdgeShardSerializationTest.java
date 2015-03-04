@@ -31,6 +31,7 @@ import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
+import org.apache.usergrid.persistence.core.util.IdGenerator;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -40,7 +41,7 @@ import com.google.inject.Inject;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
-import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createId;
+import static org.apache.usergrid.persistence.core.util.IdGenerator.createId;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.mock;
@@ -79,7 +80,7 @@ public class EdgeShardSerializationTest {
     @Test
     public void saveReturn() throws ConnectionException {
 
-        final Id now = createId( "test" );
+        final Id now = IdGenerator.createId( "test" );
 
         final long timestamp = 10000l;
 
@@ -137,7 +138,7 @@ public class EdgeShardSerializationTest {
     @Test
     public void saveReturnDelete() throws ConnectionException {
 
-        final Id now = createId( "test" );
+        final Id now = IdGenerator.createId( "test" );
 
 
         final long timestamp = 10000l;

@@ -32,8 +32,6 @@ import org.apache.usergrid.persistence.collection.EntityVersionCreatedFactory;
 import org.apache.usergrid.persistence.collection.cache.CachedEntityCollectionManager;
 import org.apache.usergrid.persistence.collection.cache.EntityCacheFig;
 import org.apache.usergrid.persistence.collection.guice.CollectionTaskExecutor;
-import org.apache.usergrid.persistence.collection.guice.Write;
-import org.apache.usergrid.persistence.collection.guice.WriteUpdate;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkCommit;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkStart;
@@ -66,7 +64,6 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
 
 
     private final WriteStart writeStart;
-    private final WriteStart writeUpdate;
     private final WriteUniqueVerify writeVerifyUnique;
     private final WriteOptimisticVerify writeOptimisticVerify;
     private final WriteCommit writeCommit;
@@ -91,7 +88,7 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
 
                                   //create the target EM that will perform logic
                             final EntityCollectionManager target = new EntityCollectionManagerImpl(
-                                writeStart, writeUpdate, writeVerifyUnique,
+                                writeStart, writeVerifyUnique,
                                 writeOptimisticVerify, writeCommit, rollback, markStart, markCommit,
                                 entitySerializationStrategy, uniqueValueSerializationStrategy,
                                 mvccLogEntrySerializationStrategy, keyspace, serializationFig,entityVersionCleanupFactory,
@@ -107,8 +104,7 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
 
 
     @Inject
-    public EntityCollectionManagerFactoryImpl( @Write final WriteStart writeStart,
-                                               @WriteUpdate final WriteStart writeUpdate,
+    public EntityCollectionManagerFactoryImpl( final WriteStart writeStart,
                                                final WriteUniqueVerify writeVerifyUnique,
                                                final WriteOptimisticVerify writeOptimisticVerify,
                                                final WriteCommit writeCommit, final RollbackAction rollback,
@@ -125,7 +121,6 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
                                                final SerializationFig serializationFig) {
 
         this.writeStart = writeStart;
-        this.writeUpdate = writeUpdate;
         this.writeVerifyUnique = writeVerifyUnique;
         this.writeOptimisticVerify = writeOptimisticVerify;
         this.writeCommit = writeCommit;

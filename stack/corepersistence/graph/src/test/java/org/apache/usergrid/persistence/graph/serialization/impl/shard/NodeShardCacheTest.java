@@ -29,6 +29,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.util.IdGenerator;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.NodeShardCacheImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -37,7 +38,7 @@ import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import com.google.common.base.Optional;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
-import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createId;
+import static org.apache.usergrid.persistence.core.util.IdGenerator.createId;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
@@ -76,7 +77,7 @@ public class NodeShardCacheTest {
 
         final NodeShardAllocation allocation = mock( NodeShardAllocation.class );
 
-        final Id id = createId( "test" );
+        final Id id = IdGenerator.createId( "test" );
 
         final String edgeType = "edge";
 
@@ -151,7 +152,7 @@ public class NodeShardCacheTest {
         final NodeShardAllocation allocation = mock( NodeShardAllocation.class );
 
 
-        final Id id = createId( "test" );
+        final Id id = IdGenerator.createId( "test" );
 
         final String edgeType = "edge";
 
