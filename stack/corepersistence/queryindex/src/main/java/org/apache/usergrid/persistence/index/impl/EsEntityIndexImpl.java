@@ -19,6 +19,8 @@ package org.apache.usergrid.persistence.index.impl;
 
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import org.apache.commons.lang.StringUtils;
@@ -35,6 +37,8 @@ import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+import org.elasticsearch.action.ActionListener;
+import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.ShardOperationFailedException;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
@@ -136,11 +140,11 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     public void initializeIndex() {
         final int numberOfShards = config.getNumberOfShards();
         final int numberOfReplicas = config.getNumberOfReplicas();
-        addIndex(null, numberOfShards, numberOfReplicas);
+        addIndex(null, numberOfShards, numberOfReplicas,config.getWriteConsistencyLevel());
     }
 
     @Override
-    public void addIndex(final String indexSuffix,final int numberOfShards, final int numberOfReplicas) {
+    public void addIndex(final String indexSuffix,final int numberOfShards, final int numberOfReplicas, final String writeConsistency) {
         String normalizedSuffix =  StringUtils.isNotEmpty(indexSuffix) ? indexSuffix : null;
         try {
 
@@ -157,7 +161,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
                 Settings settings = ImmutableSettings.settingsBuilder()
                         .put("index.number_of_shards", numberOfShards)
                         .put("index.number_of_replicas", numberOfReplicas)
-                        .build();
+                        .put("action.write_consistency", writeConsistency )
+                    .build();
                 final CreateIndexResponse cir = admin.indices().prepareCreate(indexName)
                         .setSettings(settings)
                         .execute()
@@ -444,7 +449,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
                 try {
                     String[] indexes = ArrayUtils.addAll(
                         getIndexes(AliasType.Read),
-                        getIndexes(AliasType.Write) );
+                        getIndexes(AliasType.Write)
+                    );
 
                     if ( indexes.length == 0 ) {
                         logger.debug( "Not refreshing indexes, none found for app {}",
@@ -510,26 +516,38 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
 
     @Override
-    public void deleteAllVersionsOfEntity( Id entityId ) {
+    public ListenableActionFuture deleteAllVersionsOfEntity(final Id entityId ) {
 
         String idString = IndexingUtils.idString(entityId).toLowerCase();
 
         final TermQueryBuilder tqb = QueryBuilders.termQuery( ENTITYID_ID_FIELDNAME, idString );
 
-        final DeleteByQueryResponse response = esProvider.getClient()
-            .prepareDeleteByQuery( alias.getWriteAlias() ).setQuery( tqb ).execute().actionGet();
+        final ListenableActionFuture<DeleteByQueryResponse> response = esProvider.getClient()
+            .prepareDeleteByQuery( alias.getWriteAlias() ).setQuery( tqb ).execute();
+
+        response.addListener(new ActionListener<DeleteByQueryResponse>() {
+            @Override
+            public void onResponse(DeleteByQueryResponse response) {
+                logger.debug( "Deleted entity {}:{} from all index scopes with response status = {}",
+                    entityId.getType(), entityId.getUuid(), response.status().toString());
+
+                checkDeleteByQueryResponse( tqb, response );
+            }
+
+            @Override
+            public void onFailure(Throwable e) {
+                logger.error("Deleted entity {}:{} from all index scopes with error {}",
+                    entityId.getType(), entityId.getUuid(), e);
 
 
-        logger.debug( "Deleted entity {}:{} from all index scopes with response status = {}",
-            entityId.getType(), entityId.getUuid(), response.status().toString());
-
-       checkDeleteByQueryResponse( tqb, response );
-
+            }
+        });
+        return response;
     }
 
 
     @Override
-    public void deletePreviousVersions( final Id entityId, final UUID version ) {
+    public ListenableActionFuture deletePreviousVersions( final Id entityId, final UUID version ) {
 
         String idString = IndexingUtils.idString( entityId ).toLowerCase();
 
@@ -538,15 +556,28 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
                 FilterBuilders.rangeFilter(ENTITY_VERSION_FIELDNAME).lt(version.timestamp())
         );
 
-        final DeleteByQueryResponse response = esProvider.getClient()
-            .prepareDeleteByQuery( alias.getWriteAlias() ).setQuery( fqb ).execute().actionGet();
+        final ListenableActionFuture<DeleteByQueryResponse> response = esProvider.getClient()
+            .prepareDeleteByQuery(alias.getWriteAlias()).setQuery(fqb).execute();
 
-        //error message needs to be retooled so that it describes the entity more throughly
-        logger.debug( "Deleted entity {}:{} with version {} from all "
-                + "index scopes with response status = {}",
-            entityId.getType(), entityId.getUuid(), version,  response.status().toString()  );
+        response.addListener(new ActionListener<DeleteByQueryResponse>() {
+            @Override
+            public void onResponse(DeleteByQueryResponse response) {
+                //error message needs to be retooled so that it describes the entity more throughly
+                logger.debug( "Deleted entity {}:{} with version {} from all "
+                        + "index scopes with response status = {}",
+                    entityId.getType(), entityId.getUuid(), version,  response.status().toString()  );
 
-        checkDeleteByQueryResponse( fqb, response );
+                checkDeleteByQueryResponse( fqb, response );
+            }
+
+            @Override
+            public void onFailure(Throwable e) {
+                logger.error("Deleted entity {}:{} from all index scopes with error {}",
+                    entityId.getType(), entityId.getUuid(), e);
+            }
+        });
+
+        return response;
     }
 
 
@@ -560,13 +591,14 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
             final ShardOperationFailedException[] failures = indexDeleteByQueryResponse.getFailures();
 
             for ( ShardOperationFailedException failedException : failures ) {
-                throw new IndexException( String.format("Unable to delete by query %s. "
+                logger.error( String.format("Unable to delete by query %s. "
                         + "Failed with code %d and reason %s on shard %s in index %s",
                     query.toString(),
                     failedException.status().getStatus(),
                     failedException.reason(),
                     failedException.shardId(),
-                    failedException.index() ) );
+                    failedException.index() )
+                );
             }
 
         }

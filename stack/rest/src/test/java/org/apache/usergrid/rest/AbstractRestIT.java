@@ -33,6 +33,7 @@ import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.OrganizationOwnerInfo;
 
+import org.apache.usergrid.persistence.exceptions.ApplicationAlreadyExistsException;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.slf4j.Logger;
@@ -146,7 +147,12 @@ public abstract class AbstractRestIT extends JerseyTest {
             orgInfo = orgOwnerInfo.getOrganization();
         }
 
-        appInfo = setup.getMgmtSvc().createApplication(orgInfo.getUuid(), "app-" + rand);
+        String appname =  "app-" + rand;
+        try {
+            appInfo = setup.getMgmtSvc().createApplication(orgInfo.getUuid(),appname);
+        }catch(ApplicationAlreadyExistsException e){
+            LOG.error("Failed to create application"+appname+", maybe this is ok", e);
+        }
         refreshIndex( orgInfo.getName(), appInfo.getName() );
 
         orgAppPath = appInfo.getName() + "/";

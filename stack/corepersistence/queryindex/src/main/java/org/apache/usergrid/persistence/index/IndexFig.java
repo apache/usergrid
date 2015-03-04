@@ -51,7 +51,7 @@ public interface IndexFig extends GuicyFig {
 
     public static final String INDEX_BUFFER_SIZE = "elasticsearch.buffer_size";
 
-    public static final String INDEX_BUFFER_TIMEOUT = "elasticsearch.buffer_size";
+    public static final String INDEX_BUFFER_TIMEOUT = "elasticsearch.buffer_timeout";
 
     public static final String INDEX_BATCH_SIZE = "elasticsearch.batch_size";
 
