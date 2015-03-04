@@ -90,7 +90,7 @@ public class OrganizationIT {
 
         OrganizationInfo organization2 = setup.getMgmtSvc().getOrganizationForApplication( applicationId );
         assertNotNull( organization2 );
-        assertEquals( "wrong organization name", organization.getName(), organization2.getName() );
+        assertEquals( "wrong organization name", organization.getOrganization().getName(), organization2.getName() );
 
         boolean verified = setup.getMgmtSvc().verifyAdminUserPassword( organization.getOwner().getUuid(), "test" );
         assertTrue( verified );

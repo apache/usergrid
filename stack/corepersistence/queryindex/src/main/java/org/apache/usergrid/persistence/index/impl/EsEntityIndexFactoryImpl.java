@@ -27,6 +27,7 @@ import com.google.inject.assistedinject.Assisted;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
+import org.apache.usergrid.persistence.index.IndexBufferProducer;
 import org.apache.usergrid.persistence.index.IndexFig;
 
 import java.util.concurrent.ExecutionException;
@@ -39,18 +40,22 @@ public class EsEntityIndexFactoryImpl implements EntityIndexFactory{
     private final IndexFig config;
     private final EsProvider provider;
     private final EsIndexCache indexCache;
+    private final IndexBufferProducer indexBatchBufferProducer;
 
     private LoadingCache<ApplicationScope, EntityIndex> eiCache =
         CacheBuilder.newBuilder().maximumSize( 1000 ).build( new CacheLoader<ApplicationScope, EntityIndex>() {
             public EntityIndex load( ApplicationScope scope ) {
-                return new EsEntityIndexImpl(scope,config,provider,indexCache);
+                return new EsEntityIndexImpl(scope,config, indexBatchBufferProducer, provider,indexCache);
             }
         } );
+
     @Inject
-    public EsEntityIndexFactoryImpl(final IndexFig config, final EsProvider provider, final EsIndexCache indexCache){
+    public EsEntityIndexFactoryImpl( final IndexFig config, final EsProvider provider, final EsIndexCache indexCache,
+                                     final IndexBufferProducer indexBatchBufferProducer ){
         this.config = config;
         this.provider = provider;
         this.indexCache = indexCache;
+        this.indexBatchBufferProducer = indexBatchBufferProducer;
     }
 
     @Override
