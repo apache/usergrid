@@ -22,11 +22,11 @@ import com.google.common.cache.*;
 import com.google.inject.Injector;
 
 import org.apache.usergrid.corepersistence.CpSetup;
-import org.apache.usergrid.metrics.MetricsFactory;
 
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.queue.*;
 import org.apache.usergrid.persistence.queue.QueueManager;
 import org.apache.usergrid.services.ServiceManager;
@@ -84,15 +84,14 @@ public abstract class QueueListener  {
      * Initializes the QueueListener.
      * @param smf
      * @param emf
-     * @param metricsService
      * @param props
      */
-    public QueueListener(ServiceManagerFactory smf, EntityManagerFactory emf, MetricsFactory metricsService, Injector injector, Properties props){
+    public QueueListener(ServiceManagerFactory smf, EntityManagerFactory emf, Injector injector, Properties props){
         //TODO: change current injectors to use service module instead of CpSetup
         this.queueManagerFactory = injector.getInstance( QueueManagerFactory.class );
         this.smf = smf;
         this.emf = injector.getInstance( EntityManagerFactory.class ); //emf;
-        this.metricsService = metricsService;
+        this.metricsService = injector.getInstance(MetricsFactory.class);
         this.properties = props;
         this.queueScopeFactory = injector.getInstance(QueueScopeFactory.class);
 

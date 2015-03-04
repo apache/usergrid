@@ -1,6 +1,3 @@
-/**
- * Created by ApigeeCorporation on 12/4/14.
- */
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,9 +15,7 @@
  * limitations under the License.
  */
 
-
 package org.apache.usergrid.rest.test.resource2point0.model;
-
 
 import java.io.Serializable;
 import java.util.*;
@@ -38,7 +33,6 @@ import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
  * Contains a model that can be deconstructed from the api response. This is a base level value that contains the bare
  * minumum of what other classes use. Such as . users or groups.
  */
-
 public class Entity implements Serializable, Map<String,Object> {
 
 
@@ -135,7 +129,12 @@ public class Entity implements Serializable, Map<String,Object> {
         //All values are strings , so doing the cast here saves doing the cast elsewhere
         return getDynamicProperties().get( key );
     }
-    public String getString( final Object key ) {
+
+    public Map<String, Map<String, Object>> getMap(Object key){
+        return (LinkedHashMap<String, Map<String, Object>>) getDynamicProperties().get( key );
+    }
+
+    public String getAsString( final Object key ) {
         //All values are strings , so doing the cast here saves doing the cast elsewhere
         return (String) getDynamicProperties().get( key );
     }
@@ -198,6 +197,11 @@ public class Entity implements Serializable, Map<String,Object> {
     }
 
     public Entity chainPut(final String key, final Object value){
+        put(key,value);
+        return this;
+    }
+
+    public Entity withProp(final String key, final Object value){
         put(key,value);
         return this;
     }

@@ -21,8 +21,9 @@
  import org.apache.usergrid.settings.Utils
 
  import scala.collection.mutable.ArrayBuffer
+ import scala.util.parsing.json.JSONObject
 
-object EntityDataGenerator {
+ object EntityDataGenerator {
 
   def generateBlockUserLists(numUsers: Int): Map[String, String] = {
 
@@ -43,7 +44,9 @@ object EntityDataGenerator {
 
   def generateUser(userId: String): Map[String,String] = {
 
-    return Map("username" -> "user".concat(userId.toString),
+    return Map(
+
+      "username" -> "user".concat(userId.toString),
       "profileId" -> Utils.generateRandomInt(10000, 1000000).toString,
       "displayName" -> Utils.generateRandomInt(10000, 1000000).toString,
       "showAge" -> Utils.generateRandomInt(0, 1).toString,
@@ -59,10 +62,10 @@ object EntityDataGenerator {
     )
   }
 
-  def generateCustomEntity(entityName: String): Map[String,String] = {
+  def generateCustomEntity(): Map[String,String] = {
 
-    return Map(
-      "name" -> entityName,
+    var entity: Map[String, String] = Map(
+      // "name" -> "fdsa",
       "address" -> Utils.generateRandomInt(10000, 1000000).toString,
       "city" -> Utils.generateRandomInt(10000, 1000000).toString,
       "state" -> Utils.generateRandomInt(10000, 1000000).toString,
@@ -78,6 +81,8 @@ object EntityDataGenerator {
       "bar" -> Utils.generateRandomInt(120, 350).toString,
       "tables" -> Utils.generateRandomInt(50, 100000).toString,
       "outdoor" -> Utils.generateRandomInt(50, 100000).toString
-    )
+      )
+    return Map("entity" -> new JSONObject(entity).toString())
+
   }
 }

@@ -231,14 +231,17 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
             public Observable<Entity> call( final EntitySet entitySet ) {
                 final MvccEntity entity = entitySet.getEntity( entityId );
 
-                if ( entity == null || !entity.getEntity().isPresent()) {
+                if ( entity == null || !entity.getEntity().isPresent() ) {
                     return Observable.empty();
                 }
 
-                return Observable.just( entity.getEntity().get() );
+                return Observable.from( entity.getEntity().get() );
             }
         } );
     }
+
+
+
 
 
     @Override

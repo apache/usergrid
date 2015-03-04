@@ -28,7 +28,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
 import org.apache.usergrid.batch.service.JobSchedulerService;
-import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.management.importer.S3Upload;
 import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
@@ -153,7 +152,7 @@ public class ImportResourceIT extends AbstractRestIT {
             .addToPath(entity.getUuid().toString())
             .get();
 
-        assertNotNull(entity.getString("state"));
+        assertNotNull(entity.getAsString("state"));
     }
 
     /**
@@ -452,7 +451,7 @@ public class ImportResourceIT extends AbstractRestIT {
 
         final Entity includesEntity = importGetIncludesResponse.getEntities().get( 0 );
 
-        assertEquals( "testImportCorrect.testCol.1.json", includesEntity.getString( "fileName" ) );
+        assertEquals( "testImportCorrect.testCol.1.json", includesEntity.getAsString( "fileName" ) );
         assertEquals(1, includesEntity.get( "importedConnectionCount" ));
         assertEquals(1, includesEntity.get( "importedEntityCount" ));
 

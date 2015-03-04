@@ -36,8 +36,11 @@ import org.apache.usergrid.persistence.IndexBucketLocator;
 import org.apache.usergrid.persistence.IndexBucketLocator.IndexType;
 import org.apache.usergrid.persistence.cassandra.index.IndexBucketScanner;
 import org.apache.usergrid.persistence.cassandra.index.IndexScanner;
+import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.hector.CountingMutator;
 import org.apache.usergrid.utils.MapUtils;
+
+import com.google.inject.Injector;
 
 import me.prettyprint.cassandra.connection.HConnectionManager;
 import me.prettyprint.cassandra.model.ConfigurableConsistencyLevel;
@@ -90,11 +93,10 @@ import static org.apache.usergrid.utils.MapUtils.filter;
 
 public class CassandraService {
 
-    public static String SYSTEM_KEYSPACE = "Usergrid";
+    //make the below two not static
+   // public static String SYSTEM_KEYSPACE = "Usergrid";
 
-    public static String STATIC_APPLICATION_KEYSPACE = "Usergrid_Applications";
-
-    public static final boolean USE_VIRTUAL_KEYSPACES = true;
+    public static String applicationKeyspace;
 
     public static final String APPLICATIONS_CF = "Applications";
     public static final String PROPERTIES_CF = "Properties";
@@ -137,14 +139,17 @@ public class CassandraService {
 
     public static final UUID NULL_ID = new UUID( 0, 0 );
 
-
+//Wire guice injector via spring here, just pass the injector in the spring
     public CassandraService( Properties properties, Cluster cluster,
-                             CassandraHostConfigurator cassandraHostConfigurator, LockManager lockManager ) {
+                             CassandraHostConfigurator cassandraHostConfigurator, LockManager lockManager,
+                           final Injector injector) {
         this.properties = properties;
         this.cluster = cluster;
         chc = cassandraHostConfigurator;
         this.lockManager = lockManager;
         db_logger.info( "" + cluster.getKnownPoolHosts( false ) );
+        //getInjector
+        applicationKeyspace  = injector.getInstance( CassandraFig.class ).getApplicationKeyspace();
     }
 
 
@@ -158,7 +163,7 @@ public class CassandraService {
         accessMap.put( "username", properties.getProperty( "cassandra.username" ) );
         accessMap.put( "password", properties.getProperty( "cassandra.password" ) );
         systemKeyspace =
-                HFactory.createKeyspace( SYSTEM_KEYSPACE, cluster, consistencyLevelPolicy, ON_FAIL_TRY_ALL_AVAILABLE,
+                HFactory.createKeyspace( getApplicationKeyspace() , cluster, consistencyLevelPolicy, ON_FAIL_TRY_ALL_AVAILABLE,
                         accessMap );
 
 
@@ -168,6 +173,9 @@ public class CassandraService {
 
     }
 
+    public static String getApplicationKeyspace() {
+        return applicationKeyspace;
+    }
 
     public Cluster getCluster() {
         return cluster;
@@ -229,28 +237,18 @@ public class CassandraService {
 
     /** @return keyspace for application UUID */
     public static String keyspaceForApplication( UUID applicationId ) {
-        if ( USE_VIRTUAL_KEYSPACES ) {
-            return STATIC_APPLICATION_KEYSPACE;
-        }
-        else {
-            return "Application_" + applicationId.toString().replace( '-', '_' );
-        }
+            return getApplicationKeyspace();
     }
 
 
     public static UUID prefixForApplication( UUID applicationId ) {
-        if ( USE_VIRTUAL_KEYSPACES ) {
             return applicationId;
-        }
-        else {
-            return null;
-        }
     }
 
 
     public Keyspace getKeyspace( String keyspace, UUID prefix ) {
         Keyspace ko = null;
-        if ( USE_VIRTUAL_KEYSPACES && ( prefix != null ) ) {
+        if ( ( prefix != null ) ) {
             ko = createVirtualKeyspace( keyspace, prefix, ue, cluster, consistencyLevelPolicy,
                     ON_FAIL_TRY_ALL_AVAILABLE, accessMap );
         }
@@ -271,20 +269,15 @@ public class CassandraService {
 
     /** The Usergrid_Applications keyspace directly */
     public Keyspace getUsergridApplicationKeyspace() {
-        return getKeyspace( STATIC_APPLICATION_KEYSPACE, null );
-    }
-
-
-    public Keyspace getSystemKeyspace() {
-        return systemKeyspace;
+        return getKeyspace( getApplicationKeyspace(),  null );
     }
 
 
     public boolean checkKeyspacesExist() {
         boolean exists = false;
         try {
-            exists = cluster.describeKeyspace( SYSTEM_KEYSPACE ) != null
-                    && cluster.describeKeyspace( STATIC_APPLICATION_KEYSPACE ) != null;
+            exists = cluster.describeKeyspace( getApplicationKeyspace() ) != null;
+
         }
         catch ( Exception ex ) {
             logger.error( "could not describe keyspaces", ex );
@@ -406,7 +399,7 @@ public class CassandraService {
     /**
      * Gets the columns.
      *
-     * @param keyspace the keyspace
+     * @param ko the keyspace
      * @param columnFamily the column family
      * @param key the key
      *
@@ -462,7 +455,7 @@ public class CassandraService {
     /**
      * Gets the columns.
      *
-     * @param keyspace the keyspace
+     * @param ko the keyspace
      * @param columnFamily the column family
      * @param key the key
      * @param start the start
@@ -584,7 +577,7 @@ public class CassandraService {
     /**
      * Gets the columns.
      *
-     * @param keyspace the keyspace
+     * @param ko the keyspace
      * @param columnFamily the column family
      * @param keys the keys
      *
@@ -623,7 +616,7 @@ public class CassandraService {
     /**
      * Gets the columns.
      *
-     * @param keyspace the keyspace
+     * @param ko the keyspace
      * @param columnFamily the column family
      * @param key the key
      * @param columnNames the column names
@@ -668,7 +661,7 @@ public class CassandraService {
     /**
      * Gets the columns.
      *
-     * @param keyspace the keyspace
+     * @param ko the keyspace
      * @param columnFamily the column family
      * @param keys the keys
      * @param columnNames the column names
@@ -711,7 +704,7 @@ public class CassandraService {
     /**
      * Gets the column.
      *
-     * @param keyspace the keyspace
+     * @param ko the keyspace
      * @param columnFamily the column family
      * @param key the key
      * @param column the column
@@ -827,7 +820,7 @@ public class CassandraService {
     /**
      * Sets the columns.
      *
-     * @param keyspace the keyspace
+     * @param ko the keyspace
      * @param columnFamily the column family
      * @param key the key
      * @param map the map
@@ -894,7 +887,7 @@ public class CassandraService {
     /**
      * Delete column.
      *
-     * @param keyspace the keyspace
+     * @param ko the keyspace
      * @param columnFamily the column family
      * @param key the key
      * @param column the column
@@ -915,7 +908,7 @@ public class CassandraService {
     /**
      * Gets the row keys.
      *
-     * @param keyspace the keyspace
+     * @param ko the keyspace
      * @param columnFamily the column family
      *
      * @return set of keys
@@ -953,7 +946,7 @@ public class CassandraService {
     /**
      * Gets the row keys as uui ds.
      *
-     * @param keyspace the keyspace
+     * @param ko the keyspace
      * @param columnFamily the column family
      *
      * @return list of row key UUIDs
@@ -985,7 +978,7 @@ public class CassandraService {
     /**
      * Delete row.
      *
-     * @param keyspace the keyspace
+     * @param ko the keyspace
      * @param columnFamily the column family
      * @param key the key
      *
@@ -1043,7 +1036,7 @@ public class CassandraService {
 
 
 
-    
+
     public void destroy() throws Exception {
     	if (cluster != null) {
     		HConnectionManager connectionManager = cluster.getConnectionManager();

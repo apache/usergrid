@@ -32,9 +32,8 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
+import org.apache.usergrid.persistence.core.future.BetterFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
@@ -105,10 +104,6 @@ import org.apache.usergrid.utils.StringUtils;
 import org.apache.usergrid.utils.UUIDUtils;
 
 import com.google.common.base.Preconditions;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.CacheLoader.InvalidCacheLoadException;
-import com.google.common.cache.LoadingCache;
 import com.netflix.hystrix.exception.HystrixRuntimeException;
 import com.yammer.metrics.annotation.Metered;
 
@@ -150,7 +145,6 @@ import static org.apache.usergrid.persistence.Schema.PROPERTY_TYPE;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 import static org.apache.usergrid.persistence.Schema.TYPE_ENTITY;
-import static org.apache.usergrid.persistence.SimpleEntityRef.getUuid;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.APPLICATION_AGGREGATE_COUNTERS;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_COMPOSITE_DICTIONARIES;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_COUNTERS;
@@ -356,7 +350,7 @@ public class CpEntityManager implements EntityManager {
         Id id = new SimpleId( entityRef.getUuid(), entityRef.getType() );
 
         CollectionScope collectionScope = getCollectionScopeNameFromEntityType(
-                applicationScope.getApplication(),  entityRef.getType());
+            getApplicationScope().getApplication(),  entityRef.getType());
 
 
         //        if ( !UUIDUtils.isTimeBased( id.getUuid() ) ) {
@@ -439,7 +433,7 @@ public class CpEntityManager implements EntityManager {
 
 
         CollectionScope collectionScope = getCollectionScopeNameFromEntityType(
-                applicationScope.getApplication(),  type);
+            getApplicationScope().getApplication(),  type);
 
 
         //        if ( !UUIDUtils.isTimeBased( id.getUuid() ) ) {
@@ -497,11 +491,14 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public void update( Entity entity ) throws Exception {
-
+        Preconditions.checkNotNull(entity,"entity should never be null");
+        String type = entity.getType();
+        Preconditions.checkNotNull(type,"entity type should never be null");
+        Id appId  = getApplicationScope().getApplication();
+        Preconditions.checkNotNull(appId,"app scope should never be null");
         // first, update entity index in its own collection scope
 
-        CollectionScope collectionScope = getCollectionScopeNameFromEntityType(
-                applicationScope.getApplication(),  entity.getType());
+        CollectionScope collectionScope = getCollectionScopeNameFromEntityType(appId, type );
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
 
         Id entityId = new SimpleId( entity.getUuid(), entity.getType() );
@@ -571,8 +568,11 @@ public class CpEntityManager implements EntityManager {
 
     private Observable deleteAsync( EntityRef entityRef ) throws Exception {
 
+        if(applicationScope == null || entityRef == null){
+            return Observable.empty();
+        }
         CollectionScope collectionScope = getCollectionScopeNameFromEntityType(
-                applicationScope.getApplication(), entityRef.getType()  );
+            getApplicationScope().getApplication(), entityRef.getType()  );
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
 
@@ -982,8 +982,7 @@ public class CpEntityManager implements EntityManager {
         } );
 
 
-        ei.createBatch().index( defaultIndexScope, cpEntity ).execute();
-
+        BetterFuture future = ei.createBatch().index( defaultIndexScope, cpEntity ).execute();
         // update in all containing collections and connection indexes
         CpRelationManager rm = ( CpRelationManager ) getRelationManager( entityRef );
         rm.updateContainingCollectionAndCollectionIndexes( cpEntity );
@@ -2126,7 +2125,7 @@ public class CpEntityManager implements EntityManager {
                                           final Object propertyValue ) {
 
         CollectionScope collectionScope = getCollectionScopeNameFromEntityType(
-                applicationScope.getApplication(), collectionName);
+            getApplicationScope().getApplication(), collectionName);
 
         final EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
 
@@ -2450,7 +2449,7 @@ public class CpEntityManager implements EntityManager {
         org.apache.usergrid.persistence.model.entity.Entity cpEntity = entityToCpEntity( entity, importId );
 
         // prepare to write and index Core Persistence Entity into default scope
-        CollectionScope collectionScope = getCollectionScopeNameFromEntityType(applicationScope.getApplication(), eType);
+        CollectionScope collectionScope = getCollectionScopeNameFromEntityType(getApplicationScope().getApplication(), eType);
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
 
@@ -2746,14 +2745,18 @@ public class CpEntityManager implements EntityManager {
     }
 
 
+
     /**
-     * Completely reindex the application associated with this EntityManager.
+     * Completely reindex the named collection in the application associated with this EntityManager.
      */
-    public void reindex( final EntityManagerFactory.ProgressObserver po ) throws Exception {
+    @Override
+    public void reindexCollection(
+        final EntityManagerFactory.ProgressObserver po, String collectionName, boolean reverse) throws Exception {
 
-        CpWalker walker = new CpWalker( po.getWriteDelayTime() );
+        CpWalker walker = new CpWalker( );
 
-        walker.walkCollections( this, application, new CpVisitor() {
+        walker.walkCollections(
+            this, getApplication(), collectionName, reverse, new CpVisitor() {
 
             @Override
             public void visitCollectionEntry( EntityManager em, String collName, Entity entity ) {
@@ -2763,13 +2766,42 @@ public class CpEntityManager implements EntityManager {
                     po.onProgress( entity );
                 }
                 catch ( WriteOptimisticVerifyException wo ) {
-                    //swallow this, it just means this was already updated, which accomplishes our task.  Just ignore.
-                    logger.warn( "Someone beat us to updating entity {} in collection {}.  Ignoring.", entity.getName(),
-                            collName );
+                    // swallow this, it just means this was already updated, which accomplishes our task
+                    logger.warn( "Someone beat us to updating entity {} in collection {}.  Ignoring.",
+                        entity.getName(), collName );
                 }
                 catch ( Exception ex ) {
                     logger.error( "Error repersisting entity", ex );
                 }
+            }
+        } );
+    }
+
+
+    /**
+     * Completely reindex the application associated with this EntityManager.
+     */
+    public void reindex( final EntityManagerFactory.ProgressObserver po ) throws Exception {
+
+        CpWalker walker = new CpWalker( );
+
+        walker.walkCollections( this, getApplication(), null, false, new CpVisitor() {
+
+            @Override
+            public void visitCollectionEntry( EntityManager em, String collName, Entity entity ) {
+
+            try {
+                em.update( entity );
+                po.onProgress( entity );
+            }
+            catch ( WriteOptimisticVerifyException wo ) {
+                //swallow this, it just means this was already updated, which accomplishes our task.
+                logger.warn( "Someone beat us to updating entity {} in collection {}.  Ignoring.",
+                    entity.getName(), collName );
+            }
+            catch ( Exception ex ) {
+                logger.error( "Error repersisting entity", ex );
+            }
             }
         } );
     }

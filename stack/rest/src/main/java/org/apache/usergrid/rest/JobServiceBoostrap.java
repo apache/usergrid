@@ -18,6 +18,7 @@ package org.apache.usergrid.rest;
 
 import org.apache.usergrid.batch.service.JobSchedulerService;
 import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.services.notifications.QueueListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,19 +32,21 @@ import java.util.Properties;
  * Simple class that starts the job store after the application context has been fired up. We don't
  * want to start the service until all of spring has been initialized in our webapp context
  */
-//@Component( "jobServiceBoostrap" )
 public class JobServiceBoostrap implements
         ApplicationListener<ContextRefreshedEvent> {
 
     private static final Logger logger = LoggerFactory.getLogger( JobServiceBoostrap.class );
 
-    private static final String START_SCHEDULER_PROP = "usergrid.scheduler.enabled";
+    public static final String START_SCHEDULER_PROP = "usergrid.scheduler.enabled";
 
     @Autowired
-    private JobSchedulerService schedulerService;
+    private JobSchedulerService jobScheduler;
 
     @Autowired
     private Properties properties;
+
+    @Autowired
+    private QueueListener notificationsQueueListener;
 
     public JobServiceBoostrap() {
     }
@@ -60,13 +63,20 @@ public class JobServiceBoostrap implements
         String start = properties.getProperty( START_SCHEDULER_PROP, "true" );
         if ( Boolean.parseBoolean( start ) ) {
             logger.info( "Starting Scheduler Service..." );
-            // start the scheduler service
-            schedulerService.startAsync();
-            schedulerService.awaitRunning();
+            jobScheduler.startAsync();
+            jobScheduler.awaitRunning();
 
         } else {
             logger.info( "Scheduler Service disabled" );
         }
+
+        boolean shouldRun = new Boolean(properties.getProperty("usergrid.notifications.listener.run","true"));
+        if(shouldRun){
+            notificationsQueueListener.start();
+        }else{
+            logger.info("QueueListener: never started due to config value usergrid.notifications.listener.run.");
+        }
+
     }
 
 }

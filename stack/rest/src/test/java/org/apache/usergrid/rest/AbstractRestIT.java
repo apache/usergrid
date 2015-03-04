@@ -27,34 +27,33 @@ import com.sun.jersey.test.framework.AppDescriptor;
 import com.sun.jersey.test.framework.JerseyTest;
 import com.sun.jersey.test.framework.WebAppDescriptor;
 import com.sun.jersey.test.framework.spi.container.TestContainerFactory;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.usergrid.java.client.Client;
+import org.apache.usergrid.management.ApplicationInfo;
+import org.apache.usergrid.management.OrganizationInfo;
+import org.apache.usergrid.management.OrganizationOwnerInfo;
+
+import org.apache.usergrid.persistence.exceptions.ApplicationAlreadyExistsException;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.UriBuilder;
-import org.apache.usergrid.java.client.Client;
+
 import static org.apache.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
-
-import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.shrinkwrap.api.Archive;
-import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.Maven;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.importer.MavenImporter;
-import org.junit.AfterClass;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.runner.RunWith;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 /**
@@ -64,12 +63,15 @@ import org.slf4j.LoggerFactory;
  * following naming convention: test_[HTTP verb]_[action mapping]_[ok|fail][_[specific
  * failure condition if multiple]
  */
-//
-@RunWith( Arquillian.class )
+//@ArquillianSuiteDeployment
+//@RunWith(Arquillian.class)
 public abstract class AbstractRestIT extends JerseyTest {
     private static final Logger LOG = LoggerFactory.getLogger( AbstractRestIT.class );
     private static boolean usersSetup = false;
 
+    protected static TomcatRuntime tomcatRuntime = TomcatRuntime.getInstance();
+
+    protected static final ITSetup setup = ITSetup.getInstance();
 
     private static ClientConfig clientConfig = new DefaultClientConfig();
 
@@ -81,7 +83,6 @@ public abstract class AbstractRestIT extends JerseyTest {
 
     protected static final AppDescriptor descriptor;
 
-    public static ITSetup setup = new ITSetup(  );
 
     //private static final URI baseURI = setup.getBaseURI();
 
@@ -101,21 +102,20 @@ public abstract class AbstractRestIT extends JerseyTest {
     }
 
 
-    //We set testable = false so we deploy the archive to the server and test it locally
-    @Deployment(testable = false)
-    public static WebArchive createTestArchive() {
-
-        //we use the MavenImporter from shrinkwrap to just produce whatever maven would build then test with it
-
-        //set maven to be in offline mode
-
-        System.setProperty( "org.apache.maven.offline", "true" );
-
-      return  ShrinkWrap.create(MavenImporter.class)
-          .loadPomFromFile("pom.xml", "arquillian-tomcat" ).importBuildOutput().as(WebArchive.class);
-
-    }
-
+//    // We set testable = false so we deploy the archive to the server and test it locally
+//    @org.jboss.arquillian.container.test.api.Deployment( testable = false )
+//    public static WebArchive createTestArchive() {
+//
+//        // we use the MavenImporter from shrinkwrap to just produce whatever maven would build then test with it
+//
+//        // set maven to be in offline mode
+//
+//        System.setProperty( "org.apache.maven.offline", "true" );
+//        return ShrinkWrap.create(MavenImporter.class)
+//            .loadPomFromFile( "pom.xml", "arquillian-tomcat" )
+//            .importBuildOutput()
+//            .as( WebArchive.class );
+//    }
 
 
     @AfterClass
@@ -126,21 +126,48 @@ public abstract class AbstractRestIT extends JerseyTest {
     }
 
 
-    /** Hook to get the token for our base user */
-    @Before
-    public void acquireToken() throws Exception {
+    public ApplicationInfo appInfo = null;
+    public OrganizationInfo orgInfo = null;
+    public String orgAppPath = null;
+    public String username = null;
+    public String userEmail = null;
 
-//        setupUsers();
-//
-//        refreshIndex("test-organization", "test-app");
-//
-//        LOG.info( "acquiring token" );
-//        access_token = userToken( "ed@anuff.com", "sesame" );
-//        LOG.info( "with token: {}", access_token );
-//
-//        loginClient();
-//
-//        refreshIndex("test-organization", "test-app");
+    /** Quick fix to get old style test working again. We need them! */
+    @Before
+    public void setupOrgApp() throws Exception {
+
+        setup.getMgmtSvc().setup();
+
+        String rand = RandomStringUtils.randomAlphanumeric(5);
+
+        orgInfo = setup.getMgmtSvc().getOrganizationByName("test-organization");
+        if ( orgInfo == null  ) {
+            OrganizationOwnerInfo orgOwnerInfo = setup.getMgmtSvc().createOwnerAndOrganization(
+                "test-organization" + rand, "test", "test", "test@usergrid.org", rand, false, false);
+            orgInfo = orgOwnerInfo.getOrganization();
+        }
+
+        String appname =  "app-" + rand;
+        try {
+            appInfo = setup.getMgmtSvc().createApplication(orgInfo.getUuid(),appname);
+        }catch(ApplicationAlreadyExistsException e){
+            LOG.error("Failed to create application"+appname+", maybe this is ok", e);
+        }
+        refreshIndex( orgInfo.getName(), appInfo.getName() );
+
+        orgAppPath = appInfo.getName() + "/";
+        adminToken();
+
+        setupUsers();
+        refreshIndex( orgInfo.getName(), appInfo.getName() );
+
+        loginClient();
+        refreshIndex( orgInfo.getName(), appInfo.getName() );
+
+        LOG.info( "acquiring token" );
+        access_token = userToken( userEmail, "sesame" );
+        LOG.info( "with token: {}", access_token );
+
     }
 
 
@@ -161,39 +188,35 @@ public abstract class AbstractRestIT extends JerseyTest {
     }
 
 
-    protected void setupUsers() {
+    protected void setupUsers() throws Exception {
 
         LOG.info("Entering setupUsers");
 
-        if ( usersSetup ) {
-            LOG.info("Leaving setupUsers: already setup");
-            return;
-        }
+//        if ( usersSetup ) {
+//            LOG.info("Leaving setupUsers: already setup");
+//            return;
+//        }
 
-        //
-        createUser( "edanuff", "ed@anuff.com", "sesame", "Ed Anuff" ); // client.setApiUrl(apiUrl);
+        String rand = RandomStringUtils.randomAlphanumeric(5);
+        username = "user-" + rand;
+        userEmail = username + "@example.com";
 
-        usersSetup = true;
-        LOG.info("Leaving setupUsers success");
+        createUser( username, userEmail, "sesame", "User named " + rand);
+
+        //usersSetup = true;
+        LOG.info("Leaving setupUsers, setup user: " + userEmail );
     }
 
 
     public void loginClient() throws Exception {
-        // now create a client that logs in ed
 
-        // TODO T.N. This is a filthy hack and I should be ashamed of it (which
-        // I am). There's a bug in the grizzly server when it's restarted per
-        // test, and until we can upgrade versions this is the workaround. Backs
-        // off with each attempt to allow the server to catch up
+        String appNameOnly = appInfo.getName().split("/")[1];
 
-
-        setUserPassword( "ed@anuff.com", "sesame" );
-
-        client = new Client( "test-organization", "test-app" ).withApiUrl(
-                UriBuilder.fromUri( "http://localhost/" ).port( setup.getTomcatPort() ).build().toString() );
+        client = new Client( "test-organization", appNameOnly ).withApiUrl(
+                UriBuilder.fromUri( "http://localhost/" ).port(tomcatRuntime.getPort() ).build().toString() );
 
         org.apache.usergrid.java.client.response.ApiResponse response =
-                client.authorizeAppUser( "ed@anuff.com", "sesame" );
+            client.authorizeAppUser( userEmail, "sesame" );
 
         assertTrue( response != null && response.getError() == null );
     }
@@ -209,7 +232,11 @@ public abstract class AbstractRestIT extends JerseyTest {
 
     @Override
     protected URI getBaseURI() {
-        return setup.getBaseURI();
+        try {
+            return new URI("http://localhost:" + tomcatRuntime.getPort());
+        } catch (URISyntaxException e) {
+            throw new RuntimeException("Error determining baseURI", e);
+        }
     }
 
 
@@ -224,10 +251,8 @@ public abstract class AbstractRestIT extends JerseyTest {
     protected String userToken( String name, String password ) throws Exception {
 
         try {
-            setUserPassword( "ed@anuff.com", "sesame" );
-
-            JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/token" )
-                    .queryParam( "grant_type", "password" )
+            JsonNode node = mapper.readTree( resource().path( orgAppPath + "token" )
+                    .queryParam("grant_type", "password")
                     .queryParam( "username", name )
                     .queryParam( "password", password ).accept( MediaType.APPLICATION_JSON )
                     .get( String.class ));
@@ -246,7 +271,7 @@ public abstract class AbstractRestIT extends JerseyTest {
     public void createUser( String username, String email, String password, String name ) {
 
         try {
-            JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/token" )
+            JsonNode node = mapper.readTree( resource().path( orgAppPath + "token" )
                 .queryParam( "grant_type", "password" )
                 .queryParam( "username", username )
                 .queryParam( "password", password )
@@ -269,7 +294,7 @@ public abstract class AbstractRestIT extends JerseyTest {
             .map( "password", password )
             .map( "pin", "1234" );
 
-        resource().path( "/test-organization/test-app/users" )
+        resource().path( orgAppPath + "users" )
             .queryParam( "access_token", adminAccessToken )
             .accept( MediaType.APPLICATION_JSON )
             .type( MediaType.APPLICATION_JSON )
@@ -284,12 +309,12 @@ public abstract class AbstractRestIT extends JerseyTest {
         adminToken();
 
         // change the password as admin. The old password isn't required
-        JsonNode node = mapper.readTree( resource().path(
-                String.format( "/test-organization/test-app/users/%s/password", username ) )
-                .queryParam( "access_token", adminAccessToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, data ));
-
-        assertNull( getError( node ) );
+        JsonNode node = mapper.readTree(
+            resource().path( String.format( orgAppPath + "users/%s/password", username ) )
+                .queryParam("access_token", adminAccessToken)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE)
+                .post(String.class, data));
     }
 
 
@@ -383,7 +408,7 @@ public abstract class AbstractRestIT extends JerseyTest {
 
     /** convenience to return a ready WebResource.Builder in a single call */
     protected WebResource.Builder appPath( String path ) {
-        return resource().path( "/test-organization/test-app/" + path )
+        return resource().path( orgAppPath + "" + path )
                 .queryParam( "access_token", access_token )
                 .accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE );
@@ -461,6 +486,9 @@ public abstract class AbstractRestIT extends JerseyTest {
     public void refreshIndex( String orgName, String appName ) {
 
         LOG.debug("Refreshing index for app {}/{}", orgName, appName );
+
+        // be nice if somebody accidentally passed in orgName/appName
+        appName = appName.contains("/") ? appInfo.getName().split("/")[1] : appName;
 
         try {
 

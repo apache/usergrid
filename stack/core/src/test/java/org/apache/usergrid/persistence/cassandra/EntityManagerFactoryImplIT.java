@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.*;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -36,16 +37,13 @@ import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.persistence.cassandra.util.TraceTag;
 import org.apache.usergrid.persistence.cassandra.util.TraceTagManager;
 import org.apache.usergrid.persistence.cassandra.util.TraceTagReporter;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.SimpleEntityRef;
-import org.apache.usergrid.persistence.cassandra.util.TraceTag;
-import org.apache.usergrid.persistence.cassandra.util.TraceTagManager;
-import org.apache.usergrid.persistence.cassandra.util.TraceTagReporter;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.setup.ConcurrentProcessSingleton;
+import rx.functions.Func0;
+import rx.functions.Func1;
+import rx.functions.Func2;
+
+import javax.annotation.concurrent.NotThreadSafe;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -54,11 +52,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-
 public class EntityManagerFactoryImplIT extends AbstractCoreIT {
-
-    @SuppressWarnings("PointlessBooleanExpression")
-    public static final boolean USE_DEFAULT_DOMAIN = !CassandraService.USE_VIRTUAL_KEYSPACES;
 
     private static final Logger logger = LoggerFactory.getLogger( EntityManagerFactoryImplIT.class );
 
@@ -87,9 +81,6 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
 
     public UUID createApplication( String organizationName, String applicationName ) throws Exception {
-        if ( USE_DEFAULT_DOMAIN ) {
-            return emf.getDefaultAppId();
-        }
         return emf.createApplication( organizationName, applicationName );
     }
 
@@ -110,7 +101,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
         // create an application with a collection and an entity
 
-        UUID applicationId = setup.createApplication( "test-org-" + rand, "test-app-" + rand );
+        final UUID applicationId = setup.createApplication( "test-org-" + rand, "test-app-" + rand );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
@@ -126,9 +117,40 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
         em.refreshIndex();
 
+        // TODO: this assertion should work!
+        //assertNotNull( "cannot lookup app by name", setup.getEmf().lookupApplication("test-app-" + rand) );
+
         // delete the application
 
         setup.getEmf().deleteApplication( applicationId );
+
+        em.refreshIndex();
+
+        Func2<UUID, Map<String, UUID> ,Boolean> findApps = new Func2<UUID,Map<String, UUID> ,Boolean>() {
+            @Override
+            public Boolean call(UUID applicationId,  Map<String, UUID> apps) {
+                boolean found = false;
+                for (String appName : apps.keySet()) {
+                    UUID appId = apps.get(appName);
+                    if (appId.equals(applicationId)) {
+                        found = true;
+                        break;
+                    }
+                }
+                return found;
+            }
+        };
+
+        boolean found = false;
+        for(int i=0;i<10;i++){
+            found = findApps.call(applicationId,emf.getDeletedApplications());
+            if(found){
+                break;
+            } else{
+              Thread.sleep(500);
+            }
+        }
+        assertTrue("Deleted app not found in deleted apps collection", found );
 
         // attempt to get entities in application's collections in various ways should all fail
 
@@ -141,6 +163,42 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
             assertNotEquals( appName, "test-app-" + rand );
         }
 
+        // restore the app
+
+        emf.restoreApplication( applicationId );
+
+        emf.rebuildAllIndexes(new EntityManagerFactory.ProgressObserver() {
+            @Override
+            public void onProgress(EntityRef entity) {
+                logger.debug("Reindexing {}:{}", entity.getType(), entity.getUuid() );
+            }
+        });
+
+        // test to see that app now works and is happy
+
+        // it should not be found in the deleted apps collection
+        for(int i=0;i<10;i++){
+            found = findApps.call(applicationId,emf.getDeletedApplications());
+            if(!found){
+                break;
+            } else{
+                Thread.sleep(500);
+            }
+        }
+        assertFalse("Restored app found in deleted apps collection", found);
+
+        for(int i=0;i<10;i++){
+            found = findApps.call(applicationId,setup.getEmf().getApplications());
+            if(!found){
+                break;
+            } else{
+                Thread.sleep(500);
+            }
+        }
+        assertTrue("Restored app not found in apps collection", found);
+
+        // TODO: this assertion should work!
+        //assertNotNull(setup.getEmf().lookupApplication("test-app-" + rand));
     }
 
 

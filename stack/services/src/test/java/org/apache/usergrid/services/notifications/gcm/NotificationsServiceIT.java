@@ -101,7 +101,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         DefaultQueueManager qm = new DefaultQueueManager();
         ns.TEST_QUEUE_MANAGER = qm;
 
-        listener = new QueueListener(ns.getServiceManagerFactory(), ns.getEntityManagerFactory(),ns.getMetricsFactory(), new Properties());
+        listener = new QueueListener(ns.getServiceManagerFactory(), ns.getEntityManagerFactory(), new Properties());
         listener.DEFAULT_SLEEP = 200;
         listener.TEST_QUEUE_MANAGER = qm;
         listener.start();
@@ -186,7 +186,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         Entity device = app.testRequest(ServiceAction.POST, 1, "users",  user.getUuid(), "devices", device1.getUuid()).getEntity();
         assertEquals(device.getUuid(), device1.getUuid());
 
-        // create and post notification 
+        // create and post notification
         String payload = "Hello, World!";
         Map<String, String> payloads = new HashMap<String, String>(1);
         payloads.put(notifier.getUuid().toString(), payload);

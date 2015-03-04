@@ -22,10 +22,8 @@ package org.apache.usergrid.rest;
 
 import com.google.common.base.Preconditions;
 import com.sun.jersey.api.json.JSONWithPadding;
-import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
 import org.slf4j.Logger;
@@ -54,6 +52,10 @@ public class IndexResource extends AbstractContextResource {
 
     private static final Logger logger = LoggerFactory.getLogger(IndexResource.class);
 
+    public IndexResource(){
+        super();
+    }
+
     @RequireSystemAccess
     @PUT
     @Path( "rebuild" )
@@ -73,11 +75,6 @@ public class IndexResource extends AbstractContextResource {
                 logger.info( "Indexing entity {}:{} ", entity.getType(), entity.getUuid() );
             }
 
-
-            @Override
-            public long getWriteDelayTime() {
-                return 0;
-            }
         };
 
 
@@ -118,22 +115,28 @@ public class IndexResource extends AbstractContextResource {
 
         final UUID appId = UUIDUtils.tryExtractUUID(applicationIdStr);
         ApiResponse response = createApiResponse();
-        response.setAction( "rebuild indexes" );
+        response.setAction( "rebuild indexes started" );
+
+        final EntityManagerFactory.ProgressObserver po = new EntityManagerFactory.ProgressObserver() {
+
+            @Override
+            public void onProgress( final EntityRef entity ) {
+                logger.info( "Indexing entity {}:{}", entity.getType(), entity.getUuid() );
+            }
 
 
-        final EntityManager em = emf.getEntityManager( appId );
+        };
 
-        final Set<String> collectionNames = em.getApplicationCollections();
 
         final Thread rebuild = new Thread() {
 
             @Override
             public void run() {
-                for ( String collectionName : collectionNames )
-
-
-                {
-                    rebuildCollection( appId, collectionName, delay );
+                try {
+                    emf.rebuildApplicationIndexes( appId, po );
+                }
+                catch ( Exception e ) {
+                    logger.error( "Unable to re-index application", e );
                 }
             }
         };
@@ -151,12 +154,12 @@ public class IndexResource extends AbstractContextResource {
     @RequireSystemAccess
     @PUT
     @Path( "rebuild/" + RootResource.APPLICATION_ID_PATH + "/{collectionName}" )
-    public JSONWithPadding rebuildIndexes( @Context UriInfo ui,
-                                           @PathParam( "applicationId" ) final String applicationIdStr,
-                                           @PathParam( "collectionName" ) final String collectionName,
-                                           @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback,
-                                           @QueryParam( "delay" ) @DefaultValue( "10" ) final long delay )
-            throws Exception {
+    public JSONWithPadding rebuildIndexes(
+        @Context UriInfo ui,
+        @PathParam( "applicationId" ) final String applicationIdStr,
+        @PathParam( "collectionName" ) final String collectionName,
+        @QueryParam( "reverse" ) @DefaultValue( "false" ) final Boolean reverse,
+        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback) throws Exception {
 
         final UUID appId = UUIDUtils.tryExtractUUID( applicationIdStr );
         ApiResponse response = createApiResponse();
@@ -166,7 +169,13 @@ public class IndexResource extends AbstractContextResource {
 
             public void run() {
 
-                rebuildCollection( appId, collectionName, delay );
+                try {
+                    rebuildCollection( appId, collectionName, reverse );
+                } catch (Exception e) {
+
+                    // TODO: handle this in rebuildCollection() instead
+                    throw new RuntimeException("Error rebuilding collection");
+                }
             }
         };
 
@@ -180,18 +189,64 @@ public class IndexResource extends AbstractContextResource {
     }
 
     @RequireSystemAccess
+    @PUT
+    @Path( "rebuildinternal" )
+    public JSONWithPadding rebuildInternalIndexes(
+        @Context UriInfo ui,
+        @PathParam( "applicationId" ) String applicationIdStr,
+        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback,
+        @QueryParam( "delay" ) @DefaultValue( "10" ) final long delay )  throws Exception {
+
+
+        final UUID appId = UUIDUtils.tryExtractUUID(applicationIdStr);
+        ApiResponse response = createApiResponse();
+        response.setAction( "rebuild indexes started" );
+
+        final EntityManagerFactory.ProgressObserver po = new EntityManagerFactory.ProgressObserver() {
+
+            @Override
+            public void onProgress( final EntityRef entity ) {
+                logger.info( "Indexing entity {}:{}", entity.getType(), entity.getUuid() );
+            }
+
+        };
+
+        final Thread rebuild = new Thread() {
+
+            @Override
+            public void run() {
+                try {
+                    emf.rebuildInternalIndexes( po );
+                }
+                catch ( Exception e ) {
+                    logger.error( "Unable to re-index internals", e );
+                }
+            }
+        };
+
+        rebuild.setName( String.format( "Index rebuild for app %s", appId ) );
+        rebuild.setDaemon( true );
+        rebuild.start();
+
+        response.setSuccess();
+
+        return new JSONWithPadding( response, callback );
+    }
+
+    @RequireSystemAccess
     @POST
     @Path( RootResource.APPLICATION_ID_PATH )
     public JSONWithPadding addIndex(@Context UriInfo ui,
-                                    @PathParam( "applicationId" ) final String applicationIdStr,
-                                    Map<String, Object> config,
-                                    @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback)  throws Exception{
+            @PathParam( "applicationId" ) final String applicationIdStr,
+            Map<String, Object> config,
+            @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback)  throws Exception{
+
         Preconditions.checkNotNull(config,"Payload for config is null, please pass {replicas:int, shards:int} in body");
 
         ApiResponse response = createApiResponse();
         final UUID appId = UUIDUtils.tryExtractUUID(applicationIdStr);
 
-        if(!config.containsKey("replicas") || !config.containsKey("shards") ||
+        if (!config.containsKey("replicas") || !config.containsKey("shards") ||
                 !(config.get("replicas") instanceof Integer) || !(config.get("shards") instanceof Integer)){
             throw new IllegalArgumentException("body must contains 'replicas' of type int and 'shards' of type int");
         }
@@ -200,30 +255,32 @@ public class IndexResource extends AbstractContextResource {
             throw new IllegalArgumentException("Please add an indexSuffix to your post");
         }
 
-        emf.addIndex(appId, config.get("indexSuffix").toString(), (int) config.get("shards"),(int) config.get("replicas"));
+
+        emf.addIndex(appId, config.get("indexSuffix").toString(),
+            (int) config.get("shards"),(int) config.get("replicas"),(String)config.get("writeConsistency"));
         response.setAction("Add index to alias");
 
         return new JSONWithPadding(response, callback);
 
     }
 
-    private void rebuildCollection( final UUID applicationId, final String collectionName, final long delay ) {
+    private void rebuildCollection(
+        final UUID applicationId,
+        final String collectionName,
+        final boolean reverse) throws Exception {
+
         EntityManagerFactory.ProgressObserver po = new EntityManagerFactory.ProgressObserver() {
 
             @Override
             public void onProgress( final EntityRef entity ) {
                 logger.info( "Indexing entity {}:{}", entity.getType(), entity.getUuid() );
             }
-            @Override
-            public long getWriteDelayTime() {
-                return delay;
-            }
-        };
 
+        };
 
         logger.info( "Reindexing for app id: {} and collection {}", applicationId, collectionName );
 
-        emf.rebuildCollectionIndex( applicationId, collectionName, po );
+        emf.rebuildCollectionIndex(applicationId, collectionName, reverse, po);
         emf.refreshIndex();
     }
 

@@ -261,7 +261,7 @@ public class TokenServiceImpl implements TokenService {
 
         long maxTokenTtl = getMaxTtl( TokenCategory.getFromBase64String( token ), tokenInfo.getPrincipal() );
 
-        Mutator<UUID> batch = createMutator( cassandra.getSystemKeyspace(), ue );
+        Mutator<UUID> batch = createMutator( cassandra.getUsergridApplicationKeyspace(), ue );
 
         HColumn<String, Long> col =
                 createColumn( TOKEN_ACCESSED, now, calcTokenTime( tokenInfo.getExpiration( maxTokenTtl ) ),
@@ -326,7 +326,7 @@ public class TokenServiceImpl implements TokenService {
     public void removeTokens( AuthPrincipalInfo principal ) throws Exception {
         List<UUID> tokenIds = getTokenUUIDS( principal );
 
-        Mutator<ByteBuffer> batch = createMutator( cassandra.getSystemKeyspace(), be );
+        Mutator<ByteBuffer> batch = createMutator( cassandra.getUsergridApplicationKeyspace(), be );
 
         for ( UUID tokenId : tokenIds ) {
             batch.addDeletion( bytebuffer( tokenId ), TOKENS_CF );
@@ -359,7 +359,7 @@ public class TokenServiceImpl implements TokenService {
 
         UUID tokenId = info.getUuid();
 
-        Mutator<ByteBuffer> batch = createMutator( cassandra.getSystemKeyspace(), be );
+        Mutator<ByteBuffer> batch = createMutator( cassandra.getUsergridApplicationKeyspace(), be );
 
         // clean up the link in the principal -> token index if the principal is
         // on the token
@@ -380,7 +380,7 @@ public class TokenServiceImpl implements TokenService {
             throw new InvalidTokenException( "No token specified" );
         }
         Map<String, ByteBuffer> columns = getColumnMap( cassandra
-                .getColumns( cassandra.getSystemKeyspace(), TOKENS_CF, uuid, TOKEN_PROPERTIES, se,
+                .getColumns( cassandra.getUsergridApplicationKeyspace(), TOKENS_CF, uuid, TOKEN_PROPERTIES, se,
                         be ) );
         if ( !hasKeys( columns, REQUIRED_TOKEN_PROPERTIES ) ) {
             throw new InvalidTokenException( "Token not found in database" );
@@ -415,7 +415,7 @@ public class TokenServiceImpl implements TokenService {
 
         ByteBuffer tokenUUID = bytebuffer( tokenInfo.getUuid() );
 
-        Keyspace ko = cassandra.getSystemKeyspace();
+        Keyspace ko = cassandra.getUsergridApplicationKeyspace();
 
         Mutator<ByteBuffer> m = createMutator( ko, be );
 
@@ -449,7 +449,7 @@ public class TokenServiceImpl implements TokenService {
 
       /*
        * write to the PRINCIPAL+TOKEN The format is as follow
-       * 
+       *
        * appid+principalId+principalType :{ tokenuuid: 0x00}
        */
 
@@ -473,7 +473,7 @@ public class TokenServiceImpl implements TokenService {
         ByteBuffer rowKey = principalKey( principal );
 
         List<HColumn<ByteBuffer, ByteBuffer>> cols = cassandra
-                .getColumns( cassandra.getSystemKeyspace(), PRINCIPAL_TOKEN_CF, rowKey, null, null, Integer.MAX_VALUE,
+                .getColumns( cassandra.getUsergridApplicationKeyspace(), PRINCIPAL_TOKEN_CF, rowKey, null, null, Integer.MAX_VALUE,
                         false );
 
         List<UUID> results = new ArrayList<UUID>( cols.size() );

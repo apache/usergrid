@@ -19,6 +19,8 @@ package org.apache.usergrid.management.export;
 
 import com.amazonaws.SDKGlobalConfiguration;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.hash.Hashing;
+import com.google.common.io.Files;
 import com.google.inject.Module;
 import org.jclouds.ContextBuilder;
 import org.jclouds.blobstore.BlobStore;
@@ -81,8 +83,8 @@ public class S3ExportImpl implements S3Export {
         try {
             BlobStore blobStore = context.getBlobStore();
             BlobBuilder blobBuilder = blobStore.blobBuilder( filename )
-                .payload(ephemeral)
-                .calculateMD5()
+                .payload( ephemeral )
+                .contentMD5(Files.hash( ephemeral, Hashing.md5() ))
                 .contentType("application/json");
             Blob blob = blobBuilder.build();
 
