@@ -21,6 +21,7 @@ package org.apache.usergrid.persistence.index.impl;
 import java.util.*;
 
 import org.apache.usergrid.persistence.core.future.BetterFuture;
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.index.*;
 import org.elasticsearch.action.delete.DeleteRequestBuilder;
 import org.elasticsearch.action.index.IndexRequestBuilder;
@@ -48,6 +49,9 @@ import org.apache.usergrid.persistence.model.field.SetField;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.field.UUIDField;
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
+
+import com.codahale.metrics.*;
+import com.codahale.metrics.Timer;
 
 import rx.Observable;
 import rx.functions.Func1;
@@ -81,9 +85,12 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
     private final AliasedEntityIndex entityIndex;
     private IndexOperationMessage container;
 
+    private final Timer batchTimer;
 
-    public EsEntityIndexBatchImpl(final ApplicationScope applicationScope, final Client client,final IndexBufferProducer indexBatchBufferProducer,
-            final IndexFig config, final AliasedEntityIndex entityIndex ) {
+
+    public EsEntityIndexBatchImpl(final ApplicationScope applicationScope, final Client client,
+                                  final IndexBufferProducer indexBatchBufferProducer,final IndexFig config,
+                                  final AliasedEntityIndex entityIndex,final MetricsFactory metricsFactory ) {
 
         this.applicationScope = applicationScope;
         this.client = client;
@@ -92,6 +99,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         this.indexIdentifier = IndexingUtils.createIndexIdentifier(config, applicationScope);
         this.alias = indexIdentifier.getAlias();
         this.refresh = config.isForcedRefresh();
+        this.batchTimer = metricsFactory.getTimer( EsEntityIndexBatchImpl.class, "entity.index.batch.timer" );
         //constrained
         this.container = new IndexOperationMessage();
     }
@@ -167,6 +175,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
             indexes = new String[]{indexIdentifier.getIndex(null)};
         }
         //get all indexes then flush everyone
+        Timer.Context timeDeindex = batchTimer.time();
         Observable.from(indexes)
                .map(new Func1<String, Object>() {
                    @Override
@@ -181,7 +190,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
                        return index;
                    }
                }).toBlocking().last();
-
+        timeDeindex.stop();
         log.debug("Deindexed Entity with index id " + indexId);
 
         return this;
