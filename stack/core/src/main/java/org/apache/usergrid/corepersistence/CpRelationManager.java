@@ -192,6 +192,8 @@ public class CpRelationManager implements RelationManager {
 
     private Timer cpRelationTimer;
 
+    private MetricsFactory metricsFactory;
+
     public CpRelationManager() {}
 
 
@@ -221,7 +223,7 @@ public class CpRelationManager implements RelationManager {
 
         this.cass = em.getCass(); // TODO: eliminate need for this via Core Persistence
         this.indexBucketLocator = indexBucketLocator; // TODO: this also
-
+        this.metricsFactory = metricsFactory;
         this.cpRelationTimer = metricsFactory.getTimer( CpRelationManager.class, "relation.manager.timer" );
 
         // load the Core Persistence version of the head entity as well
@@ -1541,7 +1543,7 @@ public class CpRelationManager implements RelationManager {
 
     private CpRelationManager getRelationManager( EntityRef headEntity ) {
         CpRelationManager rmi = new CpRelationManager();
-        rmi.init( em, emf, applicationId, headEntity, null );
+        rmi.init( em, emf, applicationId, headEntity, null, metricsFactory);
         return rmi;
     }
 

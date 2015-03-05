@@ -18,6 +18,7 @@ package org.apache.usergrid.corepersistence;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.yammer.metrics.annotation.Metered;
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
@@ -109,15 +110,14 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private final MetricsFactory metricsFactory;
 
     public CpEntityManagerFactory(
-            final CassandraService cassandraService, final CounterUtils counterUtils, final Injector injector,
-                                 final MetricsFactory metricsFactory) {
+            final CassandraService cassandraService, final CounterUtils counterUtils, final Injector injector) {
 
         this.cassandraService = cassandraService;
         this.counterUtils = counterUtils;
         this.injector = injector;
         this.managerCache = injector.getInstance( ManagerCache.class );
         this.dataMigrationManager = injector.getInstance( DataMigrationManager.class );
-        this.metricsFactory = metricsFactory;
+        this.metricsFactory = injector.getInstance( MetricsFactory.class );
 
     }
 

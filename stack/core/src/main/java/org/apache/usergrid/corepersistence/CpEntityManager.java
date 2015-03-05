@@ -189,14 +189,13 @@ public class CpEntityManager implements EntityManager {
 
     private boolean skipAggregateCounters;
 
-    private final Timer corePersistanceTimer;
+    private Timer corePersistanceTimer;
 
 //    /** Short-term cache to keep us from reloading same Entity during single request. */
 //    private LoadingCache<EntityScope, org.apache.usergrid.persistence.model.entity.Entity> entityCache;
 
 
     public CpEntityManager() {
-        corePersistanceTimer = emf.getMetricsFactory().getTimer( CpEntityManager.class, "cp.entity.manager.timer" );
 
     }
 
@@ -207,6 +206,7 @@ public class CpEntityManager implements EntityManager {
         Preconditions.checkNotNull( applicationId, "applicationId must not be null" );
 
         this.emf = ( CpEntityManagerFactory ) emf;
+        corePersistanceTimer = this.emf.getMetricsFactory().getTimer( CpEntityManager.class, "cp.entity.manager.timer" );
         this.managerCache = this.emf.getManagerCache();
         this.applicationId = applicationId;
 
@@ -689,7 +689,7 @@ public class CpEntityManager implements EntityManager {
     @Override
     public RelationManager getRelationManager( EntityRef entityRef ) {
         CpRelationManager rmi = new CpRelationManager();
-        rmi.init( this, emf, applicationId, entityRef, null );
+        rmi.init( this, emf, applicationId, entityRef, null, emf.getMetricsFactory() );
         return rmi;
     }
 
