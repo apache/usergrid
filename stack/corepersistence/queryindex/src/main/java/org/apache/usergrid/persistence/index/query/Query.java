@@ -176,12 +176,12 @@ public class Query {
         // Do we need to put the context term first for performance?
         if ( queryBuilder != null ) {
             queryBuilder = QueryBuilders.boolQuery().must( queryBuilder ).must( QueryBuilders
-                    .matchQuery( IndexingUtils.ENTITY_CONTEXT_FIELDNAME, context ) );
+                    .termQuery( IndexingUtils.ENTITY_CONTEXT_FIELDNAME, context ) );
         }
 
         //nothing was specified ensure we specify the context in the search
         else {
-            queryBuilder = QueryBuilders.matchQuery( IndexingUtils.ENTITY_CONTEXT_FIELDNAME, context );
+            queryBuilder = QueryBuilders.termQuery( IndexingUtils.ENTITY_CONTEXT_FIELDNAME, context );
         }
 
         return queryBuilder;
