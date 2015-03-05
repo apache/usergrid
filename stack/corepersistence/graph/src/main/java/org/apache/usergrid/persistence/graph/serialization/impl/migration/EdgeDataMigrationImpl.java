@@ -23,11 +23,11 @@ import com.google.inject.Inject;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
-import org.apache.usergrid.persistence.core.migration.data.newimpls.DataMigration2;
-import org.apache.usergrid.persistence.core.migration.data.newimpls.MigrationDataProvider;
-import org.apache.usergrid.persistence.core.migration.data.newimpls.MigrationRelationship;
-import org.apache.usergrid.persistence.core.migration.data.newimpls.ProgressObserver;
-import org.apache.usergrid.persistence.core.migration.data.newimpls.VersionedMigrationSet;
+import org.apache.usergrid.persistence.core.migration.data.DataMigration;
+import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
+import org.apache.usergrid.persistence.core.migration.data.MigrationRelationship;
+import org.apache.usergrid.persistence.core.migration.data.ProgressObserver;
+import org.apache.usergrid.persistence.core.migration.data.VersionedMigrationSet;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
@@ -50,7 +50,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * The migration data provider assumes that is will visit every node in the graph
  * all edges from these source node will then be re-indexed.
  */
-public class EdgeDataMigrationImpl implements DataMigration2<GraphNode> {
+public class EdgeDataMigrationImpl implements DataMigration<GraphNode> {
 
     private static final Logger logger = LoggerFactory.getLogger(EdgeDataMigrationImpl.class);
 

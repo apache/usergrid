@@ -21,23 +21,38 @@
  *
  */
 
-package org.apache.usergrid.persistence.core.migration.data.newimpls;
-
-
-import rx.Observable;
+package org.apache.usergrid.persistence.core.migration.data;
 
 
 /**
- * An interface for data providers to implement.  The migration must take the migrationdata provider as an argument
+ * Data migration.  The internal version to migrate
+ *
  * @param <T>
  */
-public interface MigrationDataProvider<T> {
-
+public interface DataMigration<T> {
 
     /**
-     * Get data that can be used in the migration
+     * Perform the migration, returning an observable with a single emitted value
+     * @param currentVersion the current version of the system
+     * @param migrationDataProvider
+     * @param observer The observer to receive updates of the progress
+     *
+     * @return The version that the system is now running
+     */
+    public int migrate(final int currentVersion, MigrationDataProvider<T> migrationDataProvider, ProgressObserver observer);
+
+    /**
+     * Check if this version supports migration from the current system version.  If this returns false,
+     * migrate will not be invoked
      * @return
      */
-    public Observable<T> getData();
+    public boolean supports(final int currentVersion);
+
+    /**
+     * Get the max version this migration can migrate to
+     * @return
+     */
+    public int getMaxVersion();
+
 
 }

@@ -29,8 +29,8 @@ import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerial
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.CollectionMigrationPlugin;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.migration.data.MigrationInfoCache;
-import org.apache.usergrid.persistence.core.migration.data.newimpls.MigrationRelationship;
-import org.apache.usergrid.persistence.core.migration.data.newimpls.VersionedMigrationSet;
+import org.apache.usergrid.persistence.core.migration.data.MigrationRelationship;
+import org.apache.usergrid.persistence.core.migration.data.VersionedMigrationSet;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;

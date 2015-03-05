@@ -21,31 +21,41 @@
  *
  */
 
-package org.apache.usergrid.persistence.core.migration.data.newimpls;
+package org.apache.usergrid.persistence.core.migration.data;
 
+
+import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
+
+import rx.Observable;
 
 
 /**
- * A simple interface to return migration plugins.  All versions within this migration plugin should have a name
+ * A simple test class that will emit the provided test data when subscribed
+ * @param <T>
  */
-public interface MigrationPlugin {
+public class TestMigrationDataProvider<T> implements MigrationDataProvider<T> {
+
+
+
+    //default to nothing so that we don't return null
+    private Observable<T> observable = Observable.empty();
+
+
+    public TestMigrationDataProvider(  ) {}
+
+
+    @Override
+    public Observable<T> getData() {
+       return observable;
+    }
 
 
     /**
-     * Get the name of the plugin.  Must be unique
-     * @return
+     * Set this observable to return when invoked
+     *
+     * @param observable
      */
-    public String getName();
-
-    /**
-     * Run any migrations that may need to be run in this plugin
-     */
-    public void run(ProgressObserver observer);
-
-
-    /**
-     * Get the max version this plugin supports
-     * @return
-     */
-    int getMaxVersion();
+    public void setObservable( final Observable<T> observable ) {
+        this.observable = observable;
+    }
 }

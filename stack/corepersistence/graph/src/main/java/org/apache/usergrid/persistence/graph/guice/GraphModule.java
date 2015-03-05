@@ -24,12 +24,11 @@ import org.safehaus.guicyfig.GuicyFigModule;
 import org.apache.usergrid.persistence.core.consistency.TimeService;
 import org.apache.usergrid.persistence.core.consistency.TimeServiceImpl;
 import org.apache.usergrid.persistence.core.guice.ProxyImpl;
-import org.apache.usergrid.persistence.core.migration.data.newimpls.DataMigration2;
-import org.apache.usergrid.persistence.core.migration.data.newimpls.MigrationPlugin;
-import org.apache.usergrid.persistence.core.migration.data.newimpls.MigrationRelationship;
-import org.apache.usergrid.persistence.core.migration.data.newimpls.VersionedMigrationSet;
+import org.apache.usergrid.persistence.core.migration.data.DataMigration;
+import org.apache.usergrid.persistence.core.migration.data.MigrationPlugin;
+import org.apache.usergrid.persistence.core.migration.data.MigrationRelationship;
+import org.apache.usergrid.persistence.core.migration.data.VersionedMigrationSet;
 import org.apache.usergrid.persistence.core.migration.schema.Migration;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.task.NamedTaskExecutorImpl;
 import org.apache.usergrid.persistence.core.task.TaskExecutor;
 import org.apache.usergrid.persistence.graph.GraphFig;
@@ -56,6 +55,7 @@ import org.apache.usergrid.persistence.graph.serialization.impl.EdgesObservableI
 import org.apache.usergrid.persistence.graph.serialization.impl.GraphManagerFactoryImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.NodeSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.TargetIdObservableImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.migration.GraphMigration;
 import org.apache.usergrid.persistence.graph.serialization.impl.migration.GraphMigrationPlugin;
 import org.apache.usergrid.persistence.graph.serialization.impl.migration.GraphNode;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeColumnFamilies;
@@ -131,8 +131,8 @@ public abstract class GraphModule extends AbstractModule {
 
 
         //wire up the edg migration
-        Multibinder<DataMigration2<GraphNode>> dataMigrationMultibinder =
-                Multibinder.newSetBinder( binder(), new TypeLiteral<DataMigration2<GraphNode>>() {} );
+        Multibinder<DataMigration<GraphNode>> dataMigrationMultibinder =
+                Multibinder.newSetBinder( binder(), new TypeLiteral<DataMigration<GraphNode>>() {}, GraphMigration.class );
 
 
         dataMigrationMultibinder.addBinding().to( EdgeDataMigrationImpl.class );

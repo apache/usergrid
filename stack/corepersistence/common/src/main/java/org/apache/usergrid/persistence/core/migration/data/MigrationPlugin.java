@@ -21,38 +21,31 @@
  *
  */
 
-package org.apache.usergrid.persistence.core.migration.data.newimpls;
+package org.apache.usergrid.persistence.core.migration.data;
+
 
 
 /**
- * Data migration.  The internal version to migrate
- *
- * @param <T>
+ * A simple interface to return migration plugins.  All versions within this migration plugin should have a name
  */
-public interface DataMigration2<T> {
+public interface MigrationPlugin {
+
 
     /**
-     * Perform the migration, returning an observable with a single emitted value
-     * @param currentVersion the current version of the system
-     * @param migrationDataProvider
-     * @param observer The observer to receive updates of the progress
-     *
-     * @return The version that the system is now running
-     */
-    public int migrate(final int currentVersion, MigrationDataProvider<T> migrationDataProvider, ProgressObserver observer);
-
-    /**
-     * Check if this version supports migration from the current system version.  If this returns false,
-     * migrate will not be invoked
+     * Get the name of the plugin.  Must be unique
      * @return
      */
-    public boolean supports(final int currentVersion);
+    public String getName();
 
     /**
-     * Get the max version this migration can migrate to
+     * Run any migrations that may need to be run in this plugin
+     */
+    public void run(ProgressObserver observer);
+
+
+    /**
+     * Get the max version this plugin supports
      * @return
      */
-    public int getMaxVersion();
-
-
+    int getMaxVersion();
 }

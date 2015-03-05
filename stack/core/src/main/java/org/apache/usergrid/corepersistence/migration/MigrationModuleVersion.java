@@ -24,9 +24,9 @@ import org.apache.usergrid.persistence.collection.serialization.impl.MvccEntityS
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.CollectionMigrationPlugin;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerialization;
-import org.apache.usergrid.persistence.core.migration.data.newimpls.DataMigration2;
-import org.apache.usergrid.persistence.core.migration.data.newimpls.MigrationDataProvider;
-import org.apache.usergrid.persistence.core.migration.data.newimpls.ProgressObserver;
+import org.apache.usergrid.persistence.core.migration.data.DataMigration;
+import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
+import org.apache.usergrid.persistence.core.migration.data.ProgressObserver;
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeMetadataSerializationV2Impl;
 import org.apache.usergrid.persistence.graph.serialization.impl.migration.GraphMigrationPlugin;
 
@@ -37,7 +37,7 @@ import com.google.inject.Inject;
  * Migration to set our module versions now that we've refactor for sub modules Keeps the EntityIdScope because it won't
  * subscribe to the data provider.
  */
-public class MigrationModuleVersion implements DataMigration2<EntityIdScope> {
+public class MigrationModuleVersion implements DataMigration<EntityIdScope> {
 
 
     /**

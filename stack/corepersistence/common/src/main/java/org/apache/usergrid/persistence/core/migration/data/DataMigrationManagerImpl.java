@@ -24,19 +24,13 @@ import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.core.migration.data.newimpls.MigrationPlugin;
-import org.apache.usergrid.persistence.core.migration.data.newimpls.ProgressObserver;
 import org.apache.usergrid.persistence.core.migration.schema.MigrationException;
 
 import com.google.common.base.Preconditions;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -89,6 +83,8 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
             final ProgressObserver observer = new CassandraProgressObserver(plugin.getName());
 
             plugin.run( observer );
+
+
         }
 
 
@@ -98,6 +94,7 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
     @Override
     public boolean isRunning() {
 
+        //we have to get our state from cassandra
         for(final String pluginName :getPluginNames()){
            if( migrationInfoSerialization.getStatusCode(pluginName) == StatusCode.RUNNING.status){
                return true;
@@ -171,6 +168,18 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
 
 
         private CassandraProgressObserver( final String pluginName ) {this.pluginName = pluginName;}
+
+
+        @Override
+        public void start() {
+            migrationInfoSerialization.setStatusCode( pluginName, StatusCode.RUNNING.status );
+        }
+
+
+        @Override
+        public void stop() {
+            migrationInfoSerialization.setStatusCode( pluginName, StatusCode.COMPLETE.status );
+        }
 
 
         @Override

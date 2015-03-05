@@ -21,10 +21,14 @@
  *
  */
 
-package org.apache.usergrid.persistence.core.migration.data.newimpls;
+package org.apache.usergrid.persistence.core.migration.data;
 
 
 import org.junit.Test;
+
+import org.apache.usergrid.persistence.core.migration.data.MigrationRelationship;
+import org.apache.usergrid.persistence.core.migration.data.VersionedData;
+import org.apache.usergrid.persistence.core.migration.data.VersionedMigrationSet;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;

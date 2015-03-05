@@ -33,15 +33,13 @@ import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.impl.CollectionDataVersions;
-import org.apache.usergrid.persistence.collection.serialization.impl.MvccEntitySerializationStrategyV1Impl;
-import org.apache.usergrid.persistence.collection.serialization.impl.MvccEntitySerializationStrategyV3Impl;
 import org.apache.usergrid.persistence.core.guice.DataMigrationResetRule;
 import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
 import org.apache.usergrid.persistence.core.migration.data.TestProgressObserver;
-import org.apache.usergrid.persistence.core.migration.data.newimpls.MigrationDataProvider;
-import org.apache.usergrid.persistence.core.migration.data.newimpls.MigrationRelationship;
-import org.apache.usergrid.persistence.core.migration.data.newimpls.VersionedMigrationSet;
+import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
+import org.apache.usergrid.persistence.core.migration.data.MigrationRelationship;
+import org.apache.usergrid.persistence.core.migration.data.VersionedMigrationSet;
 import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -150,7 +148,7 @@ public abstract class AbstractMvccEntityDataMigrationV1ToV3ImplTest implements D
         final CollectionDataVersions expectedVersion = expectedTargetVersion();
 
         assertEquals( "Correct version returned", newVersion, expectedVersion.getVersion() );
-        assertFalse( "Progress observer should not have failed", progressObserver.getFailed() );
+        assertFalse( "Progress observer should not have failed", progressObserver.isFailed() );
         assertTrue( "Progress observer should have update messages", progressObserver.getUpdates().size() > 0 );
 
 

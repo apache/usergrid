@@ -21,9 +21,8 @@ package org.apache.usergrid.persistence.graph.guice;
 
 import org.apache.usergrid.persistence.core.guice.CommonModule;
 import org.apache.usergrid.persistence.core.guice.TestModule;
-import org.apache.usergrid.persistence.core.migration.data.newimpls.MigrationDataProvider;
-import org.apache.usergrid.persistence.core.migration.data.newimpls.TestMigrationDataProvider;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
+import org.apache.usergrid.persistence.core.migration.data.TestMigrationDataProvider;
 import org.apache.usergrid.persistence.graph.serialization.impl.migration.GraphNode;
 
 import com.google.inject.TypeLiteral;

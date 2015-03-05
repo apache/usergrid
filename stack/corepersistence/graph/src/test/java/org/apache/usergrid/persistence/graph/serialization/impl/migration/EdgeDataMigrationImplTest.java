@@ -29,7 +29,7 @@ import org.junit.runner.RunWith;
 import org.apache.usergrid.persistence.core.guice.DataMigrationResetRule;
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
 import org.apache.usergrid.persistence.core.migration.data.TestProgressObserver;
-import org.apache.usergrid.persistence.core.migration.data.newimpls.MigrationDataProvider;
+import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.test.ITRunner;
@@ -142,7 +142,7 @@ public class EdgeDataMigrationImplTest implements DataMigrationResetRule.DataMig
         //perform the migration
 
         assertEquals( "Correct version returned", returned, GraphDataVersions.META_SHARDING.getVersion() );
-        assertFalse( "Progress observer should not have failed", progressObserver.getFailed() );
+        assertFalse( "Progress observer should not have failed", progressObserver.isFailed() );
         assertTrue( "Progress observer should have update messages", progressObserver.getUpdates().size() > 0 );
 
 

@@ -26,9 +26,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.usergrid.corepersistence.ManagerCache;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
-import org.apache.usergrid.persistence.core.migration.data.newimpls.DataMigration2;
-import org.apache.usergrid.persistence.core.migration.data.newimpls.MigrationDataProvider;
-import org.apache.usergrid.persistence.core.migration.data.newimpls.ProgressObserver;
+import org.apache.usergrid.persistence.core.migration.data.DataMigration;
+import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
+import org.apache.usergrid.persistence.core.migration.data.ProgressObserver;
 import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapScope;
 
@@ -42,7 +42,7 @@ import rx.functions.Func1;
 /**
  * Migration to ensure that our entity id is written into our map data
  */
-public class EntityTypeMappingMigration implements DataMigration2<EntityIdScope> {
+public class EntityTypeMappingMigration implements DataMigration<EntityIdScope> {
 
     private final ManagerCache managerCache;
     private final MigrationDataProvider<EntityIdScope> allEntitiesInSystemObservable;

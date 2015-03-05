@@ -21,16 +21,13 @@
  *
  */
 
-package org.apache.usergrid.persistence.core.migration.data.newimpls;
+package org.apache.usergrid.persistence.core.migration.data;
 
 
 import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.usergrid.persistence.core.migration.data.DataMigrationException;
-import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerialization;
 
 
 /**
@@ -44,12 +41,12 @@ public abstract class AbstractMigrationPlugin<T> implements MigrationPlugin {
     private static final Logger LOG = LoggerFactory.getLogger( AbstractMigrationPlugin.class );
 
 
-    private final Set<DataMigration2<T>> entityDataMigrations;
+    private final Set<DataMigration<T>> entityDataMigrations;
     private final MigrationDataProvider<T> entityIdScopeDataMigrationProvider;
     private final MigrationInfoSerialization migrationInfoSerialization;
 
 
-    protected AbstractMigrationPlugin( final Set<DataMigration2<T>> entityDataMigrations,
+    protected AbstractMigrationPlugin( final Set<DataMigration<T>> entityDataMigrations,
                                        final MigrationDataProvider<T> entityIdScopeDataMigrationProvider,
                                        final MigrationInfoSerialization migrationInfoSerialization ) {
         this.entityDataMigrations = entityDataMigrations;
@@ -74,7 +71,7 @@ public abstract class AbstractMigrationPlugin<T> implements MigrationPlugin {
 
         int max = 0;
 
-        for(DataMigration2<T> entityMigration: entityDataMigrations){
+        for(DataMigration<T> entityMigration: entityDataMigrations){
             max = Math.max( max, entityMigration.getMaxVersion() );
         }
 
@@ -88,12 +85,12 @@ public abstract class AbstractMigrationPlugin<T> implements MigrationPlugin {
      * @return True if we ran a migration
      */
     private boolean runMigration( final ProgressObserver po ) {
-        DataMigration2<T> migrationToExecute = null;
+        DataMigration<T> migrationToExecute = null;
 
 
         final int version = migrationInfoSerialization.getVersion( getName() );
 
-        for ( DataMigration2<T> entityMigration : entityDataMigrations ) {
+        for ( DataMigration<T> entityMigration : entityDataMigrations ) {
             if ( entityMigration.supports( version ) ) {
                 if ( migrationToExecute != null ) {
                     throw new DataMigrationException(
@@ -112,11 +109,16 @@ public abstract class AbstractMigrationPlugin<T> implements MigrationPlugin {
             return false;
         }
 
+        po.start();
+
+
         //run the migration
         final int newSystemVersion = migrationToExecute.migrate( version, entityIdScopeDataMigrationProvider, po );
 
         //write the version
         migrationInfoSerialization.setVersion( getName(), newSystemVersion );
+
+        po.stop();
 
         //signal we've run a migration and return
         return true;

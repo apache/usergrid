@@ -23,15 +23,27 @@ package org.apache.usergrid.persistence.core.migration.data;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.usergrid.persistence.core.migration.data.newimpls.ProgressObserver;
-
 
 public class TestProgressObserver implements ProgressObserver {
 
     private boolean failed = false;
 
+    private boolean started = false;
+
 
     private List<String> updates = new ArrayList<>( 100 );
+
+
+    @Override
+    public void start() {
+         started = true;
+    }
+
+
+    @Override
+    public void stop() {
+        started = false;
+    }
 
 
     @Override
@@ -56,9 +68,15 @@ public class TestProgressObserver implements ProgressObserver {
      * Get if we failed
      * @return
      */
-    public boolean getFailed() {
+    public boolean isFailed() {
         return failed;
     }
+
+
+    public boolean isStarted() {
+        return started;
+    }
+
 
 
     /**

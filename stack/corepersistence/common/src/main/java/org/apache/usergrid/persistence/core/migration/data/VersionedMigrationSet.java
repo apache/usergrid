@@ -21,7 +21,7 @@
  *
  */
 
-package org.apache.usergrid.persistence.core.migration.data.newimpls;
+package org.apache.usergrid.persistence.core.migration.data;
 
 
 import java.util.ArrayList;

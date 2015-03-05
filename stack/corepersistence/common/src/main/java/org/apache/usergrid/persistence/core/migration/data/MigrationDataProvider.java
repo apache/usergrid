@@ -21,41 +21,23 @@
  *
  */
 
-package org.apache.usergrid.persistence.core.migration.data.newimpls;
+package org.apache.usergrid.persistence.core.migration.data;
 
-
-import java.util.Collection;
 
 import rx.Observable;
 
 
 /**
- * A simple test class that will emit the provided test data when subscribed
+ * An interface for data providers to implement.  The migration must take the migrationdata provider as an argument
  * @param <T>
  */
-public class TestMigrationDataProvider<T> implements MigrationDataProvider<T> {
-
-
-
-    //default to nothing so that we don't return null
-    private Observable<T> observable = Observable.empty();
-
-
-    public TestMigrationDataProvider(  ) {}
-
-
-    @Override
-    public Observable<T> getData() {
-       return observable;
-    }
+public interface MigrationDataProvider<T> {
 
 
     /**
-     * Set this observable to return when invoked
-     *
-     * @param observable
+     * Get data that can be used in the migration
+     * @return
      */
-    public void setObservable( final Observable<T> observable ) {
-        this.observable = observable;
-    }
+    public Observable<T> getData();
+
 }

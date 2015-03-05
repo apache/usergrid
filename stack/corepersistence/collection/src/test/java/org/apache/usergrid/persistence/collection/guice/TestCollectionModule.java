@@ -20,13 +20,11 @@
 package org.apache.usergrid.persistence.collection.guice;
 
 
-import java.util.Collections;
-
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.guice.CommonModule;
 import org.apache.usergrid.persistence.core.guice.TestModule;
-import org.apache.usergrid.persistence.core.migration.data.newimpls.MigrationDataProvider;
-import org.apache.usergrid.persistence.core.migration.data.newimpls.TestMigrationDataProvider;
+import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
+import org.apache.usergrid.persistence.core.migration.data.TestMigrationDataProvider;
 
 import com.google.inject.TypeLiteral;
 

@@ -30,8 +30,6 @@ import com.netflix.hystrix.HystrixThreadPoolProperties;
 
 /**
  * A utility class that creates graph observables wrapped in Hystrix for timeouts and circuit breakers.
- *
- * TODO USERGRId-405 restore this class before merge
  */
 public class HystrixCassandra {
 
@@ -43,32 +41,32 @@ public class HystrixCassandra {
      */
     public static final HystrixCommand.Setter
             USER_GROUP = HystrixCommand.Setter.withGroupKey(   HystrixCommandGroupKey.Factory.asKey( "user" ) ).andThreadPoolPropertiesDefaults(
-            HystrixThreadPoolProperties.Setter().withCoreSize( 100 ) );
+            HystrixThreadPoolProperties.Setter().withCoreSize( 1000 ) );
 
     /**
      * Command group for asynchronous operations
      */
     public static final HystrixCommand.Setter
             ASYNC_GROUP = HystrixCommand.Setter.withGroupKey( HystrixCommandGroupKey.Factory.asKey( "async" ) ).andThreadPoolPropertiesDefaults(
-            HystrixThreadPoolProperties.Setter().withCoreSize( 50 ) );
+            HystrixThreadPoolProperties.Setter().withCoreSize( 1000 ) );
 
 
     /**
      * Execute an user operation
      */
     public static <R> OperationResult<R> user( final Execution<R> execution) {
-//        return new HystrixCommand<OperationResult<R>>( USER_GROUP ) {
-//
-//            @Override
-//            protected OperationResult<R> run() {
+        return new HystrixCommand<OperationResult<R>>( USER_GROUP ) {
+
+            @Override
+            protected OperationResult<R> run() {
                 try {
                     return  execution.execute();
                 }
                 catch ( ConnectionException e ) {
                     throw new RuntimeException( e );
                 }
-//            }
-//        }.execute();
+            }
+        }.execute();
     }
 
 
@@ -78,18 +76,18 @@ public class HystrixCassandra {
     public static <R> OperationResult<R> async( final Execution<R> execution) {
 
 
-//        return new HystrixCommand<OperationResult<R>>( ASYNC_GROUP ) {
-//
-//            @Override
-//            protected OperationResult<R> run() {
+        return new HystrixCommand<OperationResult<R>>( ASYNC_GROUP ) {
+
+            @Override
+            protected OperationResult<R> run() {
                 try {
                     return  execution.execute();
                 }
                 catch ( ConnectionException e ) {
                     throw new RuntimeException( e );
                 }
-//            }
-//        }.execute();
+            }
+        }.execute();
     }
 
 

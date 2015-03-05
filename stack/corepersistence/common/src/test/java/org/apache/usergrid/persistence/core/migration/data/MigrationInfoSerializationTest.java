@@ -22,18 +22,16 @@
 package org.apache.usergrid.persistence.core.migration.data;
 
 
-
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import org.apache.usergrid.persistence.core.migration.schema.MigrationException;
-import org.apache.usergrid.persistence.core.migration.schema.MigrationManager;
-import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.guice.TestCommonModule;
+import org.apache.usergrid.persistence.core.migration.schema.MigrationException;
+import org.apache.usergrid.persistence.core.migration.schema.MigrationManager;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
 
 import com.google.inject.Inject;
@@ -42,15 +40,11 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
 
 
 @RunWith( ITRunner.class )
 @UseModules( TestCommonModule.class )
-@Ignore()
 public class MigrationInfoSerializationTest {
-
-    //TODO USERGRID-405 fix this
 
     @Inject
     @Rule
@@ -68,53 +62,55 @@ public class MigrationInfoSerializationTest {
     @Inject
     protected MigrationInfoSerialization migrationInfoSerialization;
 
-//
-//    @Test
-//    public void basicTest() throws ConnectionException, MigrationException {
-//
-//        //drop the column family, then run setup
-//        keyspace.dropColumnFamily( MigrationInfoSerializationImpl.CF_MIGRATION_INFO.getName() );
-//
-//        migrationManager.migrate();
-//
-//        //test getting nothing works
-//        final String emptyStatus = migrationInfoSerialization.getStatusMessage();
-//
-//        assertNull(emptyStatus);
-//
-//        final int unsavedVersion = migrationInfoSerialization.getVersion();
-//
-//        assertEquals(0, unsavedVersion);
-//
-//        final int statusCode = migrationInfoSerialization.getStatusCode();
-//
-//        assertEquals(0, statusCode);
-//
-//        //now update them
-//
-//        final String savedStatus = "I'm a test status";
-//
-//        migrationInfoSerialization.setStatusMessage( savedStatus );
-//
-//        final String returnedStatus = migrationInfoSerialization.getStatusMessage();
-//
-//        assertEquals("Correct status returned", savedStatus, returnedStatus);
-//
-//
-//        final int savedVersion = 100;
-//
-//        migrationInfoSerialization.setVersion( savedVersion );
-//
-//        final int returnedVersion = migrationInfoSerialization.getVersion();
-//
-//        assertEquals("Correct version returned", savedVersion, returnedVersion);
-//
-//        final int savedStatusCode = 200;
-//
-//        migrationInfoSerialization.setStatusCode( savedStatusCode );
-//
-//        final int returnedStatusCode = migrationInfoSerialization.getStatusCode();
-//
-//        assertEquals("Status code was set correctly", savedStatusCode, returnedStatusCode);
-//    }
+
+    @Test
+    public void basicTest() throws ConnectionException, MigrationException {
+
+        final String migrationModule = "test";
+
+        //drop the column family, then run setup
+        keyspace.dropColumnFamily( MigrationInfoSerializationImpl.CF_MIGRATION_INFO.getName() );
+
+        migrationManager.migrate();
+
+        //test getting nothing works
+        final String emptyStatus = migrationInfoSerialization.getStatusMessage(migrationModule);
+
+        assertNull(emptyStatus);
+
+        final int unsavedVersion = migrationInfoSerialization.getVersion(migrationModule);
+
+        assertEquals(0, unsavedVersion);
+
+        final int statusCode = migrationInfoSerialization.getStatusCode(migrationModule);
+
+        assertEquals(0, statusCode);
+
+        //now update them
+
+        final String savedStatus = "I'm a test status";
+
+        migrationInfoSerialization.setStatusMessage(migrationModule,  savedStatus );
+
+        final String returnedStatus = migrationInfoSerialization.getStatusMessage(migrationModule);
+
+        assertEquals("Correct status returned", savedStatus, returnedStatus);
+
+
+        final int savedVersion = 100;
+
+        migrationInfoSerialization.setVersion(migrationModule,  savedVersion );
+
+        final int returnedVersion = migrationInfoSerialization.getVersion(migrationModule);
+
+        assertEquals("Correct version returned", savedVersion, returnedVersion);
+
+        final int savedStatusCode = 200;
+
+        migrationInfoSerialization.setStatusCode(migrationModule,  savedStatusCode );
+
+        final int returnedStatusCode = migrationInfoSerialization.getStatusCode(migrationModule);
+
+        assertEquals("Status code was set correctly", savedStatusCode, returnedStatusCode);
+    }
 }
