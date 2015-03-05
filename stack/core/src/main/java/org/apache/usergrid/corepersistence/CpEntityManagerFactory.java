@@ -44,6 +44,7 @@ import org.apache.usergrid.persistence.cassandra.Setup;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
@@ -105,17 +106,18 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private CassandraService cassandraService;
     private CounterUtils counterUtils;
     private Injector injector;
-
+    private final MetricsFactory metricsFactory;
 
     public CpEntityManagerFactory(
-            final CassandraService cassandraService, final CounterUtils counterUtils, final Injector injector) {
+            final CassandraService cassandraService, final CounterUtils counterUtils, final Injector injector,
+                                 final MetricsFactory metricsFactory) {
 
         this.cassandraService = cassandraService;
         this.counterUtils = counterUtils;
         this.injector = injector;
         this.managerCache = injector.getInstance( ManagerCache.class );
         this.dataMigrationManager = injector.getInstance( DataMigrationManager.class );
-
+        this.metricsFactory = metricsFactory;
 
     }
 
@@ -194,6 +196,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         return em;
     }
 
+    public MetricsFactory getMetricsFactory(){
+        return metricsFactory;
+    }
 
     @Override
     public UUID createApplication(String organizationName, String name) throws Exception {

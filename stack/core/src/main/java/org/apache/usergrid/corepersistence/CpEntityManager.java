@@ -72,6 +72,7 @@ import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.exception.WriteOptimisticVerifyException;
 import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.entities.Application;
@@ -103,6 +104,7 @@ import org.apache.usergrid.utils.CompositeUtils;
 import org.apache.usergrid.utils.StringUtils;
 import org.apache.usergrid.utils.UUIDUtils;
 
+import com.codahale.metrics.Timer;
 import com.google.common.base.Preconditions;
 import com.netflix.hystrix.exception.HystrixRuntimeException;
 import com.yammer.metrics.annotation.Metered;
@@ -187,12 +189,16 @@ public class CpEntityManager implements EntityManager {
 
     private boolean skipAggregateCounters;
 
+    private final Timer corePersistanceTimer;
+
 //    /** Short-term cache to keep us from reloading same Entity during single request. */
 //    private LoadingCache<EntityScope, org.apache.usergrid.persistence.model.entity.Entity> entityCache;
 
 
-    public CpEntityManager() {}
+    public CpEntityManager() {
+        corePersistanceTimer = emf.getMetricsFactory().getTimer( CpEntityManager.class, "cp.entity.manager.timer" );
 
+    }
 
     @Override
     public void init( EntityManagerFactory emf, UUID applicationId ) {
@@ -303,7 +309,9 @@ public class CpEntityManager implements EntityManager {
 
         Entity entity = batchCreate( m, entityType, null, properties, importId, timestampUuid );
 
+        Timer.Context timeCassCreation = corePersistanceTimer.time();
         m.execute();
+        timeCassCreation.stop();
 
         return entity;
     }
