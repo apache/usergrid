@@ -30,6 +30,8 @@ import com.netflix.hystrix.HystrixThreadPoolProperties;
 
 /**
  * A utility class that creates graph observables wrapped in Hystrix for timeouts and circuit breakers.
+ *
+ * TODO USERGRId-405 restore this class before merge
  */
 public class HystrixCassandra {
 
@@ -55,18 +57,18 @@ public class HystrixCassandra {
      * Execute an user operation
      */
     public static <R> OperationResult<R> user( final Execution<R> execution) {
-        return new HystrixCommand<OperationResult<R>>( USER_GROUP ) {
-
-            @Override
-            protected OperationResult<R> run() {
+//        return new HystrixCommand<OperationResult<R>>( USER_GROUP ) {
+//
+//            @Override
+//            protected OperationResult<R> run() {
                 try {
                     return  execution.execute();
                 }
                 catch ( ConnectionException e ) {
                     throw new RuntimeException( e );
                 }
-            }
-        }.execute();
+//            }
+//        }.execute();
     }
 
 
@@ -76,18 +78,18 @@ public class HystrixCassandra {
     public static <R> OperationResult<R> async( final Execution<R> execution) {
 
 
-        return new HystrixCommand<OperationResult<R>>( ASYNC_GROUP ) {
-
-            @Override
-            protected OperationResult<R> run() {
+//        return new HystrixCommand<OperationResult<R>>( ASYNC_GROUP ) {
+//
+//            @Override
+//            protected OperationResult<R> run() {
                 try {
                     return  execution.execute();
                 }
                 catch ( ConnectionException e ) {
                     throw new RuntimeException( e );
                 }
-            }
-        }.execute();
+//            }
+//        }.execute();
     }
 
 
