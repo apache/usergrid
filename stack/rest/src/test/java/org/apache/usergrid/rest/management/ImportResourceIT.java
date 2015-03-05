@@ -52,6 +52,7 @@ import org.junit.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -98,7 +99,7 @@ public class ImportResourceIT extends AbstractRestIT {
     @Before
     public void before() {
         configured =
-            !StringUtils.isEmpty(System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR ))
+                   !StringUtils.isEmpty(System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR ))
                 && !StringUtils.isEmpty(System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR ))
                 && !StringUtils.isEmpty(System.getProperty("bucketName"));
 
@@ -416,11 +417,12 @@ public class ImportResourceIT extends AbstractRestIT {
         String org = clientSetup.getOrganizationName();
         String app = clientSetup.getAppName();
 
+        String basePath = System.getProperty("target.directory")
+            + File.separator + "test-classes" + File.separator;
 
-        //list out all the files in the resource directory you want uploaded
-        List<String> filenames = new ArrayList<>(1);
+        List<String> filenames = new ArrayList<>( 1 );
+        filenames.add( basePath  + "testImportCorrect.testCol.1.json" );
 
-        filenames.add("testImportCorrect.testCol.1.json");
         // create 10 applications each with collection of 10 things, export all to S3
         S3Upload s3Upload = new S3Upload();
         s3Upload.copyToS3(
@@ -432,15 +434,20 @@ public class ImportResourceIT extends AbstractRestIT {
 
         Entity importEntity = importCollection();
 
-        Entity importGet = this.management().orgs().organization( org ).app().addToPath( app )
-            .addToPath( "imports" ).addToPath( importEntity.getUuid().toString() ).get();
-
+        Entity importGet = this.management().orgs().organization( org ).app()
+            .addToPath(app)
+            .addToPath( "imports" )
+            .addToPath(importEntity.getUuid().toString())
+            .get();
 
         refreshIndex();
 
-        Entity importGetIncludes = this.management().orgs().organization(org).app().addToPath(app)
-                                       .addToPath("imports" ).addToPath(importEntity.getUuid().toString() )
-                                       .addToPath("files" ).get();
+        Entity importGetIncludes = this.management().orgs().organization(org).app()
+            .addToPath(app)
+            .addToPath("imports")
+            .addToPath(importEntity.getUuid().toString())
+            .addToPath("files")
+            .get();
 
         ApiResponse importGetIncludesResponse = importGetIncludes.getResponse();
 
@@ -451,7 +458,8 @@ public class ImportResourceIT extends AbstractRestIT {
 
         final Entity includesEntity = importGetIncludesResponse.getEntities().get( 0 );
 
-        assertEquals( "testImportCorrect.testCol.1.json", includesEntity.getAsString( "fileName" ) );
+        assertTrue( includesEntity.getAsString("fileName").endsWith("testImportCorrect.testCol.1.json"));
+
         assertEquals(1, includesEntity.get( "importedConnectionCount" ));
         assertEquals(1, includesEntity.get( "importedEntityCount" ));
 
@@ -474,18 +482,20 @@ public class ImportResourceIT extends AbstractRestIT {
      */
     @Test
     public void testImportOneGoodOneBad() throws Exception {
+
         // import from a bad JSON file
         Assume.assumeTrue(configured);
 
         String org = clientSetup.getOrganizationName();
         String app = clientSetup.getAppName();
 
+        String basePath = System.getProperty("target.directory")
+            + File.separator + "test-classes" + File.separator;
 
-        //list out all the files in the resource directory you want uploaded
-        List<String> filenames = new ArrayList<>(1);
+        List<String> filenames = new ArrayList<>( 2 );
+        filenames.add( basePath + "testImportCorrect.testCol.1.json");
+        filenames.add( basePath + "testImport.testApplication.2.json");
 
-        filenames.add("testImportCorrect.testCol.1.json");
-        filenames.add("testImport.testApplication.2.json");
         // create 10 applications each with collection of 10 things, export all to S3
         S3Upload s3Upload = new S3Upload();
         s3Upload.copyToS3(
@@ -497,9 +507,10 @@ public class ImportResourceIT extends AbstractRestIT {
 
         Entity importEntity = importCollection();
 
-        Entity importGet = this.management().orgs().organization(org).app().addToPath(app)
-            .addToPath( "imports" ).addToPath(importEntity.getUuid().toString() ).get();
-
+        Entity importGet = this.management().orgs().organization(org).app()
+            .addToPath(app)
+            .addToPath("imports")
+            .addToPath(importEntity.getUuid().toString()).get();
 
         assertNotNull(importGet);
 
@@ -526,11 +537,12 @@ public class ImportResourceIT extends AbstractRestIT {
         String org = clientSetup.getOrganizationName();
         String app = clientSetup.getAppName();
 
+        String basePath = System.getProperty("target.directory")
+            + File.separator + "test-classes" + File.separator;
 
-        //list out all the files in the resource directory you want uploaded
-        List<String> filenames = new ArrayList<>(1);
+        List<String> filenames = new ArrayList<>( 1 );
+        filenames.add( basePath + "testimport-bad-json.json");
 
-        filenames.add("testImport.testApplication.2.json");
         // create 10 applications each with collection of 10 things, export all to S3
         S3Upload s3Upload = new S3Upload();
         s3Upload.copyToS3(
@@ -573,12 +585,16 @@ public class ImportResourceIT extends AbstractRestIT {
         String org = clientSetup.getOrganizationName();
         String app = clientSetup.getAppName();
 
-        //list out all the files in the resource directory you want uploaded
-        List<String> filenames = new ArrayList<>(1);
-        filenames.add("testImportInvalidJson.testApplication.3.json");
+        String basePath = System.getProperty("target.directory")
+            + File.separator + "test-classes" + File.separator;
+
+        List<String> filenames = new ArrayList<>( 1 );
+        filenames.add( basePath + "testImportInvalidJson.testApplication.3.json");
+
         // create 10 applications each with collection of 10 things, export all to S3
         S3Upload s3Upload = new S3Upload();
-        s3Upload.copyToS3(System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR ),
+        s3Upload.copyToS3(
+            System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR ),
             System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR ),
             bucketName, filenames);
 
@@ -633,13 +649,10 @@ public class ImportResourceIT extends AbstractRestIT {
 
         while (retries++ < maxRetries) {
 
-            Entity importGet = this.management()
-                .orgs()
-                .organization(org)
-                .app()
-                .addToPath(app)
-                .addToPath("imports")
-                .addToPath(importEntity.getUuid().toString())
+            Entity importGet = this.management().orgs().organization(org).app()
+                .addToPath( app )
+                .addToPath( "imports")
+                .addToPath( importEntity.getUuid().toString() )
                 .get();
 
             if (importGet.get("state").equals("FINISHED") || importGet.get( "state" ).equals( "FAILED" )) {

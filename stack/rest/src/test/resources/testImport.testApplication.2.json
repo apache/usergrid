@@ -1,0 +1,56 @@
+[ {
+    "Metadata" : {
+        "uuid" : "589d95fa-ad7c-11e4-98bc-0f85bf181834",
+        "type" : "qtsmagic",
+        "created" : 1423171030223,
+        "modified" : 1423171030223,
+        "email" : "test0@anuff.com",
+        "username" : "billybob0"
+    },
+    "connections" : { },
+    "dictionaries" : { }
+}, {
+    "Metadata" : {
+        "uuid" : "589f91ca-ad7c-11e4-a250-63b6975ea888",
+        "type" : "qtsmagic",
+        "created" : 1423171030236,
+        "modified" : 1423171030236,
+        "email" : "test1@anuff.com",
+        "username" : "billybob1"
+    },
+    "connections" : { },
+    "dictionaries" : { }
+}, {
+    "Metadata" : {
+        "uuid" : "58a1186a-ad7c-11e4-bfc2-89e1e7bff3a8",
+        "type" : "qtsmagic",
+        "created" : 1423171030246,
+        "modified" : 1423171030246,
+        "email" : "test2@anuff.com",
+        "username" : "billybob2"
+    },
+    "connections" : { },
+    "dictionaries" : { }
+}, {
+    "Metadata" : {
+        "uuid" : "58a2c61a-ad7c-11e4-b2be-ab36d8b017f3",
+        "type" : "qtsmagic",
+        "created" : 1423171030257,
+        "modified" : 1423171030257,
+        "email" : "test3@anuff.com",
+        "username" : "billybob3"
+    },
+    "connections" : { },
+    "dictionaries" : { }
+}, {
+    "Metadata" : {
+        "uuid" : "58a44cba-ad7c-11e4-9fe5-fb8577a1f4a5",
+        "type" : "qtsmagic",
+        "created" : 1423171030267,
+        "modified" : 1423171030267,
+        "email" : "test4@anuff.com",
+        "username" : "billybob4"
+    },
+    "connections" : { },
+    "dictionaries" : { }
+} ]
