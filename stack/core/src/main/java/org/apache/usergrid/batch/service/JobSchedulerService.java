@@ -25,6 +25,8 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.google.inject.Injector;
+import org.apache.usergrid.corepersistence.CpSetup;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,6 +77,8 @@ public class JobSchedulerService extends AbstractScheduledService {
     private Counter successCounter;
     private Counter failCounter;
 
+    private Injector injector;
+
     //TODO Add meters for throughput of start and stop
 
 
@@ -85,6 +89,13 @@ public class JobSchedulerService extends AbstractScheduledService {
             rateUnit = TimeUnit.MINUTES )
     @Override
     protected void runOneIteration() throws Exception {
+
+        MetricsFactory metricsFactory = injector.getInstance( MetricsFactory.class );
+
+        jobTimer = metricsFactory.getTimer( JobSchedulerService.class, "job_execution_timer" );
+        runCounter = metricsFactory.getCounter( JobSchedulerService.class, "running_workers" );
+        successCounter = metricsFactory.getCounter( JobSchedulerService.class, "successful_jobs" );
+        failCounter = metricsFactory.getCounter( JobSchedulerService.class, "failed_jobs" );
 
         try {
             LOG.info( "Running one check iteration ..." );
@@ -338,12 +349,13 @@ public class JobSchedulerService extends AbstractScheduledService {
     /**
      * Set the metrics factory
      */
-    public void setMetricsFactory( MetricsFactory metricsFactory ) {
-        jobTimer = metricsFactory.getTimer( JobSchedulerService.class, "job_execution_timer" );
-        runCounter = metricsFactory.getCounter( JobSchedulerService.class, "running_workers" );
-        successCounter = metricsFactory.getCounter( JobSchedulerService.class, "successful_jobs" );
-        failCounter = metricsFactory.getCounter( JobSchedulerService.class, "failed_jobs" );
-    }
+//    public void setMetricsFactory( MetricsFactory metricsFactory ) {
+//
+//        jobTimer = metricsFactory.getTimer( JobSchedulerService.class, "job_execution_timer" );
+//        runCounter = metricsFactory.getCounter( JobSchedulerService.class, "running_workers" );
+//        successCounter = metricsFactory.getCounter( JobSchedulerService.class, "successful_jobs" );
+//        failCounter = metricsFactory.getCounter( JobSchedulerService.class, "failed_jobs" );
+//    }
 
 
     /*
@@ -402,6 +414,10 @@ public class JobSchedulerService extends AbstractScheduledService {
      */
     public JobListener getJobListener() {
         return jobListener;
+    }
+
+    public void setInjector(Injector injector) {
+        this.injector = injector;
     }
 
 
