@@ -583,7 +583,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
             // it's been deleted, remove it
 
             if ( STATE_DELETED == state ) {
-                return new EntityWrapper( MvccEntity.Status.COMPLETE, entityVersion, Optional.<Entity>absent() );
+                return new EntityWrapper( MvccEntity.Status.DELETED, entityVersion, Optional.<Entity>absent() );
             }
 
             EntityMap storedEntity;

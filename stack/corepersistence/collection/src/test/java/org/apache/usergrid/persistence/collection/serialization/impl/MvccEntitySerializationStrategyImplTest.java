@@ -251,6 +251,7 @@ public abstract class MvccEntitySerializationStrategyImplTest {
         assertEquals( entityId, returned.getId() );
         assertEquals( version, returned.getVersion() );
         assertFalse( returned.getEntity().isPresent() );
+        assertEquals( MvccEntity.Status.DELETED, returned.getStatus());
 
         //now delete it
         serializationStrategy.delete( context, entityId, version ).execute();
@@ -395,7 +396,7 @@ public abstract class MvccEntitySerializationStrategyImplTest {
 
         final Optional<Entity> empty = Optional.absent();
 
-        MvccEntity clearedV3 = new MvccEntityImpl( id, version3, MvccEntity.Status.COMPLETE, empty );
+        MvccEntity clearedV3 = new MvccEntityImpl( id, version3, MvccEntity.Status.DELETED, empty );
 
         MvccEntity returnedV3 =
             serializationStrategy.load( context, Collections.singleton( id ), version3 ).getEntity( id );
