@@ -122,8 +122,8 @@
       <!-- only use half the cores on the machine for testing -->
       <usergrid.it.parallel>methods</usergrid.it.parallel>
       <usergrid.it.reuseForks>true</usergrid.it.reuseForks>
-      <usergrid.it.forkCount>1</usergrid.it.forkCount>
-      <usergrid.it.threads>2</usergrid.it.threads>
+      <usergrid.it.forkCount>4</usergrid.it.forkCount>
+      <usergrid.it.threads>8</usergrid.it.threads>
 
       <metrics.version>3.0.0</metrics.version>
       <rx.version>0.19.6</rx.version>
@@ -1510,13 +1510,19 @@
                       <!-- TODO, we may need an exclusion.  Appears to be a classloader bug
                       http://stackoverflow.com/questions/27225140/intermittent-noclassdeffounderror-when-running-a-maven-surefire-build-in-jenkins
                       -->
-                      <!--<dependencies>-->
-                          <!--<dependency>-->
-                              <!--<groupId>org.apache.maven.surefire</groupId>-->
-                              <!--<artifactId>surefire-junit47</artifactId>-->
-                              <!--<version>${surefire.plugin.version}</version>-->
-                          <!--</dependency>-->
-                      <!--</dependencies>-->
+                      <dependencies>
+                          <dependency>
+                              <groupId>org.apache.maven.surefire</groupId>
+                              <artifactId>surefire-junit47</artifactId>
+                              <version>${surefire.plugin.version}</version>
+                              <exclusions>
+                                  <exclusion>
+                                      <groupId>org.apache.maven.surfire</groupId>
+                                      <artifactId>common-junit3</artifactId>
+                                  </exclusion>
+                              </exclusions>
+                          </dependency>
+                      </dependencies>
                   </plugin>
 
 

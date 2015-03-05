@@ -21,10 +21,8 @@
 package org.apache.usergrid.rest;
 
 import com.sun.jersey.api.json.JSONWithPadding;
-import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
 import org.slf4j.Logger;
@@ -52,6 +50,10 @@ import java.util.UUID;
 public class IndexResource extends AbstractContextResource {
 
     private static final Logger logger = LoggerFactory.getLogger(IndexResource.class);
+
+    public IndexResource(){
+        super();
+    }
 
     @RequireSystemAccess
     @PUT
@@ -250,8 +252,9 @@ public class IndexResource extends AbstractContextResource {
             throw new IllegalArgumentException("Please add an indexSuffix to your post");
         }
 
+
         emf.addIndex(appId, config.get("indexSuffix").toString(),
-            (int) config.get("shards"),(int) config.get("replicas"));
+            (int) config.get("shards"),(int) config.get("replicas"),(String)config.get("writeConsistency"));
         response.setAction("Add index to alias");
 
         return new JSONWithPadding(response, callback);

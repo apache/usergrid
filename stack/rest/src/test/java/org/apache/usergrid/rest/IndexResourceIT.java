@@ -59,6 +59,7 @@ public class IndexResourceIT extends AbstractRestIT {
         Map<String, Object> data = new HashMap<String, Object>();
         data.put( "replicas", 0 );
         data.put( "shards", 1 );
+        data.put( "writeConsistency", "one" );
 
         UUID appId = this.context.getAppUuid();
 

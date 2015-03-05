@@ -350,7 +350,7 @@ public class CpEntityManager implements EntityManager {
         Id id = new SimpleId( entityRef.getUuid(), entityRef.getType() );
 
         CollectionScope collectionScope = getCollectionScopeNameFromEntityType(
-                applicationScope.getApplication(),  entityRef.getType());
+            getApplicationScope().getApplication(),  entityRef.getType());
 
 
         //        if ( !UUIDUtils.isTimeBased( id.getUuid() ) ) {
@@ -433,7 +433,7 @@ public class CpEntityManager implements EntityManager {
 
 
         CollectionScope collectionScope = getCollectionScopeNameFromEntityType(
-                applicationScope.getApplication(),  type);
+            getApplicationScope().getApplication(),  type);
 
 
         //        if ( !UUIDUtils.isTimeBased( id.getUuid() ) ) {
@@ -491,11 +491,14 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public void update( Entity entity ) throws Exception {
-
+        Preconditions.checkNotNull(entity,"entity should never be null");
+        String type = entity.getType();
+        Preconditions.checkNotNull(type,"entity type should never be null");
+        Id appId  = getApplicationScope().getApplication();
+        Preconditions.checkNotNull(appId,"app scope should never be null");
         // first, update entity index in its own collection scope
 
-        CollectionScope collectionScope = getCollectionScopeNameFromEntityType(
-                applicationScope.getApplication(),  entity.getType());
+        CollectionScope collectionScope = getCollectionScopeNameFromEntityType(appId, type );
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
 
         Id entityId = new SimpleId( entity.getUuid(), entity.getType() );
@@ -565,8 +568,11 @@ public class CpEntityManager implements EntityManager {
 
     private Observable deleteAsync( EntityRef entityRef ) throws Exception {
 
+        if(applicationScope == null || entityRef == null){
+            return Observable.empty();
+        }
         CollectionScope collectionScope = getCollectionScopeNameFromEntityType(
-                applicationScope.getApplication(), entityRef.getType()  );
+            getApplicationScope().getApplication(), entityRef.getType()  );
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
 
@@ -2119,7 +2125,7 @@ public class CpEntityManager implements EntityManager {
                                           final Object propertyValue ) {
 
         CollectionScope collectionScope = getCollectionScopeNameFromEntityType(
-                applicationScope.getApplication(), collectionName);
+            getApplicationScope().getApplication(), collectionName);
 
         final EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
 
@@ -2443,7 +2449,7 @@ public class CpEntityManager implements EntityManager {
         org.apache.usergrid.persistence.model.entity.Entity cpEntity = entityToCpEntity( entity, importId );
 
         // prepare to write and index Core Persistence Entity into default scope
-        CollectionScope collectionScope = getCollectionScopeNameFromEntityType(applicationScope.getApplication(), eType);
+        CollectionScope collectionScope = getCollectionScopeNameFromEntityType(getApplicationScope().getApplication(), eType);
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
 
@@ -2750,7 +2756,7 @@ public class CpEntityManager implements EntityManager {
         CpWalker walker = new CpWalker( );
 
         walker.walkCollections(
-            this, application, collectionName, reverse, new CpVisitor() {
+            this, getApplication(), collectionName, reverse, new CpVisitor() {
 
             @Override
             public void visitCollectionEntry( EntityManager em, String collName, Entity entity ) {
@@ -2779,7 +2785,7 @@ public class CpEntityManager implements EntityManager {
 
         CpWalker walker = new CpWalker( );
 
-        walker.walkCollections( this, application, null, false, new CpVisitor() {
+        walker.walkCollections( this, getApplication(), null, false, new CpVisitor() {
 
             @Override
             public void visitCollectionEntry( EntityManager em, String collName, Entity entity ) {

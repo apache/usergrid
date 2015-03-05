@@ -17,6 +17,7 @@
 package org.apache.usergrid.persistence.index;
 
 import org.apache.usergrid.persistence.core.future.BetterFuture;
+import org.elasticsearch.action.ActionRequestBuilder;
 import org.elasticsearch.action.support.replication.ShardReplicationOperationRequestBuilder;
 
 import java.util.Iterator;
@@ -27,7 +28,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * Container for index operations.
  */
 public  class IndexOperationMessage {
-    private final ConcurrentLinkedQueue<ShardReplicationOperationRequestBuilder> builders;
+    private final ConcurrentLinkedQueue<ActionRequestBuilder> builders;
     private final BetterFuture<IndexOperationMessage> containerFuture;
 
     public IndexOperationMessage(){
@@ -41,7 +42,7 @@ public  class IndexOperationMessage {
         });
     }
 
-    public void addOperation(ShardReplicationOperationRequestBuilder builder){
+    public void addOperation(ActionRequestBuilder builder){
         builders.add(builder);
     }
 
@@ -49,7 +50,7 @@ public  class IndexOperationMessage {
      * return operations for the message
      * @return
      */
-    public ConcurrentLinkedQueue<ShardReplicationOperationRequestBuilder> getOperations(){
+    public ConcurrentLinkedQueue<ActionRequestBuilder> getOperations(){
         return builders;
     }
 

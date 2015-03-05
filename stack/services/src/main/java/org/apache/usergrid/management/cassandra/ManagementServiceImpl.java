@@ -57,6 +57,7 @@ import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.exceptions.ApplicationAlreadyExistsException;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.PagingResultsIterator;
 import org.apache.usergrid.persistence.Results;
@@ -310,7 +311,11 @@ public class ManagementServiceImpl implements ManagementService {
             }
 
             if ( !getApplicationsForOrganization( organization.getUuid() ).containsValue( test_app_name ) ) {
-                createApplication( organization.getUuid(), test_app_name );
+                try {
+                    createApplication( organization.getUuid(), test_app_name );
+                }catch(ApplicationAlreadyExistsException aaee){
+                    logger.debug("The database setup already found an existing application");
+                }
             }
         }
         else {

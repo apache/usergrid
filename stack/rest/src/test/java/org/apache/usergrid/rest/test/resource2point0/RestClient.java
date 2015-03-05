@@ -16,6 +16,7 @@
  */
 package org.apache.usergrid.rest.test.resource2point0;
 
+import org.apache.usergrid.rest.test.resource2point0.endpoints.SystemResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.TokenResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.ManagementResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.OrganizationResource;
@@ -72,6 +73,10 @@ public class RestClient implements UrlResource {
 
     public ClientContext getContext() {
         return context;
+    }
+
+    public SystemResource system() {
+        return new SystemResource(context, this);
     }
 
     public TestPropertiesResource testPropertiesResource() {
