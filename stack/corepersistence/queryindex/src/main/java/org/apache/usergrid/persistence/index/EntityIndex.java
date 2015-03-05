@@ -25,8 +25,10 @@ import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
 import org.apache.usergrid.persistence.model.entity.Id;
+import org.elasticsearch.action.ListenableActionFuture;
 
 import java.util.Map;
+import java.util.concurrent.Future;
 
 
 /**
@@ -50,8 +52,9 @@ public interface EntityIndex {
      * @param indexSuffix index name
      * @param shards
      * @param replicas
+     * @param writeConsistency
      */
-    public void addIndex(final String indexSuffix, final int shards, final int replicas);
+    public void addIndex(final String indexSuffix, final int shards, final int replicas, final String writeConsistency);
 
     /**
      * Create the index batch.
@@ -76,14 +79,14 @@ public interface EntityIndex {
      * effectively removing all versions of an entity from all index scopes
      * @param entityId The entityId to remove
      */
-    public void deleteAllVersionsOfEntity(final Id entityId );
+    public Future deleteAllVersionsOfEntity(final Id entityId );
 
     /**
      * Takes all the previous versions of the current entity and deletes all previous versions
      * @param id The id to remove
      * @param version The max version to retain
      */
-    public void deletePreviousVersions(final Id id, final UUID version);
+    public Future deletePreviousVersions(final Id id, final UUID version);
 
     /**
      * Refresh the index.

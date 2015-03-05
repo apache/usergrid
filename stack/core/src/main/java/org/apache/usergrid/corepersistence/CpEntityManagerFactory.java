@@ -297,20 +297,19 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     @Override
     public void deleteApplication(UUID applicationId) throws Exception {
 
-        // remove old appinfo Entity, which is in the Management App's appinfos collection
+        // remove old application info Entity, which is in the Management App's application infos collection
         EntityManager em = getEntityManager( this.getManagementAppId() );
         Entity applicationInfo = em.get(new SimpleEntityRef(CpNamingUtils.APPLICATION_INFO, applicationId));
         em.delete( applicationInfo );
 
-        // create new Entity in deleted_appinfos collection, with same UUID and properties as deleted appinfo
+        // create new Entity in deleted_application_infos collection,
+        // with same UUID and properties as deleted application info
         em.create( applicationId, CpNamingUtils.DELETED_APPLICATION_INFO, applicationInfo.getProperties() );
 
         em.refreshIndex();
 
         // delete the application's index
-        EntityIndex ei = managerCache.getEntityIndex(
-            new ApplicationScopeImpl( new SimpleId(applicationId, TYPE_APPLICATION)) );
-        ei.deleteIndex();
+        managerCache.getEntityIndex( new ApplicationScopeImpl(new SimpleId(applicationId, TYPE_APPLICATION)));
     }
 
 
@@ -813,7 +812,11 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         em.reindex( po );
 
-        logger.info("\n\nRebuilt index for application {} id {}\n", app.getName(), appId );
+        if(app!=null) {
+            logger.info("\n\nRebuilt index for application {} id {}\n", app.getName(), appId);
+        }else{
+            logger.info("\n\nDid not rebuild index for application id {}\n",  appId);
+        }
     }
 
 
@@ -868,9 +871,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     }
 
     @Override
-    public void addIndex(final UUID applicationId,final String indexSuffix,final int shards,final int replicas){
+    public void addIndex(final UUID applicationId,final String indexSuffix,final int shards,final int replicas, final String writeConsistency){
         EntityIndex entityIndex = managerCache.getEntityIndex(CpNamingUtils.getApplicationScope(applicationId));
-        entityIndex.addIndex(indexSuffix, shards, replicas);
+        entityIndex.addIndex(indexSuffix, shards, replicas,writeConsistency);
     }
 
     @Override

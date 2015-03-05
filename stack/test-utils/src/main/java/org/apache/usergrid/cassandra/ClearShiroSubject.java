@@ -33,20 +33,17 @@ public class ClearShiroSubject extends ExternalResource {
     private static final Logger LOG = LoggerFactory.getLogger( ClearShiroSubject.class );
 
 
+
+    @Override
+    protected void before() throws Throwable {
+        super.before();
+        clear();
+    }
+
     @Override
     protected void after() {
         super.after();
-        Subject subject = SecurityUtils.getSubject();
-
-        if ( subject == null ) {
-
-            LOG.info( "Shiro Subject was null. No need to clear." );
-            return;
-        }
-
-        new SubjectThreadState( subject ).clear();
-
-        LOG.info( "Shiro Subject was NOT null. Subject has been cleared." );
+        clear();
     }
 
     public void clear(){
