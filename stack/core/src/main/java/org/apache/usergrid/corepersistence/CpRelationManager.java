@@ -121,7 +121,6 @@ import rx.functions.Func1;
 import static java.util.Arrays.asList;
 
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
-import static org.apache.usergrid.corepersistence.util.CpEntityMapUtils.entityToCpEntity;
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getCollectionScopeNameFromEntityType;
 import static org.apache.usergrid.persistence.Schema.COLLECTION_ROLES;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTED_ENTITIES;
@@ -190,8 +189,6 @@ public class CpRelationManager implements RelationManager {
 
     private ResultsLoaderFactory resultsLoaderFactory;
 
-    private Timer cpRelationTimer;
-
     private MetricsFactory metricsFactory;
 
     public CpRelationManager() {}
@@ -224,7 +221,6 @@ public class CpRelationManager implements RelationManager {
         this.cass = em.getCass(); // TODO: eliminate need for this via Core Persistence
         this.indexBucketLocator = indexBucketLocator; // TODO: this also
         this.metricsFactory = metricsFactory;
-        this.cpRelationTimer = metricsFactory.getTimer( CpRelationManager.class, "relation.manager.timer" );
 
         // load the Core Persistence version of the head entity as well
         this.headEntityScope = getCollectionScopeNameFromEntityType(
@@ -449,7 +445,8 @@ public class CpRelationManager implements RelationManager {
                 } ).count().toBlocking().lastOrDefault( 0 );
 
         //Adding graphite metrics
-        Timer.Context timeElasticIndexBatch = cpRelationTimer.time();
+        Timer.Context timeElasticIndexBatch = metricsFactory
+            .getTimer( CpRelationManager.class, "relation.manager.es.update.collection" ).time();
         entityIndexBatch.execute();
         timeElasticIndexBatch.stop();
 
@@ -1075,7 +1072,8 @@ public class CpRelationManager implements RelationManager {
         Mutator<ByteBuffer> m = createMutator( ko, be );
         batchUpdateEntityConnection( m, false, connection, UUIDGenerator.newTimeUUID() );
         //Added Graphite Metrics
-        Timer.Context timeElasticIndexBatch = cpRelationTimer.time();
+        Timer.Context timeElasticIndexBatch = metricsFactory
+            .getTimer( CpRelationManager.class, "relation.manager.es.create.connection.timer" ).time();
         batchExecute( m, CassandraService.RETRY_COUNT );
         timeElasticIndexBatch.stop();
 
@@ -1251,7 +1249,8 @@ public class CpRelationManager implements RelationManager {
                 m, true, ( ConnectionRefImpl ) connectionRef, UUIDGenerator.newTimeUUID() );
 
         //Added Graphite Metrics
-        Timer.Context timeDeleteConnections = cpRelationTimer.time();
+        Timer.Context timeDeleteConnections = metricsFactory
+            .getTimer( CpRelationManager.class, "relation.manager.cassandra.delete.connection.batch.timer" ).time();
         batchExecute( m, CassandraService.RETRY_COUNT );
         timeDeleteConnections.stop();
 
@@ -1309,7 +1308,7 @@ public class CpRelationManager implements RelationManager {
 //        batch.deindex( allTypesIndexScope, targetEntity );
 
         //Added Graphite Metrics
-        Timer.Context timeDeleteConnection = cpRelationTimer.time();
+        Timer.Context timeDeleteConnection = metricsFactory.getTimer( CpRelationManager.class, "relation.manager.es.delete.connection.batch.timer" ).time();
         batch.execute();
         timeDeleteConnection.stop();
 

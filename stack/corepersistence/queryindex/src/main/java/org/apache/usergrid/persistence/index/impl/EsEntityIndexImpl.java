@@ -126,7 +126,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
     private EsIndexCache aliasCache;
 
-    private final Timer indexTimer;
+//    private final Timer indexTimer;
 
 
     @Inject
@@ -139,12 +139,11 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
         this.esProvider = provider;
         this.config = config;
         this.cursorTimeout = config.getQueryCursorTimeout();
-        this.indexIdentifier = IndexingUtils.createIndexIdentifier(config, appScope);
+        this.indexIdentifier = IndexingUtils.createIndexIdentifier( config, appScope );
         this.alias = indexIdentifier.getAlias();
         this.failureMonitor = new FailureMonitorImpl( config, provider );
         this.aliasCache = indexCache;
         this.metricsFactory = metricsFactory;
-        this.indexTimer = metricsFactory.getTimer( EsEntityIndexImpl.class, "entity.index.timer" );
     }
 
     @Override
@@ -176,7 +175,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
                     .build();
 
                 //Added For Graphite Metrics
-                Timer.Context timeNewIndexCreation = indexTimer.time();
+                Timer.Context timeNewIndexCreation = metricsFactory
+                    .getTimer( EsEntityIndexImpl.class, "es.entity.index.add.index.timer" ).time();
                 final CreateIndexResponse cir = admin.indices().prepareCreate(indexName)
                         .setSettings(settings)
                         .execute()
@@ -209,7 +209,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
             for (String currentIndex : indexNames){
                 //Added For Graphite Metrics
-                Timer.Context timeRemoveAlias = indexTimer.time();
+                Timer.Context timeRemoveAlias = metricsFactory
+                    .getTimer( EsEntityIndexImpl.class, "es.entity.index.remove.index.alias.timer" ).time();
                 isAck = adminClient.indices().prepareAliases().removeAlias(currentIndex,
                         alias.getWriteAlias()).execute().actionGet().isAcknowledged();
                 timeRemoveAlias.stop();
@@ -217,7 +218,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
             }
 
             //Added For Graphite Metrics
-            Timer.Context timeAddReadAlias = indexTimer.time();
+            Timer.Context timeAddReadAlias = metricsFactory
+                .getTimer( EsEntityIndexImpl.class, "es.entity.index.add.read.alias.timer" ).time();
             // add read alias
             isAck = adminClient.indices().prepareAliases().addAlias(
                     indexName, alias.getReadAlias()).execute().actionGet().isAcknowledged();
@@ -225,7 +227,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
             logger.info("Created new read Alias Name [{}] ACK=[{}]", alias.getReadAlias(), isAck);
 
             //Added For Graphite Metrics
-            Timer.Context timeAddWriteAlias = indexTimer.time();
+            Timer.Context timeAddWriteAlias = metricsFactory
+                .getTimer( EsEntityIndexImpl.class, "es.entity.index.add.write.alias.timer" ).time();
             //add write alias
             isAck = adminClient.indices().prepareAliases().addAlias(
                     indexName, alias.getWriteAlias()).execute().actionGet().isAcknowledged();
@@ -296,7 +299,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
                 XContentFactory.jsonBuilder(), "_default_");
 
         //Added For Graphite Metrics
-        Timer.Context timePutIndex = indexTimer.time();
+        Timer.Context timePutIndex = metricsFactory
+            .getTimer( EsEntityIndexImpl.class, "es.entity.index.create.mapping.timer" ).time();
         PutIndexTemplateResponse pitr = esProvider.getClient().admin().indices()
                 .preparePutTemplate("usergrid_template")
                 // set mapping as the default for all types
@@ -389,7 +393,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
             try {
                 //Added For Graphite Metrics
-                Timer.Context timeSearch = indexTimer.time();
+                Timer.Context timeSearch = metricsFactory
+                    .getTimer( EsEntityIndexImpl.class, "es.entity.index.search.timer" ).time();
                 searchResponse = srb.execute().actionGet();
                 timeSearch.stop();
             }
@@ -417,7 +422,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
             try {
                 //Added For Graphite Metrics
-                Timer.Context timeSearchCursor = indexTimer.time();
+                Timer.Context timeSearchCursor = metricsFactory
+                    .getTimer( EsEntityIndexImpl.class, "es.entity.index.search.cursor.timer" ).time();
                 searchResponse = ssrb.execute().actionGet();
                 timeSearchCursor.stop();
             }
@@ -489,7 +495,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
                         return true;
                     }
                     //Added For Graphite Metrics
-                    Timer.Context timeRefreshIndex = indexTimer.time();
+                    Timer.Context timeRefreshIndex = metricsFactory
+                        .getTimer( EsEntityIndexImpl.class, "es.entity.index.refresh.timer" ).time();
                     esProvider.getClient().admin().indices().prepareRefresh( indexes ).execute().actionGet();
                     timeRefreshIndex.stop();
                     logger.debug("Refreshed indexes: {}", StringUtils.join(indexes, ", "));
@@ -535,7 +542,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
         final SearchResponse searchResponse;
         try {
             //Added For Graphite Metrics
-            Timer.Context timeEntityIndex = indexTimer.time();
+            Timer.Context timeEntityIndex = metricsFactory
+                .getTimer( EsEntityIndexImpl.class, "es.entity.index.get.versions.timer" ).time();
             searchResponse = srb.execute().actionGet();
             timeEntityIndex.stop();
         }
@@ -560,7 +568,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
         final TermQueryBuilder tqb = QueryBuilders.termQuery( ENTITYID_ID_FIELDNAME, idString );
 
         //Added For Graphite Metrics
-        final Timer.Context timeDeleteAllVersions = indexTimer.time();
+        final Timer.Context timeDeleteAllVersions = metricsFactory
+            .getTimer( EsEntityIndexImpl.class, "es.entity.index.delete.all.versions.timer" ).time();
         final ListenableActionFuture<DeleteByQueryResponse> response = esProvider.getClient()
             .prepareDeleteByQuery( alias.getWriteAlias() ).setQuery( tqb ).execute();
 
@@ -601,7 +610,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
         //Added For Graphite Metrics
         //Checks the time from the execute to the response below
-        final Timer.Context timeDeletePreviousVersions = indexTimer.time();
+        final Timer.Context timeDeletePreviousVersions = metricsFactory
+            .getTimer( EsEntityIndexImpl.class, "es.entity.index.delete.previous.versions.timer" ).time();
         final ListenableActionFuture<DeleteByQueryResponse> response = esProvider.getClient()
             .prepareDeleteByQuery(alias.getWriteAlias()).setQuery(fqb).execute();
 
