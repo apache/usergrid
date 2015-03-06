@@ -1638,24 +1638,22 @@ public class ManagementServiceImpl implements ManagementService {
             properties = new HashMap<>();
         }
 
-        OrganizationInfo organizationInfo = getOrganizationByUuid( organizationId );
-        UUID applicationId = emf.createApplication( organizationInfo.getName(), applicationName, properties );
-
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
+
+        OrganizationInfo organizationInfo = getOrganizationByUuid( organizationId );
+        UUID applicationId = emf.createApplication(
+            organizationInfo.getName(), applicationName, properties );
         em.refreshIndex();
 
-        // TODO: move this logic into the EntityManagerFactory implementation
-
-        String appName = buildAppName( applicationName, organizationInfo );
-        Query q = Query.fromQL(PROPERTY_NAME + " = '" + appName + "'");
-        Results results = em.searchCollection( em.getApplicationRef(), CpNamingUtils.APPLICATION_INFOS, q);
-        Entity appInfo = results.iterator().next();
+        Entity appInfo = em.get(
+            new SimpleEntityRef( CpNamingUtils.APPLICATION_INFO, applicationId ));
 
         writeUserToken( smf.getManagementAppId(), appInfo,
-            encryptionService.plainTextCredentials( generateOAuthSecretKey( AuthPrincipalType.APPLICATION ),
-                null, smf.getManagementAppId() ) );
+            encryptionService.plainTextCredentials(
+                generateOAuthSecretKey( AuthPrincipalType.APPLICATION ),
+                null,
+                smf.getManagementAppId() ) );
 
-        // TODO: migration needed to make sure this gets called for all existing apps
         addApplicationToOrganization( organizationId, applicationId, appInfo );
 
         UserInfo user = null;

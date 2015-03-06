@@ -126,10 +126,10 @@ public class ImportServiceImpl implements ImportService {
         importEntity.setState(Import.State.SCHEDULED);
         rootEM.update(importEntity);
 
-        final EntityRef source = getApplicationEntity( rootEM, application );
+        final EntityRef appInfo = getApplicationInfoEntity(rootEM, application);
 
         //now link it to the application
-        rootEM.createConnection(source, APP_IMPORT_CONNECTION, importEntity);
+        rootEM.createConnection(appInfo, APP_IMPORT_CONNECTION, importEntity);
 
         return importEntity;
     }
@@ -141,9 +141,7 @@ public class ImportServiceImpl implements ImportService {
 
         try {
             final EntityManager rootEm = emf.getEntityManager( emf.getManagementAppId() );
-
-
-            final Entity applicationEntity = getApplicationEntity( rootEm, applicationId );
+            final Entity appInfo = getApplicationInfoEntity(rootEm, applicationId);
 
             Query query = Query.fromQLNullSafe( ql );
             query.setCursor( cursor );
@@ -151,7 +149,7 @@ public class ImportServiceImpl implements ImportService {
             //set our entity type
             query.setEntityType( Schema.getDefaultSchema().getEntityType( Import.class ) );
 
-            return rootEm.searchCollection( applicationEntity, APP_IMPORT_CONNECTION, query );
+            return rootEm.searchCollection( appInfo, APP_IMPORT_CONNECTION, query );
         }
         catch ( Exception e ) {
             throw new RuntimeException( "Unable to get import entity", e );
@@ -167,11 +165,11 @@ public class ImportServiceImpl implements ImportService {
         try {
             final EntityManager rootEm = emf.getEntityManager( emf.getManagementAppId() );
 
-            final Entity applicationEntity = getApplicationEntity( rootEm, applicationId );
+            final Entity appInfo = getApplicationInfoEntity(rootEm, applicationId);
             final Import importEntity = rootEm.get( importId, Import.class );
 
             // check if it's on the path
-            if ( !rootEm.isConnectionMember( applicationEntity, APP_IMPORT_CONNECTION, importEntity ) ) {
+            if ( !rootEm.isConnectionMember( appInfo, APP_IMPORT_CONNECTION, importEntity ) ) {
                 return null;
             }
 
@@ -183,7 +181,7 @@ public class ImportServiceImpl implements ImportService {
     }
 
 
-    private Entity getApplicationEntity(final EntityManager rootEm, final UUID applicationId) throws Exception {
+    private Entity getApplicationInfoEntity(final EntityManager rootEm, final UUID applicationId) throws Exception {
         final Entity entity = rootEm.get( new SimpleEntityRef( CpNamingUtils.APPLICATION_INFO, applicationId ) );
 
         if(entity == null){
@@ -252,7 +250,8 @@ public class ImportServiceImpl implements ImportService {
 
 
     @Override
-    public Results getFailedImportEntities(final UUID applicationId,  final UUID importId, final UUID fileImportId,  @Nullable  final String ql, @Nullable final String cursor ) {
+    public Results getFailedImportEntities(final UUID applicationId,  final UUID importId, final UUID fileImportId,
+                                           @Nullable  final String ql, @Nullable final String cursor ) {
 
         Preconditions.checkNotNull( applicationId, "applicationId must be specified" );
         Preconditions.checkNotNull( importId, "importId must be specified" );
@@ -282,8 +281,8 @@ public class ImportServiceImpl implements ImportService {
 
 
     @Override
-    public FailedImportEntity getFailedImportEntity(final UUID applicationId, final UUID importId, final UUID fileImportId,
-                                                     final UUID failedImportId ) {
+    public FailedImportEntity getFailedImportEntity(final UUID applicationId, final UUID importId,
+                                                    final UUID fileImportId, final UUID failedImportId ) {
         try {
             final EntityManager rootEm = emf.getEntityManager( emf.getManagementAppId() );
 
@@ -588,7 +587,6 @@ public class ImportServiceImpl implements ImportService {
 
             } else {
 
-
                 if (config.get("applicationId") == null) {
                     throw new UnsupportedOperationException("Import applications not supported");
 
@@ -855,6 +853,8 @@ public class ImportServiceImpl implements ImportService {
 
             try {
                 rootEM.update( importEntity );
+                logger.debug("Updated import entity {}:{} with state {}",
+                    new Object[] { importEntity.getType(), importEntity.getUuid(), importEntity.getState() } );
             }
             catch ( Exception e ) {
                 logger.error( "Error updating import entity", e );

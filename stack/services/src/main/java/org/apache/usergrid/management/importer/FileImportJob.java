@@ -82,7 +82,7 @@ public class FileImportJob extends OnlyOnceJob {
             throw t;
         }
 
-        logger.error("File Import Service completed job");
+        logger.info("File Import Service completed job: " + jobExecution.getJobName() );
     }
 
     @Override
