@@ -93,7 +93,6 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
                                 if(polled!=null) {
                                     drainList.add(polled);
                                     producerQueue.drainTo(drainList, config.getIndexBufferSize());
-                                    System.out.println("Consumer Thread" + Thread.currentThread().getName());
                                     for(IndexOperationMessage drained : drainList){
                                         subscriber.onNext(drained);
                                     }
@@ -116,7 +115,6 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
             .doOnNext(new Action1<List<IndexOperationMessage>>() {
                 @Override
                 public void call(List<IndexOperationMessage> containerList) {
-                    System.out.println("Buffered Consumer Thread" + Thread.currentThread().getName());
                     if (containerList.size() > 0) {
                         flushMeter.mark(containerList.size());
                         Timer.Context time = flushTimer.time();

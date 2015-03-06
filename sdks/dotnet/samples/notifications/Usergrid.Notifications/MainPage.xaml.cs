@@ -44,7 +44,7 @@ namespace Usergrid.Notifications
         {
             this.InitializeComponent();
             //TODO: change me to your server
-            serverUrl = "http://10.0.1.20:8080/";
+            serverUrl = "http://server/";
             //TODO: change me to your org
             org = "test-organization";
             //TODO: change me to your app
@@ -52,9 +52,9 @@ namespace Usergrid.Notifications
             //TODO: change me to your notifier name
             notifier = "windows";
             //TODO: change me to your user
-            user = "mobileuser";
+            user = "test";
             //TODO: change me to your password
-            password = "P@ssw0rd1";
+            password = "test";
             this.NavigationCacheMode = NavigationCacheMode.Required;
             usergrid = new Client.Usergrid(serverUrl, org, app, user, password, notifier);
 
@@ -79,7 +79,7 @@ namespace Usergrid.Notifications
             // If you are using the NavigationHelper provided by some templates,
             // this event is handled for you.
         }
-         
+
         private void pushText_TextChanged(object sender, TextChangedEventArgs e)
         {
 
