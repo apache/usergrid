@@ -118,7 +118,7 @@ public abstract class AbstractMigrationPlugin<T> implements MigrationPlugin {
         //write the version
         migrationInfoSerialization.setVersion( getName(), newSystemVersion );
 
-        po.stop();
+        po.complete();
 
         //signal we've run a migration and return
         return true;

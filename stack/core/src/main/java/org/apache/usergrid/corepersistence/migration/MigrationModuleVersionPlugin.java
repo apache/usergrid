@@ -22,10 +22,7 @@ package org.apache.usergrid.corepersistence.migration;
 
 import org.apache.usergrid.persistence.collection.serialization.impl.MvccEntitySerializationStrategyV2Impl;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.CollectionMigrationPlugin;
-import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerialization;
-import org.apache.usergrid.persistence.core.migration.data.DataMigration;
-import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
 import org.apache.usergrid.persistence.core.migration.data.MigrationPlugin;
 import org.apache.usergrid.persistence.core.migration.data.PluginPhase;
 import org.apache.usergrid.persistence.core.migration.data.ProgressObserver;
@@ -110,7 +107,7 @@ public class MigrationModuleVersionPlugin implements MigrationPlugin{
         //save the version
         migrationInfoSerialization.setVersion( NAME, getMaxVersion() );
 
-        observer.stop();
+        observer.complete();
       }
 
 

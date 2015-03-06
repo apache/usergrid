@@ -41,7 +41,7 @@ public class TestProgressObserver implements ProgressObserver {
 
 
     @Override
-    public void stop() {
+    public void complete() {
         started = false;
     }
 

@@ -194,7 +194,7 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
 
 
         @Override
-        public void stop() {
+        public void complete() {
             migrationInfoSerialization.setStatusCode( pluginName, StatusCode.COMPLETE.status );
         }
 

@@ -34,7 +34,7 @@ public interface ProgressObserver {
     /**
      * Signal the process has stopped
      */
-    public void stop();
+    public void complete();
 
     /**
      * Mark the migration as failed
