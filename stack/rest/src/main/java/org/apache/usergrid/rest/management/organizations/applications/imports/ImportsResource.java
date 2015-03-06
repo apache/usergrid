@@ -37,6 +37,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriInfo;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -63,6 +65,7 @@ import com.sun.jersey.api.json.JSONWithPadding;
 @Produces( MediaType.APPLICATION_JSON )
 public class ImportsResource extends AbstractContextResource {
 
+    private static final Logger logger = LoggerFactory.getLogger(ImportsResource.class);
 
     @Autowired
     protected ImportService importService;
@@ -94,10 +97,7 @@ public class ImportsResource extends AbstractContextResource {
                                         @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
         throws Exception {
 
-
         ApiResponse response = createApiResponse();
-
-
         response.setAction( "post" );
         response.setApplication( emf.getEntityManager( application.getId() ).getApplication() );
         response.setParams( ui.getQueryParameters() );
@@ -106,42 +106,33 @@ public class ImportsResource extends AbstractContextResource {
 
         Map<String, Object> properties;
         Map<String, Object> storage_info;
-        // UsergridAwsCredentialsProvider uacp = new UsergridAwsCredentialsProvider();
 
-        //             try {
-        //checkJsonExportProperties(json);
+        if ((properties = (Map<String, Object>) json.get("properties")) == null) {
+            throw new NullArgumentException("Could not find 'properties'");
+        }
+        storage_info = (Map<String, Object>) properties.get("storage_info");
+        String storage_provider = (String) properties.get("storage_provider");
+        if (storage_provider == null) {
+            throw new NullArgumentException("Could not find field 'storage_provider'");
+        }
+        if (storage_info == null) {
+            throw new NullArgumentException("Could not find field 'storage_info'");
+        }
 
+        String bucketName = (String) storage_info.get("bucket_location");
+        String accessId = (String) storage_info.get("s3_access_id");
+        String secretKey = (String) storage_info.get("s3_key");
 
-            if ( ( properties = ( Map<String, Object> ) json.get( "properties" ) ) == null ) {
-                throw new NullArgumentException( "Could not find 'properties'" );
-            }
-            storage_info = ( Map<String, Object> ) properties.get( "storage_info" );
-            String storage_provider = ( String ) properties.get( "storage_provider" );
-            if ( storage_provider == null ) {
-                throw new NullArgumentException( "Could not find field 'storage_provider'" );
-            }
-            if ( storage_info == null ) {
-                throw new NullArgumentException( "Could not find field 'storage_info'" );
-            }
+        if (bucketName == null) {
+            throw new NullArgumentException("Could not find field 'bucketName'");
+        }
+        if (accessId == null) {
+            throw new NullArgumentException("Could not find field 's3_access_id'");
+        }
+        if (secretKey == null) {
 
-            String bucketName = ( String ) storage_info.get( "bucket_location" );
-
-
-            String accessId = ( String ) storage_info.get( "s3_access_id" );
-            String secretKey = ( String ) storage_info.get( "s3_key" );
-
-            if ( bucketName == null ) {
-                throw new NullArgumentException( "Could not find field 'bucketName'" );
-            }
-            if ( accessId == null ) {
-                throw new NullArgumentException( "Could not find field 's3_access_id'" );
-            }
-            if ( secretKey == null ) {
-
-                throw new NullArgumentException( "Could not find field 's3_key'" );
-            }
-
-
+            throw new NullArgumentException("Could not find field 's3_key'");
+        }
 
         json.put( "organizationId", organization.getUuid() );
         json.put( "applicationId", application.getId() );
@@ -157,7 +148,6 @@ public class ImportsResource extends AbstractContextResource {
     @GET
     public JSONWithPadding getImports( @Context UriInfo ui, @QueryParam( "ql" ) String query,  @QueryParam( "cursor" ) String cursor ) throws Exception {
 
-
         final Results importResults = importService.getImports( application.getId(), query, cursor );
 
         if ( importResults == null ) {
@@ -165,13 +155,9 @@ public class ImportsResource extends AbstractContextResource {
         }
 
         ApiResponse response = createApiResponse();
-
-
         response.setAction( "get" );
         response.setApplication( emf.getEntityManager( application.getId() ).getApplication() );
         response.setParams( ui.getQueryParameters() );
-
-
         response.withResults( importResults );
 
         return new JSONWithPadding( response );
@@ -186,18 +172,17 @@ public class ImportsResource extends AbstractContextResource {
         final UUID importId = UUID.fromString( entityId.getPath() );
         final Import importEntity = importService.getImport( application.getId(), importId );
 
+        logger.debug("Loaded import entity {}:{} with state {}",
+            new Object[] { importEntity.getType(), importEntity.getUuid(), importEntity.getState() } );
+
         if ( importEntity == null ) {
             throw new EntityNotFoundException( "could not find import with uuid " + importId );
         }
 
         ApiResponse response = createApiResponse();
-
-
         response.setAction( "get" );
         response.setApplication( emf.getEntityManager( application.getId() ).getApplication() );
         response.setParams( ui.getQueryParameters() );
-
-
         response.setEntities( Collections.<Entity>singletonList( importEntity ) );
 
         return new JSONWithPadding( response );
