@@ -36,6 +36,16 @@ public class ApplicationDeleteTest  extends AbstractRestIT {
     private static final Logger logger = LoggerFactory.getLogger(ApplicationDeleteTest.class);
 
 
+    /**
+     * Test most common use cases.
+     * <pre>
+     *  - create app with collection of things
+     *  - delete the app
+     *  - test that attempts to get the app, its collections and entities throw 400 with message
+     *  - test that we cannot delete the app a second time
+     *  - test that we can create a new app with the same name as the deleted app
+     * </pre>
+     */
     @Test
     public void testBasicOperation() throws Exception {
 
@@ -45,30 +55,9 @@ public class ApplicationDeleteTest  extends AbstractRestIT {
         String appToDeleteName = clientSetup.getAppName() + "_appToDelete";
         Token orgAdminToken = getAdminToken( clientSetup.getUsername(), clientSetup.getUsername());
 
-        ApiResponse appCreateResponse = clientSetup.getRestClient()
-            .management().orgs().organization( orgName ).app().getResource()
-            .queryParam( "access_token", orgAdminToken.getAccessToken() )
-            .type( MediaType.APPLICATION_JSON )
-            .post( ApiResponse.class, new Application( appToDeleteName ) );
-        UUID appToDeleteId = appCreateResponse.getEntities().get(0).getUuid();
-
         List<Entity> entities = new ArrayList<>();
-        for ( int i=0; i<10; i++ ) {
 
-            final String entityName = "entity" + i;
-            Entity entity = new Entity();
-            entity.setProperties(new HashMap<String, Object>() {{
-                put("name", entityName );
-            }});
-
-            ApiResponse createResponse = clientSetup.getRestClient()
-                .org(orgName).app( appToDeleteName ).collection("things").getResource()
-                .queryParam("access_token", orgAdminToken.getAccessToken())
-                .type(MediaType.APPLICATION_JSON)
-                .post( ApiResponse.class, entity );
-
-            entities.add( createResponse.getEntities().get(0) );
-        }
+        UUID appToDeleteId = createAppWithCollection(orgName, appToDeleteName, orgAdminToken, entities);
 
         // delete the app
 
@@ -130,7 +119,8 @@ public class ApplicationDeleteTest  extends AbstractRestIT {
             Assert.assertEquals("organization_application_not_found", node.get("error").textValue());
         }
 
-        // test that we cannot see the application in the list of applications
+        // test that we cannot see the application in the list of applications returned
+        // by the management resource's get organization's applications end-point
 
         refreshIndex();
 
@@ -171,33 +161,195 @@ public class ApplicationDeleteTest  extends AbstractRestIT {
     }
 
 
+   /**
+    * Test restore of deleted app.
+    * <pre>
+    *  - create app with collection of things
+    *  - delete the app
+    *  - restore the app
+    *  - test that we can get the app, its collections and an entity
+    * </pre>
+    */
     @Test
     public void testAppRestore() throws Exception {
 
-        // create and delete app
+        // create app with a collection of "things"
+
+        String orgName = clientSetup.getOrganization().getName();
+        String appToDeleteName = clientSetup.getAppName() + "_appToDelete";
+        Token orgAdminToken = getAdminToken( clientSetup.getUsername(), clientSetup.getUsername());
+
+        List<Entity> entities = new ArrayList<>();
+
+        UUID appToDeleteId = createAppWithCollection(orgName, appToDeleteName, orgAdminToken, entities);
+
+        // delete the app
+
+        clientSetup.getRestClient()
+            .org(orgName).app(appToDeleteId.toString() ).getResource()
+            .queryParam("access_token", orgAdminToken.getAccessToken() )
+            .delete();
 
         // restore the app
 
-        // test that app appears in list of apps
+        clientSetup.getRestClient()
+            .org(orgName).app(appToDeleteId.toString() ).getResource()
+            .queryParam("access_token", orgAdminToken.getAccessToken() )
+            .put();
 
-        // test that application's collection exists
+
+        // test that we can see the application in the list of applications
+
+        ManagementResponse orgAppResponse = clientSetup.getRestClient()
+            .management().orgs().organization( orgName ).apps().getOrganizationApplications();
+
+        boolean found = false;
+        for ( String appName : orgAppResponse.getData().keySet() ) {
+            if ( orgAppResponse.getData().get( appName ).equals( appToDeleteId.toString() )) {
+                found = true;
+                break;
+            }
+        }
+
+        Assert.assertTrue( found );
+
+        // test that we can get an app entity
+
+        UUID entityId = entities.get(0).getUuid();
+        ApiResponse entityResponse = clientSetup.getRestClient()
+            .org(orgName).app(appToDeleteName).collection("things").entity( entityId ).getResource()
+            .queryParam("access_token", orgAdminToken.getAccessToken())
+            .type(MediaType.APPLICATION_JSON)
+            .get(ApiResponse.class);
+        Assert.assertEquals( entityId, entityResponse.getEntities().get(0).getUuid() );
+
+        // test that we can get deleted app's collection
+
+        ApiResponse collectionReponse = clientSetup.getRestClient()
+            .org(orgName).app(appToDeleteName).collection("things").getResource()
+            .queryParam("access_token", orgAdminToken.getAccessToken())
+            .type(MediaType.APPLICATION_JSON)
+            .get(ApiResponse.class);
+        Assert.assertEquals( entities.size(), collectionReponse.getEntityCount() );
     }
 
 
-
+    /**
+     * Test that we cannot restore deleted app with same name as
+     */
     @Test
     public void testAppRestoreConflict() throws Exception {
 
-        // create and delete app
+        // create app with a collection of "things"
+
+        String orgName = clientSetup.getOrganization().getName();
+        String appToDeleteName = clientSetup.getAppName() + "_appToDelete";
+        Token orgAdminToken = getAdminToken( clientSetup.getUsername(), clientSetup.getUsername());
+
+        List<Entity> entities = new ArrayList<>();
+
+        UUID appToDeleteId = createAppWithCollection(orgName, appToDeleteName, orgAdminToken, entities);
+
+        // delete the app
+
+        clientSetup.getRestClient()
+            .org( orgName ).app(appToDeleteId.toString() ).getResource()
+            .queryParam( "access_token", orgAdminToken.getAccessToken() )
+            .delete();
 
         // create new app with same name
 
-        // attempt to restore original app
+        createAppWithCollection(orgName, appToDeleteName, orgAdminToken, entities);
 
-        // test that HTTP 409 CONFLICT and informative error message is received
+        // attempt to restore original app, should get 409
 
-        // create a collection with two entities
+        try {
 
+            clientSetup.getRestClient()
+                .org(orgName).app(appToDeleteId.toString()).getResource()
+                .queryParam("access_token", orgAdminToken.getAccessToken())
+                .put();
+
+            Assert.fail("Must fail to restore app with same name as existing app");
+
+        } catch ( UniformInterfaceException e ) {
+            Assert.assertEquals(409, e.getResponse().getStatus());
+        }
+    }
+
+
+    /**
+     * Test that we cannot delete an app with same name as an app that is already deleted.
+     * TODO: investigate way to support this, there should be no such restriction.
+     */
+    @Test
+    public void testAppDeleteConflict() throws Exception {
+
+        // create app with a collection of "things"
+
+        String orgName = clientSetup.getOrganization().getName();
+        String appToDeleteName = clientSetup.getAppName() + "_appToDelete";
+        Token orgAdminToken = getAdminToken( clientSetup.getUsername(), clientSetup.getUsername());
+
+        List<Entity> entities = new ArrayList<>();
+
+        UUID appToDeleteId = createAppWithCollection(orgName, appToDeleteName, orgAdminToken, entities);
+
+        // delete the app
+
+        clientSetup.getRestClient()
+            .org( orgName ).app(appToDeleteId.toString() ).getResource()
+            .queryParam( "access_token", orgAdminToken.getAccessToken() )
+            .delete();
+
+        // create new app with same name
+
+        UUID newAppId = createAppWithCollection(orgName, appToDeleteName, orgAdminToken, entities);
+
+        // attempt to delete new app, it should fail
+
+        try {
+
+            clientSetup.getRestClient()
+                .org(orgName).app( newAppId.toString() ).getResource()
+                .queryParam("access_token", orgAdminToken.getAccessToken())
+                .delete();
+
+            Assert.fail("Must fail to delete app with same name as deleted app");
+
+        } catch ( UniformInterfaceException e ) {
+            Assert.assertEquals( 409, e.getResponse().getStatus() );
+        }
+    }
+
+
+    private UUID createAppWithCollection(
+        String orgName, String appName, Token orgAdminToken, List<Entity> entities) {
+
+        ApiResponse appCreateResponse = clientSetup.getRestClient()
+            .management().orgs().organization( orgName ).app().getResource()
+            .queryParam( "access_token", orgAdminToken.getAccessToken() )
+            .type( MediaType.APPLICATION_JSON )
+            .post( ApiResponse.class, new Application( appName ) );
+        UUID appId = appCreateResponse.getEntities().get(0).getUuid();
+
+        for ( int i=0; i<10; i++ ) {
+
+            final String entityName = "entity" + i;
+            Entity entity = new Entity();
+            entity.setProperties(new HashMap<String, Object>() {{
+                put("name", entityName );
+            }});
+
+            ApiResponse createResponse = clientSetup.getRestClient()
+                .org(orgName).app( appName ).collection("things").getResource()
+                .queryParam("access_token", orgAdminToken.getAccessToken())
+                .type(MediaType.APPLICATION_JSON)
+                .post( ApiResponse.class, entity );
+
+            entities.add( createResponse.getEntities().get(0) );
+        }
+        return appId;
     }
 }
 

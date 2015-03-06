@@ -38,9 +38,6 @@ import org.apache.usergrid.persistence.model.entity.SimpleId;
  */
 public class CpNamingUtils {
 
-    // TODO: Why do we have three internal apps?  Can we merge this into a single management app?
-    // It would make administration much easier and cleaner on the ES side
-
     /** Edge types for collection suffix */
     public static final String EDGE_COLL_SUFFIX = "zzzcollzzz";
 

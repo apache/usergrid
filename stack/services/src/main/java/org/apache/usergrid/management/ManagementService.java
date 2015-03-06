@@ -149,6 +149,8 @@ public interface ManagementService {
 
     public ApplicationInfo getApplicationInfo( UUID applicationId ) throws Exception;
 
+    ApplicationInfo getDeletedApplicationInfo(UUID applicationId) throws Exception;
+
     public ApplicationInfo getApplicationInfo( Identifier id ) throws Exception;
 
     public ApplicationInfo getApplicationInfoFromAccessToken( String token ) throws Exception;
@@ -318,4 +320,8 @@ public interface ManagementService {
 
     /** For testing purposes only */
     public Properties getProperties();
+
+    public void deleteApplication(UUID applicationId) throws Exception;
+
+    public ApplicationInfo restoreApplication(UUID applicationId) throws Exception;
 }

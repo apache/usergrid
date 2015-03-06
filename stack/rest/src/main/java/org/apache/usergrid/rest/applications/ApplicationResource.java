@@ -30,6 +30,7 @@ import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import com.sun.jersey.api.ConflictException;
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
@@ -488,6 +489,9 @@ public class ApplicationResource extends ServiceResource {
     }
 
 
+    /**
+     * Put on application URL will restore application if it was deleted.
+     */
     @PUT
     @RequireOrganizationAccess
     @Override
@@ -498,12 +502,7 @@ public class ApplicationResource extends ServiceResource {
             throw new IllegalArgumentException("Application ID not specified in request");
         }
 
-        ApplicationInfo app = management.getApplicationInfo( applicationId );
-        if ( app == null ) {
-            throw new EntityNotFoundException("Application ID " + applicationId + " not found");
-        }
-
-        emf.restoreApplication( applicationId );
+        management.restoreApplication( applicationId );
 
         ApiResponse response = createApiResponse();
         response.setAction( "restore" );
@@ -532,15 +531,9 @@ public class ApplicationResource extends ServiceResource {
             throw new IllegalArgumentException("Application ID not specified in request");
         }
 
-        ApplicationInfo app = management.getApplicationInfo( applicationId );
-        if ( app == null ) {
-            throw new EntityNotFoundException("Application ID " + applicationId + " not found");
-        }
+        management.deleteApplication( applicationId );
 
-        emf.deleteApplication( applicationId );
-
-        LOG.debug( "ApplicationResource.delete() deleted appId = {} appName = {}",
-            applicationId, app.getName() );
+        LOG.debug( "ApplicationResource.delete() deleted appId = {}", applicationId);
 
         ApiResponse response = createApiResponse();
         response.setAction( "delete" );

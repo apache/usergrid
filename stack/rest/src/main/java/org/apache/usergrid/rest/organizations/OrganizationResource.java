@@ -100,9 +100,14 @@ public class OrganizationResource extends AbstractContextResource {
         if (organizationId == null) {
             return null;
         }
-        BiMap<UUID, String> apps = management.getApplicationsForOrganization( organizationId );
-        if ( apps.get( applicationId ) == null ) {
-            return null;
+
+        // don't look up app if request is a PUT because a PUT can be used to restore a deleted app
+        if ( !hc.getRequest().getMethod().equalsIgnoreCase("PUT") ) {
+
+            BiMap<UUID, String> apps = management.getApplicationsForOrganization(organizationId);
+            if (apps.get(applicationId) == null) {
+                return null;
+            }
         }
 
         return appResourceFor( applicationId );

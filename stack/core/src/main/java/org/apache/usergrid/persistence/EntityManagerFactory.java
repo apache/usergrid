@@ -76,6 +76,11 @@ public interface EntityManagerFactory {
      */
     public abstract void deleteApplication( UUID applicationId ) throws Exception;
 
+    /**
+     * Restore deleted application.
+     */
+    public void restoreApplication( UUID applicationId) throws Exception;
+
     public abstract UUID importApplication( String organization, UUID applicationId, String name,
                                             Map<String, Object> properties ) throws Exception;
 
@@ -168,8 +173,6 @@ public interface EntityManagerFactory {
     public void addIndex(final UUID appId,final String suffix,final int shards,final int replicas, final String writeConsistency);
 
     public Health getEntityStoreHealth();
-
-    void restoreApplication(UUID applicationId) throws Exception;
 
     public interface ProgressObserver {
 

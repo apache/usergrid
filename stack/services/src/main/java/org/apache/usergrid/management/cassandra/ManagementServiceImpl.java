@@ -29,7 +29,10 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.management.exceptions.*;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,15 +48,6 @@ import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.OrganizationOwnerInfo;
 import org.apache.usergrid.management.UserInfo;
-import org.apache.usergrid.management.exceptions.DisabledAdminUserException;
-import org.apache.usergrid.management.exceptions.DisabledAppUserException;
-import org.apache.usergrid.management.exceptions.IncorrectPasswordException;
-import org.apache.usergrid.management.exceptions.ManagementException;
-import org.apache.usergrid.management.exceptions.RecentlyUsedPasswordException;
-import org.apache.usergrid.management.exceptions.UnableToLeaveOrganizationException;
-import org.apache.usergrid.management.exceptions.UnactivatedAdminUserException;
-import org.apache.usergrid.management.exceptions.UnactivatedAppUserException;
-import org.apache.usergrid.management.exceptions.UnconfirmedAdminUserException;
 import org.apache.usergrid.persistence.CredentialsInfo;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
@@ -250,8 +244,7 @@ public class ManagementServiceImpl implements ManagementService {
         return properties.properties;
     }
 
-
-    @Autowired
+   @Autowired
     public void setTokenService( TokenService tokens ) {
         this.tokens = tokens;
     }
@@ -1662,12 +1655,88 @@ public class ManagementServiceImpl implements ManagementService {
         }
         catch ( UnavailableSecurityManagerException e ) {
             // occurs in the rare case that this is called before the full stack is initialized
-            logger.warn("Error getting user, organization created activity will not be created", e);
+            logger.warn("Error getting user, application created activity will not be created", e);
         }
         if ( ( user != null ) && user.isAdminUser() ) {
             postOrganizationActivity( organizationId, user, "create", appInfo, "Application", applicationName,
                 "<a href=\"mailto:" + user.getEmail() + "\">" + user.getName() + " (" + user.getEmail()
                     + ")</a> created a new application named " + applicationName, null );
+        }
+
+        em.refreshIndex();
+
+        return new ApplicationInfo( applicationId, appInfo.getName() );
+    }
+
+
+    @Override
+    public void deleteApplication(UUID applicationId) throws Exception {
+
+        // make sure there is not already a delete app with the same name
+
+        EntityManager em = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+        Entity appToDelete = em.get(
+            new SimpleEntityRef( CpNamingUtils.APPLICATION_INFO, applicationId ));
+
+        final EntityRef alias = em.getAlias(
+            CpNamingUtils.DELETED_APPLICATION_INFO, appToDelete.getName() );
+
+        if ( alias != null ) {
+            throw new ConflictException("Cannot delete app with same name as already deleted app");
+        }
+
+        emf.deleteApplication( applicationId );
+    }
+
+
+    @Override
+    public ApplicationInfo restoreApplication(UUID applicationId) throws Exception {
+
+        ApplicationInfo app = getDeletedApplicationInfo( applicationId );
+        if ( app == null ) {
+            throw new EntityNotFoundException("Deleted application ID " + applicationId + " not found");
+        }
+
+        if ( emf.lookupApplication( app.getName() ) != null ) {
+            throw new ConflictException("Cannot restore application, one with that name already exists.");
+        }
+
+        // restore application_info entity
+
+        EntityManager em = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
+        emf.restoreApplication(applicationId);
+
+        // restore token
+
+        Entity appInfo = em.get(
+            new SimpleEntityRef( CpNamingUtils.APPLICATION_INFO, applicationId ));
+
+        writeUserToken( smf.getManagementAppId(), appInfo,
+            encryptionService.plainTextCredentials(
+                generateOAuthSecretKey( AuthPrincipalType.APPLICATION ),
+                null,
+                smf.getManagementAppId() ) );
+
+        String orgName = appInfo.getName().split("/")[0];
+        EntityRef alias = em.getAlias( Group.ENTITY_TYPE, orgName );
+        Entity orgEntity = em.get( alias );
+
+        addApplicationToOrganization( orgEntity.getUuid(), applicationId, appInfo );
+
+        // create activity
+
+        UserInfo user = null;
+        try {
+            user = SubjectUtils.getUser();
+        }
+        catch ( UnavailableSecurityManagerException e ) {
+            // occurs in the rare case that this is called before the full stack is initialized
+            logger.warn("Error getting user, application restored created activity will not be created", e);
+        }
+        if ( ( user != null ) && user.isAdminUser() ) {
+            postOrganizationActivity( orgEntity.getUuid(), user, "restore", appInfo, "Application", appInfo.getName(),
+                "<a href=\"mailto:" + user.getEmail() + "\">" + user.getName() + " (" + user.getEmail()
+                    + ")</a> restored an application named " + appInfo.getName(), null );
         }
 
         em.refreshIndex();
@@ -1795,6 +1864,22 @@ public class ManagementServiceImpl implements ManagementService {
         }
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         Entity entity = em.get( new SimpleEntityRef( CpNamingUtils.APPLICATION_INFO, applicationId ));
+
+        if ( entity != null ) {
+            return new ApplicationInfo( applicationId, entity.getName() );
+        }
+        return null;
+    }
+
+
+    @Override
+    public ApplicationInfo getDeletedApplicationInfo(UUID applicationId) throws Exception {
+        if ( applicationId == null ) {
+            return null;
+        }
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
+        Entity entity = em.get( new SimpleEntityRef(
+            CpNamingUtils.DELETED_APPLICATION_INFO, applicationId ));
 
         if ( entity != null ) {
             return new ApplicationInfo( applicationId, entity.getName() );
@@ -2979,4 +3064,5 @@ public class ManagementServiceImpl implements ManagementService {
         else
             return Boolean.parseBoolean(obj);
     }
+
 }
