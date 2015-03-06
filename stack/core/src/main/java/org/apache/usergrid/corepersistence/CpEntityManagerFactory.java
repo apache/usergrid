@@ -241,10 +241,10 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         getSetup().setupApplicationKeyspace( applicationId, appName );
 
 
-        final Optional<UUID> cachedValue = orgApplicationCache.getOrganizationId( name );
+        final Optional<UUID> cachedValue = orgApplicationCache.getOrganizationId( organizationName );
 
 
-        final UUID orgUuid;
+        UUID orgUuid;
 
         if ( !cachedValue.isPresent() ) {
 
@@ -252,22 +252,22 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             // create new org because the specified one does not exist
             final String orgName = organizationName;
 
-            final Entity orgInfo;
+
 
             try {
-                orgInfo = em.create( "organization", new HashMap<String, Object>() {{
+                final Entity orgInfo = em.create( "organization", new HashMap<String, Object>() {{
                     put( PROPERTY_NAME, orgName );
                 }} );
+                orgUuid = orgInfo.getUuid();
+                //evit so it's re-loaded later
+                orgApplicationCache.evictOrgId( name );
             }
             catch ( DuplicateUniquePropertyExistsException e ) {
-                throw new OrganizationAlreadyExistsException( orgName );
+                //swallow, if it exists, just get it
+                orgApplicationCache.evictOrgId( organizationName );
+                orgUuid = orgApplicationCache.getOrganizationId( organizationName ).get();
             }
 
-            em.refreshIndex();
-            orgUuid = orgInfo.getUuid();
-
-            //evit so it's re-loaded later
-            orgApplicationCache.evictOrgId( name );
         } else{
             orgUuid = cachedValue.get();
         }
@@ -281,11 +281,12 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             put( "organizationUuid", orgId );
         }};
 
-        try{
-             em.create( "appinfo", appInfoMap );
-        }catch(DuplicateUniquePropertyExistsException e){
-                       throw new ApplicationAlreadyExistsException( appName );
-                   }
+        try {
+            em.create( "appinfo", appInfoMap );
+        }
+        catch ( DuplicateUniquePropertyExistsException e ) {
+            throw new ApplicationAlreadyExistsException( appName );
+        }
         em.refreshIndex();
 
         // create application entity
