@@ -44,17 +44,17 @@ namespace Usergrid.Notifications
         {
             this.InitializeComponent();
             //TODO: change me to your server
-            serverUrl = "https://usergrid-push.example.com";
+            serverUrl = "http://10.0.1.20:8080/";
             //TODO: change me to your org
-            org = "ugvalidate";
+            org = "test-organization";
             //TODO: change me to your app
-            app = "sandbox";
+            app = "test-app";
             //TODO: change me to your notifier name
-            notifier = "winphone";
+            notifier = "windows";
             //TODO: change me to your user
             user = "mobileuser";
             //TODO: change me to your password
-            password = "******";
+            password = "P@ssw0rd1";
             this.NavigationCacheMode = NavigationCacheMode.Required;
             usergrid = new Client.Usergrid(serverUrl, org, app, user, password, notifier);
 
@@ -120,5 +120,20 @@ namespace Usergrid.Notifications
         }
 
         public AggregateException LastException { get; set; }
+
+        private async void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+            Result.Text = "Sending....";
+
+            var message = this.pushText.Text;
+            if (await usergrid.Push.SendRaw(message))
+            {
+                Result.Text = "It did! :)";
+            }
+            else
+            {
+                Result.Text = "It did not! :(";
+            }
+        }
     }
 }

@@ -33,6 +33,7 @@
         <Button x:Name="SendToast"  Content="Toast" HorizontalAlignment="Left" Margin="114,88,0,0" VerticalAlignment="Top" Click="Button_Click" Width="39"/>
         <Button x:Name="Badge" Content="Badge" HorizontalAlignment="Left" Margin="114,157,0,0" VerticalAlignment="Top" Click="Badge_Click"/>
         <TextBlock x:Name="Result" HorizontalAlignment="Left" Margin="46,295,0,0" TextWrapping="Wrap" Text="Did it work? " VerticalAlignment="Top" Height="49" Width="261" FontSize="25" SelectionChanged="Result_SelectionChanged"/>
+        <Button Content="Raw" HorizontalAlignment="Left" Margin="114,223,0,0" VerticalAlignment="Top" Click="Button_Click_1"/>
 
     </Grid>
 </Page>
