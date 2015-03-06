@@ -24,7 +24,6 @@
 package org.apache.usergrid.persistence.core.migration.data;
 
 
-
 /**
  * A simple interface to return migration plugins.  All versions within this migration plugin should have a name
  */
@@ -48,4 +47,10 @@ public interface MigrationPlugin {
      * @return
      */
     int getMaxVersion();
+
+    /**
+     * Get the phase of the plugin
+     * @return
+     */
+    PluginPhase getPhase();
 }

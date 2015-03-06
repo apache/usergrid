@@ -26,6 +26,8 @@ import org.apache.usergrid.persistence.collection.serialization.impl.migration.E
 import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerialization;
 import org.apache.usergrid.persistence.core.migration.data.DataMigration;
 import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
+import org.apache.usergrid.persistence.core.migration.data.MigrationPlugin;
+import org.apache.usergrid.persistence.core.migration.data.PluginPhase;
 import org.apache.usergrid.persistence.core.migration.data.ProgressObserver;
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeMetadataSerializationV2Impl;
 import org.apache.usergrid.persistence.graph.serialization.impl.migration.GraphMigrationPlugin;
@@ -37,9 +39,11 @@ import com.google.inject.Inject;
  * Migration to set our module versions now that we've refactor for sub modules Keeps the EntityIdScope because it won't
  * subscribe to the data provider.
  */
-public class MigrationModuleVersion implements DataMigration<EntityIdScope> {
+public class MigrationModuleVersionPlugin implements MigrationPlugin{
 
+    public static final String NAME = "migration-system";
 
+    private static final int INITIAL = 0;
     /**
      * The migration from 0 -> 1 that re-writes all the entity id's into the map module
      */
@@ -55,6 +59,10 @@ public class MigrationModuleVersion implements DataMigration<EntityIdScope> {
      */
     private static final int ENTITY_V2_MIGRATION = 3;
 
+
+    /**
+     * Get versions directly from impls so we know they're accurate
+     */
     private final MigrationInfoSerialization migrationInfoSerialization;
 
     private final MvccEntitySerializationStrategyV2Impl serializationStrategyV2;
@@ -63,50 +71,66 @@ public class MigrationModuleVersion implements DataMigration<EntityIdScope> {
 
 
     @Inject
-    public MigrationModuleVersion( final MigrationInfoSerialization migrationInfoSerialization,
-                                   final MvccEntitySerializationStrategyV2Impl serializationStrategyV2,
-                                   final EdgeMetadataSerializationV2Impl edgeMetadataSerializationV2 ) {
+    public MigrationModuleVersionPlugin( final MigrationInfoSerialization migrationInfoSerialization,
+                                         final MvccEntitySerializationStrategyV2Impl serializationStrategyV2,
+                                         final EdgeMetadataSerializationV2Impl edgeMetadataSerializationV2 ) {
         this.migrationInfoSerialization = migrationInfoSerialization;
         this.serializationStrategyV2 = serializationStrategyV2;
         this.edgeMetadataSerializationV2 = edgeMetadataSerializationV2;
     }
 
-
     @Override
-    public int migrate( final int currentVersion, final MigrationDataProvider<EntityIdScope> migrationDataProvider,
-                        final ProgressObserver observer ) {
+      public void run( final ProgressObserver observer ) {
+
+
+        observer.start();
 
         //we ignore our current version, since it will always be 0
         final int legacyVersion = migrationInfoSerialization.getSystemVersion();
 
+
+
         //now we store versions for each of our modules
 
         switch ( legacyVersion ) {
-            case ID_MIGRATION:
-                //no op, we need to migration everything in all modules
-                break;
             //we need to set the version of the entity data, and our edge shard migration.  The fall through (no break) is deliberate
+            //if it's initial, set both
+            case INITIAL:
+               //if it's entity v2, set all, it's current
             case ENTITY_V2_MIGRATION:
                migrationInfoSerialization.setVersion( CollectionMigrationPlugin.PLUGIN_NAME, serializationStrategyV2.getImplementationVersion() );
+                //if it's edge shard, we need to run the v2 migration
             case EDGE_SHARD_MIGRATION:
                 //set our shard migration to the migrated version
                 migrationInfoSerialization.setVersion( GraphMigrationPlugin.PLUGIN_NAME, edgeMetadataSerializationV2.getImplementationVersion() );
-                break;
+            case ID_MIGRATION:
+                migrationInfoSerialization.setVersion( CoreMigrationPlugin.PLUGIN_NAME, CoreDataVersions.ID_MAP_FIX.getVersion() );
         }
 
-        return CoreDataVersions.MIGRATION_VERSION_FIX.getVersion();
-    }
+        //save the version
+        migrationInfoSerialization.setVersion( NAME, getMaxVersion() );
+
+        observer.stop();
+      }
+
 
 
     @Override
-    public boolean supports( final int currentVersion ) {
-        //we move from the migration version fix to the current version
-        return CoreDataVersions.INITIAL.getVersion() == currentVersion;
+    public String getName() {
+        return NAME;
     }
+
+
 
 
     @Override
     public int getMaxVersion() {
-        return CoreDataVersions.MIGRATION_VERSION_FIX.getVersion();
+        return MigrationSystemVersions.LEGACY_ID_MAPPED.getVersion();
+    }
+
+
+    @Override
+    public PluginPhase getPhase() {
+        return PluginPhase.BOOTSTRAP;
     }
 }

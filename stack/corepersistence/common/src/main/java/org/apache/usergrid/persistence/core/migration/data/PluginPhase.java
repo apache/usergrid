@@ -17,27 +17,26 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.migration;
+package org.apache.usergrid.persistence.core.migration.data;
 
 
 /**
- * Versions of data as they exist across our system
+ * This is the plugin lifeccyle where plugins should be executed.  Plugins are executed in the following order
+ *
+ *
  */
-public enum CoreDataVersions {
-     //even though this didn't really come first in time, we need to run this first in order to bring our system
-    //up to date so that our new migration module can proceed.
+public enum PluginPhase {
 
-    INITIAL(0),
-    ID_MAP_FIX(1);
+    /**
+     * Runs before any data migration.  This is used to prepare our migration subsystem.
+     * For instance, a change in the migration system itself.  Most plugins won't need to use this
+     */
+    BOOTSTRAP,
 
-
-    private final int version;
-
-
-    private CoreDataVersions( final int version ) {this.version = version;}
-
-
-    public int getVersion() {
-        return version;
-    }
+    /**
+     * This is where data migration actually happens.  Plugins should be able to run concurrently.
+     * If a plugin has a race condition with another plugin, they should be refactored into a single plugin,
+     * with migration versions encapsulated within the plugin itself
+     */
+    MIGRATE
 }

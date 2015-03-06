@@ -24,7 +24,7 @@ import org.apache.usergrid.corepersistence.events.EntityVersionDeletedHandler;
 import org.apache.usergrid.corepersistence.migration.CoreMigration;
 import org.apache.usergrid.corepersistence.migration.CoreMigrationPlugin;
 import org.apache.usergrid.corepersistence.migration.EntityTypeMappingMigration;
-import org.apache.usergrid.corepersistence.migration.MigrationModuleVersion;
+import org.apache.usergrid.corepersistence.migration.MigrationModuleVersionPlugin;
 import org.apache.usergrid.corepersistence.rx.impl.AllEntitiesInSystemImpl;
 import org.apache.usergrid.corepersistence.rx.impl.AllNodesInGraphImpl;
 import org.apache.usergrid.corepersistence.rx.impl.AllApplicationsObservableImpl;
@@ -34,7 +34,6 @@ import org.apache.usergrid.persistence.collection.event.EntityVersionCreated;
 import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
 import org.apache.usergrid.persistence.collection.guice.CollectionModule;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
-import org.apache.usergrid.persistence.collection.serialization.impl.migration.MvccEntityDataMigrationImpl;
 import org.apache.usergrid.persistence.core.guice.CommonModule;
 import org.apache.usergrid.persistence.core.migration.data.DataMigration;
 import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
@@ -128,13 +127,14 @@ public class CoreModule  extends AbstractModule {
 
 
         dataMigrationMultibinder.addBinding().to( EntityTypeMappingMigration.class );
-        dataMigrationMultibinder.addBinding().to( MigrationModuleVersion.class );
 
 
         //wire up the collection migration plugin
-        Multibinder.newSetBinder( binder(), MigrationPlugin.class ).addBinding().to( CoreMigrationPlugin.class );
+        final Multibinder<MigrationPlugin> plugins = Multibinder.newSetBinder( binder(), MigrationPlugin.class );
+        plugins.addBinding().to( CoreMigrationPlugin.class );
+        plugins.addBinding().to(MigrationModuleVersionPlugin.class );
 
-        bind(AllApplicationsObservable.class).to(AllApplicationsObservableImpl.class);
+        bind( AllApplicationsObservable.class).to(AllApplicationsObservableImpl.class);
 
 
 

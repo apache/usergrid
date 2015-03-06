@@ -99,7 +99,7 @@ public class EntityTypeMappingMigration implements DataMigration<EntityIdScope> 
     @Override
     public boolean supports( final int currentVersion ) {
         //we move from the migration version fix to the current version
-        return CoreDataVersions.MIGRATION_VERSION_FIX.getVersion() == currentVersion;
+        return CoreDataVersions.INITIAL.getVersion() == currentVersion;
     }
 
 

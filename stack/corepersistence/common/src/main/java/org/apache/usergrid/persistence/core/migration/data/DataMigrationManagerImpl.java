@@ -21,7 +21,11 @@ package org.apache.usergrid.persistence.core.migration.data;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -40,7 +44,9 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
 
     private static final Logger LOG = LoggerFactory.getLogger( DataMigrationManagerImpl.class );
 
-    private final Map<String, MigrationPlugin> migrationPlugins = new HashMap<>();
+    private final Map<String, MigrationPlugin> migrationPlugins;
+
+    private final List<MigrationPlugin> executionOrder;
 
     private final MigrationInfoSerialization migrationInfoSerialization;
 
@@ -50,10 +56,15 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
     public DataMigrationManagerImpl( final Set<MigrationPlugin> plugins,
                                      final MigrationInfoSerialization migrationInfoSerialization ) {
 
+
         Preconditions.checkNotNull( plugins, "plugins must not be null" );
         Preconditions.checkNotNull( migrationInfoSerialization, "migrationInfoSerialization must not be null" );
 
         this.migrationInfoSerialization = migrationInfoSerialization;
+
+
+        this.executionOrder = new ArrayList<>(plugins.size());
+        this.migrationPlugins = new HashMap<>();
 
 
         for ( MigrationPlugin plugin : plugins ) {
@@ -68,8 +79,16 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
                         .getClass().getName() + "' is also trying to implement this name." );
             }
 
-            migrationPlugins.put( name, plugin );
+            this.migrationPlugins.put( name, plugin );
+            this.executionOrder.add( plugin );
+
         }
+
+        //now sort based on execution order
+
+        Collections.sort(executionOrder, MigrationPluginComparator.INSTANCE);
+
+
     }
 
 
@@ -79,12 +98,10 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
         /**
          * Invoke each plugin to attempt a migration
          */
-        for(final MigrationPlugin plugin: migrationPlugins.values()){
+        for(final MigrationPlugin plugin: executionOrder){
             final ProgressObserver observer = new CassandraProgressObserver(plugin.getName());
 
             plugin.run( observer );
-
-
         }
 
 
@@ -234,6 +251,28 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
          */
         public boolean isFailed() {
             return failed;
+        }
+    }
+
+    private final static class MigrationPluginComparator implements Comparator<MigrationPlugin> {
+
+        public static  final MigrationPluginComparator INSTANCE = new MigrationPluginComparator();
+
+        @Override
+        public int compare( final MigrationPlugin o1, final MigrationPlugin o2 ) {
+
+            //first one is less
+            if(o1.getPhase().ordinal() < o2.getPhase().ordinal()){
+                return -1;
+            }
+
+            //second one is first
+            if(o2.getPhase().ordinal() < o2.getPhase().ordinal()){
+                return 1;
+            }
+
+            //if our phase for
+            return o1.getName().compareTo( o2.getName() );
         }
     }
 }

@@ -30,6 +30,7 @@ import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerializ
 import org.apache.usergrid.persistence.core.migration.data.AbstractMigrationPlugin;
 import org.apache.usergrid.persistence.core.migration.data.DataMigration;
 import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
+import org.apache.usergrid.persistence.core.migration.data.PluginPhase;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -60,4 +61,8 @@ public class CollectionMigrationPlugin extends AbstractMigrationPlugin<EntityIdS
     }
 
 
+    @Override
+    public PluginPhase getPhase() {
+        return PluginPhase.MIGRATE;
+    }
 }
