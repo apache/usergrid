@@ -190,6 +190,10 @@ public class CpRelationManager implements RelationManager {
     private ResultsLoaderFactory resultsLoaderFactory;
 
     private MetricsFactory metricsFactory;
+    private Timer updateCollectionTimer;
+    private Timer createConnectionTimer;
+    private Timer cassConnectionDelete;
+    private Timer esDeleteConnectionTimer;
 
     public CpRelationManager() {}
 
@@ -221,7 +225,13 @@ public class CpRelationManager implements RelationManager {
         this.cass = em.getCass(); // TODO: eliminate need for this via Core Persistence
         this.indexBucketLocator = indexBucketLocator; // TODO: this also
         this.metricsFactory = metricsFactory;
-
+        this.updateCollectionTimer = metricsFactory
+            .getTimer( CpRelationManager.class, "relation.manager.es.update.collection" );
+        this.createConnectionTimer = metricsFactory
+            .getTimer( CpRelationManager.class, "relation.manager.es.create.connection.timer" );
+        this.cassConnectionDelete = metricsFactory
+            .getTimer( CpRelationManager.class, "relation.manager.cassandra.delete.connection.batch.timer" );
+        this.esDeleteConnectionTimer = metricsFactory.getTimer(CpRelationManager.class, "relation.manager.es.delete.connection.batch.timer" );
         // load the Core Persistence version of the head entity as well
         this.headEntityScope = getCollectionScopeNameFromEntityType(
                 applicationScope.getApplication(), headEntity.getType());
@@ -445,8 +455,7 @@ public class CpRelationManager implements RelationManager {
                 } ).count().toBlocking().lastOrDefault( 0 );
 
         //Adding graphite metrics
-        Timer.Context timeElasticIndexBatch = metricsFactory
-            .getTimer( CpRelationManager.class, "relation.manager.es.update.collection" ).time();
+        Timer.Context timeElasticIndexBatch = updateCollectionTimer.time();
         entityIndexBatch.execute();
         timeElasticIndexBatch.stop();
 
@@ -1072,8 +1081,7 @@ public class CpRelationManager implements RelationManager {
         Mutator<ByteBuffer> m = createMutator( ko, be );
         batchUpdateEntityConnection( m, false, connection, UUIDGenerator.newTimeUUID() );
         //Added Graphite Metrics
-        Timer.Context timeElasticIndexBatch = metricsFactory
-            .getTimer( CpRelationManager.class, "relation.manager.es.create.connection.timer" ).time();
+        Timer.Context timeElasticIndexBatch = createConnectionTimer.time();
         batchExecute( m, CassandraService.RETRY_COUNT );
         timeElasticIndexBatch.stop();
 
@@ -1249,8 +1257,7 @@ public class CpRelationManager implements RelationManager {
                 m, true, ( ConnectionRefImpl ) connectionRef, UUIDGenerator.newTimeUUID() );
 
         //Added Graphite Metrics
-        Timer.Context timeDeleteConnections = metricsFactory
-            .getTimer( CpRelationManager.class, "relation.manager.cassandra.delete.connection.batch.timer" ).time();
+        Timer.Context timeDeleteConnections = cassConnectionDelete.time();
         batchExecute( m, CassandraService.RETRY_COUNT );
         timeDeleteConnections.stop();
 
@@ -1308,7 +1315,7 @@ public class CpRelationManager implements RelationManager {
 //        batch.deindex( allTypesIndexScope, targetEntity );
 
         //Added Graphite Metrics
-        Timer.Context timeDeleteConnection = metricsFactory.getTimer( CpRelationManager.class, "relation.manager.es.delete.connection.batch.timer" ).time();
+        Timer.Context timeDeleteConnection = esDeleteConnectionTimer.time();
         batch.execute();
         timeDeleteConnection.stop();
 
