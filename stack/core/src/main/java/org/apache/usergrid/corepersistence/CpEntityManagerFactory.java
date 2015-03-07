@@ -19,6 +19,7 @@ import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.yammer.metrics.annotation.Metered;
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
@@ -45,6 +46,7 @@ import org.apache.usergrid.persistence.cassandra.Setup;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
@@ -108,7 +110,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private CassandraService cassandraService;
     private CounterUtils counterUtils;
     private Injector injector;
-
+    private final MetricsFactory metricsFactory;
 
     public CpEntityManagerFactory(
             final CassandraService cassandraService, final CounterUtils counterUtils, final Injector injector) {
@@ -118,6 +120,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.injector = injector;
         this.managerCache = injector.getInstance( ManagerCache.class );
         this.dataMigrationManager = injector.getInstance( DataMigrationManager.class );
+        this.metricsFactory = injector.getInstance( MetricsFactory.class );
 
         this.orgApplicationCache = new OrgApplicationCacheImpl( this );
     }
@@ -185,6 +188,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         return em;
     }
 
+    public MetricsFactory getMetricsFactory(){
+        return metricsFactory;
+    }
 
     @Override
     public UUID createApplication(String organizationName, String name) throws Exception {
