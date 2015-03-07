@@ -22,6 +22,7 @@ package org.apache.usergrid.services.notifications.wns;
 
 import ar.com.fernandospr.wns.WnsService;
 import ar.com.fernandospr.wns.model.WnsBadge;
+import ar.com.fernandospr.wns.model.WnsRaw;
 import ar.com.fernandospr.wns.model.WnsToast;
 import ar.com.fernandospr.wns.model.builders.WnsBadgeBuilder;
 import ar.com.fernandospr.wns.model.builders.WnsToastBuilder;
@@ -36,6 +37,7 @@ import org.apache.usergrid.services.notifications.TaskTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -87,6 +89,11 @@ public class WNSAdapter implements ProviderAdapter {
                         }
                         service.pushBadge(providerId, badge);
                         break;
+                    case "raw" :
+                        WnsRaw raw = new WnsRaw();
+                        raw.stream = toBytes( translatedNotification.getMessage() ) ;
+                        service.pushRaw(providerId, raw);
+                        break;
                     default : throw new IllegalArgumentException(translatedNotification.getType()+" does not match a valid notification type (toast,badge).");
                 }
             }
@@ -97,6 +104,35 @@ public class WNSAdapter implements ProviderAdapter {
         }
     }
 
+    private byte[] toBytes(Object message) {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ObjectOutput out = null;
+        try {
+            if(message instanceof Serializable) {
+                out = new ObjectOutputStream(bos);
+                out.writeObject(message);
+                byte[] yourBytes = bos.toByteArray();
+                return yourBytes;
+            }else{
+                throw new RuntimeException("message is not serializable");
+            }
+        }catch (IOException e){
+            throw new RuntimeException(e);
+        } finally {
+            try {
+                if (out != null) {
+                    out.close();
+                }
+            } catch (IOException ex) {
+                // ignore close exception
+            }
+            try {
+                bos.close();
+            } catch (IOException ex) {
+                // ignore close exception
+            }
+        }
+    }
     @Override
     public void doneSendingNotifications() throws Exception {
 
@@ -119,6 +155,9 @@ public class WNSAdapter implements ProviderAdapter {
             }
             if (map.containsKey("badge")) {
                 translatedNotifications.add(new TranslatedNotification(map.get("badge"), "badge"));
+            }
+            if (map.containsKey("raw")) {
+                translatedNotifications.add(new TranslatedNotification(map.get("raw"), "raw"));
             }
 
         } else {

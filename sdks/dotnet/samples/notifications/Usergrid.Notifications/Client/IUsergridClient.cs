@@ -108,7 +108,7 @@ namespace Usergrid.Notifications.Client
         /// <param name="message"></param>
         /// <returns></returns>
         Task<bool> SendToast(string message);
-        
+        Task<bool> SendRaw(string message);
         /// <summary>
         /// Send a badge update
         /// </summary>

@@ -65,6 +65,7 @@ import org.elasticsearch.index.query.*;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.elasticsearch.indices.IndexMissingException;
 import org.elasticsearch.indices.InvalidAliasNameException;
+import org.elasticsearch.rest.action.admin.indices.alias.delete.AliasesMissingException;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.sort.FieldSortBuilder;
@@ -241,12 +242,25 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
             String[] indexNames = getIndexes(AliasType.Write);
 
             for (String currentIndex : indexNames){
+
+                final Timer.Context timeRemoveAlias = removeAliasTimer.time();
+                try {
                 //Added For Graphite Metrics
-                Timer.Context timeRemoveAlias = removeAliasTimer.time();
+
                 isAck = adminClient.indices().prepareAliases().removeAlias(currentIndex,
                         alias.getWriteAlias()).execute().actionGet().isAcknowledged();
-                timeRemoveAlias.stop();
+
                 logger.info("Removed Index Name [{}] from Alias=[{}] ACK=[{}]", currentIndex, alias, isAck);
+                } catch (AliasesMissingException aie) {
+                                   logger.info("Alias does not exist Index Name [{}] from Alias=[{}] ACK=[{}]", currentIndex, alias, aie.getMessage());
+                                   continue;
+                               }catch(InvalidAliasNameException iane) {
+                                   logger.info("Alias does not exist Index Name [{}] from Alias=[{}] ACK=[{}]", currentIndex, alias, iane.getMessage());
+                                   continue;
+                               }finally{
+                    timeRemoveAlias.stop();
+
+                }
             }
 
             //Added For Graphite Metrics
@@ -274,7 +288,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
     @Override
     public String[] getIndexes(final AliasType aliasType) {
-        return aliasCache.getIndexes(alias,aliasType);
+        return aliasCache.getIndexes(alias, aliasType);
     }
 
 
@@ -326,7 +340,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     private void createMappings() throws IOException {
 
         XContentBuilder xcb = IndexingUtils.createDoubleStringIndexMapping(
-                XContentFactory.jsonBuilder(), "_default_");
+            XContentFactory.jsonBuilder(), "_default_");
 
         //Added For Graphite Metrics
         Timer.Context timePutIndex = mappingTimer.time();
@@ -357,7 +371,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
         final String context = IndexingUtils.createContextName(indexScope);
         final String[] entityTypes = searchTypes.getTypeNames();
 
-        QueryBuilder qb = query.createQueryBuilder( context );
+        QueryBuilder qb = query.createQueryBuilder(context);
 
 
         SearchResponse searchResponse;
@@ -474,7 +488,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
         final SearchHit[] hits = searchHits.getHits();
         final int length = hits.length;
 
-        logger.debug( "   Hit count: {} Total hits: {}", length, searchHits.getTotalHits() );
+        logger.debug("   Hit count: {} Total hits: {}", length, searchHits.getTotalHits());
 
         List<CandidateResult> candidates = new ArrayList<>( length );
 
@@ -555,7 +569,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
         //since we don't have paging inputs, there's no point in executing a query for paging.
 
         final String context = IndexingUtils.createContextName(scope);
-        final SearchTypes searchTypes = SearchTypes.fromTypes( id.getType() );
+        final SearchTypes searchTypes = SearchTypes.fromTypes(id.getType());
 
         final QueryBuilder queryBuilder =
                 QueryBuilders.termQuery( IndexingUtils.ENTITY_CONTEXT_FIELDNAME, context );
@@ -590,7 +604,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
         String idString = IndexingUtils.idString(entityId).toLowerCase();
 
-        final TermQueryBuilder tqb = QueryBuilders.termQuery( ENTITYID_ID_FIELDNAME, idString );
+        final TermQueryBuilder tqb = QueryBuilders.termQuery(ENTITYID_ID_FIELDNAME, idString);
 
         //Added For Graphite Metrics
         final Timer.Context timeDeleteAllVersions =allVersionsTimer.time();
@@ -606,7 +620,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
                     .debug("Deleted entity {}:{} from all index scopes with response status = {}", entityId.getType(),
                         entityId.getUuid(), response.status().toString() );
 
-                checkDeleteByQueryResponse( tqb, response );
+                checkDeleteByQueryResponse(tqb, response);
             }
 
 

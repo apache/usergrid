@@ -89,10 +89,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     /** Have we already initialized the index for the management app? */
     private AtomicBoolean indexInitialized = new AtomicBoolean(  );
 
-    /** Keep track of applications that already have indexes to avoid redundant re-creation. */
-    private static final Set<UUID> applicationIndexesCreated = new HashSet<UUID>();
-
-
     // cache of already instantiated entity managers
     private LoadingCache<UUID, EntityManager> entityManagers
         = CacheBuilder.newBuilder().maximumSize(100).build(new CacheLoader<UUID, EntityManager>() {
@@ -178,12 +174,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         EntityManager em = new CpEntityManager();
         em.init( this, applicationId );
-
-        // only need to do this once
-        if ( !applicationIndexesCreated.contains( applicationId ) ) {
-            em.createIndex();
-            applicationIndexesCreated.add( applicationId );
-        }
 
         return em;
     }
@@ -303,6 +293,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         EntityManager appEm = getEntityManager( applicationId );
 
         appEm.create( applicationId, TYPE_APPLICATION, properties );
+        appEm.createIndex();
         appEm.resetRoles();
         appEm.refreshIndex();
 
