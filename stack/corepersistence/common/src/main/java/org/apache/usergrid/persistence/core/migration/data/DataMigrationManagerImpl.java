@@ -142,7 +142,7 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
         final int highestAllowed = plugin.getMaxVersion();
 
         Preconditions.checkArgument( version <= highestAllowed,
-                "You cannot set a version higher than the max of " + highestAllowed );
+                "You cannot set a version higher than the max of " + highestAllowed + " for plugin " + pluginName );
         Preconditions.checkArgument( version >= 0, "You must specify a version of 0 or greater" );
 
         migrationInfoSerialization.setVersion( pluginName, version );

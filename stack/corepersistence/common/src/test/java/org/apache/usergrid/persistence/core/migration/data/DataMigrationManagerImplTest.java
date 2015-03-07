@@ -32,6 +32,7 @@ import org.apache.usergrid.persistence.core.migration.schema.MigrationException;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
@@ -188,10 +189,122 @@ public class DataMigrationManagerImplTest {
         migrationManager.migrate();
 
 
-
         //we want to verify the bootsrap plugin was called first
         InOrder inOrderVerification = inOrder( plugin1, plugin2 );
         inOrderVerification.verify( plugin2 ).run( any( ProgressObserver.class ) );
         inOrderVerification.verify( plugin1 ).run( any( ProgressObserver.class ) );
+    }
+
+
+    /**
+     * Happy path of version reset
+     */
+    @Test
+    public void testResetToVersion() {
+
+        final String name = "plugin1";
+        final int version = 10;
+
+        //linked hash set is intentional here.  For iteration order we can boostrap to come second so we can
+        //verify it was actually run first
+        final Set<MigrationPlugin> plugins = new LinkedHashSet<>();
+
+        MigrationPlugin plugin1 = mock( MigrationPlugin.class );
+        when( plugin1.getPhase() ).thenReturn( PluginPhase.MIGRATE );
+
+
+        when( plugin1.getName() ).thenReturn( name );
+        when( plugin1.getMaxVersion() ).thenReturn( version );
+
+        plugins.add( plugin1 );
+
+
+        final MigrationInfoSerialization migrationInfoSerialization = mock( MigrationInfoSerialization.class );
+
+
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization );
+
+        migrationManager.resetToVersion( name, 0 );
+
+        verify( migrationInfoSerialization ).setVersion( name, 0 );
+
+
+        migrationManager.resetToVersion( name, version );
+
+        verify( migrationInfoSerialization ).setVersion( name, version );
+    }
+
+
+    /**
+     * Reset of version that is too high or too low
+     */
+    @Test( expected = IllegalArgumentException.class )
+    public void testResetToInvalidVersions() {
+        final String name = "plugin1";
+        final int version = 10;
+
+        //linked hash set is intentional here.  For iteration order we can boostrap to come second so we can
+        //verify it was actually run first
+        final Set<MigrationPlugin> plugins = new LinkedHashSet<>();
+
+        MigrationPlugin plugin1 = mock( MigrationPlugin.class );
+        when( plugin1.getPhase() ).thenReturn( PluginPhase.MIGRATE );
+
+
+        when( plugin1.getName() ).thenReturn( name );
+        when( plugin1.getMaxVersion() ).thenReturn( version );
+
+        plugins.add( plugin1 );
+
+
+        final MigrationInfoSerialization migrationInfoSerialization = mock( MigrationInfoSerialization.class );
+
+
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization );
+
+        migrationManager.resetToVersion( name, version + 1 );
+    }
+
+
+    /**
+     * Reset with no plugin name
+     */
+    @Test( expected = IllegalArgumentException.class )
+    public void testResetInvalidName() {
+        final String name = "plugin1";
+        final int version = 10;
+
+        //linked hash set is intentional here.  For iteration order we can boostrap to come second so we can
+        //verify it was actually run first
+        final Set<MigrationPlugin> plugins = new LinkedHashSet<>();
+
+        MigrationPlugin plugin1 = mock( MigrationPlugin.class );
+        when( plugin1.getPhase() ).thenReturn( PluginPhase.MIGRATE );
+
+
+        when( plugin1.getName() ).thenReturn( name );
+        when( plugin1.getMaxVersion() ).thenReturn( version );
+
+        plugins.add( plugin1 );
+
+
+        final MigrationInfoSerialization migrationInfoSerialization = mock( MigrationInfoSerialization.class );
+
+
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization );
+
+        migrationManager.resetToVersion( name + "foo", version );
+    }
+
+
+    @Test
+    public void testLastStatus() {
+        fail( "writeme" );
+    }
+
+
+    @Test
+    public void testLastStatusNoPlugin() {
+        fail( "writeme" );
     }
 }
