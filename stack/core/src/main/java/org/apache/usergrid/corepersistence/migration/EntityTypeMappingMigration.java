@@ -63,7 +63,7 @@ public class EntityTypeMappingMigration implements DataMigration<EntityIdScope> 
         final AtomicLong atomicLong = new AtomicLong();
 
 
-        return allEntitiesInSystemObservable.getData()
+        allEntitiesInSystemObservable.getData()
                                             //process the entities in parallel
          .parallel( new Func1<Observable<EntityIdScope>, Observable<EntityIdScope>>() {
 
@@ -93,6 +93,11 @@ public class EntityTypeMappingMigration implements DataMigration<EntityIdScope> 
                      } );
                  }
              } ).count().toBlocking().last();
+
+
+        return getMaxVersion();
+
+
     }
 
 

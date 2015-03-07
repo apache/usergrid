@@ -20,140 +20,108 @@
 package org.apache.usergrid.corepersistence.migration;
 
 
-import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.corepersistence.ManagerCache;
-import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
+import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
+import org.apache.usergrid.persistence.core.migration.data.TestMigrationDataProvider;
+import org.apache.usergrid.persistence.core.migration.data.TestProgressObserver;
+import org.apache.usergrid.persistence.map.MapManager;
+import org.apache.usergrid.persistence.map.MapScope;
+import org.apache.usergrid.persistence.map.impl.MapScopeImpl;
+import org.apache.usergrid.persistence.model.entity.Id;
 
-import com.google.inject.Injector;
-import com.netflix.astyanax.Keyspace;
+import rx.Observable;
 
-import net.jcip.annotations.NotThreadSafe;
-
-
-@NotThreadSafe
-public class EntityTypeMappingMigrationIT extends AbstractCoreIT {
-
-
-    private Injector injector;
-
-
-    private EntityTypeMappingMigration entityTypeMappingMigration;
-    private Keyspace keyspace;
-    private EntityManagerFactory emf;
-    private ManagerCache managerCache;
-    private DataMigrationManager dataMigrationManager;
+import static org.apache.usergrid.persistence.core.util.IdGenerator.createId;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 
-//    /**
-//     * Rule to do the resets we need
-//     */
-//    @Rule
-//    public MigrationTestRule migrationTestRule = new MigrationTestRule(
-//            app,  SpringResource.getInstance().getBean( Injector.class ) ,EntityTypeMappingMigration.class  );
-//    private AllEntitiesInSystemObservable allEntitiesInSystemObservable;
-
-
-    //TODO USERGRID-405
-    @Before
-    public void setup() {
-//        injector =  SpringResource.getInstance().getBean( Injector.class );
-//        emf = setup.getEmf();
-//        entityTypeMappingMigration = injector.getInstance( EntityTypeMappingMigration.class );
-//        keyspace = injector.getInstance( Keyspace.class );
-//        managerCache = injector.getInstance( ManagerCache.class );
-//        dataMigrationManager = injector.getInstance( DataMigrationManager.class );
-//        allEntitiesInSystemObservable = injector.getInstance(AllEntitiesInSystemObservable.class);
-    }
+/**
+ * Test for our entity type mapping
+ */
+public class EntityTypeMappingMigrationIT  {
 
 
     @Test
-    @Ignore("Ignored awaiting fix for USERGRID-268")
     public void testIdMapping() throws Throwable {
 
-//        assertEquals( "version 1 expected", 1, entityTypeMappingMigration.getVersion() );
-//        assertEquals( "Previous version expected", 0, dataMigrationManager.getCurrentVersion());
-//
-//        final EntityManager newAppEm = app.getEntityManager();
-//
-//        final String type1 = "type1thing";
-//        final String type2 = "type2thing";
-//        final int size = 10;
-//
-//        final Set<Id> type1Identities = EntityWriteHelper.createTypes( newAppEm, type1, size );
-//        final Set<Id> type2Identities = EntityWriteHelper.createTypes( newAppEm, type2, size );
-//
-//
-//        final Set<Id> allEntities = new HashSet<>();
-//        allEntities.addAll( type1Identities );
-//        allEntities.addAll( type2Identities );
-//
-//
-//        /**
-//         * Drop our map keyspace to ensure we have no entries before migrating after doing our writes.
-//         * This will ensure we have the data
-//         */
-//        keyspace.truncateColumnFamily( MapSerializationImpl.MAP_ENTRIES );
-//        keyspace.truncateColumnFamily( MapSerializationImpl.MAP_KEYS );
-//
-//        app.createApplication(
-//                GraphShardVersionMigrationIT.class.getSimpleName()+ UUIDGenerator.newTimeUUID(),
-//                "migrationTest" );
-//
-//
-//
-//        final TestProgressObserver progressObserver = new TestProgressObserver();
-//
-//        entityTypeMappingMigration.migrate(allEntitiesInSystemObservable.getAllEntitiesInSystem(1000), progressObserver).toBlocking().last();
-//
-//        allEntitiesInSystemObservable.getAllEntitiesInSystem(1000)
-//            .doOnNext(new Action1<ApplicationEntityGroup<CollectionScope>>() {
-//                @Override
-//                public void call(
-//                    final ApplicationEntityGroup<CollectionScope> entity) {
-//                    //ensure that each one has a type
-//
-//                    final EntityManager em = emf.getEntityManager(
-//                        entity.applicationScope.getApplication().getUuid());
-//
-//                    for (final EntityIdScope<CollectionScope> idScope : entity.entityIds) {
-//                        final Id id = idScope.getId();
-//                        try {
-//                            final Entity returned = em.get(id.getUuid());
-//
-//                            //we seem to occasionally get phantom edges.  If this is the
-//                            // case we'll store the type _> uuid mapping, but we won't have
-//                            // anything to load
-//
-//                            if (returned != null) {
-//                                assertEquals(id.getUuid(), returned.getUuid());
-//                                assertEquals(id.getType(), returned.getType());
-//                            } else {
-//                                final String type = managerCache.getMapManager(CpNamingUtils
-//                                    .getEntityTypeMapScope(
-//                                        entity.applicationScope.getApplication()))
-//                                    .getString(id.getUuid()
-//                                        .toString());
-//
-//                                assertEquals(id.getType(), type);
-//                            }
-//                        } catch (Exception e) {
-//                            throw new RuntimeException("Unable to get entity " + id
-//                                + " by UUID, migration failed", e);
-//                                    }
-//
-//                                    allEntities.remove(id);
-//                                }
-//                            }
-//                        }).toBlocking().lastOrDefault(null);
-//
-//
-//                    assertEquals("Every element should have been encountered", 0, allEntities.size());
-//                    assertFalse("Progress observer should not have failed", progressObserver.getFailed());
-//                    assertTrue("Progress observer should have update messages", progressObserver.getUpdates().size() > 0);
-                }
-            }
+        final Id applicationId = createId("application");
+
+        final CollectionScope scope1 = new CollectionScopeImpl( applicationId, applicationId, "things" );
+
+        final Id entityId1 = createId("thing");
+
+        final EntityIdScope idScope1 = new EntityIdScope(scope1, entityId1 );
+
+        final MapScope mapScope1 = new MapScopeImpl(applicationId, CpNamingUtils.TYPES_BY_UUID_MAP );
+
+
+
+        final Id subCollectionOwner = createId("owners");
+
+        final CollectionScope scope2 = new CollectionScopeImpl( applicationId, subCollectionOwner, "foos" );
+
+        final Id entityId2 = createId("foo");
+
+        final EntityIdScope idScope2 = new EntityIdScope( scope2, entityId2 );
+
+        final MapScope mapScope2 = new MapScopeImpl(applicationId, CpNamingUtils.TYPES_BY_UUID_MAP );
+
+
+        final Observable<EntityIdScope> scopes = Observable.from(idScope1, idScope2);
+
+        final TestMigrationDataProvider<EntityIdScope> migrationDataProvider = new TestMigrationDataProvider<>();
+
+        //set our scopes
+        migrationDataProvider.setObservable( scopes );
+
+
+
+
+        //mock up returning our map manager
+        final MapManager mapManager = mock(MapManager.class);
+        final ManagerCache managerCache = mock(ManagerCache.class);
+
+        when(managerCache.getMapManager( eq( mapScope1 ) )).thenReturn( mapManager );
+
+        when(managerCache.getMapManager( eq( mapScope2 ) )).thenReturn( mapManager );
+
+        final TestProgressObserver progressObserver = new TestProgressObserver();
+
+
+        //wire it up
+        final EntityTypeMappingMigration migration = new EntityTypeMappingMigration( managerCache, migrationDataProvider );
+
+        //run it
+
+        final int returnedVersion = migration.migrate(CoreDataVersions.INITIAL.getVersion(), migrationDataProvider, progressObserver );
+
+
+        assertEquals(CoreDataVersions.ID_MAP_FIX.getVersion(), returnedVersion);
+
+        //verify we saved it
+
+        verify(mapManager).putString(entityId1.getUuid().toString(), entityId1.getType()  );
+
+        verify(mapManager).putString(entityId2.getUuid().toString(), entityId2.getType()  );
+
+
+
+
+
+
+
+
+
+
+    }
+}
