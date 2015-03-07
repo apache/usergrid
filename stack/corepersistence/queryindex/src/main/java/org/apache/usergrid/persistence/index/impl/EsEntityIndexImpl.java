@@ -241,25 +241,30 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
             String[] indexNames = getIndexes(AliasType.Write);
 
-            for (String currentIndex : indexNames){
+            for ( String currentIndex : indexNames ) {
 
                 final Timer.Context timeRemoveAlias = removeAliasTimer.time();
+
                 try {
-                //Added For Graphite Metrics
+                    //Added For Graphite Metrics
 
-                isAck = adminClient.indices().prepareAliases().removeAlias(currentIndex,
-                        alias.getWriteAlias()).execute().actionGet().isAcknowledged();
+                    isAck = adminClient.indices().prepareAliases().removeAlias( currentIndex, alias.getWriteAlias() )
+                                       .execute().actionGet().isAcknowledged();
 
-                logger.info("Removed Index Name [{}] from Alias=[{}] ACK=[{}]", currentIndex, alias, isAck);
-                } catch (AliasesMissingException aie) {
-                                   logger.info("Alias does not exist Index Name [{}] from Alias=[{}] ACK=[{}]", currentIndex, alias, aie.getMessage());
-                                   continue;
-                               }catch(InvalidAliasNameException iane) {
-                                   logger.info("Alias does not exist Index Name [{}] from Alias=[{}] ACK=[{}]", currentIndex, alias, iane.getMessage());
-                                   continue;
-                               }finally{
+                    logger.info( "Removed Index Name [{}] from Alias=[{}] ACK=[{}]", currentIndex, alias, isAck );
+                }
+                catch ( AliasesMissingException aie ) {
+                    logger.info( "Alias does not exist Index Name [{}] from Alias=[{}] ACK=[{}]", currentIndex, alias,
+                        aie.getMessage() );
+                    continue;
+                }
+                catch ( InvalidAliasNameException iane ) {
+                    logger.info( "Alias does not exist Index Name [{}] from Alias=[{}] ACK=[{}]", currentIndex, alias,
+                        iane.getMessage() );
+                    continue;
+                }
+                finally {
                     timeRemoveAlias.stop();
-
                 }
             }
 
@@ -617,7 +622,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
             public void onResponse( DeleteByQueryResponse response) {
                 timeDeleteAllVersions.stop();
                 logger
-                    .debug("Deleted entity {}:{} from all index scopes with response status = {}", entityId.getType(),
+                    .debug( "Deleted entity {}:{} from all index scopes with response status = {}", entityId.getType(),
                         entityId.getUuid(), response.status().toString() );
 
                 checkDeleteByQueryResponse(tqb, response);

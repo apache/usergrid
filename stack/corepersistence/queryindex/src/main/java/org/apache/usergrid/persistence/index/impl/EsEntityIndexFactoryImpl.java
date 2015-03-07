@@ -24,6 +24,8 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
@@ -41,21 +43,24 @@ public class EsEntityIndexFactoryImpl implements EntityIndexFactory{
     private final EsProvider provider;
     private final EsIndexCache indexCache;
     private final IndexBufferProducer indexBatchBufferProducer;
+    private final MetricsFactory metricsFactory;
 
     private LoadingCache<ApplicationScope, EntityIndex> eiCache =
         CacheBuilder.newBuilder().maximumSize( 1000 ).build( new CacheLoader<ApplicationScope, EntityIndex>() {
             public EntityIndex load( ApplicationScope scope ) {
-                return new EsEntityIndexImpl(scope,config, indexBatchBufferProducer, provider,indexCache);
+                return new EsEntityIndexImpl(scope,config, indexBatchBufferProducer, provider,indexCache, metricsFactory);
             }
         } );
 
     @Inject
     public EsEntityIndexFactoryImpl( final IndexFig config, final EsProvider provider, final EsIndexCache indexCache,
-                                     final IndexBufferProducer indexBatchBufferProducer ){
+                                     final IndexBufferProducer indexBatchBufferProducer,
+                                     final MetricsFactory metricsFactory ){
         this.config = config;
         this.provider = provider;
         this.indexCache = indexCache;
         this.indexBatchBufferProducer = indexBatchBufferProducer;
+        this.metricsFactory = metricsFactory;
     }
 
     @Override
