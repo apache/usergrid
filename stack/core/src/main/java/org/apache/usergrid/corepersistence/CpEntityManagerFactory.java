@@ -109,7 +109,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private ManagerCache managerCache;
 
 
-    private DataMigrationManager dataMigrationManager;
+
 
     private CassandraService cassandraService;
     private CounterUtils counterUtils;
@@ -123,9 +123,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.counterUtils = counterUtils;
         this.injector = injector;
         this.managerCache = injector.getInstance( ManagerCache.class );
-        this.dataMigrationManager = injector.getInstance( DataMigrationManager.class );
-
-
     }
 
 
@@ -165,8 +162,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         if ( managerCache == null ) {
             managerCache = injector.getInstance( ManagerCache.class );
-
-            dataMigrationManager = injector.getInstance( DataMigrationManager.class );
         }
         return managerCache;
     }
@@ -778,35 +773,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         logger.info("\n\nRebuilt index for applicationId {} \n", appId );
     }
 
-
-    @Override
-    public void migrateData() throws Exception {
-         dataMigrationManager.migrate();
-    }
-
-
-    @Override
-    public String getMigrateDataStatus() {
-    //TODO  USERGRID-405      return dataMigrationManager.getLastStatus();
-        return null;
-    }
-
-
-    @Override
-    public int getMigrateDataVersion() {
-        //TODO USERGRID-405
-        //return dataMigrationManager.getCurrentVersion();
-        return 0;
-    }
-
-
-    @Override
-    public void setMigrationVersion( final int version ) {
-        //TODO USERGRID-405
-//
-//        dataMigrationManager.resetToVersion( version );
-//        dataMigrationManager.invalidate();
-    }
 
 
     @Override
