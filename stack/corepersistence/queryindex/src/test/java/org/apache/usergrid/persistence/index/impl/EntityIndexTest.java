@@ -24,10 +24,7 @@ import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.usergrid.persistence.core.future.BetterFuture;
 import org.apache.usergrid.persistence.index.*;
-import org.apache.usergrid.persistence.index.query.CandidateResult;
-import org.apache.usergrid.persistence.index.utils.IndexValidationUtils;
 import org.apache.usergrid.persistence.model.field.UUIDField;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -289,8 +286,8 @@ public class EntityIndexTest extends BaseIT {
         entityIndex.createBatch().index(indexScope , entity ).execute().get();
         entityIndex.refresh();
 
-        CandidateResults candidateResults = entityIndex.search( indexScope, SearchTypes.fromTypes(entity.getId().getType()),
-                Query.fromQL( "name contains 'Ferrari*'" ) );
+        CandidateResults candidateResults = entityIndex.search( indexScope,
+            SearchTypes.fromTypes( entity.getId().getType() ), Query.fromQL( "name contains 'Ferrari*'" ) );
         assertEquals( 1, candidateResults.size() );
 
         EntityIndexBatch batch = entityIndex.createBatch();
@@ -593,6 +590,98 @@ public class EntityIndexTest extends BaseIT {
         assertNotEquals( "cluster should be fine", Health.RED, ei.getIndexHealth() );
         assertNotEquals( "cluster should be ready now", Health.RED, ei.getClusterHealth() );
     }
+
+
+    @Test
+    public void testCursorFormat() throws Exception {
+
+        Id appId = new SimpleId( "application" );
+        Id ownerId = new SimpleId( "owner" );
+
+        ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
+
+        IndexScope indexScope = new IndexScopeImpl( ownerId, "users" );
+
+
+        EntityIndex entityIndex = eif.createEntityIndex( applicationScope );
+        entityIndex.initializeIndex();
+
+        final EntityIndexBatch batch = entityIndex.createBatch();
+
+
+        final int size = 10;
+
+        final List<Id> entities = new ArrayList<>( size );
+
+
+        for ( int i = 0; i < size; i++ ) {
+            final String middleName = "middleName" + UUIDUtils.newTimeUUID();
+            Map<String, Object> properties = new LinkedHashMap<String, Object>();
+            properties.put( "username", "edanuff" );
+            properties.put( "email", "ed@anuff.com" );
+            properties.put( "middlename", middleName );
+
+            Map entityMap = new HashMap() {{
+                put( "username", "edanuff" );
+                put( "email", "ed@anuff.com" );
+                put( "middlename", middleName );
+            }};
+
+            final Id userId = new SimpleId( "user" );
+
+            Entity user = EntityIndexMapUtils.fromMap( entityMap );
+            EntityUtils.setId( user, userId );
+            EntityUtils.setVersion( user, UUIDGenerator.newTimeUUID() );
+
+            user.setField( new UUIDField( IndexingUtils.ENTITYID_ID_FIELDNAME, UUIDGenerator.newTimeUUID() ) );
+
+            entities.add( userId );
+
+
+            batch.index( indexScope, user );
+        }
+
+
+        batch.execute().get();
+        entityIndex.refresh();
+
+
+        final int limit = 1;
+
+
+        final int expectedPages = size / limit;
+
+
+        String cursor = null;
+
+        for ( int i = 0; i < expectedPages; i++ ) {
+            //**
+            final Query query = Query.fromQL( "select *" );
+            query.setLimit( limit );
+
+            if ( cursor != null ) {
+                query.setCursor( cursor );
+            }
+
+            final CandidateResults results = entityIndex.search( indexScope, SearchTypes.allTypes(), query );
+
+            assertTrue( results.hasCursor() );
+
+            cursor = results.getCursor();
+
+            assertEquals("Should be 16 bytes as hex", 32, cursor.length());
+
+
+
+
+            assertEquals( 1, results.size() );
+
+
+            assertEquals( results.get( 0 ).getId(), entities.get( i ) );
+        }
+    }
+
+
 }
 
 
