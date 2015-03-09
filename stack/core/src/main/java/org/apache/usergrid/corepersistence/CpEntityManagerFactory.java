@@ -131,7 +131,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.counterUtils = counterUtils;
         this.injector = injector;
         this.managerCache = injector.getInstance( ManagerCache.class );
-        this.dataMigrationManager = injector.getInstance( DataMigrationManager.class );
         this.metricsFactory = injector.getInstance( MetricsFactory.class );
 
         this.orgApplicationCache = new OrgApplicationCacheImpl( this );

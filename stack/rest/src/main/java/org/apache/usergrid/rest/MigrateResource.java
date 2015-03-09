@@ -20,6 +20,7 @@ package org.apache.usergrid.rest;
 
 
 import java.util.Map;
+import java.util.Set;
 
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -37,6 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
 import org.apache.usergrid.persistence.core.migration.schema.MigrationManager;
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
 
@@ -62,6 +64,7 @@ public class MigrateResource extends AbstractContextResource {
         logger.info( "SystemResource initialized" );
     }
 
+
     @Autowired
     private Injector guiceInjector;
 
@@ -76,8 +79,6 @@ public class MigrateResource extends AbstractContextResource {
         ApiResponse response = createApiResponse();
         response.setAction( "Migrate Data" );
         //TODO make this use the task scheduler
-
-
 
 
         final Thread migrate = new Thread() {
@@ -106,7 +107,6 @@ public class MigrateResource extends AbstractContextResource {
     }
 
 
-
     @RequireSystemAccess
     @PUT
     @Path( "set" )
@@ -118,17 +118,23 @@ public class MigrateResource extends AbstractContextResource {
 
         Preconditions.checkNotNull( json, "You must provide a json body" );
 
-        Preconditions.checke
 
-        String version = ( String ) json.get( "version" );
+        Preconditions.checkArgument( json.keySet().size() > 0, "You must specify at least one module and version" );
 
-        Preconditions
-            .checkArgument( version != null && version.length() > 0, "You must specify a version field in your json" );
+        /**
+         *  Set the migration version for the plugins specified
+         */
+        for ( final String key : json.keySet() ) {
+            String version = ( String ) json.get( key );
+
+            Preconditions.checkArgument( version != null && version.length() > 0,
+                "You must specify a version field per module name" );
 
 
-        int intVersion = Integer.parseInt( version );
+            int intVersion = Integer.parseInt( version );
 
-        emf.setMigrationVersion( intVersion );
+            getDataMigrationManager().resetToVersion( key, intVersion );
+        }
 
 
         return migrateStatus( ui, callback );
@@ -146,9 +152,16 @@ public class MigrateResource extends AbstractContextResource {
         response.setAction( "Migrate Schema indexes" );
 
         ObjectNode node = JsonNodeFactory.instance.objectNode();
-        node.put( "currentVersion", emf.getMigrateDataVersion() );
-        node.put( "lastMessage", emf.getMigrateDataStatus() );
-        response.setProperty( "status", node );
+
+
+
+        final DataMigrationManager dataMigrationManager = getDataMigrationManager();
+
+        final Set<String> plugins = dataMigrationManager.getPluginNames();
+
+        for(final String pluginName: plugins){
+            node.put( pluginName, dataMigrationManager.getCurrentVersion( pluginName ) );
+        }
 
         response.setSuccess();
 
@@ -173,7 +186,20 @@ public class MigrateResource extends AbstractContextResource {
         return new JSONWithPadding( response, callback );
     }
 
-    private MigrationManager getMigrationManager(){
+
+    /**
+     * Get the Data migraiton manager
+     */
+    private DataMigrationManager getDataMigrationManager() {
+        return guiceInjector.getInstance( DataMigrationManager.class );
+    }
+
+
+    /**
+     * Get the Data migraiton manager
+     */
+    private MigrationManager getMigrationManager() {
         return guiceInjector.getInstance( MigrationManager.class );
     }
 }
+
