@@ -216,14 +216,26 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
                         .execute()
                         .actionGet();
                 timeNewIndexCreation.stop();
+
+                //ONLY add the alias if we create the index, otherwise we're going to overwrite production settings
+
+                /**
+                 * DO NOT MOVE THIS LINE OF CODE UNLESS YOU REALLY KNOW WHAT YOU'RE DOING!!!!
+                 */
+
+                //We do NOT want to create an alias if the index already exists, we'll overwrite the indexes that
+                //may have been set via other administrative endpoint
+                addAlias(normalizedSuffix);
+
+                testNewIndex();
+
                 logger.info("Created new Index Name [{}] ACK=[{}]", indexName, cir.isAcknowledged());
             } catch (IndexAlreadyExistsException e) {
                 logger.info("Index Name [{}] already exists", indexName);
             }
 
-            addAlias(normalizedSuffix);
 
-            testNewIndex();
+
         } catch (IndexAlreadyExistsException expected) {
             // this is expected to happen if index already exists, it's a no-op and swallow
         } catch (IOException e) {
