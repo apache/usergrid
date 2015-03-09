@@ -25,6 +25,7 @@ import java.util.UUID;
 
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
 import org.apache.usergrid.persistence.core.guice.ProxyImpl;
 import org.junit.Rule;
 import org.junit.Test;
@@ -51,6 +52,7 @@ import org.apache.usergrid.persistence.model.field.StringField;
 
 import com.fasterxml.uuid.UUIDComparator;
 import com.google.inject.Inject;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import rx.Observable;
 
@@ -422,7 +424,7 @@ public class EntityCollectionManagerIT {
     @Test
     public void updateVersioning() {
 
-        // create entity 
+        // create entity
         Entity origEntity = new Entity( new SimpleId( "testUpdate" ) );
         origEntity.setField( new StringField( "testField", "value" ) );
 
@@ -431,7 +433,7 @@ public class EntityCollectionManagerIT {
         EntityCollectionManager manager = factory.createCollectionManager( context );
         Entity returned = manager.write( origEntity ).toBlocking().lastOrDefault( null );
 
-        // note its version 
+        // note its version
         UUID oldVersion = returned.getVersion();
 
         // partial update entity but with new entity that has version = null
@@ -754,16 +756,16 @@ public class EntityCollectionManagerIT {
         //override our default
         SetConfigTestBypass.setValueByPass( serializationFig, "getMaxEntitySize", currentMaxSize + "" );
     }
-    
+
     @Test
     public void invalidNameRepair() {
-        
+
         //write an entity with a unique field
-        CollectionScope context = 
+        CollectionScope context =
                 new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" );
 
         Entity newEntity = new Entity( new SimpleId( "test" ) );
-        
+
         newEntity.setField( new IntegerField( "count", 5, true ) );
         newEntity.setField( new StringField( "yes", "fred", true ) );
 
@@ -777,28 +779,41 @@ public class EntityCollectionManagerIT {
         assertNotNull( "Id was assigned", createReturned.getId() );
         assertNotNull( "Version was assigned", createReturned.getVersion() );
 
-
+        //load an entity by it's unique field
         Observable<Entity> loadObservable = manager.load( createReturned.getId() );
 
         Entity loadReturned = loadObservable.toBlocking().lastOrDefault( null );
 
-        assertEquals( "Same value", createReturned, loadReturned );
-        //load an entity by it's unique field
-        
         //verify the entity is correct.
-        
-        //use the entity serializationStrategy to remove the entity data.
-        
-        //try to load via the unique field
-        
-        //verify no entity returned
-        
-        //user the unique serialization to verify it's been deleted from cassandra
-        
+        assertEquals( "Same value", createReturned, loadReturned );
 
-        
-                
-                
-                
+
+        //use the entity serializationStrategy to remove the entity data.
+        try {
+            entitySerializationStrategy.delete( context,loadReturned.getId(),loadReturned.getVersion() ).execute();
+        }
+        catch ( ConnectionException e ) {
+            e.printStackTrace();
+            fail("Shouldn't have had trouble deleting entity");
+        }
+
+
+        //try to load via the unique field
+        loadObservable = manager.load( createReturned.getId() );
+
+        loadReturned = loadObservable.toBlocking().lastOrDefault( null );
+
+        //verify no entity returned
+        assertNull( loadReturned );
+
+        //user the unique serialization to verify it's been deleted from cassandra
+        try {
+            UniqueValueSet uniqueValues = uniqueValueSerializationStrategy.load( context, loadReturned.getFields() );
+            assertNull( uniqueValues );
+        }
+        catch ( ConnectionException e ) {
+            e.printStackTrace();
+            fail("Shouldn't have been able to load the unique entity");
+        }
     }
 }
