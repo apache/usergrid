@@ -35,7 +35,6 @@ import org.apache.usergrid.persistence.core.migration.data.PluginPhase;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import sun.plugin2.main.server.Plugin;
 
 
 /**

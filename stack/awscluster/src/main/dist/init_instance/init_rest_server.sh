@@ -68,9 +68,6 @@ export ACCEPT_COUNT=100
 export NR_OPEN=1048576
 export FILE_MAX=761773
 
-#Number of threads to allow per core
-export NUM_THREAD_PROC=25
-
 #Get the number of processors
 export NUM_PROC=$(nproc)
 

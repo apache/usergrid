@@ -15,6 +15,14 @@
  */
 package org.apache.usergrid.corepersistence;
 
+import com.google.common.base.Optional;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.yammer.metrics.annotation.Metered;
+import static java.lang.String.CASE_INSENSITIVE_ORDER;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -41,6 +49,7 @@ import org.apache.usergrid.persistence.cassandra.Setup;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
 import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
@@ -94,10 +103,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     /** Have we already initialized the index for the management app? */
     private AtomicBoolean indexInitialized = new AtomicBoolean(  );
 
-    /** Keep track of applications that already have indexes to avoid redundant re-creation. */
-    private static final Set<UUID> applicationIndexesCreated = new HashSet<UUID>();
-
-
     // cache of already instantiated entity managers
     private LoadingCache<UUID, EntityManager> entityManagers
         = CacheBuilder.newBuilder().maximumSize(100).build(new CacheLoader<UUID, EntityManager>() {
@@ -105,6 +110,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                 return _getEntityManager(appId);
             }
         });
+
+    private final OrgApplicationCache orgApplicationCache;
+
 
     private ManagerCache managerCache;
 
@@ -114,7 +122,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private CassandraService cassandraService;
     private CounterUtils counterUtils;
     private Injector injector;
-
+    private final MetricsFactory metricsFactory;
 
     public CpEntityManagerFactory(
             final CassandraService cassandraService, final CounterUtils counterUtils, final Injector injector) {
@@ -123,6 +131,10 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.counterUtils = counterUtils;
         this.injector = injector;
         this.managerCache = injector.getInstance( ManagerCache.class );
+        this.dataMigrationManager = injector.getInstance( DataMigrationManager.class );
+        this.metricsFactory = injector.getInstance( MetricsFactory.class );
+
+        this.orgApplicationCache = new OrgApplicationCacheImpl( this );
     }
 
 
@@ -189,15 +201,12 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         EntityManager em = new CpEntityManager();
         em.init( this, applicationId );
 
-        // only need to do this once
-        if ( !applicationIndexesCreated.contains( applicationId ) ) {
-            em.createIndex();
-            applicationIndexesCreated.add( applicationId );
-        }
-
         return em;
     }
 
+    public MetricsFactory getMetricsFactory(){
+        return metricsFactory;
+    }
 
     @Override
     public UUID createApplication(String organizationName, String name) throws Exception {
@@ -211,15 +220,16 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         String appName = buildAppName( orgName, name );
 
-        UUID applicationId = lookupApplication( appName );
 
-        if ( applicationId != null ) {
+        final Optional<UUID> appId = orgApplicationCache.getApplicationId( appName );
+
+        if ( appId.isPresent() ) {
             throw new ApplicationAlreadyExistsException( name );
         }
 
-        applicationId = UUIDGenerator.newTimeUUID();
+        UUID applicationId = UUIDGenerator.newTimeUUID();
 
-        logger.debug( "New application orgName {} name {} id {} ",
+        logger.debug( "New application orgName {} orgAppName {} id {} ",
                 new Object[] { orgName, name, applicationId.toString() } );
 
         initializeApplication( orgName, applicationId, appName, properties );
@@ -237,6 +247,10 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                                        Map<String, Object> properties ) throws Exception {
 
 
+
+        //Ensure our management system exists before creating our application
+        init();
+
         EntityManager em = getEntityManager( CpNamingUtils.SYSTEM_APP_ID);
 
         final String appName = buildAppName( organizationName, name );
@@ -248,25 +262,36 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         getSetup().setupApplicationKeyspace( applicationId, appName );
 
-        UUID orgUuid = lookupOrganization( organizationName );
-        if ( orgUuid == null ) {
+
+        final Optional<UUID> cachedValue = orgApplicationCache.getOrganizationId( organizationName );
+
+
+        UUID orgUuid;
+
+        if ( !cachedValue.isPresent() ) {
+
 
             // create new org because the specified one does not exist
             final String orgName = organizationName;
 
-            final Entity orgInfo;
+
 
             try {
-                orgInfo = em.create( "organization", new HashMap<String, Object>() {{
+                final Entity orgInfo = em.create( "organization", new HashMap<String, Object>() {{
                     put( PROPERTY_NAME, orgName );
                 }} );
+                orgUuid = orgInfo.getUuid();
+                //evit so it's re-loaded later
+                orgApplicationCache.evictOrgId( name );
             }
             catch ( DuplicateUniquePropertyExistsException e ) {
-                throw new OrganizationAlreadyExistsException( orgName );
+                //swallow, if it exists, just get it
+                orgApplicationCache.evictOrgId( organizationName );
+                orgUuid = orgApplicationCache.getOrganizationId( organizationName ).get();
             }
 
-            em.refreshIndex();
-            orgUuid = orgInfo.getUuid();
+        } else{
+            orgUuid = cachedValue.get();
         }
 
         // create appinfo entry in the system app
@@ -278,11 +303,12 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             put( "organizationUuid", orgId );
         }};
 
-        try{
-             em.create( "appinfo", appInfoMap );
-        }catch(DuplicateUniquePropertyExistsException e){
-                       throw new ApplicationAlreadyExistsException( appName );
-                   }
+        try {
+            em.create( "appinfo", appInfoMap );
+        }
+        catch ( DuplicateUniquePropertyExistsException e ) {
+            throw new ApplicationAlreadyExistsException( appName );
+        }
         em.refreshIndex();
 
         // create application entity
@@ -293,10 +319,15 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         EntityManager appEm = getEntityManager( applicationId );
 
         appEm.create( applicationId, TYPE_APPLICATION, properties );
+        appEm.createIndex();
         appEm.resetRoles();
         appEm.refreshIndex();
 
         logger.info("Initialized application {}", appName );
+
+        //evict app Id from cache
+        orgApplicationCache.evictAppId( appName );
+
         return applicationId;
     }
 
@@ -378,71 +409,10 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     }
 
 
-    public UUID lookupOrganization( String name ) throws Exception {
-        init();
-
-
-        //        Query q = Query.fromQL(PROPERTY_NAME + " = '" + name + "'");
-        EntityManager em = getEntityManager( CpNamingUtils.SYSTEM_APP_ID );
-
-
-        final EntityRef alias = em.getAlias( "organizations", name );
-
-        if ( alias == null ) {
-            return null;
-        }
-
-        final Entity entity = em.get( alias );
-
-        if ( entity == null ) {
-            return null;
-        }
-
-        return entity.getUuid();
-        //        Results results = em.searchCollection( em.getApplicationRef(), "organizations", q );
-        //
-        //        if ( results.isEmpty() ) {
-        //            return null;
-        //        }
-        //
-        //        return results.iterator().next().getUuid();
-    }
-
 
     @Override
-    public UUID lookupApplication( String name ) throws Exception {
-        init();
-
-        // TODO: why does this not work for restored apps
-
-//        EntityManager em = getEntityManager( CpNamingUtils.SYSTEM_APP_ID );
-//        final EntityRef alias = em.getAlias( CpNamingUtils.APPINFOS, name );
-//        if ( alias == null ) {
-//            return null;
-//        }
-//        final Entity entity = em.get( alias );
-//        if ( entity == null ) {
-//            return null;
-//        }
-//        final UUID property = ( UUID ) entity.getProperty( "applicationUuid" );
-//        return property;
-
-        Query q = Query.fromQL( PROPERTY_NAME + " = '" + name + "'");
-
-        EntityManager em = getEntityManager(CpNamingUtils.SYSTEM_APP_ID);
-
-        Results results = em.searchCollection( em.getApplicationRef(), "appinfos", q);
-
-        if ( results.isEmpty() ) {
-            return null;
-        }
-
-        Entity entity = results.iterator().next();
-        Object uuidObject = entity.getProperty("applicationUuid");
-        if ( uuidObject instanceof UUID ) {
-            return (UUID)uuidObject;
-        }
-        return UUIDUtils.tryExtractUUID( entity.getProperty("applicationUuid").toString() );
+    public UUID lookupApplication( String orgAppName ) throws Exception {
+        return orgApplicationCache.getApplicationId( orgAppName ).orNull();
     }
 
 
@@ -636,7 +606,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             em.update( propsEntity );
 
         } catch (Exception ex) {
-            logger.error("Error deleting service property name: " + name, ex);
+            logger.error("Error deleting service property orgAppName: " + name, ex);
             return false;
         }
 
