@@ -96,7 +96,7 @@ public class EntityIndexTest extends BaseIT {
 
         long now = System.currentTimeMillis();
         final int threads = 20;
-        final int size = 20;
+        final int size = 30;
         final EntityIndex entityIndex = eif.createEntityIndex( applicationScope );
         final IndexScope indexScope = new IndexScopeImpl(appId, "things");
         final String entityType = "thing";

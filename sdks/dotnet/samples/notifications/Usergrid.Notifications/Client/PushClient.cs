@@ -85,9 +85,28 @@ namespace Usergrid.Notifications.Client
             return jsonResponse.StatusIsOk;
         }
 
+
+        public async Task<bool> SendRaw(String message)
+        {
+            if (DeviceId == null)
+            {
+                throw new Exception("Please call PushClient.RegisterDevice first.");
+            }
+            var jsonObject = new JObject();
+            var payloads = new JObject();
+            var payload = new JObject();
+            payload.Add("raw", new JValue(message));
+            payloads.Add(Notifier, payload);
+            jsonObject.Add("payloads", payloads);
+            jsonObject.Add("debug", true);
+            var jsonResponse = await usergrid.SendAsync(HttpMethod.Post, String.Format("users/{1}/devices/{0}/notifications", this.DeviceId, userId), jsonObject);
+            return jsonResponse.StatusIsOk;
+        }
+
         private async Task init()
         {
             channel = await PushNotificationChannelManager.CreatePushNotificationChannelForApplicationAsync().AsTask<PushNotificationChannel>();
+            channel.PushNotificationReceived += channel_PushNotificationReceived;
             if (settings.Values[DEVICE_KEY] == null)
             {
                 Guid uuid = await registerDevice(true);
@@ -111,6 +130,11 @@ namespace Usergrid.Notifications.Client
                     await registerDevice(false);
                 }
             }
+        }
+
+        void channel_PushNotificationReceived(PushNotificationChannel sender, PushNotificationReceivedEventArgs args)
+        {
+            throw new NotImplementedException();
         }
 
        

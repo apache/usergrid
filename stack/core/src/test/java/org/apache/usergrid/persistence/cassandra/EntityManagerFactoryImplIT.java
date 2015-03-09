@@ -52,6 +52,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+@NotThreadSafe
 public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
     private static final Logger logger = LoggerFactory.getLogger( EntityManagerFactoryImplIT.class );

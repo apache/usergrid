@@ -127,6 +127,7 @@
 
       <metrics.version>3.0.0</metrics.version>
       <rx.version>0.19.6</rx.version>
+        <surefire.plugin.artifactName>surefire-junit47</surefire.plugin.artifactName>
       <surefire.plugin.version>2.18.1</surefire.plugin.version>
       <powermock.version>1.6.1</powermock.version>
 
@@ -1503,8 +1504,8 @@
                           <forkCount>${usergrid.it.forkCount}</forkCount>
                           <reuseForks>${usergrid.it.reuseForks}</reuseForks>
                           <threadCount>${usergrid.it.forkCount}</threadCount>
-                          <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin}  -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}
-                          </argLine>
+                          <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin}  -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}</argLine>
+                          <testFailureIgnore>false</testFailureIgnore>
                       </configuration>
 
                       <!-- TODO, we may need an exclusion.  Appears to be a classloader bug
@@ -1515,12 +1516,19 @@
                               <groupId>org.apache.maven.surefire</groupId>
                               <artifactId>surefire-junit47</artifactId>
                               <version>${surefire.plugin.version}</version>
-                              <exclusions>
-                                  <exclusion>
-                                      <groupId>org.apache.maven.surfire</groupId>
-                                      <artifactId>common-junit3</artifactId>
-                                  </exclusion>
-                              </exclusions>
+
+                              <!--<exclusions>-->
+                                  <!--<exclusion>-->
+                                      <!--<groupId>org.apache.maven.surfire</groupId>-->
+                                      <!--<artifactId>common-junit3</artifactId>-->
+                                  <!--</exclusion>-->
+                              <!--</exclusions>-->
+                          </dependency>
+                          <!-- override plex utils, otherwise bug from above SO post happens-->
+                          <dependency>
+                              <groupId>org.codehaus.plexus</groupId>
+                              <artifactId>plexus-utils</artifactId>
+                              <version>3.0.21</version>
                           </dependency>
                       </dependencies>
                   </plugin>

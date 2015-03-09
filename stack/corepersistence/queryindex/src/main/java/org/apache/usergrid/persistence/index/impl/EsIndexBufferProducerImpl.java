@@ -20,14 +20,19 @@
 package org.apache.usergrid.persistence.index.impl;
 
 import com.codahale.metrics.Counter;
+import com.codahale.metrics.Timer;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.usergrid.persistence.core.future.BetterFuture;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.index.IndexBufferProducer;
+import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.index.IndexOperationMessage;
 import rx.Subscriber;
+
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 /**
  * Producer for index operation messages
@@ -36,22 +41,27 @@ import rx.Subscriber;
 public class EsIndexBufferProducerImpl implements IndexBufferProducer {
 
     private final Counter indexSizeCounter;
-    private Subscriber<? super IndexOperationMessage> subscriber;
+    private final ArrayBlockingQueue<IndexOperationMessage> messages;
+    private final Timer timer;
 
     @Inject
-    public EsIndexBufferProducerImpl(MetricsFactory metricsFactory){
-        this.indexSizeCounter = metricsFactory.getCounter(EsIndexBufferProducerImpl.class,"index.buffer.size");
-
-    }
-    @Override
-    public void call(Subscriber<? super IndexOperationMessage> subscriber) {
-        this.subscriber = subscriber;
+    public EsIndexBufferProducerImpl(MetricsFactory metricsFactory,IndexFig fig){
+        this.messages = new ArrayBlockingQueue<>(fig.getIndexQueueSize()*5);
+        this.indexSizeCounter = metricsFactory.getCounter(EsIndexBufferProducerImpl.class, "index.buffer.size");
+        this.timer =  metricsFactory.getTimer(EsIndexBufferProducerImpl.class,"index.buffer.producer.timer");
     }
 
     public BetterFuture put(IndexOperationMessage message){
-        Preconditions.checkNotNull(message,"Message cannot be null");
+        Preconditions.checkNotNull(message, "Message cannot be null");
         indexSizeCounter.inc(message.getOperations().size());
-        subscriber.onNext(message);
+        Timer.Context time = timer.time();
+        messages.offer(message);
+        time.stop();
         return message.getFuture();
+    }
+
+    @Override
+    public BlockingQueue<IndexOperationMessage> getSource() {
+        return messages;
     }
 }

@@ -15,32 +15,23 @@
  */
 package org.apache.usergrid.corepersistence;
 
+import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.inject.Injector;
 import com.yammer.metrics.annotation.Metered;
-import static java.lang.String.CASE_INSENSITIVE_ORDER;
-
-import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.apache.commons.lang.StringUtils;
-
 import org.apache.usergrid.corepersistence.rx.AllEntitiesInSystemObservable;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.*;
-
-import static org.apache.usergrid.persistence.Schema.PROPERTY_PATH;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
-import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.CounterUtils;
 import org.apache.usergrid.persistence.cassandra.Setup;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
@@ -50,7 +41,6 @@ import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.exceptions.ApplicationAlreadyExistsException;
 import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
-import org.apache.usergrid.persistence.exceptions.OrganizationAlreadyExistsException;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
@@ -59,14 +49,20 @@ import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
-import org.apache.usergrid.utils.UUIDUtils;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import rx.Observable;
+
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static java.lang.String.CASE_INSENSITIVE_ORDER;
+import static org.apache.usergrid.persistence.Schema.*;
 
 
 /**
@@ -88,13 +84,15 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private static final Set<UUID> applicationIndexesCreated = new HashSet<UUID>();
 
 
-    // cache of already instantiated oldAppInfo managers
+    // cache of already instantiated entity managers
     private LoadingCache<UUID, EntityManager> entityManagers
         = CacheBuilder.newBuilder().maximumSize(100).build(new CacheLoader<UUID, EntityManager>() {
             public EntityManager load(UUID appId) { // no checked exception
                 return _getEntityManager(appId);
             }
         });
+
+    private final OrgApplicationCache orgApplicationCache;
 
 
     private ManagerCache managerCache;
@@ -103,7 +101,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private CassandraService cassandraService;
     private CounterUtils counterUtils;
     private Injector injector;
-
+    private final MetricsFactory metricsFactory;
 
     public CpEntityManagerFactory(
             final CassandraService cassandraService, final CounterUtils counterUtils, final Injector injector) {
@@ -113,12 +111,14 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.injector = injector;
         this.managerCache = injector.getInstance( ManagerCache.class );
         this.dataMigrationManager = injector.getInstance( DataMigrationManager.class );
+        this.metricsFactory = injector.getInstance( MetricsFactory.class );
 
         // can be removed after everybody moves to Usergrid 2.0, default is true
         Properties configProps = cassandraService.getProperties();
         if ( configProps.getProperty("usergrid.twodoto.appinfo.migration", "true").equals("true")) {
             migrateOldAppInfos();
         }
+        this.orgApplicationCache = new OrgApplicationCacheImpl( this );
     }
 
 
@@ -175,15 +175,12 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         EntityManager em = new CpEntityManager();
         em.init( this, applicationId );
 
-        // only need to do this once
-        if ( !applicationIndexesCreated.contains( applicationId ) ) {
-            em.createIndex();
-            applicationIndexesCreated.add( applicationId );
-        }
-
         return em;
     }
 
+    public MetricsFactory getMetricsFactory(){
+        return metricsFactory;
+    }
 
     @Override
     public UUID createApplication(String organizationName, String name) throws Exception {
@@ -197,15 +194,16 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         String appName = buildAppName( orgName, name );
 
-        UUID applicationId = lookupApplication( appName );
 
-        if ( applicationId != null ) {
+        final Optional<UUID> appId = orgApplicationCache.getApplicationId( appName );
+
+        if ( appId.isPresent() ) {
             throw new ApplicationAlreadyExistsException( name );
         }
 
-        applicationId = UUIDGenerator.newTimeUUID();
+        UUID applicationId = UUIDGenerator.newTimeUUID();
 
-        logger.debug( "New application orgName {} name {} id {} ",
+        logger.debug( "New application orgName {} orgAppName {} id {} ",
                 new Object[] { orgName, name, applicationId.toString() } );
 
         initializeApplication( orgName, applicationId, appName, properties );
@@ -224,6 +222,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         EntityManager em = getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID);
 
+        // Ensure our management system exists before creating our application
+        init();
+
         final String appName = buildAppName( organizationName, name );
 
         // check for pre-existing application
@@ -232,9 +233,32 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             throw new ApplicationAlreadyExistsException( appName );
         }
 
-        // create application info entity in the management app
-
         getSetup().setupApplicationKeyspace( applicationId, appName );
+
+        final Optional<UUID> cachedValue = orgApplicationCache.getOrganizationId( organizationName );
+
+        if ( !cachedValue.isPresent() ) {
+
+
+            // create new org because the specified one does not exist
+            final String orgName = organizationName;
+
+
+
+            try {
+                final Entity orgInfo = em.create( "organization", new HashMap<String, Object>() {{
+                    put( PROPERTY_NAME, orgName );
+                }} );
+                //evit so it's re-loaded later
+                orgApplicationCache.evictOrgId( name );
+            }
+            catch ( DuplicateUniquePropertyExistsException e ) {
+                //swallow, if it exists, just get it
+                orgApplicationCache.evictOrgId( organizationName );
+            }
+        }
+
+        // create appinfo entry in the system app
         final UUID appId = applicationId;
         Map<String, Object> appInfoMap = new HashMap<String, Object>() {{
             put( PROPERTY_NAME, appName );
@@ -256,10 +280,15 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         properties.put( PROPERTY_NAME, appName );
         EntityManager appEm = getEntityManager( applicationId );
         appEm.create( applicationId, TYPE_APPLICATION, properties );
+        appEm.createIndex();
         appEm.resetRoles();
         appEm.refreshIndex();
 
         logger.info("Initialized application {}", appName );
+
+        //evict app Id from cache
+        orgApplicationCache.evictAppId( appName );
+
         return applicationId;
     }
 
@@ -360,68 +389,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     }
 
 
-    @Override
-    public UUID lookupApplication( final String name ) throws Exception {
-        init();
-
-        // attempt to look up APPLICATION_INFO by name
-
-        UUID applicationId = null;
-        EntityManager em = getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
-        final EntityRef alias = em.getAlias( CpNamingUtils.APPLICATION_INFO, name );
-        if ( alias != null ) {
-            Entity entity = em.get(alias);
-            applicationId = (UUID) entity.getProperty("uuid");
-        }
-
-        // below is not necessary if migrateOldAppInfos() has already run
-
-//        if ( applicationId == null ) {
-//
-//            // maybe there is a record in the old and deprecated "appinfos" collection
-//
-//            UUID organizationId = null;
-//
-//            Query q = Query.fromQL( PROPERTY_NAME + " = '" + name + "'");
-//            Results results = em.searchCollection( em.getApplicationRef(), "appinfos" , q);
-//            if ( !results.isEmpty() ) {
-//                Entity entity = results.iterator().next();
-//                Object uuidObject = entity.getProperty("applicationUuid");
-//                if (uuidObject instanceof UUID) {
-//                    applicationId = (UUID)uuidObject;
-//                } else {
-//                    applicationId = UUIDUtils.tryExtractUUID(uuidObject.toString());
-//                }
-//                uuidObject = entity.getProperty("organizationUuid");
-//                if (uuidObject instanceof UUID) {
-//                    organizationId = (UUID)uuidObject;
-//                } else {
-//                    organizationId = UUIDUtils.tryExtractUUID(uuidObject.toString());
-//                }
-//            }
-//
-//            if ( applicationId != null ) {
-//
-//                // copy application information into new APPLICATION_INFO collection
-//
-//                final UUID appId = applicationId;
-//                Map<String, Object> appInfoMap = new HashMap<String, Object>() {{
-//                    put( PROPERTY_NAME, name );
-//                    put( PROPERTY_UUID, appId );
-//                }};
-//
-//                final Entity appInfo;
-//                try {
-//                    appInfo = em.create( appId, CpNamingUtils.APPLICATION_INFO, appInfoMap );
-//                } catch (DuplicateUniquePropertyExistsException e) {
-//                    throw new ApplicationAlreadyExistsException(name);
-//                }
-//                em.createConnection( new SimpleEntityRef( Group.ENTITY_TYPE, organizationId ), "owns", appInfo );
-//                em.refreshIndex();
-//            }
-//        }
-
-        return applicationId;
+    public UUID lookupApplication( String orgAppName ) throws Exception {
+        return orgApplicationCache.getApplicationId( orgAppName ).orNull();
     }
 
 
@@ -678,7 +647,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             em.update( propsEntity );
 
         } catch (Exception ex) {
-            logger.error("Error deleting service property name: " + name, ex);
+            logger.error("Error deleting service property orgAppName: " + name, ex);
             return false;
         }
 
