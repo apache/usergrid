@@ -41,14 +41,14 @@ public class HystrixCassandra {
      */
     public static final HystrixCommand.Setter
             USER_GROUP = HystrixCommand.Setter.withGroupKey(   HystrixCommandGroupKey.Factory.asKey( "user" ) ).andThreadPoolPropertiesDefaults(
-            HystrixThreadPoolProperties.Setter().withCoreSize( 100 ) );
+            HystrixThreadPoolProperties.Setter().withCoreSize( 1000 ) );
 
     /**
      * Command group for asynchronous operations
      */
     public static final HystrixCommand.Setter
             ASYNC_GROUP = HystrixCommand.Setter.withGroupKey( HystrixCommandGroupKey.Factory.asKey( "async" ) ).andThreadPoolPropertiesDefaults(
-            HystrixThreadPoolProperties.Setter().withCoreSize( 50 ) );
+            HystrixThreadPoolProperties.Setter().withCoreSize( 1000 ) );
 
 
     /**

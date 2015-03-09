@@ -26,7 +26,6 @@ import java.util.UUID;
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.exception.DataCorruptionException;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
-import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
@@ -85,6 +84,12 @@ public class MvccEntitySerializationStrategyV1Impl extends MvccEntitySerializati
     @Override
     protected MultiTennantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> getColumnFamily() {
         return CF_ENTITY_DATA;
+    }
+
+
+    @Override
+    public int getImplementationVersion() {
+        return CollectionDataVersions.INITIAL.getVersion();
     }
 
 

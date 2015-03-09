@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.exception.WriteCommitException;
-import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.MvccLogEntry;
@@ -53,7 +53,7 @@ import rx.functions.Func1;
 
 
 /**
- * This phase should invoke any finalization, and mark the entity as committed in the 
+ * This phase should invoke any finalization, and mark the entity as committed in the
  * data store before returning
  */
 @Singleton
@@ -111,9 +111,7 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Entity>
         logMutation.mergeShallow( entityMutation );
 
         // re-write the unique values but this time with no TTL
-        for ( Field field : mvccEntity.getEntity().get().getFields() ) {
-
-            if ( field.isUnique() ) {
+        for ( Field field : EntityUtils.getUniqueFields(mvccEntity.getEntity().get()) ) {
 
                 UniqueValue written  = new UniqueValueImpl( field,
                     entityId,version);
@@ -124,7 +122,6 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Entity>
 
                 // merge into our existing mutation batch
                 logMutation.mergeShallow( mb );
-            }
         }
 
         try {

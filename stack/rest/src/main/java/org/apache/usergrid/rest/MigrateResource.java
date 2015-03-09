@@ -77,13 +77,13 @@ public class MigrateResource extends AbstractContextResource {
 
             @Override
             public void run() {
-                logger.info( "Rebuilding all indexes" );
+                logger.info( "Migrating Data " );
 
                 try {
                     emf.migrateData();
                 }
                 catch ( Exception e ) {
-                    logger.error( "Unable to rebuild indexes", e );
+                    logger.error( "Unable to migrate data", e );
                 }
             }
         };

@@ -20,9 +20,10 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.TypeLiteral;
 import com.yammer.metrics.annotation.Metered;
 import org.apache.commons.lang.StringUtils;
-import org.apache.usergrid.corepersistence.rx.AllEntitiesInSystemObservable;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
@@ -31,8 +32,10 @@ import org.apache.usergrid.persistence.cassandra.Setup;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
+import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
+import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.util.Health;
@@ -96,6 +99,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
 
     private ManagerCache managerCache;
+
+
     private DataMigrationManager dataMigrationManager;
 
     private CassandraService cassandraService;
@@ -132,10 +137,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     }
 
 
-    public ManagerCache getManagerCache() {
-        return managerCache;
-    }
-
 
     private void init() {
 
@@ -156,6 +157,22 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             throw new RuntimeException("Fatal error creating system application", ex);
         }
     }
+
+
+    public ManagerCache getManagerCache() {
+
+        if ( managerCache == null ) {
+            managerCache = injector.getInstance( ManagerCache.class );
+
+            dataMigrationManager = injector.getInstance( DataMigrationManager.class );
+        }
+        return managerCache;
+    }
+
+    private Observable<EntityIdScope> getAllEntitiesObservable(){
+      return injector.getInstance( Key.get(new TypeLiteral< MigrationDataProvider<EntityIdScope>>(){})).getData();
+    }
+
 
 
     @Override
@@ -314,7 +331,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         // and put it in a deleted_application_info collection
 
         Entity deletedApp = em.create(
-            applicationId, CpNamingUtils.DELETED_APPLICATION_INFO, appToDelete.getProperties() );
+            applicationId, CpNamingUtils.DELETED_APPLICATION_INFO, appToDelete.getProperties());
 
         // copy its connections too
 
@@ -329,7 +346,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         // delete the app from the application_info collection and delete its index
 
-        em.delete( appToDelete);
+        em.delete(appToDelete);
         em.refreshIndex();
 
         final EntityIndex entityIndex = managerCache.getEntityIndex(
@@ -345,7 +362,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         EntityManager em = getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
         Entity deletedApp = em.get(
-            new SimpleEntityRef( CpNamingUtils.DELETED_APPLICATION_INFO, applicationId ));
+            new SimpleEntityRef(CpNamingUtils.DELETED_APPLICATION_INFO, applicationId));
 
         if ( deletedApp == null ) {
             throw new EntityNotFoundException("Cannot restore. Deleted Application not found: " + applicationId );
@@ -369,12 +386,12 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         // delete the deleted app entity rebuild the app index
 
-        em.delete( deletedApp );
+        em.delete(deletedApp);
 
         this.rebuildApplicationIndexes(applicationId, new ProgressObserver() {
             @Override
             public void onProgress(EntityRef entity) {
-                logger.debug("Restored oldAppInfo {}:{}", entity.getType(), entity.getUuid());
+                logger.info( "Restored entity {}:{}", entity.getType(), entity.getUuid() );
             }
         });
     }
@@ -546,7 +563,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         Map<String, String> props = new HashMap<String,String>();
 
-        EntityManager em = getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+        EntityManager em = getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
         Query q = Query.fromQL("select *");
         Results results = null;
         try {
@@ -673,8 +690,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     public long performEntityCount() {
         //TODO, this really needs to be a task that writes this data somewhere since this will get
         //progressively slower as the system expands
-        return AllEntitiesInSystemObservable
-            .getAllEntitiesInSystem( managerCache, 1000 ).longCount().toBlocking().last();
+        return (Long) getAllEntitiesObservable().longCount().toBlocking().last();
     }
 
 
@@ -765,15 +781,11 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         //explicitly invoke create index, we don't know if it exists or not in ES during a rebuild.
         em.createIndex();
-        Application app = em.getApplication();
+        em.reindex(po);
 
         em.reindex( po );
 
-        if(app!=null) {
-            logger.info("\n\nRebuilt index for application {} id {}\n", app.getName(), appId);
-        }else{
-            logger.info("\n\nDid not rebuild index for application id {}\n",  appId);
-        }
+        logger.info("\n\nRebuilt index for applicationId {} \n", appId );
     }
 
 
@@ -785,20 +797,25 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     @Override
     public String getMigrateDataStatus() {
-        return dataMigrationManager.getLastStatus();
+    //TODO  USERGRID-405      return dataMigrationManager.getLastStatus();
+        return null;
     }
 
 
     @Override
     public int getMigrateDataVersion() {
-        return dataMigrationManager.getCurrentVersion();
+        //TODO USERGRID-405
+        //return dataMigrationManager.getCurrentVersion();
+        return 0;
     }
 
 
     @Override
     public void setMigrationVersion( final int version ) {
-        dataMigrationManager.resetToVersion( version );
-        dataMigrationManager.invalidate();
+        //TODO USERGRID-405
+//
+//        dataMigrationManager.resetToVersion( version );
+//        dataMigrationManager.invalidate();
     }
 
 

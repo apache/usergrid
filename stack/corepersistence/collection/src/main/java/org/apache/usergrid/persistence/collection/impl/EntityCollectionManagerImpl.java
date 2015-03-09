@@ -28,12 +28,13 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.EntityDeletedFactory;
 import org.apache.usergrid.persistence.collection.EntitySet;
+import org.apache.usergrid.persistence.collection.EntityVersionCleanupFactory;
+import org.apache.usergrid.persistence.collection.EntityVersionCreatedFactory;
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.VersionSet;
-import org.apache.usergrid.persistence.collection.guice.Write;
-import org.apache.usergrid.persistence.collection.guice.WriteUpdate;
-import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
+import org.apache.usergrid.persistence.collection.guice.CollectionTaskExecutor;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccValidationUtils;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
@@ -44,11 +45,14 @@ import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteCommit;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteOptimisticVerify;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteStart;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteUniqueVerify;
+import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
 import org.apache.usergrid.persistence.core.guice.ProxyImpl;
+import org.apache.usergrid.persistence.core.task.Task;
+import org.apache.usergrid.persistence.core.task.TaskExecutor;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -65,12 +69,6 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.model.ColumnFamily;
 import com.netflix.astyanax.model.CqlResult;
 import com.netflix.astyanax.serializers.StringSerializer;
-import org.apache.usergrid.persistence.collection.EntityDeletedFactory;
-import org.apache.usergrid.persistence.collection.EntityVersionCleanupFactory;
-import org.apache.usergrid.persistence.collection.EntityVersionCreatedFactory;
-import org.apache.usergrid.persistence.collection.guice.CollectionTaskExecutor;
-import org.apache.usergrid.persistence.core.task.Task;
-import org.apache.usergrid.persistence.core.task.TaskExecutor;
 
 import rx.Observable;
 import rx.Subscriber;
@@ -92,7 +90,6 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
     //start stages
     private final WriteStart writeStart;
-    private final WriteStart writeUpdate;
     private final WriteUniqueVerify writeVerifyUnique;
     private final WriteOptimisticVerify writeOptimisticVerify;
     private final WriteCommit writeCommit;
@@ -117,8 +114,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
     @Inject
     public EntityCollectionManagerImpl(
-        @Write final WriteStart                    writeStart,
-        @WriteUpdate final WriteStart              writeUpdate,
+        final WriteStart                    writeStart,
         final WriteUniqueVerify                    writeVerifyUnique,
         final WriteOptimisticVerify                writeOptimisticVerify,
         final WriteCommit                          writeCommit,
@@ -129,6 +125,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         final UniqueValueSerializationStrategy     uniqueValueSerializationStrategy,
         final MvccLogEntrySerializationStrategy    mvccLogEntrySerializationStrategy,
         final Keyspace                             keyspace,
+        final SerializationFig                     config,
         final EntityVersionCleanupFactory          entityVersionCleanupFactory,
         final EntityVersionCreatedFactory          entityVersionCreatedFactory,
         final EntityDeletedFactory                 entityDeletedFactory,
@@ -141,7 +138,6 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         MvccValidationUtils.validateCollectionScope( collectionScope );
 
         this.writeStart = writeStart;
-        this.writeUpdate = writeUpdate;
         this.writeVerifyUnique = writeVerifyUnique;
         this.writeOptimisticVerify = writeOptimisticVerify;
         this.writeCommit = writeCommit;
@@ -280,10 +276,9 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
             @Override
             public Id call( Field field ) {
                 try {
-                    UniqueValueSet set = uniqueValueSerializationStrategy.load( collectionScope, fields );
-                    UniqueValue value = set.getValue( field.getName() );
-                    Id id = value == null ? null : value.getEntityId();
-                    return id;
+                    final UniqueValueSet set = uniqueValueSerializationStrategy.load( collectionScope, fields );
+                    final UniqueValue value = set.getValue( field.getName() );
+                    return value == null ? null : value.getEntityId();
                 }
                 catch ( ConnectionException e ) {
                     logger.error( "Failed to getIdField", e );
@@ -292,45 +287,6 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
             }
         } );
     }
-
-
-    @Override
-    public Observable<Entity> update( final Entity entity ) {
-
-        logger.debug( "Starting update process" );
-
-        //do our input validation
-        Preconditions.checkNotNull( entity, "Entity is required in the new stage of the mvcc write" );
-
-        final Id entityId = entity.getId();
-
-
-        ValidationUtils.verifyIdentity( entityId );
-
-        // create our observable and start the write
-        CollectionIoEvent<Entity> writeData = new CollectionIoEvent<Entity>( collectionScope, entity );
-
-
-        Observable<CollectionIoEvent<MvccEntity>> observable = stageRunner( writeData, writeUpdate );
-
-
-        return observable.map( writeCommit ).doOnNext( new Action1<Entity>() {
-            @Override
-            public void call( final Entity entity ) {
-                logger.debug( "sending entity to the queue" );
-
-                //we an update, signal the fix
-                taskExecutor.submit(entityVersionCreatedFactory.getTask(collectionScope,entity));
-
-                //TODO T.N Change this to fire a task
-                //                Observable.from( new CollectionIoEvent<Id>(collectionScope,
-                // entityId ) ).map( load ).subscribeOn( Schedulers.io() ).subscribe();
-
-
-            }
-        } ).doOnError( rollback );
-    }
-
 
     // fire the stages
     public Observable<CollectionIoEvent<MvccEntity>> stageRunner( CollectionIoEvent<Entity> writeData,

@@ -19,19 +19,18 @@
 package org.apache.usergrid.persistence.index.guice;
 
 
-import org.apache.usergrid.persistence.collection.guice.CollectionModule;
-import org.apache.usergrid.persistence.core.guice.TestModule;
 import org.apache.usergrid.persistence.core.guice.CommonModule;
+import org.apache.usergrid.persistence.core.guice.TestModule;
 
 
 public class TestIndexModule extends TestModule {
 
     @Override
     protected void configure() {
+
         install( new CommonModule());
 
         // configure collections and our core astyanax framework
-        install( new CollectionModule() );
         install( new IndexModule() );
     }
 }

@@ -21,6 +21,7 @@ package org.apache.usergrid.persistence.map.guice;
 import org.apache.usergrid.persistence.core.migration.schema.Migration;
 import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapManagerFactory;
+import org.apache.usergrid.persistence.map.impl.MapManagerFactoryImpl;
 import org.apache.usergrid.persistence.map.impl.MapManagerImpl;
 import org.apache.usergrid.persistence.map.impl.MapSerialization;
 import org.apache.usergrid.persistence.map.impl.MapSerializationImpl;
@@ -41,13 +42,8 @@ public class MapModule extends AbstractModule {
 
     @Override
     protected void configure() {
-
-        // create a guice factory for getting our collection manager
-        install( new FactoryModuleBuilder().implement( MapManager.class, MapManagerImpl.class )
-                                           .build( MapManagerFactory.class ) );
-
-
-        bind( MapSerialization.class).to( MapSerializationImpl.class );
+        bind(MapManagerFactory.class).to(MapManagerFactoryImpl.class);
+        bind(MapSerialization.class).to( MapSerializationImpl.class );
 
         Multibinder<Migration> migrationBinding = Multibinder.newSetBinder( binder(), Migration.class );
         migrationBinding.addBinding().to(  Key.get( MapSerialization.class ) );

@@ -23,77 +23,93 @@ package org.apache.usergrid.corepersistence.migration;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.usergrid.corepersistence.ManagerCache;
-import org.apache.usergrid.corepersistence.rx.AllEntitiesInSystemObservable;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.migration.data.DataMigration;
+import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
+import org.apache.usergrid.persistence.core.migration.data.ProgressObserver;
 import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapScope;
-import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.inject.Inject;
 
+import rx.Observable;
 import rx.functions.Action1;
+import rx.functions.Func1;
 
 
 /**
  * Migration to ensure that our entity id is written into our map data
  */
-public class EntityTypeMappingMigration implements DataMigration {
+public class EntityTypeMappingMigration implements DataMigration<EntityIdScope> {
 
     private final ManagerCache managerCache;
-
+    private final MigrationDataProvider<EntityIdScope> allEntitiesInSystemObservable;
 
 
     @Inject
-    public EntityTypeMappingMigration( final ManagerCache managerCache) {
-       this.managerCache = managerCache;
+    public EntityTypeMappingMigration( final ManagerCache managerCache,
+                                       final MigrationDataProvider<EntityIdScope> allEntitiesInSystemObservable ) {
+        this.managerCache = managerCache;
+        this.allEntitiesInSystemObservable = allEntitiesInSystemObservable;
     }
 
 
     @Override
-    public void migrate( final ProgressObserver observer ) throws Throwable {
+    public int migrate( final int currentVersion, final MigrationDataProvider<EntityIdScope> migrationDataProvider,
+                        final ProgressObserver observer ) {
 
         final AtomicLong atomicLong = new AtomicLong();
 
-        AllEntitiesInSystemObservable.getAllEntitiesInSystem(managerCache, 1000 )
-                                     .doOnNext( new Action1<AllEntitiesInSystemObservable.ApplicationEntityGroup>() {
+
+        allEntitiesInSystemObservable.getData()
+                                            //process the entities in parallel
+         .parallel( new Func1<Observable<EntityIdScope>, Observable<EntityIdScope>>() {
 
 
-                                         @Override
-                                         public void call( final AllEntitiesInSystemObservable.ApplicationEntityGroup applicationEntityGroup ) {
+                 @Override
+                 public Observable<EntityIdScope> call( final Observable<EntityIdScope> entityIdScopeObservable ) {
 
-                                             final MapScope ms = CpNamingUtils.getEntityTypeMapScope( applicationEntityGroup.applicationScope.getApplication() );
+                     //for each entity observable, get the map scope and write it to the map
+                     return entityIdScopeObservable.doOnNext( new Action1<EntityIdScope>() {
+                         @Override
+                         public void call( final EntityIdScope entityIdScope ) {
+                             final MapScope ms = CpNamingUtils
+                                 .getEntityTypeMapScope( entityIdScope.getCollectionScope().getApplication() );
+
+                             final MapManager mapManager = managerCache.getMapManager( ms );
+
+                             final UUID entityUuid = entityIdScope.getId().getUuid();
+                             final String entityType = entityIdScope.getId().getType();
+
+                             mapManager.putString( entityUuid.toString(), entityType );
+
+                             if ( atomicLong.incrementAndGet() % 100 == 0 ) {
+                                 observer.update( getMaxVersion(),
+                                     String.format( "Updated %d entities", atomicLong.get() ) );
+                             }
+                         }
+                     } );
+                 }
+             } ).count().toBlocking().last();
 
 
-                                             final MapManager mapManager = managerCache.getMapManager( ms );
-
-                                             for(Id entityId: applicationEntityGroup.entityIds) {
-                                                 final UUID entityUuid = entityId.getUuid();
-                                                 final String entityType = entityId.getType();
-
-                                                 mapManager.putString( entityUuid.toString(), entityType );
-
-                                                 if ( atomicLong.incrementAndGet() % 100 == 0 ) {
-                                                     updateStatus( atomicLong, observer );
-                                                 }
-                                             }
-                                         }
-                                     } ).toBlocking().lastOrDefault( null );
-    }
+        return getMaxVersion();
 
 
-    private void updateStatus( final AtomicLong counter, final ProgressObserver observer ) {
-
-        observer.update( getVersion(), String.format( "Updated %d entities", counter.get() ) );
     }
 
 
     @Override
-    public int getVersion() {
-        return Versions.VERSION_1;
+    public boolean supports( final int currentVersion ) {
+        //we move from the migration version fix to the current version
+        return CoreDataVersions.INITIAL.getVersion() == currentVersion;
+    }
+
+
+    @Override
+    public int getMaxVersion() {
+        return CoreDataVersions.ID_MAP_FIX.getVersion();
     }
 }
