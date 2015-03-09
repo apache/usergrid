@@ -50,6 +50,7 @@ import org.elasticsearch.action.admin.cluster.tasks.PendingClusterTasksRequest;
 import org.elasticsearch.action.admin.cluster.tasks.PendingClusterTasksResponse;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
+import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
 import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateResponse;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.deletebyquery.IndexDeleteByQueryResponse;
@@ -93,6 +94,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     private static final Logger logger = LoggerFactory.getLogger( EsEntityIndexImpl.class );
 
     private static final AtomicBoolean mappingsCreated = new AtomicBoolean( false );
+    public static final String DEFAULT_TYPE = "_default_";
 
     private final IndexIdentifier.IndexAlias alias;
     private final IndexIdentifier indexIdentifier;
@@ -193,10 +195,6 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
         String normalizedSuffix =  StringUtils.isNotEmpty(indexSuffix) ? indexSuffix : null;
         try {
 
-            if (!mappingsCreated.getAndSet(true)) {
-                createMappings();
-            }
-
             //get index name with suffix attached
             String indexName = indexIdentifier.getIndex(normalizedSuffix);
 
@@ -217,6 +215,9 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
                         .actionGet();
                 timeNewIndexCreation.stop();
 
+                //create the mappings
+                createMappings( indexName );
+
                 //ONLY add the alias if we create the index, otherwise we're going to overwrite production settings
 
                 /**
@@ -225,6 +226,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
                 //We do NOT want to create an alias if the index already exists, we'll overwrite the indexes that
                 //may have been set via other administrative endpoint
+
                 addAlias(normalizedSuffix);
 
                 testNewIndex();
@@ -354,18 +356,16 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
      * Setup ElasticSearch type mappings as a template that applies to all new indexes.
      * Applies to all indexes that* start with our prefix.
      */
-    private void createMappings() throws IOException {
+    private void createMappings(final String indexName) throws IOException {
 
         XContentBuilder xcb = IndexingUtils.createDoubleStringIndexMapping(
-            XContentFactory.jsonBuilder(), "_default_");
+            XContentFactory.jsonBuilder(), DEFAULT_TYPE );
+
 
         //Added For Graphite Metrics
         Timer.Context timePutIndex = mappingTimer.time();
-        PutIndexTemplateResponse pitr = esProvider.getClient().admin().indices()
-                .preparePutTemplate("usergrid_template")
-                // set mapping as the default for all types
-                .setTemplate(config.getIndexPrefix() + "*").addMapping( "_default_", xcb )
-                .execute().actionGet();
+        PutMappingResponse  pitr = esProvider.getClient().admin().indices().preparePutMapping( indexName ).setType(
+            DEFAULT_TYPE ).setSource( xcb ).execute().actionGet();
         timePutIndex.stop();
         if ( !pitr.isAcknowledged() ) {
             throw new IndexException( "Unable to create default mappings" );
