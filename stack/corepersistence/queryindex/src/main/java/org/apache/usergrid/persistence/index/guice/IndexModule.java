@@ -27,6 +27,8 @@ import org.apache.usergrid.persistence.index.impl.EsEntityIndexFactoryImpl;
 import org.apache.usergrid.persistence.index.impl.EsEntityIndexImpl;
 import org.apache.usergrid.persistence.index.impl.EsIndexBufferConsumerImpl;
 import org.apache.usergrid.persistence.index.impl.EsIndexBufferProducerImpl;
+import org.apache.usergrid.persistence.map.guice.MapModule;
+
 import org.safehaus.guicyfig.GuicyFigModule;
 
 
@@ -37,6 +39,8 @@ public class IndexModule extends AbstractModule {
 
         // install our configuration
         install(new GuicyFigModule(IndexFig.class));
+
+        install(new MapModule());
 
 
         bind(EntityIndexFactory.class).to( EsEntityIndexFactoryImpl.class );

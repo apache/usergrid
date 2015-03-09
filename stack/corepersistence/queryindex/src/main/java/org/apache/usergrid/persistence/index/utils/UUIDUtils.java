@@ -57,10 +57,6 @@ public class UUIDUtils {
 
     private static ReentrantLock tsLock = new ReentrantLock( true );
 
-    public static final UUID MIN_TIME_UUID = UUID.fromString( "00000000-0000-1000-8000-000000000000" );
-
-    public static final UUID MAX_TIME_UUID = UUID.fromString( "ffffffff-ffff-1fff-bfff-ffffffffffff" );
-
     public static final UUID ZERO_UUID = new UUID( 0, 0 );
 
     private static long timestampMillisNow = System.currentTimeMillis();
