@@ -54,7 +54,7 @@
 		<constructor-arg value="${cassandra.url}" />
         <!-- set the pool size if it's available.  If not go with 50 -->
         <property name="maxActive" value="${cassandra.connections:50}"/>
-        <!--<property name="clockResolution" ref="microsecondsTimeResolution" />-->
+        <!--<property orgAppName="clockResolution" ref="microsecondsTimeResolution" />-->
         <property name="opTimer" ref="taggedOpTimer"/>
         <property name="loadBalancingPolicy" ref="loadBalancingPolicy"/>
 	</bean>
@@ -70,7 +70,7 @@
     <bean id="loadBalancingPolicy" class="me.prettyprint.cassandra.connection.DynamicLoadBalancingPolicy"/>
 
 	<!--  locking for a single node -->
-<!--	<bean name="lockManager"
+<!--	<bean orgAppName="lockManager"
         class="org.apache.usergrid.locking.singlenode.SingleNodeLockManagerImpl" />-->
 
 	<!--  hector based locks -->
@@ -86,10 +86,10 @@
 
 	<!--  zookeeper locks -->
 	<!--
-	<bean name="lockManager" class="org.apache.usergrid.locking.zookeeper.ZooKeeperLockManagerImpl" >
-		<property name="hostPort" value="${zookeeper.url}"/>
-		<property name="sessionTimeout" value="2000"/>
-		<property name="maxAttempts" value="10"/>
+	<bean orgAppName="lockManager" class="org.apache.usergrid.locking.zookeeper.ZooKeeperLockManagerImpl" >
+		<property orgAppName="hostPort" value="${zookeeper.url}"/>
+		<property orgAppName="sessionTimeout" value="2000"/>
+		<property orgAppName="maxAttempts" value="10"/>
 	</bean>  -->
 
 
@@ -196,7 +196,7 @@
     </bean>
 
     <bean id="jobFactory" class="org.apache.usergrid.batch.UsergridJobFactory" />
- 
+
 
     <context:component-scan base-package="org.apache.usergrid.batch.job" />
     <context:annotation-config />

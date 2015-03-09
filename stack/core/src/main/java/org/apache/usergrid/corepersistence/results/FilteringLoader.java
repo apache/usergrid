@@ -147,7 +147,7 @@ public class FilteringLoader implements ResultsLoader {
             if ( UUIDComparator.staticCompare( currentVersion, previousMaxVersion ) > 0 ) {
 
                 //de-index it
-                logger.debug( "Stale version of Entity uuid:{} type:{}, stale v:{}, latest v:{}",
+                logger.warn( "Stale version of Entity uuid:{} type:{}, stale v:{}, latest v:{}",
                     new Object[] {
                         entityId.getUuid(),
                         entityId.getType(),

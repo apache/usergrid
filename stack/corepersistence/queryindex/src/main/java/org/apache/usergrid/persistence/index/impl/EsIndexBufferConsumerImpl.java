@@ -42,12 +42,14 @@ import org.elasticsearch.client.Client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
+import rx.Subscriber;
 import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * Consumer for IndexOperationMessages
@@ -63,6 +65,7 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
     private final Timer flushTimer;
     private final Counter indexSizeCounter;
     private final Meter flushMeter;
+    private final Timer produceTimer;
 
     @Inject
     public EsIndexBufferConsumerImpl(final IndexFig config, final IndexBufferProducer producer, final EsProvider provider, final MetricsFactory metricsFactory){
@@ -72,9 +75,41 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
         this.config = config;
         this.failureMonitor = new FailureMonitorImpl(config,provider);
         this.client = provider.getClient();
+        this.produceTimer = metricsFactory.getTimer(EsIndexBufferConsumerImpl.class,"index.buffer.consumer.messageFetch");
+        final BlockingQueue<IndexOperationMessage> producerQueue = producer.getSource();
 
         //batch up sets of some size and send them in batch
-        this.consumer = Observable.create(producer)
+        this.consumer = Observable.create(new Observable.OnSubscribe<IndexOperationMessage>() {
+            @Override
+            public void call(final Subscriber<? super IndexOperationMessage> subscriber) {
+                Thread thread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        List<IndexOperationMessage> drainList = new ArrayList<>(config.getIndexBufferSize() + 1);
+                        do {
+                            try {
+                                Timer.Context timer = produceTimer.time();
+                                IndexOperationMessage polled = producerQueue.poll(config.getIndexBufferTimeout(), TimeUnit.MILLISECONDS);
+                                if(polled!=null) {
+                                    drainList.add(polled);
+                                    producerQueue.drainTo(drainList, config.getIndexBufferSize());
+                                    for(IndexOperationMessage drained : drainList){
+                                        subscriber.onNext(drained);
+                                    }
+                                    drainList.clear();
+                                }
+                                timer.stop();
+
+                            } catch (InterruptedException ie) {
+                                log.error("failed to dequeue", ie);
+                            }
+                        } while (true);
+                    }
+                });
+                thread.setName("EsEntityIndex_Consumer");
+                thread.start();
+            }
+        })
             .subscribeOn(Schedulers.io())
             .buffer(config.getIndexBufferTimeout(), TimeUnit.MILLISECONDS, config.getIndexBufferSize())
             .doOnNext(new Action1<List<IndexOperationMessage>>() {

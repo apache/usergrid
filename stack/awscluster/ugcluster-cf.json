@@ -46,6 +46,12 @@
             ],
             "ConstraintDescription": "must be valid instance type."
         },
+      "TomcatThreadsPerCore": {
+        "Description": "Number of threads to configure tomcat for per core",
+        "Type": "Number",
+        "Default": "50",
+        "MinValue": "1"
+      },
         "KeyPair": {
           "Description": "Name of an existing EC2 KeyPair to enable SSH access to the instance",
           "Type": "AWS::EC2::KeyPair::KeyName",
@@ -1170,6 +1176,8 @@
                         "export ES_NUM_SERVERS=", { "Ref":"ESNumServers" }, "\n",
                          "\n",
                         "export RELEASE_BUCKET=", { "Ref":"ReleaseBucket" }, "\n",
+                        "\n",
+                        "export NUM_THREAD_PROC=", { "Ref":"TomcatThreadsPerCore" }, "\n",
                         "\n",
                         "export SUPER_USER_EMAIL=", { "Ref":"SuperUserEmail" }, "\n",
                         "export TEST_ADMIN_USER_EMAIL=", { "Ref":"TestAdminUserEmail" }, "\n",
