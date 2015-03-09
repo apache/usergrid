@@ -88,18 +88,17 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
                         List<IndexOperationMessage> drainList = new ArrayList<>(config.getIndexBufferSize() + 1);
                         do {
                             try {
-                                Timer.Context timer = produceTimer.time();
                                 IndexOperationMessage polled = producerQueue.poll(config.getIndexBufferTimeout(), TimeUnit.MILLISECONDS);
                                 if(polled!=null) {
+                                    Timer.Context timer = produceTimer.time();
                                     drainList.add(polled);
                                     producerQueue.drainTo(drainList, config.getIndexBufferSize());
                                     for(IndexOperationMessage drained : drainList){
                                         subscriber.onNext(drained);
                                     }
                                     drainList.clear();
+                                    timer.stop();
                                 }
-                                timer.stop();
-
                             } catch (InterruptedException ie) {
                                 log.error("failed to dequeue", ie);
                             }
