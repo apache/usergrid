@@ -40,9 +40,9 @@ object EntityScenarios {
 
   val putEntity = exec(
     http("Put custom entity")
-      .put(Settings.baseAppUrl+"/${collectionType}/${entityName}")
-      .body(StringBody("{\"address\":\""+Utils.generateRandomInt(1, Settings.numEntities)+"\",\"phone\":\""+Utils.generateRandomInt(1, Settings.numEntities)+"\"}}"))
-      .headers(Headers.jsonAuthorized)
+      .put(Settings.baseAppUrl+"/"+ Settings.collectionType+"/${entityName}")
+      .body(StringBody("""${entity}"""))
+      .headers(Headers.jsonAnonymous)
       .check(status.is(200))
   )
 
@@ -61,7 +61,7 @@ object EntityScenarios {
       .headers(Headers.jsonAnonymous)
       .check(status.is(200))
   )
-  
+
   val postEntityWithToken = exec(
     http("Post custom entity")
       .post(Settings.baseAppUrl+"/"+ Settings.collectionType)

@@ -740,6 +740,7 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public RelationManager getRelationManager( EntityRef entityRef ) {
+        Preconditions.checkNotNull( entityRef, "entityRef cannot be null" );
         CpRelationManager rmi = new CpRelationManager();
         rmi.init( this, emf, applicationId, entityRef, null, metricsFactory );
         return rmi;

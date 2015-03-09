@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 public class MetricsFactoryImpl implements MetricsFactory {
 
-    private final MetricsFig metricsFig;
+
     private MetricRegistry registry;
     private GraphiteReporter graphiteReporter;
     private JmxReporter jmxReporter;
@@ -44,7 +44,6 @@ public class MetricsFactoryImpl implements MetricsFactory {
 
     @Inject
     public MetricsFactoryImpl(MetricsFig metricsFig) {
-        this.metricsFig = metricsFig;
         registry = new MetricRegistry();
         String metricsHost = metricsFig.getHost();
         if(!metricsHost.equals("false")) {
