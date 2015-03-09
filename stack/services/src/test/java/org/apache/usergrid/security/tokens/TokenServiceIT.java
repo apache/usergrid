@@ -32,7 +32,7 @@ import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
 
-import org.apache.usergrid.persistence.entities.ApplicationInfo;
+import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.entities.Application;

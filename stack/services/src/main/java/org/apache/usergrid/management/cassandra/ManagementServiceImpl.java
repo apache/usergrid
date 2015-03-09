@@ -30,9 +30,6 @@ import java.util.UUID;
 
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.management.exceptions.*;
-import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
-import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +40,7 @@ import org.apache.usergrid.locking.Lock;
 import org.apache.usergrid.locking.LockManager;
 import org.apache.usergrid.management.AccountCreationProps;
 import org.apache.usergrid.management.ActivationState;
-import org.apache.usergrid.persistence.entities.ApplicationInfo;
+import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.OrganizationOwnerInfo;

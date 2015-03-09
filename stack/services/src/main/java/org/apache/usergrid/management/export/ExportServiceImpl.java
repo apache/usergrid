@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.batch.service.SchedulerService;
-import org.apache.usergrid.persistence.entities.ApplicationInfo;
+import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.persistence.ConnectionRef;
 import org.apache.usergrid.persistence.Entity;

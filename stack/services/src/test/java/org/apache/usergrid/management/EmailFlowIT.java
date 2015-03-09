@@ -28,7 +28,6 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMultipart;
 
-import org.apache.usergrid.persistence.entities.ApplicationInfo;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;

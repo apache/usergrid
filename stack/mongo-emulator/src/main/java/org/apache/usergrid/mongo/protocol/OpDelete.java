@@ -30,7 +30,7 @@ import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.MessageEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.persistence.entities.ApplicationInfo;
+import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.mongo.MongoChannelHandler;
 import org.apache.usergrid.mongo.query.MongoQueryParser;
 import org.apache.usergrid.mongo.utils.BSONUtils;

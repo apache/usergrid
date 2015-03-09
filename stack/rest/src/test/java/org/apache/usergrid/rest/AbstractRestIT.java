@@ -29,7 +29,7 @@ import com.sun.jersey.test.framework.WebAppDescriptor;
 import com.sun.jersey.test.framework.spi.container.TestContainerFactory;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.usergrid.java.client.Client;
-import org.apache.usergrid.persistence.entities.ApplicationInfo;
+import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.OrganizationOwnerInfo;
 

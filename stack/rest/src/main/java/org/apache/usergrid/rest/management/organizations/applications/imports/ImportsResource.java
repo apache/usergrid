@@ -45,7 +45,7 @@ import org.springframework.stereotype.Component;
 
 import org.apache.commons.lang.NullArgumentException;
 
-import org.apache.usergrid.persistence.entities.ApplicationInfo;
+import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.importer.ImportService;
 import org.apache.usergrid.persistence.Entity;
@@ -180,8 +180,8 @@ public class ImportsResource extends AbstractContextResource {
         }
 
         ApiResponse response = createApiResponse();
-        response.setAction( "get" );
-        response.setApplication( emf.getEntityManager( application.getId() ).getApplication() );
+        response.setAction("get");
+        response.setApplication(emf.getEntityManager(application.getId()).getApplication());
         response.setParams( ui.getQueryParameters() );
         response.setEntities( Collections.<Entity>singletonList( importEntity ) );
 

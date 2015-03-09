@@ -30,15 +30,13 @@ import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
-import com.sun.jersey.api.ConflictException;
-import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-import org.apache.usergrid.persistence.entities.ApplicationInfo;
+import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.exceptions.DisabledAdminUserException;
 import org.apache.usergrid.management.exceptions.DisabledAppUserException;
 import org.apache.usergrid.management.exceptions.UnactivatedAdminUserException;

@@ -18,7 +18,6 @@ package org.apache.usergrid.management;
 
 
 import org.apache.usergrid.management.exceptions.ApplicationCreationException;
-import org.apache.usergrid.persistence.entities.ApplicationInfo;
 
 
 /**

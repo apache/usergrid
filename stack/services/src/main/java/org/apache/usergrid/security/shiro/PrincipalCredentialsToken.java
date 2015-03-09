@@ -18,7 +18,7 @@ package org.apache.usergrid.security.shiro;
 
 
 import java.util.UUID;
-import org.apache.usergrid.persistence.entities.ApplicationInfo;
+import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.security.shiro.credentials.AdminUserAccessToken;

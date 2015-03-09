@@ -19,7 +19,7 @@ package org.apache.usergrid.tools;
 
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.entities.ApplicationInfo;
+import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.utils.UUIDUtils;
 

@@ -19,7 +19,7 @@ package org.apache.usergrid.security.shiro.principals;
 
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.entities.ApplicationInfo;
+import org.apache.usergrid.management.ApplicationInfo;
 
 
 public class ApplicationPrincipal extends PrincipalIdentifier {
