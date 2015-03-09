@@ -23,6 +23,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
+import org.apache.usergrid.persistence.core.guice.ProxyImpl;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -73,6 +76,14 @@ public class EntityCollectionManagerIT {
 
     @Inject
     private SerializationFig serializationFig;
+
+
+    @Inject
+    private UniqueValueSerializationStrategy uniqueValueSerializationStrategy;
+
+    @Inject
+    @ProxyImpl
+    private MvccEntitySerializationStrategy entitySerializationStrategy;
 
 
     @Test
@@ -742,5 +753,52 @@ public class EntityCollectionManagerIT {
 
         //override our default
         SetConfigTestBypass.setValueByPass( serializationFig, "getMaxEntitySize", currentMaxSize + "" );
+    }
+    
+    @Test
+    public void invalidNameRepair() {
+        
+        //write an entity with a unique field
+        CollectionScope context = 
+                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" );
+
+        Entity newEntity = new Entity( new SimpleId( "test" ) );
+        
+        newEntity.setField( new IntegerField( "count", 5, true ) );
+        newEntity.setField( new StringField( "yes", "fred", true ) );
+
+        EntityCollectionManager manager = factory.createCollectionManager( context );
+
+        Observable<Entity> observable = manager.write( newEntity );
+
+        Entity createReturned = observable.toBlocking().lastOrDefault( null );
+
+
+        assertNotNull( "Id was assigned", createReturned.getId() );
+        assertNotNull( "Version was assigned", createReturned.getVersion() );
+
+
+        Observable<Entity> loadObservable = manager.load( createReturned.getId() );
+
+        Entity loadReturned = loadObservable.toBlocking().lastOrDefault( null );
+
+        assertEquals( "Same value", createReturned, loadReturned );
+        //load an entity by it's unique field
+        
+        //verify the entity is correct.
+        
+        //use the entity serializationStrategy to remove the entity data.
+        
+        //try to load via the unique field
+        
+        //verify no entity returned
+        
+        //user the unique serialization to verify it's been deleted from cassandra
+        
+
+        
+                
+                
+                
     }
 }

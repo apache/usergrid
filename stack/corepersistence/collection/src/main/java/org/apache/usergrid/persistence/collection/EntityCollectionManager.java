@@ -54,6 +54,9 @@ public interface EntityCollectionManager {
      * Return the latest versions of the specified entityIds
      */
     public Observable<VersionSet> getLatestVersion( Collection<Id> entityId );
+    
+    
+    public Observable<FieldSet> getAllEntities(Collection<Field> fields);
 
     /**
      * Gets the Id for a field
@@ -61,6 +64,12 @@ public interface EntityCollectionManager {
      */
     public Observable<Id> getIdField(final Field field);
 
+    /**
+     * Audit a unique field, and remove any stale entries in the system
+     * @param field The field to audit within this collection scope.
+
+    public Observable<Integer> auditUniqueField(final Field field);
+     */
     /**
      * Load all the entityIds into the observable entity set
      */

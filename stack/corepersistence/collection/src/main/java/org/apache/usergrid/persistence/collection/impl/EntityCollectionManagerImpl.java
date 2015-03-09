@@ -19,18 +19,15 @@
 package org.apache.usergrid.persistence.collection.impl;
 
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
+import com.netflix.astyanax.MutationBatch;
+import org.apache.usergrid.persistence.collection.*;
+import org.apache.usergrid.persistence.collection.serialization.impl.FieldSetImpl;
+import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.EntityCollectionManager;
-import org.apache.usergrid.persistence.collection.EntitySet;
-import org.apache.usergrid.persistence.collection.MvccEntity;
-import org.apache.usergrid.persistence.collection.VersionSet;
 import org.apache.usergrid.persistence.collection.guice.Write;
 import org.apache.usergrid.persistence.collection.guice.WriteUpdate;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
@@ -65,9 +62,6 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.model.ColumnFamily;
 import com.netflix.astyanax.model.CqlResult;
 import com.netflix.astyanax.serializers.StringSerializer;
-import org.apache.usergrid.persistence.collection.EntityDeletedFactory;
-import org.apache.usergrid.persistence.collection.EntityVersionCleanupFactory;
-import org.apache.usergrid.persistence.collection.EntityVersionCreatedFactory;
 import org.apache.usergrid.persistence.collection.guice.CollectionTaskExecutor;
 import org.apache.usergrid.persistence.core.task.Task;
 import org.apache.usergrid.persistence.core.task.TaskExecutor;
@@ -293,6 +287,69 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         } );
     }
 
+    @Override
+    public Observable<FieldSet> getAllEntities(final Collection<Field> fields) {
+        return rx.Observable.just(fields).map( new Func1<Collection<Field>, FieldSet>() {
+            @Override
+            public FieldSet call( Collection<Field> fields ) {
+                try {
+
+                    final UUID startTime = UUIDGenerator.newTimeUUID();
+
+                    UniqueValueSet set = uniqueValueSerializationStrategy.load( collectionScope, fields );
+
+
+                    //loop through each field, and construct an entity load
+                    List<Id> entityIds = new ArrayList<>(fields.size());
+                    List<UniqueValue> uniqueValues = new ArrayList<>(fields.size());
+
+                    for(final Field expectedField: fields) {
+
+                        UniqueValue value = set.getValue(expectedField.getName());
+
+                        entityIds.add(value.getEntityId());
+                        uniqueValues.add(value);
+                    }
+
+                    final EntitySet entitySet = entitySerializationStrategy.load(collectionScope, entityIds, startTime);
+
+                    //now loop through and ensure the entities are there.
+                    final MutationBatch deleteBatch = keyspace.prepareMutationBatch();
+
+                    final FieldSetImpl response = new FieldSetImpl(fields.size());
+
+                    for(final UniqueValue expectedUnique: uniqueValues) {
+                        final MvccEntity entity = entitySet.getEntity(expectedUnique.getEntityId());
+
+                        //bad unique value, delete this, it's inconsistent
+                        if(entity == null || !entity.getEntity().isPresent()){
+                            final MutationBatch valueDelete = uniqueValueSerializationStrategy.delete(collectionScope, expectedUnique);
+                            deleteBatch.mergeShallow(valueDelete);
+                            continue;
+                        }
+
+
+                        //else add it to our result set
+                        response.addEntity(expectedUnique.getField(),entity);
+
+                    }
+
+                    //fire and forget, we don't care.  We'll repair it again if we have to
+                    deleteBatch.executeAsync();
+
+                    return response;
+
+
+                }
+                catch ( ConnectionException e ) {
+                    logger.error( "Failed to getIdField", e );
+                    throw new RuntimeException( e );
+                }
+            }
+        } );
+    }
+
+   
 
     @Override
     public Observable<Entity> update( final Entity entity ) {
