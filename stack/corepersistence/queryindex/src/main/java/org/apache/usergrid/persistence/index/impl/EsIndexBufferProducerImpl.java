@@ -41,12 +41,13 @@ import java.util.concurrent.BlockingQueue;
 public class EsIndexBufferProducerImpl implements IndexBufferProducer {
 
     private final Counter indexSizeCounter;
-    private final ArrayBlockingQueue<IndexOperationMessage> messages;
+
     private final Timer timer;
+    private final BufferQueue bufferQueue;
 
     @Inject
-    public EsIndexBufferProducerImpl(MetricsFactory metricsFactory,IndexFig fig){
-        this.messages = new ArrayBlockingQueue<>(fig.getIndexQueueSize()*5);
+    public EsIndexBufferProducerImpl( MetricsFactory metricsFactory, IndexFig fig, final BufferQueue bufferQueue ){
+        this.bufferQueue = bufferQueue;
         this.indexSizeCounter = metricsFactory.getCounter(EsIndexBufferProducerImpl.class, "index.buffer.size");
         this.timer =  metricsFactory.getTimer(EsIndexBufferProducerImpl.class,"index.buffer.producer.timer");
     }
@@ -55,13 +56,9 @@ public class EsIndexBufferProducerImpl implements IndexBufferProducer {
         Preconditions.checkNotNull(message, "Message cannot be null");
         indexSizeCounter.inc(message.getOperations().size());
         Timer.Context time = timer.time();
-        messages.offer(message);
+        bufferQueue.offer( message );
         time.stop();
         return message.getFuture();
     }
 
-    @Override
-    public BlockingQueue<IndexOperationMessage> getSource() {
-        return messages;
-    }
 }

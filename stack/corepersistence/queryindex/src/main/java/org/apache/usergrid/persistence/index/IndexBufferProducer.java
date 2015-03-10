@@ -34,5 +34,4 @@ public interface IndexBufferProducer {
 
     BetterFuture put(IndexOperationMessage message);
 
-    BlockingQueue<IndexOperationMessage> getSource();
 }

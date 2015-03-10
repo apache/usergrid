@@ -550,6 +550,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
         if ( candidates.size() >= query.getLimit() ) {
             //USERGRID-461 our cursor is getting too large, map it to a new time UUID
+            //TODO T.N., this shouldn't live here. This should live at the UG core tier.  However the RM/EM are an absolute mess, so until they're refactored, this is it's home
 
             final String userCursorString = org.apache.usergrid.persistence.index.utils.StringUtils.sanitizeUUID( UUIDGenerator.newTimeUUID() );
 

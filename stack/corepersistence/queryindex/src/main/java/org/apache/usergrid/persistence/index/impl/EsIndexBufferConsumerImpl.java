@@ -67,9 +67,13 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
     private final Counter indexSizeCounter;
     private final Meter flushMeter;
     private final Timer produceTimer;
+    private final BufferQueue bufferQueue;
 
     @Inject
-    public EsIndexBufferConsumerImpl(final IndexFig config, final IndexBufferProducer producer, final EsProvider provider, final MetricsFactory metricsFactory){
+    public EsIndexBufferConsumerImpl( final IndexFig config, final IndexBufferProducer producer, final EsProvider
+        provider, final MetricsFactory metricsFactory,
+                                      final BufferQueue bufferQueue ){
+        this.bufferQueue = bufferQueue;
         this.flushTimer = metricsFactory.getTimer(EsIndexBufferConsumerImpl.class, "index.buffer.flush");
         this.flushMeter = metricsFactory.getMeter(EsIndexBufferConsumerImpl.class, "index.buffer.meter");
         this.indexSizeCounter =  metricsFactory.getCounter(EsIndexBufferConsumerImpl.class, "index.buffer.size");
@@ -77,61 +81,56 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
         this.failureMonitor = new FailureMonitorImpl(config,provider);
         this.client = provider.getClient();
         this.produceTimer = metricsFactory.getTimer(EsIndexBufferConsumerImpl.class,"index.buffer.consumer.messageFetch");
-        final BlockingQueue<IndexOperationMessage> producerQueue = producer.getSource();
 
 
         final AtomicInteger countFail = new AtomicInteger();
         //batch up sets of some size and send them in batch
-        this.consumer = Observable.create(new Observable.OnSubscribe<IndexOperationMessage>() {
+        this.consumer = Observable.create( new Observable.OnSubscribe<IndexOperationMessage>() {
             @Override
-            public void call(final Subscriber<? super IndexOperationMessage> subscriber) {
-                Thread thread = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        List<IndexOperationMessage> drainList = new ArrayList<>(config.getIndexBufferSize() + 1);
-                        do {
-                            try {
-                                IndexOperationMessage polled = producerQueue.poll(config.getIndexBufferTimeout(), TimeUnit.MILLISECONDS);
-                                if(polled!=null) {
-                                    Timer.Context timer = produceTimer.time();
-                                    drainList.add(polled);
-                                    producerQueue.drainTo(drainList, config.getIndexBufferSize());
-                                    for(IndexOperationMessage drained : drainList){
-                                        subscriber.onNext(drained);
-                                    }
-                                    drainList.clear();
-                                    timer.stop();
-                                }
-                                countFail.set(0);
-                            } catch (InterruptedException ie) {
-                                int count = countFail.incrementAndGet();
-                                log.error("failed to dequeue", ie);
-                                if(count > 200){
-                                    log.error("Shutting down index drain due to repetitive failures");
-                                    //break;
-                                }
+            public void call( final Subscriber<? super IndexOperationMessage> subscriber ) {
+                List<IndexOperationMessage> drainList;
+                do {
+                    try {
 
-                            }
-                        } while (true);
+
+                        Timer.Context timer = produceTimer.time();
+
+                        drainList = bufferQueue
+                            .take( config.getIndexBufferSize(), config.getIndexBufferTimeout(), TimeUnit.MILLISECONDS );
+
+                        for ( IndexOperationMessage drained : drainList ) {
+                            subscriber.onNext( drained );
+                        }
+                        drainList.clear();
+                        timer.stop();
+
+                        countFail.set( 0 );
                     }
-                });
-                thread.setName("EsEntityIndex_Consumer");
-                thread.start();
-            }
-        })
-            .subscribeOn(Schedulers.io())
-            .buffer(config.getIndexBufferTimeout(), TimeUnit.MILLISECONDS, config.getIndexBufferSize())
-            .doOnNext(new Action1<List<IndexOperationMessage>>() {
-                @Override
-                public void call(List<IndexOperationMessage> containerList) {
-                    if (containerList.size() > 0) {
-                        flushMeter.mark(containerList.size());
-                        Timer.Context time = flushTimer.time();
-                        execute(containerList);
-                        time.stop();
+                    catch ( Exception e ) {
+                        int count = countFail.incrementAndGet();
+                        log.error( "failed to dequeue", e );
+                        if ( count > 200 ) {
+                            log.error( "Shutting down index drain due to repetitive failures" );
+                            //break;
+                        }
                     }
                 }
-            });
+                while ( true );
+            }
+        } ).subscribeOn( Schedulers.io() ).buffer( config.getIndexBufferTimeout(), TimeUnit.MILLISECONDS,
+            config.getIndexBufferSize() ).doOnNext( new Action1<List<IndexOperationMessage>>() {
+            @Override
+            public void call( List<IndexOperationMessage> containerList ) {
+                if ( containerList.size() > 0 ) {
+                    flushMeter.mark( containerList.size() );
+                    Timer.Context time = flushTimer.time();
+                    execute( containerList );
+                    time.stop();
+                }
+            }
+        } );
+
+        //start in the background
         consumer.subscribe();
     }
 
