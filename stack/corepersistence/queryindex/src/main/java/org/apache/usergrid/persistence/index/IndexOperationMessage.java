@@ -17,23 +17,28 @@
 package org.apache.usergrid.persistence.index;
 
 import org.apache.usergrid.persistence.core.future.BetterFuture;
+import org.apache.usergrid.persistence.index.impl.BatchRequest;
+
 import org.elasticsearch.action.ActionRequestBuilder;
 import org.elasticsearch.action.support.replication.ShardReplicationOperationRequestBuilder;
 
+import java.io.Serializable;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * Container for index operations.
  */
-public  class IndexOperationMessage {
-    private final ConcurrentLinkedQueue<ActionRequestBuilder> builders;
+public  class IndexOperationMessage implements Serializable {
+    private final Set<BatchRequest> builders;
     private final BetterFuture<IndexOperationMessage> containerFuture;
 
     public IndexOperationMessage(){
         final IndexOperationMessage parent = this;
-        builders = new ConcurrentLinkedQueue<>();
+        this.builders = new HashSet<>();
         this.containerFuture = new BetterFuture<>(new Callable<IndexOperationMessage>() {
             @Override
             public IndexOperationMessage call() throws Exception {
@@ -42,7 +47,21 @@ public  class IndexOperationMessage {
         });
     }
 
-    public void addOperation(ActionRequestBuilder builder){
+
+    /**
+     * Add all our operations in the set
+     * @param requests
+     */
+    public void setOperations(final Set<BatchRequest> requests){
+        this.builders.addAll( requests);
+    }
+
+
+    /**
+     * Add the operation to the set
+     * @param builder
+     */
+    public void addOperation(BatchRequest builder){
         builders.add(builder);
     }
 
@@ -50,7 +69,7 @@ public  class IndexOperationMessage {
      * return operations for the message
      * @return
      */
-    public ConcurrentLinkedQueue<ActionRequestBuilder> getOperations(){
+    public Set<BatchRequest> getOperations(){
         return builders;
     }
 

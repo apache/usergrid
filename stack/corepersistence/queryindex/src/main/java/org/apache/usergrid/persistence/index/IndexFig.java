@@ -55,6 +55,8 @@ public interface IndexFig extends GuicyFig {
 
     public static final String INDEX_BUFFER_TIMEOUT = "elasticsearch.buffer_timeout";
 
+    public static final String INDEX_QUEUE_READ_TIMEOUT = "elasticsearch.queue_read_timeout";
+
     public static final String INDEX_BATCH_SIZE = "elasticsearch.batch_size";
 
     public static final String INDEX_WRITE_CONSISTENCY_LEVEL = "elasticsearch.write_consistency_level";
@@ -167,4 +169,9 @@ public interface IndexFig extends GuicyFig {
     @Default("1000")
     @Key( FAILURE_REJECTED_RETRY_WAIT_TIME )
     long getFailureRetryTime();
+
+    //give us 60 seconds to process the message
+    @Default("60")
+    @Key(INDEX_QUEUE_READ_TIMEOUT)
+    int getIndexQueueTimeout();
 }

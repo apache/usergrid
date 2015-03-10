@@ -33,13 +33,13 @@ import com.google.inject.Singleton;
 
 
 @Singleton
-public class BufferQueueInMemory implements BufferQueue {
+public class BufferQueueInMemoryImpl implements BufferQueue {
 
     private final ArrayBlockingQueue<IndexOperationMessage> messages;
 
 
     @Inject
-    public BufferQueueInMemory(final IndexFig fig ) {
+    public BufferQueueInMemoryImpl( final IndexFig fig ) {
         messages = new ArrayBlockingQueue<>( fig.getIndexQueueSize() );
     }
 

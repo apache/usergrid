@@ -400,7 +400,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     @Override
     public EntityIndexBatch createBatch() {
         EntityIndexBatch batch = new EsEntityIndexBatchImpl(
-                applicationScope, esProvider.getClient(),indexBatchBufferProducer, config, this, metricsFactory );
+                applicationScope, indexBatchBufferProducer, config, this );
         return batch;
     }
 

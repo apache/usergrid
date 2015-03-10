@@ -26,7 +26,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.index.IndexBufferConsumer;
-import org.apache.usergrid.persistence.index.IndexBufferProducer;
 import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.index.IndexOperationMessage;
 import org.elasticsearch.action.ActionRequestBuilder;
@@ -37,7 +36,6 @@ import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequestBuilder;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryRequestBuilder;
 import org.elasticsearch.action.index.IndexRequestBuilder;
-import org.elasticsearch.action.support.replication.ShardReplicationOperationRequestBuilder;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.util.concurrent.EsRejectedExecutionException;
 import org.slf4j.Logger;
@@ -48,7 +46,6 @@ import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -88,6 +85,10 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
         this.consumer = Observable.create( new Observable.OnSubscribe<IndexOperationMessage>() {
             @Override
             public void call( final Subscriber<? super IndexOperationMessage> subscriber ) {
+
+                //name our thread so it's easy to see
+                Thread.currentThread().setName( "QueueConsumer_" + Thread.currentThread().getId() );
+
                 List<IndexOperationMessage> drainList;
                 do {
                     try {
@@ -130,7 +131,7 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
                 }
                 while ( true );
             }
-        } ).subscribeOn( Schedulers.io() ).buffer( config.getIndexBufferTimeout(), TimeUnit.MILLISECONDS,
+        } ).subscribeOn( Schedulers.newThread() ).buffer( config.getIndexBufferTimeout(), TimeUnit.MILLISECONDS,
             config.getIndexBufferSize() ).doOnNext( new Action1<List<IndexOperationMessage>>() {
             @Override
             public void call( List<IndexOperationMessage> containerList ) {
@@ -157,37 +158,29 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
         }
 
         //process and flatten all the messages to builder requests
-        Observable<ActionRequestBuilder> flattenMessages = Observable.from(operationMessages)
+        Observable<BatchRequest> flattenMessages = Observable.from(operationMessages)
             .subscribeOn(Schedulers.io())
-            .flatMap(new Func1<IndexOperationMessage, Observable<ActionRequestBuilder>>() {
+            .flatMap( new Func1<IndexOperationMessage, Observable<BatchRequest>>() {
                 @Override
-                public Observable<ActionRequestBuilder> call(IndexOperationMessage operationMessage) {
-                    return Observable.from(operationMessage.getOperations());
+                public Observable<BatchRequest> call( IndexOperationMessage operationMessage ) {
+                    return Observable.from( operationMessage.getOperations() );
                 }
-            });
+            } );
 
 
 
         //batch shard operations into a bulk request
         flattenMessages
             .buffer(config.getIndexBatchSize())
-            .doOnNext(new Action1<List<ActionRequestBuilder>>() {
+            .doOnNext(new Action1<List<BatchRequest>>() {
                 @Override
-                public void call(List<ActionRequestBuilder> builders) {
+                public void call(List<BatchRequest> builders) {
                     try {
                         final BulkRequestBuilder bulkRequest = initRequest();
-                        for (ActionRequestBuilder builder : builders) {
+                        for (BatchRequest builder : builders) {
                             indexSizeCounter.dec();
-                            if (builder instanceof IndexRequestBuilder) {
-                                bulkRequest.add((IndexRequestBuilder) builder);
-                            }
-                            if (builder instanceof DeleteRequestBuilder) {
-                                bulkRequest.add((DeleteRequestBuilder) builder);
-                            }
-                            if(builder instanceof DeleteByQueryRequestBuilder){
-                                DeleteByQueryRequestBuilder deleteByQueryRequestBuilder = (DeleteByQueryRequestBuilder) builder;
-                                deleteByQueryRequestBuilder.get();
-                            }
+
+                            builder.doOperation( client, bulkRequest );
                         }
                         sendRequest(bulkRequest);
                     }catch (Exception e){

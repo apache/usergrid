@@ -23,7 +23,8 @@ import org.apache.usergrid.persistence.collection.guice.CollectionModule;
 import org.apache.usergrid.persistence.core.guice.TestModule;
 import org.apache.usergrid.persistence.core.guice.CommonModule;
 import org.apache.usergrid.persistence.index.impl.BufferQueue;
-import org.apache.usergrid.persistence.index.impl.BufferQueueInMemory;
+import org.apache.usergrid.persistence.index.impl.BufferQueueInMemoryImpl;
+import org.apache.usergrid.persistence.index.impl.BufferQueueSQSImpl;
 
 
 public class TestIndexModule extends TestModule {
@@ -37,7 +38,8 @@ public class TestIndexModule extends TestModule {
         install( new IndexModule() {
             @Override
             public void wireBufferQueue() {
-                bind( BufferQueue.class).to( BufferQueueInMemory.class );
+                bind( BufferQueue.class).to( BufferQueueInMemoryImpl.class );
+//                bind( BufferQueue.class).to( BufferQueueSQSImpl.class );
             }
         } );
     }

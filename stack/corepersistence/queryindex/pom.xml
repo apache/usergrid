@@ -108,6 +108,14 @@
         </dependency>
 
         <dependency>
+                  <groupId>${project.parent.groupId}</groupId>
+                  <artifactId>queue</artifactId>
+                  <version>${project.version}</version>
+                  <type>jar</type>
+              </dependency>
+
+
+        <dependency>
             <groupId>org.elasticsearch</groupId>
             <artifactId>elasticsearch</artifactId>
             <version>${elasticsearch.version}</version>
