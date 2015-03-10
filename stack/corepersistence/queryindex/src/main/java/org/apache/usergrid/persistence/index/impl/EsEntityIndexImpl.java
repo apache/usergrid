@@ -196,7 +196,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
         final MapScope mapScope = new MapScopeImpl( appScope.getApplication(), "cursorcache" );
 
-        mapManager = mapManagerFactory.createMapManager( mapScope );
+        mapManager = mapManagerFactory.createMapManager(mapScope);
     }
 
     @Override
@@ -680,6 +680,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
             @Override
             public void onFailure( Throwable e ) {
+                timeDeleteAllVersions.stop();
                 logger.error( "Deleted entity {}:{} from all index scopes with error {}", entityId.getType(),
                     entityId.getUuid(), e);
 
