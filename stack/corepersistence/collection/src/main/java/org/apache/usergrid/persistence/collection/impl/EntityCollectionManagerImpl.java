@@ -335,7 +335,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                     }
 
                     //fire and forget, we don't care.  We'll repair it again if we have to
-                    deleteBatch.executeAsync();
+                    deleteBatch.execute();
 
                     return response;
 
@@ -349,7 +349,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         } );
     }
 
-   
+
 
     @Override
     public Observable<Entity> update( final Entity entity ) {

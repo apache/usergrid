@@ -82,16 +82,9 @@ public class CachedEntityCollectionManager implements EntityCollectionManager {
                                   .build();
     }
 
+    @Override
     public Observable<FieldSet> getAllEntities(final Collection<Field> fields) {
-        return rx.Observable.just(fields).map( new Func1<Collection<Field>, FieldSet>() {
-            @Override
-            public FieldSet call( Collection<Field> fields ) {
-
-                    final FieldSet response = new FieldSetImpl(fields.size());
-
-                    return response;
-            }
-        } );
+        return targetEntityCollectionManager.getAllEntities( fields );
     }
 
     @Override
