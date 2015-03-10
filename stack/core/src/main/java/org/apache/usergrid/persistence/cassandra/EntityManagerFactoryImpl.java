@@ -439,29 +439,6 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
 
 
     @Override
-    public void migrateData() throws Exception {
-
-    }
-
-
-    @Override
-    public String getMigrateDataStatus() {
-        throw new UnsupportedOperationException("Not supported in v1");
-    }
-
-
-    @Override
-    public int getMigrateDataVersion() {
-        throw new UnsupportedOperationException("Not supported in v1");
-    }
-
-
-    @Override
-    public void setMigrationVersion( final int version ) {
-        throw new UnsupportedOperationException("Not supported in v1");
-    }
-
-    @Override
     public void addIndex(UUID appId, String suffix,final int shards,final int replicas,final String consistency) {
         throw new UnsupportedOperationException("Not supported in v1");
     }

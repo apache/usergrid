@@ -299,12 +299,36 @@ public class DataMigrationManagerImplTest {
 
     @Test
     public void testLastStatus() {
-        fail( "writeme" );
+
+        final String name = "plugin1";
+        final String status = "some status";
+
+        //linked hash set is intentional here.  For iteration order we can boostrap to come second so we can
+        //verify it was actually run first
+        final Set<MigrationPlugin> plugins = new LinkedHashSet<>();
+
+        MigrationPlugin plugin1 = mock( MigrationPlugin.class );
+        when( plugin1.getPhase() ).thenReturn( PluginPhase.MIGRATE );
+
+
+        when( plugin1.getName() ).thenReturn( name );
+
+
+
+        plugins.add( plugin1 );
+
+
+        final MigrationInfoSerialization migrationInfoSerialization = mock( MigrationInfoSerialization.class );
+        when(migrationInfoSerialization.getStatusMessage( name )).thenReturn( status  );
+
+
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization );
+
+        final String returnedStatus = migrationManager.getLastStatus( name );
+
+
+        assertEquals(status, returnedStatus);
     }
 
 
-    @Test
-    public void testLastStatusNoPlugin() {
-        fail( "writeme" );
-    }
 }
