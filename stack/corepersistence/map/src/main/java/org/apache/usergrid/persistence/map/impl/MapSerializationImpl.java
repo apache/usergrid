@@ -129,9 +129,14 @@ public class MapSerializationImpl implements MapSerialization {
     public void putString( final MapScope scope, final String key, final String value ) {
         final RowOp op = new RowOp() {
             @Override
-            public void rowOp( final ScopedRowKey<MapEntryKey> scopedRowKey,
-                               final ColumnListMutation<Boolean> columnListMutation ) {
+            public void putValue(final ColumnListMutation<Boolean> columnListMutation ) {
                 columnListMutation.putColumn( true, value );
+            }
+
+
+            @Override
+            public void putKey(final ColumnListMutation<String> keysMutation ) {
+                keysMutation.putColumn( key, true );
             }
         };
 
@@ -146,9 +151,14 @@ public class MapSerializationImpl implements MapSerialization {
 
         final RowOp op = new RowOp() {
             @Override
-            public void rowOp( final ScopedRowKey<MapEntryKey> scopedRowKey,
-                               final ColumnListMutation<Boolean> columnListMutation ) {
+            public void putValue( final ColumnListMutation<Boolean> columnListMutation ) {
                 columnListMutation.putColumn( true, value, ttl );
+            }
+
+
+            @Override
+            public void putKey( final ColumnListMutation<String> keysMutation ) {
+                keysMutation.putColumn( key, true, ttl );
             }
         };
 
@@ -179,7 +189,7 @@ public class MapSerializationImpl implements MapSerialization {
         // entry
 
 
-        rowOp.rowOp( entryRowKey, batch.withRow( MAP_ENTRIES, entryRowKey ) );
+        rowOp.putValue( batch.withRow( MAP_ENTRIES, entryRowKey ) );
 
 
         //add it to the keys
@@ -189,20 +199,31 @@ public class MapSerializationImpl implements MapSerialization {
         final BucketScopedRowKey<String> keyRowKey = BucketScopedRowKey.fromKey( scope.getApplication(), key, bucket );
 
         //serialize to the entry
-        batch.withRow( MAP_KEYS, keyRowKey ).putColumn( key, true );
+
+        rowOp.putKey( batch.withRow( MAP_KEYS, keyRowKey ) );
 
 
         executeBatch( batch );
     }
 
+
+    /**
+     * Callbacks for performing row operations
+     */
     private static interface RowOp{
 
         /**
          * Callback to do the row
-         * @param scopedRowKey The row key
          * @param columnListMutation The column mutation
          */
-        void rowOp(final ScopedRowKey<MapEntryKey> scopedRowKey, final ColumnListMutation<Boolean> columnListMutation);
+        void putValue( final ColumnListMutation<Boolean> columnListMutation );
+
+
+        /**
+         * Write the key
+         * @param keysMutation
+         */
+        void putKey( final ColumnListMutation<String> keysMutation );
 
 
     }
