@@ -32,7 +32,7 @@ import org.apache.usergrid.persistence.map.guice.MapModule;
 import org.safehaus.guicyfig.GuicyFigModule;
 
 
-public class IndexModule extends AbstractModule {
+public abstract class IndexModule extends AbstractModule {
 
     @Override
     protected void configure() {
@@ -48,6 +48,14 @@ public class IndexModule extends AbstractModule {
         bind(IndexBufferProducer.class).to(EsIndexBufferProducerImpl.class);
         bind(IndexBufferConsumer.class).to(EsIndexBufferConsumerImpl.class).asEagerSingleton();
 
+        wireBufferQueue();
     }
+
+
+    /**
+     * Write the <class>BufferQueue</class> for this implementation
+     */
+    public abstract void wireBufferQueue();
+
 
 }

@@ -46,4 +46,11 @@ public interface BufferQueue {
      * @return
      */
     public List<IndexOperationMessage> take(final int takeSize, final long timeout, final TimeUnit timeUnit );
+
+
+    /**
+     * Ack all messages so they do not appear again.  Meant for transactional queues, and may or may not be implemented
+     * @param messages
+     */
+    public void ack(List<IndexOperationMessage> messages);
 }

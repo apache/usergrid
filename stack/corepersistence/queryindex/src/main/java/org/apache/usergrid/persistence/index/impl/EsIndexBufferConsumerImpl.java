@@ -39,6 +39,7 @@ import org.elasticsearch.action.deletebyquery.DeleteByQueryRequestBuilder;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.support.replication.ShardReplicationOperationRequestBuilder;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.common.util.concurrent.EsRejectedExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
@@ -70,9 +71,8 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
     private final BufferQueue bufferQueue;
 
     @Inject
-    public EsIndexBufferConsumerImpl( final IndexFig config, final IndexBufferProducer producer, final EsProvider
-        provider, final MetricsFactory metricsFactory,
-                                      final BufferQueue bufferQueue ){
+    public EsIndexBufferConsumerImpl( final IndexFig config,  final EsProvider
+        provider, final MetricsFactory metricsFactory,   final BufferQueue bufferQueue ){
         this.bufferQueue = bufferQueue;
         this.flushTimer = metricsFactory.getTimer(EsIndexBufferConsumerImpl.class, "index.buffer.flush");
         this.flushMeter = metricsFactory.getMeter(EsIndexBufferConsumerImpl.class, "index.buffer.meter");
@@ -101,17 +101,30 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
                         for ( IndexOperationMessage drained : drainList ) {
                             subscriber.onNext( drained );
                         }
-                        drainList.clear();
+
+                        bufferQueue.ack( drainList );
+
                         timer.stop();
 
                         countFail.set( 0 );
+                    }
+                    catch( EsRejectedExecutionException err)  {
+                        countFail.incrementAndGet();
+                        log.error( "Elasticsearch rejected our request, sleeping for {} milliseconds before retrying.  Failed {} consecutive times", config.getFailRefreshCount(), countFail.get() );
+
+                       //es  rejected the exception, sleep and retry in the queue
+                        try {
+                            Thread.sleep( config.getFailureRetryTime() );
+                        }
+                        catch ( InterruptedException e ) {
+                            //swallow
+                        }
                     }
                     catch ( Exception e ) {
                         int count = countFail.incrementAndGet();
                         log.error( "failed to dequeue", e );
                         if ( count > 200 ) {
                             log.error( "Shutting down index drain due to repetitive failures" );
-                            //break;
                         }
                     }
                 }

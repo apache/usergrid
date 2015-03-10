@@ -36,15 +36,11 @@ import com.google.inject.Singleton;
 public class BufferQueueInMemory implements BufferQueue {
 
     private final ArrayBlockingQueue<IndexOperationMessage> messages;
-    private final IndexFig fig;
 
 
     @Inject
-    public BufferQueueInMemory( final ArrayBlockingQueue<IndexOperationMessage> messages, final IndexFig fig ) {
-        this.messages = messages;
-
-
-        this.fig = fig;
+    public BufferQueueInMemory(final IndexFig fig ) {
+        messages = new ArrayBlockingQueue<>( fig.getIndexQueueSize() );
     }
 
 
@@ -78,8 +74,14 @@ public class BufferQueueInMemory implements BufferQueue {
 
             }
         }
-        while ( response.size() < takeSize &&  System.currentTimeMillis() < endTime );
+        while ( response.size() < takeSize && System.currentTimeMillis() < endTime );
 
-        return null;
+        return response;
+    }
+
+
+    @Override
+    public void ack( final List<IndexOperationMessage> messages ) {
+         //no op for this
     }
 }

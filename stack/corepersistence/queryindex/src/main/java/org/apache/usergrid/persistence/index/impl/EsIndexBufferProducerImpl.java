@@ -46,7 +46,7 @@ public class EsIndexBufferProducerImpl implements IndexBufferProducer {
     private final BufferQueue bufferQueue;
 
     @Inject
-    public EsIndexBufferProducerImpl( MetricsFactory metricsFactory, IndexFig fig, final BufferQueue bufferQueue ){
+    public EsIndexBufferProducerImpl( MetricsFactory metricsFactory, final BufferQueue bufferQueue ){
         this.bufferQueue = bufferQueue;
         this.indexSizeCounter = metricsFactory.getCounter(EsIndexBufferProducerImpl.class, "index.buffer.size");
         this.timer =  metricsFactory.getTimer(EsIndexBufferProducerImpl.class,"index.buffer.producer.timer");

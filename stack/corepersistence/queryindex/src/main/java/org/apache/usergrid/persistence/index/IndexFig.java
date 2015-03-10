@@ -64,6 +64,11 @@ public interface IndexFig extends GuicyFig {
      */
     public static final String ELASTICSEARCH_FAIL_REFRESH = "elasticsearch.fail_refresh";
 
+    /**
+     *  Amount of time in milliseconds to wait when ES rejects our request before retrying.  Provides simple backpressure
+     */
+    public static final String FAILURE_REJECTED_RETRY_WAIT_TIME =  "elasticsearch.rejected_retry_wait";
+
     public static final String QUERY_LIMIT_DEFAULT = "index.query.limit.default";
 
     @Default( "127.0.0.1" )
@@ -158,4 +163,8 @@ public interface IndexFig extends GuicyFig {
     @Default("one")
     @Key( INDEX_WRITE_CONSISTENCY_LEVEL )
     String getWriteConsistencyLevel();
+
+    @Default("1000")
+    @Key( FAILURE_REJECTED_RETRY_WAIT_TIME )
+    long getFailureRetryTime();
 }
