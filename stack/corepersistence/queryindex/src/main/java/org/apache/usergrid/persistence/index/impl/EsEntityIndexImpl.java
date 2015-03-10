@@ -111,6 +111,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     private final Timer addWriteAliasTimer;
     private final Timer addReadAliasTimer;
     private final Timer searchTimer;
+    private final Timer allVersionsTimerFuture;
+    private final Timer deletePreviousTimerFuture;
 
     /**
      * We purposefully make this per instance. Some indexes may work, while others may fail
@@ -193,6 +195,10 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
             .getTimer( EsEntityIndexImpl.class, "es.entity.index.delete.all.versions.timer" );
         this.deletePreviousTimer = metricsFactory
             .getTimer( EsEntityIndexImpl.class, "es.entity.index.delete.previous.versions.timer" );
+        this.allVersionsTimerFuture =  metricsFactory
+            .getTimer( EsEntityIndexImpl.class, "es.entity.index.delete.all.versions.timer.future" );
+        this.deletePreviousTimerFuture = metricsFactory
+            .getTimer( EsEntityIndexImpl.class, "es.entity.index.delete.previous.versions.timer.future" );
 
         final MapScope mapScope = new MapScopeImpl( appScope.getApplication(), "cursorcache" );
 
@@ -203,14 +209,16 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     public void initializeIndex() {
         final int numberOfShards = config.getNumberOfShards();
         final int numberOfReplicas = config.getNumberOfReplicas();
-        addIndex(null, numberOfShards, numberOfReplicas,config.getWriteConsistencyLevel());
+        String[] indexes = getIndexes(AliasType.Write);
+        if(indexes == null || indexes.length==0) {
+            addIndex(null, numberOfShards, numberOfReplicas, config.getWriteConsistencyLevel());
+        }
     }
 
     @Override
     public void addIndex(final String indexSuffix,final int numberOfShards, final int numberOfReplicas, final String writeConsistency) {
         String normalizedSuffix =  StringUtils.isNotEmpty(indexSuffix) ? indexSuffix : null;
         try {
-
             //get index name with suffix attached
             String indexName = indexIdentifier.getIndex(normalizedSuffix);
 
@@ -398,7 +406,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
 
     @Override
-    public CandidateResults search( final IndexScope indexScope, final SearchTypes searchTypes,
+    public CandidateResults search(final IndexScope indexScope, final SearchTypes searchTypes,
             final Query query ) {
 
         final String context = IndexingUtils.createContextName(indexScope);
@@ -642,7 +650,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
         }
         catch ( Throwable t ) {
             logger.error( "Unable to communicate with elasticsearch" );
-            failureMonitor.fail( "Unable to execute batch", t );
+            failureMonitor.fail( "Unable to execute batch", t);
             throw t;
         }
 
@@ -662,6 +670,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
         //Added For Graphite Metrics
         final Timer.Context timeDeleteAllVersions =allVersionsTimer.time();
+        final Timer.Context timeDeleteAllVersionsFuture = allVersionsTimerFuture.time();
         final ListenableActionFuture<DeleteByQueryResponse> response = esProvider.getClient()
             .prepareDeleteByQuery( alias.getWriteAlias() ).setQuery( tqb ).execute();
 
@@ -687,35 +696,37 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
             }
         });
+        timeDeleteAllVersionsFuture.stop();
         return response;
     }
 
 
     @Override
-    public ListenableActionFuture deletePreviousVersions( final Id entityId, final UUID version ) {
+    public ListenableActionFuture deletePreviousVersions(final Id entityId, final UUID version) {
 
         String idString = IndexingUtils.idString( entityId ).toLowerCase();
 
         final FilteredQueryBuilder fqb = QueryBuilders.filteredQuery(
                 QueryBuilders.termQuery(ENTITYID_ID_FIELDNAME, idString),
-                FilterBuilders.rangeFilter(ENTITY_VERSION_FIELDNAME).lt(version.timestamp())
+            FilterBuilders.rangeFilter(ENTITY_VERSION_FIELDNAME).lt(version.timestamp())
         );
 
         //Added For Graphite Metrics
         //Checks the time from the execute to the response below
         final Timer.Context timeDeletePreviousVersions = deletePreviousTimer.time();
+        final Timer.Context timeDeletePreviousVersionFuture = deletePreviousTimerFuture.time();
         final ListenableActionFuture<DeleteByQueryResponse> response = esProvider.getClient()
             .prepareDeleteByQuery(alias.getWriteAlias()).setQuery(fqb).execute();
 
         //Added For Graphite Metrics
-        response.addListener( new ActionListener<DeleteByQueryResponse>() {
+        response.addListener(new ActionListener<DeleteByQueryResponse>() {
             @Override
-            public void onResponse( DeleteByQueryResponse response ) {
+            public void onResponse(DeleteByQueryResponse response) {
                 timeDeletePreviousVersions.stop();
                 //error message needs to be retooled so that it describes the entity more throughly
                 logger
-                    .debug( "Deleted entity {}:{} with version {} from all " + "index scopes with response status = {}",
-                        entityId.getType(), entityId.getUuid(), version, response.status().toString() );
+                    .debug("Deleted entity {}:{} with version {} from all " + "index scopes with response status = {}",
+                        entityId.getType(), entityId.getUuid(), version, response.status().toString());
 
                 checkDeleteByQueryResponse( fqb, response );
             }
@@ -728,6 +739,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
             }
         } );
 
+        timeDeletePreviousVersionFuture.stop();
 
         return response;
     }
@@ -748,7 +760,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
                     query.toString(),
                     failedException.status().getStatus(),
                     failedException.reason(),
-                    failedException.shardId(),
+                        failedException.shardId(),
                     failedException.index() )
                 );
             }
