@@ -60,8 +60,11 @@ public class BufferQueueInMemoryImpl implements BufferQueue {
         //loop until we're we're full or we time out
         do {
             try {
+
+                final long remaining = endTime - System.currentTimeMillis();
+
                 //we received 1, try to drain
-                IndexOperationMessage polled = messages.poll( timeout, timeUnit );
+                IndexOperationMessage polled = messages.poll( remaining, timeUnit );
 
                 //drain
                 if ( polled != null ) {

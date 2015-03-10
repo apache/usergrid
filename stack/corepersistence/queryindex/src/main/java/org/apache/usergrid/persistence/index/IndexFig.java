@@ -18,6 +18,7 @@
  */
 package org.apache.usergrid.persistence.index;
 
+
 import org.safehaus.guicyfig.Default;
 import org.safehaus.guicyfig.FigSingleton;
 import org.safehaus.guicyfig.GuicyFig;
@@ -55,7 +56,15 @@ public interface IndexFig extends GuicyFig {
 
     public static final String INDEX_BUFFER_TIMEOUT = "elasticsearch.buffer_timeout";
 
+    /**
+     * Amount of time to wait when reading from the queue
+     */
     public static final String INDEX_QUEUE_READ_TIMEOUT = "elasticsearch.queue_read_timeout";
+
+    /**
+     * Amount of time to wait when reading from the queue in milliseconds
+     */
+    public static final String INDEX_QUEUE_TRANSACTION_TIMEOUT = "elasticsearch.queue_transaction_timeout";
 
     public static final String INDEX_BATCH_SIZE = "elasticsearch.batch_size";
 
@@ -67,9 +76,10 @@ public interface IndexFig extends GuicyFig {
     public static final String ELASTICSEARCH_FAIL_REFRESH = "elasticsearch.fail_refresh";
 
     /**
-     *  Amount of time in milliseconds to wait when ES rejects our request before retrying.  Provides simple backpressure
+     * Amount of time in milliseconds to wait when ES rejects our request before retrying.  Provides simple
+     * backpressure
      */
-    public static final String FAILURE_REJECTED_RETRY_WAIT_TIME =  "elasticsearch.rejected_retry_wait";
+    public static final String FAILURE_REJECTED_RETRY_WAIT_TIME = "elasticsearch.rejected_retry_wait";
 
     public static final String QUERY_LIMIT_DEFAULT = "index.query.limit.default";
 
@@ -82,7 +92,7 @@ public interface IndexFig extends GuicyFig {
     int getPort();
 
     @Default( "usergrid" )
-    @Key( ELASTICSEARCH_CLUSTER_NAME)
+    @Key( ELASTICSEARCH_CLUSTER_NAME )
     String getClusterName();
 
     @Default( "usergrid" ) // no underbars allowed
@@ -111,15 +121,15 @@ public interface IndexFig extends GuicyFig {
     public boolean isForcedRefresh();
 
     /** Identify the client node with a unique name. */
-    @Default("default")
+    @Default( "default" )
     @Key( ELASTICSEARCH_NODENAME )
     public String getNodeName();
 
-    @Default("6")
+    @Default( "6" )
     @Key( ELASTICSEARCH_NUMBER_OF_SHARDS )
     public int getNumberOfShards();
 
-    @Default("1")
+    @Default( "1" )
     @Key( ELASTICSEARCH_NUMBER_OF_REPLICAS )
     public int getNumberOfReplicas();
 
@@ -127,51 +137,48 @@ public interface IndexFig extends GuicyFig {
     @Key( ELASTICSEARCH_FAIL_REFRESH )
     int getFailRefreshCount();
 
-    @Default("2")
+    @Default( "2" )
     int getIndexCacheMaxWorkers();
 
     /**
      * how long to wait before the buffer flushes to send
-     * @return
      */
-    @Default("250")
+    @Default( "250" )
     @Key( INDEX_BUFFER_TIMEOUT )
     long getIndexBufferTimeout();
 
     /**
      * size of the buffer to build up before you send results
-     * @return
      */
-    @Default("1000")
+    @Default( "1000" )
     @Key( INDEX_BUFFER_SIZE )
     int getIndexBufferSize();
 
     /**
      * size of the buffer to build up before you send results
-     * @return
      */
-    @Default("1000")
+    @Default( "1000" )
     @Key( INDEX_QUEUE_SIZE )
     int getIndexQueueSize();
 
     /**
      * Request batch size for ES
-     * @return
      */
-    @Default("1000")
-    @Key( INDEX_BATCH_SIZE)
+    @Default( "1000" )
+    @Key( INDEX_BATCH_SIZE )
     int getIndexBatchSize();
 
-    @Default("one")
+    @Default( "one" )
     @Key( INDEX_WRITE_CONSISTENCY_LEVEL )
     String getWriteConsistencyLevel();
 
-    @Default("1000")
+    @Default( "1000" )
     @Key( FAILURE_REJECTED_RETRY_WAIT_TIME )
     long getFailureRetryTime();
 
     //give us 60 seconds to process the message
-    @Default("60")
-    @Key(INDEX_QUEUE_READ_TIMEOUT)
+    @Default( "60" )
+    @Key( INDEX_QUEUE_READ_TIMEOUT )
     int getIndexQueueTimeout();
+
 }

@@ -34,6 +34,8 @@ import org.apache.usergrid.persistence.core.guice.CommonModule;
 import org.apache.usergrid.persistence.core.migration.data.DataMigration;
 import org.apache.usergrid.persistence.graph.guice.GraphModule;
 import org.apache.usergrid.persistence.index.guice.IndexModule;
+import org.apache.usergrid.persistence.index.impl.BufferQueue;
+import org.apache.usergrid.persistence.index.impl.BufferQueueSQSImpl;
 import org.apache.usergrid.persistence.map.guice.MapModule;
 import org.apache.usergrid.persistence.queue.guice.QueueModule;
 import org.slf4j.Logger;
@@ -69,7 +71,12 @@ public class CoreModule  extends AbstractModule {
         install( new CommonModule());
         install(new CollectionModule());
         install(new GraphModule());
-        install(new IndexModule());
+        install( new IndexModule() {
+            @Override
+            public void wireBufferQueue() {
+                bind(BufferQueue.class).to( BufferQueueSQSImpl.class );
+            }
+        } );
         install(new MapModule());
         install(new QueueModule());
 

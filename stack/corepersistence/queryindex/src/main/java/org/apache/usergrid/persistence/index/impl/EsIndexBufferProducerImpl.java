@@ -54,7 +54,8 @@ public class EsIndexBufferProducerImpl implements IndexBufferProducer {
 
     public BetterFuture put(IndexOperationMessage message){
         Preconditions.checkNotNull(message, "Message cannot be null");
-        indexSizeCounter.inc(message.getOperations().size());
+        indexSizeCounter.inc(message.getDeIndexRequests().size());
+        indexSizeCounter.inc(message.getIndexRequests().size());
         Timer.Context time = timer.time();
         bufferQueue.offer( message );
         time.stop();

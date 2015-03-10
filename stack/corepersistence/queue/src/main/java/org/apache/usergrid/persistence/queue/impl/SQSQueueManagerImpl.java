@@ -95,7 +95,8 @@ public class SQSQueueManagerImpl implements QueueManager {
             sqs.setRegion(region);
             smileFactory.delegateToTextual(true);
             mapper = new ObjectMapper( smileFactory );
-            mapper.enable(SerializationFeature.INDENT_OUTPUT);
+            //pretty print, disabling for speed
+//            mapper.enable(SerializationFeature.INDENT_OUTPUT);
             mapper.enableDefaultTypingAsProperty(ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT, "@class");
         } catch ( Exception e ) {
             LOG.warn("failed to setup SQS",e);
@@ -180,7 +181,10 @@ public class SQSQueueManagerImpl implements QueueManager {
         }
         String url = getQueue().getUrl();
         LOG.info("Sending Message...{} to {}",body.toString(),url);
-        SendMessageRequest request = new SendMessageRequest(url,toString((Serializable)body));
+
+        final String stringBody = toString(body);
+
+        SendMessageRequest request = new SendMessageRequest(url, stringBody);
         sqs.sendMessage(request);
     }
 

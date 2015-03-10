@@ -21,14 +21,10 @@ package org.apache.usergrid.persistence.index.impl;
 
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-
-import org.elasticsearch.action.ActionRequestBuilder;
 
 import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.index.IndexOperationMessage;
@@ -39,7 +35,6 @@ import org.apache.usergrid.persistence.queue.QueueMessage;
 import org.apache.usergrid.persistence.queue.QueueScope;
 import org.apache.usergrid.persistence.queue.impl.QueueScopeImpl;
 
-import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -69,13 +64,10 @@ public class BufferQueueSQSImpl implements BufferQueue {
 
     @Override
     public void offer( final IndexOperationMessage operation ) {
-        final Message toQueue = new Message( operation.getOperations() );
-
-
 
 
         try {
-            this.queue.sendMessage( toQueue );
+            this.queue.sendMessage( operation );
             operation.getFuture().run();
         }
         catch ( IOException e ) {
@@ -87,19 +79,22 @@ public class BufferQueueSQSImpl implements BufferQueue {
     @Override
     public List<IndexOperationMessage> take( final int takeSize, final long timeout, final TimeUnit timeUnit ) {
 
-        //loop until we're we're full or we time out
+        //SQS doesn't support more than 10
+
+        final int actualTake = Math.min( 10, takeSize );
+
         List<QueueMessage> messages = queue
-            .getMessages( takeSize, indexFig.getIndexQueueTimeout(), ( int ) timeUnit.toMillis( timeout ),
-                Message.class );
+            .getMessages( actualTake, indexFig.getIndexQueueTimeout(), ( int ) timeUnit.toMillis( timeout ),
+                IndexOperationMessage.class );
 
 
         final List<IndexOperationMessage> response = new ArrayList<>( messages.size() );
 
         for ( final QueueMessage message : messages ) {
 
-            SqsIndexOperationMessage operation = new SqsIndexOperationMessage( message );
+            final IndexOperationMessage messageBody = ( IndexOperationMessage ) message.getBody();
 
-            operation.setOperations( ( ( Message ) message.getBody() ).getData() );
+            SqsIndexOperationMessage operation = new SqsIndexOperationMessage(message,  messageBody );
 
             response.add( operation );
         }
@@ -111,29 +106,18 @@ public class BufferQueueSQSImpl implements BufferQueue {
     @Override
     public void ack( final List<IndexOperationMessage> messages ) {
 
+        //nothing to do
+        if(messages.size() == 0){
+            return;
+        }
+
         List<QueueMessage> toAck = new ArrayList<>( messages.size() );
 
-        for(IndexOperationMessage ioe: messages){
-            toAck.add( ((SqsIndexOperationMessage)ioe).getMessage() );
+        for ( IndexOperationMessage ioe : messages ) {
+            toAck.add( ( ( SqsIndexOperationMessage ) ioe ).getMessage() );
         }
 
         queue.commitMessages( toAck );
-    }
-
-
-    /**
-     * The message to queue to SQS
-     */
-    public static final class Message implements Serializable {
-        private final Set<BatchRequest> data;
-
-
-        private Message( final Set<BatchRequest> data ) {this.data = data;}
-
-
-        public Set<BatchRequest> getData() {
-            return data;
-        }
     }
 
 
@@ -145,7 +129,11 @@ public class BufferQueueSQSImpl implements BufferQueue {
         private final QueueMessage message;
 
 
-        public SqsIndexOperationMessage( final QueueMessage message ) {this.message = message;}
+        public SqsIndexOperationMessage( final QueueMessage message, final IndexOperationMessage source ) {
+            this.message = message;
+            this.addAllDeIndexRequest( source.getDeIndexRequests() );
+            this.addAllIndexRequest( source.getIndexRequests() );
+        }
 
 
         /**

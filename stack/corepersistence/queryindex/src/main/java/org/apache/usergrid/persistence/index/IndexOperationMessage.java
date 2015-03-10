@@ -16,69 +16,84 @@
  */
 package org.apache.usergrid.persistence.index;
 
-import org.apache.usergrid.persistence.core.future.BetterFuture;
-import org.apache.usergrid.persistence.index.impl.BatchRequest;
-
-import org.elasticsearch.action.ActionRequestBuilder;
-import org.elasticsearch.action.support.replication.ShardReplicationOperationRequestBuilder;
 
 import java.io.Serializable;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentLinkedQueue;
+
+import org.apache.usergrid.persistence.core.future.BetterFuture;
+import org.apache.usergrid.persistence.index.impl.DeIndexRequest;
+import org.apache.usergrid.persistence.index.impl.IndexRequest;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 
 /**
  * Container for index operations.
  */
-public  class IndexOperationMessage implements Serializable {
-    private final Set<BatchRequest> builders;
+public class IndexOperationMessage implements Serializable {
+    private final Set<IndexRequest> indexRequests;
+    private final Set<DeIndexRequest> deIndexRequests;
+
+
+
     private final BetterFuture<IndexOperationMessage> containerFuture;
 
-    public IndexOperationMessage(){
+
+    public IndexOperationMessage() {
         final IndexOperationMessage parent = this;
-        this.builders = new HashSet<>();
-        this.containerFuture = new BetterFuture<>(new Callable<IndexOperationMessage>() {
+        this.indexRequests = new HashSet<>();
+        this.deIndexRequests = new HashSet<>();
+        this.containerFuture = new BetterFuture<>( new Callable<IndexOperationMessage>() {
             @Override
             public IndexOperationMessage call() throws Exception {
                 return parent;
             }
-        });
+        } );
     }
 
 
-    /**
-     * Add all our operations in the set
-     * @param requests
-     */
-    public void setOperations(final Set<BatchRequest> requests){
-        this.builders.addAll( requests);
+    public void addIndexRequest( final IndexRequest indexRequest ) {
+        indexRequests.add( indexRequest );
     }
 
 
-    /**
-     * Add the operation to the set
-     * @param builder
-     */
-    public void addOperation(BatchRequest builder){
-        builders.add(builder);
+    public void addAllIndexRequest( final Set<IndexRequest> indexRequests ) {
+        indexRequests.addAll( indexRequests );
     }
 
-    /**
-     * return operations for the message
-     * @return
-     */
-    public Set<BatchRequest> getOperations(){
-        return builders;
+
+    public void addDeIndexRequest( final DeIndexRequest deIndexRequest ) {
+        deIndexRequests.add( deIndexRequest );
+    }
+
+
+    public void addAllDeIndexRequest( final Set<DeIndexRequest> deIndexRequests ) {
+        deIndexRequests.addAll( deIndexRequests );
+    }
+
+
+    public Set<IndexRequest> getIndexRequests() {
+        return indexRequests;
+    }
+
+
+    public Set<DeIndexRequest> getDeIndexRequests() {
+        return deIndexRequests;
+    }
+
+
+    @JsonIgnore
+    public boolean isEmpty(){
+        return indexRequests.isEmpty() && deIndexRequests.isEmpty();
     }
 
     /**
      * return the promise
-     * @return
      */
-    public BetterFuture<IndexOperationMessage> getFuture(){
+    @JsonIgnore
+    public BetterFuture<IndexOperationMessage> getFuture() {
         return containerFuture;
     }
-
 }

@@ -26,17 +26,20 @@ import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.client.Client;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 
 /**
  * Represent the properties required to build an index request
  */
+@JsonTypeInfo( use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class" )
 public class IndexRequest implements BatchRequest {
 
-    public final  String writeAlias;
-    public final String entityType;
-    public final String documentId;
+    public String writeAlias;
+    public String entityType;
+    public String documentId;
 
-    public final Map<String, Object> data;
+    public Map<String, Object> data;
 
 
     public IndexRequest( final String writeAlias, final String entityType, final String documentId,
@@ -48,13 +51,18 @@ public class IndexRequest implements BatchRequest {
     }
 
 
-    public void  doOperation(final Client client, final BulkRequestBuilder bulkRequest ){
-        IndexRequestBuilder builder =
-                      client.prepareIndex(writeAlias, entityType, documentId).setSource( data );
+    /**
+     * DO NOT DELETE!  Required for Jackson
+     */
+    public IndexRequest() {
+    }
+
+
+    public void doOperation( final Client client, final BulkRequestBuilder bulkRequest ) {
+        IndexRequestBuilder builder = client.prepareIndex( writeAlias, entityType, documentId ).setSource( data );
 
 
         bulkRequest.add( builder );
-
     }
 
 

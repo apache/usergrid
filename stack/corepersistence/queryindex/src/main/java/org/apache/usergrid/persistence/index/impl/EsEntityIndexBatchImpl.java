@@ -127,7 +127,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         final String entityType = entity.getId().getType();
 
 
-        container.addOperation(new IndexRequest(alias.getWriteAlias(), entityType, indexId, entityAsMap));
+        container.addIndexRequest(new IndexRequest(alias.getWriteAlias(), entityType, indexId, entityAsMap));
 
         return this;
     }
@@ -168,7 +168,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
             indexes = new String[]{indexIdentifier.getIndex(null)};
         }
 
-        container.addOperation( new DeIndexRequest( indexes, entityType, indexId ) );
+        container.addDeIndexRequest( new DeIndexRequest( indexes, entityType, indexId ) );
 
         log.debug("Deindexed Entity with index id " + indexId);
 
@@ -192,6 +192,14 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
     public BetterFuture execute() {
         IndexOperationMessage tempContainer = container;
         container = new IndexOperationMessage();
+
+        /**
+         * No-op, just disregard it
+         */
+        if(tempContainer.isEmpty()){
+            return tempContainer.getFuture();
+        }
+
         return indexBatchBufferProducer.put(tempContainer);
     }
 
