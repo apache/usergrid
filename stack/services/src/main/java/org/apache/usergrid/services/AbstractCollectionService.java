@@ -178,7 +178,7 @@ public class AbstractCollectionService extends AbstractService {
     /*
      * Level level = Level.REFS; if (isEmpty(parameters)) {
      * level = Level.ALL_PROPERTIES; }
-     * 
+     *
      * Results results = em.searchCollectionForProperty(owner,
      * getCollectionName(), null, nameProperty, name, null, null, 1, level);
      * EntityRef entity = results.getRef();
@@ -248,9 +248,9 @@ public class AbstractCollectionService extends AbstractService {
         }
 
         logger.debug("Limiting collection to " + Query.DEFAULT_LIMIT);
-        int count = Query.DEFAULT_LIMIT; 
+        int count = Query.DEFAULT_LIMIT;
 
-        Results r = em.getCollection( context.getOwner(), context.getCollectionName(), 
+        Results r = em.getCollection( context.getOwner(), context.getCollectionName(),
             null, count, Level.ALL_PROPERTIES, isCollectionReversed( context ) );
 
         importEntities( context, r );
@@ -370,7 +370,7 @@ public class AbstractCollectionService extends AbstractService {
                             p );
                 }
                 catch ( Exception e ) {
-                    logger.error( "Entity " + i + " unable to be created in collection " + context.getCollectionName(),
+                    logger.debug( "Entity " + i + " unable to be created in collection " + context.getCollectionName(),
                             e );
 
                     i++;
