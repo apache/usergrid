@@ -40,6 +40,14 @@ public interface MapManager extends CPManager {
      */
     public void putString( final String key, final String value );
 
+    /**
+     * The time to live (in seconds) of the string
+     * @param key
+     * @param value
+     * @param ttl
+     */
+    public void putString( final String key, final String value, final int ttl );
+
 
     /**
      * Return the uuid, null if not found

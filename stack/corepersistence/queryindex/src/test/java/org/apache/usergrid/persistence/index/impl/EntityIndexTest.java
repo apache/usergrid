@@ -24,11 +24,10 @@ import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.usergrid.persistence.core.future.BetterFuture;
 import org.apache.usergrid.persistence.index.*;
-import org.apache.usergrid.persistence.index.query.CandidateResult;
-import org.apache.usergrid.persistence.index.utils.IndexValidationUtils;
-import org.apache.usergrid.persistence.model.field.UUIDField;
+import org.apache.usergrid.persistence.model.field.*;
+import org.apache.usergrid.persistence.model.field.value.EntityObject;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -48,7 +47,6 @@ import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
-import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -86,6 +84,74 @@ public class EntityIndexTest extends BaseIT {
         entityIndex.refresh();
 
         testQueries( indexScope, searchTypes,  entityIndex );
+    }
+
+    @Test
+//    @Ignore("this is a problem i will work on when i can breathe")
+    public void testIndexVariations() throws IOException {
+        Id appId = new SimpleId( "application" );
+
+        ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
+
+        EntityIndex entityIndex = eif.createEntityIndex( applicationScope );
+        entityIndex.initializeIndex();
+
+        final String entityType = "thing";
+        IndexScope indexScope = new IndexScopeImpl( appId, "things" );
+        final SearchTypes searchTypes = SearchTypes.fromTypes( entityType );
+        EntityIndexBatch batch = entityIndex.createBatch();
+        Entity entity = new Entity( entityType );
+        EntityUtils.setVersion(entity, UUIDGenerator.newTimeUUID());
+        entity.setField(new UUIDField(IndexingUtils.ENTITYID_ID_FIELDNAME, UUID.randomUUID()));
+        entity.setField(new StringField("testfield","test"));
+        batch.index(indexScope, entity);
+        batch.execute().get();
+
+        entity = new Entity( entityType );
+        entity.setField(new UUIDField(IndexingUtils.ENTITYID_ID_FIELDNAME, UUID.randomUUID()));
+        EntityUtils.setVersion(entity, UUIDGenerator.newTimeUUID());
+        List<String> list = new ArrayList<>();
+        list.add("test");
+        entity.setField(new ArrayField<String>("testfield", list));
+        batch.index(indexScope, entity);
+        batch.execute().get();
+
+
+        entity = new Entity( entityType );
+        entity.setField(new UUIDField(IndexingUtils.ENTITYID_ID_FIELDNAME, UUID.randomUUID()));
+        EntityUtils.setVersion(entity, UUIDGenerator.newTimeUUID());
+        EntityObject testObj = new EntityObject();
+        testObj.setField(new StringField("test","testFiedl"));
+        entity.setField(new EntityObjectField("testfield", testObj));
+        batch.index(indexScope, entity);
+        batch.execute().get();
+
+        entity = new Entity( entityType );
+        entity.setField(new UUIDField(IndexingUtils.ENTITYID_ID_FIELDNAME, UUID.randomUUID()));
+        EntityUtils.setVersion(entity, UUIDGenerator.newTimeUUID());
+        List<Integer> listint = new ArrayList<>();
+        listint.add(0);
+        entity.setField(new ArrayField<Integer>("testfield", listint));
+        batch.index(indexScope, entity);
+        batch.execute().get();
+
+        entity = new Entity( entityType );
+        entity.setField(new UUIDField(IndexingUtils.ENTITYID_ID_FIELDNAME, UUID.randomUUID()));
+        EntityUtils.setVersion(entity, UUIDGenerator.newTimeUUID());
+        List<EntityObject> listObj = new ArrayList<>();
+        EntityObject listObjField = new EntityObject();
+        listObjField.setField(new StringField("testasf","somevalue"));
+        listObj.add(listObjField);
+        listObjField = new EntityObject();
+        listObjField.setField(new IntegerField("testasf",0));
+        listObj.add(listObjField);
+        entity.setField(new ArrayField<EntityObject>("testfield", listObj));
+        batch.index(indexScope, entity);
+        batch.execute().get();
+
+        entityIndex.refresh();
+        testQuery(indexScope, searchTypes, entityIndex, "select *", 5);
+
     }
 
     @Test
@@ -213,6 +279,7 @@ public class EntityIndexTest extends BaseIT {
         entityIndex.refresh();
 
         //Hilda Youn
+
         testQuery(indexScope, searchTypes, entityIndex, "name = 'Bowers Oneil'", 0);
 
     }
@@ -289,8 +356,8 @@ public class EntityIndexTest extends BaseIT {
         entityIndex.createBatch().index(indexScope , entity ).execute().get();
         entityIndex.refresh();
 
-        CandidateResults candidateResults = entityIndex.search( indexScope, SearchTypes.fromTypes(entity.getId().getType()),
-                Query.fromQL( "name contains 'Ferrari*'" ) );
+        CandidateResults candidateResults = entityIndex.search( indexScope,
+            SearchTypes.fromTypes( entity.getId().getType() ), Query.fromQL( "name contains 'Ferrari*'" ) );
         assertEquals( 1, candidateResults.size() );
 
         EntityIndexBatch batch = entityIndex.createBatch();
@@ -593,6 +660,98 @@ public class EntityIndexTest extends BaseIT {
         assertNotEquals( "cluster should be fine", Health.RED, ei.getIndexHealth() );
         assertNotEquals( "cluster should be ready now", Health.RED, ei.getClusterHealth() );
     }
+
+
+    @Test
+    public void testCursorFormat() throws Exception {
+
+        Id appId = new SimpleId( "application" );
+        Id ownerId = new SimpleId( "owner" );
+
+        ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
+
+        IndexScope indexScope = new IndexScopeImpl( ownerId, "users" );
+
+
+        EntityIndex entityIndex = eif.createEntityIndex( applicationScope );
+        entityIndex.initializeIndex();
+
+        final EntityIndexBatch batch = entityIndex.createBatch();
+
+
+        final int size = 10;
+
+        final List<Id> entities = new ArrayList<>( size );
+
+
+        for ( int i = 0; i < size; i++ ) {
+            final String middleName = "middleName" + UUIDUtils.newTimeUUID();
+            Map<String, Object> properties = new LinkedHashMap<String, Object>();
+            properties.put( "username", "edanuff" );
+            properties.put( "email", "ed@anuff.com" );
+            properties.put( "middlename", middleName );
+
+            Map entityMap = new HashMap() {{
+                put( "username", "edanuff" );
+                put( "email", "ed@anuff.com" );
+                put( "middlename", middleName );
+            }};
+
+            final Id userId = new SimpleId( "user" );
+
+            Entity user = EntityIndexMapUtils.fromMap( entityMap );
+            EntityUtils.setId( user, userId );
+            EntityUtils.setVersion( user, UUIDGenerator.newTimeUUID() );
+
+            user.setField( new UUIDField( IndexingUtils.ENTITYID_ID_FIELDNAME, UUIDGenerator.newTimeUUID() ) );
+
+            entities.add( userId );
+
+
+            batch.index( indexScope, user );
+        }
+
+
+        batch.execute().get();
+        entityIndex.refresh();
+
+
+        final int limit = 1;
+
+
+        final int expectedPages = size / limit;
+
+
+        String cursor = null;
+
+        for ( int i = 0; i < expectedPages; i++ ) {
+            //**
+            final Query query = Query.fromQL( "select *" );
+            query.setLimit( limit );
+
+            if ( cursor != null ) {
+                query.setCursor( cursor );
+            }
+
+            final CandidateResults results = entityIndex.search( indexScope, SearchTypes.allTypes(), query );
+
+            assertTrue( results.hasCursor() );
+
+            cursor = results.getCursor();
+
+            assertEquals("Should be 16 bytes as hex", 32, cursor.length());
+
+
+
+
+            assertEquals( 1, results.size() );
+
+
+            assertEquals( results.get( 0 ).getId(), entities.get( i ) );
+        }
+    }
+
+
 }
 
 

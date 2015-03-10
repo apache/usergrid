@@ -57,6 +57,12 @@ public class MapManagerImpl implements MapManager {
 
 
     @Override
+    public void putString( final String key, final String value, final int ttl ) {
+        mapSerialization.putString( scope, key, value, ttl );
+    }
+
+
+    @Override
     public UUID getUuid( final String key ) {
         return mapSerialization.getUuid(scope,key);
     }

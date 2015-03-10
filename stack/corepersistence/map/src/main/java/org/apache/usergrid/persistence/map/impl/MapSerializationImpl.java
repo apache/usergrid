@@ -42,6 +42,7 @@ import com.google.common.hash.Funnel;
 import com.google.common.hash.PrimitiveSink;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.netflix.astyanax.ColumnListMutation;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
@@ -126,33 +127,85 @@ public class MapSerializationImpl implements MapSerialization {
 
     @Override
     public void putString( final MapScope scope, final String key, final String value ) {
-        Preconditions.checkNotNull(scope, "mapscope is required");
+        final RowOp op = new RowOp() {
+            @Override
+            public void rowOp( final ScopedRowKey<MapEntryKey> scopedRowKey,
+                               final ColumnListMutation<Boolean> columnListMutation ) {
+                columnListMutation.putColumn( true, value );
+            }
+        };
+
+
+        writeString( scope, key, value, op );
+    }
+
+
+    @Override
+    public void putString( final MapScope scope, final String key, final String value, final int ttl ) {
+        Preconditions.checkArgument( ttl > 0, "ttl must be > than 0" );
+
+        final RowOp op = new RowOp() {
+            @Override
+            public void rowOp( final ScopedRowKey<MapEntryKey> scopedRowKey,
+                               final ColumnListMutation<Boolean> columnListMutation ) {
+                columnListMutation.putColumn( true, value, ttl );
+            }
+        };
+
+
+        writeString( scope, key, value, op );
+    }
+
+
+    /**
+     * Write our string index with the specified row op
+     * @param scope
+     * @param key
+     * @param value
+     * @param rowOp
+     */
+    private void writeString( final MapScope scope, final String key, final String value, final RowOp rowOp ) {
+
+        Preconditions.checkNotNull( scope, "mapscope is required" );
         Preconditions.checkNotNull( key, "key is required" );
         Preconditions.checkNotNull( value, "value is required" );
 
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
         //add it to the entry
-        final ScopedRowKey<MapEntryKey> entryRowKey = MapEntryKey.fromKey(scope, key);
+        final ScopedRowKey<MapEntryKey> entryRowKey = MapEntryKey.fromKey( scope, key );
 
-        //serialize to the entry
-        batch.withRow(MAP_ENTRIES, entryRowKey).putColumn(true, value);
+        //serialize to the
+        // entry
+
+
+        rowOp.rowOp( entryRowKey, batch.withRow( MAP_ENTRIES, entryRowKey ) );
+
 
         //add it to the keys
 
         final int bucket = BUCKET_LOCATOR.getCurrentBucket( key );
 
-        final BucketScopedRowKey< String> keyRowKey =
-                BucketScopedRowKey.fromKey( scope.getApplication(), key, bucket);
+        final BucketScopedRowKey<String> keyRowKey = BucketScopedRowKey.fromKey( scope.getApplication(), key, bucket );
 
         //serialize to the entry
-        batch.withRow(MAP_KEYS, keyRowKey).putColumn(key, true);
+        batch.withRow( MAP_KEYS, keyRowKey ).putColumn( key, true );
 
-        executeBatch(batch);
+
+        executeBatch( batch );
     }
 
+    private static interface RowOp{
+
+        /**
+         * Callback to do the row
+         * @param scopedRowKey The row key
+         * @param columnListMutation The column mutation
+         */
+        void rowOp(final ScopedRowKey<MapEntryKey> scopedRowKey, final ColumnListMutation<Boolean> columnListMutation);
 
 
+    }
 
     @Override
     public UUID getUuid( final MapScope scope, final String key ) {
@@ -255,18 +308,18 @@ public class MapSerializationImpl implements MapSerialization {
     @Override
     public Collection<MultiTennantColumnFamilyDefinition> getColumnFamilies() {
 
-        final MultiTennantColumnFamilyDefinition mapEntries = 
+        final MultiTennantColumnFamilyDefinition mapEntries =
                 new MultiTennantColumnFamilyDefinition( MAP_ENTRIES,
-                       BytesType.class.getSimpleName(), 
-                       BytesType.class.getSimpleName(), 
-                       BytesType.class.getSimpleName(), 
+                       BytesType.class.getSimpleName(),
+                       BytesType.class.getSimpleName(),
+                       BytesType.class.getSimpleName(),
                        MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
 
-        final MultiTennantColumnFamilyDefinition mapKeys = 
+        final MultiTennantColumnFamilyDefinition mapKeys =
                 new MultiTennantColumnFamilyDefinition( MAP_KEYS,
-                        BytesType.class.getSimpleName(), 
-                        UTF8Type.class.getSimpleName(), 
-                        BytesType.class.getSimpleName(), 
+                        BytesType.class.getSimpleName(),
+                        UTF8Type.class.getSimpleName(),
+                        BytesType.class.getSimpleName(),
                         MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
 
         return Arrays.asList( mapEntries, mapKeys );
