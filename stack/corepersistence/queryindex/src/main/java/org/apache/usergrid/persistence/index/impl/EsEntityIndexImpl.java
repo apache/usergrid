@@ -735,6 +735,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
             @Override
             public void onFailure( Throwable e ) {
+                timeDeletePreviousVersions.stop();
                 logger.error( "Deleted entity {}:{} from all index scopes with error {}", entityId.getType(),
                     entityId.getUuid(), e );
             }
