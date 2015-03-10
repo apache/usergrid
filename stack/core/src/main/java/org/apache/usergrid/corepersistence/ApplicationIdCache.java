@@ -30,26 +30,11 @@ import com.google.common.base.Optional;
 /**
  * A simple cache interface for looking up entities from an EM
  */
-public interface OrgApplicationCache {
+public interface ApplicationIdCache {
 
-
-    /**
-     * Get an entity by it's alias property.  The result is cached. To clear it call evict or evict all
-     * @param
-     * @return
-     */
-    public Optional<UUID> getOrganizationId(final String orgName);
-
-    /**
-     * Evict the org by name
-     * @param orgName
-     */
-    public void evictOrgId(final String orgName);
 
     /**
      * Evict the application by name
-     * @param applicationName
-     * @return
      */
     public Optional<UUID> getApplicationId(final String applicationName);
 
@@ -57,7 +42,7 @@ public interface OrgApplicationCache {
     /**
      * Evict the app id by the name
      */
-    public void evictAppId(final String applicationname);
+    public void evictAppId(final String applicationName);
 
 
     /**

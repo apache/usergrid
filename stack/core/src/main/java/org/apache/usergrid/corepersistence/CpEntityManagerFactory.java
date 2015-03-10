@@ -34,13 +34,11 @@ import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
-import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
 import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.entities.Application;
-import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.exceptions.ApplicationAlreadyExistsException;
 import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
@@ -95,7 +93,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             }
         });
 
-    private final OrgApplicationCache orgApplicationCache;
+    private final ApplicationIdCache orgApplicationCache;
 
 
     private ManagerCache managerCache;
@@ -116,13 +114,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.injector = injector;
         this.managerCache = injector.getInstance( ManagerCache.class );
         this.metricsFactory = injector.getInstance( MetricsFactory.class );
-
-        // can be removed after everybody moves to Usergrid 2.0, default is true
-        Properties configProps = cassandraService.getProperties();
-        if ( configProps.getProperty("usergrid.twodoto.appinfo.migration", "true").equals("true")) {
-            migrateOldAppInfos();
-        }
-        this.orgApplicationCache = new OrgApplicationCacheImpl( this );
+        this.orgApplicationCache = new ApplicationIdCacheImpl( this );
     }
 
 
@@ -236,9 +228,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         EntityManager em = getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID);
 
-        // Ensure our management system exists before creating our application
-        init();
-
         final String appName = buildAppName( organizationName, name );
 
         // check for pre-existing application
@@ -247,32 +236,10 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             throw new ApplicationAlreadyExistsException( appName );
         }
 
+        // create application info entity in the management app
+
         getSetup().setupApplicationKeyspace( applicationId, appName );
 
-        final Optional<UUID> cachedValue = orgApplicationCache.getOrganizationId( organizationName );
-
-        if ( !cachedValue.isPresent() ) {
-
-
-            // create new org because the specified one does not exist
-            final String orgName = organizationName;
-
-
-
-            try {
-                final Entity orgInfo = em.create( "organization", new HashMap<String, Object>() {{
-                    put( PROPERTY_NAME, orgName );
-                }} );
-                //evit so it's re-loaded later
-                orgApplicationCache.evictOrgId( name );
-            }
-            catch ( DuplicateUniquePropertyExistsException e ) {
-                //swallow, if it exists, just get it
-                orgApplicationCache.evictOrgId( organizationName );
-            }
-        }
-
-        // create appinfo entry in the system app
         final UUID appId = applicationId;
         Map<String, Object> appInfoMap = new HashMap<String, Object>() {{
             put( PROPERTY_NAME, appName );
@@ -298,7 +265,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         appEm.resetRoles();
         appEm.refreshIndex();
 
-        logger.info("Initialized application {}", appName );
+        logger.info("Initialized application {}", appName);
 
         //evict app Id from cache
         orgApplicationCache.evictAppId( appName );
@@ -480,71 +447,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         }
 
         return appMap;
-    }
-
-
-    private void migrateOldAppInfos() {
-
-        EntityManager em = getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID);
-
-        Query q = Query.fromQL("select *");
-        Results results = null;
-        try {
-            results = em.searchCollection(em.getApplicationRef(), "appinfos", q);
-        } catch (Exception e) {
-            logger.error("Error reading old appinfos collection, not migrating", e);
-            return;
-        }
-
-        if ( !results.isEmpty() ) {
-
-            // applications still found in old appinfos collection, migrate them.
-            logger.info("Migrating old appinfos");
-
-            for ( Entity oldAppInfo : results.getEntities() ) {
-
-                final String appName = oldAppInfo.getName();
-
-                UUID applicationId = null, organizationId = null;
-                Object uuidObject = oldAppInfo.getProperty("applicationUuid");
-                if (uuidObject instanceof UUID) {
-                    applicationId = (UUID) uuidObject;
-                } else {
-                    applicationId = UUIDUtils.tryExtractUUID(uuidObject.toString());
-                }
-                uuidObject = oldAppInfo.getProperty("organizationUuid");
-                if (uuidObject instanceof UUID) {
-                    organizationId = (UUID) uuidObject;
-                } else {
-                    organizationId = UUIDUtils.tryExtractUUID(uuidObject.toString());
-                }
-
-                // create and connect new APPLICATION_INFO oldAppInfo to Organization
-
-                final UUID appId = applicationId;
-                Map<String, Object> appInfoMap = new HashMap<String, Object>() {{
-                    put(PROPERTY_NAME, appName);
-                    put(PROPERTY_UUID, appId);
-                }};
-
-                final Entity appInfo;
-                try {
-                    appInfo = em.create(appId, CpNamingUtils.APPLICATION_INFO, appInfoMap);
-                    em.createConnection(new SimpleEntityRef(Group.ENTITY_TYPE, organizationId), "owns", appInfo);
-                    em.delete( oldAppInfo );
-                    logger.info("Migrated old appinfo for app {}", appName);
-
-                } catch (Exception e) {
-                    logger.error("Error migration application " + appName + " continuing ", e);
-                }
-            }
-
-            em.refreshIndex();
-
-        } else {
-            logger.info("No old appinfos found, no need for migration");
-        }
-
     }
 
 

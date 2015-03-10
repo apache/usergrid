@@ -28,38 +28,24 @@ import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.utils.UUIDUtils;
 
 import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
-import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
-
 
 /**
  * Implements the org app cache for faster runtime lookups.  These values are immutable, so this LRU cache can stay
  * full for the duration of the execution
  */
-public class OrgApplicationCacheImpl implements OrgApplicationCache {
+public class ApplicationIdCacheImpl implements ApplicationIdCache {
 
 
     /**
      * Cache the pointer to our root entity manager for reference
      */
     private final EntityManager rootEm;
-
-    private final LoadingCache<String, Optional<UUID>> orgCache =
-        CacheBuilder.newBuilder().maximumSize( 10000 ).build( new CacheLoader<String, Optional<UUID>>() {
-            @Override
-            public Optional<UUID> load( final String key ) throws Exception {
-                return fetchOrganizationId( key );
-            }
-        } );
-
 
     private final LoadingCache<String, Optional<UUID>> appCache =
         CacheBuilder.newBuilder().maximumSize( 10000 ).build( new CacheLoader<String, Optional<UUID>>() {
@@ -70,56 +56,9 @@ public class OrgApplicationCacheImpl implements OrgApplicationCache {
         } );
 
 
-    public OrgApplicationCacheImpl( final EntityManagerFactory emf ) {
+    public ApplicationIdCacheImpl(final EntityManagerFactory emf) {
         this.rootEm = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID);
     }
-
-
-    @Override
-    public Optional<UUID> getOrganizationId( final String orgName ) {
-        try {
-            return orgCache.get( orgName );
-        }
-        catch ( ExecutionException e ) {
-            throw new RuntimeException( "Unable to load org cache", e );
-        }
-    }
-
-
-    /**
-     * Fetches the organization
-     */
-    private Optional<UUID> fetchOrganizationId( final String orgName ) {
-
-        try {
-            final EntityRef alias = rootEm.getAlias( "organizations", orgName );
-
-            if ( alias == null ) {
-                return Optional.absent();
-            }
-
-            final Entity entity;
-
-            entity = rootEm.get( alias );
-
-
-            if ( entity == null ) {
-                return Optional.absent();
-            }
-
-            return Optional.of( entity.getUuid() );
-        }
-        catch ( Exception e ) {
-            throw new RuntimeException( "Unable to load organization Id for caching", e );
-        }
-    }
-
-
-    @Override
-    public void evictOrgId( final String orgName ) {
-        orgCache.invalidate( orgName );
-    }
-
 
     @Override
     public Optional<UUID> getApplicationId( final String applicationName ) {
@@ -138,31 +77,18 @@ public class OrgApplicationCacheImpl implements OrgApplicationCache {
     private Optional<UUID> fetchApplicationId( final String applicationName ) {
 
         try {
-            Query q = Query.fromQL( PROPERTY_NAME + " = '" + applicationName + "'" );
+            UUID applicationId = null;
 
-
-            Results results = rootEm.searchCollection( rootEm.getApplicationRef(), "appinfos", q );
-
-            if ( results.isEmpty() ) {
-                return Optional.absent();
+            final EntityRef alias = rootEm.getAlias( CpNamingUtils.APPLICATION_INFO, applicationName );
+            if ( alias != null ) {
+                Entity entity = rootEm.get(alias);
+                applicationId = (UUID) entity.getProperty("uuid");
             }
 
-            Entity entity = results.iterator().next();
-            Object uuidObject = entity.getProperty( "applicationUuid" );
-
-            final UUID value;
-            if ( uuidObject instanceof UUID ) {
-                value = ( UUID ) uuidObject;
-            }
-            else {
-                value = UUIDUtils.tryExtractUUID( entity.getProperty( "applicationUuid" ).toString() );
-            }
-
-
-            return Optional.of( value );
+            return Optional.of( applicationId );
         }
         catch ( Exception e ) {
-            throw new RuntimeException( "Unable to retreive application id", e );
+            throw new RuntimeException( "Unable to retrieve application id", e );
         }
     }
 
@@ -175,7 +101,6 @@ public class OrgApplicationCacheImpl implements OrgApplicationCache {
 
     @Override
     public void evictAll() {
-        orgCache.invalidateAll();
         appCache.invalidateAll();
     }
 }
