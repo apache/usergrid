@@ -33,6 +33,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
 
+import com.codahale.metrics.Meter;
 import org.apache.usergrid.persistence.core.future.BetterFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -206,6 +207,8 @@ public class CpEntityManager implements EntityManager {
     private Timer entGetEntityCountersTimer;
     private Timer esIndexEntityCollectionTimer;
     private Timer entRevokeRolePermissionsTimer;
+    private Timer updateEntityTimer;
+    private Meter updateEntityMeter;
 
     //    /** Short-term cache to keep us from reloading same Entity during single request. */
 //    private LoadingCache<EntityScope, org.apache.usergrid.persistence.model.entity.Entity> entityCache;
@@ -266,6 +269,9 @@ public class CpEntityManager implements EntityManager {
             .getTimer( CpEntityManager.class, "cp.entity.es.index.entity.to.collection.timer" );
         this.entRevokeRolePermissionsTimer =
             this.metricsFactory.getTimer( CpEntityManager.class, "cp.entity.revoke.role.permissions.timer");
+
+        this.updateEntityMeter =this.metricsFactory.getMeter(CpEntityManager.class,"cp.entity.update.meter");
+        this.updateEntityTimer =this.metricsFactory.getTimer(CpEntityManager.class, "cp.entity.update.timer");
 
         // set to false for now
         this.skipAggregateCounters = false;
@@ -562,6 +568,9 @@ public class CpEntityManager implements EntityManager {
         Preconditions.checkNotNull(appId,"app scope should never be null");
         // first, update entity index in its own collection scope
 
+        updateEntityMeter.mark();
+        Timer.Context timer = updateEntityTimer.time();
+
         CollectionScope collectionScope = getCollectionScopeNameFromEntityType(appId, type );
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
 
@@ -618,6 +627,7 @@ public class CpEntityManager implements EntityManager {
         // update in all containing collections and connection indexes
         CpRelationManager rm = ( CpRelationManager ) getRelationManager( entity );
         rm.updateContainingCollectionAndCollectionIndexes( cpEntity );
+        timer.stop();
     }
 
 
