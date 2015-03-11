@@ -25,7 +25,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.usergrid.persistence.index.*;
-import org.apache.usergrid.persistence.model.field.UUIDField;
+import org.apache.usergrid.persistence.model.field.*;
+import org.apache.usergrid.persistence.model.field.value.EntityObject;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -45,7 +47,6 @@ import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
-import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -83,6 +84,74 @@ public class EntityIndexTest extends BaseIT {
         entityIndex.refresh();
 
         testQueries( indexScope, searchTypes,  entityIndex );
+    }
+
+    @Test
+//    @Ignore("this is a problem i will work on when i can breathe")
+    public void testIndexVariations() throws IOException {
+        Id appId = new SimpleId( "application" );
+
+        ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
+
+        EntityIndex entityIndex = eif.createEntityIndex( applicationScope );
+        entityIndex.initializeIndex();
+
+        final String entityType = "thing";
+        IndexScope indexScope = new IndexScopeImpl( appId, "things" );
+        final SearchTypes searchTypes = SearchTypes.fromTypes( entityType );
+        EntityIndexBatch batch = entityIndex.createBatch();
+        Entity entity = new Entity( entityType );
+        EntityUtils.setVersion(entity, UUIDGenerator.newTimeUUID());
+        entity.setField(new UUIDField(IndexingUtils.ENTITYID_ID_FIELDNAME, UUID.randomUUID()));
+        entity.setField(new StringField("testfield","test"));
+        batch.index(indexScope, entity);
+        batch.execute().get();
+
+        entity = new Entity( entityType );
+        entity.setField(new UUIDField(IndexingUtils.ENTITYID_ID_FIELDNAME, UUID.randomUUID()));
+        EntityUtils.setVersion(entity, UUIDGenerator.newTimeUUID());
+        List<String> list = new ArrayList<>();
+        list.add("test");
+        entity.setField(new ArrayField<String>("testfield", list));
+        batch.index(indexScope, entity);
+        batch.execute().get();
+
+
+        entity = new Entity( entityType );
+        entity.setField(new UUIDField(IndexingUtils.ENTITYID_ID_FIELDNAME, UUID.randomUUID()));
+        EntityUtils.setVersion(entity, UUIDGenerator.newTimeUUID());
+        EntityObject testObj = new EntityObject();
+        testObj.setField(new StringField("test","testFiedl"));
+        entity.setField(new EntityObjectField("testfield", testObj));
+        batch.index(indexScope, entity);
+        batch.execute().get();
+
+        entity = new Entity( entityType );
+        entity.setField(new UUIDField(IndexingUtils.ENTITYID_ID_FIELDNAME, UUID.randomUUID()));
+        EntityUtils.setVersion(entity, UUIDGenerator.newTimeUUID());
+        List<Integer> listint = new ArrayList<>();
+        listint.add(0);
+        entity.setField(new ArrayField<Integer>("testfield", listint));
+        batch.index(indexScope, entity);
+        batch.execute().get();
+
+        entity = new Entity( entityType );
+        entity.setField(new UUIDField(IndexingUtils.ENTITYID_ID_FIELDNAME, UUID.randomUUID()));
+        EntityUtils.setVersion(entity, UUIDGenerator.newTimeUUID());
+        List<EntityObject> listObj = new ArrayList<>();
+        EntityObject listObjField = new EntityObject();
+        listObjField.setField(new StringField("testasf","somevalue"));
+        listObj.add(listObjField);
+        listObjField = new EntityObject();
+        listObjField.setField(new IntegerField("testasf",0));
+        listObj.add(listObjField);
+        entity.setField(new ArrayField<EntityObject>("testfield", listObj));
+        batch.index(indexScope, entity);
+        batch.execute().get();
+
+        entityIndex.refresh();
+        testQuery(indexScope, searchTypes, entityIndex, "select *", 5);
+
     }
 
     @Test
@@ -210,6 +279,7 @@ public class EntityIndexTest extends BaseIT {
         entityIndex.refresh();
 
         //Hilda Youn
+
         testQuery(indexScope, searchTypes, entityIndex, "name = 'Bowers Oneil'", 0);
 
     }
