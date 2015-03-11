@@ -124,6 +124,10 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     private final Timer updateTimer;
     private final Timer loadTimer;
     private final Timer getLatestTimer;
+    private final Meter deleteMeter;
+    private final Meter getLatestMeter;
+    private final Meter loadMeter;
+    private final Meter updateMeter;
 
 
     @Inject
@@ -176,9 +180,13 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         this.writeTimer = metricsFactory.getTimer(EntityCollectionManagerImpl.class,"write.timer");
         this.writeMeter = metricsFactory.getMeter(EntityCollectionManagerImpl.class, "write.meter");
         this.deleteTimer = metricsFactory.getTimer(EntityCollectionManagerImpl.class, "delete.timer");
-        this.updateTimer = metricsFactory.getTimer(EntityCollectionManagerImpl.class,"update.timer");
+        this.deleteMeter= metricsFactory.getMeter(EntityCollectionManagerImpl.class, "delete.meter");
+        this.updateTimer = metricsFactory.getTimer(EntityCollectionManagerImpl.class, "update.timer");
+        this.updateMeter = metricsFactory.getMeter(EntityCollectionManagerImpl.class, "update.meter");
         this.loadTimer = metricsFactory.getTimer(EntityCollectionManagerImpl.class,"load.timer");
+        this.loadMeter = metricsFactory.getMeter(EntityCollectionManagerImpl.class, "load.meter");
         this.getLatestTimer = metricsFactory.getTimer(EntityCollectionManagerImpl.class,"latest.timer");
+        this.getLatestMeter = metricsFactory.getMeter(EntityCollectionManagerImpl.class, "latest.meter");
     }
 
 
@@ -250,12 +258,19 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                          return entity.getId();
                      }
                  }
-            ) .doOnCompleted(new Action0() {
+            )
+            .doOnNext(new Action1<Id>() {
+                @Override
+                public void call(Id id) {
+                    deleteMeter.mark();
+                }
+            })
+            .doOnCompleted(new Action0() {
                 @Override
                 public void call() {
                     timer.stop();
                 }
-            });;
+            });
 
         return o;
     }
@@ -281,6 +296,12 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                 return Observable.from(entity.getEntity().get());
             }
         })
+            .doOnNext(new Action1<Entity>() {
+                @Override
+                public void call(Entity entity) {
+                    loadMeter.mark();
+                }
+            })
             .doOnCompleted(new Action0() {
                 @Override
                 public void call() {
@@ -316,6 +337,12 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                 }
             }
         } )
+            .doOnNext(new Action1<EntitySet>() {
+                @Override
+                public void call(EntitySet entitySet) {
+                    loadMeter.mark();
+                }
+            })
             .doOnCompleted(new Action0() {
                 @Override
                 public void call() {
@@ -382,6 +409,12 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
             }
         }).doOnError(rollback)
+            .doOnNext(new Action1<Entity>() {
+                @Override
+                public void call(Entity entity) {
+                    updateMeter.mark();
+                }
+            })
             .doOnCompleted(new Action0() {
                 @Override
                 public void call() {
