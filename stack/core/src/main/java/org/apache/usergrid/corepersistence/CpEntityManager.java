@@ -340,6 +340,17 @@ public class CpEntityManager implements EntityManager {
         return entity;
     }
 
+    public Entity convertMvccEntityToEntity( org.apache.usergrid.persistence.model.entity.Entity entity){
+        if(entity == null) {
+            return null;
+        }
+        Class clazz = Schema.getDefaultSchema().getEntityClass( entity.getId().getType() );
+
+        Entity oldFormatEntity = EntityFactory.newEntity(entity.getId().getUuid(),entity.getId().getType(),clazz);
+        oldFormatEntity.setProperties( CpEntityMapUtils.toMap( entity ) );
+
+        return oldFormatEntity;
+    }
 
     @Override
     public Entity get( EntityRef entityRef ) throws Exception {
@@ -730,17 +741,33 @@ public class CpEntityManager implements EntityManager {
     }
 
     @Override
-    public Observable<FieldSet> getAllEntityFromFields(String aliasType,String aliasValue ){
-        return null;
-//        EntityCollectionManager ecm = managerCache.getEntityCollectionManager( aliasType );
-//
-//        Schema.
-//        return ecm.getAllEntities( aliasValue );
+    public Entity getAllEntityFromFields( String collectionType, String aliasType ){
+        String collName = Schema.defaultCollectionName( collectionType );
+
+        CollectionScope collectionScope = getCollectionScopeNameFromEntityType(
+            getApplicationScope().getApplication(), collName);
+
+        String propertyName = Schema.getDefaultSchema().aliasProperty( collName );
+
+
+        final EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
+        //TODO: can't we just sub in the getEntityRepair method here so for every read of a uniqueEntityField we can verify it is correct?
+
+        StringField uniqueLookupRepairField =  new StringField( propertyName, aliasType.toString());
+
+        Observable<FieldSet> fieldSetObservable = ecm.getAllEntities( Arrays.<Field>asList( uniqueLookupRepairField) );
+
+        FieldSet fieldSet = fieldSetObservable.toBlocking().last();
+
+        if(fieldSet.isEmpty()) {
+            return null;
+        }
+
+        return convertMvccEntityToEntity( fieldSet.getEntity( uniqueLookupRepairField ).getEntity().get() );
     }
 
     @Override
     public Entity getEntityByAlias(String collectionType, String aliasType) throws Exception {
-
         EntityRef newEntityRef = getAlias(collectionType,aliasType);
 
         if(newEntityRef == null) {
@@ -748,9 +775,6 @@ public class CpEntityManager implements EntityManager {
         }
 
         return get( newEntityRef );
-
-
-
     }
 
 
@@ -2157,11 +2181,6 @@ public class CpEntityManager implements EntityManager {
         //convert to a string, that's what we store
         final Id results = ecm.getIdField( new StringField(
                 propertyName, propertyValue.toString() ) ).toBlocking() .lastOrDefault( null );
-
-        Observable<FieldSet> fieldSetObservable = ecm.getAllEntities( Arrays.<Field>asList( new StringField( propertyName, propertyValue.toString() ) );
-
-        FieldSet fieldSet = fieldSetObservable.toBlocking().last();
-        fieldSet.
         return results;
     }
 

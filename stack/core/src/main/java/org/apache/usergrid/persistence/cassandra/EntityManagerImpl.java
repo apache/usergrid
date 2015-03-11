@@ -69,7 +69,6 @@ import org.apache.usergrid.persistence.SimpleRoleRef;
 import org.apache.usergrid.persistence.TypedEntity;
 import org.apache.usergrid.persistence.cassandra.CounterUtils.AggregateCounterSelection;
 import org.apache.usergrid.persistence.cassandra.util.TraceParticipant;
-import org.apache.usergrid.persistence.collection.FieldSet;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.Event;
 import org.apache.usergrid.persistence.entities.Group;
@@ -108,7 +107,6 @@ import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.MultigetSliceCounterQuery;
 import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.SliceCounterQuery;
-import rx.Observable;
 
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static java.util.Arrays.asList;
@@ -538,7 +536,7 @@ public class EntityManagerImpl implements EntityManager {
     /**
      * Return all UUIDs that have this unique value
      *
-     * @param ownerEntityId The entity id that owns this entity collection
+     * @param ownerEntityRef The entity id that owns this entity collection
      * @param collectionName The entity collection name
      * @param propertyName The name of the unique property
      * @param propertyValue The value of the unique property
@@ -1775,6 +1773,12 @@ public class EntityManagerImpl implements EntityManager {
 
 
     @Override
+    public Entity getEntityByAlias( final String collectionType, final String aliasType ) throws Exception {
+        throw new UnsupportedOperationException("Not supported.");
+    }
+
+
+    @Override
     public EntityRef getAlias( String aliasType, String alias ) throws Exception {
         return getAlias( new SimpleEntityRef(Application.ENTITY_TYPE, applicationId), aliasType, alias );
     }
@@ -2952,8 +2956,7 @@ public class EntityManagerImpl implements EntityManager {
 
 
     @Override
-    public Observable<FieldSet> getAllEntityFromFields( final String aliasType,
-                                                        final String aliasValue ) {
+    public Entity getAllEntityFromFields( final String aliasType, final String aliasValue ) {
         throw new UnsupportedOperationException( "Not supported." );
     }
 }

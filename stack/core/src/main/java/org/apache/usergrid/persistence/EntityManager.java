@@ -19,6 +19,7 @@ package org.apache.usergrid.persistence;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.FieldSet;
+import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.index.query.Query;
 import java.nio.ByteBuffer;
 import java.util.Collection;
@@ -719,6 +720,6 @@ public interface EntityManager {
      */
     public Health getIndexHealth();
 
-    public Observable<FieldSet> getAllEntityFromFields(String aliasType,String aliasValue );
+    public Entity getAllEntityFromFields( String aliasType, String aliasValue );
 
     }

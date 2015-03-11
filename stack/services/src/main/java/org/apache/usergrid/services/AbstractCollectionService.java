@@ -76,7 +76,7 @@ public class AbstractCollectionService extends AbstractService {
             nameProperty = "name";
         }
 
-        Entity entity = em.getEntityByAlias( getEntityType(), name );
+        Entity entity = em.getAllEntityFromFields( getEntityType(), name );
         if ( entity != null ) {
             entity = importEntity( request, entity );
         }
@@ -148,7 +148,7 @@ public class AbstractCollectionService extends AbstractService {
             nameProperty = "name";
         }
 
-        EntityRef entity = em.get( getEntityType(), name );
+        EntityRef entity = em.getAlias( getEntityType(), name );
 
         if ( entity == null ) {
             logger.info( "miss on entityType: {} with name: {}", getEntityType(), name );
