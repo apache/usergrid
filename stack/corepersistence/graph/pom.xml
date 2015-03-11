@@ -66,13 +66,17 @@
     </dependency>
 
 
+      <dependency>
+          <groupId>com.codahale.metrics</groupId>
+          <artifactId>metrics-core</artifactId>
+          <version>${metrics.version}</version>
+      </dependency>
 
-    <dependency>
-        <groupId>com.codahale.metrics</groupId>
-        <artifactId>metrics-core</artifactId>
-        <version>3.0.2</version>
-        <scope>test</scope>
-    </dependency>
+      <dependency>
+          <groupId>com.codahale.metrics</groupId>
+          <artifactId>metrics-graphite</artifactId>
+          <version>${metrics.version}</version>
+      </dependency>
 
     <dependency>
       <groupId>org.mockito</groupId>
@@ -88,16 +92,16 @@
 
   <build>
     <plugins>
-        
+
 <!--      <plugin>
         <groupId>org.safehaus.chop</groupId>
         <artifactId>chop-maven-plugin</artifactId>
         <version>${chop.version}</version>
 
-        
+
         NOTE: you should be putting most of these variables into your settings.xml
         as an automatically activated profile.
-        
+
 
         <configuration>
           <accessKey>${aws.s3.key}</accessKey>
@@ -119,11 +123,11 @@
           <runnerCount>6</runnerCount>
           <runnerName>${runner.name}</runnerName>
           <securityGroupExceptions>
-            
+
             Add your own IP address as an exception to allow access
             but please do this in the settings.xml file .. essentially
             all parameters should be in the settings.xml file.
-            
+
             <param>${myip.address}/32:24981</param>
             <param>${myip.address}/32:22</param>
           </securityGroupExceptions>
