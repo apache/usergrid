@@ -1,14 +1,14 @@
 #!/bin/bash
 
-# 
+#
 #  Licensed to the Apache Software Foundation (ASF) under one or more
 #   contributor license agreements.  The ASF licenses this file to You
 #  under the Apache License, Version 2.0 (the "License"); you may not
 #  use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-# 
+#
 #      http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,10 +35,10 @@ apt-get -y --force-yes install ${PKGS}
 # Install AWS Java SDK and get it into the Groovy classpath
 curl http://sdk-for-java.amazonwebservices.com/latest/aws-java-sdk.zip > /tmp/aws-sdk-java.zip
 cd /usr/share/
-unzip /tmp/aws-sdk-java.zip 
+unzip /tmp/aws-sdk-java.zip
 mkdir -p /home/ubuntu/.groovy/lib
 cp /usr/share/aws-java-sdk-*/third-party/*/*.jar /home/ubuntu/.groovy/lib
-cp /usr/share/aws-java-sdk-*/lib/* /home/ubuntu/.groovy/lib 
+cp /usr/share/aws-java-sdk-*/lib/* /home/ubuntu/.groovy/lib
 ln -s /home/ubuntu/.groovy /root/.groovy
 
 # Build environment for Groovy scripts
@@ -55,7 +55,7 @@ groovy tag_instance.groovy -BUILD-IN-PROGRESS
 chmod +x /usr/share/usergrid/update.sh
 
 cd /usr/share/usergrid/init_instance
-./install_oraclejdk.sh 
+./install_oraclejdk.sh
 
 cd /usr/share/usergrid/init_instance
 ./install_yourkit.sh
@@ -119,6 +119,8 @@ sed -i.bak "s/<Connector/<Connector maxThreads=\"${TOMCAT_THREADS}\" acceptCount
 
 #Append our java opts for secret key
 echo "JAVA_OPTS=\"\${JAVA_OPTS} -DAWS_SECRET_KEY=${AWS_SECRET_KEY} -DAWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY}\"" >> /etc/default/tomcat7
+echo "JAVA_OPTS=\"\${JAVA_OPTS} -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8000\"" >> /etc/default/tomcat7
+
 
 ulimit -n $NOFILE
 
@@ -168,7 +170,7 @@ kernel.shmall = 4294967296
 ######
 EOF
 
-# wait for enough Cassandra nodes then delpoy and configure Usergrid 
+# wait for enough Cassandra nodes then delpoy and configure Usergrid
 cd /usr/share/usergrid/scripts
 groovy wait_for_instances.groovy cassandra ${CASSANDRA_NUM_SERVERS}
 groovy wait_for_instances.groovy elasticsearch ${ES_NUM_SERVERS}
@@ -182,8 +184,8 @@ chown -R tomcat7 /usr/share/usergrid/webapps
 chown -R tomcat7 /var/lib/tomcat7/webapps
 
 # configure usergrid
-mkdir -p /usr/share/tomcat7/lib 
-groovy configure_usergrid.groovy > /usr/share/tomcat7/lib/usergrid-deployment.properties 
+mkdir -p /usr/share/tomcat7/lib
+groovy configure_usergrid.groovy > /usr/share/tomcat7/lib/usergrid-deployment.properties
 groovy configure_portal_new.groovy >> /var/lib/tomcat7/webapps/portal/config.js
 
 

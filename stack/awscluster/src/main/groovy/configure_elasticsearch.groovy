@@ -26,6 +26,9 @@
 //
 
 
+String accessKey = (String)System.getenv().get("AWS_ACCESS_KEY")
+String secretKey = (String)System.getenv().get("AWS_SECRET_KEY")
+
 String hostName  = (String)System.getenv().get("PUBLIC_HOSTNAME")
 def clusterName  = (String)System.getenv().get("ES_CLUSTER_NAME")
 
@@ -152,6 +155,14 @@ index.indexing.slowlog.threshold.index.warn: 10s
 index.indexing.slowlog.threshold.index.info: 5s
 index.indexing.slowlog.threshold.index.debug: 2s
 index.indexing.slowlog.threshold.index.trace: 500ms
+
+########
+# AWS PLUGIM
+##########
+
+cloud.aws.access_key: ${accessKey}
+cloud.aws.secret_key: ${secretKey}
+
 
 
 """

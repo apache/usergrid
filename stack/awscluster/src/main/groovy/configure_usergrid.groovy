@@ -44,7 +44,7 @@ def testAdminUserEmail = System.getenv().get("TEST_ADMIN_USER_EMAIL")
 
 def numEsNodes = Integer.parseInt(System.getenv().get("ES_NUM_SERVERS"))
 //Override number of shards.  Set it to 2x the cluster size
-def esShards = numEsNodes;
+def esShards = numEsNodes*2;
 
 
 //This gives us 3 copies, which means we'll have a quorum with primary + 1 replica
