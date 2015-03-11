@@ -33,7 +33,6 @@ import org.apache.usergrid.persistence.queue.QueueManager;
 import org.apache.usergrid.persistence.queue.QueueMessage;
 import org.apache.usergrid.persistence.queue.QueueScope;
 
-import com.amazonaws.AbortedException;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.sqs.AmazonSQSClient;
@@ -76,15 +75,16 @@ public class SQSQueueManagerImpl implements QueueManager {
             .maximumSize( 1000 )
             .build( new CacheLoader<String, Queue>() {
                 @Override
-                public Queue load( String queueLoader ) throws Exception {
+                public Queue load( String queueName ) throws Exception {
 
                     //the amazon client is not thread safe, we need to create one per queue
                     Queue queue = null;
                     try {
-                        GetQueueUrlResult result = sqs.getQueueUrl( queueLoader );
+                        GetQueueUrlResult result = sqs.getQueueUrl( queueName );
                         queue = new Queue( result.getQueueUrl() );
                     }catch ( QueueDoesNotExistException queueDoesNotExistException ) {
                         //no op, swallow
+                        LOG.error( "Queue {} does not exist, creating", queueName );
 
                     }
                     catch ( Exception e ) {
@@ -92,7 +92,7 @@ public class SQSQueueManagerImpl implements QueueManager {
                         throw e;
                     }
                     if ( queue == null ) {
-                        CreateQueueRequest createQueueRequest = new CreateQueueRequest().withQueueName( queueLoader );
+                        CreateQueueRequest createQueueRequest = new CreateQueueRequest().withQueueName( queueName );
                         CreateQueueResult result = sqs.createQueue( createQueueRequest );
                         String url = result.getQueueUrl();
                         queue = new Queue( url );
@@ -124,7 +124,7 @@ public class SQSQueueManagerImpl implements QueueManager {
 
 
     private String getName() {
-        String name = scope.getApplication().getType() + "_"+ scope.getName() + "_"+ scope.getApplication().getUuid().toString();
+        String name = fig.getPrefix() + "_" + scope.getApplication().getType() + "_"+ scope.getName() + "_"+ scope.getApplication().getUuid().toString();
         return name;
     }
 

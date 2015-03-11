@@ -127,6 +127,12 @@ public class BufferQueueSQSImpl implements BufferQueue {
     @Override
     public void offer( final IndexOperationMessage operation ) {
 
+        //no op
+        if(operation.isEmpty()){
+            operation.getFuture().done();
+            return;
+        }
+
         final Timer.Context timer = this.writeTimer.time();
         this.writeMeter.mark();
 
@@ -141,7 +147,7 @@ public class BufferQueueSQSImpl implements BufferQueue {
 
             //signal to SQS
             this.queue.sendMessage( identifier );
-            operation.getFuture().run();
+            operation.getFuture().done();
         }
         catch ( IOException e ) {
             throw new RuntimeException( "Unable to queue message", e );
@@ -184,7 +190,7 @@ public class BufferQueueSQSImpl implements BufferQueue {
             }
 
             //look up the values
-            final Map<String, String> values = mapManager.getStrings( mapEntries );
+            final Map<String, String> storedCommands = mapManager.getStrings( mapEntries );
 
 
             //load them into our response
@@ -193,7 +199,7 @@ public class BufferQueueSQSImpl implements BufferQueue {
                 final String key = getMessageKey( message );
 
                 //now see if the key was there
-                final String payload = values.get( key );
+                final String payload = storedCommands.get( key );
 
                 //the entry was not present in cassandra, ignore this message.  Failure should eventually kick it to
                 // a DLQ
@@ -242,7 +248,7 @@ public class BufferQueueSQSImpl implements BufferQueue {
 
             final SqsIndexOperationMessage sqsIndexOperationMessage =   ( SqsIndexOperationMessage ) ioe;
 
-            final String key = getMessageKey(sqsIndexOperationMessage.getMessage());
+            final String key = getMessageKey( sqsIndexOperationMessage.getMessage() );
 
             //remove it from the map
             mapManager.delete( key  );

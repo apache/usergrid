@@ -209,7 +209,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     public void initializeIndex() {
         final int numberOfShards = config.getNumberOfShards();
         final int numberOfReplicas = config.getNumberOfReplicas();
-        String[] indexes = getIndexes(AliasType.Write);
+        String[] indexes = getIndexesFromEs(AliasType.Write);
         if(indexes == null || indexes.length==0) {
             addIndex(null, numberOfShards, numberOfReplicas, config.getWriteConsistencyLevel());
         }
@@ -333,6 +333,18 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     public String[] getIndexes(final AliasType aliasType) {
         return aliasCache.getIndexes(alias, aliasType);
     }
+
+
+    /**
+     * Get our index info from ES, but clear our cache first
+     * @param aliasType
+     * @return
+     */
+    public String[] getIndexesFromEs(final AliasType aliasType){
+        aliasCache.invalidate( alias );
+        return getIndexes( aliasType );
+    }
+
 
 
     /**

@@ -46,6 +46,7 @@ import rx.Subscription;
 import rx.functions.Action1;
 import rx.functions.Action2;
 import rx.functions.Func1;
+import rx.functions.Func2;
 import rx.schedulers.Schedulers;
 
 import java.util.List;
@@ -191,27 +192,27 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
         }
 
         //process and flatten all the messages to builder requests
-        Observable<IndexOperationMessage> flattenMessages = Observable.from( operationMessages );
-
-
         //batch shard operations into a bulk request
-        flattenMessages.flatMap( new Func1<IndexOperationMessage, Observable<BatchRequest>>() {
+        Observable.from( operationMessages ).flatMap( new Func1<IndexOperationMessage, Observable<BatchRequest>>() {
             @Override
             public Observable<BatchRequest> call( final IndexOperationMessage indexOperationMessage ) {
                 final Observable<IndexRequest> index = Observable.from( indexOperationMessage.getIndexRequests() );
-                final Observable<DeIndexRequest> deIndex = Observable.from( indexOperationMessage.getDeIndexRequests() );
+                final Observable<DeIndexRequest> deIndex =
+                    Observable.from( indexOperationMessage.getDeIndexRequests() );
 
-                indexSizeCounter.inc(indexOperationMessage.getDeIndexRequests().size());
-                indexSizeCounter.inc(indexOperationMessage.getIndexRequests().size());
+                indexSizeCounter.dec( indexOperationMessage.getDeIndexRequests().size() );
+                indexSizeCounter.dec( indexOperationMessage.getIndexRequests().size() );
 
                 return Observable.merge( index, deIndex );
             }
         } )
       //collection all the operations into a single stream
-       .collect( initRequest(), new Action2<BulkRequestBuilder, BatchRequest>() {
+       .reduce( initRequest(), new Func2<BulkRequestBuilder, BatchRequest, BulkRequestBuilder>() {
            @Override
-           public void call( final BulkRequestBuilder bulkRequestBuilder, final BatchRequest batchRequest ) {
+           public BulkRequestBuilder call( final BulkRequestBuilder bulkRequestBuilder, final BatchRequest batchRequest ) {
                batchRequest.doOperation( client, bulkRequestBuilder );
+
+               return bulkRequestBuilder;
            }
        } )
         //send the request off to ES

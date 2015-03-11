@@ -20,6 +20,24 @@
 
 package org.apache.usergrid.persistence.index.impl;
 
+
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
+import org.elasticsearch.client.AdminClient;
+import org.elasticsearch.cluster.metadata.AliasMetaData;
+import org.elasticsearch.common.collect.ImmutableOpenMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.apache.usergrid.persistence.index.AliasedEntityIndex;
+import org.apache.usergrid.persistence.index.IndexFig;
+import org.apache.usergrid.persistence.index.IndexIdentifier;
+
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -29,21 +47,6 @@ import com.google.common.util.concurrent.ListeningScheduledExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import org.apache.usergrid.persistence.index.AliasedEntityIndex;
-import org.apache.usergrid.persistence.index.IndexFig;
-import org.apache.usergrid.persistence.index.IndexIdentifier;
-import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
-import org.elasticsearch.client.AdminClient;
-import org.elasticsearch.cluster.metadata.AliasMetaData;
-import org.elasticsearch.common.collect.ImmutableOpenMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -52,65 +55,88 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 public class EsIndexCache {
 
-    private static final Logger logger = LoggerFactory.getLogger(EsEntityIndexImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger( EsEntityIndexImpl.class );
     private final ListeningScheduledExecutorService refreshExecutors;
 
     private LoadingCache<String, String[]> aliasIndexCache;
+    private EsProvider provider;
+
 
     @Inject
-    public EsIndexCache(final EsProvider provider, final IndexFig indexFig) {
-        
-        this.refreshExecutors = MoreExecutors
-                .listeningDecorator(Executors.newScheduledThreadPool(indexFig.getIndexCacheMaxWorkers()));
-        
-        aliasIndexCache = CacheBuilder.newBuilder().maximumSize(1000)
-                .refreshAfterWrite(5,TimeUnit.MINUTES)
-                .build(new CacheLoader<String, String[]>() {
-                    @Override
-                    public ListenableFuture<String[]> reload(final String key, String[] oldValue) throws Exception {
-                        ListenableFutureTask<String[]> task = ListenableFutureTask.create( new Callable<String[]>() {
-                            public String[] call() {
-                                return load( key );
-                            }
-                        } );
-                        refreshExecutors.execute(task);
-                        return task;
-                    }
+    public EsIndexCache( final EsProvider provider, final IndexFig indexFig ) {
 
-                    @Override
-                    public String[] load(final String aliasName) {
-                        final AdminClient adminClient = provider.getClient().admin();
-                        //remove write alias, can only have one
-                        ImmutableOpenMap<String, List<AliasMetaData>> aliasMap = 
-                           adminClient.indices().getAliases(new GetAliasesRequest(aliasName)).actionGet().getAliases();
-                        return aliasMap.keys().toArray(String.class);
-                    }
-                }) ;
+        this.refreshExecutors =
+            MoreExecutors.listeningDecorator( Executors.newScheduledThreadPool( indexFig.getIndexCacheMaxWorkers() ) );
+
+        this.provider = provider;
+
+        aliasIndexCache = CacheBuilder.newBuilder().maximumSize( 1000 ).refreshAfterWrite( 5, TimeUnit.MINUTES )
+                                      .build( new CacheLoader<String, String[]>() {
+                                          @Override
+                                          public ListenableFuture<String[]> reload( final String key,
+                                                                                    String[] oldValue )
+                                              throws Exception {
+                                              ListenableFutureTask<String[]> task =
+                                                  ListenableFutureTask.create( new Callable<String[]>() {
+                                                      public String[] call() {
+                                                          return load( key );
+                                                      }
+                                                  } );
+                                              refreshExecutors.execute( task );
+                                              return task;
+                                          }
+
+
+                                          @Override
+                                          public String[] load( final String aliasName ) {
+                                             return getIndexesFromEs(aliasName);
+                                          }
+                                      } );
     }
 
-    
+
     /**
      * Get indexes for an alias
      */
-    public String[] getIndexes(IndexIdentifier.IndexAlias alias, AliasedEntityIndex.AliasType aliasType) {
+    public String[] getIndexes( IndexIdentifier.IndexAlias alias, AliasedEntityIndex.AliasType aliasType ) {
         String[] indexes;
         try {
-            indexes = aliasIndexCache.get(aliasType == AliasedEntityIndex.AliasType.Read ? alias.getReadAlias() : alias.getWriteAlias());
-        } catch (ExecutionException ee) {
-            logger.error("Failed to retreive indexes", ee);
-            throw new RuntimeException(ee);
+            indexes = aliasIndexCache.get( getAliasName( alias, aliasType ) );
+        }
+        catch ( ExecutionException ee ) {
+            logger.error( "Failed to retreive indexes", ee );
+            throw new RuntimeException( ee );
         }
         return indexes;
     }
 
-    
+
+
+    private String[] getIndexesFromEs(final String aliasName){
+        final AdminClient adminClient = this.provider.getClient().admin();
+             //remove write alias, can only have one
+        ImmutableOpenMap<String, List<AliasMetaData>> aliasMap =
+            adminClient.indices().getAliases( new GetAliasesRequest( aliasName ) ).actionGet().getAliases();
+        return aliasMap.keys().toArray( String.class );
+    }
+
+
+    /**
+     * Get the name of the alias to use
+     * @param alias
+     * @param aliasType
+     * @return
+     */
+    private String getAliasName( IndexIdentifier.IndexAlias alias, AliasedEntityIndex.AliasType aliasType ) {
+        return aliasType == AliasedEntityIndex.AliasType.Read ? alias.getReadAlias() : alias.getWriteAlias();
+    }
+
+
     /**
      * clean up cache
      */
-    public void invalidate(IndexIdentifier.IndexAlias alias){
-        aliasIndexCache.invalidate(alias.getWriteAlias());
-        aliasIndexCache.invalidate(alias.getReadAlias());
-
+    public void invalidate( IndexIdentifier.IndexAlias alias ) {
+        aliasIndexCache.invalidate( alias.getWriteAlias() );
+        aliasIndexCache.invalidate( alias.getReadAlias() );
     }
-
 }
