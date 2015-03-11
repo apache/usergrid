@@ -66,7 +66,7 @@ public class ApplicationIdCacheImpl implements ApplicationIdCache {
             return appCache.get( applicationName );
         }
         catch ( ExecutionException e ) {
-            throw new RuntimeException( "Unable to load org cache", e );
+            throw new RuntimeException( "Unable to load app cache", e );
         }
     }
 
@@ -85,7 +85,7 @@ public class ApplicationIdCacheImpl implements ApplicationIdCache {
                 applicationId = (UUID) entity.getProperty("uuid");
             }
 
-            return Optional.of( applicationId );
+            return Optional.fromNullable( applicationId );
         }
         catch ( Exception e ) {
             throw new RuntimeException( "Unable to retrieve application id", e );

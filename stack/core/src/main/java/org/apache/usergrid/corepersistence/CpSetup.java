@@ -97,8 +97,6 @@ public class CpSetup implements Setup {
         //force the EMF creation of indexes before creating the default applications
         emf.refreshIndex();
 
-        injector.getInstance( DataMigrationManager.class ).migrate();
-
         logger.info( "Setting up management app" );
 
         try {
@@ -110,6 +108,8 @@ public class CpSetup implements Setup {
         catch ( OrganizationAlreadyExistsException oaee ) {
             logger.warn( "Organization {} already exists", DEFAULT_ORGANIZATION );
         }
+
+        injector.getInstance( DataMigrationManager.class ).migrate();
     }
 
 

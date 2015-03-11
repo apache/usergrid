@@ -16,27 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.usergrid.corepersistence.migration;
 
 
 /**
- * Versions of data as they exist across our system
+ * Enumeration of versions for the application and organization data stored by the system.
+ * Specifically by the CpEntityManagerImpl and MangementSystemImpl classes.
  */
-public enum CoreDataVersions {
-
-    // even though this didn't really come first in time, we need to run this first
-    // in order to bring our system up to date so that our new migration module can proceed.
+public enum AppInfoVersions {
 
     INITIAL(0),
-    ID_MAP_FIX(1),
-    APPINFO_FIX(2);
-
+    APPINFO_FIX(1); // Migration of appinfo to application_info
 
     private final int version;
 
 
-    private CoreDataVersions( final int version ) {this.version = version;}
+    private AppInfoVersions( final int version ) {this.version = version;}
 
 
     public int getVersion() {

@@ -236,9 +236,21 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             throw new ApplicationAlreadyExistsException( appName );
         }
 
-        // create application info entity in the management app
+        // create application info entity
 
         getSetup().setupApplicationKeyspace( applicationId, appName );
+
+        if ( properties == null ) {
+            properties = new TreeMap<String, Object>( CASE_INSENSITIVE_ORDER );
+        }
+        properties.put( PROPERTY_NAME, appName );
+        EntityManager appEm = getEntityManager( applicationId );
+        appEm.create( applicationId, TYPE_APPLICATION, properties );
+        appEm.createIndex();
+        appEm.resetRoles();
+        appEm.refreshIndex();
+
+        // create application info entity in the management app
 
         final UUID appId = applicationId;
         Map<String, Object> appInfoMap = new HashMap<String, Object>() {{
@@ -253,23 +265,10 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         }
         em.refreshIndex();
 
-        // create application info entity
-
-        if ( properties == null ) {
-            properties = new TreeMap<String, Object>( CASE_INSENSITIVE_ORDER );
-        }
-        properties.put( PROPERTY_NAME, appName );
-        EntityManager appEm = getEntityManager( applicationId );
-        appEm.create( applicationId, TYPE_APPLICATION, properties );
-        appEm.createIndex();
-        appEm.resetRoles();
-        appEm.refreshIndex();
-
-        logger.info("Initialized application {}", appName);
-
         //evict app Id from cache
         orgApplicationCache.evictAppId( appName );
 
+        logger.info("Initialized application {}", appName);
         return applicationId;
     }
 
@@ -691,6 +690,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     @Override
     public void flushEntityManagerCaches() {
+        managerCache.invalidate();
+        orgApplicationCache.evictAll();
         Map<UUID, EntityManager>  entityManagersMap = entityManagers.asMap();
         for ( UUID appUuid : entityManagersMap.keySet() ) {
             EntityManager em = entityManagersMap.get(appUuid);

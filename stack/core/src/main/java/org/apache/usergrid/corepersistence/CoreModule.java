@@ -16,15 +16,12 @@
 package org.apache.usergrid.corepersistence;
 
 
+import org.apache.usergrid.corepersistence.migration.*;
 import org.springframework.context.ApplicationContext;
 
 import org.apache.usergrid.corepersistence.events.EntityDeletedHandler;
 import org.apache.usergrid.corepersistence.events.EntityVersionCreatedHandler;
 import org.apache.usergrid.corepersistence.events.EntityVersionDeletedHandler;
-import org.apache.usergrid.corepersistence.migration.CoreMigration;
-import org.apache.usergrid.corepersistence.migration.CoreMigrationPlugin;
-import org.apache.usergrid.corepersistence.migration.EntityTypeMappingMigration;
-import org.apache.usergrid.corepersistence.migration.MigrationModuleVersionPlugin;
 import org.apache.usergrid.corepersistence.rx.impl.AllEntitiesInSystemImpl;
 import org.apache.usergrid.corepersistence.rx.impl.AllNodesInGraphImpl;
 import org.apache.usergrid.corepersistence.rx.impl.AllApplicationsObservableImpl;
@@ -132,7 +129,8 @@ public class CoreModule  extends AbstractModule {
         //wire up the collection migration plugin
         final Multibinder<MigrationPlugin> plugins = Multibinder.newSetBinder( binder(), MigrationPlugin.class );
         plugins.addBinding().to( CoreMigrationPlugin.class );
-        plugins.addBinding().to(MigrationModuleVersionPlugin.class );
+        plugins.addBinding().to( AppInfoMigrationPlugin.class );
+        plugins.addBinding().to( MigrationModuleVersionPlugin.class );
 
         bind( AllApplicationsObservable.class).to(AllApplicationsObservableImpl.class);
 

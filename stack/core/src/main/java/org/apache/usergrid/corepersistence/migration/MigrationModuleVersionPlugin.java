@@ -56,6 +56,11 @@ public class MigrationModuleVersionPlugin implements MigrationPlugin{
      */
     private static final int ENTITY_V2_MIGRATION = 3;
 
+    /**
+     * Appinfo to application_info migration.
+     */
+    private static final int APPINFO_MIGRATION = 4;
+
 
     /**
      * Get versions directly from impls so we know they're accurate
@@ -102,6 +107,8 @@ public class MigrationModuleVersionPlugin implements MigrationPlugin{
                 migrationInfoSerialization.setVersion( GraphMigrationPlugin.PLUGIN_NAME, edgeMetadataSerializationV2.getImplementationVersion() );
             case ID_MIGRATION:
                 migrationInfoSerialization.setVersion( CoreMigrationPlugin.PLUGIN_NAME, CoreDataVersions.ID_MAP_FIX.getVersion() );
+            case APPINFO_MIGRATION:
+                migrationInfoSerialization.setVersion( AppInfoMigrationPlugin.PLUGIN_NAME, AppInfoVersions.APPINFO_FIX.getVersion() );
         }
 
         //save the version
