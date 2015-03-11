@@ -77,8 +77,8 @@ public class CoreModule  extends AbstractModule {
                 bind(BufferQueue.class).to( BufferQueueSQSImpl.class );
             }
         } );
-        install(new MapModule());
-//        install(new QueueModule()); TODO, re-enable when index module doesn't depend on queue
+//        install(new MapModule());   TODO, re-enable when index module doesn't depend on queue
+//        install(new QueueModule());
 
         bind(ManagerCache.class).to( CpManagerCache.class );
 
