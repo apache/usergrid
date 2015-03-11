@@ -109,7 +109,6 @@
       <jersey-version>1.18.1</jersey-version>
       <junit-version>4.12</junit-version>
       <log4j-version>1.2.16</log4j-version>
-      <metrics-version>2.1.2</metrics-version>
       <org.springframework.version>3.1.2.RELEASE</org.springframework.version>
       <shiro-version>1.2.3</shiro-version>
       <slf4j-version>1.6.1</slf4j-version>
@@ -826,12 +825,6 @@
       </dependency>
 
       <dependency>
-        <groupId>com.yammer.metrics</groupId>
-        <artifactId>metrics-annotation</artifactId>
-        <version>${metrics-version}</version>
-      </dependency>
-
-      <dependency>
         <groupId>com.github.stephenc</groupId>
         <artifactId>jamm</artifactId>
         <version>0.2.5</version>
@@ -1072,44 +1065,8 @@
         <version>${snakeyaml-version}</version>
       </dependency>
 
-      <dependency>
-        <groupId>com.yammer.metrics</groupId>
-        <artifactId>metrics-core</artifactId>
-        <version>${metrics-version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
 
-      <dependency>
-        <groupId>com.yammer.metrics</groupId>
-        <artifactId>metrics-spring</artifactId>
-        <version>${metrics-version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-core</artifactId>
-          </exclusion>
 
-          <exclusion>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-aop</artifactId>
-          </exclusion>
-
-          <exclusion>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-beans</artifactId>
-          </exclusion>
-
-          <exclusion>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-context-support</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
 
       <dependency>
         <groupId>jline</groupId>

@@ -108,7 +108,6 @@ import org.apache.usergrid.utils.UUIDUtils;
 import com.codahale.metrics.Timer;
 import com.google.common.base.Preconditions;
 import com.netflix.hystrix.exception.HystrixRuntimeException;
-import com.yammer.metrics.annotation.Metered;
 
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.ColumnSlice;
@@ -388,7 +387,6 @@ public class CpEntityManager implements EntityManager {
      *
      * @throws Exception the exception
      */
-    @Metered( group = "core", name = "EntityManager_create" )
     @TraceParticipant
     public <A extends Entity> A create( String entityType, Class<A> entityClass,
             Map<String, Object> properties, UUID importId ) throws Exception {
@@ -1261,7 +1259,6 @@ public class CpEntityManager implements EntityManager {
     }
 
 
-    @Metered( group = "core", name = "EntityManager_getDictionaryElementValues" )
     public Map<String, Object> getDictionaryElementValues( EntityRef entity, String dictionaryName,
                                                            String... elementNames ) throws Exception {
 
