@@ -34,6 +34,7 @@ import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkCommit;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkStart;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.core.guice.ProxyImpl;
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.task.TaskExecutor;
 
 import java.util.concurrent.ExecutionException;
@@ -80,6 +81,7 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
     private final EntityDeletedFactory entityDeletedFactory;
     private final TaskExecutor taskExecutor;
     private final EntityCacheFig entityCacheFig;
+    private final MetricsFactory metricsFactory;
 
     private LoadingCache<CollectionScope, EntityCollectionManager> ecmCache =
         CacheBuilder.newBuilder().maximumSize( 1000 )
@@ -91,7 +93,7 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
                                 writeOptimisticVerify, writeCommit, rollback, markStart, markCommit,
                                 entitySerializationStrategy, uniqueValueSerializationStrategy,
                                 mvccLogEntrySerializationStrategy, keyspace, entityVersionCleanupFactory,
-                                entityVersionCreatedFactory, entityDeletedFactory, taskExecutor, scope );
+                                entityVersionCreatedFactory, entityDeletedFactory, taskExecutor, scope, metricsFactory );
 
 
                             final EntityCollectionManager proxy = new CachedEntityCollectionManager(entityCacheFig, target  );
@@ -117,7 +119,8 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
                                                final EntityVersionCreatedFactory entityVersionCreatedFactory,
                                                final EntityDeletedFactory entityDeletedFactory,
                                                @CollectionTaskExecutor final TaskExecutor taskExecutor,
-                                              final EntityCacheFig entityCacheFig) {
+                                              final EntityCacheFig entityCacheFig,
+                                               MetricsFactory metricsFactory) {
 
         this.writeStart = writeStart;
         this.writeUpdate = writeUpdate;
@@ -136,6 +139,7 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
         this.entityDeletedFactory = entityDeletedFactory;
         this.taskExecutor = taskExecutor;
         this.entityCacheFig = entityCacheFig;
+        this.metricsFactory = metricsFactory;
     }
 
 
