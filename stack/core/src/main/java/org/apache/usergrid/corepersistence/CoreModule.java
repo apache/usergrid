@@ -78,7 +78,7 @@ public class CoreModule  extends AbstractModule {
             }
         } );
         install(new MapModule());
-        install(new QueueModule());
+//        install(new QueueModule()); TODO, re-enable when index module doesn't depend on queue
 
         bind(ManagerCache.class).to( CpManagerCache.class );
 
