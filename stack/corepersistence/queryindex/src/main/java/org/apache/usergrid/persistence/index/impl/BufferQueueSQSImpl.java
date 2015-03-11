@@ -190,7 +190,7 @@ public class BufferQueueSQSImpl implements BufferQueue {
             //load them into our response
             for ( final QueueMessage message : messages ) {
 
-                final String key = message.getBody().toString();
+                final String key = getMessageKey( message );
 
                 //now see if the key was there
                 final String payload = values.get( key );
@@ -238,6 +238,15 @@ public class BufferQueueSQSImpl implements BufferQueue {
         List<QueueMessage> toAck = new ArrayList<>( messages.size() );
 
         for ( IndexOperationMessage ioe : messages ) {
+
+
+            final SqsIndexOperationMessage sqsIndexOperationMessage =   ( SqsIndexOperationMessage ) ioe;
+
+            final String key = getMessageKey(sqsIndexOperationMessage.getMessage());
+
+            //remove it from the map
+            mapManager.delete( key  );
+
             toAck.add( ( ( SqsIndexOperationMessage ) ioe ).getMessage() );
         }
 
@@ -257,6 +266,9 @@ public class BufferQueueSQSImpl implements BufferQueue {
         return mapper.writeValueAsString( o );
     }
 
+    private String getMessageKey(final QueueMessage message){
+        return message.getBody().toString();
+    }
 
     /**
      * The message that subclasses our IndexOperationMessage.  holds a pointer to the original message
