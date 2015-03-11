@@ -126,4 +126,8 @@ public class IndexOperationMessage implements Serializable {
         result = 31 * result + deIndexRequests.hashCode();
         return result;
     }
+
+    public void done() {
+        getFuture().done();
+    }
 }
