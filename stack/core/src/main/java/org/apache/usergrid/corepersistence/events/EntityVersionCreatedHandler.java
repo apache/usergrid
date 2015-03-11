@@ -64,6 +64,6 @@ public class EntityVersionCreatedHandler implements EntityVersionCreated {
         CpEntityManagerFactory cpemf = (CpEntityManagerFactory)emf;
         final EntityIndex ei = cpemf.getManagerCache().getEntityIndex(scope);
 
-        ei.deletePreviousVersions( entity.getId(), entity.getVersion() );
+//        ei.deletePreviousVersions( entity.getId(), entity.getVersion() );
     }
 }

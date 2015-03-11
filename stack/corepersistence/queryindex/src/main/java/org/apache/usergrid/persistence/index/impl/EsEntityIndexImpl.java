@@ -662,89 +662,89 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     }
 
 
-    @Override
-    public ListenableActionFuture deleteAllVersionsOfEntity(final Id entityId ) {
-
-        String idString = IndexingUtils.idString(entityId).toLowerCase();
-
-        final TermQueryBuilder tqb = QueryBuilders.termQuery(ENTITYID_ID_FIELDNAME, idString);
-
-        //Added For Graphite Metrics
-        final Timer.Context timeDeleteAllVersions =allVersionsTimer.time();
-        final Timer.Context timeDeleteAllVersionsFuture = allVersionsTimerFuture.time();
-        final ListenableActionFuture<DeleteByQueryResponse> response = esProvider.getClient()
-            .prepareDeleteByQuery( alias.getWriteAlias() ).setQuery( tqb ).execute();
-
-        response.addListener( new ActionListener<DeleteByQueryResponse>() {
-
-            @Override
-            public void onResponse( DeleteByQueryResponse response) {
-                timeDeleteAllVersions.stop();
-                logger
-                    .debug( "Deleted entity {}:{} from all index scopes with response status = {}", entityId.getType(),
-                        entityId.getUuid(), response.status().toString() );
-
-                checkDeleteByQueryResponse(tqb, response);
-            }
-
-
-            @Override
-            public void onFailure( Throwable e ) {
-                timeDeleteAllVersions.stop();
-                logger.error( "Deleted entity {}:{} from all index scopes with error {}", entityId.getType(),
-                    entityId.getUuid(), e);
-
-
-            }
-        });
-        timeDeleteAllVersionsFuture.stop();
-        return response;
-    }
-
-
-    @Override
-    public ListenableActionFuture deletePreviousVersions(final Id entityId, final UUID version) {
-
-        String idString = IndexingUtils.idString( entityId ).toLowerCase();
-
-        final FilteredQueryBuilder fqb = QueryBuilders.filteredQuery(
-                QueryBuilders.termQuery(ENTITYID_ID_FIELDNAME, idString),
-            FilterBuilders.rangeFilter(ENTITY_VERSION_FIELDNAME).lt(version.timestamp())
-        );
-
-        //Added For Graphite Metrics
-        //Checks the time from the execute to the response below
-        final Timer.Context timeDeletePreviousVersions = deletePreviousTimer.time();
-        final Timer.Context timeDeletePreviousVersionFuture = deletePreviousTimerFuture.time();
-        final ListenableActionFuture<DeleteByQueryResponse> response = esProvider.getClient()
-            .prepareDeleteByQuery(alias.getWriteAlias()).setQuery(fqb).execute();
-
-        //Added For Graphite Metrics
-        response.addListener(new ActionListener<DeleteByQueryResponse>() {
-            @Override
-            public void onResponse(DeleteByQueryResponse response) {
-                timeDeletePreviousVersions.stop();
-                //error message needs to be retooled so that it describes the entity more throughly
-                logger
-                    .debug("Deleted entity {}:{} with version {} from all " + "index scopes with response status = {}",
-                        entityId.getType(), entityId.getUuid(), version, response.status().toString());
-
-                checkDeleteByQueryResponse( fqb, response );
-            }
-
-
-            @Override
-            public void onFailure( Throwable e ) {
-                timeDeletePreviousVersions.stop();
-                logger.error( "Deleted entity {}:{} from all index scopes with error {}", entityId.getType(),
-                    entityId.getUuid(), e );
-            }
-        } );
-
-        timeDeletePreviousVersionFuture.stop();
-
-        return response;
-    }
+//    @Override
+//    public ListenableActionFuture deleteAllVersionsOfEntity(final Id entityId ) {
+//        String idString = IndexingUtils.idString(entityId).toLowerCase();
+//
+//        final TermQueryBuilder tqb = QueryBuilders.termQuery(ENTITYID_ID_FIELDNAME, idString);
+//
+//        //Added For Graphite Metrics
+//        final Timer.Context timeDeleteAllVersions =allVersionsTimer.time();
+//        final Timer.Context timeDeleteAllVersionsFuture = allVersionsTimerFuture.time();
+//
+//        final ListenableActionFuture<DeleteByQueryResponse> response = esProvider.getClient()
+//            .prepareDeleteByQuery( alias.getWriteAlias() ).setQuery( tqb ).execute();
+//
+//        response.addListener( new ActionListener<DeleteByQueryResponse>() {
+//
+//            @Override
+//            public void onResponse( DeleteByQueryResponse response) {
+//                timeDeleteAllVersions.stop();
+//                logger
+//                    .debug( "Deleted entity {}:{} from all index scopes with response status = {}", entityId.getType(),
+//                        entityId.getUuid(), response.status().toString() );
+//
+//                checkDeleteByQueryResponse(tqb, response);
+//            }
+//
+//
+//            @Override
+//            public void onFailure( Throwable e ) {
+//                timeDeleteAllVersions.stop();
+//                logger.error( "Deleted entity {}:{} from all index scopes with error {}", entityId.getType(),
+//                    entityId.getUuid(), e);
+//
+//
+//            }
+//        });
+//        timeDeleteAllVersionsFuture.stop();
+//        return response;
+//    }
+//
+//
+//    @Override
+//    public ListenableActionFuture deletePreviousVersions(final Id entityId, final UUID version) {
+//
+//        String idString = IndexingUtils.idString( entityId ).toLowerCase();
+//
+//        final FilteredQueryBuilder fqb = QueryBuilders.filteredQuery(
+//                QueryBuilders.termQuery(ENTITYID_ID_FIELDNAME, idString),
+//            FilterBuilders.rangeFilter(ENTITY_VERSION_FIELDNAME).lt(version.timestamp())
+//        );
+//
+//        //Added For Graphite Metrics
+//        //Checks the time from the execute to the response below
+//        final Timer.Context timeDeletePreviousVersions = deletePreviousTimer.time();
+//        final Timer.Context timeDeletePreviousVersionFuture = deletePreviousTimerFuture.time();
+//        final ListenableActionFuture<DeleteByQueryResponse> response = esProvider.getClient()
+//            .prepareDeleteByQuery(alias.getWriteAlias()).setQuery(fqb).execute();
+//
+//        //Added For Graphite Metrics
+//        response.addListener(new ActionListener<DeleteByQueryResponse>() {
+//            @Override
+//            public void onResponse(DeleteByQueryResponse response) {
+//                timeDeletePreviousVersions.stop();
+//                //error message needs to be retooled so that it describes the entity more throughly
+//                logger
+//                    .debug("Deleted entity {}:{} with version {} from all " + "index scopes with response status = {}",
+//                        entityId.getType(), entityId.getUuid(), version, response.status().toString());
+//
+//                checkDeleteByQueryResponse( fqb, response );
+//            }
+//
+//
+//            @Override
+//            public void onFailure( Throwable e ) {
+//                timeDeletePreviousVersions.stop();
+//                logger.error( "Deleted entity {}:{} from all index scopes with error {}", entityId.getType(),
+//                    entityId.getUuid(), e );
+//            }
+//        } );
+//
+//        timeDeletePreviousVersionFuture.stop();
+//
+//        return response;
+//    }
 
 
     /**

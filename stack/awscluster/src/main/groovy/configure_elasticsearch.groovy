@@ -18,10 +18,10 @@
 
 
 
-// 
-// configure_elasticsearch.groovy 
-// 
-// Emits Elasticsearch config file based on environment and Elasticsearch node 
+//
+// configure_elasticsearch.groovy
+//
+// Emits Elasticsearch config file based on environment and Elasticsearch node
 // registry in SimpleDB
 //
 
@@ -29,13 +29,18 @@
 String hostName  = (String)System.getenv().get("PUBLIC_HOSTNAME")
 def clusterName  = (String)System.getenv().get("ES_CLUSTER_NAME")
 
+def isMaster = ((String)System.getenv().get("ES_MASTER")).toBoolean()
+
 int esNumServers = ((String)System.getenv().get("ES_NUM_SERVERS")).toInteger()
-int quorum = esNumServers/2+1;
+///int quorum = esNumServers/2+1;
+
+//TODO get this from the number of master nodes
+int quorum = 1
 
 NodeRegistry registry = new NodeRegistry();
 
 // build seed list by listing all Elasticsearch nodes found in SimpleDB domain with our stackName
-def selectResult = registry.searchNode('elasticsearch')
+def selectResult = registry.searchNode('elasticsearch_master')
 def esnodes = ""
 def sep = ""
 for (hostname in selectResult) {
@@ -43,13 +48,19 @@ for (hostname in selectResult) {
    sep = ","
 }
 
+
+def nodeData = !isMaster
+def nodeMaster = isMaster
+
+
+
 def elasticSearchConfig = """
 cluster.name: ${clusterName}
 discovery.zen.minimum_master_nodes: ${quorum}
 discovery.zen.ping.multicast.enabled: false
 discovery.zen.ping.unicast.hosts: [${esnodes}]
 node:
-    name: ${hostName} 
+    name: ${hostName}
 network:
     host: ${hostName}
 path:
@@ -65,21 +76,20 @@ es.logger.level: INFO
 # Temporarily removing.  We don't know better :)
 # http://www.elasticsearch.org/guide/en/elasticsearch/guide/current/_don_8217_t_touch_these_settings.html#_threadpools
 #
-#threadpool:
-#    index:
-#        type: fixed
-#        size: 160
-#        queue_size: 0
-#    bulk:
-#        type: fixed
-#        size: 5000
-#        size: 16
-#        queue_size: 100
-#    search:
-#        size: 10000
-#        size: 48
-#        type: fixed
-#        queue_size: 100
+threadpool:
+    index:
+        type: fixed
+        size: 160
+        queue_size: 1000
+    bulk:
+        type: fixed
+        size: 160
+        size: 16
+        queue_size: 1000
+    search:
+        size: 320
+        type: fixed
+        queue_size: 1000
 
 action.auto_create_index: false
 
@@ -108,10 +118,18 @@ cluster.routing.allocation.disk.watermark.low: .97
 cluster.routing.allocation.disk.watermark.high: .99
 
 #Set streaming high water marks so reboots don't kill our service
-cluster.routing.allocation.node_concurrent_recoveries: 4
-cluster.routing.allocation.node_initial_primaries_recoveries: 18
-indices.recovery.concurrent_streams: 4
-indices.recovery.max_bytes_per_sec: 40mb
+cluster.routing.allocation.node_concurrent_recoveries: 40
+cluster.routing.allocation.node_initial_primaries_recoveries: 40
+indices.recovery.concurrent_streams: 16
+indices.recovery.max_bytes_per_sec: 300mb
+
+
+##############################
+# Master or data node options
+#############################
+
+node.data: ${nodeData}
+node.master: ${nodeMaster}
 
 
 ###############

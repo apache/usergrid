@@ -63,6 +63,6 @@ public class EntityDeletedHandler implements EntityDeleted {
         CpEntityManagerFactory cpemf = (CpEntityManagerFactory)emf;
         final EntityIndex ei = cpemf.getManagerCache().getEntityIndex(scope);
 
-        ei.deleteAllVersionsOfEntity( entityId );
+//        ei.deleteAllVersionsOfEntity( entityId );
     }
 }

@@ -72,8 +72,6 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
     //the actively running subscription
     private Subscription subscription;
 
-    private  Observable<List<IndexOperationMessage>> consumer;
-
     private Object mutex = new Object();
 
     @Inject
@@ -202,6 +200,9 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
             public Observable<BatchRequest> call( final IndexOperationMessage indexOperationMessage ) {
                 final Observable<IndexRequest> index = Observable.from( indexOperationMessage.getIndexRequests() );
                 final Observable<DeIndexRequest> deIndex = Observable.from( indexOperationMessage.getDeIndexRequests() );
+
+                indexSizeCounter.inc(indexOperationMessage.getDeIndexRequests().size());
+                indexSizeCounter.inc(indexOperationMessage.getIndexRequests().size());
 
                 return Observable.merge( index, deIndex );
             }

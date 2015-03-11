@@ -42,9 +42,17 @@ echo "vm.swappiness = 0" >> /etc/sysctl.conf
 sysctl -p
 
 # No need to do this, elasticsearch nodes are also cassandra nodes
+
 cd /usr/share/usergrid/scripts
-groovy registry_register.groovy elasticsearch
-groovy wait_for_instances.groovy elasticsearch ${ES_NUM_SERVERS}
+
+#If we're the master, register ourselves and move on, if we're not, wait for the master to come up
+if [ "$ES_MASTER" = "true" ]; then
+    groovy registry_register.groovy elasticsearch_master
+else
+    groovy registry_register.groovy elasticsearch
+    groovy wait_for_instances.groovy elasticsearch_master 1
+fi
+
 
 # leave room for Cassandra: use about one half of RAM for heap
 case `(curl http://169.254.169.254/latest/meta-data/instance-type)` in
