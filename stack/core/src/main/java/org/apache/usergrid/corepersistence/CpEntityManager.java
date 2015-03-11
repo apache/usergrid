@@ -33,6 +33,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.collection.FieldSet;
 import org.apache.usergrid.persistence.core.future.BetterFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -500,7 +501,6 @@ public class CpEntityManager implements EntityManager {
 
         CollectionScope collectionScope = getCollectionScopeNameFromEntityType(appId, type );
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
-
         Id entityId = new SimpleId( entity.getUuid(), entity.getType() );
 
         if ( logger.isDebugEnabled() ) {
@@ -729,6 +729,11 @@ public class CpEntityManager implements EntityManager {
         create( entityType, null );
     }
 
+    @Override
+    public Observable<FieldSet> getAllEntityFromFields(CollectionScope collectionScope,Collection<Field> fields){
+        EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
+        return ecm.getAllEntities( fields );
+    }
 
     @Override
     public EntityRef getAlias( String aliasType, String alias ) throws Exception {

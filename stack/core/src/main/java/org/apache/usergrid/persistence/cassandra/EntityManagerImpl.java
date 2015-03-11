@@ -69,6 +69,8 @@ import org.apache.usergrid.persistence.SimpleRoleRef;
 import org.apache.usergrid.persistence.TypedEntity;
 import org.apache.usergrid.persistence.cassandra.CounterUtils.AggregateCounterSelection;
 import org.apache.usergrid.persistence.cassandra.util.TraceParticipant;
+import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.FieldSet;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.Event;
 import org.apache.usergrid.persistence.entities.Group;
@@ -83,6 +85,7 @@ import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Query.CounterFilterPredicate;
 import org.apache.usergrid.persistence.index.query.Query.Level;
+import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.schema.CollectionInfo;
 import org.apache.usergrid.utils.ClassUtils;
 import org.apache.usergrid.utils.CompositeUtils;
@@ -107,6 +110,7 @@ import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.MultigetSliceCounterQuery;
 import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.SliceCounterQuery;
+import rx.Observable;
 
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static java.util.Arrays.asList;
@@ -2946,5 +2950,12 @@ public class EntityManagerImpl implements EntityManager {
     @Override
     public Health getIndexHealth() {
         return Health.GREEN; // no good way to assess index status using old-school entity manager
+    }
+
+
+    @Override
+    public Observable<FieldSet> getAllEntityFromFields( final CollectionScope collectionScope,
+                                                        final Collection<Field> fields ) {
+        throw new UnsupportedOperationException( "Not supported." );
     }
 }
