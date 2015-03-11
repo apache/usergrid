@@ -50,6 +50,7 @@ import rx.schedulers.Schedulers;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Consumer for IndexOperationMessages
@@ -78,6 +79,8 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
         this.produceTimer = metricsFactory.getTimer(EsIndexBufferConsumerImpl.class,"index.buffer.consumer.messageFetch");
         final BlockingQueue<IndexOperationMessage> producerQueue = producer.getSource();
 
+
+        final AtomicInteger countFail = new AtomicInteger();
         //batch up sets of some size and send them in batch
         this.consumer = Observable.create(new Observable.OnSubscribe<IndexOperationMessage>() {
             @Override
@@ -88,20 +91,26 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
                         List<IndexOperationMessage> drainList = new ArrayList<>(config.getIndexBufferSize() + 1);
                         do {
                             try {
-                                Timer.Context timer = produceTimer.time();
                                 IndexOperationMessage polled = producerQueue.poll(config.getIndexBufferTimeout(), TimeUnit.MILLISECONDS);
                                 if(polled!=null) {
+                                    Timer.Context timer = produceTimer.time();
                                     drainList.add(polled);
                                     producerQueue.drainTo(drainList, config.getIndexBufferSize());
                                     for(IndexOperationMessage drained : drainList){
                                         subscriber.onNext(drained);
                                     }
                                     drainList.clear();
+                                    timer.stop();
                                 }
-                                timer.stop();
-
+                                countFail.set(0);
                             } catch (InterruptedException ie) {
+                                int count = countFail.incrementAndGet();
                                 log.error("failed to dequeue", ie);
+                                if(count > 200){
+                                    log.error("Shutting down index drain due to repetitive failures");
+                                    //break;
+                                }
+
                             }
                         } while (true);
                     }

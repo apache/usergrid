@@ -23,7 +23,6 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
-import com.google.inject.assistedinject.Assisted;
 
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -31,6 +30,7 @@ import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexBufferProducer;
 import org.apache.usergrid.persistence.index.IndexFig;
+import org.apache.usergrid.persistence.map.MapManagerFactory;
 
 import java.util.concurrent.ExecutionException;
 
@@ -44,23 +44,29 @@ public class EsEntityIndexFactoryImpl implements EntityIndexFactory{
     private final EsIndexCache indexCache;
     private final IndexBufferProducer indexBatchBufferProducer;
     private final MetricsFactory metricsFactory;
+    private final MapManagerFactory mapManagerFactory;
+    private final IndexFig indexFig;
 
     private LoadingCache<ApplicationScope, EntityIndex> eiCache =
         CacheBuilder.newBuilder().maximumSize( 1000 ).build( new CacheLoader<ApplicationScope, EntityIndex>() {
             public EntityIndex load( ApplicationScope scope ) {
-                return new EsEntityIndexImpl(scope,config, indexBatchBufferProducer, provider,indexCache, metricsFactory);
+                return new EsEntityIndexImpl(scope,config, indexBatchBufferProducer, provider,indexCache, metricsFactory,
+                    mapManagerFactory, indexFig );
             }
         } );
 
     @Inject
     public EsEntityIndexFactoryImpl( final IndexFig config, final EsProvider provider, final EsIndexCache indexCache,
                                      final IndexBufferProducer indexBatchBufferProducer,
-                                     final MetricsFactory metricsFactory ){
+                                     final MetricsFactory metricsFactory, final MapManagerFactory mapManagerFactory,
+                                     final IndexFig indexFig ){
         this.config = config;
         this.provider = provider;
         this.indexCache = indexCache;
         this.indexBatchBufferProducer = indexBatchBufferProducer;
         this.metricsFactory = metricsFactory;
+        this.mapManagerFactory = mapManagerFactory;
+        this.indexFig = indexFig;
     }
 
     @Override

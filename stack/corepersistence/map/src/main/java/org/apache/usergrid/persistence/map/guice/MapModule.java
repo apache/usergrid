@@ -42,7 +42,7 @@ public class MapModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(MapManagerFactory.class).to(MapManagerFactoryImpl.class);
+        bind(MapManagerFactory.class).to( MapManagerFactoryImpl.class );
         bind(MapSerialization.class).to( MapSerializationImpl.class );
 
         Multibinder<Migration> migrationBinding = Multibinder.newSetBinder( binder(), Migration.class );
