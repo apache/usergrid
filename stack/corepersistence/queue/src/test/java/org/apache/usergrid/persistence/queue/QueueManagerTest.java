@@ -76,7 +76,6 @@ public class QueueManagerTest {
         assertEquals(scope.getApplication().getUuid(),uuid);
     }
 
-    @Ignore("need aws creds")
     @Test
     public void send() throws IOException,ClassNotFoundException{
         String value = "bodytest";
@@ -92,7 +91,6 @@ public class QueueManagerTest {
 
     }
 
-    @Ignore("need aws creds")
     @Test
     public void sendMore() throws IOException,ClassNotFoundException{
         HashMap<String,String> values = new HashMap<>();

@@ -36,12 +36,11 @@ import com.google.inject.assistedinject.Assisted;
 import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.queue.*;
+import org.apache.usergrid.persistence.queue.Queue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -55,33 +54,49 @@ public class SQSQueueManagerImpl implements QueueManager {
     private static SmileFactory smileFactory = new SmileFactory();
 
     private static LoadingCache<SqsLoader, Queue> urlMap = CacheBuilder.newBuilder()
-            .maximumSize(1000)
-            .build(new CacheLoader<SqsLoader, Queue>() {
-                       @Override
-                       public Queue load(SqsLoader queueLoader) throws Exception {
-                           Queue queue = null;
-                           try {
-                               GetQueueUrlResult result = queueLoader.getClient().getQueueUrl(queueLoader.getKey());
-                               queue = new Queue(result.getQueueUrl());
-                           } catch (QueueDoesNotExistException queueDoesNotExistException) {
-                               queue = null;
-                           } catch (Exception e) {
-                               LOG.error("failed to get queue from service", e);
-                               throw e;
-                           }
-                           if (queue == null) {
-                               String name = queueLoader.getKey();
-                               CreateQueueRequest createQueueRequest = new CreateQueueRequest()
-                                       .withQueueName(name);
-                               CreateQueueResult result = queueLoader.getClient().createQueue(createQueueRequest);
-                               String url = result.getQueueUrl();
-                               queue = new Queue(url);
-                               LOG.info("Created queue with url {}", url);
-                           }
-                           return queue;
+        .maximumSize(1000)
+        .build(new CacheLoader<SqsLoader, Queue>() {
+                   @Override
+                   public Queue load(SqsLoader queueLoader) throws Exception {
+                       Queue queue = null;
+                       try {
+                           GetQueueUrlResult result = queueLoader.getClient().getQueueUrl(queueLoader.getKey());
+                           queue = new Queue(result.getQueueUrl());
+                       } catch (QueueDoesNotExistException queueDoesNotExistException) {
+                           queue = null;
+                       } catch (Exception e) {
+                           LOG.error("failed to get queue from service", e);
+                           throw e;
                        }
+                       if (queue == null) {
+                           String name = queueLoader.getKey();
+                           CreateQueueRequest createQueueRequest = new CreateQueueRequest()
+                               .withQueueName(name);
+                           CreateQueueResult result = queueLoader.getClient().createQueue(createQueueRequest);
+                           String queueUrl = result.getQueueUrl();
+
+                           setDeadLetterQueue(queueLoader.client,queueLoader.config(), queueUrl, name+"_dead");
+                           queue = new Queue(queueUrl);
+                           LOG.info("Created queue with url {}", queueUrl);
+                       }
+                       return queue;
                    }
-            );
+               }
+        );
+
+    private static void setDeadLetterQueue(AmazonSQSClient client, QueueFig fig,  String queueUrl, String deadLetterName) {
+        CreateQueueRequest deadLetterQueueRequest = new CreateQueueRequest()
+            .withQueueName(deadLetterName);
+        CreateQueueResult deadLetterResult = client.createQueue(deadLetterQueueRequest);
+        String deadLetterUrl = deadLetterResult.getQueueUrl();
+        String redrivePolicy = String.format("{\"maxReceiveCount\":\"%s\", \"deadLetterTargetArn\":\"%s\"}", fig.getMaxReceiveCount(), deadLetterUrl);
+        SetQueueAttributesRequest queueAttributes = new SetQueueAttributesRequest();
+        Map<String, String> attributes = new HashMap<>();
+        attributes.put("RedrivePolicy", redrivePolicy);
+        queueAttributes.setAttributes(attributes);
+        queueAttributes.setQueueUrl(queueUrl);
+        client.setQueueAttributes(queueAttributes);
+    }
 
     @Inject
     public SQSQueueManagerImpl(@Assisted QueueScope scope, QueueFig fig){
@@ -111,7 +126,7 @@ public class SQSQueueManagerImpl implements QueueManager {
 
     public Queue getQueue() {
         try {
-            Queue queue = urlMap.get(new SqsLoader(getName(),sqs));
+            Queue queue = urlMap.get(new SqsLoader(getName(),sqs,fig));
             return queue;
         } catch (ExecutionException ee) {
             throw new RuntimeException(ee);
@@ -127,6 +142,7 @@ public class SQSQueueManagerImpl implements QueueManager {
         waitTime = waitTime/1000;
         String url = getQueue().getUrl();
         LOG.info("Getting {} messages from {}", limit, url);
+
         ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest(url);
         receiveMessageRequest.setMaxNumberOfMessages(limit);
         receiveMessageRequest.setVisibilityTimeout(transactionTimeout);
@@ -191,8 +207,8 @@ public class SQSQueueManagerImpl implements QueueManager {
         LOG.info("Commit message {} to queue {}",queueMessage.getMessageId(),url);
 
         sqs.deleteMessage(new DeleteMessageRequest()
-                .withQueueUrl(url)
-                .withReceiptHandle(queueMessage.getHandle()));
+            .withQueueUrl(url)
+            .withReceiptHandle(queueMessage.getHandle()));
     }
 
 
@@ -230,10 +246,12 @@ public class SQSQueueManagerImpl implements QueueManager {
     public class SqsLoader {
         private final String key;
         private final AmazonSQSClient client;
+        private final QueueFig fig;
 
-        public SqsLoader(String key, AmazonSQSClient client) {
+        public SqsLoader(String key, AmazonSQSClient client,QueueFig fig) {
             this.key = key;
             this.client = client;
+            this.fig = fig;
         }
 
         public AmazonSQSClient getClient() {
@@ -264,6 +282,8 @@ public class SQSQueueManagerImpl implements QueueManager {
         public String toString() {
             return getKey();
         }
+
+        public QueueFig config(){return fig;}
 
     }
 }
