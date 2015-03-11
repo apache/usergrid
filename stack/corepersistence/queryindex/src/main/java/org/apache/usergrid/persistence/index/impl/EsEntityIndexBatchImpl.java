@@ -197,9 +197,8 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
          * No-op, just disregard it
          */
         if(tempContainer.isEmpty()){
-            final BetterFuture<?> future =  tempContainer.getFuture();
-            future.done();
-            return future;
+            tempContainer.done();
+            return tempContainer.getFuture();
         }
 
         return indexBatchBufferProducer.put(tempContainer);
