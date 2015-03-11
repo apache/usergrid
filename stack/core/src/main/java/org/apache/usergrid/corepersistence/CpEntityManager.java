@@ -730,10 +730,29 @@ public class CpEntityManager implements EntityManager {
     }
 
     @Override
-    public Observable<FieldSet> getAllEntityFromFields(CollectionScope collectionScope,Collection<Field> fields){
-        EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
-        return ecm.getAllEntities( fields );
+    public Observable<FieldSet> getAllEntityFromFields(String aliasType,String aliasValue ){
+        return null;
+//        EntityCollectionManager ecm = managerCache.getEntityCollectionManager( aliasType );
+//
+//        Schema.
+//        return ecm.getAllEntities( aliasValue );
     }
+
+    @Override
+    public Entity getEntityByAlias(String collectionType, String aliasType) throws Exception {
+
+        EntityRef newEntityRef = getAlias(collectionType,aliasType);
+
+        if(newEntityRef == null) {
+            return null;
+        }
+
+        return get( newEntityRef );
+
+
+
+    }
+
 
     @Override
     public EntityRef getAlias( String aliasType, String alias ) throws Exception {
@@ -2133,11 +2152,16 @@ public class CpEntityManager implements EntityManager {
             getApplicationScope().getApplication(), collectionName);
 
         final EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
+//TODO: can't we just sub in the getEntityRepair method here so for every read of a uniqueEntityField we can verify it is correct?
 
         //convert to a string, that's what we store
         final Id results = ecm.getIdField( new StringField(
                 propertyName, propertyValue.toString() ) ).toBlocking() .lastOrDefault( null );
 
+        Observable<FieldSet> fieldSetObservable = ecm.getAllEntities( Arrays.<Field>asList( new StringField( propertyName, propertyValue.toString() ) );
+
+        FieldSet fieldSet = fieldSetObservable.toBlocking().last();
+        fieldSet.
         return results;
     }
 

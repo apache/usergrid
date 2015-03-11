@@ -76,11 +76,7 @@ public class AbstractCollectionService extends AbstractService {
             nameProperty = "name";
         }
 
-        EntityRef entityRef = em.getAlias( getEntityType(), name );
-        if ( entityRef == null ) {
-            return null;
-        }
-        Entity entity = em.get( entityRef );
+        Entity entity = em.getEntityByAlias( getEntityType(), name );
         if ( entity != null ) {
             entity = importEntity( request, entity );
         }
@@ -152,7 +148,7 @@ public class AbstractCollectionService extends AbstractService {
             nameProperty = "name";
         }
 
-        EntityRef entity = em.getAlias( getEntityType(), name );
+        EntityRef entity = em.get( getEntityType(), name );
 
         if ( entity == null ) {
             logger.info( "miss on entityType: {} with name: {}", getEntityType(), name );
@@ -178,7 +174,7 @@ public class AbstractCollectionService extends AbstractService {
     /*
      * Level level = Level.REFS; if (isEmpty(parameters)) {
      * level = Level.ALL_PROPERTIES; }
-     * 
+     *
      * Results results = em.searchCollectionForProperty(owner,
      * getCollectionName(), null, nameProperty, name, null, null, 1, level);
      * EntityRef entity = results.getRef();
@@ -248,9 +244,9 @@ public class AbstractCollectionService extends AbstractService {
         }
 
         logger.debug("Limiting collection to " + Query.DEFAULT_LIMIT);
-        int count = Query.DEFAULT_LIMIT; 
+        int count = Query.DEFAULT_LIMIT;
 
-        Results r = em.getCollection( context.getOwner(), context.getCollectionName(), 
+        Results r = em.getCollection( context.getOwner(), context.getCollectionName(),
             null, count, Level.ALL_PROPERTIES, isCollectionReversed( context ) );
 
         importEntities( context, r );

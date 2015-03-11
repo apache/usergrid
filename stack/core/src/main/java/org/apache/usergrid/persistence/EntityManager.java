@@ -98,6 +98,8 @@ public interface EntityManager {
 
     public void createApplicationCollection( String entityType ) throws Exception;
 
+    Entity getEntityByAlias( String collectionType, String aliasType ) throws Exception;
+
     public EntityRef getAlias( String aliasType, String alias ) throws Exception;
 
     /**
@@ -717,6 +719,6 @@ public interface EntityManager {
      */
     public Health getIndexHealth();
 
-    public Observable<FieldSet> getAllEntityFromFields(CollectionScope collectionScope,Collection<Field> fields);
+    public Observable<FieldSet> getAllEntityFromFields(String aliasType,String aliasValue );
 
     }

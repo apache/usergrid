@@ -44,6 +44,7 @@ import org.apache.usergrid.utils.UUIDUtils;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 
@@ -577,5 +578,28 @@ public class EntityManagerIT extends AbstractCoreIT {
         em.refreshIndex();
 
         assertNotNull( em.get( user.getUuid() ));
+    }
+
+    @Test
+    public void testInvalidNameRepair() throws Exception {
+        LOG.info("EntityManagerIT.testInvalidNameReapir");
+
+        EntityManager em = app.getEntityManager();
+
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put( "name", "XR-51B" );
+        properties.put( "fuel", "Nutrinox" );
+
+        Entity user = em.create( "robot", properties );
+        assertNotNull( user );
+
+        em.refreshIndex();
+
+        assertNotNull( em.get( user.getUuid() ));
+
+        em.delete( user );
+
+        assertNull( em.get( user.getUuid() ));
+
     }
 }
