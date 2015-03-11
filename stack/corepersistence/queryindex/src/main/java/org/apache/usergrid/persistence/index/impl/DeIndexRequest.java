@@ -37,15 +37,19 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 @JsonTypeInfo(use=JsonTypeInfo.Id.CLASS, include=JsonTypeInfo.As.PROPERTY, property="@class")
 public class DeIndexRequest implements BatchRequest {
 
-    public final String[] indexes;
-    public final String entityType;
-    public final String documentId;
+    public String[] indexes;
+    public String entityType;
+    public String documentId;
 
 
     public DeIndexRequest( final String[] indexes, final String entityType, final String documentId) {
         this.indexes = indexes;
         this.entityType = entityType;
         this.documentId = documentId;
+    }
+
+
+    public DeIndexRequest() {
     }
 
 

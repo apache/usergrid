@@ -48,20 +48,19 @@ import java.util.concurrent.TimeUnit;
 public class SQSQueueManagerImpl implements QueueManager {
     private static final Logger LOG = LoggerFactory.getLogger(SQSQueueManagerImpl.class);
 
-    private  AmazonSQSClient sqs;
-    private  QueueScope scope;
-    private  QueueFig fig;
+    private  final AmazonSQSClient sqs;
+    private  final QueueScope scope;
     private  ObjectMapper mapper;
     private static SmileFactory smileFactory = new SmileFactory();
 
-    private static LoadingCache<SqsLoader, Queue> urlMap = CacheBuilder.newBuilder()
+    private LoadingCache<SqsLoader, Queue> urlMap = CacheBuilder.newBuilder()
             .maximumSize(1000)
             .build(new CacheLoader<SqsLoader, Queue>() {
                        @Override
                        public Queue load(SqsLoader queueLoader) throws Exception {
                            Queue queue = null;
                            try {
-                               GetQueueUrlResult result = queueLoader.getClient().getQueueUrl(queueLoader.getKey());
+                               GetQueueUrlResult result = sqs.getQueueUrl(queueLoader.getKey());
                                queue = new Queue(result.getQueueUrl());
                            } catch (QueueDoesNotExistException queueDoesNotExistException) {
                                queue = null;
@@ -73,7 +72,7 @@ public class SQSQueueManagerImpl implements QueueManager {
                                String name = queueLoader.getKey();
                                CreateQueueRequest createQueueRequest = new CreateQueueRequest()
                                        .withQueueName(name);
-                               CreateQueueResult result = queueLoader.getClient().createQueue(createQueueRequest);
+                               CreateQueueResult result = sqs.createQueue(createQueueRequest);
                                String url = result.getQueueUrl();
                                queue = new Queue(url);
                                LOG.info("Created queue with url {}", url);
@@ -85,7 +84,6 @@ public class SQSQueueManagerImpl implements QueueManager {
 
     @Inject
     public SQSQueueManagerImpl(@Assisted QueueScope scope, QueueFig fig){
-        this.fig = fig;
         this.scope = scope;
         try {
             UsergridAwsCredentialsProvider ugProvider = new UsergridAwsCredentialsProvider();
@@ -99,8 +97,7 @@ public class SQSQueueManagerImpl implements QueueManager {
 //            mapper.enable(SerializationFeature.INDENT_OUTPUT);
             mapper.enableDefaultTypingAsProperty(ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT, "@class");
         } catch ( Exception e ) {
-            LOG.warn("failed to setup SQS",e);
-//            throw new RuntimeException("Error setting up mapper", e);
+            throw new RuntimeException("Error setting up mapper", e);
         }
     }
 
@@ -127,14 +124,14 @@ public class SQSQueueManagerImpl implements QueueManager {
         }
         waitTime = waitTime/1000;
         String url = getQueue().getUrl();
-        LOG.info("Getting {} messages from {}", limit, url);
+        LOG.debug( "Getting {} messages from {}", limit, url);
         ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest(url);
         receiveMessageRequest.setMaxNumberOfMessages(limit);
         receiveMessageRequest.setVisibilityTimeout(transactionTimeout);
         receiveMessageRequest.setWaitTimeSeconds(waitTime);
         ReceiveMessageResult result = sqs.receiveMessage(receiveMessageRequest);
         List<Message> messages = result.getMessages();
-        LOG.info("Received {} messages from {}",messages.size(),url);
+        LOG.debug( "Received {} messages from {}", messages.size(), url);
         List<QueueMessage> queueMessages = new ArrayList<>(messages.size());
         for (Message message : messages) {
             Object body ;
@@ -157,7 +154,7 @@ public class SQSQueueManagerImpl implements QueueManager {
             return;
         }
         String url = getQueue().getUrl();
-        LOG.info("Sending Messages...{} to {}", bodies.size(), url);
+        LOG.debug( "Sending Messages...{} to {}", bodies.size(), url);
 
         SendMessageBatchRequest request = new SendMessageBatchRequest(url);
         List<SendMessageBatchRequestEntry> entries = new ArrayList<>(bodies.size());
@@ -180,7 +177,7 @@ public class SQSQueueManagerImpl implements QueueManager {
             return;
         }
         String url = getQueue().getUrl();
-        LOG.info("Sending Message...{} to {}",body.toString(),url);
+        LOG.debug( "Sending Message...{} to {}", body.toString(), url);
 
         final String stringBody = toString(body);
 
@@ -192,7 +189,7 @@ public class SQSQueueManagerImpl implements QueueManager {
     @Override
     public void commitMessage(QueueMessage queueMessage) {
         String url = getQueue().getUrl();
-        LOG.info("Commit message {} to queue {}",queueMessage.getMessageId(),url);
+        LOG.debug( "Commit message {} to queue {}", queueMessage.getMessageId(), url);
 
         sqs.deleteMessage(new DeleteMessageRequest()
                 .withQueueUrl(url)
@@ -203,7 +200,7 @@ public class SQSQueueManagerImpl implements QueueManager {
     @Override
     public void commitMessages(List<QueueMessage> queueMessages) {
         String url = getQueue().getUrl();
-        LOG.info("Commit messages {} to queue {}",queueMessages.size(),url);
+        LOG.debug( "Commit messages {} to queue {}", queueMessages.size(), url);
         List<DeleteMessageBatchRequestEntry> entries = new ArrayList<>();
         for(QueueMessage message : queueMessages){
             entries.add(new DeleteMessageBatchRequestEntry(message.getMessageId(),message.getHandle()));
@@ -233,16 +230,11 @@ public class SQSQueueManagerImpl implements QueueManager {
 
     public class SqsLoader {
         private final String key;
-        private final AmazonSQSClient client;
 
         public SqsLoader(String key, AmazonSQSClient client) {
             this.key = key;
-            this.client = client;
         }
 
-        public AmazonSQSClient getClient() {
-            return client;
-        }
 
         public String getKey() {
             return key;

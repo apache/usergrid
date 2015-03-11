@@ -60,17 +60,17 @@ public class IndexOperationMessage implements Serializable {
 
 
     public void addAllIndexRequest( final Set<IndexRequest> indexRequests ) {
-        indexRequests.addAll( indexRequests );
+        this.indexRequests.addAll( indexRequests );
     }
 
 
     public void addDeIndexRequest( final DeIndexRequest deIndexRequest ) {
-        deIndexRequests.add( deIndexRequest );
+        this.deIndexRequests.add( deIndexRequest );
     }
 
 
     public void addAllDeIndexRequest( final Set<DeIndexRequest> deIndexRequests ) {
-        deIndexRequests.addAll( deIndexRequests );
+        this.deIndexRequests.addAll( deIndexRequests );
     }
 
 
@@ -95,5 +95,35 @@ public class IndexOperationMessage implements Serializable {
     @JsonIgnore
     public BetterFuture<IndexOperationMessage> getFuture() {
         return containerFuture;
+    }
+
+
+    @Override
+    public boolean equals( final Object o ) {
+        if ( this == o ) {
+            return true;
+        }
+        if ( o == null || getClass() != o.getClass() ) {
+            return false;
+        }
+
+        final IndexOperationMessage that = ( IndexOperationMessage ) o;
+
+        if ( !deIndexRequests.equals( that.deIndexRequests ) ) {
+            return false;
+        }
+        if ( !indexRequests.equals( that.indexRequests ) ) {
+            return false;
+        }
+
+        return true;
+    }
+
+
+    @Override
+    public int hashCode() {
+        int result = indexRequests.hashCode();
+        result = 31 * result + deIndexRequests.hashCode();
+        return result;
     }
 }

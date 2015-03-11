@@ -42,7 +42,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
 import rx.Subscriber;
+import rx.Subscription;
 import rx.functions.Action1;
+import rx.functions.Action2;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
@@ -60,17 +62,23 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
     private final IndexFig config;
     private final FailureMonitorImpl failureMonitor;
     private final Client client;
-    private final Observable<List<IndexOperationMessage>> consumer;
+
     private final Timer flushTimer;
     private final Counter indexSizeCounter;
     private final Meter flushMeter;
     private final Timer produceTimer;
     private final BufferQueue bufferQueue;
 
+    //the actively running subscription
+    private Subscription subscription;
+
+    private  Observable<List<IndexOperationMessage>> consumer;
+
+    private Object mutex = new Object();
+
     @Inject
     public EsIndexBufferConsumerImpl( final IndexFig config,  final EsProvider
         provider, final MetricsFactory metricsFactory,   final BufferQueue bufferQueue ){
-        this.bufferQueue = bufferQueue;
         this.flushTimer = metricsFactory.getTimer(EsIndexBufferConsumerImpl.class, "index.buffer.flush");
         this.flushMeter = metricsFactory.getMeter(EsIndexBufferConsumerImpl.class, "index.buffer.meter");
         this.indexSizeCounter =  metricsFactory.getCounter(EsIndexBufferConsumerImpl.class, "index.buffer.size");
@@ -78,81 +86,101 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
         this.failureMonitor = new FailureMonitorImpl(config,provider);
         this.client = provider.getClient();
         this.produceTimer = metricsFactory.getTimer(EsIndexBufferConsumerImpl.class,"index.buffer.consumer.messageFetch");
+        this.bufferQueue = bufferQueue;
 
 
-        final AtomicInteger countFail = new AtomicInteger();
+
         //batch up sets of some size and send them in batch
-        this.consumer = Observable.create( new Observable.OnSubscribe<List<IndexOperationMessage>>() {
-            @Override
-            public void call( final Subscriber<? super List<IndexOperationMessage>> subscriber ) {
-
-                //name our thread so it's easy to see
-                Thread.currentThread().setName( "QueueConsumer_" + Thread.currentThread().getId() );
-
-                List<IndexOperationMessage> drainList;
-                do {
-                    try {
+          start();
+    }
 
 
-                        Timer.Context timer = produceTimer.time();
+    public void start() {
+        synchronized ( mutex) {
 
-                        drainList = bufferQueue
-                            .take( config.getIndexBufferSize(), config.getIndexBufferTimeout(), TimeUnit.MILLISECONDS );
+            final AtomicInteger countFail = new AtomicInteger();
 
+            Observable<List<IndexOperationMessage>> consumer = Observable.create( new Observable.OnSubscribe<List<IndexOperationMessage>>() {
+                @Override
+                public void call( final Subscriber<? super List<IndexOperationMessage>> subscriber ) {
 
-                        subscriber.onNext( drainList );
+                    //name our thread so it's easy to see
+                    Thread.currentThread().setName( "QueueConsumer_" + Thread.currentThread().getId() );
 
-
-                        timer.stop();
-
-                        countFail.set( 0 );
-                    }
-                    catch ( EsRejectedExecutionException err ) {
-                        countFail.incrementAndGet();
-                        log.error(
-                            "Elasticsearch rejected our request, sleeping for {} milliseconds before retrying.  "
-                                + "Failed {} consecutive times",
-                            config.getFailRefreshCount(), countFail.get() );
-
-                        //es  rejected the exception, sleep and retry in the queue
+                    List<IndexOperationMessage> drainList;
+                    do {
                         try {
-                            Thread.sleep( config.getFailureRetryTime() );
-                        }
-                        catch ( InterruptedException e ) {
-                            //swallow
-                        }
-                    }
-                    catch ( Exception e ) {
-                        int count = countFail.incrementAndGet();
-                        log.error( "failed to dequeue", e );
-                        if ( count > 200 ) {
-                            log.error( "Shutting down index drain due to repetitive failures" );
-                        }
-                    }
-                }
-                while ( true );
-            }
-        } ).subscribeOn( Schedulers.newThread() ).doOnNext( new Action1<List<IndexOperationMessage>>() {
-            @Override
-            public void call( List<IndexOperationMessage> containerList ) {
-                if ( containerList.size() > 0 ) {
-                    flushMeter.mark( containerList.size() );
-                    Timer.Context time = flushTimer.time();
-                    execute( containerList );
-                    time.stop();
-                }
-            }
-} )
-            //ack after we process
-          .doOnNext( new Action1<List<IndexOperationMessage>>() {
-              @Override
-              public void call( final List<IndexOperationMessage> indexOperationMessages ) {
-                  bufferQueue.ack( indexOperationMessages );
-              }
-          } );
 
-        //start in the background
-        consumer.subscribe();
+
+                            Timer.Context timer = produceTimer.time();
+
+                            drainList = bufferQueue.take( config.getIndexBufferSize(), config.getIndexBufferTimeout(),
+                                TimeUnit.MILLISECONDS );
+
+
+                            subscriber.onNext( drainList );
+
+
+                            timer.stop();
+
+                            countFail.set( 0 );
+                        }
+                        catch ( EsRejectedExecutionException err ) {
+                            countFail.incrementAndGet();
+                            log.error(
+                                "Elasticsearch rejected our request, sleeping for {} milliseconds before retrying.  " + "Failed {} consecutive times", config.getFailRefreshCount(),
+                                countFail.get() );
+
+                            //es  rejected the exception, sleep and retry in the queue
+                            try {
+                                Thread.sleep( config.getFailureRetryTime() );
+                            }
+                            catch ( InterruptedException e ) {
+                                //swallow
+                            }
+                        }
+                        catch ( Exception e ) {
+                            int count = countFail.incrementAndGet();
+                            log.error( "failed to dequeue", e );
+                            if ( count > 200 ) {
+                                log.error( "Shutting down index drain due to repetitive failures" );
+                            }
+                        }
+                    }
+                    while ( true );
+                }
+            } ).subscribeOn( Schedulers.newThread() ).doOnNext( new Action1<List<IndexOperationMessage>>() {
+                @Override
+                public void call( List<IndexOperationMessage> containerList ) {
+                    if ( containerList.size() > 0 ) {
+                        flushMeter.mark( containerList.size() );
+                        Timer.Context time = flushTimer.time();
+                        execute( containerList );
+                        time.stop();
+                    }
+                }
+            } )
+                //ack after we process
+                .doOnNext( new Action1<List<IndexOperationMessage>>() {
+                    @Override
+                    public void call( final List<IndexOperationMessage> indexOperationMessages ) {
+                        bufferQueue.ack( indexOperationMessages );
+                    }
+                } );
+
+            //start in the background
+            subscription = consumer.subscribe();
+        }
+    }
+
+
+    public void stop() {
+        synchronized ( mutex ) {
+            //stop consuming
+            if(subscription != null) {
+                subscription.unsubscribe();
+            }
+        }
     }
 
     /**
@@ -165,43 +193,36 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
         }
 
         //process and flatten all the messages to builder requests
-        Observable<BatchRequest> flattenMessages = Observable.from(operationMessages)
-            .subscribeOn(Schedulers.io())
-            .flatMap( new Func1<IndexOperationMessage, Observable<BatchRequest>>() {
-                @Override
-                public Observable<BatchRequest> call( IndexOperationMessage operationMessage ) {
-                    final Observable<DeIndexRequest> deIndex = Observable.from( operationMessage.getDeIndexRequests () );
-                    final Observable<IndexRequest> index = Observable.from( operationMessage.getIndexRequests() );
-
-                    return Observable.merge( deIndex, index );
-                }
-            } );
-
+        Observable<IndexOperationMessage> flattenMessages = Observable.from( operationMessages );
 
 
         //batch shard operations into a bulk request
-        flattenMessages.toList()
-            .doOnNext(new Action1<List<BatchRequest>>() {
-                @Override
-                public void call(List<BatchRequest> builders) {
-                    try {
-                        final BulkRequestBuilder bulkRequest = initRequest();
-                        for (BatchRequest builder : builders) {
-                            indexSizeCounter.dec();
+        flattenMessages.flatMap( new Func1<IndexOperationMessage, Observable<BatchRequest>>() {
+            @Override
+            public Observable<BatchRequest> call( final IndexOperationMessage indexOperationMessage ) {
+                final Observable<IndexRequest> index = Observable.from( indexOperationMessage.getIndexRequests() );
+                final Observable<DeIndexRequest> deIndex = Observable.from( indexOperationMessage.getDeIndexRequests() );
 
-                            builder.doOperation( client, bulkRequest );
-                        }
-                        sendRequest(bulkRequest);
-                    }catch (Exception e){
-                        log.error("Failed while sending bulk",e);
-                    }
-                }
-            })
-            .toBlocking().lastOrDefault(null);
+                return Observable.merge( index, deIndex );
+            }
+        } )
+      //collection all the operations into a single stream
+       .collect( initRequest(), new Action2<BulkRequestBuilder, BatchRequest>() {
+           @Override
+           public void call( final BulkRequestBuilder bulkRequestBuilder, final BatchRequest batchRequest ) {
+               batchRequest.doOperation( client, bulkRequestBuilder );
+           }
+       } )
+        //send the request off to ES
+        .doOnNext( new Action1<BulkRequestBuilder>() {
+            @Override
+            public void call( final BulkRequestBuilder bulkRequestBuilder ) {
+                sendRequest( bulkRequestBuilder );
+            }
+        } ).toBlocking().last();
 
         //call back all futures
         Observable.from(operationMessages)
-            .subscribeOn(Schedulers.io())
             .doOnNext(new Action1<IndexOperationMessage>() {
                 @Override
                 public void call(IndexOperationMessage operationMessage) {
@@ -210,6 +231,7 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
             })
             .toBlocking().lastOrDefault(null);
     }
+
 
     /**
      * initialize request

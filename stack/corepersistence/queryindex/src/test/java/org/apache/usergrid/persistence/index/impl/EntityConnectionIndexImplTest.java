@@ -141,7 +141,7 @@ public class EntityConnectionIndexImplTest extends BaseIT {
 
 
         EsTestUtils.waitForTasks(personLikesIndex);
-        Thread.sleep( 30000 );
+        Thread.sleep( 2000 );
 
         // now, let's search for muffins
         CandidateResults likes = personLikesIndex
@@ -271,7 +271,7 @@ public class EntityConnectionIndexImplTest extends BaseIT {
         personLikesIndex.refresh();
 
         EsTestUtils.waitForTasks( personLikesIndex );
-        Thread.sleep( 30000 );
+        Thread.sleep( 2000 );
 
         // now, let's search for muffins
         CandidateResults likes = personLikesIndex.search( searchScope,
