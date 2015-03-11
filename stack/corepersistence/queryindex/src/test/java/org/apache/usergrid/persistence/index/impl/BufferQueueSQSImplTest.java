@@ -26,26 +26,27 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.test.UseModules;
-import org.apache.usergrid.persistence.index.EntityIndexFactory;
+import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.index.IndexOperationMessage;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
+import org.apache.usergrid.persistence.map.MapManagerFactory;
+import org.apache.usergrid.persistence.queue.QueueManagerFactory;
+import org.apache.usergrid.persistence.queue.impl.UsergridAwsCredentialsProvider;
 
 import com.google.inject.Inject;
 
 import net.jcip.annotations.NotThreadSafe;
 
-import static org.junit.Assert.*;
-
-
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 
 @RunWith(EsRunner.class)
@@ -59,21 +60,23 @@ public class BufferQueueSQSImplTest {
     public MigrationManagerRule migrationManagerRule;
 
     @Inject
-    private BufferQueueSQSImpl bufferQueueSQS;
+    public QueueManagerFactory queueManagerFactory;
 
     @Inject
-    private EsIndexBufferConsumerImpl esIndexBufferConsumer;
+    public IndexFig indexFig;
 
+    @Inject
+    public MapManagerFactory mapManagerFactory;
+
+    @Inject
+    public MetricsFactory metricsFactory;
+
+
+    private BufferQueueSQSImpl bufferQueueSQS;
 
     @Before
-    public void stop() {
-        esIndexBufferConsumer.stop();
-    }
-
-
-    @After
-    public void after() {
-        esIndexBufferConsumer.start();
+    public void setup(){
+        bufferQueueSQS = new BufferQueueSQSImpl( queueManagerFactory, indexFig, mapManagerFactory, metricsFactory );
     }
 
 
@@ -81,6 +84,10 @@ public class BufferQueueSQSImplTest {
 
     @Test
     public void testMessageIndexing(){
+
+        final UsergridAwsCredentialsProvider ugProvider = new UsergridAwsCredentialsProvider();
+        assumeTrue( ugProvider.getCredentials().getAWSAccessKeyId() != null );
+        assumeTrue( ugProvider.getCredentials().getAWSSecretKey() != null );
 
         final Map<String, Object> request1Data  = new HashMap<String, Object>() {{put("test", "testval1");}};
         final IndexRequest indexRequest1 =  new IndexRequest( "testAlias1", "testType1", "testDoc1",request1Data );
@@ -112,9 +119,9 @@ public class BufferQueueSQSImplTest {
 
         //now get it back
 
-        final List<IndexOperationMessage> ops = bufferQueueSQS.take( 10,  20, TimeUnit.SECONDS );
+        final List<IndexOperationMessage> ops = getResults( 20, TimeUnit.SECONDS );
 
-        assertTrue(ops.size() > 1);
+        assertTrue(ops.size() > 0);
 
         final IndexOperationMessage returnedOperation = ops.get( 0 );
 
@@ -137,6 +144,18 @@ public class BufferQueueSQSImplTest {
 
         bufferQueueSQS.ack( ops );
 
+    }
+
+    private List<IndexOperationMessage> getResults(final long timeout, final TimeUnit timeUnit){
+        final long endTime = System.currentTimeMillis() + timeUnit.toMillis( timeout );
+
+        List<IndexOperationMessage> ops;
+
+        do{
+            ops = bufferQueueSQS.take( 10,  20, TimeUnit.SECONDS );
+        }while((ops == null || ops.size() == 0 ) &&  System.currentTimeMillis() < endTime);
+
+        return ops;
     }
 
 

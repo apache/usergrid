@@ -17,85 +17,106 @@
  */
 package org.apache.usergrid.persistence.queue.impl;
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.SDKGlobalConfiguration;
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.regions.Region;
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.sqs.AmazonSQSClient;
-import com.amazonaws.services.sqs.model.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.inject.Inject;
-import com.fasterxml.jackson.dataformat.smile.SmileFactory;
-import com.google.inject.assistedinject.Assisted;
-import org.apache.commons.lang.StringUtils;
-import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-import org.apache.usergrid.persistence.queue.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import java.io.*;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.apache.usergrid.persistence.queue.Queue;
+import org.apache.usergrid.persistence.queue.QueueFig;
+import org.apache.usergrid.persistence.queue.QueueManager;
+import org.apache.usergrid.persistence.queue.QueueMessage;
+import org.apache.usergrid.persistence.queue.QueueScope;
+
+import com.amazonaws.AbortedException;
+import com.amazonaws.regions.Region;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.sqs.AmazonSQSClient;
+import com.amazonaws.services.sqs.model.BatchResultErrorEntry;
+import com.amazonaws.services.sqs.model.CreateQueueRequest;
+import com.amazonaws.services.sqs.model.CreateQueueResult;
+import com.amazonaws.services.sqs.model.DeleteMessageBatchRequest;
+import com.amazonaws.services.sqs.model.DeleteMessageBatchRequestEntry;
+import com.amazonaws.services.sqs.model.DeleteMessageBatchResult;
+import com.amazonaws.services.sqs.model.DeleteMessageRequest;
+import com.amazonaws.services.sqs.model.GetQueueUrlResult;
+import com.amazonaws.services.sqs.model.Message;
+import com.amazonaws.services.sqs.model.MessageAttributeValue;
+import com.amazonaws.services.sqs.model.QueueDoesNotExistException;
+import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
+import com.amazonaws.services.sqs.model.ReceiveMessageResult;
+import com.amazonaws.services.sqs.model.SendMessageBatchRequest;
+import com.amazonaws.services.sqs.model.SendMessageBatchRequestEntry;
+import com.amazonaws.services.sqs.model.SendMessageRequest;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.smile.SmileFactory;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 
 public class SQSQueueManagerImpl implements QueueManager {
     private static final Logger LOG = LoggerFactory.getLogger(SQSQueueManagerImpl.class);
 
-    private  final AmazonSQSClient sqs;
+
     private  final QueueScope scope;
     private  ObjectMapper mapper;
+    private final QueueFig fig;
+    private final AmazonSQSClient sqs;
+
     private static SmileFactory smileFactory = new SmileFactory();
 
-    private LoadingCache<SqsLoader, Queue> urlMap = CacheBuilder.newBuilder()
-            .maximumSize(1000)
-            .build(new CacheLoader<SqsLoader, Queue>() {
-                       @Override
-                       public Queue load(SqsLoader queueLoader) throws Exception {
-                           Queue queue = null;
-                           try {
-                               GetQueueUrlResult result = sqs.getQueueUrl(queueLoader.getKey());
-                               queue = new Queue(result.getQueueUrl());
-                           } catch (QueueDoesNotExistException queueDoesNotExistException) {
-                               queue = null;
-                           } catch (Exception e) {
-                               LOG.error("failed to get queue from service", e);
-                               throw e;
-                           }
-                           if (queue == null) {
-                               String name = queueLoader.getKey();
-                               CreateQueueRequest createQueueRequest = new CreateQueueRequest()
-                                       .withQueueName(name);
-                               CreateQueueResult result = sqs.createQueue(createQueueRequest);
-                               String url = result.getQueueUrl();
-                               queue = new Queue(url);
-                               LOG.info("Created queue with url {}", url);
-                           }
-                           return queue;
-                       }
-                   }
-            );
+    private LoadingCache<String, Queue> urlMap = CacheBuilder.newBuilder()
+            .maximumSize( 1000 )
+            .build( new CacheLoader<String, Queue>() {
+                @Override
+                public Queue load( String queueLoader ) throws Exception {
+
+                    //the amazon client is not thread safe, we need to create one per queue
+                    Queue queue = null;
+                    try {
+                        GetQueueUrlResult result = sqs.getQueueUrl( queueLoader );
+                        queue = new Queue( result.getQueueUrl() );
+                    }catch ( QueueDoesNotExistException queueDoesNotExistException ) {
+                        //no op, swallow
+
+                    }
+                    catch ( Exception e ) {
+                        LOG.error( "failed to get queue from service", e );
+                        throw e;
+                    }
+                    if ( queue == null ) {
+                        CreateQueueRequest createQueueRequest = new CreateQueueRequest().withQueueName( queueLoader );
+                        CreateQueueResult result = sqs.createQueue( createQueueRequest );
+                        String url = result.getQueueUrl();
+                        queue = new Queue( url );
+                        LOG.info( "Created queue with url {}", url );
+                    }
+                    return queue;
+                }
+            } );
+
 
     @Inject
-    public SQSQueueManagerImpl(@Assisted QueueScope scope, QueueFig fig){
+    public SQSQueueManagerImpl( @Assisted QueueScope scope, QueueFig fig ){
         this.scope = scope;
+        this.fig = fig;
         try {
-            UsergridAwsCredentialsProvider ugProvider = new UsergridAwsCredentialsProvider();
-            this.sqs = new AmazonSQSClient(ugProvider.getCredentials());
-            Regions regions = Regions.fromName(fig.getRegion());
-            Region region = Region.getRegion(regions);
-            sqs.setRegion(region);
+
             smileFactory.delegateToTextual(true);
             mapper = new ObjectMapper( smileFactory );
             //pretty print, disabling for speed
 //            mapper.enable(SerializationFeature.INDENT_OUTPUT);
             mapper.enableDefaultTypingAsProperty(ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT, "@class");
+
+            sqs = createClient();
+
         } catch ( Exception e ) {
             throw new RuntimeException("Error setting up mapper", e);
         }
@@ -109,7 +130,7 @@ public class SQSQueueManagerImpl implements QueueManager {
 
     public Queue getQueue() {
         try {
-            Queue queue = urlMap.get(new SqsLoader(getName(),sqs));
+            Queue queue = urlMap.get(getName());
             return queue;
         } catch (ExecutionException ee) {
             throw new RuntimeException(ee);
@@ -228,38 +249,29 @@ public class SQSQueueManagerImpl implements QueueManager {
         return mapper.writeValueAsString(o);
     }
 
-    public class SqsLoader {
-        private final String key;
 
-        public SqsLoader(String key, AmazonSQSClient client) {
-            this.key = key;
-        }
-
-
-        public String getKey() {
-            return key;
-        }
-
-        @Override
-        public boolean equals(Object o){
-            if(o instanceof  SqsLoader){
-                SqsLoader loader = (SqsLoader)o;
-                return loader.getKey().equals(this.getKey());
-            }
-            return false;
-        }
-
-        @Override
-        public int hashCode() {
-            int result = getKey().hashCode();
-            return result;
-        }
-
-
-        @Override
-        public String toString() {
-            return getKey();
-        }
-
+    /**
+     * Get the region
+     * @return
+     */
+    private Region getRegion() {
+        Regions regions = Regions.fromName( fig.getRegion() );
+        Region region = Region.getRegion( regions );
+        return region;
     }
+
+
+    /**
+     * Create the SQS client for the specified settings
+     */
+    private AmazonSQSClient createClient() {
+        final UsergridAwsCredentialsProvider ugProvider = new UsergridAwsCredentialsProvider();
+        final AmazonSQSClient sqs = new AmazonSQSClient( ugProvider.getCredentials() );
+        final Region region = getRegion();
+        sqs.setRegion( region );
+
+        return sqs;
+    }
+
+
 }
