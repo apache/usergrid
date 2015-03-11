@@ -147,7 +147,7 @@ public class BufferQueueSQSImpl implements BufferQueue {
 
             //signal to SQS
             this.queue.sendMessage( identifier );
-            operation.getFuture().done();
+            operation.done();
         }
         catch ( IOException e ) {
             throw new RuntimeException( "Unable to queue message", e );

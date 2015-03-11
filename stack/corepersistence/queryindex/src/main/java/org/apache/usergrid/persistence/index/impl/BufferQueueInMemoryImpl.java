@@ -47,6 +47,7 @@ public class BufferQueueInMemoryImpl implements BufferQueue {
     @Override
     public void offer( final IndexOperationMessage operation ) {
         messages.offer( operation );
+        operation.done();
     }
 
 
