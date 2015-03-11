@@ -49,7 +49,7 @@ public class MetricsFactoryImpl implements MetricsFactory {
         if(!metricsHost.equals("false")) {
             Graphite graphite = new Graphite(new InetSocketAddress(metricsHost, 2003));
             graphiteReporter = GraphiteReporter.forRegistry(registry)
-                    .prefixedWith("notifications")
+                    .prefixedWith("usergrid-metrics")
                     .convertRatesTo(TimeUnit.SECONDS)
                     .convertDurationsTo(TimeUnit.MILLISECONDS)
                     .filter(MetricFilter.ALL)
