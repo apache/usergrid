@@ -85,7 +85,7 @@ public class EntityVerifier implements ResultsVerifier {
         final UUID savedVersion = savedEntity.getVersion();
 
         if ( UUIDComparator.staticCompare( savedVersion, candidateVersion ) > 0 ) {
-            logger.debug( "Stale version of Entity uuid:{} type:{}, stale v:{}, latest v:{}", new Object[] {
+            logger.warn( "Stale version of Entity uuid:{} type:{}, stale v:{}, latest v:{}", new Object[] {
                     entityId.getUuid(), entityId.getType(), candidateVersion, savedEntity
             } );
 
@@ -96,7 +96,7 @@ public class EntityVerifier implements ResultsVerifier {
         final Optional<org.apache.usergrid.persistence.model.entity.Entity> entity = savedEntity.getEntity();
 
         if ( !entity.isPresent() ) {
-            logger.warn( "Entity uuid:{} version v:{} is deleted but indexed, this is a bug ", 
+            logger.warn( "Entity uuid:{} version v:{} is deleted but indexed, this is a bug ",
                     entityId.getUuid(), savedEntity.getEntity() );
             return false;
         }

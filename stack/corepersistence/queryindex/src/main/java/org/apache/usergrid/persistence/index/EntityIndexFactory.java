@@ -25,6 +25,8 @@ import com.google.inject.assistedinject.Assisted;
 
 public interface EntityIndexFactory {
 
-    public EntityIndex createEntityIndex( 
+    public EntityIndex createEntityIndex(
         @Assisted ApplicationScope appScope);
+
+    void invalidate();
 }

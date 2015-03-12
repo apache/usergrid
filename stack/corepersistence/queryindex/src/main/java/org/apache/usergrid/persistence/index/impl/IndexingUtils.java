@@ -151,7 +151,6 @@ public class IndexingUtils {
 
             .startObject()
 
-                .startObject(type)
                     /**  add routing  "_routing":{ "required":false,  "path":"ug_entityId" **/
                      .startObject("_routing").field("required",true).field("path",ENTITYID_ID_FIELDNAME).endObject()
                      .startArray("dynamic_templates")
@@ -223,8 +222,6 @@ public class IndexingUtils {
                         .endObject()
 
                     .endArray()
-
-                .endObject()
 
             .endObject();
 

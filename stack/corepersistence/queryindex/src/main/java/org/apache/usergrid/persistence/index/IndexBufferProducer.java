@@ -24,13 +24,15 @@ import org.apache.usergrid.persistence.index.IndexOperationMessage;
 import rx.Observable;
 import rx.Subscriber;
 
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+
 /**
  * Classy class class.
  */
-public interface IndexBufferProducer extends Observable.OnSubscribe<IndexOperationMessage> {
-
-    @Override
-    void call(Subscriber<? super IndexOperationMessage> subscriber);
+public interface IndexBufferProducer {
 
     BetterFuture put(IndexOperationMessage message);
+
+    BlockingQueue<IndexOperationMessage> getSource();
 }

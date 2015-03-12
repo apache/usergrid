@@ -89,6 +89,8 @@ public class IndexResource extends AbstractContextResource {
                 catch ( Exception e ) {
                     logger.error( "Unable to rebuild indexes", e );
                 }
+
+                logger.info( "Completed all indexes" );
             }
         };
 
@@ -131,12 +133,20 @@ public class IndexResource extends AbstractContextResource {
 
             @Override
             public void run() {
+
+
+                logger.info( "Started rebuilding application {} in collection ", appId );
+
+
                 try {
                     emf.rebuildApplicationIndexes( appId, po );
                 }
                 catch ( Exception e ) {
                     logger.error( "Unable to re-index application", e );
                 }
+
+
+                logger.info( "Completed rebuilding application {} in collection ", appId );
             }
         };
 
@@ -168,6 +178,8 @@ public class IndexResource extends AbstractContextResource {
 
             public void run() {
 
+                logger.info( "Started rebuilding application {} in collection {}", appId, collectionName );
+
                 try {
                     rebuildCollection( appId, collectionName, reverse );
                 } catch (Exception e) {
@@ -175,6 +187,8 @@ public class IndexResource extends AbstractContextResource {
                     // TODO: handle this in rebuildCollection() instead
                     throw new RuntimeException("Error rebuilding collection");
                 }
+
+                logger.info( "Completed rebuilding application {} in collection {}", appId, collectionName );
             }
         };
 
@@ -214,12 +228,17 @@ public class IndexResource extends AbstractContextResource {
 
             @Override
             public void run() {
+
+                logger.info( "Started rebuilding internal indexes", appId );
+
                 try {
                     emf.rebuildInternalIndexes( po );
                 }
                 catch ( Exception e ) {
                     logger.error( "Unable to re-index internals", e );
                 }
+
+                logger.info( "Completed rebuilding internal indexes" );
             }
         };
 

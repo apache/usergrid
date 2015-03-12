@@ -50,9 +50,9 @@ def esShards = numEsNodes;
 //This gives us 3 copies, which means we'll have a quorum with primary + 1 replica
 def esReplicas = 1;
 
-def cassThreads = System.getenv().get("TOMCAT_THREADS")
+def tomcatThreads = System.getenv().get("TOMCAT_THREADS")
 //temporarily set to equal since we now have a sane tomcat thread calculation
-def hystrixThreads = cassThreads
+def hystrixThreads = tomcatThreads
 
 //if we end in -1, we remove it
 def ec2Region = System.getenv().get("EC2_REGION")
@@ -99,7 +99,7 @@ cassandra.keyspace.strategy=org.apache.cassandra.locator.NetworkTopologyStrategy
 cassandra.keyspace.replication=${cassEc2Region}:${replFactor}
 
 cassandra.timeout=5000
-cassandra.connections=${cassThreads}
+cassandra.connections=${tomcatThreads}
 hystrix.threadpool.graph_user.coreSize=${hystrixThreads}
 hystrix.threadpool.graph_async.coreSize=${hystrixThreads}
 usergrid.read.cl=${readConsistencyLevel}

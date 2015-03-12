@@ -51,6 +51,8 @@ public interface IndexFig extends GuicyFig {
 
     public static final String INDEX_BUFFER_SIZE = "elasticsearch.buffer_size";
 
+    public static final String INDEX_QUEUE_SIZE = "elasticsearch.queue_size";
+
     public static final String INDEX_BUFFER_TIMEOUT = "elasticsearch.buffer_timeout";
 
     public static final String INDEX_BATCH_SIZE = "elasticsearch.batch_size";
@@ -127,7 +129,7 @@ public interface IndexFig extends GuicyFig {
      */
     @Default("250")
     @Key( INDEX_BUFFER_TIMEOUT )
-    int getIndexBufferTimeout();
+    long getIndexBufferTimeout();
 
     /**
      * size of the buffer to build up before you send results
@@ -136,6 +138,14 @@ public interface IndexFig extends GuicyFig {
     @Default("1000")
     @Key( INDEX_BUFFER_SIZE )
     int getIndexBufferSize();
+
+    /**
+     * size of the buffer to build up before you send results
+     * @return
+     */
+    @Default("1000")
+    @Key( INDEX_QUEUE_SIZE )
+    int getIndexQueueSize();
 
     /**
      * Request batch size for ES

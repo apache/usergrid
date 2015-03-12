@@ -61,6 +61,7 @@ import org.apache.usergrid.persistence.cassandra.index.IndexBucketScanner;
 import org.apache.usergrid.persistence.cassandra.index.IndexScanner;
 import org.apache.usergrid.persistence.cassandra.index.NoOpIndexScanner;
 import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.entities.User;
@@ -105,6 +106,7 @@ import org.apache.usergrid.utils.IndexUtils;
 import org.apache.usergrid.utils.MapUtils;
 import org.apache.usergrid.utils.UUIDUtils;
 
+import com.codahale.metrics.Timer;
 import com.google.common.base.Preconditions;
 import com.yammer.metrics.annotation.Metered;
 
@@ -119,7 +121,6 @@ import rx.functions.Func1;
 import static java.util.Arrays.asList;
 
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
-import static org.apache.usergrid.corepersistence.util.CpEntityMapUtils.entityToCpEntity;
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getCollectionScopeNameFromEntityType;
 import static org.apache.usergrid.persistence.Schema.COLLECTION_ROLES;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTED_ENTITIES;
@@ -188,7 +189,11 @@ public class CpRelationManager implements RelationManager {
 
     private ResultsLoaderFactory resultsLoaderFactory;
 
-
+    private MetricsFactory metricsFactory;
+    private Timer updateCollectionTimer;
+    private Timer createConnectionTimer;
+    private Timer cassConnectionDelete;
+    private Timer esDeleteConnectionTimer;
 
     public CpRelationManager() {}
 
@@ -198,7 +203,8 @@ public class CpRelationManager implements RelationManager {
             CpEntityManagerFactory emf,
             UUID applicationId,
             EntityRef headEntity,
-            IndexBucketLocator indexBucketLocator ) {
+            IndexBucketLocator indexBucketLocator,
+            MetricsFactory metricsFactory) {
 
         Assert.notNull( em, "Entity manager cannot be null" );
         Assert.notNull( emf, "Entity manager factory cannot be null" );
@@ -218,7 +224,14 @@ public class CpRelationManager implements RelationManager {
 
         this.cass = em.getCass(); // TODO: eliminate need for this via Core Persistence
         this.indexBucketLocator = indexBucketLocator; // TODO: this also
-
+        this.metricsFactory = metricsFactory;
+        this.updateCollectionTimer = metricsFactory
+            .getTimer( CpRelationManager.class, "relation.manager.es.update.collection" );
+        this.createConnectionTimer = metricsFactory
+            .getTimer( CpRelationManager.class, "relation.manager.es.create.connection.timer" );
+        this.cassConnectionDelete = metricsFactory
+            .getTimer( CpRelationManager.class, "relation.manager.cassandra.delete.connection.batch.timer" );
+        this.esDeleteConnectionTimer = metricsFactory.getTimer(CpRelationManager.class, "relation.manager.es.delete.connection.batch.timer" );
         // load the Core Persistence version of the head entity as well
         this.headEntityScope = getCollectionScopeNameFromEntityType(
                 applicationScope.getApplication(), headEntity.getType());
@@ -441,8 +454,10 @@ public class CpRelationManager implements RelationManager {
                     }
                 } ).count().toBlocking().lastOrDefault( 0 );
 
-
+        //Adding graphite metrics
+        Timer.Context timeElasticIndexBatch = updateCollectionTimer.time();
         entityIndexBatch.execute();
+        timeElasticIndexBatch.stop();
 
         logger.debug( "updateContainingCollectionsAndCollections() updated {} indexes", count );
     }
@@ -1065,7 +1080,11 @@ public class CpRelationManager implements RelationManager {
         Keyspace ko = cass.getApplicationKeyspace( applicationId );
         Mutator<ByteBuffer> m = createMutator( ko, be );
         batchUpdateEntityConnection( m, false, connection, UUIDGenerator.newTimeUUID() );
+        //Added Graphite Metrics
+        Timer.Context timeElasticIndexBatch = createConnectionTimer.time();
         batchExecute( m, CassandraService.RETRY_COUNT );
+        timeElasticIndexBatch.stop();
+
 
         return connection;
     }
@@ -1236,7 +1255,11 @@ public class CpRelationManager implements RelationManager {
         Mutator<ByteBuffer> m = createMutator( ko, be );
         batchUpdateEntityConnection(
                 m, true, ( ConnectionRefImpl ) connectionRef, UUIDGenerator.newTimeUUID() );
+
+        //Added Graphite Metrics
+        Timer.Context timeDeleteConnections = cassConnectionDelete.time();
         batchExecute( m, CassandraService.RETRY_COUNT );
+        timeDeleteConnections.stop();
 
         EntityRef connectingEntityRef = connectionRef.getConnectingEntity();  // source
         EntityRef connectedEntityRef = connectionRef.getConnectedEntity();  // target
@@ -1291,7 +1314,11 @@ public class CpRelationManager implements RelationManager {
 //
 //        batch.deindex( allTypesIndexScope, targetEntity );
 
+        //Added Graphite Metrics
+        Timer.Context timeDeleteConnection = esDeleteConnectionTimer.time();
         batch.execute();
+        timeDeleteConnection.stop();
+
     }
 
 
@@ -1522,7 +1549,7 @@ public class CpRelationManager implements RelationManager {
 
     private CpRelationManager getRelationManager( EntityRef headEntity ) {
         CpRelationManager rmi = new CpRelationManager();
-        rmi.init( em, emf, applicationId, headEntity, null );
+        rmi.init( em, emf, applicationId, headEntity, null, metricsFactory);
         return rmi;
     }
 
