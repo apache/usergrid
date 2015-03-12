@@ -148,7 +148,7 @@ public class AbstractCollectionService extends AbstractService {
             nameProperty = "name";
         }
 
-        EntityRef entity = em.getAlias( getEntityType(), name );
+        Entity entity = em.getAllEntityFromFields( getEntityType(), name );
 
         if ( entity == null ) {
             logger.info( "miss on entityType: {} with name: {}", getEntityType(), name );
@@ -165,8 +165,7 @@ public class AbstractCollectionService extends AbstractService {
         }
 
         if ( !context.moreParameters() ) {
-            entity = em.get( entity );
-            entity = importEntity( context, ( Entity ) entity );
+            entity = importEntity( context, entity );
         }
 
         checkPermissionsForEntity( context, entity );
@@ -291,9 +290,9 @@ public class AbstractCollectionService extends AbstractService {
             return getItemByName( context, name );
         }
 
-        EntityRef ref = em.getAlias( getEntityType(), name );
-        Entity entity;
-        if ( ref == null ) {
+       // EntityRef ref = em.getAlias( getEntityType(), name );
+        Entity entity = em.getAllEntityFromFields( getEntityType(), name );
+        if ( entity == null ) {
             // null entity ref means we tried to put a non-existing entity
             // before we create a new entity for it, we should check for permission
             checkPermissionsForCollection(context);
@@ -305,7 +304,6 @@ public class AbstractCollectionService extends AbstractService {
             entity = em.create( getEntityType(), properties );
         }
         else {
-            entity = em.get( ref );
             entity = importEntity( context, entity );
             checkPermissionsForEntity( context, entity );
             updateEntity( context, entity );
@@ -437,12 +435,12 @@ public class AbstractCollectionService extends AbstractService {
             return super.postItemByName( context, name );
         }
 
-        EntityRef ref = em.getAlias( getEntityType(), name );
-        if ( ref == null ) {
+        Entity entity = em.getAllEntityFromFields( getEntityType(), name );
+        if ( entity == null ) {
             throw new ServiceResourceNotFoundException( context );
         }
 
-        return postItemById( context, ref.getUuid() );
+        return postItemById( context, entity.getUuid() );
     }
 
 
@@ -491,11 +489,7 @@ public class AbstractCollectionService extends AbstractService {
             return getItemByName( context, name );
         }
 
-        EntityRef ref = em.getAlias( getEntityType(), name );
-        if ( ref == null ) {
-            throw new ServiceResourceNotFoundException( context );
-        }
-        Entity entity = em.get( ref );
+        Entity entity = em.getAllEntityFromFields(getEntityType(), name );
         if ( entity == null ) {
             throw new ServiceResourceNotFoundException( context );
         }
