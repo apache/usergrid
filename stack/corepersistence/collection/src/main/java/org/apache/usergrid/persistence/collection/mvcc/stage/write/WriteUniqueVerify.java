@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.netflix.hystrix.strategy.concurrency.HystrixRequestVariableLifecycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -110,7 +111,7 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
         //
         for ( final Field field : entityFields ) {
 
-            // if it's unique, create a function to validate it and add it to the list of 
+            // if it's unique, create a function to validate it and add it to the list of
             // concurrent validations
             if ( field.isUnique() ) {
 

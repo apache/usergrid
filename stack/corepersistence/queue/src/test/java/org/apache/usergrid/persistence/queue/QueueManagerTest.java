@@ -63,7 +63,7 @@ public class QueueManagerTest {
     @Before
     public void mockApp() {
         this.scope = new QueueScopeImpl( new SimpleId( "application" ), "testQueue" );
-        qm = qmf.getQueueManager(scope);
+//        qm = qmf.getQueueManager(scope);
         queueScopeFactory = new QueueScopeFactoryImpl(queueFig);
     }
 

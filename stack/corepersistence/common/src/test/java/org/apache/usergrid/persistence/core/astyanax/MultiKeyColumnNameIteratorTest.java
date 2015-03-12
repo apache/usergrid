@@ -83,6 +83,11 @@ public class MultiKeyColumnNameIteratorTest {
                 return ConsistencyLevel.CL_QUORUM;
             }
 
+            @Override
+            public ConsistencyLevel getConsistentReadCL() {
+                return ConsistencyLevel.CL_LOCAL_ONE;
+            }
+
 
             @Override
             public ConsistencyLevel getWriteCL() {
