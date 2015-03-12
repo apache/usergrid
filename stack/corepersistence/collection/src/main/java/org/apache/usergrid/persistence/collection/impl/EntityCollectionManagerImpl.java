@@ -287,6 +287,12 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         } );
     }
 
+
+    /**
+     * Retrieves all entities that correspond to each field given in the Collection.
+     * @param fields
+     * @return
+     */
     @Override
     public Observable<FieldSet> getAllEntities(final Collection<Field> fields) {
         return rx.Observable.just(fields).map( new Func1<Collection<Field>, FieldSet>() {
@@ -296,7 +302,13 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
                     final UUID startTime = UUIDGenerator.newTimeUUID();
 
+                    //Get back set of unique values that correspond to collection of fields
                     UniqueValueSet set = uniqueValueSerializationStrategy.load( collectionScope, fields );
+
+                    //Short circut if we don't have any uniqueValues from the given fields.
+                    if(!set.iterator().hasNext()){
+                        return new FieldSetImpl( 0 );
+                    }
 
 
                     //loop through each field, and construct an entity load
@@ -311,6 +323,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                         uniqueValues.add(value);
                     }
 
+                    //Load a entity for each entityId we retrieved.
                     final EntitySet entitySet = entitySerializationStrategy.load(collectionScope, entityIds, startTime);
 
                     //now loop through and ensure the entities are there.
@@ -334,7 +347,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
                     }
 
-                    //fire and forget, we don't care.  We'll repair it again if we have to
+                    //TODO: explore making this an Async process
+                    //We'll repair it again if we have to
                     deleteBatch.execute();
 
                     return response;
