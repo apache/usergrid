@@ -29,7 +29,10 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.exception.ConflictException;
 import org.apache.usergrid.management.exceptions.*;
+import org.apache.usergrid.persistence.*;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,16 +48,8 @@ import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.OrganizationOwnerInfo;
 import org.apache.usergrid.management.UserInfo;
-import org.apache.usergrid.persistence.CredentialsInfo;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.exceptions.ApplicationAlreadyExistsException;
 import org.apache.usergrid.persistence.index.query.Identifier;
-import org.apache.usergrid.persistence.PagingResultsIterator;
-import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.entities.User;
@@ -647,24 +642,8 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     @Override
-    public UUID importApplication( UUID organizationId, Application application ) throws Exception {
-        // TODO organizationName
-        OrganizationInfo organization = getOrganizationByUuid( organizationId );
-        UUID applicationId =
-                emf.importApplication( organization.getName(), application.getUuid(), application.getName(),
-                        application.getProperties() );
-
-        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-        properties.setProperty( "name", buildAppName( application.getName(), organization ) );
-        properties.setProperty( PROPERTY_PATH, organization.getName() );
-        Entity appInfo = em.create(
-            applicationId, CpNamingUtils.APPLICATION_INFO, application.getProperties() );
-
-        writeUserToken( smf.getManagementAppId(), appInfo, encryptionService
-                .plainTextCredentials( generateOAuthSecretKey( AuthPrincipalType.APPLICATION ), null, applicationId ) );
-
-        addApplicationToOrganization( organizationId, applicationId, appInfo );
-        return applicationId;
+    public UUID importApplication( UUID organizationId, final Application application ) throws Exception {
+        throw new UnsupportedOperationException("Import application not supported");
     }
 
 
@@ -1550,14 +1529,14 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public Map<String, Object> getOrganizationData( OrganizationInfo organization ) throws Exception {
 
-        Map<String, Object> jsonOrganization = new HashMap<String, Object>();
+        Map<String, Object> jsonOrganization = new HashMap<>();
         jsonOrganization.putAll( JsonUtils.toJsonMap( organization ) );
 
         BiMap<UUID, String> applications = getApplicationsForOrganization( organization.getUuid() );
         jsonOrganization.put( "applications", applications.inverse() );
 
         List<UserInfo> users = getAdminUsersForOrganization( organization.getUuid() );
-        Map<String, Object> jsonUsers = new HashMap<String, Object>();
+        Map<String, Object> jsonUsers = new HashMap<>();
         for ( UserInfo u : users ) {
             jsonUsers.put( u.getUsername(), u );
         }
@@ -1631,12 +1610,9 @@ public class ManagementServiceImpl implements ManagementService {
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
 
         OrganizationInfo organizationInfo = getOrganizationByUuid( organizationId );
-        UUID applicationId = emf.createApplication(
-            organizationInfo.getName(), applicationName, properties );
+        Entity appInfo = emf.createApplicationV2(
+            organizationInfo.getName(), applicationName, properties);
         em.refreshIndex();
-
-        Entity appInfo = em.get(
-            new SimpleEntityRef( CpNamingUtils.APPLICATION_INFO, applicationId ));
 
         writeUserToken( smf.getManagementAppId(), appInfo,
             encryptionService.plainTextCredentials(
@@ -1644,7 +1620,7 @@ public class ManagementServiceImpl implements ManagementService {
                 null,
                 smf.getManagementAppId() ) );
 
-        addApplicationToOrganization( organizationId, applicationId, appInfo );
+        UUID applicationId = addApplicationToOrganization( organizationId, appInfo );
 
         UserInfo user = null;
         try {
@@ -1668,20 +1644,6 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public void deleteApplication(UUID applicationId) throws Exception {
-
-        // make sure there is not already a delete app with the same name
-
-        EntityManager em = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
-        Entity appToDelete = em.get(
-            new SimpleEntityRef( CpNamingUtils.APPLICATION_INFO, applicationId ));
-
-        final EntityRef alias = em.getAlias(
-            CpNamingUtils.DELETED_APPLICATION_INFO, appToDelete.getName() );
-
-        if ( alias != null ) {
-            throw new ConflictException("Cannot delete app with same name as already deleted app");
-        }
-
         emf.deleteApplication( applicationId );
     }
 
@@ -1701,12 +1663,9 @@ public class ManagementServiceImpl implements ManagementService {
         // restore application_info entity
 
         EntityManager em = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
-        emf.restoreApplication(applicationId);
+        Entity appInfo = emf.restoreApplication(applicationId);
 
         // restore token
-
-        Entity appInfo = em.get(
-            new SimpleEntityRef( CpNamingUtils.APPLICATION_INFO, applicationId ));
 
         writeUserToken( smf.getManagementAppId(), appInfo,
             encryptionService.plainTextCredentials(
@@ -1718,7 +1677,7 @@ public class ManagementServiceImpl implements ManagementService {
         EntityRef alias = em.getAlias( Group.ENTITY_TYPE, orgName );
         Entity orgEntity = em.get( alias );
 
-        addApplicationToOrganization( orgEntity.getUuid(), applicationId, appInfo );
+        addApplicationToOrganization( orgEntity.getUuid(), appInfo );
 
         // create activity
 
@@ -1773,6 +1732,7 @@ public class ManagementServiceImpl implements ManagementService {
         final BiMap<UUID, String> applications = HashBiMap.create();
         final EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
 
+        // query for application_info entities
         final Results results = em.getConnectedEntities(
                 new SimpleEntityRef(Group.ENTITY_TYPE, organizationGroupId),
                 "owns", CpNamingUtils.APPLICATION_INFO, Level.ALL_PROPERTIES );
@@ -1791,7 +1751,11 @@ public class ManagementServiceImpl implements ManagementService {
                 entityName = entityName.toLowerCase();
             }
 
-            applications.put( entity.getUuid(), entityName );
+            // make sure we return applicationId and not the application_info UUID
+            UUID applicationId = UUIDUtils.tryExtractUUID(
+                entity.getProperty( PROPERTY_APPLICATION_ID ).toString() );
+
+            applications.put( applicationId, entityName );
         }
 
 
@@ -1813,8 +1777,14 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
 
+    /**
+     * @return UUID of the application itself (NOT the application_info entity).
+     */
     @Override
-    public UUID addApplicationToOrganization( UUID organizationId, UUID applicationId, Entity appInfo ) throws Exception {
+    public UUID addApplicationToOrganization(UUID organizationId, Entity appInfo) throws Exception {
+
+        UUID applicationId = UUIDUtils.tryExtractUUID(
+            appInfo.getProperty(PROPERTY_APPLICATION_ID).toString());
 
         if ( ( organizationId == null ) || ( applicationId == null ) ) {
             return null;
@@ -1860,7 +1830,12 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-        Entity entity = em.get( new SimpleEntityRef( CpNamingUtils.APPLICATION_INFO, applicationId ));
+        EntityRef mgmtAppRef = new SimpleEntityRef( Schema.TYPE_APPLICATION, smf.getManagementAppId() );
+
+        final Results results = em.searchCollection(mgmtAppRef, CpNamingUtils.APPLICATION_INFOS,
+            Query.fromQL("select * where " + PROPERTY_APPLICATION_ID + " = " + applicationId.toString()));
+
+        Entity entity = results.getEntity();
 
         if ( entity != null ) {
             return new ApplicationInfo( applicationId, entity.getName() );
@@ -1875,8 +1850,12 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-        Entity entity = em.get( new SimpleEntityRef(
-            CpNamingUtils.DELETED_APPLICATION_INFO, applicationId ));
+        EntityRef mgmtAppRef = new SimpleEntityRef( Schema.TYPE_APPLICATION, smf.getManagementAppId() );
+
+        final Results results = em.searchCollection(mgmtAppRef, CpNamingUtils.DELETED_APPLICATION_INFOS,
+            Query.fromQL("select * where " + PROPERTY_APPLICATION_ID + " = " + applicationId.toString()));
+
+        Entity entity = results.getEntity();
 
         if ( entity != null ) {
             return new ApplicationInfo( applicationId, entity.getName() );

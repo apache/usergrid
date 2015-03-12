@@ -19,6 +19,7 @@ package org.apache.usergrid.management.cassandra;
 
 import java.util.Set;
 
+import org.apache.usergrid.corepersistence.ApplicationIdCacheImpl;
 import org.junit.Rule;
 import org.junit.Test;
 

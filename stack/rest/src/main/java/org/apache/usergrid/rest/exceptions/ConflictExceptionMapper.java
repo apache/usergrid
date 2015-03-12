@@ -17,7 +17,7 @@
 package org.apache.usergrid.rest.exceptions;
 
 
-import org.apache.usergrid.management.exceptions.ConflictException;
+import org.apache.usergrid.exception.ConflictException;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;

@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.Entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -356,6 +357,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
     }
 
 
+
     @Override
     public boolean updateServiceProperties( Map<String, String> properties ) {
         try {
@@ -437,7 +439,6 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
         throw new UnsupportedOperationException("Not supported.");
     }
 
-
     @Override
     public void addIndex(UUID appId, String suffix,final int shards,final int replicas,final String consistency) {
         throw new UnsupportedOperationException("Not supported in v1");
@@ -449,12 +450,28 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
     }
 
     @Override
-    public void restoreApplication(UUID applicationId) throws Exception {
+    public Entity restoreApplication(UUID applicationId) throws Exception {
         throw new UnsupportedOperationException("Not supported in v1");
     }
 
     @Override
     public Map<String, UUID> getDeletedApplications() throws Exception {
+        throw new UnsupportedOperationException("Not supported in v1");
+    }
+
+    public Entity createApplicationV2( String organizationName, String name ) throws Exception {
+        throw new UnsupportedOperationException("Not supported in v1");
+    }
+
+    @Override
+    public Entity initializeApplicationV2(
+        String orgName, UUID appId, String appName, Map<String, Object> props) throws Exception {
+        throw new UnsupportedOperationException("Not supported in v1");
+    }
+
+    @Override
+    public Entity createApplicationV2(
+        String organizationName, String name, Map<String, Object> properties) throws Exception {
         throw new UnsupportedOperationException("Not supported in v1");
     }
 

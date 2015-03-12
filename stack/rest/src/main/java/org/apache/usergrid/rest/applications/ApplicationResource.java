@@ -30,6 +30,7 @@ import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
 import org.slf4j.Logger;
@@ -515,7 +516,13 @@ public class ApplicationResource extends ServiceResource {
     @RequireOrganizationAccess
     @Override
     public JSONWithPadding executeDelete(  @Context UriInfo ui,
-        @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
+        @QueryParam("callback") @DefaultValue("callback") String callback,
+        @QueryParam("app_delete_confirm") String confirmDelete) throws Exception {
+
+        if (!"confirm_delete_of_application_and_data".equals( confirmDelete ) ) {
+            throw new IllegalArgumentException(
+                "Cannot delete application without app_delete_confirm parameter");
+        }
 
         Properties props = management.getProperties();
 

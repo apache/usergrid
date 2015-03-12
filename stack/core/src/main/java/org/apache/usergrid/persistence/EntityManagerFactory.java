@@ -49,10 +49,13 @@ public interface EntityManagerFactory {
      *
      * @param name a unique application name.
      *
-     * @return the newly created application id.
+     * @return Entity of type application_info that represents the newly created Application
      *
      * @throws Exception the exception
      */
+    public abstract Entity createApplicationV2( String organizationName, String name ) throws Exception;
+
+    @Deprecated
     public abstract UUID createApplication( String organizationName, String name ) throws Exception;
 
     /**
@@ -62,12 +65,16 @@ public interface EntityManagerFactory {
      * @param name the name of the application to create.
      * @param properties property values to create in the new entity or null.
      *
-     * @return the newly created application id.
+     * @return Entity of type application_info that represents the newly created Application
      *
      * @throws Exception the exception
      */
+    public abstract Entity createApplicationV2(
+        String organizationName, String name, Map<String, Object> properties ) throws Exception;
+
+    @Deprecated
     public abstract UUID createApplication(
-            String organizationName, String name, Map<String, Object> properties ) throws Exception;
+        String organizationName, String name, Map<String, Object> properties ) throws Exception;
 
     /**
      * Delete Application.
@@ -79,7 +86,7 @@ public interface EntityManagerFactory {
     /**
      * Restore deleted application.
      */
-    public void restoreApplication( UUID applicationId) throws Exception;
+    public Entity restoreApplication( UUID applicationId) throws Exception;
 
     public abstract UUID importApplication( String organization, UUID applicationId, String name,
                                             Map<String, Object> properties ) throws Exception;
@@ -117,6 +124,13 @@ public interface EntityManagerFactory {
 
     public abstract boolean deleteServiceProperty( String name );
 
+    /**
+     * @return Entity of type application_info that represents the newly created application.
+     */
+    public Entity initializeApplicationV2(
+        String orgName, UUID appId, String appName, Map<String, Object> props) throws Exception;
+
+    @Deprecated
     public UUID initializeApplication(
         String orgName, UUID appId, String appName, Map<String, Object> props) throws Exception;
 

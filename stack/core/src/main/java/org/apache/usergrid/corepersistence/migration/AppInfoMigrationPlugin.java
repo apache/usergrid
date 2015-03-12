@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.apache.usergrid.persistence.Schema.PROPERTY_APPLICATION_ID;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
 
@@ -49,9 +50,8 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
 
     public static String PLUGIN_NAME = "appinfo-migration";
 
-    // protected for test purposes only
     @Inject
-    protected EntityManagerFactory emf;
+    protected EntityManagerFactory emf; // protected for test purposes only
 
     @Override
     public String getName() {
@@ -77,13 +77,15 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
         if ( !results.isEmpty() ) {
 
             // applications still found in old appinfos collection, migrate them.
-            logger.info("Migrating old appinfos");
+
+            String currentAppName = null;
 
             try {
+                logger.info("Migrating old appinfos");
 
                 for (Entity oldAppInfo : results.getEntities()) {
 
-                    final String appName = oldAppInfo.getName();
+                    final String appName = currentAppName = oldAppInfo.getName();
 
                     UUID applicationId;
                     UUID organizationId;
@@ -104,23 +106,37 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
                     // create and connect new APPLICATION_INFO oldAppInfo to Organization
 
                     final UUID appId = applicationId;
-                    Map<String, Object> appInfoMap = new HashMap<String, Object>() {{
-                        put(PROPERTY_NAME, appName);
-                        put(PROPERTY_UUID, appId);
-                    }};
 
-                    final Entity appInfo;
-                    appInfo = em.create(appId, CpNamingUtils.APPLICATION_INFO, appInfoMap);
+                    Entity appInfo = getApplicationInfo( emf, appId );
+                    if ( appInfo == null ) {
+                        Map<String, Object> appInfoMap = new HashMap<String, Object>() {{
+                            put(PROPERTY_NAME, appName);
+                            put(PROPERTY_APPLICATION_ID, appId);
+                        }};
+                        appInfo = em.create(appId, CpNamingUtils.APPLICATION_INFO, appInfoMap);
+                        observer.update( getMaxVersion(), "Created application_info for " + appName);
+
+                    } else {
+                        appInfo.setProperty(PROPERTY_APPLICATION_ID, appId);
+                        em.update(appInfo);
+                        observer.update( getMaxVersion(), "Updated existing application_info for " + appName);
+                    }
                     em.createConnection(new SimpleEntityRef(Group.ENTITY_TYPE, organizationId), "owns", appInfo);
-                    em.delete(oldAppInfo);
-
-                    observer.update( getMaxVersion(), "Updated application " + appName);
                 }
 
                 em.refreshIndex();
 
+                // after we've successfully created all of the application_infos, we delete the old appoinfos
+
+                for (Entity oldAppInfo : results.getEntities()) {
+                    em.delete(oldAppInfo);
+                }
+
             } catch (Exception e) {
-                String msg = "Exception writing new application_info collection";
+
+                // stop on any exception and return failure
+
+                String msg = "Exception writing application_info for " + currentAppName;
                 logger.error(msg, e);
                 observer.failed( getMaxVersion(), msg);
             }
@@ -130,7 +146,18 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
         }
 
         observer.complete();
+    }
 
+    private Entity getApplicationInfo( EntityManagerFactory emf, UUID appId ) throws Exception {
+
+        UUID mgmtAppId = emf.getManagementAppId();
+        EntityManager rootEm = emf.getEntityManager( mgmtAppId );
+
+        final Results applicationInfoResults = rootEm.searchCollection(
+            new SimpleEntityRef("application", mgmtAppId), "application_infos",
+            Query.fromQL("select * where applicationId=" + appId.toString()));
+
+        return applicationInfoResults.getEntity();
     }
 
     @Override

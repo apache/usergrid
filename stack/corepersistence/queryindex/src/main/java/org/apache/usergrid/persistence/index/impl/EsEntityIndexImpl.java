@@ -682,9 +682,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
             @Override
             public void onResponse( DeleteByQueryResponse response) {
                 timeDeleteAllVersions.stop();
-                logger
-                    .debug( "Deleted entity {}:{} from all index scopes with response status = {}", entityId.getType(),
-                        entityId.getUuid(), response.status().toString() );
+                logger.debug( "Deleted entity {}:{} from all index scopes with response status = {}",
+                    entityId.getType(), entityId.getUuid(), response.status().toString() );
 
                 checkDeleteByQueryResponse(tqb, response);
             }
@@ -693,8 +692,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
             @Override
             public void onFailure( Throwable e ) {
                 timeDeleteAllVersions.stop();
-                logger.error( "Deleted entity {}:{} from all index scopes with error {}", entityId.getType(),
-                    entityId.getUuid(), e);
+                logger.error( "Failed to delete entity {}:{} from all index scopes with error {}",
+                    entityId.getType(), entityId.getUuid(), e);
 
 
             }

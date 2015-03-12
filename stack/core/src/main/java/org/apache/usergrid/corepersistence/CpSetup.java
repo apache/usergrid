@@ -100,7 +100,7 @@ public class CpSetup implements Setup {
         logger.info( "Setting up management app" );
 
         try {
-            emf.initializeApplication( DEFAULT_ORGANIZATION, emf.getManagementAppId(), MANAGEMENT_APPLICATION, null );
+            emf.initializeApplicationV2( DEFAULT_ORGANIZATION, emf.getManagementAppId(), MANAGEMENT_APPLICATION, null );
         }
         catch ( ApplicationAlreadyExistsException ex ) {
             logger.warn( "Application {}/{} already exists", DEFAULT_ORGANIZATION, MANAGEMENT_APPLICATION );

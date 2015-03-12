@@ -24,16 +24,16 @@ import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
 import org.apache.usergrid.management.OrganizationOwnerInfo;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.SimpleEntityRef;
+import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.core.migration.data.ProgressObserver;
+import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -48,6 +48,7 @@ import static org.junit.Assert.*;
  * ManagementService's application and organization logic.
  */
 public class AppInfoMigrationPluginTest {
+    private static final Logger logger = LoggerFactory.getLogger(AppInfoMigrationPluginTest.class);
 
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
@@ -62,9 +63,11 @@ public class AppInfoMigrationPluginTest {
     @Test
     public void testRun() throws Exception {
 
-        // create 10 applications, each with 10 entities
+       // create 10 applications, each with 10 entities
 
-        final String orgName =  uniqueOrg();
+        logger.debug("\n\nCreate 10 apps each with 10 entities");
+
+       final String orgName =  uniqueOrg();
         OrganizationOwnerInfo organization =  orgAppRule.createOwnerAndOrganization(
             orgName, uniqueUsername(), uniqueEmail(),"Ed Anuff", "test" );
 
@@ -85,45 +88,65 @@ public class AppInfoMigrationPluginTest {
             }
         }
 
-        assertNotNull("Should be able to get application",
-            setup.getEmf().lookupApplication(orgName + "/application0"));
+        UUID mgmtAppId = setup.getEmf().getManagementAppId();
+        EntityManager rootEm = setup.getEmf().getEntityManager( mgmtAppId );
+
+        checkApplicationsOk( orgName );
 
         // create corresponding 10 appinfo entities in Management app
         // and delete the application_info entities from the Management app
 
-        UUID mgmtAppId = setup.getEmf().getManagementAppId();
-        EntityManager rootEm = setup.getEmf().getEntityManager( mgmtAppId );
+        logger.debug("\n\nCreate old-style appinfo entities to be migrated\n");
 
+        List<Entity> deletedApps = new ArrayList<>();
+
+        int count = 0;
         for ( UUID appId : appIds ) {
+
+            final Entity applicationInfo = getApplicationInfo( appId );
+
+            final String appName = applicationInfo.getName();
             final String finalOrgId = organization.getOrganization().getUuid().toString();
-            final String finalAppId = appId.toString();
+            final String finalAppId = applicationInfo.getProperty( Schema.PROPERTY_APPLICATION_ID ).toString();
             rootEm.create("appinfo", new HashMap<String, Object>() {{
+                put("name", appName );
                 put("organizationUuid", finalOrgId );
                 put("applicationUuid", finalAppId );
             }});
-            rootEm.delete( new SimpleEntityRef("application_info", appId ));
+
+            // delete some but not all of the application_info entities
+            // so that we cover both create and update cases
+
+            if ( count++ % 2 == 0 ) {
+                rootEm.delete( applicationInfo );
+                deletedApps.add( applicationInfo );
+            }
         }
 
+        setup.getEmf().refreshIndex();
         setup.getEmf().flushEntityManagerCaches();
 
-        // test that applications are now borked
+        Thread.sleep(1000);
 
-        assertNull("Should not be able to get application",
-            setup.getEmf().lookupApplication(orgName + "/application0"));
+        // test that applications are now broken
+
+        checkApplicationsBroken( orgName, deletedApps );
 
         // run the migration, which should restore the application_info entities
+
+        logger.debug("\n\nRun the migration\n");
 
         ProgressObserver po = Mockito.mock(ProgressObserver.class);
         AppInfoMigrationPlugin plugin = new AppInfoMigrationPlugin();
         plugin.emf = setup.getEmf();
         plugin.run( po );
 
+        logger.debug("\n\nVerify migration results\n");
+
         // test that expected calls were made the to progress observer (use mock library)
 
         Mockito.verify( po, Mockito.times(10) ).update( Mockito.anyInt(), Mockito.anyString() );
         setup.getEmf().refreshIndex();
-
-        // test that 10 appinfo entities have been removed
 
         final Results appInfoResults = rootEm.searchCollection(
             new SimpleEntityRef("application", mgmtAppId), "appinfos", Query.fromQL("select *"));
@@ -133,9 +156,57 @@ public class AppInfoMigrationPluginTest {
             new SimpleEntityRef("application", mgmtAppId), "application_infos", Query.fromQL("select *"));
         assertEquals( 10, applicationInfoResults.size() );
 
-        // test that 10 applications are no longer borked
+        // test that 10 applications are no longer broken
 
-        assertNotNull("Should be able to get application",
-            setup.getEmf().lookupApplication(orgName + "/application0"));
+        checkApplicationsOk( orgName );
+    }
+
+    private void checkApplicationsBroken( String orgName, List<Entity> deletedApps ) throws Exception {
+
+        logger.debug("\n\nChecking applications broken\n");
+
+
+        for ( Entity applicationInfo : deletedApps ) {
+
+            String appName = applicationInfo.getName();
+            UUID uuid = setup.getEmf().lookupApplication( appName );
+
+            // missing application_info does not completely break applications, but we...
+            assertNull("Should not be able to lookup deleted application by name" + appName, uuid);
+        }
+    }
+
+    private void checkApplicationsOk( String orgName) throws Exception {
+
+        logger.debug("\n\nChecking applications OK\n");
+
+        for (int i=0; i<10; i++) {
+
+            String appName = orgName + "/application" + i;
+
+            UUID uuid = setup.getEmf().lookupApplication( appName );
+            assertNotNull("Should be able to get application", uuid );
+
+            EntityManager em = setup.getEmf().getEntityManager( uuid );
+
+            Application app = em.getApplication();
+            assertEquals( appName, app.getName() );
+
+            Results results = em.searchCollection(
+                em.getApplicationRef(), "things", Query.fromQL("select *"));
+            assertEquals( "Should have 10 entities", 10, results.size() );
+        }
+    }
+
+    private Entity getApplicationInfo( UUID appId ) throws Exception {
+
+        UUID mgmtAppId = setup.getEmf().getManagementAppId();
+        EntityManager rootEm = setup.getEmf().getEntityManager( mgmtAppId );
+
+        final Results applicationInfoResults = rootEm.searchCollection(
+            new SimpleEntityRef("application", mgmtAppId), "application_infos",
+            Query.fromQL("select * where applicationId=" + appId.toString()));
+
+        return applicationInfoResults.getEntity();
     }
 }

@@ -36,7 +36,7 @@ public interface ApplicationIdCache {
     /**
      * Evict the application by name
      */
-    public Optional<UUID> getApplicationId(final String applicationName);
+    public UUID getApplicationId(final String applicationName);
 
 
     /**

@@ -20,6 +20,9 @@ package org.apache.usergrid.rest.applications;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.jersey.api.client.UniformInterfaceException;
+import org.apache.usergrid.corepersistence.ApplicationIdCacheImpl;
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.ManagementResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.*;
@@ -30,6 +33,9 @@ import org.slf4j.LoggerFactory;
 import javax.ws.rs.core.MediaType;
 import java.io.StringReader;
 import java.util.*;
+import java.util.regex.Pattern;
+
+import static org.junit.Assert.fail;
 
 
 public class ApplicationDeleteTest  extends AbstractRestIT {
@@ -61,9 +67,22 @@ public class ApplicationDeleteTest  extends AbstractRestIT {
 
         // delete the app
 
+        try {
+            clientSetup.getRestClient()
+                .org(orgName).app(appToDeleteId.toString()).getResource()
+                .queryParam("access_token", orgAdminToken.getAccessToken())
+                .delete();
+
+            fail("Delete must fail without app_delete_confirm parameter");
+
+        } catch ( Exception e ) {
+            logger.error("Error", e);
+        }
+
         clientSetup.getRestClient()
             .org(orgName).app(appToDeleteId.toString() ).getResource()
             .queryParam("access_token", orgAdminToken.getAccessToken() )
+            .queryParam("app_delete_confirm", "confirm_delete_of_application_and_data")
             .delete();
 
         // test that we can no longer get the app
@@ -75,7 +94,7 @@ public class ApplicationDeleteTest  extends AbstractRestIT {
                 .type(MediaType.APPLICATION_JSON)
                 .get(ApiResponse.class);
 
-            Assert.fail("Must not be able to get deleted app");
+            fail("Must not be able to get deleted app");
 
         } catch ( UniformInterfaceException expected ) {
             Assert.assertEquals("Error must be 400", 400, expected.getResponse().getStatus() );
@@ -92,7 +111,7 @@ public class ApplicationDeleteTest  extends AbstractRestIT {
                 .type(MediaType.APPLICATION_JSON )
                 .get(ApiResponse.class);
 
-            Assert.fail("Must not be able to get deleted app's collection");
+            fail("Must not be able to get deleted app's collection");
 
         } catch ( UniformInterfaceException expected ) {
             Assert.assertEquals("Error must be 400", 400, expected.getResponse().getStatus() );
@@ -110,7 +129,7 @@ public class ApplicationDeleteTest  extends AbstractRestIT {
                 .type( MediaType.APPLICATION_JSON)
                 .get(ApiResponse.class);
 
-            Assert.fail("Must not be able to get deleted app entity");
+            fail("Must not be able to get deleted app entity");
 
         } catch ( UniformInterfaceException expected ) {
             // TODO: why not a 404?
@@ -129,7 +148,7 @@ public class ApplicationDeleteTest  extends AbstractRestIT {
 
         for ( String appName : orgAppResponse.getData().keySet() ) {
             if ( orgAppResponse.getData().get( appName ).equals( appToDeleteId.toString() )) {
-                Assert.fail("Deleted app must not be included in list of org apps");
+                fail("Deleted app must not be included in list of org apps");
             }
         }
 
@@ -185,20 +204,28 @@ public class ApplicationDeleteTest  extends AbstractRestIT {
 
         // delete the app
 
+        logger.debug("\n\nDeleting app\n");
+
         clientSetup.getRestClient()
-            .org(orgName).app(appToDeleteId.toString() ).getResource()
+            .org(orgName).app( appToDeleteName ).getResource()
             .queryParam("access_token", orgAdminToken.getAccessToken() )
+            .queryParam("app_delete_confirm", "confirm_delete_of_application_and_data")
             .delete();
+
+        Thread.sleep(1000);
 
         // restore the app
 
+        logger.debug("\n\nRestoring app\n");
+
         clientSetup.getRestClient()
-            .org(orgName).app(appToDeleteId.toString() ).getResource()
+            .org(orgName).app( appToDeleteId.toString() ).getResource()
             .queryParam("access_token", orgAdminToken.getAccessToken() )
             .put();
 
-
         // test that we can see the application in the list of applications
+
+        logger.debug("\n\nGetting app list from management end-point\n");
 
         ManagementResponse orgAppResponse = clientSetup.getRestClient()
             .management().orgs().organization( orgName ).apps().getOrganizationApplications();
@@ -214,6 +241,8 @@ public class ApplicationDeleteTest  extends AbstractRestIT {
         Assert.assertTrue( found );
 
         // test that we can get an app entity
+
+        logger.debug("\n\nGetting entities from app\n");
 
         UUID entityId = entities.get(0).getUuid();
         ApiResponse entityResponse = clientSetup.getRestClient()
@@ -255,6 +284,7 @@ public class ApplicationDeleteTest  extends AbstractRestIT {
         clientSetup.getRestClient()
             .org( orgName ).app(appToDeleteId.toString() ).getResource()
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
+            .queryParam("app_delete_confirm", "confirm_delete_of_application_and_data")
             .delete();
 
         // create new app with same name
@@ -270,7 +300,7 @@ public class ApplicationDeleteTest  extends AbstractRestIT {
                 .queryParam("access_token", orgAdminToken.getAccessToken())
                 .put();
 
-            Assert.fail("Must fail to restore app with same name as existing app");
+            fail("Must fail to restore app with same name as existing app");
 
         } catch ( UniformInterfaceException e ) {
             Assert.assertEquals(409, e.getResponse().getStatus());
@@ -300,6 +330,7 @@ public class ApplicationDeleteTest  extends AbstractRestIT {
         clientSetup.getRestClient()
             .org( orgName ).app(appToDeleteId.toString() ).getResource()
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
+            .queryParam("app_delete_confirm", "confirm_delete_of_application_and_data")
             .delete();
 
         // create new app with same name
@@ -313,9 +344,10 @@ public class ApplicationDeleteTest  extends AbstractRestIT {
             clientSetup.getRestClient()
                 .org(orgName).app( newAppId.toString() ).getResource()
                 .queryParam("access_token", orgAdminToken.getAccessToken())
+                .queryParam("app_delete_confirm", "confirm_delete_of_application_and_data")
                 .delete();
 
-            Assert.fail("Must fail to delete app with same name as deleted app");
+            fail("Must fail to delete app with same name as deleted app");
 
         } catch ( UniformInterfaceException e ) {
             Assert.assertEquals( 409, e.getResponse().getStatus() );

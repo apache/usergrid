@@ -24,15 +24,16 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.*;
 
 import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.utils.UUIDUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -40,6 +41,7 @@ import com.google.common.cache.LoadingCache;
  * full for the duration of the execution
  */
 public class ApplicationIdCacheImpl implements ApplicationIdCache {
+    private static final Logger logger = LoggerFactory.getLogger(ApplicationIdCacheImpl.class);
 
 
     /**
@@ -47,10 +49,10 @@ public class ApplicationIdCacheImpl implements ApplicationIdCache {
      */
     private final EntityManager rootEm;
 
-    private final LoadingCache<String, Optional<UUID>> appCache =
-        CacheBuilder.newBuilder().maximumSize( 10000 ).build( new CacheLoader<String, Optional<UUID>>() {
+    private final LoadingCache<String, UUID> appCache =
+        CacheBuilder.newBuilder().maximumSize( 10000 ).build( new CacheLoader<String, UUID>() {
             @Override
-            public Optional<UUID> load( final String key ) throws Exception {
+            public UUID load( final String key ) throws Exception {
                 return fetchApplicationId( key );
             }
         } );
@@ -61,12 +63,15 @@ public class ApplicationIdCacheImpl implements ApplicationIdCache {
     }
 
     @Override
-    public Optional<UUID> getApplicationId( final String applicationName ) {
+    public UUID getApplicationId( final String applicationName ) {
         try {
-            return appCache.get( applicationName );
+            UUID optionalUuid = appCache.get( applicationName.toLowerCase() );
+            logger.debug("Returning for key {} value {}", applicationName, optionalUuid );
+            return optionalUuid;
         }
-        catch ( ExecutionException e ) {
-            throw new RuntimeException( "Unable to load app cache", e );
+        catch ( Exception e ) {
+            logger.debug("Returning for key {} value null", applicationName );
+            return null;
         }
     }
 
@@ -74,18 +79,40 @@ public class ApplicationIdCacheImpl implements ApplicationIdCache {
     /**
      * Fetch our application id
      */
-    private Optional<UUID> fetchApplicationId( final String applicationName ) {
+    private UUID fetchApplicationId( final String applicationName ) {
+
+        UUID value = null;
 
         try {
-            UUID applicationId = null;
+            if ( rootEm.getApplication() == null ) {
+                return null;
+            }
+        } catch ( Exception e ) {
+            logger.error("Error looking up app", e);
+        }
 
-            final EntityRef alias = rootEm.getAlias( CpNamingUtils.APPLICATION_INFO, applicationName );
-            if ( alias != null ) {
-                Entity entity = rootEm.get(alias);
-                applicationId = (UUID) entity.getProperty("uuid");
+        try {
+            Query q = Query.fromQL( Schema.PROPERTY_NAME + " = '" + applicationName.toLowerCase() + "'" );
+
+            Results results = rootEm.searchCollection(
+                rootEm.getApplicationRef(), CpNamingUtils.APPLICATION_INFOS, q);
+
+            if ( !results.isEmpty() ) {
+
+                Entity entity = results.iterator().next();
+                Object uuidObject = entity.getProperty(Schema.PROPERTY_APPLICATION_ID);
+
+                if (uuidObject instanceof UUID) {
+                    value = (UUID) uuidObject;
+                } else {
+                    value = UUIDUtils.tryExtractUUID(
+                        entity.getProperty(Schema.PROPERTY_APPLICATION_ID).toString());
+                }
+
             }
 
-            return Optional.fromNullable( applicationId );
+            logger.debug("Loaded    for key {} value {}", applicationName, value );
+            return value;
         }
         catch ( Exception e ) {
             throw new RuntimeException( "Unable to retrieve application id", e );
@@ -95,12 +122,14 @@ public class ApplicationIdCacheImpl implements ApplicationIdCache {
 
     @Override
     public void evictAppId( final String applicationName ) {
-        appCache.invalidate( applicationName );
+        appCache.invalidate( applicationName.toLowerCase() );
+        logger.debug("Invalidated key {}", applicationName.toLowerCase());
     }
 
 
     @Override
     public void evictAll() {
         appCache.invalidateAll();
+        logger.debug("Invalidated all keys");
     }
 }

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package org.apache.usergrid.management.exceptions;
+package org.apache.usergrid.exception;
 
-public class ConflictException extends ManagementException {
+public class ConflictException extends Exception {
 
     public ConflictException() {
         super();
