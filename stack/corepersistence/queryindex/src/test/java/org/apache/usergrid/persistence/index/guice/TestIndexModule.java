@@ -38,8 +38,8 @@ public class TestIndexModule extends TestModule {
         install( new IndexModule() {
             @Override
             public void wireBufferQueue() {
-//                bind( BufferQueue.class).to( BufferQueueInMemoryImpl.class );
-                bind( BufferQueue.class).to( BufferQueueSQSImpl.class );
+                bind( BufferQueue.class).to( BufferQueueInMemoryImpl.class );
+//                bind( BufferQueue.class).to( BufferQueueSQSImpl.class );
             }
         } );
     }

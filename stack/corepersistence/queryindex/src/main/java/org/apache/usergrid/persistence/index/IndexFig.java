@@ -81,6 +81,11 @@ public interface IndexFig extends GuicyFig {
      */
     public static final String FAILURE_REJECTED_RETRY_WAIT_TIME = "elasticsearch.rejected_retry_wait";
 
+    /**
+     * The number of worker threads to consume from the queue
+     */
+    public static final String ELASTICSEARCH_WORKER_COUNT = "elasticsearch.worker_count";
+
     public static final String QUERY_LIMIT_DEFAULT = "index.query.limit.default";
 
     @Default( "127.0.0.1" )
@@ -180,5 +185,9 @@ public interface IndexFig extends GuicyFig {
     @Default( "60" )
     @Key( INDEX_QUEUE_READ_TIMEOUT )
     int getIndexQueueTimeout();
+
+    @Default("2")
+    @Key( ELASTICSEARCH_WORKER_COUNT )
+    int getWorkerCount();
 
 }

@@ -49,9 +49,12 @@ import rx.functions.Func1;
 import rx.functions.Func2;
 import rx.schedulers.Schedulers;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+
 
 /**
  * Consumer for IndexOperationMessages
@@ -69,15 +72,18 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
     private final Meter flushMeter;
     private final Timer produceTimer;
     private final BufferQueue bufferQueue;
+    private final IndexFig indexFig;
+    private final AtomicLong counter = new AtomicLong(  );
 
     //the actively running subscription
-    private Subscription subscription;
+    private List<Subscription> subscriptions;
 
     private Object mutex = new Object();
 
     @Inject
-    public EsIndexBufferConsumerImpl( final IndexFig config,  final EsProvider
-        provider, final MetricsFactory metricsFactory,   final BufferQueue bufferQueue ){
+    public EsIndexBufferConsumerImpl( final IndexFig config, final EsProvider provider, final MetricsFactory
+        metricsFactory, final BufferQueue bufferQueue, final IndexFig indexFig ){
+
         this.flushTimer = metricsFactory.getTimer(EsIndexBufferConsumerImpl.class, "index.buffer.flush");
         this.flushMeter = metricsFactory.getMeter(EsIndexBufferConsumerImpl.class, "index.buffer.meter");
         this.indexSizeCounter =  metricsFactory.getCounter(EsIndexBufferConsumerImpl.class, "index.buffer.size");
@@ -86,15 +92,42 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
         this.client = provider.getClient();
         this.produceTimer = metricsFactory.getTimer(EsIndexBufferConsumerImpl.class,"index.buffer.consumer.messageFetch");
         this.bufferQueue = bufferQueue;
+        this.indexFig = indexFig;
 
-
+        subscriptions = new ArrayList<>( indexFig.getWorkerCount() );
 
         //batch up sets of some size and send them in batch
           start();
     }
 
 
+    /**
+     * Loop throught and start the workers
+     */
     public void start() {
+        final int count = indexFig.getWorkerCount();
+
+        for(int i = 0; i < count; i ++){
+            startWorker();
+        }
+    }
+
+
+    /**
+     * Stop the workers
+     */
+    public void stop() {
+        synchronized ( mutex ) {
+            //stop consuming
+
+            for(final Subscription subscription: subscriptions){
+                subscription.unsubscribe();
+            }
+        }
+    }
+
+
+    private void startWorker(){
         synchronized ( mutex) {
 
             final AtomicInteger countFail = new AtomicInteger();
@@ -104,7 +137,7 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
                 public void call( final Subscriber<? super List<IndexOperationMessage>> subscriber ) {
 
                     //name our thread so it's easy to see
-                    Thread.currentThread().setName( "QueueConsumer_" + Thread.currentThread().getId() );
+                    Thread.currentThread().setName( "QueueConsumer_" + counter.incrementAndGet() );
 
                     List<IndexOperationMessage> drainList;
                     do {
@@ -168,19 +201,13 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
                 } );
 
             //start in the background
-            subscription = consumer.subscribe();
+
+           final Subscription subscription = consumer.subscribe();
+
+            subscriptions.add(subscription );
         }
     }
 
-
-    public void stop() {
-        synchronized ( mutex ) {
-            //stop consuming
-            if(subscription != null) {
-                subscription.unsubscribe();
-            }
-        }
-    }
 
     /**
      * Execute the request, check for errors, then re-init the batch for future use
