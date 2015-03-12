@@ -95,20 +95,25 @@ public class MigrationModuleVersionPlugin implements MigrationPlugin{
         //now we store versions for each of our modules
 
         switch ( legacyVersion ) {
+
             //we need to set the version of the entity data, and our edge shard migration.  The fall through (no break) is deliberate
             //if it's initial, set both
             case INITIAL:
-               //if it's entity v2, set all, it's current
+
+            //if it's entity v2, set all, it's current
             case ENTITY_V2_MIGRATION:
-               migrationInfoSerialization.setVersion( CollectionMigrationPlugin.PLUGIN_NAME, serializationStrategyV2.getImplementationVersion() );
-                //if it's edge shard, we need to run the v2 migration
+               migrationInfoSerialization.setVersion(
+                   CollectionMigrationPlugin.PLUGIN_NAME, serializationStrategyV2.getImplementationVersion() );
+
+            //if it's edge shard, we need to run the v2 migration
             case EDGE_SHARD_MIGRATION:
                 //set our shard migration to the migrated version
-                migrationInfoSerialization.setVersion( GraphMigrationPlugin.PLUGIN_NAME, edgeMetadataSerializationV2.getImplementationVersion() );
+                migrationInfoSerialization.setVersion(
+                    GraphMigrationPlugin.PLUGIN_NAME, edgeMetadataSerializationV2.getImplementationVersion() );
+
             case ID_MIGRATION:
-                migrationInfoSerialization.setVersion( CoreMigrationPlugin.PLUGIN_NAME, CoreDataVersions.ID_MAP_FIX.getVersion() );
-            case APPINFO_MIGRATION:
-                migrationInfoSerialization.setVersion( AppInfoMigrationPlugin.PLUGIN_NAME, AppInfoVersions.APPINFO_FIX.getVersion() );
+                migrationInfoSerialization.setVersion(
+                    CoreMigrationPlugin.PLUGIN_NAME, CoreDataVersions.ID_MAP_FIX.getVersion() );
         }
 
         //save the version

@@ -21,6 +21,7 @@ package org.apache.usergrid.corepersistence.migration;
 import com.google.inject.Inject;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.*;
+import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerialization;
 import org.apache.usergrid.persistence.core.migration.data.MigrationPlugin;
 import org.apache.usergrid.persistence.core.migration.data.PluginPhase;
 import org.apache.usergrid.persistence.core.migration.data.ProgressObserver;
@@ -51,6 +52,9 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
     public static String PLUGIN_NAME = "appinfo-migration";
 
     @Inject
+    private MigrationInfoSerialization migrationInfoSerialization;
+
+    @Inject
     protected EntityManagerFactory emf; // protected for test purposes only
 
     @Override
@@ -60,6 +64,13 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
 
     @Override
     public void run(ProgressObserver observer) {
+
+        final int version = migrationInfoSerialization.getVersion( getName() );
+
+        if ( version == getMaxVersion() ) {
+            logger.debug("Skipping Migration Plugin: " + getName());
+            return;
+        }
 
         observer.start();
 
@@ -132,6 +143,8 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
                     em.delete(oldAppInfo);
                 }
 
+                migrationInfoSerialization.setVersion( getName(), getMaxVersion() );
+
             } catch (Exception e) {
 
                 // stop on any exception and return failure
@@ -146,6 +159,7 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
         }
 
         observer.complete();
+
     }
 
     private Entity getApplicationInfo( EntityManagerFactory emf, UUID appId ) throws Exception {
@@ -162,7 +176,7 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
 
     @Override
     public int getMaxVersion() {
-        return CoreDataVersions.APPINFO_FIX.getVersion();
+        return 1; // standalone plugin, happens once
     }
 
     @Override

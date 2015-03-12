@@ -88,7 +88,7 @@ public class MigrateResource extends AbstractContextResource {
                 logger.info( "Migrating Data " );
 
                 try {
-                    getMigrationManager().migrate();
+                    getDataMigrationManager().migrate();
                 }
                 catch ( Exception e ) {
                     logger.error( "Unable to migrate data", e );
@@ -114,7 +114,7 @@ public class MigrateResource extends AbstractContextResource {
                                                 @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
         throws Exception {
 
-        logger.debug( "newOrganization" );
+        logger.debug( "setMigrationVersion" );
 
         Preconditions.checkNotNull( json, "You must provide a json body" );
 
@@ -192,14 +192,6 @@ public class MigrateResource extends AbstractContextResource {
      */
     private DataMigrationManager getDataMigrationManager() {
         return guiceInjector.getInstance( DataMigrationManager.class );
-    }
-
-
-    /**
-     * Get the Data migraiton manager
-     */
-    private MigrationManager getMigrationManager() {
-        return guiceInjector.getInstance( MigrationManager.class );
     }
 }
 
