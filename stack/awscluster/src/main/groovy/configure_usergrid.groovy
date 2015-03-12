@@ -51,13 +51,15 @@ def esShards = numEsNodes*2;
 def esReplicas = 1;
 
 def tomcatThreads = System.getenv().get("TOMCAT_THREADS")
+
+def workerCount = System.getenv().get("INDEX_WORKER_COUNT")
+
 //temporarily set to equal since we now have a sane tomcat thread calculation
 def hystrixThreads = tomcatThreads
 
 //if we end in -1, we remove it
 def ec2Region = System.getenv().get("EC2_REGION")
 def cassEc2Region = ec2Region.replace("-1", "")
-
 
 NodeRegistry registry = new NodeRegistry();
 
@@ -194,6 +196,10 @@ usergrid.queue.region=${ec2Region}
 # Enable scheduler for import/export jobs
 usergrid.scheduler.enabled=true
 usergrid.scheduler.job.workers=1
+
+
+#Set our ingest rate
+elasticsearch.worker_count=${workerCount}
 
 """
 
