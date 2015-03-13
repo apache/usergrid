@@ -87,7 +87,6 @@ threadpool:
     bulk:
         type: fixed
         size: 160
-        size: 16
         queue_size: 1000
     search:
         size: 320

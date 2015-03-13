@@ -54,6 +54,7 @@ import com.amazonaws.services.sqs.model.SendMessageBatchRequestEntry;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.smile.SmileFactory;
+import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -124,7 +125,10 @@ public class SQSQueueManagerImpl implements QueueManager {
 
 
     private String getName() {
-        String name = fig.getPrefix() + "_" + scope.getApplication().getType() + "_"+ scope.getName() + "_"+ scope.getApplication().getUuid().toString();
+        String name = fig.getPrefix() + "_" + scope.getName();
+
+        Preconditions.checkArgument(name.length() <= 80, "Your name must be < than 80 characters");
+
         return name;
     }
 
