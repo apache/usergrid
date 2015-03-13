@@ -23,8 +23,10 @@ import org.apache.usergrid.NewOrgAppAdminRule;
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.management.OrganizationOwnerInfo;
 import org.apache.usergrid.persistence.*;
+import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.core.migration.data.ProgressObserver;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.index.query.Query;
@@ -35,11 +37,12 @@ import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.UUID;
 
-import static org.apache.usergrid.TestHelper.uniqueEmail;
-import static org.apache.usergrid.TestHelper.uniqueOrg;
-import static org.apache.usergrid.TestHelper.uniqueUsername;
+import static org.apache.usergrid.TestHelper.*;
 import static org.junit.Assert.*;
 
 
@@ -100,6 +103,11 @@ public class AppInfoMigrationPluginTest {
 
         List<Entity> deletedApps = new ArrayList<>();
 
+        setup.getEmf().initializeApplicationV2(
+            CassandraService.DEFAULT_ORGANIZATION, CpNamingUtils.SYSTEM_APP_ID, "systemapp", null);
+
+        EntityManager systemAppEm = setup.getEmf().getEntityManager( CpNamingUtils.SYSTEM_APP_ID );
+
         int count = 0;
         for ( UUID appId : appIds ) {
 
@@ -108,7 +116,7 @@ public class AppInfoMigrationPluginTest {
             final String appName = applicationInfo.getName();
             final String finalOrgId = organization.getOrganization().getUuid().toString();
             final String finalAppId = applicationInfo.getProperty( Schema.PROPERTY_APPLICATION_ID ).toString();
-            rootEm.create("appinfo", new HashMap<String, Object>() {{
+            systemAppEm.create("appinfo", new HashMap<String, Object>() {{
                 put("name", appName );
                 put("organizationUuid", finalOrgId );
                 put("applicationUuid", finalAppId );
@@ -130,16 +138,14 @@ public class AppInfoMigrationPluginTest {
 
         // test that applications are now broken
 
-        checkApplicationsBroken( orgName, deletedApps );
+        checkApplicationsBroken(orgName, deletedApps);
 
         // run the migration, which should restore the application_info entities
 
         logger.debug("\n\nRun the migration\n");
 
         ProgressObserver po = Mockito.mock(ProgressObserver.class);
-        AppInfoMigrationPlugin plugin = new AppInfoMigrationPlugin();
-        plugin.emf = setup.getEmf();
-        plugin.run( po );
+        setup.getAppInfoMigrationPlugin().run(po);
 
         logger.debug("\n\nVerify migration results\n");
 

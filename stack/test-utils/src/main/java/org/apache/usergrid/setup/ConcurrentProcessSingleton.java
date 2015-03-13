@@ -28,6 +28,9 @@ import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.lock.MultiProcessBarrier;
 import org.apache.usergrid.lock.MultiProcessLocalLock;
 
+import java.io.IOException;
+import java.util.concurrent.TimeoutException;
+
 
 /**
  * A singleton that starts cassandra and configures it once per JVM
@@ -75,6 +78,7 @@ public class ConcurrentProcessSingleton {
         try {
 
             logger.info( "Trying to get a lock to setup system" );
+
             //we have a lock, so init the system
             if ( lock.tryLock() ) {
 
@@ -96,18 +100,22 @@ public class ConcurrentProcessSingleton {
                 logger.info("Populating database");
                 schemaManager.populateBaseData();
 
-
                 //signal to other processes we've migrated, and they can proceed
                 barrier.proceed();
+
+                logger.info( "Waiting for setup to complete" );
+                barrier.await( ONE_MINUTE );
+                logger.info( "Setup to complete" );
+
+                lock.maybeReleaseLock();
+
+            } else {
+                throw new RuntimeException( "Unable to initialize system: could not get lock."
+                    +" Some other process must be binding to port " + LOCK_PORT );
             }
 
-
-            logger.info( "Waiting for setup to complete" );
-            barrier.await( ONE_MINUTE );
-            logger.info( "Setup to complete" );
-
-            lock.maybeReleaseLock();
         }
+
         catch ( Exception e ) {
             throw new RuntimeException( "Unable to initialize system", e );
         }

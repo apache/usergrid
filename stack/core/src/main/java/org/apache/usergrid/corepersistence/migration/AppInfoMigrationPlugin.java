@@ -52,7 +52,7 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
     public static String PLUGIN_NAME = "appinfo-migration";
 
     @Inject
-    private MigrationInfoSerialization migrationInfoSerialization;
+    protected MigrationInfoSerialization migrationInfoSerialization;
 
     @Inject
     protected EntityManagerFactory emf; // protected for test purposes only
@@ -74,12 +74,13 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
 
         observer.start();
 
-        EntityManager em = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+        // Search the old and now deprecated System App for appinfo entities
 
+        EntityManager systemAppEm = emf.getEntityManager( CpNamingUtils.SYSTEM_APP_ID );
         Query q = Query.fromQL("select *");
         Results results;
         try {
-            results = em.searchCollection(em.getApplicationRef(), "appinfos", q);
+            results = systemAppEm.searchCollection(systemAppEm.getApplicationRef(), "appinfos", q);
         } catch (Exception e) {
             logger.error("Error reading old appinfos collection, not migrating", e);
             return;
@@ -87,10 +88,10 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
 
         if ( !results.isEmpty() ) {
 
-            // applications still found in old appinfos collection, migrate them.
+            // we found appinfos, let's migrate them to application_infos in the Management App
 
+            EntityManager em = emf.getEntityManager( emf.getManagementAppId());
             String currentAppName = null;
-
             try {
                 logger.info("Migrating old appinfos");
 
