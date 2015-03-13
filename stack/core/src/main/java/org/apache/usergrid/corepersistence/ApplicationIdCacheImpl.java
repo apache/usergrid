@@ -59,7 +59,7 @@ public class ApplicationIdCacheImpl implements ApplicationIdCache {
 
 
     public ApplicationIdCacheImpl(final EntityManagerFactory emf) {
-        this.rootEm = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+        this.rootEm = emf.getEntityManager( emf.getManagementAppId());
     }
 
     @Override

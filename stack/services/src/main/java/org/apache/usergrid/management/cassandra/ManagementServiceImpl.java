@@ -1662,7 +1662,7 @@ public class ManagementServiceImpl implements ManagementService {
 
         // restore application_info entity
 
-        EntityManager em = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( emf.getManagementAppId() );
         Entity appInfo = emf.restoreApplication(applicationId);
 
         // restore token

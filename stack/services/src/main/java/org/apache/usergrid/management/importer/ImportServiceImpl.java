@@ -325,7 +325,7 @@ public class ImportServiceImpl implements ImportService {
         EntityManager rootEM;
 
         try {
-            rootEM = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+            rootEM = emf.getEntityManager(emf.getManagementAppId());
         } catch (Exception e) {
             logger.error("application doesn't exist within the current context");
             return null;
@@ -375,7 +375,7 @@ public class ImportServiceImpl implements ImportService {
 
         try {
 
-            EntityManager rootEM = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
+            EntityManager rootEM = emf.getEntityManager( emf.getManagementAppId() );
             Query query = Query.fromQL( "select *" );
             query.setEntityType("file_import");
             query.setConnectionType( IMPORT_FILE_INCLUDES_CONNECTION );
@@ -424,7 +424,7 @@ public class ImportServiceImpl implements ImportService {
 
         Preconditions.checkNotNull( uuid, "uuid cannot be null" );
 
-        EntityManager rootEm = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+        EntityManager rootEm = emf.getEntityManager(emf.getManagementAppId());
 
         //retrieve the import entity.
         Import importUG = rootEm.get(uuid, Import.class);
@@ -450,7 +450,7 @@ public class ImportServiceImpl implements ImportService {
             return "UUID passed in cannot be null";
         }
 
-        EntityManager rootEm = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+        EntityManager rootEm = emf.getEntityManager(emf.getManagementAppId());
 
         //retrieve the import entity.
         Import importUG = rootEm.get(uuid, Import.class);
@@ -473,7 +473,7 @@ public class ImportServiceImpl implements ImportService {
     public Import getImportEntity(final JobExecution jobExecution) throws Exception {
 
         UUID importId = (UUID) jobExecution.getJobData().getProperty(IMPORT_ID);
-        EntityManager importManager = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+        EntityManager importManager = emf.getEntityManager(emf.getManagementAppId());
 
         return importManager.get(importId, Import.class);
     }
@@ -486,7 +486,7 @@ public class ImportServiceImpl implements ImportService {
     @Override
     public FileImport getFileImportEntity(final JobExecution jobExecution) throws Exception {
         UUID fileImportId = (UUID) jobExecution.getJobData().getProperty(FILE_IMPORT_ID);
-        EntityManager em = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+        EntityManager em = emf.getEntityManager(emf.getManagementAppId());
         return em.get(fileImportId, FileImport.class);
     }
 
@@ -545,7 +545,7 @@ public class ImportServiceImpl implements ImportService {
 
         // get Import Entity from the management app, update it to show that job has started
 
-        final EntityManager rootEM = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+        final EntityManager rootEM = emf.getEntityManager(emf.getManagementAppId());
         UUID importId = (UUID) jobExecution.getJobData().getProperty(IMPORT_ID);
         Import importEntity = rootEM.get(importId, Import.class);
 
@@ -679,7 +679,7 @@ public class ImportServiceImpl implements ImportService {
         String accessId = (String) storage_info.get( "s3_access_id");
         String secretKey = (String) storage_info.get( "s3_key" );
 
-        EntityManager rootEM = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
+        EntityManager rootEM = emf.getEntityManager( emf.getManagementAppId() );
 
        // get the file import entity
 

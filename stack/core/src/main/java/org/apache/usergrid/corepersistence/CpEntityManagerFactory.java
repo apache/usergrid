@@ -124,14 +124,14 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     private void init() {
 
-        EntityManager em = getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+        EntityManager em = getEntityManager(getManagementAppId());
 
         try {
             if ( em.getApplication() == null ) {
                 logger.info("Creating management application");
                 Map mgmtAppProps = new HashMap<String, Object>();
                 mgmtAppProps.put(PROPERTY_NAME, "systemapp");
-                em.create(CpNamingUtils.MANAGEMENT_APPLICATION_ID, TYPE_APPLICATION, mgmtAppProps);
+                em.create( getManagementAppId(), TYPE_APPLICATION, mgmtAppProps);
                 em.getApplication();
                 em.createIndex();
                 em.refreshIndex();
@@ -222,7 +222,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     public Entity initializeApplicationV2( String organizationName, final UUID applicationId, String name,
                                        Map<String, Object> properties ) throws Exception {
 
-        EntityManager em = getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+        EntityManager em = getEntityManager(getManagementAppId());
 
         final String appName = buildAppName( organizationName, name );
 
@@ -294,7 +294,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         // ensure that there is not already a deleted app with the same name
 
         final EntityRef alias = em.getAlias(
-            CpNamingUtils.DELETED_APPLICATION_INFO, appInfoToDelete.getName() );
+            CpNamingUtils.DELETED_APPLICATION_INFO, appInfoToDelete.getName());
         if ( alias != null ) {
             throw new ConflictException("Cannot delete app with same name as already deleted app");
         }
@@ -368,7 +368,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.rebuildApplicationIndexes(applicationId, new ProgressObserver() {
             @Override
             public void onProgress(EntityRef entity) {
-            logger.info( "Restored entity {}:{}", entity.getType(), entity.getUuid() );
+                logger.info("Restored entity {}:{}", entity.getType(), entity.getUuid());
             }
         });
 
@@ -386,7 +386,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
 
     public UUID lookupApplication( String orgAppName ) throws Exception {
-        return applicationIdCache.getApplicationId( orgAppName );
+        return applicationIdCache.getApplicationId(orgAppName);
     }
 
 
@@ -409,10 +409,10 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         Map<String, UUID> appMap = new HashMap<String, UUID>();
 
-        ApplicationScope appScope = CpNamingUtils.getApplicationScope( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
+        ApplicationScope appScope = CpNamingUtils.getApplicationScope(getManagementAppId());
         GraphManager gm = managerCache.getGraphManager(appScope);
 
-        EntityManager em = getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+        EntityManager em = getEntityManager(getManagementAppId());
         Application app = em.getApplication();
         Id fromEntityId = new SimpleId( app.getUuid(), app.getType() );
 
@@ -477,7 +477,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         Map<String, String> props = new HashMap<String,String>();
 
-        EntityManager em = getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+        EntityManager em = getEntityManager(getManagementAppId());
         Query q = Query.fromQL("select *");
         Results results = null;
         try {
@@ -502,7 +502,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     @Override
     public boolean updateServiceProperties(Map<String, String> properties) {
 
-        EntityManager em = getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+        EntityManager em = getEntityManager(getManagementAppId());
         Query q = Query.fromQL("select *");
         Results results = null;
         try {
@@ -551,7 +551,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     @Override
     public boolean deleteServiceProperty(String name) {
 
-        EntityManager em = getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+        EntityManager em = getEntityManager(getManagementAppId());
 
 
         Query q = Query.fromQL("select *");
@@ -684,7 +684,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     @Override
     public void rebuildInternalIndexes( ProgressObserver po ) throws Exception {
-        rebuildApplicationIndexes( CpNamingUtils.MANAGEMENT_APPLICATION_ID, po );
+        rebuildApplicationIndexes( getManagementAppId(), po );
     }
 
 
@@ -699,7 +699,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         em.reindex( po );
 
-        logger.info("\n\nRebuilt index for applicationId {} \n", appId );
+        logger.info("\n\nRebuilt index for applicationId {} \n", appId);
     }
 
 
@@ -731,7 +731,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         em.reindexCollection( po, collectionName, reverse );
 
         logger.info("\n\nRebuilt index for application {} id {} collection {}\n",
-            new Object[] { app.getName(), appId, collectionName } );
+            new Object[]{app.getName(), appId, collectionName});
     }
 
     @Override
@@ -746,8 +746,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         // could use any collection scope here, does not matter
         EntityCollectionManager ecm = getManagerCache().getEntityCollectionManager(
             new CollectionScopeImpl(
-                new SimpleId( CpNamingUtils.MANAGEMENT_APPLICATION_ID, "application"),
-                new SimpleId( CpNamingUtils.MANAGEMENT_APPLICATION_ID, "application"),
+                new SimpleId( getManagementAppId(), "application"),
+                new SimpleId( getManagementAppId(), "application"),
                 "dummy"
         ));
 
