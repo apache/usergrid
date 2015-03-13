@@ -74,7 +74,9 @@ public class AllApplicationsObservableImpl implements AllApplicationsObservable 
         //emit our hard coded applications that are used the manage the system first.
         //this way consumers can perform whatever work they need to on the root system first
         final Observable<ApplicationScope> systemIds = Observable.from(
-            Arrays.asList( getApplicationScope( CpNamingUtils.MANAGEMENT_APPLICATION_ID )));
+            Arrays.asList(
+                getApplicationScope( CpNamingUtils.MANAGEMENT_APPLICATION_ID ),
+                getApplicationScope( CpNamingUtils.SYSTEM_APP_ID ))); // still need deprecated system app here
 
         final ApplicationScope appScope = getApplicationScope( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
 
@@ -86,7 +88,6 @@ public class AllApplicationsObservableImpl implements AllApplicationsObservable 
                 entityCollectionManagerFactory.createCollectionManager( appInfoCollectionScope );
 
         final GraphManager gm = graphManagerFactory.createEdgeManager(appScope);
-
 
         String edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( CpNamingUtils.APPLICATION_INFOS );
 
