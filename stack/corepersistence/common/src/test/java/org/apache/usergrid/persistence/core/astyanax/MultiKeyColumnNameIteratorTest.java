@@ -80,12 +80,12 @@ public class MultiKeyColumnNameIteratorTest {
         final CassandraConfig cassandraConfig = new CassandraConfig() {
             @Override
             public ConsistencyLevel getReadCL() {
-                return ConsistencyLevel.CL_QUORUM;
+                return ConsistencyLevel.CL_LOCAL_ONE;
             }
 
             @Override
             public ConsistencyLevel getConsistentReadCL() {
-                return ConsistencyLevel.CL_LOCAL_ONE;
+                return ConsistencyLevel.CL_LOCAL_QUORUM;
             }
 
 
