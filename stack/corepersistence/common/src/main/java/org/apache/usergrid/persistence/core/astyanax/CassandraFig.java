@@ -79,11 +79,11 @@ public interface CassandraFig extends GuicyFig {
     @Default( "false" )
     boolean isEmbedded();
 
-    @Default("CL_ONE")
+    @Default("CL_LOCAL_ONE")
     @Key(READ_CL)
     String getReadCL();
 
-    @Default("CL_LOCAL_ONE")
+    @Default("CL_LOCAL_QUORUM")
     @Key(READ_CONSISTENT_CL)
     String getConsistentReadCL();
 
