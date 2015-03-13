@@ -634,7 +634,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         // refresh special indexes without calling EntityManager refresh because stack overflow
         maybeCreateIndexes();
-        // system app
 
         for ( EntityIndex index : getManagementIndexes() ) {
             index.refresh();
@@ -643,7 +642,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
 
     private void maybeCreateIndexes() {
-        // system app
         if ( indexInitialized.getAndSet( true ) ) {
             return;
         }
@@ -684,7 +682,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     @Override
     public void rebuildInternalIndexes( ProgressObserver po ) throws Exception {
-        rebuildApplicationIndexes( getManagementAppId(), po );
+        rebuildApplicationIndexes( CpNamingUtils.SYSTEM_APP_ID, po);
+        rebuildApplicationIndexes( CpNamingUtils.MANAGEMENT_APPLICATION_ID, po );
     }
 
 

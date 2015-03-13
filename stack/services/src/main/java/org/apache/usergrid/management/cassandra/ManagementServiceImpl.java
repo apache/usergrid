@@ -386,7 +386,7 @@ public class ManagementServiceImpl implements ManagementService {
             }
         } );
 
-        sm.newRequest( ServiceAction.POST, parameters( "groups", organizationId, "activities" ), payload( properties ) )
+        sm.newRequest( ServiceAction.POST, parameters( Schema.COLLECTION_GROUPS, organizationId, "activities" ), payload( properties ) )
           .execute().getEntity();
     }
 
@@ -394,7 +394,7 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public ServiceResults getOrganizationActivity( OrganizationInfo organization ) throws Exception {
         ServiceManager sm = smf.getServiceManager( smf.getManagementAppId() );
-        return sm.newRequest( ServiceAction.GET, parameters( "groups", organization.getUuid(), "feed" ) ).execute();
+        return sm.newRequest( ServiceAction.GET, parameters( Schema.COLLECTION_GROUPS, organization.getUuid(), "feed" ) ).execute();
     }
 
 
@@ -403,7 +403,7 @@ public class ManagementServiceImpl implements ManagementService {
             throws Exception {
         ServiceManager sm = smf.getServiceManager( smf.getManagementAppId() );
         return sm.newRequest( ServiceAction.GET,
-                parameters( "groups", organization.getUuid(), "users", user.getUuid(), "feed" ) ).execute();
+                parameters( Schema.COLLECTION_GROUPS, organization.getUuid(), "users", user.getUuid(), "feed" ) ).execute();
     }
 
 
@@ -452,7 +452,7 @@ public class ManagementServiceImpl implements ManagementService {
          * node is trying to set the property do a different value
          */
         Lock groupLock =
-                getUniqueUpdateLock( lockManager, smf.getManagementAppId(), organizationName, "groups", PROPERTY_PATH );
+                getUniqueUpdateLock( lockManager, smf.getManagementAppId(), organizationName, Schema.COLLECTION_GROUPS, PROPERTY_PATH );
 
         Lock userLock = getUniqueUpdateLock( lockManager, smf.getManagementAppId(), username, "users", "username" );
 
@@ -467,8 +467,8 @@ public class ManagementServiceImpl implements ManagementService {
             userLock.lock();
             emailLock.lock();
             EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-            if ( !em.isPropertyValueUniqueForEntity( "group", PROPERTY_PATH, organizationName ) ) {
-                throw new DuplicateUniquePropertyExistsException( "group", PROPERTY_PATH, organizationName );
+            if ( !em.isPropertyValueUniqueForEntity( Group.ENTITY_TYPE, PROPERTY_PATH, organizationName ) ) {
+                throw new DuplicateUniquePropertyExistsException( Group.ENTITY_TYPE, PROPERTY_PATH, organizationName );
             }
             if ( !validateAdminInfo( username, name, email, password ) ) {
                 return null;
@@ -558,11 +558,12 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
 
-        Lock groupLock =
-                getUniqueUpdateLock( lockManager, smf.getManagementAppId(), organizationName, "groups", PROPERTY_PATH );
-        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-        if ( !em.isPropertyValueUniqueForEntity( "group", PROPERTY_PATH, organizationName ) ) {
-            throw new DuplicateUniquePropertyExistsException( "group", PROPERTY_PATH, organizationName );
+        Lock groupLock = getUniqueUpdateLock(
+            lockManager, smf.getManagementAppId(), organizationName, Schema.COLLECTION_GROUPS, PROPERTY_PATH );
+
+        EntityManager em = emf.getEntityManager(smf.getManagementAppId());
+        if ( !em.isPropertyValueUniqueForEntity( Group.ENTITY_TYPE, PROPERTY_PATH, organizationName ) ) {
+            throw new DuplicateUniquePropertyExistsException( Group.ENTITY_TYPE, PROPERTY_PATH, organizationName );
         }
         try {
             groupLock.lock();
@@ -599,8 +600,8 @@ public class ManagementServiceImpl implements ManagementService {
                                                 Map<String, Object> properties ) throws Exception {
 
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-        if ( !em.isPropertyValueUniqueForEntity( "group", PROPERTY_PATH, organizationInfo.getName() ) ) {
-            throw new DuplicateUniquePropertyExistsException( "group", PROPERTY_PATH, organizationInfo.getName() );
+        if ( !em.isPropertyValueUniqueForEntity( Group.ENTITY_TYPE, PROPERTY_PATH, organizationInfo.getName() ) ) {
+            throw new DuplicateUniquePropertyExistsException( Group.ENTITY_TYPE, PROPERTY_PATH, organizationInfo.getName() );
         }
         if ( properties == null ) {
             properties = new HashMap<String, Object>();
@@ -660,9 +661,9 @@ public class ManagementServiceImpl implements ManagementService {
     public List<OrganizationInfo> getOrganizations( UUID startResult, int count ) throws Exception {
         // still need the bimap to search for existing
         BiMap<UUID, String> organizations = HashBiMap.create();
-        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
+        EntityManager em = emf.getEntityManager(smf.getManagementAppId());
         Results results =
-                em.getCollection( em.getApplicationRef(), "groups", startResult, count, Level.ALL_PROPERTIES, false );
+                em.getCollection(em.getApplicationRef(), Schema.COLLECTION_GROUPS, startResult, count, Level.ALL_PROPERTIES, false);
         List<OrganizationInfo> orgs = new ArrayList<OrganizationInfo>( results.size() );
         OrganizationInfo orgInfo;
         for ( Entity entity : results.getEntities() ) {
@@ -715,7 +716,7 @@ public class ManagementServiceImpl implements ManagementService {
         }
 
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-        EntityRef ref = em.getAlias( "group", organizationName );
+        EntityRef ref = em.getAlias( Group.ENTITY_TYPE, organizationName );
         if ( ref == null ) {
             return null;
         }
@@ -1205,7 +1206,7 @@ public class ManagementServiceImpl implements ManagementService {
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
 
         Results orgResults = em.getCollection( new SimpleEntityRef( User.ENTITY_TYPE, userId ),
-                "groups", null, 10000, Level.REFS, false );
+                Schema.COLLECTION_GROUPS, null, 10000, Level.REFS, false );
 
         logger.debug( "    orgResults.size() = " +  orgResults.size() );
 
@@ -1445,8 +1446,9 @@ public class ManagementServiceImpl implements ManagementService {
 
         BiMap<UUID, String> organizations = HashBiMap.create();
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-        Results results = em.getCollection( new SimpleEntityRef( User.ENTITY_TYPE, userId ), "groups", null, 10000,
-                Level.ALL_PROPERTIES, false );
+        Results results = em.getCollection(
+            new SimpleEntityRef( User.ENTITY_TYPE, userId ), Schema.COLLECTION_GROUPS, null, 10000,
+            Level.ALL_PROPERTIES, false );
 
         String path = null;
 
@@ -1712,7 +1714,7 @@ public class ManagementServiceImpl implements ManagementService {
 
         Results r = em.getConnectingEntities(
                 new SimpleEntityRef(CpNamingUtils.APPLICATION_INFO, applicationInfoId),
-                "owns", "group", Level.ALL_PROPERTIES );
+                "owns", Group.ENTITY_TYPE, Level.ALL_PROPERTIES );
 
         Entity entity = r.getEntity();
         if ( entity != null ) {
