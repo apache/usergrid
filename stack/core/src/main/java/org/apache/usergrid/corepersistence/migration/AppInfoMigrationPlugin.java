@@ -90,7 +90,8 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
 
             // we found appinfos, let's migrate them to application_infos in the Management App
 
-            EntityManager em = emf.getEntityManager( emf.getManagementAppId());
+            final EntityManager em = emf.getEntityManager( emf.getManagementAppId());
+
             String currentAppName = null;
             try {
                 logger.info("Migrating old appinfos");
@@ -98,21 +99,15 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
                 for (Entity oldAppInfo : results.getEntities()) {
 
                     final String appName = currentAppName = oldAppInfo.getName();
+                    final String orgName = appName.split("/")[0];
 
                     UUID applicationId;
-                    UUID organizationId;
 
                     Object uuidObject = oldAppInfo.getProperty("applicationUuid");
                     if (uuidObject instanceof UUID) {
                         applicationId = (UUID) uuidObject;
                     } else {
                         applicationId = UUIDUtils.tryExtractUUID(uuidObject.toString());
-                    }
-                    uuidObject = oldAppInfo.getProperty("organizationUuid");
-                    if (uuidObject instanceof UUID) {
-                        organizationId = (UUID) uuidObject;
-                    } else {
-                        organizationId = UUIDUtils.tryExtractUUID(uuidObject.toString());
                     }
 
                     // create and connect new APPLICATION_INFO oldAppInfo to Organization
@@ -133,16 +128,18 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
                         em.update(appInfo);
                         observer.update( getMaxVersion(), "Updated existing application_info for " + appName);
                     }
-                    em.createConnection(new SimpleEntityRef(Group.ENTITY_TYPE, organizationId), "owns", appInfo);
+
+                    // create org->app connections, but not for apps in dummy "usergrid" internal organization
+
+                    if ( !orgName.equals("usergrid") ) {
+                        EntityRef orgRef = em.getAlias(Group.ENTITY_TYPE, appName.split("/")[0]);
+                        em.createConnection(orgRef, "owns", appInfo);
+                    }
                 }
 
                 em.refreshIndex();
 
-                // after we've successfully created all of the application_infos, we delete the old appoinfos
-
-                for (Entity oldAppInfo : results.getEntities()) {
-                    em.delete(oldAppInfo);
-                }
+                // note that the old appinfos are not deleted
 
                 migrationInfoSerialization.setVersion( getName(), getMaxVersion() );
 
