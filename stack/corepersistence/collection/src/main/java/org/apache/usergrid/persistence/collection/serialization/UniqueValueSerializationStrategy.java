@@ -64,6 +64,7 @@ public interface UniqueValueSerializationStrategy extends Migration {
      * Load UniqueValue that matches field from collection or null if that value does not exist.
      *
      * @param colScope Collection scope in which to look for field name/value
+     * @param consistencyLevel Consistency level of query
      * @param fields Field name/value to search for
      * @return UniqueValueSet containing fields from the collection that exist in cassandra
      * @throws ConnectionException on error connecting to Cassandra
