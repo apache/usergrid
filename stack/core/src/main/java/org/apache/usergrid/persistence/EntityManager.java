@@ -713,6 +713,5 @@ public interface EntityManager {
      */
     public Health getIndexHealth();
 
-    public Entity getAllEntityFromFields( String aliasType, String aliasValue );
-
-    }
+    public Entity getUniqueEntityFromAlias( String aliasType, String aliasValue );
+}

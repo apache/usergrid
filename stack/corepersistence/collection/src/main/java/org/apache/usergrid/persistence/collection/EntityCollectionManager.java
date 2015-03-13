@@ -54,9 +54,9 @@ public interface EntityCollectionManager {
      * Return the latest versions of the specified entityIds
      */
     public Observable<VersionSet> getLatestVersion( Collection<Id> entityId );
-    
-    
-    public Observable<FieldSet> getAllEntities(Collection<Field> fields);
+
+
+    public Observable<FieldSet> getEntitiesFromFields( Collection<Field> fields );
 
     /**
      * Gets the Id for a field
@@ -77,12 +77,12 @@ public interface EntityCollectionManager {
 
     /**
      * Takes the change and reloads an entity with all changes applied in this entity applied.
-     * The resulting entity from calling load will be the previous version of this entity plus 
+     * The resulting entity from calling load will be the previous version of this entity plus
      * the entity in this object applied to it.
      */
     public Observable<Entity> update ( Entity entity );
 
-    /** 
+    /**
      * Returns health of entity data store.
      */
     public Health getHealth();

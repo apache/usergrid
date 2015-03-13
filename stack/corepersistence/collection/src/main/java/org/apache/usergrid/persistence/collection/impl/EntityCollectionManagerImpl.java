@@ -23,8 +23,8 @@ import java.util.*;
 
 import com.netflix.astyanax.MutationBatch;
 import org.apache.usergrid.persistence.collection.*;
-import org.apache.usergrid.persistence.collection.serialization.impl.FieldSetImpl;
-import org.apache.usergrid.persistence.core.rx.ObservableIterator;
+import org.apache.usergrid.persistence.collection.serialization.impl.MutableFieldSet;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +41,6 @@ import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteCommit;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteOptimisticVerify;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteStart;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteUniqueVerify;
-import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
@@ -294,7 +293,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
      * @return
      */
     @Override
-    public Observable<FieldSet> getAllEntities(final Collection<Field> fields) {
+    public Observable<FieldSet> getEntitiesFromFields( final Collection<Field> fields ) {
         return rx.Observable.just(fields).map( new Func1<Collection<Field>, FieldSet>() {
             @Override
             public FieldSet call( Collection<Field> fields ) {
@@ -307,7 +306,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
                     //Short circut if we don't have any uniqueValues from the given fields.
                     if(!set.iterator().hasNext()){
-                        return new FieldSetImpl( 0 );
+                        return new MutableFieldSet( 0 );
                     }
 
 
@@ -319,6 +318,10 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
                         UniqueValue value = set.getValue(expectedField.getName());
 
+                        if(value ==null){
+                            logger.debug( "Field does not correspond to a unique value" );
+                        }
+
                         entityIds.add(value.getEntityId());
                         uniqueValues.add(value);
                     }
@@ -329,7 +332,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                     //now loop through and ensure the entities are there.
                     final MutationBatch deleteBatch = keyspace.prepareMutationBatch();
 
-                    final FieldSetImpl response = new FieldSetImpl(fields.size());
+                    final MutableFieldSet response = new MutableFieldSet(fields.size());
 
                     for(final UniqueValue expectedUnique: uniqueValues) {
                         final MvccEntity entity = entitySet.getEntity(expectedUnique.getEntityId());

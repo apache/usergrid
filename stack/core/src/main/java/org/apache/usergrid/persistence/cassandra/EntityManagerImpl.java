@@ -2949,7 +2949,7 @@ public class EntityManagerImpl implements EntityManager {
 
 
     @Override
-    public Entity getAllEntityFromFields( final String aliasType, final String aliasValue ) {
+    public Entity getUniqueEntityFromAlias( final String aliasType, final String aliasValue ) {
         throw new UnsupportedOperationException( "Not supported." );
     }
 }

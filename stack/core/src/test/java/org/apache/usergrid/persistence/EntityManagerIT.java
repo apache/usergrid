@@ -579,27 +579,4 @@ public class EntityManagerIT extends AbstractCoreIT {
 
         assertNotNull( em.get( user.getUuid() ));
     }
-
-    @Test
-    public void testInvalidNameRepair() throws Exception {
-        LOG.info("EntityManagerIT.testInvalidNameReapir");
-
-        EntityManager em = app.getEntityManager();
-
-        Map<String, Object> properties = new LinkedHashMap<String, Object>();
-        properties.put( "name", "XR-51B" );
-        properties.put( "fuel", "Nutrinox" );
-
-        Entity user = em.create( "robot", properties );
-        assertNotNull( user );
-
-        em.refreshIndex();
-
-        assertNotNull( em.get( user.getUuid() ));
-
-        em.delete( user );
-
-        assertNull( em.get( user.getUuid() ));
-
-    }
 }

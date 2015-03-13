@@ -20,19 +20,10 @@
 package org.apache.usergrid.persistence.collection.cache;
 
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import com.netflix.astyanax.MutationBatch;
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import org.apache.usergrid.persistence.collection.*;
-import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
-import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
-import org.apache.usergrid.persistence.collection.serialization.impl.FieldSetImpl;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -40,15 +31,11 @@ import org.apache.usergrid.persistence.model.field.Field;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import rx.Observable;
 import rx.functions.Action1;
-import rx.functions.Func1;
 
 
 @Singleton
@@ -83,8 +70,8 @@ public class CachedEntityCollectionManager implements EntityCollectionManager {
     }
 
     @Override
-    public Observable<FieldSet> getAllEntities(final Collection<Field> fields) {
-        return targetEntityCollectionManager.getAllEntities( fields );
+    public Observable<FieldSet> getEntitiesFromFields( final Collection<Field> fields ) {
+        return targetEntityCollectionManager.getEntitiesFromFields( fields );
     }
 
     @Override

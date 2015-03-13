@@ -265,7 +265,7 @@ public class AbstractConnectionsService extends AbstractService {
 
             //TODO T.N. USERGRID-1919 actually validate this is connected
 
-            Entity entity = em.getAllEntityFromFields( query.getEntityType(),name );
+            Entity entity = em.getUniqueEntityFromAlias( query.getEntityType(), name );
             if ( entity == null ) {
                 return null;
             }
@@ -361,7 +361,7 @@ public class AbstractConnectionsService extends AbstractService {
             if ( query.containsSingleNameOrEmailIdentifier() ) {
                 String name = query.getSingleNameOrEmailIdentifier();
 
-                entity = em.getAllEntityFromFields( query.getEntityType(), name );
+                entity = em.getUniqueEntityFromAlias( query.getEntityType(), name );
                 if ( entity == null ) {
                     throw new ServiceResourceNotFoundException( context );
                 }
@@ -472,7 +472,7 @@ public class AbstractConnectionsService extends AbstractService {
                 nameProperty = "name";
             }
 
-            Entity entity = em.getAllEntityFromFields( query.getEntityType(), name );
+            Entity entity = em.getUniqueEntityFromAlias( query.getEntityType(), name );
             if ( entity == null ) {
                 throw new ServiceResourceNotFoundException( context );
             }

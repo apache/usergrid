@@ -26,14 +26,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-public class FieldSetImpl implements FieldSet {
+public class MutableFieldSet implements FieldSet {
 
 
     private final Map<Field<?>, MvccEntity> entities;
 
 
-    public FieldSetImpl(
-            final int expectedSize) {
+    public MutableFieldSet( final int expectedSize ) {
         this.entities = new HashMap<>( expectedSize );
     }
 

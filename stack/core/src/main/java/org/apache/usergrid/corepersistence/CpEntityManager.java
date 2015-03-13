@@ -809,7 +809,7 @@ public class CpEntityManager implements EntityManager {
     }
 
     @Override
-    public Entity getAllEntityFromFields( String collectionType, String aliasType ){
+    public Entity getUniqueEntityFromAlias( String collectionType, String aliasType ){
         String collName = Schema.defaultCollectionName( collectionType );
 
         CollectionScope collectionScope = getCollectionScopeNameFromEntityType(
@@ -824,8 +824,13 @@ public class CpEntityManager implements EntityManager {
 
         StringField uniqueLookupRepairField =  new StringField( propertyName, aliasType.toString());
 
-        Observable<FieldSet> fieldSetObservable = ecm.getAllEntities( Arrays.<Field>asList( uniqueLookupRepairField) );
+        Observable<FieldSet> fieldSetObservable = ecm.getEntitiesFromFields(
+            Arrays.<Field>asList( uniqueLookupRepairField ) );
 
+        if(fieldSetObservable == null){
+            logger.debug( "Couldn't return the observable based on unique entities." );
+            return null;
+        }
         FieldSet fieldSet = fieldSetObservable.toBlocking().last();
 
         repairedEntityGet.stop();
@@ -2284,7 +2289,6 @@ public class CpEntityManager implements EntityManager {
             getApplicationScope().getApplication(), collectionName);
 
         final EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
-//TODO: can't we just sub in the getEntityRepair method here so for every read of a uniqueEntityField we can verify it is correct?
 
         //convert to a string, that's what we store
         final Id results = ecm.getIdField( new StringField(

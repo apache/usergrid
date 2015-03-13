@@ -20,7 +20,6 @@ package org.apache.usergrid.persistence.collection;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -780,12 +779,12 @@ public class EntityCollectionManagerIT {
 
         Entity createReturned = observable.toBlocking().lastOrDefault( null );
 
-
+        assertNotNull( "Need entity to be created before proceeding", createReturned );
         assertNotNull( "Id was assigned", createReturned.getId() );
         assertNotNull( "Version was assigned", createReturned.getVersion() );
 
         FieldSet
-            fieldResults = manager.getAllEntities( Arrays.<Field>asList( expectedInteger) ).toBlocking().last();
+            fieldResults = manager.getEntitiesFromFields( Arrays.<Field>asList( expectedInteger ) ).toBlocking().last();
 
         assertEquals(1,fieldResults.size());
 
@@ -800,7 +799,7 @@ public class EntityCollectionManagerIT {
 
         //try to load via the unique field, should have triggered repair
         final FieldSet
-            results = manager.getAllEntities( Arrays.<Field>asList( expectedInteger) ).toBlocking().last();
+            results = manager.getEntitiesFromFields( Arrays.<Field>asList( expectedInteger ) ).toBlocking().last();
 
 
         //verify no entity returned
