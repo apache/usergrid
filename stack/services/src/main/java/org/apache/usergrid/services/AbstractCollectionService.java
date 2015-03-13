@@ -46,12 +46,8 @@ public class AbstractCollectionService extends AbstractService {
 
 
     public AbstractCollectionService() {
-        // addSet("indexes");
         declareMetadataType( "indexes" );
     }
-
-    // cname/id/
-
 
     @Override
     public Entity getEntity( ServiceRequest request, UUID uuid ) throws Exception {

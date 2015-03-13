@@ -207,6 +207,7 @@ public class CpEntityManager implements EntityManager {
     private Timer entGetEntityCountersTimer;
     private Timer esIndexEntityCollectionTimer;
     private Timer entRevokeRolePermissionsTimer;
+    private Timer entGetRepairedEntityTimer;
 
     //    /** Short-term cache to keep us from reloading same Entity during single request. */
 //    private LoadingCache<EntityScope, org.apache.usergrid.persistence.model.entity.Entity> entityCache;
@@ -267,6 +268,8 @@ public class CpEntityManager implements EntityManager {
             .getTimer( CpEntityManager.class, "cp.entity.es.index.entity.to.collection.timer" );
         this.entRevokeRolePermissionsTimer =
             this.metricsFactory.getTimer( CpEntityManager.class, "cp.entity.revoke.role.permissions.timer");
+        this.entGetRepairedEntityTimer = this.metricsFactory
+            .getTimer( CpEntityManager.class, "get.repaired.entity.timer" );
 
         // set to false for now
         this.skipAggregateCounters = false;
@@ -814,6 +817,7 @@ public class CpEntityManager implements EntityManager {
 
         String propertyName = Schema.getDefaultSchema().aliasProperty( collName );
 
+        Timer.Context repairedEntityGet = entGetRepairedEntityTimer.time();
 
         final EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
         //TODO: can't we just sub in the getEntityRepair method here so for every read of a uniqueEntityField we can verify it is correct?
@@ -824,24 +828,13 @@ public class CpEntityManager implements EntityManager {
 
         FieldSet fieldSet = fieldSetObservable.toBlocking().last();
 
+        repairedEntityGet.stop();
         if(fieldSet.isEmpty()) {
             return null;
         }
 
         return convertMvccEntityToEntity( fieldSet.getEntity( uniqueLookupRepairField ).getEntity().get() );
     }
-
-    @Override
-    public Entity getEntityByAlias(String collectionType, String aliasType) throws Exception {
-        EntityRef newEntityRef = getAlias(collectionType,aliasType);
-
-        if(newEntityRef == null) {
-            return null;
-        }
-
-        return get( newEntityRef );
-    }
-
 
     @Override
     public EntityRef getAlias( String aliasType, String alias ) throws Exception {

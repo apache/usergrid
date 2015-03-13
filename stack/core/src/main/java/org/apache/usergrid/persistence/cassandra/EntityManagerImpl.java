@@ -1771,13 +1771,6 @@ public class EntityManagerImpl implements EntityManager {
         batchExecute( m, CassandraService.RETRY_COUNT );
     }
 
-
-    @Override
-    public Entity getEntityByAlias( final String collectionType, final String aliasType ) throws Exception {
-        throw new UnsupportedOperationException("Not supported.");
-    }
-
-
     @Override
     public EntityRef getAlias( String aliasType, String alias ) throws Exception {
         return getAlias( new SimpleEntityRef(Application.ENTITY_TYPE, applicationId), aliasType, alias );
