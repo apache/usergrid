@@ -35,12 +35,6 @@ public class TestIndexModule extends TestModule {
 
         // configure collections and our core astyanax framework
         install( new CollectionModule() );
-        install( new IndexModule() {
-            @Override
-            public void wireBufferQueue() {
-                bind( BufferQueue.class).to( BufferQueueInMemoryImpl.class );
-//                bind( BufferQueue.class).to( BufferQueueSQSImpl.class );
-            }
-        } );
+        install( new IndexModule()  );
     }
 }

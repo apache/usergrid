@@ -101,7 +101,7 @@ public class BufferQueueSQSImpl implements BufferQueue {
     public BufferQueueSQSImpl( final QueueManagerFactory queueManagerFactory, final IndexFig indexFig,
                                final MapManagerFactory mapManagerFactory, final MetricsFactory metricsFactory ) {
         final QueueScope queueScope =
-            new QueueScopeImpl( new SimpleId( MANAGEMENT_APPLICATION_ID, "application" ), QUEUE_NAME );
+            new QueueScopeImpl( QUEUE_NAME );
 
         this.queue = queueManagerFactory.getQueueManager( queueScope );
         this.indexFig = indexFig;
@@ -257,6 +257,12 @@ public class BufferQueueSQSImpl implements BufferQueue {
         }
 
         queue.commitMessages( toAck );
+    }
+
+
+    @Override
+    public void fail( final List<IndexOperationMessage> messages, final Throwable t ) {
+        //no op, just let it retry after the queue timeout
     }
 
 

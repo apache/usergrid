@@ -71,12 +71,7 @@ public class CoreModule  extends AbstractModule {
         install( new CommonModule());
         install(new CollectionModule());
         install(new GraphModule());
-        install( new IndexModule() {
-            @Override
-            public void wireBufferQueue() {
-                bind(BufferQueue.class).to( BufferQueueSQSImpl.class );
-            }
-        } );
+        install( new IndexModule() );
 //        install(new MapModule());   TODO, re-enable when index module doesn't depend on queue
 //        install(new QueueModule());
 

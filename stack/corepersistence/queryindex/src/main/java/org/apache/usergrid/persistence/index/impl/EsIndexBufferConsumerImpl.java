@@ -20,31 +20,29 @@
 package org.apache.usergrid.persistence.index.impl;
 
 import com.codahale.metrics.Counter;
+import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+
+import org.apache.usergrid.persistence.core.future.BetterFuture;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.index.IndexBufferConsumer;
 import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.index.IndexOperationMessage;
-import org.elasticsearch.action.ActionRequestBuilder;
+
 import org.elasticsearch.action.WriteConsistencyLevel;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.action.delete.DeleteRequestBuilder;
-import org.elasticsearch.action.deletebyquery.DeleteByQueryRequestBuilder;
-import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.client.Client;
-import org.elasticsearch.common.util.concurrent.EsRejectedExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
 import rx.Subscriber;
 import rx.Subscription;
 import rx.functions.Action1;
-import rx.functions.Action2;
 import rx.functions.Func1;
 import rx.functions.Func2;
 import rx.schedulers.Schedulers;
@@ -52,7 +50,6 @@ import rx.schedulers.Schedulers;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 
@@ -69,6 +66,7 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
 
     private final Timer flushTimer;
     private final Counter indexSizeCounter;
+    private final Counter indexErrorCounter;
     private final Meter flushMeter;
     private final Timer produceTimer;
     private final BufferQueue bufferQueue;
@@ -80,13 +78,28 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
 
     private Object mutex = new Object();
 
+
+    private AtomicLong inFlight = new AtomicLong(  );
+
     @Inject
     public EsIndexBufferConsumerImpl( final IndexFig config, final EsProvider provider, final MetricsFactory
         metricsFactory, final BufferQueue bufferQueue, final IndexFig indexFig ){
 
-        this.flushTimer = metricsFactory.getTimer(EsIndexBufferConsumerImpl.class, "index.buffer.flush");
-        this.flushMeter = metricsFactory.getMeter(EsIndexBufferConsumerImpl.class, "index.buffer.meter");
-        this.indexSizeCounter =  metricsFactory.getCounter(EsIndexBufferConsumerImpl.class, "index.buffer.size");
+        this.flushTimer = metricsFactory.getTimer(EsIndexBufferConsumerImpl.class, "buffer.flush");
+        this.flushMeter = metricsFactory.getMeter(EsIndexBufferConsumerImpl.class, "buffer.meter");
+        this.indexSizeCounter =  metricsFactory.getCounter(EsIndexBufferConsumerImpl.class, "buffer.size");
+        this.indexErrorCounter =  metricsFactory.getCounter(EsIndexBufferConsumerImpl.class, "error.count");
+
+        //wire up the gauge of inflight messages
+        metricsFactory.addGauge( EsIndexBufferConsumerImpl.class, "inflight.meter", new Gauge<Long>() {
+            @Override
+            public Long getValue() {
+                return inFlight.longValue();
+            }
+        } );
+
+
+
         this.config = config;
         this.failureMonitor = new FailureMonitorImpl(config,provider);
         this.client = provider.getClient();
@@ -130,66 +143,67 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
     private void startWorker(){
         synchronized ( mutex) {
 
-            final AtomicInteger countFail = new AtomicInteger();
+            Observable<List<IndexOperationMessage>> consumer = Observable.create(
+                new Observable.OnSubscribe<List<IndexOperationMessage>>() {
+                    @Override
+                    public void call( final Subscriber<? super List<IndexOperationMessage>> subscriber ) {
 
-            Observable<List<IndexOperationMessage>> consumer = Observable.create( new Observable.OnSubscribe<List<IndexOperationMessage>>() {
-                @Override
-                public void call( final Subscriber<? super List<IndexOperationMessage>> subscriber ) {
+                        //name our thread so it's easy to see
+                        Thread.currentThread().setName( "QueueConsumer_" + counter.incrementAndGet() );
 
-                    //name our thread so it's easy to see
-                    Thread.currentThread().setName( "QueueConsumer_" + counter.incrementAndGet() );
-
-                    List<IndexOperationMessage> drainList;
-                    do {
-                        try {
-
-
-                            Timer.Context timer = produceTimer.time();
-
-                            drainList = bufferQueue.take( config.getIndexBufferSize(), config.getIndexBufferTimeout(),
-                                TimeUnit.MILLISECONDS );
-
-
-                            subscriber.onNext( drainList );
-
-
-                            timer.stop();
-
-                            countFail.set( 0 );
-                        }
-                        catch ( EsRejectedExecutionException err ) {
-                            countFail.incrementAndGet();
-                            log.error(
-                                "Elasticsearch rejected our request, sleeping for {} milliseconds before retrying.  " + "Failed {} consecutive times", config.getFailRefreshCount(),
-                                countFail.get() );
-
-                            //es  rejected the exception, sleep and retry in the queue
+                        List<IndexOperationMessage> drainList;
+                        do {
                             try {
-                                Thread.sleep( config.getFailureRetryTime() );
+
+
+                                Timer.Context timer = produceTimer.time();
+
+                                drainList = bufferQueue
+                                    .take( config.getIndexBufferSize(), config.getIndexBufferTimeout(),
+                                        TimeUnit.MILLISECONDS );
+
+
+                                subscriber.onNext( drainList );
+
+                                //take since  we're in flight
+                                inFlight.addAndGet( drainList.size() );
+
+
+                                timer.stop();
                             }
-                            catch ( InterruptedException e ) {
-                                //swallow
+
+                            catch ( Exception e ) {
+                                final long sleepTime = config.getFailureRetryTime();
+
+                                log.error( "Failed to dequeue.  Sleeping for {} milliseconds", sleepTime, e );
+
+                                try {
+                                    Thread.sleep( sleepTime );
+                                }
+                                catch ( InterruptedException ie ) {
+                                    //swallow
+                                }
+
+                                indexErrorCounter.inc();
                             }
                         }
-                        catch ( Exception e ) {
-                            int count = countFail.incrementAndGet();
-                            log.error( "failed to dequeue", e );
-                            if ( count > 200 ) {
-                                log.error( "Shutting down index drain due to repetitive failures" );
-                            }
-                        }
+                        while ( true );
                     }
-                    while ( true );
-                }
-            } ).subscribeOn( Schedulers.newThread() ).doOnNext( new Action1<List<IndexOperationMessage>>() {
+                } ).subscribeOn( Schedulers.newThread() ).doOnNext( new Action1<List<IndexOperationMessage>>() {
                 @Override
                 public void call( List<IndexOperationMessage> containerList ) {
-                    if ( containerList.size() > 0 ) {
-                        flushMeter.mark( containerList.size() );
-                        Timer.Context time = flushTimer.time();
-                        execute( containerList );
-                        time.stop();
+                    if ( containerList.size() == 0 ) {
+                        return;
                     }
+
+                    flushMeter.mark( containerList.size() );
+                    Timer.Context time = flushTimer.time();
+
+
+                    execute( containerList );
+
+                    time.stop();
+
                 }
             } )
                 //ack after we process
@@ -197,6 +211,16 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
                     @Override
                     public void call( final List<IndexOperationMessage> indexOperationMessages ) {
                         bufferQueue.ack( indexOperationMessages );
+                        //release  so we know we've done processing
+                        inFlight.addAndGet( -1 * indexOperationMessages.size() );
+                    }
+                } ).doOnError( new Action1<Throwable>() {
+                    @Override
+                    public void call( final Throwable throwable ) {
+
+                        log.error( "An exception occurred when trying to deque and write to elasticsearch.  Ignoring",
+                            throwable );
+                        indexErrorCounter.inc();
                     }
                 } );
 
@@ -236,7 +260,8 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
       //collection all the operations into a single stream
        .reduce( initRequest(), new Func2<BulkRequestBuilder, BatchRequest, BulkRequestBuilder>() {
            @Override
-           public BulkRequestBuilder call( final BulkRequestBuilder bulkRequestBuilder, final BatchRequest batchRequest ) {
+           public BulkRequestBuilder call( final BulkRequestBuilder bulkRequestBuilder,
+                                           final BatchRequest batchRequest ) {
                batchRequest.doOperation( client, bulkRequestBuilder );
 
                return bulkRequestBuilder;

@@ -47,6 +47,8 @@ import org.apache.usergrid.persistence.map.impl.MapScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+
+import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.ShardOperationFailedException;
@@ -111,8 +113,6 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     private final Timer addWriteAliasTimer;
     private final Timer addReadAliasTimer;
     private final Timer searchTimer;
-    private final Timer allVersionsTimerFuture;
-    private final Timer deletePreviousTimerFuture;
 
     /**
      * We purposefully make this per instance. Some indexes may work, while others may fail
@@ -127,7 +127,6 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
     private final IndexFig config;
 
-    private final MetricsFactory metricsFactory;
 
 
     //number of times to wait for the index to refresh properly.
@@ -148,8 +147,6 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     private Timer refreshTimer;
     private Timer cursorTimer;
     private Timer getVersionsTimer;
-    private Timer allVersionsTimer;
-    private Timer deletePreviousTimer;
 
     private final MapManager mapManager;
 
@@ -168,11 +165,10 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
         this.esProvider = provider;
         this.config = config;
         this.cursorTimeout = config.getQueryCursorTimeout();
-        this.indexIdentifier = IndexingUtils.createIndexIdentifier(config, appScope);
+        this.indexIdentifier = IndexingUtils.createIndexIdentifier( config, appScope );
         this.alias = indexIdentifier.getAlias();
         this.failureMonitor = new FailureMonitorImpl( config, provider );
         this.aliasCache = indexCache;
-        this.metricsFactory = metricsFactory;
         this.addTimer = metricsFactory
             .getTimer( EsEntityIndexImpl.class, "es.entity.index.add.index.timer" );
         this.removeAliasTimer = metricsFactory
@@ -191,14 +187,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
             .getTimer( EsEntityIndexImpl.class, "es.entity.index.search.cursor.timer" );
         this.getVersionsTimer =metricsFactory
             .getTimer( EsEntityIndexImpl.class, "es.entity.index.get.versions.timer" );
-        this.allVersionsTimer =  metricsFactory
-            .getTimer( EsEntityIndexImpl.class, "es.entity.index.delete.all.versions.timer" );
-        this.deletePreviousTimer = metricsFactory
-            .getTimer( EsEntityIndexImpl.class, "es.entity.index.delete.previous.versions.timer" );
-        this.allVersionsTimerFuture =  metricsFactory
-            .getTimer( EsEntityIndexImpl.class, "es.entity.index.delete.all.versions.timer.future" );
-        this.deletePreviousTimerFuture = metricsFactory
-            .getTimer( EsEntityIndexImpl.class, "es.entity.index.delete.previous.versions.timer.future" );
+
 
         final MapScope mapScope = new MapScopeImpl( appScope.getApplication(), "cursorcache" );
 
@@ -394,8 +383,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
      */
     private void createMappings(final String indexName) throws IOException {
 
-        XContentBuilder xcb = IndexingUtils.createDoubleStringIndexMapping(
-            XContentFactory.jsonBuilder(), DEFAULT_TYPE );
+        XContentBuilder xcb = IndexingUtils.createDoubleStringIndexMapping( XContentFactory.jsonBuilder(),
+            DEFAULT_TYPE );
 
 
         //Added For Graphite Metrics
@@ -421,7 +410,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     public CandidateResults search(final IndexScope indexScope, final SearchTypes searchTypes,
             final Query query ) {
 
-        final String context = IndexingUtils.createContextName(indexScope);
+        final String context = IndexingUtils.createContextName( indexScope );
         final String[] entityTypes = searchTypes.getTypeNames();
 
         QueryBuilder qb = query.createQueryBuilder(context);
@@ -632,7 +621,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     public int getPendingTasks() {
 
         final PendingClusterTasksResponse tasksResponse = esProvider.getClient().admin()
-                .cluster().pendingClusterTasks(new PendingClusterTasksRequest()).actionGet();
+                .cluster().pendingClusterTasks( new PendingClusterTasksRequest() ).actionGet();
 
         return tasksResponse.pendingTasks().size();
     }
@@ -673,114 +662,6 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
         return parseResults(searchResponse, new Query());
     }
 
-
-//    @Override
-//    public ListenableActionFuture deleteAllVersionsOfEntity(final Id entityId ) {
-//        String idString = IndexingUtils.idString(entityId).toLowerCase();
-//
-//        final TermQueryBuilder tqb = QueryBuilders.termQuery(ENTITYID_ID_FIELDNAME, idString);
-//
-//        //Added For Graphite Metrics
-//        final Timer.Context timeDeleteAllVersions =allVersionsTimer.time();
-//        final Timer.Context timeDeleteAllVersionsFuture = allVersionsTimerFuture.time();
-//
-//        final ListenableActionFuture<DeleteByQueryResponse> response = esProvider.getClient()
-//            .prepareDeleteByQuery( alias.getWriteAlias() ).setQuery( tqb ).execute();
-//
-//        response.addListener( new ActionListener<DeleteByQueryResponse>() {
-//
-//            @Override
-//            public void onResponse( DeleteByQueryResponse response) {
-//                timeDeleteAllVersions.stop();
-//                logger
-//                    .debug( "Deleted entity {}:{} from all index scopes with response status = {}", entityId.getType(),
-//                        entityId.getUuid(), response.status().toString() );
-//
-//                checkDeleteByQueryResponse(tqb, response);
-//            }
-//
-//
-//            @Override
-//            public void onFailure( Throwable e ) {
-//                timeDeleteAllVersions.stop();
-//                logger.error( "Deleted entity {}:{} from all index scopes with error {}", entityId.getType(),
-//                    entityId.getUuid(), e);
-//
-//
-//            }
-//        });
-//        timeDeleteAllVersionsFuture.stop();
-//        return response;
-//    }
-//
-//
-//    @Override
-//    public ListenableActionFuture deletePreviousVersions(final Id entityId, final UUID version) {
-//
-//        String idString = IndexingUtils.idString( entityId ).toLowerCase();
-//
-//        final FilteredQueryBuilder fqb = QueryBuilders.filteredQuery(
-//                QueryBuilders.termQuery(ENTITYID_ID_FIELDNAME, idString),
-//            FilterBuilders.rangeFilter(ENTITY_VERSION_FIELDNAME).lt(version.timestamp())
-//        );
-//
-//        //Added For Graphite Metrics
-//        //Checks the time from the execute to the response below
-//        final Timer.Context timeDeletePreviousVersions = deletePreviousTimer.time();
-//        final Timer.Context timeDeletePreviousVersionFuture = deletePreviousTimerFuture.time();
-//        final ListenableActionFuture<DeleteByQueryResponse> response = esProvider.getClient()
-//            .prepareDeleteByQuery(alias.getWriteAlias()).setQuery(fqb).execute();
-//
-//        //Added For Graphite Metrics
-//        response.addListener(new ActionListener<DeleteByQueryResponse>() {
-//            @Override
-//            public void onResponse(DeleteByQueryResponse response) {
-//                timeDeletePreviousVersions.stop();
-//                //error message needs to be retooled so that it describes the entity more throughly
-//                logger
-//                    .debug("Deleted entity {}:{} with version {} from all " + "index scopes with response status = {}",
-//                        entityId.getType(), entityId.getUuid(), version, response.status().toString());
-//
-//                checkDeleteByQueryResponse( fqb, response );
-//            }
-//
-//
-//            @Override
-//            public void onFailure( Throwable e ) {
-//                timeDeletePreviousVersions.stop();
-//                logger.error( "Deleted entity {}:{} from all index scopes with error {}", entityId.getType(),
-//                    entityId.getUuid(), e );
-//            }
-//        } );
-//
-//        timeDeletePreviousVersionFuture.stop();
-//
-//        return response;
-//    }
-
-
-    /**
-     * Validate the response doesn't contain errors, if it does, fail fast at the first error we encounter
-     */
-    private void checkDeleteByQueryResponse(
-            final QueryBuilder query, final DeleteByQueryResponse response ) {
-
-        for ( IndexDeleteByQueryResponse indexDeleteByQueryResponse : response ) {
-            final ShardOperationFailedException[] failures = indexDeleteByQueryResponse.getFailures();
-
-            for ( ShardOperationFailedException failedException : failures ) {
-                logger.error( String.format("Unable to delete by query %s. "
-                        + "Failed with code %d and reason %s on shard %s in index %s",
-                    query.toString(),
-                    failedException.status().getStatus(),
-                    failedException.reason(),
-                        failedException.shardId(),
-                    failedException.index() )
-                );
-            }
-
-        }
-    }
 
 
     /**
@@ -856,8 +737,11 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     public Health getIndexHealth() {
 
         try {
-            ClusterHealthResponse chr = esProvider.getClient().admin().cluster().health(
-                    new ClusterHealthRequest(new String[]{indexIdentifier.getIndex(null)})).get();
+           final ActionFuture<ClusterHealthResponse> future =  esProvider.getClient().admin().cluster().health(
+               new ClusterHealthRequest( new String[] { indexIdentifier.getIndex( null ) } ) );
+
+            //only wait 2 seconds max
+            ClusterHealthResponse chr = future.actionGet( 2000 );
             return Health.valueOf( chr.getStatus().name() );
         }
         catch ( Exception ex ) {

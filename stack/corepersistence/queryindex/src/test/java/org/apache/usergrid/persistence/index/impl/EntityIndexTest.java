@@ -94,7 +94,6 @@ public class EntityIndexTest extends BaseIT {
 
         entityIndex.refresh();
 
-        Thread.sleep(100000000);
 
         testQueries( indexScope, searchTypes, entityIndex );
     }

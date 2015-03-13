@@ -128,6 +128,11 @@ public class IndexOperationMessage implements Serializable {
     }
 
     public void done() {
-        getFuture().done();
+        //if this has been serialized, it could be null. don't NPE if it is, there's nothing to ack
+        final BetterFuture<IndexOperationMessage> future = getFuture();
+
+        if(future != null ){
+            future.done();
+        }
     }
 }

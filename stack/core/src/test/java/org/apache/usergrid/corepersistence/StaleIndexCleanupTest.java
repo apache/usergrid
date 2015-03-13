@@ -310,6 +310,10 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
             em.delete( thing );
         }
 
+
+        //put this into the top of the queue, once it's acked we've been flushed
+        em.refreshIndex();
+
         // wait for indexes to be cleared for the deleted entities
         count = 0;
         do {

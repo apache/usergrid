@@ -32,25 +32,37 @@ import org.apache.usergrid.persistence.index.IndexOperationMessage;
 public interface BufferQueue {
 
     /**
-     * Offer the indexoperation message
+     * Offer the indexoperation message.  Some queues may support not returning the future until ack or fail.
+     * Other queues may return the future after ack on the offer.  See the implementation documentation for details.
      * @param operation
      */
     public void offer(final IndexOperationMessage operation);
 
 
     /**
-     * Perform a take, potentially blocking.  Until takesize is available, or timeout has elapsed
+     * Perform a take, potentially blocking until up to takesize is available, or timeout has elapsed.
+     * May return less than the take size, but will never return null
+     *
      * @param takeSize
      * @param timeout
      * @param timeUnit
-     * @return
+     * @return A null safe lid
      */
     public List<IndexOperationMessage> take(final int takeSize, final long timeout, final TimeUnit timeUnit );
 
 
     /**
-     * Ack all messages so they do not appear again.  Meant for transactional queues, and may or may not be implemented
+     * Ack all messages so they do not appear again.  Meant for transactional queues, and may or may not be implemented.
+     * This will set the future as done in in memory operations
+     *
      * @param messages
      */
-    public void ack(List<IndexOperationMessage> messages);
+    public void ack(final List<IndexOperationMessage> messages);
+
+    /**
+     * Mark these message as failed.  Set the exception in the future on local operation
+     *
+     * @param messages
+     */
+    public void fail(final List<IndexOperationMessage> messages, final Throwable t);
 }

@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.usergrid.persistence.core.future.BetterFuture;
 import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.index.IndexOperationMessage;
 
@@ -47,7 +48,6 @@ public class BufferQueueInMemoryImpl implements BufferQueue {
     @Override
     public void offer( final IndexOperationMessage operation ) {
         messages.offer( operation );
-        operation.done();
     }
 
 
@@ -55,30 +55,30 @@ public class BufferQueueInMemoryImpl implements BufferQueue {
     public List<IndexOperationMessage> take( final int takeSize, final long timeout, final TimeUnit timeUnit ) {
 
         final List<IndexOperationMessage> response = new ArrayList<>( takeSize );
+        try {
 
-        final long endTime = System.currentTimeMillis() + timeUnit.toMillis( timeout );
 
-        //loop until we're we're full or we time out
-        do {
-            try {
+            messages.drainTo( response, takeSize );
 
-                final long remaining = endTime - System.currentTimeMillis();
-
-                //we received 1, try to drain
-                IndexOperationMessage polled = messages.poll( remaining, timeUnit );
-
-                //drain
-                if ( polled != null ) {
-                    response.add( polled );
-                    messages.drainTo( response, takeSize - response.size() );
-                }
+            //we got something, go process it
+            if ( response.size() > 0 ) {
+                return response;
             }
-            catch ( InterruptedException ie ) {
-                //swallow
 
+
+            final IndexOperationMessage polled = messages.poll( timeout, timeUnit );
+
+            if ( polled != null ) {
+                response.add( polled );
+
+                //try to add more
+                messages.drainTo( response, takeSize - 1 );
             }
         }
-        while ( response.size() < takeSize && System.currentTimeMillis() < endTime );
+        catch ( InterruptedException e ) {
+            //swallow
+        }
+
 
         return response;
     }
@@ -86,6 +86,23 @@ public class BufferQueueInMemoryImpl implements BufferQueue {
 
     @Override
     public void ack( final List<IndexOperationMessage> messages ) {
-         //no op for this
+        //if we have a future ack it
+        for ( final IndexOperationMessage op : messages ) {
+            op.done();
+        }
+    }
+
+
+    @Override
+    public void fail( final List<IndexOperationMessage> messages, final Throwable t ) {
+
+
+        for ( final IndexOperationMessage op : messages ) {
+            final BetterFuture<IndexOperationMessage> future = op.getFuture();
+
+            if ( future != null ) {
+                future.setError( t );
+            }
+        }
     }
 }

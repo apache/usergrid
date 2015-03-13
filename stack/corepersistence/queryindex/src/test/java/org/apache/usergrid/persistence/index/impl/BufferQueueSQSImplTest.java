@@ -38,6 +38,7 @@ import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.index.IndexOperationMessage;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
 import org.apache.usergrid.persistence.map.MapManagerFactory;
+import org.apache.usergrid.persistence.queue.NoAWSCredsRule;
 import org.apache.usergrid.persistence.queue.QueueManagerFactory;
 import org.apache.usergrid.persistence.queue.impl.UsergridAwsCredentialsProvider;
 
@@ -58,6 +59,10 @@ public class BufferQueueSQSImplTest {
     @Inject
     @Rule
     public MigrationManagerRule migrationManagerRule;
+
+
+    @Rule
+    public NoAWSCredsRule noAwsCredsRule = new NoAWSCredsRule();
 
     @Inject
     public QueueManagerFactory queueManagerFactory;

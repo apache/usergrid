@@ -23,6 +23,7 @@ import org.apache.usergrid.persistence.index.*;
 import com.google.inject.AbstractModule;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 
+import org.apache.usergrid.persistence.index.impl.BufferQueue;
 import org.apache.usergrid.persistence.index.impl.EsEntityIndexFactoryImpl;
 import org.apache.usergrid.persistence.index.impl.EsEntityIndexImpl;
 import org.apache.usergrid.persistence.index.impl.EsIndexBufferConsumerImpl;
@@ -33,7 +34,7 @@ import org.apache.usergrid.persistence.queue.guice.QueueModule;
 import org.safehaus.guicyfig.GuicyFigModule;
 
 
-public abstract class IndexModule extends AbstractModule {
+public class IndexModule extends AbstractModule {
 
     @Override
     protected void configure() {
@@ -50,14 +51,10 @@ public abstract class IndexModule extends AbstractModule {
         bind(IndexBufferProducer.class).to(EsIndexBufferProducerImpl.class);
         bind(IndexBufferConsumer.class).to(EsIndexBufferConsumerImpl.class).asEagerSingleton();
 
-        wireBufferQueue();
+
+        bind( BufferQueue.class).toProvider( QueueProvider.class );
     }
 
-
-    /**
-     * Write the <class>BufferQueue</class> for this implementation
-     */
-    public abstract void wireBufferQueue();
 
 
 }
