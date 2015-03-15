@@ -113,6 +113,9 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     private final Timer addWriteAliasTimer;
     private final Timer addReadAliasTimer;
     private final Timer searchTimer;
+    private final Timer allVersionsTimerFuture;
+    private final Timer deletePreviousTimerFuture;
+    private final Meter errorMeter;
 
     /**
      * We purposefully make this per instance. Some indexes may work, while others may fail
@@ -170,23 +173,33 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
         this.failureMonitor = new FailureMonitorImpl( config, provider );
         this.aliasCache = indexCache;
         this.addTimer = metricsFactory
-            .getTimer( EsEntityIndexImpl.class, "es.entity.index.add.index.timer" );
+            .getTimer( EsEntityIndexImpl.class, "add.timer" );
         this.removeAliasTimer = metricsFactory
-            .getTimer( EsEntityIndexImpl.class, "es.entity.index.remove.index.alias.timer" );
+            .getTimer( EsEntityIndexImpl.class, "remove.alias.timer" );
         this.addReadAliasTimer = metricsFactory
-            .getTimer( EsEntityIndexImpl.class, "es.entity.index.add.read.alias.timer" );
+            .getTimer( EsEntityIndexImpl.class, "add.read.alias.timer" );
         this.addWriteAliasTimer = metricsFactory
-            .getTimer( EsEntityIndexImpl.class, "es.entity.index.add.write.alias.timer" );
+            .getTimer( EsEntityIndexImpl.class, "add.write.alias.timer" );
         this.mappingTimer = metricsFactory
-            .getTimer( EsEntityIndexImpl.class, "es.entity.index.create.mapping.timer" );
+            .getTimer( EsEntityIndexImpl.class, "create.mapping.timer" );
         this.refreshTimer = metricsFactory
-            .getTimer( EsEntityIndexImpl.class, "es.entity.index.refresh.timer" );
+            .getTimer( EsEntityIndexImpl.class, "refresh.timer" );
         this.searchTimer =metricsFactory
-            .getTimer( EsEntityIndexImpl.class, "es.entity.index.search.timer" );
+            .getTimer( EsEntityIndexImpl.class, "search.timer" );
         this.cursorTimer = metricsFactory
-            .getTimer( EsEntityIndexImpl.class, "es.entity.index.search.cursor.timer" );
+            .getTimer( EsEntityIndexImpl.class, "search.cursor.timer" );
         this.getVersionsTimer =metricsFactory
-            .getTimer( EsEntityIndexImpl.class, "es.entity.index.get.versions.timer" );
+            .getTimer( EsEntityIndexImpl.class, "get.versions.timer" );
+        this.allVersionsTimer =  metricsFactory
+            .getTimer( EsEntityIndexImpl.class, "delete.all.versions.timer" );
+        this.deletePreviousTimer = metricsFactory
+            .getTimer( EsEntityIndexImpl.class, "delete.previous.versions.timer" );
+        this.allVersionsTimerFuture =  metricsFactory
+            .getTimer( EsEntityIndexImpl.class, "delete.all.versions.timer.future" );
+        this.deletePreviousTimerFuture = metricsFactory
+            .getTimer( EsEntityIndexImpl.class, "delete.previous.versions.timer.future" );
+
+        this.errorMeter = metricsFactory.getMeter(EsEntityIndexImpl.class,"errors");
 
 
         final MapScope mapScope = new MapScopeImpl( appScope.getApplication(), "cursorcache" );

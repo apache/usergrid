@@ -22,6 +22,7 @@ import java.util.Collection;
 
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import com.netflix.astyanax.model.ConsistencyLevel;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.core.migration.schema.Migration;
 import org.apache.usergrid.persistence.model.field.Field;
@@ -34,7 +35,7 @@ public interface UniqueValueSerializationStrategy extends Migration {
 
     /**
      * Write the specified UniqueValue to Cassandra with optional timeToLive in milliseconds.
-     * 
+     *
      * @param uniqueValue Object to be written
      * @return MutatationBatch that encapsulates operation, caller may or may not execute.
      */
@@ -42,16 +43,16 @@ public interface UniqueValueSerializationStrategy extends Migration {
 
     /**
      * Write the specified UniqueValue to Cassandra with optional timeToLive in milliseconds.
-     * 
+     *
      * @param uniqueValue Object to be written
-     * @param timeToLive How long object should live in seconds 
+     * @param timeToLive How long object should live in seconds
      * @return MutatationBatch that encapsulates operation, caller may or may not execute.
      */
     public MutationBatch write( CollectionScope scope,  UniqueValue uniqueValue, Integer timeToLive );
 
     /**
      * Load UniqueValue that matches field from collection or null if that value does not exist.
-     * 
+     *
      * @param colScope Collection scope in which to look for field name/value
      * @param fields Field name/value to search for
      * @return UniqueValueSet containing fields from the collection that exist in cassandra
@@ -60,8 +61,18 @@ public interface UniqueValueSerializationStrategy extends Migration {
     public UniqueValueSet load( CollectionScope colScope, Collection<Field> fields ) throws ConnectionException;
 
     /**
+     * Load UniqueValue that matches field from collection or null if that value does not exist.
+     *
+     * @param colScope Collection scope in which to look for field name/value
+     * @param consistencyLevel Consistency level of query
+     * @param fields Field name/value to search for
+     * @return UniqueValueSet containing fields from the collection that exist in cassandra
+     * @throws ConnectionException on error connecting to Cassandra
+     */
+    public UniqueValueSet load( CollectionScope colScope, ConsistencyLevel consistencyLevel, Collection<Field> fields ) throws ConnectionException;
+    /**
      * Delete the specified Unique Value from Cassandra.
-     * 
+     *
      * @param uniqueValue Object to be deleted.
      * @return MutatationBatch that encapsulates operation, caller may or may not execute.
      */
