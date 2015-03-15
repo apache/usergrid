@@ -273,7 +273,7 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
             public void call( final BulkRequestBuilder bulkRequestBuilder ) {
                 sendRequest( bulkRequestBuilder );
             }
-        } ).toBlocking().last();
+        } ).toBlocking().lastOrDefault(null);
 
         //call back all futures
         Observable.from(operationMessages)

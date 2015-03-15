@@ -101,6 +101,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
     public EntityIndexBatch index( final IndexScope indexScope, final Entity entity ) {
         IndexValidationUtils.validateIndexScope( indexScope );
         ValidationUtils.verifyEntityWrite( entity );
+        ValidationUtils.verifyVersion( entity.getVersion() );
 
         final String context = createContextName(indexScope);
 
@@ -161,7 +162,6 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         }
 
 
-        log.debug( "De-indexing type {} with documentId '{}'" , entityType, indexId);
         String[] indexes = entityIndex.getIndexes(AliasedEntityIndex.AliasType.Read);
         //get the default index if no alias exists yet
         if(indexes == null ||indexes.length == 0){

@@ -113,9 +113,6 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     private final Timer addWriteAliasTimer;
     private final Timer addReadAliasTimer;
     private final Timer searchTimer;
-    private final Timer allVersionsTimerFuture;
-    private final Timer deletePreviousTimerFuture;
-    private final Meter errorMeter;
 
     /**
      * We purposefully make this per instance. Some indexes may work, while others may fail
@@ -190,16 +187,6 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
             .getTimer( EsEntityIndexImpl.class, "search.cursor.timer" );
         this.getVersionsTimer =metricsFactory
             .getTimer( EsEntityIndexImpl.class, "get.versions.timer" );
-        this.allVersionsTimer =  metricsFactory
-            .getTimer( EsEntityIndexImpl.class, "delete.all.versions.timer" );
-        this.deletePreviousTimer = metricsFactory
-            .getTimer( EsEntityIndexImpl.class, "delete.previous.versions.timer" );
-        this.allVersionsTimerFuture =  metricsFactory
-            .getTimer( EsEntityIndexImpl.class, "delete.all.versions.timer.future" );
-        this.deletePreviousTimerFuture = metricsFactory
-            .getTimer( EsEntityIndexImpl.class, "delete.previous.versions.timer.future" );
-
-        this.errorMeter = metricsFactory.getMeter(EsEntityIndexImpl.class,"errors");
 
 
         final MapScope mapScope = new MapScopeImpl( appScope.getApplication(), "cursorcache" );

@@ -23,9 +23,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import com.codahale.metrics.Meter;
-import com.codahale.metrics.Timer;
-import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +31,7 @@ import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntitySet;
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.VersionSet;
+import org.apache.usergrid.persistence.collection.guice.CollectionTaskExecutor;
 import org.apache.usergrid.persistence.collection.guice.Write;
 import org.apache.usergrid.persistence.collection.guice.WriteUpdate;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
@@ -47,11 +45,13 @@ import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteCommit;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteOptimisticVerify;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteStart;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteUniqueVerify;
-import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
 import org.apache.usergrid.persistence.core.guice.ProxyImpl;
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
+import org.apache.usergrid.persistence.core.task.Task;
+import org.apache.usergrid.persistence.core.task.TaskExecutor;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -59,6 +59,8 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.Timer;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
@@ -68,12 +70,6 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.model.ColumnFamily;
 import com.netflix.astyanax.model.CqlResult;
 import com.netflix.astyanax.serializers.StringSerializer;
-import org.apache.usergrid.persistence.collection.EntityDeletedFactory;
-import org.apache.usergrid.persistence.collection.EntityVersionCleanupFactory;
-import org.apache.usergrid.persistence.collection.EntityVersionCreatedFactory;
-import org.apache.usergrid.persistence.collection.guice.CollectionTaskExecutor;
-import org.apache.usergrid.persistence.core.task.Task;
-import org.apache.usergrid.persistence.core.task.TaskExecutor;
 
 import rx.Notification;
 import rx.Observable;
@@ -112,9 +108,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     private final MvccEntitySerializationStrategy entitySerializationStrategy;
     private final UniqueValueSerializationStrategy uniqueValueSerializationStrategy;
 
-    private final EntityVersionCleanupFactory entityVersionCleanupFactory;
-    private final EntityVersionCreatedFactory entityVersionCreatedFactory;
-    private final EntityDeletedFactory entityDeletedFactory;
+    private final EntityVersionTaskFactory entityVersionTaskFactory;
     private final TaskExecutor taskExecutor;
 
     private final Keyspace keyspace;
@@ -144,9 +138,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         final UniqueValueSerializationStrategy     uniqueValueSerializationStrategy,
         final MvccLogEntrySerializationStrategy    mvccLogEntrySerializationStrategy,
         final Keyspace                             keyspace,
-        final EntityVersionCleanupFactory          entityVersionCleanupFactory,
-        final EntityVersionCreatedFactory          entityVersionCreatedFactory,
-        final EntityDeletedFactory                 entityDeletedFactory,
+        final EntityVersionTaskFactory entityVersionTaskFactory,
         @CollectionTaskExecutor final TaskExecutor taskExecutor,
         @Assisted final CollectionScope            collectionScope,
         final MetricsFactory metricsFactory
@@ -170,9 +162,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
         this.keyspace = keyspace;
 
-        this.entityVersionCleanupFactory = entityVersionCleanupFactory;
-        this.entityVersionCreatedFactory = entityVersionCreatedFactory;
-        this.entityDeletedFactory = entityDeletedFactory;
+        this.entityVersionTaskFactory = entityVersionTaskFactory;
         this.taskExecutor = taskExecutor;
 
         this.collectionScope = collectionScope;
@@ -216,8 +206,9 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
             @Override
             public void call(final Entity entity) {
                 //TODO fire the created task first then the entityVersioncleanup
-                taskExecutor.submit(entityVersionCreatedFactory.getTask(collectionScope,entity));
-                taskExecutor.submit(entityVersionCleanupFactory.getTask(collectionScope, entityId,entity.getVersion()));
+                taskExecutor.submit( entityVersionTaskFactory.getCreatedTask( collectionScope, entity ));
+                taskExecutor.submit( entityVersionTaskFactory.getCleanupTask( collectionScope, entityId,
+                    entity.getVersion(), false ));
                 //post-processing to come later. leave it empty for now.
             }
         }).doOnError(rollback)
@@ -252,8 +243,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                      @Override
                      public Id call(final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent) {
                          MvccEntity entity = mvccEntityCollectionIoEvent.getEvent();
-                         Task<Void> task = entityDeletedFactory
-                             .getTask(collectionScope, entity.getId(), entity.getVersion());
+                         Task<Void> task = entityVersionTaskFactory
+                             .getDeleteTask( collectionScope, entity.getId(), entity.getVersion() );
                          taskExecutor.submit(task);
                          return entity.getId();
                      }
@@ -400,8 +391,9 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                 logger.debug("sending entity to the queue");
 
                 //we an update, signal the fix
-                taskExecutor.submit(entityVersionCreatedFactory.getTask(collectionScope, entity));
+                taskExecutor.submit( entityVersionTaskFactory.getCreatedTask( collectionScope, entity ));
 
+                taskExecutor.submit( entityVersionTaskFactory.getCleanupTask( collectionScope, entity.getId(), entity.getVersion(), false) );
                 //TODO T.N Change this to fire a task
                 //                Observable.from( new CollectionIoEvent<Id>(collectionScope,
                 // entityId ) ).map( load ).subscribeOn( Schedulers.io() ).subscribe();
