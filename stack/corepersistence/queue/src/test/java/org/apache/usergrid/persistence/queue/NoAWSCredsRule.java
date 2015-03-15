@@ -20,6 +20,8 @@
 package org.apache.usergrid.persistence.queue;
 
 
+import org.junit.Assume;
+import org.junit.internal.runners.model.MultipleFailureException;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -49,6 +51,9 @@ public class NoAWSCredsRule implements TestRule {
                         throw t;
                     }
 
+                    //do this so our test gets marked as ignored.  Not pretty, but it works
+                    Assume.assumeTrue( false );
+
 
                 }
             }
@@ -69,6 +74,18 @@ public class NoAWSCredsRule implements TestRule {
             }
         }
 
+        /**
+         * Handle the multiple failure junit trace
+         */
+        if( t instanceof MultipleFailureException ){
+            for(final Throwable failure : ((MultipleFailureException)t).getFailures()){
+                final boolean isMissingCreds = isMissingCredsException( failure );
+
+                if(isMissingCreds){
+                    return true;
+                }
+            }
+        }
         final Throwable cause = t.getCause();
 
         if ( cause == null ) {

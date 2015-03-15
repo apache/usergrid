@@ -1,8 +1,11 @@
 package org.apache.usergrid.persistence.collection.util;
 
 
-import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import org.apache.usergrid.persistence.model.field.Field;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
 
@@ -16,9 +19,9 @@ import org.apache.usergrid.persistence.model.entity.Id;
 public class EntityUtils {
 
 
-    private static final Field VERSION = FieldUtils.getField( Entity.class, "version", true );
+    private static final java.lang.reflect.Field VERSION = FieldUtils.getField( Entity.class, "version", true );
 
-    private static final Field ID = FieldUtils.getField( Entity.class, "id", true );
+    private static final java.lang.reflect.Field ID = FieldUtils.getField( Entity.class, "id", true );
 
 
     /**
@@ -45,5 +48,24 @@ public class EntityUtils {
         catch ( IllegalAccessException e ) {
             throw new RuntimeException( "Unable to set the field " + ID + " into the entity", e );
         }
+    }
+
+
+    /**
+     * Get the unique fields for an entity
+     * @param entity
+     * @return
+     */
+    public static List<Field> getUniqueFields( final Entity entity ){
+
+        final List<Field> uniqueFields = new ArrayList<>(entity.getFields().size());
+
+        for(final Field field: entity.getFields()){
+            if(field.isUnique()){
+                uniqueFields.add( field);
+            }
+        }
+
+        return uniqueFields;
     }
 }

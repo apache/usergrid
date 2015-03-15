@@ -31,6 +31,8 @@ import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixThreadPoolProperties;
 import com.netflix.hystrix.strategy.concurrency.HystrixRequestVariableLifecycle;
+
+import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.slf4j.Logger;
@@ -108,20 +110,21 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
         //
         // Construct all the functions for verifying we're unique
         //
-        for ( final Field field :  entity.getFields() ) {
+
+
+        for ( final Field field : EntityUtils.getUniqueFields(entity)) {
 
             // if it's unique, create a function to validate it and add it to the list of
             // concurrent validations
-            if ( field.isUnique() ) {
-                // use write-first then read strategy
-                final UniqueValue written = new UniqueValueImpl( field, mvccEntity.getId(), mvccEntity.getVersion() );
 
-                // use TTL in case something goes wrong before entity is finally committed
-                final MutationBatch mb = uniqueValueStrat.write( scope, written, serializationFig.getTimeout() );
+            // use write-first then read strategy
+            final UniqueValue written = new UniqueValueImpl( field, mvccEntity.getId(), mvccEntity.getVersion() );
 
-                batch.mergeShallow( mb );
-                uniqueFields.add(field);
-            }
+            // use TTL in case something goes wrong before entity is finally committed
+            final MutationBatch mb = uniqueValueStrat.write( scope, written, serializationFig.getTimeout() );
+
+            batch.mergeShallow( mb );
+            uniqueFields.add(field);
         }
 
         //short circuit nothing to do
@@ -175,12 +178,11 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
         }
 
         public Map<String, Field> executeStrategy(ConsistencyLevel consistencyLevel){
-            Collection<Field> entityFields = entity.getFields();
             //allocate our max size, worst case
             //now get the set of fields back
             final UniqueValueSet uniqueValues;
             try {
-                uniqueValues = uniqueValueSerializationStrategy.load( scope,consistencyLevel, entityFields );
+                uniqueValues = uniqueValueSerializationStrategy.load( scope,consistencyLevel, uniqueFields );
             }
             catch ( ConnectionException e ) {
                 throw new RuntimeException( "Unable to read from cassandra", e );

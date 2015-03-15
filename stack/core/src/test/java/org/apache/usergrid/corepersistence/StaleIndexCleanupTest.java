@@ -392,9 +392,10 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         // wait for indexes to be cleared for the deleted entities
         count = 0;
         do {
+            queryCollectionEm("dogs", "select *");
             Thread.sleep(100);
             crs = queryCollectionCp("dogs", "dog", "select *");
-        } while ( crs.size() == numEntities && count++ < 15 );
+        } while ( crs.size() != numEntities && count++ < 15 );
 
         Assert.assertEquals("Expect candidates without earlier stale entities", crs.size(), numEntities);
     }

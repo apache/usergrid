@@ -28,6 +28,7 @@ import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.impl.UniqueValueImpl;
+import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.slf4j.Logger;
@@ -158,10 +159,8 @@ public class EntityVersionCleanupTask implements Task<Void> {
                             final Entity entity = mvccEntity.getEntity().get();
 
                             //remove all unique fields from the index
-                            for ( final Field field : entity.getFields() ) {
-                                if ( !field.isUnique() ) {
-                                    continue;
-                                }
+                            for ( final Field field : EntityUtils.getUniqueFields(entity )) {
+
                                 final UniqueValue unique = new UniqueValueImpl( field, entityId, entityVersion );
                                 final MutationBatch deleteMutation =
                                     uniqueValueSerializationStrategy.delete( scope, unique );

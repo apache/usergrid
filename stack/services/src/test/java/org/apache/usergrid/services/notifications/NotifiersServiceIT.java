@@ -17,12 +17,15 @@
 package org.apache.usergrid.services.notifications;
 
 import org.apache.commons.io.IOUtils;
+
+import org.apache.usergrid.persistence.queue.NoAWSCredsRule;
 import org.apache.usergrid.services.notifications.apns.MockSuccessfulProviderAdapter;
 import org.apache.usergrid.persistence.entities.Notifier;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.apache.usergrid.services.notifications.ConnectionException;
 import org.apache.usergrid.services.notifications.NotificationsService;
@@ -47,6 +50,9 @@ public class NotifiersServiceIT extends AbstractServiceIT {
 
 
     private QueueListener listener;
+
+    @Rule
+    public NoAWSCredsRule noCredsRule = new NoAWSCredsRule();
 
 
     @Before
