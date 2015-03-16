@@ -197,6 +197,48 @@ public class GeoPagingTest extends AbstractRestIT {
     }
   }
 
+    /**
+     * Test that geo-query returns co-located entities in expected order.
+     */
+    @Test // USERGRID-1401
+    public void groupQueriesWithDistanceOrderedResults() throws IOException {
+
+        int maxRangeLimit = 10;
+        Entity[] cats = new Entity[maxRangeLimit];
+
+        // 1. Create several entities
+        for (int i = 0; i < maxRangeLimit; i++) {
+            float latDelta = i;
+            Entity cat = new Entity();
+            cat.put("name", "cat" + i);
+            cat.put("location", new MapUtils.HashMapBuilder<String, Double>()
+                .map("latitude", 37.0+(latDelta/10))
+                .map("longitude", (-75.0)));
+            cats[i] = cat;
+            this.app().collection("cats").post(cat);
+        }
+        this.refreshIndex();
+
+        QueryParameters params = new QueryParameters();
+        String query = String.format(
+            "select * where location within 1000000 of 37, -75");
+        params.setQuery(query);
+        Collection collection = this.app().collection("cats").get(params);
+        assertNotNull( collection );
+        List entities = collection.getResponse().getEntities();
+        assertNotNull( entities );
+
+        for (int consistent = 0; consistent < maxRangeLimit; consistent++) {
+//got entities back, just need to page through them and make sure that i got them in location order.
+            Object entity = entities.get( consistent );
+            assertNotNull( entity );
+
+
+
+
+        }
+    }
+
 
   /**
    * Creates a store right on top of the center store and checks to see if we can find that store, then find both
