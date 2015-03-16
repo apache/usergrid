@@ -203,17 +203,16 @@ public class GeoPagingTest extends AbstractRestIT {
     @Test // USERGRID-1401
     public void groupQueriesWithDistanceOrderedResults() throws IOException {
 
-        int maxRangeLimit = 10;
-        Entity[] cats = new Entity[maxRangeLimit];
+        int maxRangeLimit = 9;
+        Entity[] cats = new Entity[maxRangeLimit+1];
 
         // 1. Create several entities
-        for (int i = 0; i < maxRangeLimit; i++) {
-            float latDelta = i;
+        for (int i = maxRangeLimit; i >= 0; i--) {
             Entity cat = new Entity();
             cat.put("name", "cat" + i);
-            cat.put("location", new MapUtils.HashMapBuilder<String, Double>()
-                .map("latitude", 37.0+(latDelta/10))
-                .map("longitude", (-75.0)));
+            cat.put( "location",
+                new MapUtils.HashMapBuilder<String, Double>().map( "latitude", 37.0 + i )
+                                                             .map( "longitude", ( -75.0 + i) ) );
             cats[i] = cat;
             this.app().collection("cats").post(cat);
         }
@@ -221,7 +220,7 @@ public class GeoPagingTest extends AbstractRestIT {
 
         QueryParameters params = new QueryParameters();
         String query = String.format(
-            "select * where location within 1000000 of 37, -75");
+            "select * where location within 1500000 of 37, -75");
         params.setQuery(query);
         Collection collection = this.app().collection("cats").get(params);
         assertNotNull( collection );
@@ -229,12 +228,12 @@ public class GeoPagingTest extends AbstractRestIT {
         assertNotNull( entities );
 
         for (int consistent = 0; consistent < maxRangeLimit; consistent++) {
-//got entities back, just need to page through them and make sure that i got them in location order.
-            Object entity = entities.get( consistent );
+            //got entities back, just need to page through them and make sure that i got them in location order.
+            Entity entity = (Entity) entities.get( consistent );
             assertNotNull( entity );
-
-
-
+            LinkedHashMap location = ( LinkedHashMap ) entity.get( "location" );
+            assertEquals( 37.0+ consistent,location.get( "latitude" ) );
+            assertEquals( -75.0+ consistent , location.get( "longitude" ) );
 
         }
     }
