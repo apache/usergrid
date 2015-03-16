@@ -20,6 +20,7 @@
 package org.apache.usergrid.setup;
 
 
+import org.apache.usergrid.persistence.core.util.AvailablePortFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +42,7 @@ public class ConcurrentProcessSingleton {
     private static final String TEMP_FILE_PATH =
         "target/surefirelocks/start_barrier-" + System.getProperty( "test.barrier.timestamp", "default" );
 
-    public static final int LOCK_PORT = Integer.parseInt( System.getProperty( "test.lock.port", "10101" ) );
+    public static final int LOCK_PORT = AvailablePortFinder.getNextAvailable();
 
     public static final boolean CLEAN_STORAGE =
         Boolean.parseBoolean( System.getProperty( "test.clean.storage", "false" ) );
