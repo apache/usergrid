@@ -99,7 +99,7 @@ public interface EntityManager {
     /**
      * Get the entity ref from the value
      *
-     * @param ownerId The owner Id of the collection
+     * @param ownerRef The owner Id of the collection
      * @param collectionName The name of the collection
      * @param aliasValue The value of the alias
      */
@@ -111,7 +111,7 @@ public interface EntityManager {
     /**
      * Get aliases from the index with the given value
      *
-     * @param ownerId The id of the collection owner
+     * @param ownerRef The id of the collection owner
      * @param collectionName The name of the collection
      * @param aliases The alias property
      */
@@ -447,7 +447,7 @@ public interface EntityManager {
      * Gets the entities of the specified type connected to the specified entity, optionally
      * matching the specified connection types and/or entity types. Returns a list of entity ids.
      *
-     * @param entityId an entity reference
+     * @param entityRef an entity reference
      * @param connectionType type of connection or null.
      * @param connectedEntityType type of entity or null.
      *
@@ -464,7 +464,7 @@ public interface EntityManager {
      * <p/>
      * e.g. "get users who have favorited this place"
      *
-     * @param entityId an entity reference
+     * @param entityRef an entity reference
      * @param connectionType type of connection or null.
      * @param connectedEntityType type of entity or null.
      *
@@ -712,4 +712,6 @@ public interface EntityManager {
      * Get health status of application's index.
      */
     public Health getIndexHealth();
+
+    public Entity getUniqueEntityFromAlias( String aliasType, String aliasValue );
 }

@@ -181,7 +181,7 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
             throws ConnectionException {
 
         Preconditions.checkNotNull( fields, "fields are required" );
-        Preconditions.checkArgument( fields.size() > 0, "More than 1 field msut be specified" );
+        Preconditions.checkArgument( fields.size() > 0, "More than 1 field must be specified" );
 
 
         final List<ScopedRowKey<CollectionPrefixedKey<Field>>> keys = new ArrayList<>( fields.size() );

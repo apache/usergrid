@@ -535,6 +535,7 @@ public class EntityManagerImpl implements EntityManager {
     /**
      * Return all UUIDs that have this unique value
      *
+     * @param ownerEntityRef The entity id that owns this entity collection
      * @param collectionName The entity collection name
      * @param propertyName The name of the unique property
      * @param propertyValue The value of the unique property
@@ -1750,7 +1751,6 @@ public class EntityManagerImpl implements EntityManager {
         batchExecute( m, CassandraService.RETRY_COUNT );
     }
 
-
     @Override
     public EntityRef getAlias( String aliasType, String alias ) throws Exception {
         return getAlias( new SimpleEntityRef(Application.ENTITY_TYPE, applicationId), aliasType, alias );
@@ -2925,5 +2925,11 @@ public class EntityManagerImpl implements EntityManager {
     @Override
     public Health getIndexHealth() {
         return Health.GREEN; // no good way to assess index status using old-school entity manager
+    }
+
+
+    @Override
+    public Entity getUniqueEntityFromAlias( final String aliasType, final String aliasValue ) {
+        throw new UnsupportedOperationException( "Not supported." );
     }
 }

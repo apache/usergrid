@@ -34,6 +34,7 @@ import java.util.TreeSet;
 import java.util.UUID;
 
 import com.codahale.metrics.Meter;
+import org.apache.usergrid.persistence.collection.FieldSet;
 import org.apache.usergrid.persistence.core.future.BetterFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -206,6 +207,7 @@ public class CpEntityManager implements EntityManager {
     private Timer entGetEntityCountersTimer;
     private Timer esIndexEntityCollectionTimer;
     private Timer entRevokeRolePermissionsTimer;
+    private Timer entGetRepairedEntityTimer;
     private Timer updateEntityTimer;
     private Meter updateEntityMeter;
 
@@ -268,6 +270,8 @@ public class CpEntityManager implements EntityManager {
             .getTimer( CpEntityManager.class, "cp.entity.es.index.entity.to.collection.timer" );
         this.entRevokeRolePermissionsTimer =
             this.metricsFactory.getTimer( CpEntityManager.class, "cp.entity.revoke.role.permissions.timer");
+        this.entGetRepairedEntityTimer = this.metricsFactory
+            .getTimer( CpEntityManager.class, "get.repaired.entity.timer" );
 
         this.updateEntityMeter =this.metricsFactory.getMeter(CpEntityManager.class,"cp.entity.update.meter");
         this.updateEntityTimer =this.metricsFactory.getTimer(CpEntityManager.class, "cp.entity.update.timer");
@@ -407,6 +411,17 @@ public class CpEntityManager implements EntityManager {
         return entity;
     }
 
+    public Entity convertMvccEntityToEntity( org.apache.usergrid.persistence.model.entity.Entity entity){
+        if(entity == null) {
+            return null;
+        }
+        Class clazz = Schema.getDefaultSchema().getEntityClass( entity.getId().getType() );
+
+        Entity oldFormatEntity = EntityFactory.newEntity(entity.getId().getUuid(),entity.getId().getType(),clazz);
+        oldFormatEntity.setProperties( CpEntityMapUtils.toMap( entity ) );
+
+        return oldFormatEntity;
+    }
 
     @Override
     public Entity get( EntityRef entityRef ) throws Exception {
@@ -571,7 +586,6 @@ public class CpEntityManager implements EntityManager {
 
         CollectionScope collectionScope = getCollectionScopeNameFromEntityType(appId, type );
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
-
         Id entityId = new SimpleId( entity.getUuid(), entity.getType() );
 
         if ( logger.isDebugEnabled() ) {
@@ -804,6 +818,38 @@ public class CpEntityManager implements EntityManager {
         create( entityType, null );
     }
 
+    @Override
+    public Entity getUniqueEntityFromAlias( String collectionType, String aliasType ){
+        String collName = Schema.defaultCollectionName( collectionType );
+
+        CollectionScope collectionScope = getCollectionScopeNameFromEntityType(
+            getApplicationScope().getApplication(), collName);
+
+        String propertyName = Schema.getDefaultSchema().aliasProperty( collName );
+
+        Timer.Context repairedEntityGet = entGetRepairedEntityTimer.time();
+
+        final EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
+        //TODO: can't we just sub in the getEntityRepair method here so for every read of a uniqueEntityField we can verify it is correct?
+
+        StringField uniqueLookupRepairField =  new StringField( propertyName, aliasType.toString());
+
+        Observable<FieldSet> fieldSetObservable = ecm.getEntitiesFromFields(
+            Arrays.<Field>asList( uniqueLookupRepairField ) );
+
+        if(fieldSetObservable == null){
+            logger.debug( "Couldn't return the observable based on unique entities." );
+            return null;
+        }
+        FieldSet fieldSet = fieldSetObservable.toBlocking().last();
+
+        repairedEntityGet.stop();
+        if(fieldSet.isEmpty()) {
+            return null;
+        }
+
+        return convertMvccEntityToEntity( fieldSet.getEntity( uniqueLookupRepairField ).getEntity().get() );
+    }
 
     @Override
     public EntityRef getAlias( String aliasType, String alias ) throws Exception {
@@ -2256,7 +2302,6 @@ public class CpEntityManager implements EntityManager {
         //convert to a string, that's what we store
         final Id results = ecm.getIdField( new StringField(
                 propertyName, propertyValue.toString() ) ).toBlocking() .lastOrDefault( null );
-
         return results;
     }
 

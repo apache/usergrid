@@ -23,6 +23,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
+import org.apache.usergrid.persistence.core.guice.ProxyImpl;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -48,6 +52,7 @@ import org.apache.usergrid.persistence.model.field.StringField;
 
 import com.fasterxml.uuid.UUIDComparator;
 import com.google.inject.Inject;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import rx.Observable;
 
@@ -73,6 +78,14 @@ public class EntityCollectionManagerIT {
 
     @Inject
     private SerializationFig serializationFig;
+
+
+    @Inject
+    private UniqueValueSerializationStrategy uniqueValueSerializationStrategy;
+
+    @Inject
+    @ProxyImpl
+    private MvccEntitySerializationStrategy entitySerializationStrategy;
 
 
     @Test
@@ -411,7 +424,7 @@ public class EntityCollectionManagerIT {
     @Test
     public void updateVersioning() {
 
-        // create entity 
+        // create entity
         Entity origEntity = new Entity( new SimpleId( "testUpdate" ) );
         origEntity.setField( new StringField( "testField", "value" ) );
 
@@ -420,7 +433,7 @@ public class EntityCollectionManagerIT {
         EntityCollectionManager manager = factory.createCollectionManager( context );
         Entity returned = manager.write( origEntity ).toBlocking().lastOrDefault( null );
 
-        // note its version 
+        // note its version
         UUID oldVersion = returned.getVersion();
 
         // partial update entity but with new entity that has version = null
@@ -742,5 +755,60 @@ public class EntityCollectionManagerIT {
 
         //override our default
         SetConfigTestBypass.setValueByPass( serializationFig, "getMaxEntitySize", currentMaxSize + "" );
+    }
+
+    @Test
+    public void invalidNameRepair() throws ConnectionException {
+
+        //write an entity with a unique field
+        CollectionScope context =
+                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" );
+
+        Entity newEntity = new Entity( new SimpleId( "test" ) );
+
+        //if we add a second field we get a second entity that is the exact same. Is this expected?
+        final IntegerField expectedInteger =  new IntegerField( "count", 5, true );
+       // final StringField expectedString = new StringField( "yes", "fred", true );
+
+        newEntity.setField( expectedInteger );
+       // newEntity.setField( expectedString );
+
+        EntityCollectionManager manager = factory.createCollectionManager( context );
+
+        Observable<Entity> observable = manager.write( newEntity );
+
+        Entity createReturned = observable.toBlocking().lastOrDefault( null );
+
+        assertNotNull( "Need entity to be created before proceeding", createReturned );
+        assertNotNull( "Id was assigned", createReturned.getId() );
+        assertNotNull( "Version was assigned", createReturned.getVersion() );
+
+        FieldSet
+            fieldResults = manager.getEntitiesFromFields( Arrays.<Field>asList( expectedInteger ) ).toBlocking().last();
+
+        assertEquals(1,fieldResults.size());
+
+
+        //verify the entity is correct.
+        assertEquals( "Same value", createReturned, fieldResults.getEntity( expectedInteger ).getEntity().get()); //loadReturned );
+
+        //use the entity serializationStrategy to remove the entity data.
+
+        //do a mark as one test, and a delete as another
+        entitySerializationStrategy.delete( context,createReturned.getId(),createReturned.getVersion() ).execute();
+
+        //try to load via the unique field, should have triggered repair
+        final FieldSet
+            results = manager.getEntitiesFromFields( Arrays.<Field>asList( expectedInteger ) ).toBlocking().last();
+
+
+        //verify no entity returned
+        assertTrue( results.isEmpty() );
+
+        //user the unique serialization to verify it's been deleted from cassandra
+
+        UniqueValueSet uniqueValues = uniqueValueSerializationStrategy.load( context, createReturned.getFields() );
+        assertFalse( uniqueValues.iterator().hasNext() );
+
     }
 }
