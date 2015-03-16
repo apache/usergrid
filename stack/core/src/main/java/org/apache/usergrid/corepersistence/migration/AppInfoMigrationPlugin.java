@@ -19,25 +19,40 @@
 package org.apache.usergrid.corepersistence.migration;
 
 import com.google.inject.Inject;
+import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.*;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerialization;
 import org.apache.usergrid.persistence.core.migration.data.MigrationPlugin;
 import org.apache.usergrid.persistence.core.migration.data.PluginPhase;
 import org.apache.usergrid.persistence.core.migration.data.ProgressObserver;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.entities.Group;
+import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.graph.GraphManager;
+import org.apache.usergrid.persistence.graph.GraphManagerFactory;
+import org.apache.usergrid.persistence.graph.SearchByEdgeType;
+import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.model.entity.*;
 import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rx.Observable;
+import rx.functions.Func1;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.apache.usergrid.persistence.Schema.PROPERTY_APPLICATION_ID;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
+import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getApplicationScope;
+import static org.apache.usergrid.persistence.Schema.*;
 
 
 /**
@@ -52,15 +67,49 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
     public static String PLUGIN_NAME = "appinfo-migration";
 
     @Inject
-    protected MigrationInfoSerialization migrationInfoSerialization;
+    final private MigrationInfoSerialization migrationInfoSerialization;
 
     @Inject
-    protected EntityManagerFactory emf; // protected for test purposes only
+    final private EntityManagerFactory emf;
+
+    @Inject
+    final private EntityCollectionManagerFactory entityCollectionManagerFactory;
+
+    @Inject
+    final private GraphManagerFactory graphManagerFactory;
+
+
+    @Inject
+    public AppInfoMigrationPlugin(
+        EntityManagerFactory emf,
+        MigrationInfoSerialization migrationInfoSerialization,
+        EntityCollectionManagerFactory entityCollectionManagerFactory,
+        GraphManagerFactory graphManagerFactory ) {
+
+        this.emf = emf;
+        this.migrationInfoSerialization = migrationInfoSerialization;
+        this.entityCollectionManagerFactory = entityCollectionManagerFactory;
+        this.graphManagerFactory = graphManagerFactory;
+    }
+
 
     @Override
     public String getName() {
         return PLUGIN_NAME;
     }
+
+
+    @Override
+    public int getMaxVersion() {
+        return 1; // standalone plugin, happens once
+    }
+
+
+    @Override
+    public PluginPhase getPhase() {
+        return PluginPhase.MIGRATE;
+    }
+
 
     @Override
     public void run(ProgressObserver observer) {
@@ -74,21 +123,14 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
 
         observer.start();
 
-        // Search the old and now deprecated System App for appinfo entities
+        // Get appinfos from the Graph, we don't expect many so use iterator
 
-        EntityManager systemAppEm = emf.getEntityManager( CpNamingUtils.SYSTEM_APP_ID );
-        Query q = Query.fromQL("select *");
-        Results results;
-        try {
-            results = systemAppEm.searchCollection(systemAppEm.getApplicationRef(), "appinfos", q);
-        } catch (Exception e) {
-            logger.error("Error reading old appinfos collection, not migrating", e);
-            return;
-        }
+        final Iterator<org.apache.usergrid.persistence.model.entity.Entity> iterator =
+            getOldAppInfos().toBlocking().getIterator();
 
-        if ( !results.isEmpty() ) {
+        if ( iterator.hasNext() ) {
 
-            // we found appinfos, let's migrate them to application_infos in the Management App
+            // we found appinfos, now migrate them to application_infos in the Management App
 
             final EntityManager em = emf.getEntityManager( emf.getManagementAppId());
 
@@ -96,48 +138,13 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
             try {
                 logger.info("Migrating old appinfos");
 
-                for (Entity oldAppInfo : results.getEntities()) {
+                while ( iterator.hasNext() ) {
 
-                    final String appName = currentAppName = oldAppInfo.getName();
-                    final String orgName = appName.split("/")[0];
+                    Map oldAppInfo = CpEntityMapUtils.toMap( iterator.next() );
+                    currentAppName = (String)oldAppInfo.get( PROPERTY_NAME );
 
-                    UUID applicationId;
-
-                    Object uuidObject = oldAppInfo.getProperty("applicationUuid");
-                    if (uuidObject instanceof UUID) {
-                        applicationId = (UUID) uuidObject;
-                    } else {
-                        applicationId = UUIDUtils.tryExtractUUID(uuidObject.toString());
-                    }
-
-                    // create and connect new APPLICATION_INFO oldAppInfo to Organization
-
-                    final UUID appId = applicationId;
-
-                    Entity appInfo = getApplicationInfo( emf, appId );
-                    if ( appInfo == null ) {
-                        Map<String, Object> appInfoMap = new HashMap<String, Object>() {{
-                            put(PROPERTY_NAME, appName);
-                            put(PROPERTY_APPLICATION_ID, appId);
-                        }};
-                        appInfo = em.create(appId, CpNamingUtils.APPLICATION_INFO, appInfoMap);
-                        observer.update( getMaxVersion(), "Created application_info for " + appName);
-
-                    } else {
-                        appInfo.setProperty(PROPERTY_APPLICATION_ID, appId);
-                        em.update(appInfo);
-                        observer.update( getMaxVersion(), "Updated existing application_info for " + appName);
-                    }
-
-                    // create org->app connections, but not for apps in dummy "usergrid" internal organization
-
-                    if ( !orgName.equals("usergrid") ) {
-                        EntityRef orgRef = em.getAlias(Group.ENTITY_TYPE, appName.split("/")[0]);
-                        em.createConnection(orgRef, "owns", appInfo);
-                    }
+                    migragrateOneAppInfo(em, oldAppInfo, observer);
                 }
-
-                em.refreshIndex();
 
                 // note that the old appinfos are not deleted
 
@@ -160,25 +167,177 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
 
     }
 
-    private Entity getApplicationInfo( EntityManagerFactory emf, UUID appId ) throws Exception {
 
-        UUID mgmtAppId = emf.getManagementAppId();
-        EntityManager rootEm = emf.getEntityManager( mgmtAppId );
+    private void migragrateOneAppInfo(
+        EntityManager em, Map oldAppInfo, ProgressObserver observer) throws Exception {
 
-        final Results applicationInfoResults = rootEm.searchCollection(
-            new SimpleEntityRef("application", mgmtAppId), "application_infos",
-            Query.fromQL("select * where applicationId=" + appId.toString()));
+        final String name = (String)oldAppInfo.get( PROPERTY_NAME );
+        final String orgName = name.split("/")[0];
+        final String appName = name.split("/")[1];
 
-        return applicationInfoResults.getEntity();
+        UUID applicationId;
+
+        Object uuidObject = oldAppInfo.get("applicationUuid");
+        if (uuidObject instanceof UUID) {
+            applicationId = (UUID) uuidObject;
+        } else {
+            applicationId = UUIDUtils.tryExtractUUID(uuidObject.toString());
+        }
+
+        // create and connect new APPLICATION_INFO oldAppInfo to Organization
+
+        final UUID appId = applicationId;
+
+        Entity appInfo = getApplicationInfo( emf, appId );
+        if ( appInfo == null ) {
+            Map<String, Object> appInfoMap = new HashMap<String, Object>() {{
+                put(PROPERTY_NAME, name);
+                put(PROPERTY_APPLICATION_ID, appId);
+            }};
+            appInfo = em.create(appId, CpNamingUtils.APPLICATION_INFO, appInfoMap);
+            observer.update( getMaxVersion(), "Created application_info for " + appName);
+
+        } else {
+            appInfo.setProperty(PROPERTY_APPLICATION_ID, appId);
+            em.update(appInfo);
+            observer.update( getMaxVersion(), "Updated existing application_info for " + appName);
+        }
+
+        // create org->app connections, but not for apps in dummy "usergrid" internal organization
+
+        if ( !orgName.equals("usergrid") ) {
+            EntityRef orgRef = em.getAlias(Group.ENTITY_TYPE, orgName );
+            em.createConnection(orgRef, "owns", appInfo);
+        }
     }
 
-    @Override
-    public int getMaxVersion() {
-        return 1; // standalone plugin, happens once
+
+    /**
+     * TODO: Use Graph to get application_info for an specified Application.
+     */
+    private Entity getApplicationInfo( final EntityManagerFactory emf, final UUID appId ) throws Exception {
+
+        final ApplicationScope appScope = getApplicationScope( emf.getManagementAppId() );
+
+        final CollectionScope appInfoCollectionScope =
+            new CollectionScopeImpl( appScope.getApplication(), appScope.getApplication(),
+                CpNamingUtils.getCollectionScopeNameFromCollectionName( CpNamingUtils.APPLICATION_INFOS ));
+
+        final EntityCollectionManager collectionManager =
+            entityCollectionManagerFactory.createCollectionManager( appInfoCollectionScope );
+
+        final GraphManager gm = graphManagerFactory.createEdgeManager(appScope);
+
+        String edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( CpNamingUtils.APPLICATION_INFOS );
+
+        Id rootAppId = appScope.getApplication();
+
+        final SimpleSearchByEdgeType simpleSearchByEdgeType =  new SimpleSearchByEdgeType(
+            rootAppId, edgeType, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING, null);
+
+        // TODO: is there a better way?
+
+        Observable<org.apache.usergrid.persistence.model.entity.Entity> entityObs =
+            gm.loadEdgesFromSource( simpleSearchByEdgeType )
+                .flatMap(new Func1<Edge, Observable<org.apache.usergrid.persistence.model.entity.Entity>>() {
+
+                    @Override
+                    public Observable<org.apache.usergrid.persistence.model.entity.Entity> call(final Edge edge) {
+
+                        final Id appInfoId = edge.getTargetNode();
+
+                        return collectionManager.load(appInfoId)
+                            .filter(new Func1<org.apache.usergrid.persistence.model.entity.Entity, Boolean>() {
+                                @Override
+                                public Boolean call(final org.apache.usergrid.persistence.model.entity.Entity entity) {
+                                    if (entity == null) {
+                                        logger.warn("Encountered a null application info for id {}", appInfoId);
+                                        return false;
+                                    }
+                                    if ( entity.getId().getUuid().equals( appId )) {
+                                        return true;
+                                    }
+                                    return false;
+                                }
+                            });
+                    }
+                });
+
+        // don't expect many applications, so we block
+
+        org.apache.usergrid.persistence.model.entity.Entity applicationInfo =
+            entityObs.toBlocking().lastOrDefault(null);
+
+        if ( applicationInfo == null ) {
+            return null;
+        }
+
+        Class clazz = Schema.getDefaultSchema().getEntityClass(applicationInfo.getId().getType());
+
+        Entity entity = EntityFactory.newEntity(
+            applicationInfo.getId().getUuid(), applicationInfo.getId().getType(), clazz );
+
+        entity.setProperties( CpEntityMapUtils.toMap( applicationInfo ) );
+
+        return entity;
+
+//        UUID mgmtAppId = emf.getManagementAppId();
+//        EntityManager rootEm = emf.getEntityManager( mgmtAppId );
+//
+//        final Results applicationInfoResults = rootEm.searchCollection(
+//            new SimpleEntityRef("application", mgmtAppId), "application_infos",
+//            Query.fromQL("select * where applicationId=" + appId.toString()));
+//
+//        return applicationInfoResults.getEntity();
     }
 
-    @Override
-    public PluginPhase getPhase() {
-        return PluginPhase.MIGRATE;
+
+    /**
+     * Use Graph to get old appinfos from the old and deprecated System App.
+     */
+    public Observable<org.apache.usergrid.persistence.model.entity.Entity> getOldAppInfos( ) {
+
+        final ApplicationScope appScope = getApplicationScope( CpNamingUtils.SYSTEM_APP_ID );
+
+        final CollectionScope appInfoCollectionScope =
+            new CollectionScopeImpl( appScope.getApplication(), appScope.getApplication(),
+                CpNamingUtils.getCollectionScopeNameFromCollectionName( "appinfos" ));
+
+        final EntityCollectionManager collectionManager =
+            entityCollectionManagerFactory.createCollectionManager( appInfoCollectionScope );
+
+        final GraphManager gm = graphManagerFactory.createEdgeManager(appScope);
+
+        String edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( "appinfos" );
+
+        Id rootAppId = appScope.getApplication();
+
+        final SimpleSearchByEdgeType simpleSearchByEdgeType =  new SimpleSearchByEdgeType(
+            rootAppId, edgeType, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING, null);
+
+        Observable<org.apache.usergrid.persistence.model.entity.Entity> entityObs =
+            gm.loadEdgesFromSource( simpleSearchByEdgeType )
+            .flatMap(new Func1<Edge, Observable<org.apache.usergrid.persistence.model.entity.Entity>>() {
+
+                @Override
+                public Observable<org.apache.usergrid.persistence.model.entity.Entity> call(final Edge edge) {
+
+                    final Id appInfoId = edge.getTargetNode();
+
+                    return collectionManager.load(appInfoId)
+                        .filter(new Func1<org.apache.usergrid.persistence.model.entity.Entity, Boolean>() {
+                            @Override
+                            public Boolean call(final org.apache.usergrid.persistence.model.entity.Entity entity) {
+                                if (entity == null) {
+                                    logger.warn("Encountered a null application info for id {}", appInfoId);
+                                    return false;
+                                }
+                                return true;
+                            }
+                        });
+                }
+            });
+
+        return entityObs;
     }
 }

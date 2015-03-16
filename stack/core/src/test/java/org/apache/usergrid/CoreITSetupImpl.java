@@ -19,6 +19,8 @@ package org.apache.usergrid;
 
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.utils.UUIDUtils;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
@@ -35,6 +37,8 @@ import org.apache.usergrid.setup.ConcurrentProcessSingleton;
 import org.apache.usergrid.utils.JsonUtils;
 
 import com.google.inject.Injector;
+
+import static org.apache.usergrid.persistence.Schema.PROPERTY_APPLICATION_ID;
 
 
 public class CoreITSetupImpl implements CoreITSetup {
@@ -129,7 +133,10 @@ public class CoreITSetupImpl implements CoreITSetup {
 
     @Override
     public UUID createApplication( String organizationName, String applicationName ) throws Exception {
-        return emf.createApplication( organizationName, applicationName );
+        Entity appInfo = emf.createApplicationV2(organizationName, applicationName);
+        UUID applicationId = UUIDUtils.tryExtractUUID(
+            appInfo.getProperty(PROPERTY_APPLICATION_ID).toString());
+        return applicationId;
     }
 
     @Override

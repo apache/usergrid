@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.*;
+import org.apache.usergrid.utils.UUIDUtils;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -45,6 +46,7 @@ import rx.functions.Func2;
 
 import javax.annotation.concurrent.NotThreadSafe;
 
+import static org.apache.usergrid.persistence.Schema.PROPERTY_APPLICATION_ID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -82,7 +84,10 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
 
     public UUID createApplication( String organizationName, String applicationName ) throws Exception {
-        return emf.createApplication( organizationName, applicationName );
+        Entity appInfo = emf.createApplicationV2(organizationName, applicationName);
+        UUID appId = UUIDUtils.tryExtractUUID(
+            appInfo.getProperty(PROPERTY_APPLICATION_ID).toString());
+        return appId;
     }
 
 
