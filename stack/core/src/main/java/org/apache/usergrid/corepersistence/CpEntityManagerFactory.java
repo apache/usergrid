@@ -21,7 +21,6 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.yammer.metrics.annotation.Metered;
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
 
 import java.util.*;
@@ -416,20 +415,17 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
 
     @Override
-    @Metered(group = "core", name = "EntityManagerFactory_getApplication")
     public Map<String, UUID> getApplications() throws Exception {
         return getApplications( false );
     }
 
 
     @Override
-    @Metered(group = "core", name = "EntityManagerFactory_getApplication")
     public Map<String, UUID> getDeletedApplications() throws Exception {
         return getApplications( true );
     }
 
 
-    @Metered(group = "core", name = "EntityManagerFactory_getApplication")
     public Map<String, UUID> getApplications(boolean deleted) throws Exception {
 
         Map<String, UUID> appMap = new HashMap<String, UUID>();

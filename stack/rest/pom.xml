@@ -259,10 +259,6 @@
             <artifactId>jackson-jaxrs-json-provider</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.yammer.metrics</groupId>
-            <artifactId>metrics-spring</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>com.sun.jersey</groupId>

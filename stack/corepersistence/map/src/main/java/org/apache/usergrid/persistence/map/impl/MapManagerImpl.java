@@ -18,6 +18,8 @@
 package org.apache.usergrid.persistence.map.impl;
 
 
+import java.util.Collection;
+import java.util.Map;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.map.MapManager;
@@ -47,6 +49,12 @@ public class MapManagerImpl implements MapManager {
     @Override
     public String getString( final String key ) {
         return mapSerialization.getString( scope, key );
+    }
+
+
+    @Override
+    public Map<String, String> getStrings( final Collection<String> keys ) {
+        return mapSerialization.getStrings( scope, keys );
     }
 
 

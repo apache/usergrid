@@ -75,19 +75,19 @@ public interface EntityIndex extends CPManager {
      */
     public CandidateResults getEntityVersions(final IndexScope indexScope, final Id id);
 
-    /**
-     * Create a delete method that deletes by Id. This will delete all documents from ES with the same entity Id,
-     * effectively removing all versions of an entity from all index scopes
-     * @param entityId The entityId to remove
-     */
-    public Future deleteAllVersionsOfEntity(final Id entityId );
-
-    /**
-     * Takes all the previous versions of the current entity and deletes all previous versions
-     * @param id The id to remove
-     * @param version The max version to retain
-     */
-    public Future deletePreviousVersions(final Id id, final UUID version);
+//    /**
+//     * Create a delete method that deletes by Id. This will delete all documents from ES with the same entity Id,
+//     * effectively removing all versions of an entity from all index scopes
+//     * @param entityId The entityId to remove
+//     */
+//    public Future deleteAllVersionsOfEntity(final Id entityId );
+//
+//    /**
+//     * Takes all the previous versions of the current entity and deletes all previous versions
+//     * @param id The id to remove
+//     * @param version The max version to retain
+//     */
+//    public Future deletePreviousVersions(final Id id, final UUID version);
 
     /**
      * Refresh the index.

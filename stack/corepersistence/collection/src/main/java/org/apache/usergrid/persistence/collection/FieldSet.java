@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -16,33 +16,33 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.usergrid.persistence.collection;
 
-package org.apache.usergrid.persistence.index.impl;
-
-
-import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.field.Field;
 
 
 /**
- * Utilities to make testing ES easier
+ * Represents a set of entities
  */
-public class EsTestUtils {
-
+public interface FieldSet {
 
     /**
-     * Checks to see if we have pending tasks in the cluster.  If so waits until they are finished.  Adding
-     * new types can cause lag even after refresh since the type mapping needs applied
-     * @param index
+     * Get the entity from the result set
+     * @param field, Return the entity with the field
+     * @return
      */
-    public static void waitForTasks(final EntityIndex index){
+    public MvccEntity getEntity(Field<?> field);
 
-        while(index.getPendingTasks() > 0){
-            try {
-                Thread.sleep( 100 );
-            }
-            catch ( InterruptedException e ) {
-                //swallow
-            }
-        }
-    }
+    /**
+     * Get the number of entities in this set
+     * @return
+     */
+    public int size();
+
+    /**
+     * Return true if the set is empty
+     * @return
+     */
+    public boolean isEmpty();
 }

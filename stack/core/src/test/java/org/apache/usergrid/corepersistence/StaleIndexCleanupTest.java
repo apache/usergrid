@@ -246,7 +246,8 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
      * Test that the EntityDeleteImpl cleans up stale indexes on delete. Ensures that when an
      * entity is deleted its old indexes are cleared from ElasticSearch.
      */
-    @Test(timeout=30000)
+//    @Test(timeout=30000)
+    @Test
     public void testCleanupOnDelete() throws Exception {
 
         logger.info("Started testStaleIndexCleanup()");
@@ -310,13 +311,25 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
             em.delete( thing );
         }
 
+
+        //put this into the top of the queue, once it's acked we've been flushed
+        em.refreshIndex();
+
         // wait for indexes to be cleared for the deleted entities
         count = 0;
+
+
+        //we can't use our candidate result sets here.  The repair won't happen since we now have orphaned documents in our index
+        //us the EM so the repair process happens
+
+        Results results = null;
         do {
-            Thread.sleep(100);
+            //trigger the repair
+            results = queryCollectionEm("things", "select *");
             crs = queryCollectionCp("things", "thing", "select *");
-            em.refreshIndex();
-        } while ( crs.size() > 0 && count++ < 15 );
+            Thread.sleep(100);
+
+        } while ((results.hasCursor() || crs.size() > 0) && count++ < 2000 );
 
         Assert.assertEquals( "Expect no candidates", 0, crs.size() );
     }
@@ -379,9 +392,10 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         // wait for indexes to be cleared for the deleted entities
         count = 0;
         do {
+            queryCollectionEm("dogs", "select *");
             Thread.sleep(100);
             crs = queryCollectionCp("dogs", "dog", "select *");
-        } while ( crs.size() == numEntities && count++ < 15 );
+        } while ( crs.size() != numEntities && count++ < 15 );
 
         Assert.assertEquals("Expect candidates without earlier stale entities", crs.size(), numEntities);
     }
@@ -432,4 +446,18 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
         return ei.search( is, SearchTypes.fromTypes( type ), rcq );
     }
+
+    /**
+        * Go around EntityManager and execute query directly against Core Persistence.
+        * Results may include stale index entries.
+        */
+       private Results queryCollectionEm( final String collName,  final String query ) throws Exception {
+
+           EntityManager em = app.getEntityManager();
+
+
+           final Results results = em.searchCollection( em.getApplicationRef(), collName, Query.fromQL( query ).withLimit( 10000 ) );
+
+           return results;
+       }
 }

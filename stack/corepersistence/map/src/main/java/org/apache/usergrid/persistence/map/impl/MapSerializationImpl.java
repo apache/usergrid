@@ -18,9 +18,12 @@
  */
 
 package org.apache.usergrid.persistence.map.impl;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import com.google.common.base.Preconditions;
@@ -50,6 +53,9 @@ import com.netflix.astyanax.connectionpool.exceptions.NotFoundException;
 import com.netflix.astyanax.model.Column;
 import com.netflix.astyanax.model.CompositeBuilder;
 import com.netflix.astyanax.model.CompositeParser;
+import com.netflix.astyanax.model.Row;
+import com.netflix.astyanax.model.Rows;
+import com.netflix.astyanax.query.ColumnFamilyQuery;
 import com.netflix.astyanax.serializers.BooleanSerializer;
 import com.netflix.astyanax.serializers.StringSerializer;
 
@@ -71,6 +77,9 @@ public class MapSerializationImpl implements MapSerialization {
         private static final BooleanSerializer BOOLEAN_SERIALIZER = BooleanSerializer.get();
 
         private static final StringSerializer STRING_SERIALIZER = StringSerializer.get();
+
+
+    private static final StringResultsBuilder STRING_RESULTS_BUILDER = new StringResultsBuilder();
 
 
         /**
@@ -126,12 +135,23 @@ public class MapSerializationImpl implements MapSerialization {
 
 
     @Override
+    public Map<String, String> getStrings(final MapScope scope,  final Collection<String> keys ) {
+        return getValues( scope, keys, STRING_RESULTS_BUILDER );
+    }
+
+
+    @Override
     public void putString( final MapScope scope, final String key, final String value ) {
         final RowOp op = new RowOp() {
             @Override
-            public void rowOp( final ScopedRowKey<MapEntryKey> scopedRowKey,
-                               final ColumnListMutation<Boolean> columnListMutation ) {
+            public void putValue(final ColumnListMutation<Boolean> columnListMutation ) {
                 columnListMutation.putColumn( true, value );
+            }
+
+
+            @Override
+            public void putKey(final ColumnListMutation<String> keysMutation ) {
+                keysMutation.putColumn( key, true );
             }
         };
 
@@ -146,9 +166,14 @@ public class MapSerializationImpl implements MapSerialization {
 
         final RowOp op = new RowOp() {
             @Override
-            public void rowOp( final ScopedRowKey<MapEntryKey> scopedRowKey,
-                               final ColumnListMutation<Boolean> columnListMutation ) {
+            public void putValue( final ColumnListMutation<Boolean> columnListMutation ) {
                 columnListMutation.putColumn( true, value, ttl );
+            }
+
+
+            @Override
+            public void putKey( final ColumnListMutation<String> keysMutation ) {
+                keysMutation.putColumn( key, true, ttl );
             }
         };
 
@@ -179,7 +204,7 @@ public class MapSerializationImpl implements MapSerialization {
         // entry
 
 
-        rowOp.rowOp( entryRowKey, batch.withRow( MAP_ENTRIES, entryRowKey ) );
+        rowOp.putValue( batch.withRow( MAP_ENTRIES, entryRowKey ) );
 
 
         //add it to the keys
@@ -189,20 +214,31 @@ public class MapSerializationImpl implements MapSerialization {
         final BucketScopedRowKey<String> keyRowKey = BucketScopedRowKey.fromKey( scope.getApplication(), key, bucket );
 
         //serialize to the entry
-        batch.withRow( MAP_KEYS, keyRowKey ).putColumn( key, true );
+
+        rowOp.putKey( batch.withRow( MAP_KEYS, keyRowKey ) );
 
 
         executeBatch( batch );
     }
 
+
+    /**
+     * Callbacks for performing row operations
+     */
     private static interface RowOp{
 
         /**
          * Callback to do the row
-         * @param scopedRowKey The row key
          * @param columnListMutation The column mutation
          */
-        void rowOp(final ScopedRowKey<MapEntryKey> scopedRowKey, final ColumnListMutation<Boolean> columnListMutation);
+        void putValue( final ColumnListMutation<Boolean> columnListMutation );
+
+
+        /**
+         * Write the key
+         * @param keysMutation
+         */
+        void putKey( final ColumnListMutation<String> keysMutation );
 
 
     }
@@ -350,6 +386,49 @@ public class MapSerializationImpl implements MapSerialization {
     }
 
 
+    /**
+     * Get multiple values, using the string builder
+     * @param scope
+     * @param keys
+     * @param builder
+     * @param <T>
+     * @return
+     */
+    private <T> T getValues(final MapScope scope, final Collection<String> keys, final ResultsBuilder<T> builder) {
+
+
+        final List<ScopedRowKey<MapEntryKey>> rowKeys = new ArrayList<>( keys.size() );
+
+        for(final String key: keys){
+             //add it to the entry
+            final ScopedRowKey<MapEntryKey> entryRowKey = MapEntryKey.fromKey(scope, key);
+
+            rowKeys.add( entryRowKey );
+
+        }
+
+
+
+          //now get all columns, including the "old row key value"
+          try {
+              final Rows<ScopedRowKey<MapEntryKey>, Boolean>
+                  rows = keyspace.prepareQuery( MAP_ENTRIES ).getKeySlice( rowKeys ).withColumnSlice( true )
+                                                     .execute().getResult();
+
+
+             return builder.buildResults( rows );
+          }
+          catch ( NotFoundException nfe ) {
+              //nothing to return
+              return null;
+          }
+          catch ( ConnectionException e ) {
+              throw new RuntimeException( "Unable to connect to cassandra", e );
+          }
+      }
+
+
+
     private void executeBatch(MutationBatch batch) {
         try {
             batch.execute();
@@ -426,6 +505,41 @@ public class MapSerializationImpl implements MapSerialization {
                 final MapScope mapScope, final String key ) {
 
             return ScopedRowKey.fromKey( mapScope.getApplication(), new MapEntryKey( mapScope.getName(), key ) );
+        }
+    }
+
+
+    /**
+     * Build the results from the row keys
+     * @param <T>
+     */
+    private static interface ResultsBuilder<T> {
+
+        public T buildResults(final  Rows<ScopedRowKey<MapEntryKey>, Boolean> rows);
+    }
+
+    public static class StringResultsBuilder implements ResultsBuilder<Map<String, String>>{
+
+        @Override
+        public Map<String, String> buildResults( final Rows<ScopedRowKey<MapEntryKey>, Boolean> rows ) {
+            final int size = rows.size();
+
+            final Map<String, String> results = new HashMap<>(size);
+
+            for(int i = 0; i < size; i ++){
+
+                final Row<ScopedRowKey<MapEntryKey>, Boolean> row = rows.getRowByIndex( i );
+
+                final String value = row.getColumns().getStringValue( true, null );
+
+                if(value == null){
+                    continue;
+                }
+
+               results.put( row.getKey().getKey().key,  value );
+            }
+
+            return results;
         }
     }
 }

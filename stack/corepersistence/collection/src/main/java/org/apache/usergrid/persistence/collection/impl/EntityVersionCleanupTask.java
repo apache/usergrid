@@ -23,6 +23,15 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
+import org.apache.usergrid.persistence.collection.MvccEntity;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.impl.UniqueValueImpl;
+import org.apache.usergrid.persistence.collection.util.EntityUtils;
+import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.field.Field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,16 +79,21 @@ public class EntityVersionCleanupTask implements Task<Void> {
     private final CollectionScope scope;
     private final Id entityId;
     private final UUID version;
+    private final boolean includeVersion;
 
 
     @Inject
-    public EntityVersionCleanupTask( final SerializationFig serializationFig,
-                                     final MvccLogEntrySerializationStrategy logEntrySerializationStrategy,
-                                     final UniqueValueSerializationStrategy uniqueValueSerializationStrategy,
-                                     final Keyspace keyspace, final Set<EntityVersionDeleted> listeners,
-                                     // MUST be a set or Guice will not inject
-                                     @Assisted final CollectionScope scope, @Assisted final Id entityId,
-                                     @Assisted final UUID version ) {
+    public EntityVersionCleanupTask(
+        final SerializationFig serializationFig,
+        final MvccLogEntrySerializationStrategy logEntrySerializationStrategy,
+        @ProxyImpl final MvccEntitySerializationStrategy   entitySerializationStrategy,
+        final UniqueValueSerializationStrategy  uniqueValueSerializationStrategy,
+        final Keyspace                          keyspace,
+        final Set<EntityVersionDeleted>         listeners, // MUST be a set or Guice will not inject
+        @Assisted final CollectionScope         scope,
+        @Assisted final Id                      entityId,
+        @Assisted final UUID                    version,
+        @Assisted final boolean includeVersion) {
 
         this.serializationFig = serializationFig;
         this.logEntrySerializationStrategy = logEntrySerializationStrategy;
@@ -89,6 +103,8 @@ public class EntityVersionCleanupTask implements Task<Void> {
         this.scope = scope;
         this.entityId = entityId;
         this.version = version;
+
+        includeVersion = includeVersion;
     }
 
 
@@ -117,9 +133,7 @@ public class EntityVersionCleanupTask implements Task<Void> {
     @Override
     public Void call() throws Exception {
         //TODO Refactor this logic into a a class that can be invoked from anywhere
-
-
-        //iterate all unique values
+       //iterate all unique values
         final BlockingObservable<Long> uniqueValueCleanup =
                 Observable.create( new ObservableIterator<UniqueValue>( "Unique value load" ) {
                     @Override

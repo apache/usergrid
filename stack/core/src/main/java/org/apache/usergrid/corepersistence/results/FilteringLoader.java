@@ -233,7 +233,7 @@ public class FilteringLoader implements ResultsLoader {
 
     @Override
     public void postProcess() {
-        this.indexBatch.execute().get();
+        this.indexBatch.execute();
     }
 
 

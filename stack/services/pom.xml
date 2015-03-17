@@ -133,6 +133,7 @@
       <scope>runtime</scope>
     </dependency>
 
+
     <dependency>
       <groupId>org.apache.usergrid</groupId>
       <artifactId>usergrid-core</artifactId>
@@ -290,7 +291,15 @@
       <classifier>tests</classifier>
     </dependency>
 
-    <dependency>
+      <dependency>
+          <groupId>${project.parent.groupId}</groupId>
+          <artifactId>queue</artifactId>
+          <version>${project.version}</version>
+          <type>test-jar</type>
+          <scope>test</scope>
+      </dependency>
+
+      <dependency>
       <groupId>org.apache.usergrid</groupId>
       <artifactId>usergrid-config</artifactId>
       <version>${project.version}</version>
@@ -310,6 +319,8 @@
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
+
+
 
     <dependency>
       <groupId>org.springframework</groupId>
