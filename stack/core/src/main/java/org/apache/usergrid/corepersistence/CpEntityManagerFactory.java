@@ -449,16 +449,19 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                 appScope.getApplication(),
                 scopeName);
 
-            org.apache.usergrid.persistence.model.entity.Entity e =
+            org.apache.usergrid.persistence.model.entity.Entity appInfo =
                     managerCache.getEntityCollectionManager( collScope ).load( targetId )
                         .toBlockingObservable().lastOrDefault(null);
 
-            if ( e == null ) {
+            if ( appInfo == null ) {
                 logger.warn("Application {} in index but not found in collections", targetId );
                 continue;
             }
 
-            appMap.put( (String)e.getField( PROPERTY_NAME ).getValue(), e.getId().getUuid());
+            UUID applicationId = UUIDUtils.tryExtractUUID(
+                appInfo.getField( PROPERTY_APPLICATION_ID ).getValue().toString() );
+
+            appMap.put( (String)appInfo.getField( PROPERTY_NAME ).getValue(), applicationId);
         }
 
         return appMap;

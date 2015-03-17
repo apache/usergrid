@@ -23,6 +23,8 @@ package org.apache.usergrid.corepersistence.rx.impl;
 import java.util.Arrays;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.Schema;
+import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -100,6 +102,7 @@ public class AllApplicationsObservableImpl implements AllApplicationsObservable 
                         null ) ).flatMap( new Func1<Edge, Observable<ApplicationScope>>() {
             @Override
             public Observable<ApplicationScope> call( final Edge edge ) {
+
                 //get the app info and load it
                 final Id appInfo = edge.getTargetNode();
 
@@ -121,7 +124,8 @@ public class AllApplicationsObservableImpl implements AllApplicationsObservable 
 
                         @Override
                         public ApplicationScope call( final Entity entity ) {
-                            final UUID uuid = entity.getId().getUuid();
+                            final UUID uuid = UUIDUtils.tryExtractUUID(
+                                entity.getField( Schema.PROPERTY_APPLICATION_ID ).getValue().toString());
                             return getApplicationScope( uuid );
                         }
                     } );
