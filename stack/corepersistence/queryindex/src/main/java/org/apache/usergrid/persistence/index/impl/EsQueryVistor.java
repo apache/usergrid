@@ -189,7 +189,7 @@ public class EsQueryVistor implements QueryVisitor {
         FilterBuilder fb = FilterBuilders.geoDistanceFilter( name )
            .lat( lat ).lon( lon ).distance( distance, DistanceUnit.METERS );
         filterBuilders.add( fb );
-        geoSortBuilder = SortBuilders.geoDistanceSort( "location" ).point( lat,lon );
+        geoSortBuilder = SortBuilders.geoDistanceSort( GEO_PREFIX+"location" ).point( lat,lon );
     }
 
 
