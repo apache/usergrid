@@ -71,6 +71,7 @@ import org.apache.usergrid.persistence.query.ir.result.ScanColumn;
 import org.apache.usergrid.persistence.schema.CollectionInfo;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.search.sort.GeoDistanceSortBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -292,7 +293,7 @@ public class QueryProcessorImpl implements QueryProcessor {
             }
         }
         if (logger.isDebugEnabled()) {
-        	logger.debug("Getting result for query: [{}],  returning entityIds size: {}", 
+        	logger.debug("Getting result for query: [{}],  returning entityIds size: {}",
                     getQuery(), entityIds.size());
         }
 
@@ -621,12 +622,18 @@ public class QueryProcessorImpl implements QueryProcessor {
 
         @Override
         public QueryBuilder getQueryBuilder() {
-            throw new UnsupportedOperationException("Not supported by this vistor implementation."); 
+            throw new UnsupportedOperationException("Not supported by this vistor implementation.");
         }
 
         @Override
         public FilterBuilder getFilterBuilder() {
-            throw new UnsupportedOperationException("Not supported by this vistor implementation."); 
+            throw new UnsupportedOperationException("Not supported by this vistor implementation.");
+        }
+
+
+        @Override
+        public GeoDistanceSortBuilder getGeoDistanceSortBuilder() {
+            throw new UnsupportedOperationException("Not supported by this vistor implementation.");
         }
     }
 

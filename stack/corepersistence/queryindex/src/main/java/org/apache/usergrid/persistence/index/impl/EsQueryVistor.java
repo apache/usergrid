@@ -30,6 +30,8 @@ import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.FilterBuilders;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.sort.GeoDistanceSortBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,7 +60,7 @@ import static org.apache.usergrid.persistence.index.impl.IndexingUtils.STRING_PR
 
 
 /**
- * Visits tree of  parsed Query operands and populates 
+ * Visits tree of  parsed Query operands and populates
  * ElasticSearch QueryBuilder that represents the query.
  */
 public class EsQueryVistor implements QueryVisitor {
@@ -66,8 +68,9 @@ public class EsQueryVistor implements QueryVisitor {
 
     Stack<QueryBuilder> stack = new Stack<QueryBuilder>();
     List<FilterBuilder> filterBuilders = new ArrayList<FilterBuilder>();
+    GeoDistanceSortBuilder geoSortBuilder = null;
 
-    
+
     @Override
     public void visit( AndOperand op ) throws IndexException {
 
@@ -157,14 +160,14 @@ public class EsQueryVistor implements QueryVisitor {
         Object value = op.getLiteral().getValue();
 
         BoolQueryBuilder qb = QueryBuilders.boolQuery(); // let's do a boolean OR
-        qb.minimumNumberShouldMatch(1); 
+        qb.minimumNumberShouldMatch(1);
 
         // field is an entity/array that needs no name prefix
         qb = qb.should( QueryBuilders.matchQuery( name, value ) );
 
         // OR field is a string and needs the prefix on the name
         qb = qb.should( QueryBuilders.matchQuery( addPrefix( value.toString(), name, true), value));
-        
+
         stack.push( qb );
     }
 
@@ -186,7 +189,8 @@ public class EsQueryVistor implements QueryVisitor {
         FilterBuilder fb = FilterBuilders.geoDistanceFilter( name )
            .lat( lat ).lon( lon ).distance( distance, DistanceUnit.METERS );
         filterBuilders.add( fb );
-    } 
+        geoSortBuilder = SortBuilders.geoDistanceSort( "location" ).point( lat,lon );
+    }
 
 
     @Override
@@ -222,19 +226,19 @@ public class EsQueryVistor implements QueryVisitor {
             qb.minimumNumberShouldMatch(1);
 
             // field is an entity/array that does not need a prefix on its name
-            // TODO is this right now that we've updated our doc structure?  
+            // TODO is this right now that we've updated our doc structure?
             // Should this be "must" instead of should?
             qb = qb.should( QueryBuilders.wildcardQuery( name, svalue ) );
-           
+
             // or field is just a string that does need a prefix
             if ( svalue.indexOf("*") != -1 ) {
                 qb = qb.should( QueryBuilders.wildcardQuery( addPrefix( value, name ), svalue ) );
             } else {
                 qb = qb.should( QueryBuilders.termQuery(     addPrefix( value, name ), value ));
-            } 
+            }
             stack.push( qb );
             return;
-        } 
+        }
 
         // assume all other types need prefix
         stack.push( QueryBuilders.termQuery( addPrefix( value, name ), value ));
@@ -276,7 +280,7 @@ public class EsQueryVistor implements QueryVisitor {
         if ( parts.length > 1 ) {
             name = parts[ parts.length - 1 ];
         }
-        
+
         if ( value instanceof String && analyzed ) {
             name = addAnalyzedStringPrefix( name );
 
@@ -293,12 +297,12 @@ public class EsQueryVistor implements QueryVisitor {
             name = addStringPrefix( name );
         }
 
-        // re-create nested property name 
+        // re-create nested property name
         if ( parts.length > 1 ) {
             parts[parts.length - 1] = name;
             Joiner joiner = Joiner.on(".").skipNulls();
             return joiner.join(parts);
-        } 
+        }
 
         return name;
     }
@@ -307,34 +311,34 @@ public class EsQueryVistor implements QueryVisitor {
     private String addAnalyzedStringPrefix( String name ) {
         if ( name.startsWith( ANALYZED_STRING_PREFIX ) ) {
             return name;
-        }  
+        }
         return ANALYZED_STRING_PREFIX + name;
-    } 
-   
+    }
+
 
     private String addStringPrefix( String name ) {
         if ( name.startsWith( STRING_PREFIX ) ) {
             return name;
-        } 
+        }
         return STRING_PREFIX + name;
-    } 
-   
+    }
+
 
     private String addNumberPrefix( String name ) {
         if ( name.startsWith( NUMBER_PREFIX ) ) {
             return name;
-        } 
+        }
         return NUMBER_PREFIX + name;
-    } 
-   
+    }
+
 
     private String addBooleanPrefix( String name ) {
         if ( name.startsWith( BOOLEAN_PREFIX ) ) {
             return name;
-        } 
+        }
         return BOOLEAN_PREFIX + name;
-    } 
-   
+    }
+
 
     @Override
     public QueryBuilder getQueryBuilder() {
@@ -354,14 +358,19 @@ public class EsQueryVistor implements QueryVisitor {
 			for ( FilterBuilder fb : filterBuilders ) {
 				if ( andFilter == null ) {
 					andFilter = FilterBuilders.andFilter( fb );
-				} else {	
+				} else {
 					andFilter = FilterBuilders.andFilter( andFilter, fb );
 				}
-			}	
+			}
 
 		} else if ( !filterBuilders.isEmpty() ) {
 			return filterBuilders.get(0);
 		}
 		return null;
 	}
+
+    @Override
+    public GeoDistanceSortBuilder getGeoDistanceSortBuilder(){
+        return geoSortBuilder;
+    }
 }
