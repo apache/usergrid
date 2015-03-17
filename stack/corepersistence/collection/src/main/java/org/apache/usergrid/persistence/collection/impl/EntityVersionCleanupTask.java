@@ -26,10 +26,12 @@ import java.util.UUID;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import org.apache.usergrid.persistence.collection.MvccEntity;
+import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.impl.UniqueValueImpl;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
+import org.apache.usergrid.persistence.core.guice.ProxyImpl;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.slf4j.Logger;
@@ -86,7 +88,6 @@ public class EntityVersionCleanupTask implements Task<Void> {
     public EntityVersionCleanupTask(
         final SerializationFig serializationFig,
         final MvccLogEntrySerializationStrategy logEntrySerializationStrategy,
-        @ProxyImpl final MvccEntitySerializationStrategy   entitySerializationStrategy,
         final UniqueValueSerializationStrategy  uniqueValueSerializationStrategy,
         final Keyspace                          keyspace,
         final Set<EntityVersionDeleted>         listeners, // MUST be a set or Guice will not inject
@@ -104,7 +105,7 @@ public class EntityVersionCleanupTask implements Task<Void> {
         this.entityId = entityId;
         this.version = version;
 
-        includeVersion = includeVersion;
+        this.includeVersion = includeVersion;
     }
 
 
@@ -146,7 +147,7 @@ public class EntityVersionCleanupTask implements Task<Void> {
                         .skipWhile( new Func1<UniqueValue, Boolean>() {
                             @Override
                             public Boolean call( final UniqueValue uniqueValue ) {
-                                return version.equals( uniqueValue.getEntityVersion() );
+                                return !includeVersion && version.equals( uniqueValue.getEntityVersion() );
                             }
                         } )
                                 //buffer our buffer size, then roll them all up in a single batch mutation
@@ -185,7 +186,7 @@ public class EntityVersionCleanupTask implements Task<Void> {
                         .skipWhile( new Func1<MvccLogEntry, Boolean>() {
                             @Override
                             public Boolean call( final MvccLogEntry mvccLogEntry ) {
-                                return version.equals( mvccLogEntry.getVersion() );
+                                return !includeVersion && version.equals( mvccLogEntry.getVersion() );
                             }
                         } )
                                 //buffer them for efficiency

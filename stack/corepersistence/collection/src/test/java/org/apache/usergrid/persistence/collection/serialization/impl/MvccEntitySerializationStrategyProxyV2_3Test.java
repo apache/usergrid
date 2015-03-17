@@ -34,9 +34,12 @@ import org.apache.usergrid.persistence.core.test.UseModules;
 
 import com.google.inject.Inject;
 
+import net.jcip.annotations.NotThreadSafe;
+
 
 @RunWith( ITRunner.class )
 @UseModules( TestCollectionModule.class )
+@NotThreadSafe//anything that changes the system version state is not safe to be run concurrently
 public class MvccEntitySerializationStrategyProxyV2_3Test extends MvccEntitySerializationStrategyV2Test {
 
     @Inject

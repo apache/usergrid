@@ -85,7 +85,7 @@ public class EntityVersionDeletedHandler implements EntityVersionDeleted {
 
         CpEntityManagerFactory cpemf = (CpEntityManagerFactory)emf;
 
-        final EntityIndex ei = cpemf.getManagerCache().getEntityIndex(scope);
+        final EntityIndex ei = cpemf.getManagerCache().getEntityIndex( scope );
 
         final IndexScope indexScope = new IndexScopeImpl(
                 new SimpleId(scope.getOwner().getUuid(), scope.getOwner().getType()),
@@ -93,10 +93,10 @@ public class EntityVersionDeletedHandler implements EntityVersionDeleted {
         );
 
         Observable.from( entityVersions )
-            .collect( ei.createBatch(), new Action2<EntityIndexBatch, MvccEntity>() {
+            .collect( ei.createBatch(), new Action2<EntityIndexBatch, MvccLogEntry>() {
                 @Override
-                public void call( final EntityIndexBatch entityIndexBatch, final MvccEntity mvccEntity ) {
-                    entityIndexBatch.deindex( indexScope, mvccEntity.getId(), mvccEntity.getVersion() );
+                public void call( final EntityIndexBatch entityIndexBatch, final MvccLogEntry mvccLogEntry ) {
+                    entityIndexBatch.deindex( indexScope, mvccLogEntry.getEntityId(), mvccLogEntry.getVersion() );
                 }
             } ).doOnNext( new Action1<EntityIndexBatch>() {
             @Override

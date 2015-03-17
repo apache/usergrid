@@ -30,9 +30,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.EntityVersionCleanupFactory;
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.impl.EntityVersionCleanupTask;
+import org.apache.usergrid.persistence.collection.impl.EntityVersionTaskFactory;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
@@ -75,7 +75,7 @@ public class MvccEntityDataMigrationImpl implements DataMigration<EntityIdScope>
     private final Keyspace keyspace;
     private final VersionedMigrationSet<MvccEntitySerializationStrategy> allVersions;
     private final UniqueValueSerializationStrategy uniqueValueSerializationStrategy;
-    private final EntityVersionCleanupFactory entityVersionCleanupFactory;
+    private final EntityVersionTaskFactory entityVersionCleanupFactory;
     private final MvccEntitySerializationStrategyV3Impl mvccEntitySerializationStrategyV3;
 
 
@@ -84,7 +84,7 @@ public class MvccEntityDataMigrationImpl implements DataMigration<EntityIdScope>
     public MvccEntityDataMigrationImpl( final Keyspace keyspace,
                                         final VersionedMigrationSet<MvccEntitySerializationStrategy> allVersions,
                                         final UniqueValueSerializationStrategy uniqueValueSerializationStrategy,
-                                        final EntityVersionCleanupFactory entityVersionCleanupFactory,
+                                        final EntityVersionTaskFactory entityVersionCleanupFactory,
                                         final MvccEntitySerializationStrategyV3Impl mvccEntitySerializationStrategyV3
                                       ) {
 
@@ -227,7 +227,7 @@ public class MvccEntityDataMigrationImpl implements DataMigration<EntityIdScope>
                                             totalBatch.mergeShallow( mb );
                                         }
 
-                                        final EntityVersionCleanupTask task = entityVersionCleanupFactory.getTask( message.scope, message.entity.getId(), version );
+                                        final EntityVersionCleanupTask task = entityVersionCleanupFactory.getCleanupTask( message.scope, message.entity.getId(), version, false );
 
                                         entityVersionCleanupTasks.add( task );
                                     }

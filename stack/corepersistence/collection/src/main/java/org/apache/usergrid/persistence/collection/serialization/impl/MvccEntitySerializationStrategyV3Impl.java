@@ -310,7 +310,6 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
         Preconditions.checkNotNull( version, "version is required" );
 
 
-        TimeUUIDUtils.getMicrosTimeFromUUID(version);
         return doWrite( collectionScope, entityId, version, new RowOp() {
             @Override
             public void doOp( final ColumnListMutation<Boolean> colMutation ) {

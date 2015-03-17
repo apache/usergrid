@@ -19,28 +19,22 @@
 package org.apache.usergrid.persistence.collection.impl;
 
 
-import java.util.*;
-
-import com.netflix.astyanax.MutationBatch;
-import org.apache.usergrid.persistence.collection.*;
-import org.apache.usergrid.persistence.collection.serialization.impl.MutableFieldSet;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
-import org.apache.usergrid.persistence.collection.EntityDeletedFactory;
 import org.apache.usergrid.persistence.collection.EntitySet;
-import org.apache.usergrid.persistence.collection.EntityVersionCleanupFactory;
-import org.apache.usergrid.persistence.collection.EntityVersionCreatedFactory;
+import org.apache.usergrid.persistence.collection.FieldSet;
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.VersionSet;
 import org.apache.usergrid.persistence.collection.guice.CollectionTaskExecutor;
-import org.apache.usergrid.persistence.collection.guice.CollectionTaskExecutor;
-import org.apache.usergrid.persistence.collection.guice.Write;
-import org.apache.usergrid.persistence.collection.guice.WriteUpdate;
-import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccValidationUtils;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
@@ -52,13 +46,11 @@ import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteOptimist
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteStart;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteUniqueVerify;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
-import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
+import org.apache.usergrid.persistence.collection.serialization.impl.MutableFieldSet;
 import org.apache.usergrid.persistence.core.guice.ProxyImpl;
-import org.apache.usergrid.persistence.core.task.Task;
-import org.apache.usergrid.persistence.core.task.TaskExecutor;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.task.Task;
 import org.apache.usergrid.persistence.core.task.TaskExecutor;
@@ -75,17 +67,12 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.netflix.astyanax.Keyspace;
+import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.OperationResult;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.model.ColumnFamily;
 import com.netflix.astyanax.model.CqlResult;
 import com.netflix.astyanax.serializers.StringSerializer;
-import org.apache.usergrid.persistence.collection.EntityDeletedFactory;
-import org.apache.usergrid.persistence.collection.EntityVersionCleanupFactory;
-import org.apache.usergrid.persistence.collection.EntityVersionCreatedFactory;
-import org.apache.usergrid.persistence.collection.guice.CollectionTaskExecutor;
-import org.apache.usergrid.persistence.core.task.Task;
-import org.apache.usergrid.persistence.core.task.TaskExecutor;
 
 import rx.Notification;
 import rx.Observable;
@@ -224,19 +211,19 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                     entity.getVersion(), false ));
                 //post-processing to come later. leave it empty for now.
             }
-        }).doOnError(rollback)
-            .doOnEach(new Action1<Notification<? super Entity>>() {
+        }).doOnError( rollback )
+            .doOnEach( new Action1<Notification<? super Entity>>() {
                 @Override
-                public void call(Notification<? super Entity> notification) {
+                public void call( Notification<? super Entity> notification ) {
                     writeMeter.mark();
                 }
-            })
-            .doOnCompleted(new Action0() {
+            } )
+            .doOnCompleted( new Action0() {
                 @Override
                 public void call() {
                     timer.stop();
                 }
-            });
+            } );
     }
 
 
@@ -250,7 +237,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         final Timer.Context timer = deleteTimer.time();
         Observable<Id> o = Observable.from(new CollectionIoEvent<Id>(collectionScope, entityId))
             .map(markStart)
-            .doOnNext(markCommit)
+            .doOnNext( markCommit )
             .map(new Func1<CollectionIoEvent<MvccEntity>, Id>() {
 
                      @Override
@@ -269,12 +256,12 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                     deleteMeter.mark();
                 }
             })
-            .doOnCompleted(new Action0() {
+            .doOnCompleted( new Action0() {
                 @Override
                 public void call() {
                     timer.stop();
                 }
-            });
+            } );
 
         return o;
     }
@@ -300,18 +287,18 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                 return Observable.from(entity.getEntity().get());
             }
         })
-            .doOnNext(new Action1<Entity>() {
+            .doOnNext( new Action1<Entity>() {
                 @Override
-                public void call(Entity entity) {
+                public void call( Entity entity ) {
                     loadMeter.mark();
                 }
-            })
-            .doOnCompleted(new Action0() {
+            } )
+            .doOnCompleted( new Action0() {
                 @Override
                 public void call() {
                     timer.stop();
                 }
-            });
+            } );
     }
 
 
@@ -347,12 +334,12 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                     loadMeter.mark();
                 }
             })
-            .doOnCompleted(new Action0() {
+            .doOnCompleted( new Action0() {
                 @Override
                 public void call() {
                     timer.stop();
                 }
-            });
+            } );
     }
 
 
@@ -505,12 +492,12 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                 }
             }
         } )
-            .doOnCompleted(new Action0() {
+            .doOnCompleted( new Action0() {
                 @Override
                 public void call() {
                     timer.stop();
                 }
-            });
+            } );
     }
 
 
