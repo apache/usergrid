@@ -293,7 +293,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
             final boolean isAcknowledged = result.isAcknowledged();
 
             if(!isAcknowledged){
-                throw new RuntimeException( "Unable to add aliases to the new index " + indexSuffix );
+                throw new RuntimeException( "Unable to add aliases to the new index.  Elasticsearch did not acknowledge to the alias change for index '" + indexSuffix + "'");
             }
 
         }
