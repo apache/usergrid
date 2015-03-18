@@ -457,11 +457,19 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
                 logger.debug( "   Sort: {} order by {}", stringFieldName, order.toString() );
 
-                final String numberFieldName = NUMBER_PREFIX + sp.getPropertyName();
-                final FieldSortBuilder numberSort = SortBuilders.fieldSort( numberFieldName )
+                final String longFieldName = LONG_PREFIX + sp.getPropertyName();
+                final FieldSortBuilder longSort = SortBuilders.fieldSort( longFieldName )
                         .order( order ).ignoreUnmapped( true );
-                srb.addSort( numberSort );
-                logger.debug( "   Sort: {} order by {}", numberFieldName, order.toString() );
+                srb.addSort( longSort );
+                logger.debug( "   Sort: {} order by {}", longFieldName, order.toString() );
+
+
+                final String doubleFieldName = DOUBLE_PREFIX + sp.getPropertyName();
+                final FieldSortBuilder doubleSort = SortBuilders.fieldSort( doubleFieldName )
+                    .order( order ).ignoreUnmapped( true );
+                srb.addSort( doubleSort );
+                logger.debug( "   Sort: {} order by {}", doubleFieldName, order.toString() );
+
 
                 final String booleanFieldName = BOOLEAN_PREFIX + sp.getPropertyName();
                 final FieldSortBuilder booleanSort = SortBuilders.fieldSort( booleanFieldName )
@@ -613,7 +621,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
             }
         };
 
-        doInRetry( retryOperation );
+        doInRetry(retryOperation);
     }
 
 
@@ -741,7 +749,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
                new ClusterHealthRequest( new String[] { indexIdentifier.getIndex( null ) } ) );
 
             //only wait 2 seconds max
-            ClusterHealthResponse chr = future.actionGet( 2000 );
+            ClusterHealthResponse chr = future.actionGet(2000);
             return Health.valueOf( chr.getStatus().name() );
         }
         catch ( Exception ex ) {

@@ -56,15 +56,7 @@ import com.codahale.metrics.Timer;
 import rx.Observable;
 import rx.functions.Func1;
 
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ANALYZED_STRING_PREFIX;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.BOOLEAN_PREFIX;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ENTITYID_ID_FIELDNAME;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ENTITY_CONTEXT_FIELDNAME;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.GEO_PREFIX;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.NUMBER_PREFIX;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.STRING_PREFIX;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createContextName;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createIndexDocId;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.*;
 
 
 public class EsEntityIndexBatchImpl implements EntityIndexBatch {
@@ -243,7 +235,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
             if ( f instanceof ListField ) {
                 List list = ( List ) field.getValue();
-                entityMap.put( field.getName().toLowerCase(),
+                entityMap.put( ARRAY_PREFIX+ field.getName().toLowerCase(),
                         new ArrayList( processCollectionForMap( list ) ) );
 
                 if ( !list.isEmpty() ) {
@@ -255,7 +247,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
             }
             else if ( f instanceof ArrayField ) {
                 List list = ( List ) field.getValue();
-                entityMap.put( field.getName().toLowerCase(),
+                entityMap.put( ARRAY_PREFIX+ field.getName().toLowerCase(),
                         new ArrayList( processCollectionForMap( list ) ) );
             }
             else if ( f instanceof SetField ) {
@@ -265,7 +257,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
             }
             else if ( f instanceof EntityObjectField ) {
                 EntityObject eo = ( EntityObject ) field.getValue();
-                entityMap.put( field.getName().toLowerCase(), entityToMap( eo ) ); // recursion
+                entityMap.put( field.getName().toLowerCase(), entityToMap(eo) ); // recursion
             }
             else if ( f instanceof StringField ) {
 
@@ -284,12 +276,11 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
                 locMap.put( "lon", locField.getValue().getLongitude() );
                 entityMap.put( GEO_PREFIX + field.getName().toLowerCase(), locMap );
             }
-            else if (  f instanceof DoubleField
-                    || f instanceof FloatField
-                    || f instanceof IntegerField
-                    || f instanceof LongField ) {
-
-                entityMap.put( NUMBER_PREFIX + field.getName().toLowerCase(), field.getValue() );
+            else if( f instanceof DoubleField || f instanceof  FloatField){
+                entityMap.put( DOUBLE_PREFIX + field.getName().toLowerCase(), field.getValue() );
+            }
+            else if( f instanceof LongField || f instanceof IntegerField){
+                entityMap.put( LONG_PREFIX + field.getName().toLowerCase(), field.getValue() );
             }
             else if ( f instanceof BooleanField ) {
 
