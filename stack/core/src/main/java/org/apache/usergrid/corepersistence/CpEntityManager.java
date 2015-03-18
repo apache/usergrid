@@ -33,6 +33,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
 
+import com.codahale.metrics.Meter;
 import org.apache.usergrid.persistence.collection.FieldSet;
 import org.apache.usergrid.persistence.core.future.BetterFuture;
 import org.slf4j.Logger;
@@ -108,7 +109,6 @@ import org.apache.usergrid.utils.UUIDUtils;
 import com.codahale.metrics.Timer;
 import com.google.common.base.Preconditions;
 import com.netflix.hystrix.exception.HystrixRuntimeException;
-import com.yammer.metrics.annotation.Metered;
 
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.ColumnSlice;
@@ -208,6 +208,8 @@ public class CpEntityManager implements EntityManager {
     private Timer esIndexEntityCollectionTimer;
     private Timer entRevokeRolePermissionsTimer;
     private Timer entGetRepairedEntityTimer;
+    private Timer updateEntityTimer;
+    private Meter updateEntityMeter;
 
     //    /** Short-term cache to keep us from reloading same Entity during single request. */
 //    private LoadingCache<EntityScope, org.apache.usergrid.persistence.model.entity.Entity> entityCache;
@@ -270,6 +272,9 @@ public class CpEntityManager implements EntityManager {
             this.metricsFactory.getTimer( CpEntityManager.class, "cp.entity.revoke.role.permissions.timer");
         this.entGetRepairedEntityTimer = this.metricsFactory
             .getTimer( CpEntityManager.class, "get.repaired.entity.timer" );
+
+        this.updateEntityMeter =this.metricsFactory.getMeter(CpEntityManager.class,"cp.entity.update.meter");
+        this.updateEntityTimer =this.metricsFactory.getTimer(CpEntityManager.class, "cp.entity.update.timer");
 
         // set to false for now
         this.skipAggregateCounters = false;
@@ -386,7 +391,6 @@ public class CpEntityManager implements EntityManager {
      *
      * @throws Exception the exception
      */
-    @Metered( group = "core", name = "EntityManager_create" )
     @TraceParticipant
     public <A extends Entity> A create( String entityType, Class<A> entityClass,
             Map<String, Object> properties, UUID importId ) throws Exception {
@@ -577,6 +581,9 @@ public class CpEntityManager implements EntityManager {
         Preconditions.checkNotNull(appId,"app scope should never be null");
         // first, update entity index in its own collection scope
 
+        updateEntityMeter.mark();
+        Timer.Context timer = updateEntityTimer.time();
+
         CollectionScope collectionScope = getCollectionScopeNameFromEntityType(appId, type );
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
         Id entityId = new SimpleId( entity.getUuid(), entity.getType() );
@@ -627,11 +634,14 @@ public class CpEntityManager implements EntityManager {
                 WriteUniqueVerifyException wuve = ( WriteUniqueVerifyException ) hre.getCause();
                 handleWriteUniqueVerifyException( entity, wuve );
             }
+
+            throw hre;
         }
 
         // update in all containing collections and connection indexes
         CpRelationManager rm = ( CpRelationManager ) getRelationManager( entity );
         rm.updateContainingCollectionAndCollectionIndexes( cpEntity );
+        timer.stop();
     }
 
 
@@ -1297,7 +1307,6 @@ public class CpEntityManager implements EntityManager {
     }
 
 
-    @Metered( group = "core", name = "EntityManager_getDictionaryElementValues" )
     public Map<String, Object> getDictionaryElementValues( EntityRef entity, String dictionaryName,
                                                            String... elementNames ) throws Exception {
 

@@ -17,15 +17,16 @@
  */
 package org.apache.usergrid.persistence.queue.guice;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.assistedinject.FactoryModuleBuilder;
+
+import org.safehaus.guicyfig.GuicyFigModule;
+
 import org.apache.usergrid.persistence.queue.QueueFig;
 import org.apache.usergrid.persistence.queue.QueueManager;
 import org.apache.usergrid.persistence.queue.QueueManagerFactory;
-import org.apache.usergrid.persistence.queue.QueueScopeFactory;
-import org.apache.usergrid.persistence.queue.impl.QueueScopeFactoryImpl;
 import org.apache.usergrid.persistence.queue.impl.SQSQueueManagerImpl;
-import org.safehaus.guicyfig.GuicyFigModule;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.assistedinject.FactoryModuleBuilder;
 
 
 /**
@@ -43,10 +44,8 @@ public class QueueModule extends AbstractModule {
         install( new GuicyFigModule( QueueFig.class) );
 
         // create a guice factory for getting our collection manager
-        install(new FactoryModuleBuilder()
-                .implement(QueueManager.class, SQSQueueManagerImpl.class)
-                .build(QueueManagerFactory.class));
-        bind( QueueScopeFactory.class ).to( QueueScopeFactoryImpl.class );
+        install( new FactoryModuleBuilder().implement( QueueManager.class, SQSQueueManagerImpl.class )
+                                           .build( QueueManagerFactory.class ) );
 
     }
 

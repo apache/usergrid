@@ -20,29 +20,22 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
-import org.apache.usergrid.persistence.index.EntityIndex;
+import java.io.Serializable;
+
+import org.elasticsearch.action.bulk.BulkRequestBuilder;
+import org.elasticsearch.client.Client;
 
 
 /**
- * Utilities to make testing ES easier
+ * A batch request we can serialize and construct on receive
  */
-public class EsTestUtils {
+public interface BatchRequest extends Serializable {
 
 
     /**
-     * Checks to see if we have pending tasks in the cluster.  If so waits until they are finished.  Adding
-     * new types can cause lag even after refresh since the type mapping needs applied
-     * @param index
+     * Passing the client and the bulk request, add ourselves to the bulk request
+     * @param client
+     * @param bulkRequest
      */
-    public static void waitForTasks(final EntityIndex index){
-
-        while(index.getPendingTasks() > 0){
-            try {
-                Thread.sleep( 100 );
-            }
-            catch ( InterruptedException e ) {
-                //swallow
-            }
-        }
-    }
+    public void doOperation(final Client client, final BulkRequestBuilder bulkRequest );
 }

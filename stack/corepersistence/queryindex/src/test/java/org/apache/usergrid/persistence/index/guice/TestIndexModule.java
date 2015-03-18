@@ -22,6 +22,9 @@ package org.apache.usergrid.persistence.index.guice;
 import org.apache.usergrid.persistence.collection.guice.CollectionModule;
 import org.apache.usergrid.persistence.core.guice.TestModule;
 import org.apache.usergrid.persistence.core.guice.CommonModule;
+import org.apache.usergrid.persistence.index.impl.BufferQueue;
+import org.apache.usergrid.persistence.index.impl.BufferQueueInMemoryImpl;
+import org.apache.usergrid.persistence.index.impl.BufferQueueSQSImpl;
 
 
 public class TestIndexModule extends TestModule {
@@ -32,6 +35,6 @@ public class TestIndexModule extends TestModule {
 
         // configure collections and our core astyanax framework
         install( new CollectionModule() );
-        install( new IndexModule() );
+        install( new IndexModule()  );
     }
 }

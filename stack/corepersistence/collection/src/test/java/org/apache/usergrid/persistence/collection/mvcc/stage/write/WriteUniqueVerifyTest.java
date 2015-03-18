@@ -18,6 +18,7 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
 
+import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
 import org.apache.usergrid.persistence.core.test.UseModules;
 import org.junit.Rule;
 import org.junit.Test;
@@ -64,7 +65,8 @@ public class WriteUniqueVerifyTest {
     @Inject
     private SerializationFig fig;
 
-
+    @Inject
+    private CassandraConfig cassandraConfig;
 
 
     @Test
@@ -81,7 +83,7 @@ public class WriteUniqueVerifyTest {
         final MvccEntity mvccEntity = fromEntity( entity );
 
         // run the stage
-        WriteUniqueVerify newStage = new WriteUniqueVerify( uvstrat, fig, keyspace );
+        WriteUniqueVerify newStage = new WriteUniqueVerify( uvstrat, fig, keyspace,cassandraConfig );
 
        newStage.call(
             new CollectionIoEvent<>( collectionScope, mvccEntity ) ) ;

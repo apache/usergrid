@@ -21,7 +21,7 @@ package org.apache.usergrid.persistence.queue;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 
 
-public interface QueueScope extends ApplicationScope {
+public interface QueueScope  {
 
     /**
      * Get the name of the the map

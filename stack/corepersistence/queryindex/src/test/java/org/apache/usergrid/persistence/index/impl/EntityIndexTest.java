@@ -24,8 +24,14 @@ import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.index.*;
+import org.apache.usergrid.persistence.model.field.ArrayField;
+import org.apache.usergrid.persistence.model.field.EntityObjectField;
 import org.apache.usergrid.persistence.model.field.UUIDField;
+import org.apache.usergrid.persistence.model.field.value.EntityObject;
+import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -65,8 +71,14 @@ public class EntityIndexTest extends BaseIT {
     @Inject
     public EntityIndexFactory eif;
 
+    //TODO T.N. Remove this when we move the cursor mapping back to core
+    @Inject
+    @Rule
+    public MigrationManagerRule migrationManagerRule;
+
+
     @Test
-    public void testIndex() throws IOException {
+    public void testIndex() throws IOException, InterruptedException {
         Id appId = new SimpleId( "application" );
 
         ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
@@ -79,6 +91,47 @@ public class EntityIndexTest extends BaseIT {
         final SearchTypes searchTypes = SearchTypes.fromTypes( entityType );
 
         insertJsonBlob(entityIndex, entityType, indexScope, "/sample-large.json",101,0);
+
+        entityIndex.refresh();
+
+
+        testQueries( indexScope, searchTypes, entityIndex );
+    }
+
+    @Test
+    @Ignore("this is a problem i will work on when i can breathe")
+    public void testIndexVariations() throws IOException {
+        Id appId = new SimpleId( "application" );
+
+        ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
+
+        EntityIndex entityIndex = eif.createEntityIndex( applicationScope );
+        entityIndex.initializeIndex();
+
+        final String entityType = "thing";
+        IndexScope indexScope = new IndexScopeImpl( appId, "things" );
+        final SearchTypes searchTypes = SearchTypes.fromTypes( entityType );
+        EntityIndexBatch batch = entityIndex.createBatch();
+        Entity entity = new Entity( entityType );
+        EntityUtils.setVersion(entity, UUIDGenerator.newTimeUUID());
+        entity.setField(new UUIDField(IndexingUtils.ENTITYID_ID_FIELDNAME, UUID.randomUUID()));
+        entity.setField(new StringField("testfield","test"));
+        batch.index(indexScope, entity);
+        batch.execute().get();
+
+        EntityUtils.setVersion(entity, UUIDGenerator.newTimeUUID());
+        List<String> list = new ArrayList<>();
+        list.add("test");
+        entity.setField(new ArrayField<String>("testfield", list));
+        batch.index(indexScope, entity);
+        batch.execute().get();
+
+        EntityUtils.setVersion(entity, UUIDGenerator.newTimeUUID());
+        EntityObject testObj = new EntityObject();
+        testObj.setField(new StringField("test","testFiedl"));
+        entity.setField(new EntityObjectField("testfield", testObj));
+        batch.index(indexScope, entity);
+        batch.execute().get();
 
         entityIndex.refresh();
 
@@ -616,15 +669,12 @@ public class EntityIndexTest extends BaseIT {
 
         for ( int i = 0; i < size; i++ ) {
             final String middleName = "middleName" + UUIDUtils.newTimeUUID();
-            Map<String, Object> properties = new LinkedHashMap<String, Object>();
-            properties.put( "username", "edanuff" );
-            properties.put( "email", "ed@anuff.com" );
-            properties.put( "middlename", middleName );
 
             Map entityMap = new HashMap() {{
                 put( "username", "edanuff" );
                 put( "email", "ed@anuff.com" );
                 put( "middlename", middleName );
+                put( "created", System.nanoTime() );
             }};
 
             final Id userId = new SimpleId( "user" );
@@ -656,7 +706,7 @@ public class EntityIndexTest extends BaseIT {
 
         for ( int i = 0; i < expectedPages; i++ ) {
             //**
-            final Query query = Query.fromQL( "select *" );
+            final Query query = Query.fromQL( "select * order by created" );
             query.setLimit( limit );
 
             if ( cursor != null ) {

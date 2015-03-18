@@ -42,9 +42,17 @@ echo "vm.swappiness = 0" >> /etc/sysctl.conf
 sysctl -p
 
 # No need to do this, elasticsearch nodes are also cassandra nodes
+
 cd /usr/share/usergrid/scripts
-groovy registry_register.groovy elasticsearch
-groovy wait_for_instances.groovy elasticsearch ${ES_NUM_SERVERS}
+
+#If we're the master, register ourselves and move on, if we're not, wait for the master to come up
+if [ "$ES_MASTER" = "true" ]; then
+    groovy registry_register.groovy elasticsearch_master
+else
+    groovy registry_register.groovy elasticsearch
+    groovy wait_for_instances.groovy elasticsearch_master 1
+fi
+
 
 # leave room for Cassandra: use about one half of RAM for heap
 case `(curl http://169.254.169.254/latest/meta-data/instance-type)` in
@@ -72,8 +80,10 @@ cat >> /etc/default/elasticsearch << EOF
 ES_HEAP_SIZE=${ES_HEAP_SIZE}
 MAX_OPEN_FILES=65535
 MAX_MAP_COUNT=262144
-#MAX_LOCKED_MEMORY=unlimited
+MAX_LOCKED_MEMORY=unlimited
 JAVA_HOME=/usr/lib/jvm/jdk1.7.0
+ES_HEAP_NEWSIZE=4g
+ES_JAVA_OPTS="-verbose:gc -XX:+PrintGCDetails -XX:SurvivorRatio=4 -Xloggc:/mnt/raid/elasticsearch/jvm"
 EOF
 
 #Set it because Matt says so
@@ -98,15 +108,11 @@ pushd /usr/share/elasticsearch/bin
 
 #Install bigdesk
 
-./plugin --install lukas-vlcek/bigdesk
-
-./plugin --install mobz/elasticsearch-head
-
 ./plugin -install royrusso/elasticsearch-HQ
 
 ./plugin -install karmi/elasticsearch-paramedic
 
-./plugin -install xyu/elasticsearch-whatson/0.1.3
+./plugin -install elasticsearch/elasticsearch-cloud-aws/2.4.1
 
 popd
 

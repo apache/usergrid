@@ -24,18 +24,14 @@ import org.apache.usergrid.persistence.queue.QueueScope;
  * Created by ApigeeCorporation on 10/3/14.
  */
 public class QueueScopeImpl implements QueueScope {
-    private final Id owner;
+
     private final String name;
 
-    public QueueScopeImpl( final Id owner, final String name ) {
-        this.owner = owner;
+    public QueueScopeImpl(  final String name ) {
         this.name = name;
     }
 
-    @Override
-    public Id getApplication() {
-        return owner;
-    }
+
 
 
     @Override
@@ -57,9 +53,7 @@ public class QueueScopeImpl implements QueueScope {
         if ( !name.equals( queueScope.name ) ) {
             return false;
         }
-        if ( !owner.equals( queueScope.owner ) ) {
-            return false;
-        }
+
 
         return true;
     }
@@ -67,17 +61,6 @@ public class QueueScopeImpl implements QueueScope {
 
     @Override
     public int hashCode() {
-        int result = owner.hashCode();
-        result = 31 * result + name.hashCode();
-        return result;
-    }
-
-
-    @Override
-    public String toString() {
-        return "QueueScopeImpl{" +
-                "owner=" + owner +
-                ", name='" + name + '\'' +
-                '}';
+        return name.hashCode();
     }
 }

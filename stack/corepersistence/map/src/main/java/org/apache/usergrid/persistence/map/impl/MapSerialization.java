@@ -20,6 +20,8 @@
 package org.apache.usergrid.persistence.map.impl;
 
 
+import java.util.Collection;
+import java.util.Map;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.core.migration.schema.Migration;
@@ -31,6 +33,13 @@ public interface MapSerialization extends Migration {
      * Return the string, null if not found
      */
     public String getString( final MapScope scope, final String key );
+
+    /**
+     * Get strings from the map
+     * @param keys
+     * @return
+     */
+    public Map<String, String> getStrings( final MapScope scope, final Collection<String> keys );
 
     /**
      * Return the string, null if not found

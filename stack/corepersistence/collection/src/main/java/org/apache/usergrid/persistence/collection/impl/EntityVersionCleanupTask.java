@@ -28,6 +28,7 @@ import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.impl.UniqueValueImpl;
+import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.slf4j.Logger;
@@ -55,7 +56,7 @@ import rx.schedulers.Schedulers;
 
 
 /**
- * Cleans up previous versions from the specified version. Note that this means the version 
+ * Cleans up previous versions from the specified version. Note that this means the version
  * passed in the io event is retained, the range is exclusive.
  */
 public class EntityVersionCleanupTask implements Task<Void> {
@@ -74,10 +75,11 @@ public class EntityVersionCleanupTask implements Task<Void> {
     private final CollectionScope scope;
     private final Id entityId;
     private final UUID version;
+    private final int numToSkip;
 
 
     @Inject
-    public EntityVersionCleanupTask( 
+    public EntityVersionCleanupTask(
         final SerializationFig serializationFig,
         final MvccLogEntrySerializationStrategy logEntrySerializationStrategy,
         @ProxyImpl final MvccEntitySerializationStrategy   entitySerializationStrategy,
@@ -86,7 +88,8 @@ public class EntityVersionCleanupTask implements Task<Void> {
         final Set<EntityVersionDeleted>         listeners, // MUST be a set or Guice will not inject
         @Assisted final CollectionScope         scope,
         @Assisted final Id                      entityId,
-        @Assisted final UUID                    version ) {
+        @Assisted final UUID                    version,
+        @Assisted final boolean includeVersion) {
 
         this.serializationFig = serializationFig;
         this.logEntrySerializationStrategy = logEntrySerializationStrategy;
@@ -97,6 +100,8 @@ public class EntityVersionCleanupTask implements Task<Void> {
         this.scope = scope;
         this.entityId = entityId;
         this.version = version;
+
+        numToSkip = includeVersion? 0: 1;
     }
 
 
@@ -136,7 +141,7 @@ public class EntityVersionCleanupTask implements Task<Void> {
                 }
             })
             //buffer them for efficiency
-            .skip(1)
+            .skip(numToSkip)
             .buffer(serializationFig.getBufferSize()).doOnNext(
             new Action1<List<MvccEntity>>() {
                 @Override
@@ -146,27 +151,26 @@ public class EntityVersionCleanupTask implements Task<Void> {
                     final MutationBatch logBatch = keyspace.prepareMutationBatch();
 
                     for (MvccEntity mvccEntity : mvccEntities) {
-                        if (!mvccEntity.getEntity().isPresent()) {
-                            continue;
-                        }
-
                         final UUID entityVersion = mvccEntity.getVersion();
-                        final Entity entity = mvccEntity.getEntity().get();
 
-                        //remove all unique fields from the index
-                        for (final Field field : entity.getFields()) {
-                            if (!field.isUnique()) {
-                                continue;
+
+                        //if the entity is present process the fields
+                        if(mvccEntity.getEntity().isPresent()) {
+                            final Entity entity = mvccEntity.getEntity().get();
+
+                            //remove all unique fields from the index
+                            for ( final Field field : EntityUtils.getUniqueFields(entity )) {
+
+                                final UniqueValue unique = new UniqueValueImpl( field, entityId, entityVersion );
+                                final MutationBatch deleteMutation =
+                                    uniqueValueSerializationStrategy.delete( scope, unique );
+                                batch.mergeShallow( deleteMutation );
                             }
-                            final UniqueValue unique = new UniqueValueImpl( field, entityId, entityVersion);
-                            final MutationBatch deleteMutation = 
-                                    uniqueValueSerializationStrategy.delete(scope,unique);
-                            batch.mergeShallow(deleteMutation);
                         }
 
                         final MutationBatch entityDelete = entitySerializationStrategy
                                 .delete(scope, entityId, mvccEntity.getVersion());
-                        entityBatch.mergeShallow(entityDelete);
+                        entityBatch.mergeShallow( entityDelete );
                         final MutationBatch logDelete = logEntrySerializationStrategy
                                 .delete(scope, entityId, version);
                         logBatch.mergeShallow(logDelete);
