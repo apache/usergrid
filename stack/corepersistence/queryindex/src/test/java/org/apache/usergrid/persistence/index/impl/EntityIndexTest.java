@@ -576,7 +576,7 @@ public class EntityIndexTest extends BaseIT {
         EntityIndex ei = eif.createEntityIndex( applicationScope );
 
         assertNotEquals( "cluster should be ok", Health.RED, ei.getClusterHealth() );
-        assertEquals( "index not be ready yet", Health.RED, ei.getIndexHealth() );
+        assertEquals( "index should be ready", Health.GREEN, ei.getIndexHealth() );
 
         ei.initializeIndex();
         ei.refresh();

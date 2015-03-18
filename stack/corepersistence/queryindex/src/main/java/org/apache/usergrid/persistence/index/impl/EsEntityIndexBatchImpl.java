@@ -117,8 +117,8 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         String indexId = createIndexDocId( entity, context );
 
         log.debug( "Indexing entity documentId {} data {} ", indexId, entityAsMap );
-        final String entityType =IndexingUtils.getType(applicationScope, entity.getId());
-        container.addIndexRequest(new IndexRequest(alias.getWriteAlias(), entityType, indexId, entityAsMap));
+        final SearchType entityType =SearchType.fromId(entity.getId());
+        container.addIndexRequest(new IndexRequest(alias.getWriteAlias(), entityType.getTypeName(applicationScope), indexId, entityAsMap));
 
         return this;
     }
@@ -132,7 +132,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         ValidationUtils.verifyVersion( version );
 
         final String context = createContextName(indexScope);
-        final String entityType =IndexingUtils.getType(applicationScope, id);
+        final SearchType entityType =SearchType.fromId(id);
 
         final String indexId = createIndexDocId( id, version, context );
 
@@ -151,14 +151,13 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
                 } );
         }
 
-
         String[] indexes = entityIndex.getIndexes(AliasedEntityIndex.AliasType.Read);
         //get the default index if no alias exists yet
         if(indexes == null ||indexes.length == 0){
             indexes = new String[]{indexIdentifier.getIndex(null)};
         }
 
-        container.addDeIndexRequest( new DeIndexRequest( indexes, entityType, indexId ) );
+        container.addDeIndexRequest( new DeIndexRequest( indexes, entityType.getTypeName(applicationScope), indexId ) );
 
         log.debug("Deindexed Entity with index id " + indexId);
 
