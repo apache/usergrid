@@ -127,6 +127,54 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
     }
 
 
+
+    /**
+     * USERGRID-492 test for ordering
+     */
+    @Test
+    public void testUpdateVersionMaxFirst() throws Exception {
+
+        // turn off post processing stuff that cleans up stale entities
+        System.setProperty( EVENTS_DISABLED, "true" );
+
+        final EntityManager em = app.getEntityManager();
+
+        Entity thing = em.create( "thing", new HashMap<String, Object>() {{
+            put( "ordinal", 0 );
+        }} );
+
+        em.refreshIndex();
+
+        assertEquals( 1, queryCollectionCp( "things", "thing", "select *" ).size() );
+
+        em.updateProperties( thing, new HashMap<String, Object>() {{
+            put( "ordinal", 1 );
+        }} );
+        em.refreshIndex();
+
+        UUID newVersion =  getCpEntity( thing ).getVersion();
+
+
+        assertEquals( 2, queryCollectionCp( "things", "thing", "select * order by ordinal desc" ).size() );
+
+        //now run enable events and ensure we clean up
+        System.setProperty( EVENTS_DISABLED, "false" );
+
+        final Results results = queryCollectionEm( "things", "select * order by ordinal desc" );
+
+        assertEquals( 1, results.size() );
+        assertEquals(1, results.getEntities().get( 0 ).getProperty( "ordinal" ));
+
+        em.refreshIndex();
+
+        //ensure it's actually gone
+        final CandidateResults candidates =  queryCollectionCp( "things", "thing", "select * order by ordinal desc" );
+        assertEquals( 1, candidates.size() );
+
+        assertEquals(newVersion, candidates.get( 0 ).getVersion());
+    }
+
+
     /**
      * Test that the CpRelationManager cleans up and stale indexes that it finds when
      * it is building search results.
