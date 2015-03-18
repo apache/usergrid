@@ -45,7 +45,7 @@ public interface EntityIndex {
     /**
      * Delete the index from ES
      */
-    public void deleteIndex();
+    public ListenableActionFuture deleteIndex();
 
     /**
      * Create an index and add to alias, will create alias and remove any old index from write alias if alias already exists

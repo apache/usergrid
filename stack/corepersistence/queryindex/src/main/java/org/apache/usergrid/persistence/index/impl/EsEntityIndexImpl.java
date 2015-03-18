@@ -265,7 +265,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
             String indexName = indexIdentifier.getIndex(indexSuffix);
             final AdminClient adminClient = esProvider.getClient().admin();
 
-            String[] indexNames = getIndexesFromEs( AliasType.Write );
+            String[] indexNames = getIndexesFromEs(AliasType.Write);
 
 
             final IndicesAliasesRequestBuilder aliasesRequestBuilder = adminClient.indices().prepareAliases();
@@ -280,7 +280,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
             // add read alias
             aliasesRequestBuilder.addAlias(  indexName, alias.getReadAlias());
-            logger.info( "Created new read Alias Name [{}] on Index [{}]", alias.getReadAlias(), indexName);
+            logger.info("Created new read Alias Name [{}] on Index [{}]", alias.getReadAlias(), indexName);
 
 
             //add write alias
@@ -623,21 +623,54 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     /**
      * Completely delete an index.
      */
-    public void deleteIndex() {
-        AdminClient adminClient = esProvider.getClient().admin();
+    public ListenableActionFuture deleteIndex() {
+        String idString = IndexingUtils.idString(applicationScope.getApplication());
 
-        DeleteIndexResponse response = adminClient.indices()
-                .prepareDelete( indexIdentifier.getIndex(null) ).get();
+        final TermQueryBuilder tqb = QueryBuilders.termQuery(APPLICATION_ID_FIELDNAME, idString);
 
-        if ( response.isAcknowledged() ) {
-            logger.info( "Deleted index: read {} write {}", alias.getReadAlias(), alias.getWriteAlias());
-            //invlaidate the alias
-            aliasCache.invalidate(alias);
-        }
-        else {
-            logger.info( "Failed to delete index: read {} write {}", alias.getReadAlias(), alias.getWriteAlias());
+        //Added For Graphite Metrics
+
+        final ListenableActionFuture<DeleteByQueryResponse> response = esProvider.getClient()
+            .prepareDeleteByQuery( alias.getWriteAlias() ).setQuery( tqb ).execute();
+
+        response.addListener(new ActionListener<DeleteByQueryResponse>() {
+
+            @Override
+            public void onResponse(DeleteByQueryResponse response) {
+                checkDeleteByQueryResponse(tqb,response);
+            }
+
+
+            @Override
+            public void onFailure(Throwable e) {
+                logger.error("failed on delete index",e);
+            }
+        });
+        return response;
+    }
+    /**
+     * Validate the response doesn't contain errors, if it does, fail fast at the first error we encounter
+     */
+    private void checkDeleteByQueryResponse(
+        final QueryBuilder query, final DeleteByQueryResponse response ) {
+
+        for ( IndexDeleteByQueryResponse indexDeleteByQueryResponse : response ) {
+            final ShardOperationFailedException[] failures = indexDeleteByQueryResponse.getFailures();
+
+            for ( ShardOperationFailedException failedException : failures ) {
+                logger.error( String.format("Unable to delete by query %s. "
+                            + "Failed with code %d and reason %s on shard %s in index %s",
+                        query.toString(),
+                        failedException.status().getStatus(),
+                        failedException.reason(),
+                        failedException.shardId(),
+                        failedException.index() )
+                );
+            }
+
         }
     }
+
 
 
     /**

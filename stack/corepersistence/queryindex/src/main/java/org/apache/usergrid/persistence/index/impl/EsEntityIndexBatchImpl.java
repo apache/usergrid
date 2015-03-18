@@ -94,7 +94,10 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         IndexValidationUtils.validateIndexScope( indexScope );
         ValidationUtils.verifyEntityWrite( entity );
         ValidationUtils.verifyVersion( entity.getVersion() );
-
+        //add app id for indexing
+        entity.setField(
+            new StringField(APPLICATION_ID_FIELDNAME,IndexingUtils.idString(applicationScope.getApplication()))
+        );
         final String context = createContextName(indexScope);
 
         if ( log.isDebugEnabled() ) {

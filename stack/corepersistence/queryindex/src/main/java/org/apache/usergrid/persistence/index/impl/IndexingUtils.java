@@ -50,6 +50,7 @@ public class IndexingUtils {
     //
     // Reserved UG fields.
     //
+    public static final String APPLICATION_ID_FIELDNAME = "ug_applicationId";
 
     public static final String ENTITY_CONTEXT_FIELDNAME = "ug_context";
 
@@ -162,23 +163,27 @@ public class IndexingUtils {
                     .endObject()
                     .startArray("dynamic_templates")
                         // we need most specific mappings first since it's a stop on match algorithm
-                        .startObject()
-                            .startObject("entity_id_template")
-                                .field("match", IndexingUtils.ENTITYID_ID_FIELDNAME)
+                            .startObject()
+                                .startObject("application_id_template")
+                                    .field("match", APPLICATION_ID_FIELDNAME)
                                     .field("match_mapping_type", "string")
-                                            .startObject("mapping").field("type", "string")
-                                                .field("index", "not_analyzed")
-                                            .endObject()
-                                    .endObject()
+                                    .startObject("mapping").field("type", "string").field("index", "not_analyzed").field(DOC_VALUES_KEY, true).endObject()
                                 .endObject()
+                            .endObject()
+                            .startObject()
+                                .startObject("entity_id_template")
+                                    .field("match", IndexingUtils.ENTITYID_ID_FIELDNAME)
+                                    .field("match_mapping_type", "string")
+                                    .startObject("mapping").field("type", "string").field("index", "not_analyzed").field(DOC_VALUES_KEY, true).endObject()
+                                .endObject()
+                            .endObject()
 
                             .startObject()
                                 .startObject("entity_context_template")
                                     .field("match", IndexingUtils.ENTITY_CONTEXT_FIELDNAME)
                                     .field("match_mapping_type", "string")
                                         .startObject("mapping")
-                                            .field("type", "string")
-                                            .field("index", "not_analyzed")
+                                            .field("type", "string").field("index", "not_analyzed").field(DOC_VALUES_KEY, true)
                                         .endObject()
                                 .endObject()
                             .endObject()
@@ -187,7 +192,7 @@ public class IndexingUtils {
                                 .startObject("entity_version_template")
                                     .field("match", IndexingUtils.ENTITY_VERSION_FIELDNAME)
                                     .field("match_mapping_type", "string")
-                                    .startObject("mapping").field("type", "long").field(DOC_VALUES_KEY, true)
+                                    .startObject("mapping").field("type", "long").field("index", "not_analyzed").field(DOC_VALUES_KEY, true)
                                     .endObject()
                                 .endObject()
                             .endObject()

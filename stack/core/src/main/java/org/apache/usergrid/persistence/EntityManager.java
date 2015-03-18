@@ -34,6 +34,7 @@ import org.apache.usergrid.persistence.entities.Role;
 import org.apache.usergrid.persistence.index.query.CounterResolution;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.index.query.Query.Level;
+import org.elasticsearch.action.ListenableActionFuture;
 
 
 /**
@@ -696,7 +697,7 @@ public interface EntityManager {
     /**
     * Create the index, should ONLY ever be called the first time an application is created
     */
-    void deleteIndex();
+    ListenableActionFuture deleteIndex();
 
     public void init( EntityManagerFactory emf, UUID applicationId);
 
