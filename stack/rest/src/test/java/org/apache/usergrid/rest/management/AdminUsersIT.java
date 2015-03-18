@@ -93,16 +93,16 @@ public class AdminUsersIT extends AbstractRestIT {
         passwordPayload.put( "oldpassword", password );
 
         // change the password as admin. The old password isn't required
-        management.users().user( username ).password().post(passwordPayload);
+        management.users().user( username ).password().post(Entity.class,passwordPayload);
 
         this.refreshIndex();
 
         //Get the token using the new password
-        management.token().post( new Token( username, "testPassword" ) );
+        management.token().post( Token.class, new Token( username, "testPassword" )  );
 
         //Check that we cannot get the token using the old password
         try {
-            management.token().post( new Token( username, password ) );
+            management.token().post( Token.class, new Token( username, password ));
             fail( "We shouldn't be able to get a token using the old password" );
         }catch(UniformInterfaceException uie) {
             errorParse( 400,"invalid_grant",uie );
@@ -125,18 +125,19 @@ public class AdminUsersIT extends AbstractRestIT {
         passwordPayload.put( "oldpassword", password );
 
         // change the password as admin. The old password isn't required
-        management.users().user( username ).password().post( passwordPayload );
+        management.users().user( username ).password().post(Entity.class, passwordPayload );
 
         this.refreshIndex();
 
 
         //Get the token using the new password
-        management.token().post( new Token( username, "testPassword" ) );
+        management.token().post( Token.class, new Token( username, "testPassword" )  );
+
 
 
         // Check that we can't change the password using the old password.
         try {
-            management.users().user( username ).password().post( passwordPayload );
+            management.users().user( username ).password().post( Entity.class ,passwordPayload );
             fail("We shouldn't be able to change the password with the same payload");
         }
         catch ( UniformInterfaceException uie ) {
@@ -164,11 +165,12 @@ public class AdminUsersIT extends AbstractRestIT {
 
         this.refreshIndex();
 
-        assertNotNull( management.token().post( new Token( username, "testPassword" ) ) );
+        assertNotNull(management.token().post( Token.class, new Token( username, "testPassword" )  ));
+
 
         //Check that we cannot get the token using the old password
         try {
-            management.token().post( new Token( username, password ) );
+            management.token().post( Token.class, new Token( username, password) );
             fail( "We shouldn't be able to get a token using the old password" );
         }catch(UniformInterfaceException uie) {
             errorParse( 400,"invalid_grant",uie );
@@ -306,8 +308,9 @@ public class AdminUsersIT extends AbstractRestIT {
             clientSetup.getRestClient().testPropertiesResource().post( testPropertiesPayload );
             refreshIndex();
 
-            Token superuserToken = management().token().post(
-                new Token( clientSetup.getSuperuserName(), clientSetup.getSuperuserPassword() ) );
+            Token superuserToken = management.token().post( Token.class,
+                new Token( clientSetup.getSuperuserName(), clientSetup.getSuperuserPassword() )  );
+
 
 
 
@@ -343,7 +346,7 @@ public class AdminUsersIT extends AbstractRestIT {
             clientSetup.getRestClient().testPropertiesResource().post( testPropertiesPayload );
             refreshIndex();
 
-            Token testToken = management().token().post(
+            Token testToken = management().token().post(Token.class,
                 new Token( originalTestProperties.getAsString( PROPERTIES_TEST_ACCOUNT_ADMIN_USER_EMAIL ),
                     originalTestProperties.getAsString(  PROPERTIES_TEST_ACCOUNT_ADMIN_USER_PASSWORD ) ));
 
@@ -414,7 +417,7 @@ public class AdminUsersIT extends AbstractRestIT {
     public void checkFormPasswordReset() throws Exception {
 
 
-        management().users().user( clientSetup.getUsername() ).resetpw().post(null);
+        management().users().user( clientSetup.getUsername() ).resetpw().post(new Form());
 
         //Create mocked inbox
         List<Message> inbox = Mailbox.get( clientSetup.getEmail() );
@@ -501,7 +504,7 @@ public class AdminUsersIT extends AbstractRestIT {
 
         //Makes sure we can't replace a password with itself ( as it is the only one in the history )
         try {
-            management().users().user( clientSetup.getUsername() ).password().post( payload );
+            management().users().user( clientSetup.getUsername() ).password().post(Entity.class ,payload );
 
             fail( "should fail with conflict" );
         }
@@ -511,7 +514,7 @@ public class AdminUsersIT extends AbstractRestIT {
 
         //Change the password
         payload.put( "newpassword", passwords[1] );
-        management().users().user( clientSetup.getUsername() ).password().post( payload );
+        management().users().user( clientSetup.getUsername() ).password().post( Entity.class,payload );
 
         refreshIndex();
 
@@ -520,7 +523,7 @@ public class AdminUsersIT extends AbstractRestIT {
 
         //Make sure that we can't change the password with itself using a different entry in the history.
         try {
-            management().users().user( clientSetup.getUsername() ).password().post( payload );
+            management().users().user( clientSetup.getUsername() ).password().post( Entity.class,payload );
 
             fail( "should fail with conflict" );
         }
@@ -603,12 +606,12 @@ public class AdminUsersIT extends AbstractRestIT {
         adminUserPayload.put( "password", username );
 
         //post new admin user besides the default
-        management().orgs().organization( clientSetup.getOrganizationName() ).users().post( adminUserPayload );
+        management().orgs().organization( clientSetup.getOrganizationName() ).users().post(ApiResponse.class ,adminUserPayload );
 
         refreshIndex();
 
         //Retrieves the admin users
-        Entity adminUsers = management().orgs().organization( clientSetup.getOrganizationName() ).users().get();
+        Entity adminUsers = management().orgs().organization( clientSetup.getOrganizationName() ).users().get(Entity.class);
 
         assertEquals("There need to be 2 admin users",2,( ( ArrayList ) adminUsers.getResponse().getData() ).size());
 
@@ -623,7 +626,8 @@ public class AdminUsersIT extends AbstractRestIT {
     @Test
     public void createOrgFromUserConnectionFail() throws Exception {
 
-        Token token = management().token().post( new Token( clientSetup.getUsername(),clientSetup.getPassword() ) );
+        Token token = management().token().post(Token.class ,new Token( clientSetup.getUsername(),clientSetup.getPassword() ) );
+
         // try to create the same org again off the connection
         try {
             management().users().user( clientSetup.getUsername() ).organizations().post( clientSetup.getOrganization(),token );

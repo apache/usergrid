@@ -17,10 +17,13 @@
 package org.apache.usergrid.rest.test.resource2point0.endpoints;
 
 
+import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource2point0.model.Token;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
+import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.WebResource;
 
 import java.util.HashMap;
@@ -28,6 +31,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+
+import javax.ws.rs.core.MediaType;
 
 
 /**
@@ -105,5 +110,68 @@ public abstract class NamedResource implements UrlResource {
         return resource;
     }
 
+    //Post Resources
+    public Entity postResource(WebResource resource, Map<String,Object> payload){
+        ApiResponse response = resource.type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
+                                                .post(ApiResponse.class, payload);
+        return new Entity(response);
+    }
+
+    public Entity post(Token token, Map<String,Object> payload){
+        WebResource resource;
+
+        if(token != null) {
+            resource = getResource( true, token );
+        }
+        else
+            resource = getResource( true );
+
+        return postResource(resource,payload);
+    }
+
+
+    /**
+     * Need to refactor all instances of tokens to either be passed in or manually set during the test.
+     * There isn't any reason we would want a rest forwarding framework to set something on behave of the user.
+     * @param type
+     * @param requestEntity
+     * @param <T>
+     * @return
+     */
+    //For edge cases like Organizations and Tokens
+    public <T> T post(Class<T> type, Object requestEntity) {
+        GenericType<T> gt = new GenericType<>((Class) type);
+        return getResource().type(MediaType.APPLICATION_JSON_TYPE)
+                            .accept( MediaType.APPLICATION_JSON )
+                            .post(gt.getRawClass(), requestEntity);
+
+    }
+
+    //For edge cases like Organizations and Tokens without any payload
+    public <T> T post(Class<T> type) {
+        GenericType<T> gt = new GenericType<>((Class) type);
+        return getResource().type(MediaType.APPLICATION_JSON_TYPE)
+                            .accept( MediaType.APPLICATION_JSON )
+                            .post(gt.getRawClass());
+
+    }
+
+    //Get Resources
+//    public Entity get() {
+//        WebResource resource = getResource(true);
+//
+//        ApiResponse response = resource.type( MediaType.APPLICATION_JSON_TYPE )
+//                                       .accept( MediaType.APPLICATION_JSON ).get( ApiResponse.class);
+//        return new Entity(response);
+//    }
+
+    //For edge cases like Organizations and Tokens without any payload
+    public <T> T get(Class<T> type) {
+        GenericType<T> gt = new GenericType<>((Class) type);
+        return getResource( true ).type(MediaType.APPLICATION_JSON_TYPE)
+                            .accept( MediaType.APPLICATION_JSON )
+                            .get( gt.getRawClass() );
+
+    }
 
 }

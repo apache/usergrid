@@ -139,7 +139,7 @@ public class ImportResourceIT extends AbstractRestIT {
             .app()
             .addToPath(app)
             .addToPath("imports")
-            .post(payload);
+            .post(Entity.class,payload);
 
         assertNotNull(entity);
 
@@ -177,7 +177,7 @@ public class ImportResourceIT extends AbstractRestIT {
             .app()
             .addToPath(app)
             .addToPath("imports")
-            .post(payload);
+            .post(Entity.class,payload);
 
 
         assertNotNull(entity);
@@ -200,7 +200,7 @@ public class ImportResourceIT extends AbstractRestIT {
 
         //log into the new org/app and get a token
         Token tokenPayload = new Token("password", newOrgUsername, newOrgPassword);
-        Token newOrgToken = clientSetup.getRestClient().management().token().post(tokenPayload);
+        Token newOrgToken = clientSetup.getRestClient().management().token().post(Token.class,tokenPayload);
 
         //save the old token and set the newly issued token as current
         context().setToken(newOrgToken);
@@ -227,7 +227,7 @@ public class ImportResourceIT extends AbstractRestIT {
         Entity payload = new Entity();
 
         try {
-            this.management().orgs().organization(org).app().addToPath(app).addToPath("imports").post(payload);
+            this.management().orgs().organization(org).app().addToPath(app).addToPath("imports").post(Entity.class,payload);
         } catch (UniformInterfaceException uie) {
             responseStatus = uie.getResponse().getClientResponseStatus();
         }
@@ -246,7 +246,7 @@ public class ImportResourceIT extends AbstractRestIT {
         properties.remove("storage_info");
 
         try {
-            this.management().orgs().organization(org).app().addToPath(app).addToPath("imports").post(payload);
+            this.management().orgs().organization(org).app().addToPath(app).addToPath("imports").post(Entity.class,payload);
         } catch (UniformInterfaceException uie) {
             responseStatus = uie.getResponse().getClientResponseStatus();
         }
@@ -267,7 +267,7 @@ public class ImportResourceIT extends AbstractRestIT {
 
 
         try {
-            this.management().orgs().organization(org).app().addToPath(app).addToPath("imports").post(payload);
+            this.management().orgs().organization(org).app().addToPath(app).addToPath("imports").post(Entity.class,payload);
         } catch (UniformInterfaceException uie) {
             responseStatus = uie.getResponse().getClientResponseStatus();
         }
@@ -289,7 +289,7 @@ public class ImportResourceIT extends AbstractRestIT {
         storage_info.remove("s3_key");
 
         try {
-            this.management().orgs().organization(org).app().addToPath(app).addToPath("imports").post(payload);
+            this.management().orgs().organization(org).app().addToPath(app).addToPath("imports").post(Entity.class,payload);
         } catch (UniformInterfaceException uie) {
             responseStatus = uie.getResponse().getClientResponseStatus();
         }
@@ -302,7 +302,7 @@ public class ImportResourceIT extends AbstractRestIT {
         storage_info.remove("s3_access_id");
 
         try {
-            this.management().orgs().organization(org).app().addToPath(app).addToPath("imports").post(payload);
+            this.management().orgs().organization(org).app().addToPath(app).addToPath("imports").post(Entity.class,payload);
         } catch (UniformInterfaceException uie) {
             responseStatus = uie.getResponse().getClientResponseStatus();
         }
@@ -315,7 +315,7 @@ public class ImportResourceIT extends AbstractRestIT {
         storage_info.remove("bucket_location");
 
         try {
-            this.management().orgs().organization(org).app().addToPath(app).addToPath("imports").post(payload);
+            this.management().orgs().organization(org).app().addToPath(app).addToPath("imports").post(Entity.class,payload);
         } catch (UniformInterfaceException uie) {
             responseStatus = uie.getResponse().getClientResponseStatus();
         }
@@ -626,7 +626,7 @@ public class ImportResourceIT extends AbstractRestIT {
         }});
 
         Entity importEntity = this.management().orgs().organization(org).app().addToPath(app).addToPath("imports")
-                                  .post(importPayload);
+                                  .post(Entity.class,importPayload);
 
         int maxRetries = 120;
         int retries = 0;

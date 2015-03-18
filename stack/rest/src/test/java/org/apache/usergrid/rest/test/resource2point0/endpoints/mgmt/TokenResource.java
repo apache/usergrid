@@ -35,19 +35,6 @@ public class TokenResource extends NamedResource {
         super("token", context, parent);
     }
 
-
-    /**
-     * Obtains an access token and sets the token for the context to use in later calls
-     *
-     * @return
-     */
-    public Token post() {
-        Token token = getResource().type(MediaType.APPLICATION_JSON_TYPE)
-            .accept(MediaType.APPLICATION_JSON).post(Token.class);
-        this.context.setToken(token);
-        return token;
-    }
-
     /**
      * Obtains an access token and sets the token for the context to use in later calls
      *
@@ -62,20 +49,6 @@ public class TokenResource extends NamedResource {
         this.context.setToken(token);
         return token;
     }
-
-    /**
-     * Obtains an access token and sets the token for the context to use in later calls
-     *
-     * @param token
-     * @return
-     */
-    public Token post(Token token) {
-        token = getResource().type(MediaType.APPLICATION_JSON_TYPE)
-            .accept(MediaType.APPLICATION_JSON).post(Token.class, token);
-        this.context.setToken(token);
-        return token;
-    }
-
 
     public TokenResource setToken(Token token) {
         this.context.setToken(token);

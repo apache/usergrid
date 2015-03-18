@@ -91,16 +91,18 @@ public class ClientSetup implements TestRule {
         String name = testClass + "." + methodName;
 
         restClient.superuserSetup();
-        superuserToken = restClient.management().token().post( new Token( superuserName, superuserPassword ) );
+        superuserToken = restClient.management().token().post(Token.class, new Token( superuserName, superuserPassword ) );
 
         username = "user_"+name + UUIDUtils.newTimeUUID();
         password = username;
         orgName = "org_"+name+UUIDUtils.newTimeUUID();
         appName = "app_"+name+UUIDUtils.newTimeUUID();
 
-        organization = restClient.management().orgs().post(new Organization( orgName,username,username+"@usergrid.com",username,username, null  ));
+        organization = restClient.management().orgs()
+                                 .post(new Organization(
+                                     orgName,username,username+"@usergrid.com",username,username, null  ));
 
-        restClient.management().token().post(new Token(username,username));
+        Token token = restClient.management().token().post(Token.class,new Token(username,username));
 
         restClient.management().orgs().organization(organization.getName()).app().post(new Application(appName));
 
