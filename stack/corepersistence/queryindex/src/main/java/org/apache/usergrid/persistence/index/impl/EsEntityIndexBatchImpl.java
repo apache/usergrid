@@ -117,9 +117,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         String indexId = createIndexDocId( entity, context );
 
         log.debug( "Indexing entity documentId {} data {} ", indexId, entityAsMap );
-        final String entityType = entity.getId().getType();
-
-
+        final String entityType =IndexingUtils.getType(applicationScope, entity.getId());
         container.addIndexRequest(new IndexRequest(alias.getWriteAlias(), entityType, indexId, entityAsMap));
 
         return this;
@@ -134,7 +132,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         ValidationUtils.verifyVersion( version );
 
         final String context = createContextName(indexScope);
-        final String entityType = id.getType();
+        final String entityType =IndexingUtils.getType(applicationScope, id);
 
         final String indexId = createIndexDocId( id, version, context );
 

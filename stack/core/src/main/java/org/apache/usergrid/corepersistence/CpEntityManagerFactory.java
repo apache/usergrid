@@ -292,7 +292,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         EntityManager appEm = getEntityManager( applicationId );
 
         appEm.create( applicationId, TYPE_APPLICATION, properties );
-        appEm.createIndex();
         appEm.resetRoles();
         appEm.refreshIndex();
 
@@ -706,7 +705,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         EntityManager em = getEntityManager( appId );
 
         //explicitly invoke create index, we don't know if it exists or not in ES during a rebuild.
-        em.createIndex();
         Application app = em.getApplication();
 
         em.reindex( po );
@@ -760,7 +758,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         EntityManager em = getEntityManager( appId );
 
         //explicitly invoke create index, we don't know if it exists or not in ES during a rebuild.
-        em.createIndex();
         Application app = em.getApplication();
 
         em.reindexCollection( po, collectionName, reverse );

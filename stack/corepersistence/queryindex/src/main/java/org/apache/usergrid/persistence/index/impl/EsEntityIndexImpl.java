@@ -199,9 +199,9 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
         final int numberOfShards = config.getNumberOfShards();
         final int numberOfReplicas = config.getNumberOfReplicas();
         String[] indexes = getIndexesFromEs(AliasType.Write);
-        if(indexes == null || indexes.length==0) {
+//        if(indexes == null || indexes.length==0) {
             addIndex(null, numberOfShards, numberOfReplicas, config.getWriteConsistencyLevel());
-        }
+//        }
     }
 
     @Override
@@ -233,21 +233,21 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
                 //ONLY add the alias if we create the index, otherwise we're going to overwrite production settings
 
-                /**
-                 * DO NOT MOVE THIS LINE OF CODE UNLESS YOU REALLY KNOW WHAT YOU'RE DOING!!!!
-                 */
-
-                //We do NOT want to create an alias if the index already exists, we'll overwrite the indexes that
-                //may have been set via other administrative endpoint
-
-                addAlias(normalizedSuffix);
-
-                testNewIndex();
 
                 logger.info("Created new Index Name [{}] ACK=[{}]", indexName, cir.isAcknowledged());
             } catch (IndexAlreadyExistsException e) {
                 logger.info("Index Name [{}] already exists", indexName);
             }
+            /**
+             * DO NOT MOVE THIS LINE OF CODE UNLESS YOU REALLY KNOW WHAT YOU'RE DOING!!!!
+             */
+
+            //We do NOT want to create an alias if the index already exists, we'll overwrite the indexes that
+            //may have been set via other administrative endpoint
+
+            addAlias(normalizedSuffix);
+
+            testNewIndex();
 
 
 
@@ -347,7 +347,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
         // to receive documents. Occasionally we see errors.
         // See this post: http://s.apache.org/index-missing-exception
 
-        logger.debug( "Testing new index name: read {} write {}", alias.getReadAlias(), alias.getWriteAlias());
+        logger.debug("Testing new index name: read {} write {}", alias.getReadAlias(), alias.getWriteAlias());
 
         final RetryOperation retryOperation = new RetryOperation() {
             @Override
@@ -410,12 +410,9 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     public CandidateResults search(final IndexScope indexScope, final SearchTypes searchTypes,
             final Query query ) {
 
-        final String context = IndexingUtils.createContextName( indexScope );
-        final String[] entityTypes = searchTypes.getTypeNames();
-
+        final String context = IndexingUtils.createContextName(indexScope);
+        final String[] entityTypes = searchTypes.getTypeNames(applicationScope);
         QueryBuilder qb = query.createQueryBuilder(context);
-
-
         SearchResponse searchResponse;
 
         if ( query.getCursor() == null ) {
@@ -632,42 +629,6 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
                 .cluster().pendingClusterTasks( new PendingClusterTasksRequest() ).actionGet();
 
         return tasksResponse.pendingTasks().size();
-    }
-
-
-    @Override
-    public CandidateResults getEntityVersions( final IndexScope scope, final Id id ) {
-
-        //since we don't have paging inputs, there's no point in executing a query for paging.
-
-        final String context = IndexingUtils.createContextName(scope);
-        final SearchTypes searchTypes = SearchTypes.fromTypes(id.getType());
-
-        final QueryBuilder queryBuilder =
-                QueryBuilders.termQuery( IndexingUtils.ENTITY_CONTEXT_FIELDNAME, context );
-
-        final SearchRequestBuilder srb = esProvider.getClient().prepareSearch( alias.getReadAlias() )
-                .setTypes(searchTypes.getTypeNames())
-                .setScroll(cursorTimeout + "m")
-                .setQuery(queryBuilder);
-
-        final SearchResponse searchResponse;
-        try {
-            //Added For Graphite Metrics
-            Timer.Context timeEntityIndex = getVersionsTimer.time();
-            searchResponse = srb.execute().actionGet();
-            timeEntityIndex.stop();
-        }
-        catch ( Throwable t ) {
-            logger.error( "Unable to communicate with elasticsearch" );
-            failureMonitor.fail( "Unable to execute batch", t);
-            throw t;
-        }
-
-
-        failureMonitor.success();
-
-        return parseResults(searchResponse, new Query());
     }
 
 

@@ -271,7 +271,7 @@ public class EntityIndexTest extends BaseIT {
         ObjectMapper mapper = new ObjectMapper();
         List<Object> sampleJson = mapper.readValue( is, new TypeReference<List<Object>>() {} );
         EntityIndexBatch batch = entityIndex.createBatch();
-        insertJsonBlob(sampleJson,batch, entityType, indexScope, max,startIndex);
+        insertJsonBlob(sampleJson,batch, entityType, indexScope, max, startIndex);
         batch.execute().get();
         entityIndex.refresh();
     }
@@ -297,10 +297,9 @@ public class EntityIndexTest extends BaseIT {
             EntityUtils.setVersion(entity, UUIDGenerator.newTimeUUID());
             entity.setField(new UUIDField(IndexingUtils.ENTITYID_ID_FIELDNAME, UUID.randomUUID()));
             batch.index(indexScope, entity);
+            batch.execute().get();
 
-            if(count %1000 == 0){
-                batch.execute().get();
-            }
+
             if ( ++count > max ) {
                 break;
             }
@@ -369,7 +368,6 @@ public class EntityIndexTest extends BaseIT {
 
 
     private void testQueries(final IndexScope scope, SearchTypes searchTypes, final EntityIndex entityIndex ) {
-
 
         testQuery(scope, searchTypes, entityIndex, "name = 'Morgan Pierce'", 1 );
 
@@ -442,63 +440,6 @@ public class EntityIndexTest extends BaseIT {
             assertEquals( 0, diff.size() );
         }
     }
-
-
-    @Test
-    public void getEntityVersions() throws Exception {
-
-        Id appId = new SimpleId( "application" );
-        Id ownerId = new SimpleId( "owner" );
-
-        ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
-
-        IndexScope indexScope = new IndexScopeImpl( ownerId, "users" );
-
-
-
-        EntityIndex entityIndex = eif.createEntityIndex( applicationScope );
-        entityIndex.initializeIndex();
-
-        final String middleName = "middleName" + UUIDUtils.newTimeUUID();
-        Map<String, Object> properties = new LinkedHashMap<String, Object>();
-        properties.put( "username", "edanuff" );
-        properties.put( "email", "ed@anuff.com" );
-        properties.put( "middlename", middleName );
-
-        Map entityMap = new HashMap() {{
-            put( "username", "edanuff" );
-            put( "email", "ed@anuff.com" );
-            put( "middlename", middleName );
-        }};
-
-        final Id userId = new SimpleId("user");
-
-        Entity user = EntityIndexMapUtils.fromMap( entityMap );
-        EntityUtils.setId( user, userId);
-        EntityUtils.setVersion( user, UUIDGenerator.newTimeUUID() );
-
-
-        final EntityIndexBatch batch = entityIndex.createBatch();
-        user.setField(new UUIDField(IndexingUtils.ENTITYID_ID_FIELDNAME, UUID.randomUUID()));
-
-        batch.index( indexScope, user );
-
-        user.setField( new StringField( "address1", "1782 address st" ) );
-        batch.index( indexScope, user );
-        user.setField( new StringField( "address2", "apt 508" ) );
-        batch.index( indexScope,  user );
-        user.setField( new StringField( "address3", "apt 508" ) );
-        batch.index( indexScope,  user);
-        batch.execute().get();
-        entityIndex.refresh();
-
-        CandidateResults results = entityIndex.getEntityVersions(indexScope,  user.getId() );
-
-        assertEquals(1,  results.size());
-        assertEquals( results.get( 0 ).getId(), user.getId() );
-        assertEquals( results.get(0).getVersion(), user.getVersion());
-    }
-
 
     @Test
     public void deleteVerification() throws Throwable {

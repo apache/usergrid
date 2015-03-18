@@ -68,27 +68,6 @@ public interface EntityIndex {
     public CandidateResults search(final IndexScope indexScope, final SearchTypes searchType, Query query );
 
     /**
-     * Get the candidate results of all versions of the entity for this id.
-     * @param indexScope The scope of the index to search in
-     * @param id The id to search within.
-     */
-    public CandidateResults getEntityVersions(final IndexScope indexScope, final Id id);
-
-//    /**
-//     * Create a delete method that deletes by Id. This will delete all documents from ES with the same entity Id,
-//     * effectively removing all versions of an entity from all index scopes
-//     * @param entityId The entityId to remove
-//     */
-//    public Future deleteAllVersionsOfEntity(final Id entityId );
-//
-//    /**
-//     * Takes all the previous versions of the current entity and deletes all previous versions
-//     * @param id The id to remove
-//     * @param version The max version to retain
-//     */
-//    public Future deletePreviousVersions(final Id id, final UUID version);
-
-    /**
      * Refresh the index.
      */
     public void refresh();

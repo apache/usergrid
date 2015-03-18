@@ -230,7 +230,7 @@ public class IndexingUtils {
                             .startObject("template__long")
                                 .field("match", LONG_PREFIX + "*")
                                 .field("match_mapping_type", "long")
-                                .startObject("mapping").field("type", "long").field("index","not_analyzed").field(DOC_VALUES_KEY, true).endObject()
+                                .startObject("mapping").field("type", "long").field("index", "not_analyzed").field(DOC_VALUES_KEY, true).endObject()
                             .endObject()
                         .endObject()
 
@@ -249,5 +249,11 @@ public class IndexingUtils {
     }
 
 
+    public static String getType(ApplicationScope applicationScope, Id entityId) {
+        return getType(applicationScope,entityId.getType());
+    }
 
+    public static String getType(ApplicationScope applicationScope, String type) {
+        return idString(applicationScope.getApplication()) + SEPARATOR + type;
+    }
 }

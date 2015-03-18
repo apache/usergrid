@@ -40,7 +40,7 @@ public class IndexIdentifier{
      * @return
      */
     public IndexAlias getAlias() {
-        return new IndexAlias(config,getIndexBase());
+        return new IndexAlias(config,config.getIndexPrefix());
     }
 
     /**
@@ -50,22 +50,12 @@ public class IndexIdentifier{
      */
     public String getIndex(String suffix) {
         if (suffix != null) {
-            return getIndexBase() + "_" + suffix;
+            return config.getIndexPrefix() + "_" + suffix;
         } else {
-            return getIndexBase();
+            return config.getIndexPrefix();
         }
     }
 
-    /**
-     * returns the base name for index which will be used to add an alias and index
-     * @return
-     */
-    private String getIndexBase() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(config.getIndexPrefix()).append(IndexingUtils.SEPARATOR);
-        IndexingUtils.idString(sb, applicationScope.getApplication());
-        return sb.toString();
-    }
 
     public class IndexAlias{
         private final String readAlias;
