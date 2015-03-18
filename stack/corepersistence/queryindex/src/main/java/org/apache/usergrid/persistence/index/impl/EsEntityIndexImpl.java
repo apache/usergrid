@@ -273,14 +273,14 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
             //remove the write alias from it's target
             for ( String currentIndex : indexNames ) {
                 aliasesRequestBuilder.removeAlias( currentIndex, alias.getWriteAlias() );
-                logger.info("Removing existing write Alias Name [{}] from Index [{}]", alias.getReadAlias(), currentIndex);
+                logger.info("Removing existing write Alias Name [{}] from Index [{}]", alias.getWriteAlias(), currentIndex);
             }
 
             //Added For Graphite Metrics
 
             // add read alias
             aliasesRequestBuilder.addAlias(  indexName, alias.getReadAlias());
-            logger.info("Created new read Alias Name [{}] on Index [{}]", alias.getReadAlias(), indexName);
+            logger.info( "Created new read Alias Name [{}] on Index [{}]", alias.getReadAlias(), indexName);
 
 
             //add write alias
