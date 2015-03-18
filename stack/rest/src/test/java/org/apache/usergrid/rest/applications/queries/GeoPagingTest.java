@@ -200,7 +200,7 @@ public class GeoPagingTest extends AbstractRestIT {
     /**
      * Test that geo-query returns co-located entities in expected order.
      */
-    @Test // USERGRID-1401
+    @Test
     public void groupQueriesWithDistanceOrderedResults() throws IOException {
 
         int maxRangeLimit = 9;
