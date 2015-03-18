@@ -141,15 +141,17 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         EntityManager em = getEntityManager( CpNamingUtils.SYSTEM_APP_ID);
 
         try {
-            if ( em.getApplication() == null ) {
+            if (em.getApplication() == null) {
                 logger.info("Creating system application");
                 Map sysAppProps = new HashMap<String, Object>();
                 sysAppProps.put(PROPERTY_NAME, "systemapp");
                 em.create(CpNamingUtils.SYSTEM_APP_ID, TYPE_APPLICATION, sysAppProps);
                 em.getApplication();
-                em.createIndex();
-                em.refreshIndex();
             }
+
+            em.createIndex();
+            em.refreshIndex();
+
 
         } catch (Exception ex) {
             throw new RuntimeException("Fatal error creating system application", ex);
@@ -289,9 +291,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             properties = new TreeMap<String, Object>( CASE_INSENSITIVE_ORDER );
         }
         properties.put( PROPERTY_NAME, appName );
-        EntityManager appEm = getEntityManager( applicationId );
+        EntityManager appEm = getEntityManager( applicationId);
 
-        appEm.create( applicationId, TYPE_APPLICATION, properties );
+        appEm.create(applicationId, TYPE_APPLICATION, properties );
         appEm.resetRoles();
         appEm.refreshIndex();
 
