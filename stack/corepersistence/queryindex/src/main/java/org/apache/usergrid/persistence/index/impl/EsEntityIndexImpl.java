@@ -624,6 +624,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
      * Completely delete an index.
      */
     public ListenableActionFuture deleteIndex() {
+        //TODO: add timer
+        //TODO: add all indexes
         String idString = IndexingUtils.idString(applicationScope.getApplication());
 
         final TermQueryBuilder tqb = QueryBuilders.termQuery(APPLICATION_ID_FIELDNAME, idString);
