@@ -109,7 +109,6 @@ public class ClientSetup implements TestRule {
         clientCredentials = restClient.management().orgs().organization( orgName ).credentials().get();
 
         Token token = restClient.management().token().post(Token.class,new Token(username,username));
-        restClient.management().token().setToken( token );
 
         restClient.management().orgs().organization(organization.getName()).app().post(new Application(appName));
 
