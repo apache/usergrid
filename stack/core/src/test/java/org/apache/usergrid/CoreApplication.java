@@ -145,11 +145,11 @@ public class CoreApplication implements Application, TestRule {
     protected void after( Description description ) {
         LOG.info( "Test {}: finish with application", description.getDisplayName() );
 
-        try {
-            setup.getEmf().getEntityManager(id).deleteIndex().get();
-        }catch (Exception ee){
-            throw new RuntimeException(ee);
-        }
+//        try {
+//            setup.getEmf().getEntityManager(id).().get();
+//        }catch (Exception ee){
+//            throw new RuntimeException(ee);
+//        }
     }
 
 
