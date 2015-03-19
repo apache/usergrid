@@ -177,7 +177,7 @@ public class GeoIT extends AbstractCoreIT {
         Map<String, Object> restaurantProps = new LinkedHashMap<String, Object>();
         restaurantProps.put("name", "Brickhouse");
         restaurantProps.put("address", "426 Brannan Street");
-        restaurantProps.put("location", getLocation(37.779632, -122.395131));
+        restaurantProps.put("location", getLocation(37.776753, -122.407846));
 
         Entity restaurant = em.create("restaurant", restaurantProps);
         assertNotNull(restaurant);
@@ -193,6 +193,7 @@ public class GeoIT extends AbstractCoreIT {
 
         Entity user = em.create("user", userProperties);
         assertNotNull(user);
+        em.refreshIndex();
 
         //3. Create a connection between the user and the entity
         em.createConnection(user, "likes", restaurant);
@@ -200,7 +201,7 @@ public class GeoIT extends AbstractCoreIT {
         em.refreshIndex();
         //4. Test that the user is within 2000m of the entity
         Results emSearchResults = em.searchConnectedEntities(user,
-            Query.fromQL("location within 2000 of "
+            Query.fromQL("location within 5000 of "
                 + ((LinkedHashMap<String, Object>) userProperties.get("location")).get("latitude")
                 + ", " + ((LinkedHashMap<String, Object>)
                         userProperties.get("location")).get("longitude")).setConnectionType("likes"));

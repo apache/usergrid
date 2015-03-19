@@ -22,6 +22,10 @@ package org.apache.usergrid.persistence.model.field;
  */
 public class StringField extends AbstractField<String> {
 
+
+    public static final int MAX_LENGTH = 500;
+
+
     public StringField(String name, String value) {
         super(name, value);
     }
@@ -38,4 +42,20 @@ public class StringField extends AbstractField<String> {
     public FieldTypeName getTypeName() {
                 return FieldTypeName.STRING;
             }
+
+
+    @Override
+    public void validate() {
+        //not unique, don't care
+        if(!unique){
+            return;
+        }
+
+        if(value != null && value.length() > MAX_LENGTH ){
+            throw new IllegalArgumentException( "Your unique field '" + name + "' cannot be longer than " + MAX_LENGTH + " characters" );
+        }
+
+
+
+    }
 }

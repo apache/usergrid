@@ -45,6 +45,7 @@ import static org.junit.Assert.assertEquals;
 
 
 
+
 public class LargeEntityIT extends AbstractCoreIT {
     private static final Logger LOG = LoggerFactory.getLogger( LargeEntityIT.class );
 
@@ -83,7 +84,7 @@ public class LargeEntityIT extends AbstractCoreIT {
 
         LOG.debug( "testLargeEntityCrud" );
 
-        SetConfigTestBypass.setValueByPass( serializationFig, "getMaxEntitySize", 641814 + "" );
+        SetConfigTestBypass.setValueByPass( serializationFig, "getMaxEntitySize", 641834 + "" );
 
 
         final URL resource = this.getClass().getClassLoader().getResource( TEST_DATA_FILE );

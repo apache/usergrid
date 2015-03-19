@@ -3,7 +3,7 @@ package org.apache.usergrid.persistence.collection.util;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
+import java.util.Collection;
 import java.util.UUID;
 import org.apache.usergrid.persistence.model.field.Field;
 
@@ -52,20 +52,21 @@ public class EntityUtils {
 
 
     /**
-     * Get the unique fields for an entity
+     * Get all unique fields on an entity
      * @param entity
      * @return
      */
-    public static List<Field> getUniqueFields( final Entity entity ){
+    public static List<Field> getUniqueFields( Entity entity ) {
+        final Collection<Field> entityFields = entity.getFields();
 
-        final List<Field> uniqueFields = new ArrayList<>(entity.getFields().size());
+        //preallocate to max possible for more efficient runtime
+        final List<Field> possibleFields = new ArrayList<>( entityFields.size() );
 
-        for(final Field field: entity.getFields()){
-            if(field.isUnique()){
-                uniqueFields.add( field);
+        for ( Field field : entity.getFields() ) {
+            if ( field.isUnique() ) {
+                possibleFields.add( field );
             }
         }
-
-        return uniqueFields;
+        return possibleFields;
     }
 }

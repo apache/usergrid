@@ -23,10 +23,12 @@ package org.apache.usergrid.persistence.core.astyanax;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.UUID;
 
 import com.netflix.astyanax.serializers.ByteSerializer;
 import com.netflix.astyanax.serializers.BytesArraySerializer;
 import com.netflix.astyanax.serializers.IntegerSerializer;
+import com.netflix.astyanax.serializers.UUIDSerializer;
 
 
 /**
@@ -38,6 +40,7 @@ public class FieldBufferParser {
     private static final IntegerSerializer INTEGER_SERIALIZER = IntegerSerializer.get();
     private static final BytesArraySerializer BYTES_ARRAY_SERIALIZER = BytesArraySerializer.get();
     private static final ByteSerializer BYTE_SERIALIZER = ByteSerializer.get();
+    private static final UUIDSerializer UUID_SERIALIZER = UUIDSerializer.get();
 
     private final Iterator<ByteBuffer> fields;
 
@@ -71,6 +74,14 @@ public class FieldBufferParser {
     }
 
 
+    /**
+     * Return the next 16 bytes asa  UUID
+     * @return
+     */
+    public UUID readUUID() {
+        return UUID_SERIALIZER.fromByteBuffer( getNext() );
+    }
+
     private ByteBuffer getNext() {
         if ( !fields.hasNext() ) {
             throw new NoSuchElementException( "No more elements to return" );
@@ -78,4 +89,6 @@ public class FieldBufferParser {
 
         return fields.next();
     }
+
+
 }

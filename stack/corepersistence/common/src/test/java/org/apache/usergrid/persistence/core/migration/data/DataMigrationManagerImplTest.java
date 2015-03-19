@@ -1,220 +1,334 @@
 /*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *  * Licensed to the Apache Software Foundation (ASF) under one
- *  * or more contributor license agreements.  See the NOTICE file
- *  * distributed with this work for additional information
- *  * regarding copyright ownership.  The ASF licenses this file
- *  * to you under the Apache License, Version 2.0 (the
- *  * "License"); you may not use this file except in compliance
- *  * with the License.  You may obtain a copy of the License at
- *  *
- *  *    http://www.apache.org/licenses/LICENSE-2.0
- *  *
- *  * Unless required by applicable law or agreed to in writing,
- *  * software distributed under the License is distributed on an
- *  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- *  * KIND, either express or implied.  See the License for the
- *  * specific language governing permissions and limitations
- *  * under the License.
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 
 package org.apache.usergrid.persistence.core.migration.data;
 
 
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
+import org.mockito.InOrder;
 
 import org.apache.usergrid.persistence.core.migration.schema.MigrationException;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 
-/**
- * Tests our data migration manager
- */
 public class DataMigrationManagerImplTest {
 
 
     @Test
-    public void noMigrations() throws MigrationException {
-        final MigrationInfoSerialization serialization = mock( MigrationInfoSerialization.class );
+    public void testNoPlugins() {
+
+        final Set<MigrationPlugin> plugins = new HashSet<>();
+
+        final MigrationInfoSerialization migrationInfoSerialization = mock( MigrationInfoSerialization.class );
 
 
-        Set<DataMigration> emptyMigration = new HashSet<>();
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization );
 
 
-        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( serialization, emptyMigration );
+        Set<String> pluginNames = migrationManager.getPluginNames();
 
-        migrationManager.migrate();
-
-        verify( serialization, never() ).setStatusMessage( any( String.class ) );
-        verify( serialization, never() ).setStatusCode( any( Integer.class ) );
-        verify( serialization, never() ).setVersion( any( Integer.class ) );
+        assertEquals( 0, pluginNames.size() );
     }
 
 
     @Test
-    public void multipleMigrations() throws Throwable {
-        final MigrationInfoSerialization serialization = mock( MigrationInfoSerialization.class );
+    public void test2Plugins() throws MigrationException {
+
+        final Set<MigrationPlugin> plugins = new HashSet<>();
+
+        MigrationPlugin plugin1 = mock( MigrationPlugin.class );
+        when( plugin1.getPhase() ).thenReturn( PluginPhase.MIGRATE );
+
+        when( plugin1.getName() ).thenReturn( "plugin1" );
+
+        MigrationPlugin plugin2 = mock( MigrationPlugin.class );
+        when( plugin2.getPhase() ).thenReturn( PluginPhase.MIGRATE );
+
+        when( plugin2.getName() ).thenReturn( "plugin2" );
+
+        plugins.add( plugin1 );
+        plugins.add( plugin2 );
 
 
-        final DataMigration v1 = mock( DataMigration.class );
-        when( v1.getVersion() ).thenReturn( 1 );
-
-        final DataMigration v2 = mock( DataMigration.class );
-        when( v2.getVersion() ).thenReturn( 2 );
+        final MigrationInfoSerialization migrationInfoSerialization = mock( MigrationInfoSerialization.class );
 
 
-        Set<DataMigration> migrations = new HashSet<>();
-        migrations.add( v1 );
-        migrations.add( v2 );
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization );
 
 
-        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( serialization, migrations );
+        Set<String> pluginNames = migrationManager.getPluginNames();
+
+        assertEquals( 2, pluginNames.size() );
+
+        assertTrue( pluginNames.contains( "plugin1" ) );
+
+        assertTrue( pluginNames.contains( "plugin2" ) );
+
+        //now run them
 
         migrationManager.migrate();
 
+        verify( plugin1 ).run( any( ProgressObserver.class ) );
 
-        verify( v1 ).migrate( any( DataMigration.ProgressObserver.class ) );
-        verify( v2 ).migrate( any( DataMigration.ProgressObserver.class ) );
-
-        //verify we set the running status
-        verify( serialization, times( 2 ) ).setStatusCode( DataMigrationManagerImpl.StatusCode.RUNNING.status );
-
-        //set the status message
-        verify( serialization, times( 2 * 2 ) ).setStatusMessage( any( String.class ) );
-
-        verify( serialization ).setStatusCode( DataMigrationManagerImpl.StatusCode.COMPLETE.status );
-
-        //verify we set version 1
-        verify( serialization ).setVersion( 1 );
-
-        //verify we set version 2
-        verify( serialization ).setVersion( 2 );
+        verify( plugin2 ).run( any( ProgressObserver.class ) );
     }
 
 
     @Test
-    public void shortCircuitVersionFails() throws Throwable {
-        final MigrationInfoSerialization serialization = mock( MigrationInfoSerialization.class );
+    public void testRunning() throws MigrationException {
+
+        final Set<MigrationPlugin> plugins = new HashSet<>();
+
+        MigrationPlugin plugin1 = mock( MigrationPlugin.class );
+
+        when( plugin1.getName() ).thenReturn( "plugin1" );
+        when( plugin1.getPhase() ).thenReturn( PluginPhase.MIGRATE );
+
+        plugins.add( plugin1 );
 
 
-        final DataMigration v1 = mock( DataMigration.class );
-        when( v1.getVersion() ).thenReturn( 1 );
+        final MigrationInfoSerialization migrationInfoSerialization = mock( MigrationInfoSerialization.class );
 
-        //throw an exception
-        doThrow( new RuntimeException( "Something bad happened" ) ).when( v1 ).migrate(
-                any( DataMigration.ProgressObserver.class ) );
-
-        final DataMigration v2 = mock( DataMigration.class );
-        when( v2.getVersion() ).thenReturn( 2 );
+        when( migrationInfoSerialization.getStatusCode( "plugin1" ) )
+            .thenReturn( DataMigrationManagerImpl.StatusCode.RUNNING.status );
 
 
-        Set<DataMigration> migrations = new HashSet<>();
-        migrations.add( v1 );
-        migrations.add( v2 );
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization );
 
 
-        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( serialization, migrations );
+        boolean status = migrationManager.isRunning();
 
-        migrationManager.migrate();
+        assertTrue( "Status is set", status );
 
 
-        verify( v1 ).migrate( any( DataMigration.ProgressObserver.class ) );
+        when( migrationInfoSerialization.getStatusCode( "plugin1" ) )
+            .thenReturn( DataMigrationManagerImpl.StatusCode.COMPLETE.status );
 
-        //verify we don't run migration
-        verify( v2, never() ).migrate( any( DataMigration.ProgressObserver.class ) );
+        status = migrationManager.isRunning();
 
-        //verify we set the running status
-        verify( serialization, times( 1 ) ).setStatusCode( DataMigrationManagerImpl.StatusCode.RUNNING.status );
+        assertFalse( "Status is not running", status );
 
-        //set the status message
-        verify( serialization, times( 2 ) ).setStatusMessage( any( String.class ) );
 
-        //verify we set an error
-        verify( serialization ).setStatusCode( DataMigrationManagerImpl.StatusCode.ERROR.status );
+        when( migrationInfoSerialization.getStatusCode( "plugin1" ) )
+            .thenReturn( DataMigrationManagerImpl.StatusCode.ERROR.status );
 
-        //verify we never set version 1
-        verify( serialization, never() ).setVersion( 1 );
+        status = migrationManager.isRunning();
 
-        //verify we never set version 2
-        verify( serialization, never() ).setVersion( 2 );
+        assertFalse( "Status is not running", status );
     }
 
 
     @Test
-    public void failStopsProgress() throws Throwable {
-        final MigrationInfoSerialization serialization = mock( MigrationInfoSerialization.class );
+    public void testExecutionOrder() throws MigrationException {
 
 
-        final DataMigration v1 = mock( DataMigration.class );
-        when( v1.getVersion() ).thenReturn( 1 );
+        //linked hash set is intentional here.  For iteration order we can boostrap to come second so we can
+        //verify it was actually run first
+        final Set<MigrationPlugin> plugins = new LinkedHashSet<>();
+
+        MigrationPlugin plugin1 = mock( MigrationPlugin.class );
+        when( plugin1.getPhase() ).thenReturn( PluginPhase.MIGRATE );
+
+        when( plugin1.getName() ).thenReturn( "plugin1" );
+
+        //boostrap plugin, should run first
+        MigrationPlugin plugin2 = mock( MigrationPlugin.class );
+        when( plugin2.getPhase() ).thenReturn( PluginPhase.BOOTSTRAP );
+
+        when( plugin2.getName() ).thenReturn( "plugin2" );
+
+        plugins.add( plugin1 );
+        plugins.add( plugin2 );
 
 
-        final int returnedCode = 100;
-
-        final String reason = "test reason";
-
-        //mark as fail but don't
-        doAnswer( new Answer<Object>() {
-            @Override
-            public Object answer( final InvocationOnMock invocation ) throws Throwable {
-                final DataMigration.ProgressObserver progressObserver =
-                        ( DataMigration.ProgressObserver ) invocation.getArguments()[0];
-
-                progressObserver.failed( returnedCode, reason );
-                return null;
-            }
-        } ).when( v1 ).migrate( any( DataMigration.ProgressObserver.class ) );
+        final MigrationInfoSerialization migrationInfoSerialization = mock( MigrationInfoSerialization.class );
 
 
-
-        final DataMigration v2 = mock( DataMigration.class );
-        when( v2.getVersion() ).thenReturn( 2 );
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization );
 
 
-        Set<DataMigration> migrations = new HashSet<>();
-        migrations.add( v1 );
-        migrations.add( v2 );
+        Set<String> pluginNames = migrationManager.getPluginNames();
 
+        assertEquals( 2, pluginNames.size() );
 
-        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( serialization, migrations );
+        assertTrue( pluginNames.contains( "plugin1" ) );
+
+        assertTrue( pluginNames.contains( "plugin2" ) );
+
+        //now run them
 
         migrationManager.migrate();
 
 
-        verify( v1 ).migrate( any( DataMigration.ProgressObserver.class ) );
-
-        //verify we don't run migration
-        verify( v2, never() ).migrate( any( DataMigration.ProgressObserver.class ) );
-
-        //verify we set the running status
-        verify( serialization, times( 1 ) ).setStatusCode( DataMigrationManagerImpl.StatusCode.RUNNING.status );
-
-        //set the status message
-        verify( serialization ).setStatusMessage( "Migration version 1.  Starting migration" );
-
-        verify( serialization ).setStatusMessage( "Migration version 100.  Failed to migrate, reason is appended.  Error 'test reason'" );
-
-        //verify we set an error
-        verify( serialization, times(1) ).setStatusCode( DataMigrationManagerImpl.StatusCode.ERROR.status );
-
-        //verify we never set version 1
-        verify( serialization, never() ).setVersion( 1 );
-
-        //verify we never set version 2
-        verify( serialization, never() ).setVersion( 2 );
+        //we want to verify the bootsrap plugin was called first
+        InOrder inOrderVerification = inOrder( plugin1, plugin2 );
+        inOrderVerification.verify( plugin2 ).run( any( ProgressObserver.class ) );
+        inOrderVerification.verify( plugin1 ).run( any( ProgressObserver.class ) );
     }
+
+
+    /**
+     * Happy path of version reset
+     */
+    @Test
+    public void testResetToVersion() {
+
+        final String name = "plugin1";
+        final int version = 10;
+
+        //linked hash set is intentional here.  For iteration order we can boostrap to come second so we can
+        //verify it was actually run first
+        final Set<MigrationPlugin> plugins = new LinkedHashSet<>();
+
+        MigrationPlugin plugin1 = mock( MigrationPlugin.class );
+        when( plugin1.getPhase() ).thenReturn( PluginPhase.MIGRATE );
+
+
+        when( plugin1.getName() ).thenReturn( name );
+        when( plugin1.getMaxVersion() ).thenReturn( version );
+
+        plugins.add( plugin1 );
+
+
+        final MigrationInfoSerialization migrationInfoSerialization = mock( MigrationInfoSerialization.class );
+
+
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization );
+
+        migrationManager.resetToVersion( name, 0 );
+
+        verify( migrationInfoSerialization ).setVersion( name, 0 );
+
+
+        migrationManager.resetToVersion( name, version );
+
+        verify( migrationInfoSerialization ).setVersion( name, version );
+    }
+
+
+    /**
+     * Reset of version that is too high or too low
+     */
+    @Test( expected = IllegalArgumentException.class )
+    public void testResetToInvalidVersions() {
+        final String name = "plugin1";
+        final int version = 10;
+
+        //linked hash set is intentional here.  For iteration order we can boostrap to come second so we can
+        //verify it was actually run first
+        final Set<MigrationPlugin> plugins = new LinkedHashSet<>();
+
+        MigrationPlugin plugin1 = mock( MigrationPlugin.class );
+        when( plugin1.getPhase() ).thenReturn( PluginPhase.MIGRATE );
+
+
+        when( plugin1.getName() ).thenReturn( name );
+        when( plugin1.getMaxVersion() ).thenReturn( version );
+
+        plugins.add( plugin1 );
+
+
+        final MigrationInfoSerialization migrationInfoSerialization = mock( MigrationInfoSerialization.class );
+
+
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization );
+
+        migrationManager.resetToVersion( name, version + 1 );
+    }
+
+
+    /**
+     * Reset with no plugin name
+     */
+    @Test( expected = IllegalArgumentException.class )
+    public void testResetInvalidName() {
+        final String name = "plugin1";
+        final int version = 10;
+
+        //linked hash set is intentional here.  For iteration order we can boostrap to come second so we can
+        //verify it was actually run first
+        final Set<MigrationPlugin> plugins = new LinkedHashSet<>();
+
+        MigrationPlugin plugin1 = mock( MigrationPlugin.class );
+        when( plugin1.getPhase() ).thenReturn( PluginPhase.MIGRATE );
+
+
+        when( plugin1.getName() ).thenReturn( name );
+        when( plugin1.getMaxVersion() ).thenReturn( version );
+
+        plugins.add( plugin1 );
+
+
+        final MigrationInfoSerialization migrationInfoSerialization = mock( MigrationInfoSerialization.class );
+
+
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization );
+
+        migrationManager.resetToVersion( name + "foo", version );
+    }
+
+
+    @Test
+    public void testLastStatus() {
+
+        final String name = "plugin1";
+        final String status = "some status";
+
+        //linked hash set is intentional here.  For iteration order we can boostrap to come second so we can
+        //verify it was actually run first
+        final Set<MigrationPlugin> plugins = new LinkedHashSet<>();
+
+        MigrationPlugin plugin1 = mock( MigrationPlugin.class );
+        when( plugin1.getPhase() ).thenReturn( PluginPhase.MIGRATE );
+
+
+        when( plugin1.getName() ).thenReturn( name );
+
+
+
+        plugins.add( plugin1 );
+
+
+        final MigrationInfoSerialization migrationInfoSerialization = mock( MigrationInfoSerialization.class );
+        when(migrationInfoSerialization.getStatusMessage( name )).thenReturn( status  );
+
+
+        DataMigrationManagerImpl migrationManager = new DataMigrationManagerImpl( plugins, migrationInfoSerialization );
+
+        final String returnedStatus = migrationManager.getLastStatus( name );
+
+
+        assertEquals(status, returnedStatus);
+    }
+
+
 }
