@@ -123,12 +123,12 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private final MetricsFactory metricsFactory;
 
     public CpEntityManagerFactory(
-            final CassandraService cassandraService, final CounterUtils counterUtils, final Injector injector, final EntityIndex entityIndex) {
+            final CassandraService cassandraService, final CounterUtils counterUtils, final Injector injector) {
 
         this.cassandraService = cassandraService;
         this.counterUtils = counterUtils;
         this.injector = injector;
-        this.entityIndex = entityIndex;
+        this.entityIndex = injector.getInstance(EntityIndex.class);
         this.managerCache = injector.getInstance( ManagerCache.class );
         this.metricsFactory = injector.getInstance( MetricsFactory.class );
 
@@ -664,8 +664,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         // refresh special indexes without calling EntityManager refresh because stack overflow
         maybeCreateIndexes();
         // system app
-
-            entityIndex.refresh();
+        entityIndex.refresh();
     }
 
 
@@ -675,7 +674,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             return;
         }
 
-        entityIndex.initializeIndex();
+//        entityIndex.initializeIndex();
     }
 
 

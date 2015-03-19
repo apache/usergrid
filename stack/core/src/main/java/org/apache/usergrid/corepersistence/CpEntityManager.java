@@ -2889,9 +2889,6 @@ public class CpEntityManager implements EntityManager {
 
         // refresh factory indexes
         emf.refreshIndex();
-
-        // refresh this Entity Manager's application's index
-        ei.refresh();
     }
 
 
