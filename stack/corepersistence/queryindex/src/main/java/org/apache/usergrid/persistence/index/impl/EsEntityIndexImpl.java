@@ -59,6 +59,8 @@ import org.elasticsearch.action.admin.cluster.tasks.PendingClusterTasksResponse;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesResponse;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesResponse;
+import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
+import org.elasticsearch.action.admin.indices.alias.IndicesAliasesResponse;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
@@ -113,8 +115,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     private final IndexBufferProducer indexBatchBufferProducer;
     private final IndexFig indexFig;
     private final Timer addTimer;
-    private final Timer addWriteAliasTimer;
-    private final Timer addReadAliasTimer;
+    private final Timer updateAliasTimer;
     private final Timer searchTimer;
 
     /**
@@ -145,7 +146,6 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     private static final MatchAllQueryBuilder MATCH_ALL_QUERY_BUILDER = QueryBuilders.matchAllQuery();
 
     private EsIndexCache aliasCache;
-    private Timer removeAliasTimer;
     private Timer mappingTimer;
     private Timer refreshTimer;
     private Timer cursorTimer;
@@ -174,12 +174,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
         this.aliasCache = indexCache;
         this.addTimer = metricsFactory
             .getTimer( EsEntityIndexImpl.class, "add.timer" );
-        this.removeAliasTimer = metricsFactory
-            .getTimer( EsEntityIndexImpl.class, "remove.alias.timer" );
-        this.addReadAliasTimer = metricsFactory
-            .getTimer( EsEntityIndexImpl.class, "add.read.alias.timer" );
-        this.addWriteAliasTimer = metricsFactory
-            .getTimer( EsEntityIndexImpl.class, "add.write.alias.timer" );
+        this.updateAliasTimer = metricsFactory
+            .getTimer( EsEntityIndexImpl.class, "update.alias.timer" );
         this.mappingTimer = metricsFactory
             .getTimer( EsEntityIndexImpl.class, "create.mapping.timer" );
         this.refreshTimer = metricsFactory
@@ -264,60 +260,51 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
     @Override
     public void addAlias(final String indexSuffix) {
+
+        final Timer.Context timeRemoveAlias = updateAliasTimer.time();
         try {
-            Boolean isAck;
+
+
             String indexName = indexIdentifier.getIndex(indexSuffix);
             final AdminClient adminClient = esProvider.getClient().admin();
 
-            String[] indexNames = getIndexes(AliasType.Write);
+            String[] indexNames = getIndexesFromEs( AliasType.Write );
 
+
+            final IndicesAliasesRequestBuilder aliasesRequestBuilder = adminClient.indices().prepareAliases();
+
+            //remove the write alias from it's target
             for ( String currentIndex : indexNames ) {
-
-                final Timer.Context timeRemoveAlias = removeAliasTimer.time();
-
-                try {
-                    //Added For Graphite Metrics
-
-                    isAck = adminClient.indices().prepareAliases().removeAlias( currentIndex, alias.getWriteAlias() )
-                                       .execute().actionGet().isAcknowledged();
-
-                    logger.info( "Removed Index Name [{}] from Alias=[{}] ACK=[{}]", currentIndex, alias, isAck );
-                }
-                catch ( AliasesMissingException aie ) {
-                    logger.info( "Alias does not exist Index Name [{}] from Alias=[{}] ACK=[{}]", currentIndex, alias,
-                        aie.getMessage() );
-                    continue;
-                }
-                catch ( InvalidAliasNameException iane ) {
-                    logger.info( "Alias does not exist Index Name [{}] from Alias=[{}] ACK=[{}]", currentIndex, alias,
-                        iane.getMessage() );
-                    continue;
-                }
-                finally {
-                    timeRemoveAlias.stop();
-                }
+                aliasesRequestBuilder.removeAlias( currentIndex, alias.getWriteAlias() );
+                logger.info("Removing existing write Alias Name [{}] from Index [{}]", alias.getWriteAlias(), currentIndex);
             }
 
             //Added For Graphite Metrics
-            Timer.Context timeAddReadAlias = addReadAliasTimer.time();
+
             // add read alias
-            isAck = adminClient.indices().prepareAliases().addAlias(
-                    indexName, alias.getReadAlias()).execute().actionGet().isAcknowledged();
-            timeAddReadAlias.stop();
-            logger.info("Created new read Alias Name [{}] ACK=[{}]", alias.getReadAlias(), isAck);
+            aliasesRequestBuilder.addAlias(  indexName, alias.getReadAlias());
+            logger.info( "Created new read Alias Name [{}] on Index [{}]", alias.getReadAlias(), indexName);
 
-            //Added For Graphite Metrics
-            Timer.Context timeAddWriteAlias = addWriteAliasTimer.time();
+
             //add write alias
-            isAck = adminClient.indices().prepareAliases().addAlias(
-                    indexName, alias.getWriteAlias()).execute().actionGet().isAcknowledged();
-            timeAddWriteAlias.stop();
-            logger.info("Created new write Alias Name [{}] ACK=[{}]", alias.getWriteAlias(), isAck);
+            aliasesRequestBuilder.addAlias( indexName, alias.getWriteAlias() );
 
+            logger.info("Created new write Alias Name [{}] on Index [{}]", alias.getWriteAlias(), indexName);
+
+            final IndicesAliasesResponse result = aliasesRequestBuilder.execute().actionGet();
+
+            final boolean isAcknowledged = result.isAcknowledged();
+
+            if(!isAcknowledged){
+                throw new RuntimeException( "Unable to add aliases to the new index.  Elasticsearch did not acknowledge to the alias change for index '" + indexSuffix + "'");
+            }
+
+        }
+        finally{
+            //invalidate the alias
             aliasCache.invalidate(alias);
-
-        } catch (Exception e) {
-            logger.warn("Failed to create alias ", e);
+            //stop the timer
+            timeRemoveAlias.stop();
         }
     }
 
