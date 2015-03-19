@@ -92,12 +92,6 @@
 
         <!-- major dependencies -->
 
-        <dependency>
-            <groupId>${project.parent.groupId}</groupId>
-            <artifactId>collection</artifactId>
-            <version>${project.version}</version>
-            <type>jar</type>
-        </dependency>
 
 
         <dependency>
