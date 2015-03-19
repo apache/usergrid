@@ -1227,11 +1227,15 @@ public class CollectionIT extends AbstractCoreIT {
 
         Query query = new Query();
         query.addEqualityFilter( "rootprop1", "simpleprop" );
-
-        Results results = em.searchCollection( em.getApplicationRef(), "tests", query );
-
-        Entity entity = results.getEntitiesMap().get( saved.getUuid() );
-
+        Entity entity;
+        Results results;
+        do {
+            results = em.searchCollection(em.getApplicationRef(), "tests", query);
+            entity = results.getEntitiesMap().get(saved.getUuid());
+            if (entity == null) {
+                Thread.sleep(200);
+            }
+        }while(entity == null);
         assertNotNull( entity );
 
         // query on the nested int value

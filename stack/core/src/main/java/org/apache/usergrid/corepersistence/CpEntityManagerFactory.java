@@ -160,8 +160,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                 em.getApplication();
             }
 
-            em.createIndex();
-            em.refreshIndex();
+            entityIndex.initializeIndex();
+            entityIndex.refresh();
 
 
         } catch (Exception ex) {
@@ -723,7 +723,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         EntityManager em = getEntityManager( appId );
 
         //explicitly invoke create index, we don't know if it exists or not in ES during a rebuild.
-        em.createIndex();
+        entityIndex.initializeIndex();
         em.reindex(po);
 
         em.reindex( po );

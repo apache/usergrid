@@ -120,7 +120,14 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         assertTrue( "New version is greater than old",
                 UUIDComparator.staticCompare( newVersion, oldVersion ) > 0 );
 
-        assertEquals( 2, queryCollectionCp( "things", "thing", "select *" ).size() );
+        CandidateResults results;
+        do{
+             results = queryCollectionCp( "things", "thing", "select *" );
+            if(results.size()!=2){
+                Thread.sleep(200);
+            }
+        }while(results.size()!=2);
+        assertEquals( 2, results.size() );
     }
 
 
@@ -151,24 +158,42 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
         UUID newVersion =  getCpEntity( thing ).getVersion();
 
+        CandidateResults candidateResults = null;
 
-        assertEquals(2, queryCollectionCp("things", "thing", "select * order by ordinal desc").size());
+        do{
+            candidateResults = queryCollectionCp("things", "thing", "select * order by ordinal desc");
+            if(candidateResults.size()!=2){
+                Thread.sleep(200);
+            }
+        }while(candidateResults.size()<2);
+
+        assertEquals(2, candidateResults.size());
 
         //now run enable events and ensure we clean up
         System.setProperty(EVENTS_DISABLED, "false");
 
-        final Results results = queryCollectionEm("things", "select * order by ordinal desc");
-
+        Results results = null;
+        do{
+            results =  queryCollectionEm("things", "select * order by ordinal desc");;
+            if(results.size()!=1){
+                Thread.sleep(200);
+            }
+        }while(results.size()<1);
         assertEquals( 1, results.size() );
         assertEquals(1, results.getEntities().get( 0 ).getProperty( "ordinal" ));
 
         em.refreshIndex();
 
         //ensure it's actually gone
-        final CandidateResults candidates =  queryCollectionCp( "things", "thing", "select * order by ordinal desc" );
-        assertEquals(1, candidates.size());
+        do{
+            candidateResults = queryCollectionCp( "things", "thing", "select * order by ordinal desc" );
+            if(candidateResults.size()!=1){
+                Thread.sleep(200);
+            }
+        }while(candidateResults.size()!=1);
+        assertEquals(1, candidateResults.size());
 
-        assertEquals(newVersion, candidates.get(0).getVersion());
+        assertEquals(newVersion, candidateResults.get(0).getVersion());
     }
 
 

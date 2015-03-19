@@ -18,6 +18,7 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
+import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -105,6 +106,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     private EsIndexCache aliasCache;
     private Timer mappingTimer;
     private Timer refreshTimer;
+    private Meter refreshIndexMeter;
 
 
 //    private final Timer indexTimer;
@@ -131,6 +133,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
             .getTimer(EsEntityIndexImpl.class, "create.mapping.timer");
         this.refreshTimer = metricsFactory
             .getTimer(EsEntityIndexImpl.class, "refresh.timer");
+        this.refreshIndexMeter = metricsFactory.getMeter(EsEntityIndexImpl.class,"refresh.meter");
 
     }
 
@@ -323,6 +326,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
 
     public void refresh() {
+        refreshIndexMeter.mark();
 
         BetterFuture future = indexBatchBufferProducer.put(new IndexOperationMessage());
         future.get();

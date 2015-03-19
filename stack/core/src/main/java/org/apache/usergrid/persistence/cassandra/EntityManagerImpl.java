@@ -2890,12 +2890,6 @@ public class EntityManagerImpl implements EntityManager {
     }
 
 
-    @Override
-    public void createIndex() {
-        //no op
-    }
-
-
 
     @Override
     public EntityRef getGroupRoleRef( UUID ownerId, String roleName) throws Exception {

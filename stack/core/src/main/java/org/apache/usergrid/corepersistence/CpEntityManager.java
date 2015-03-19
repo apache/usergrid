@@ -2893,13 +2893,6 @@ public class CpEntityManager implements EntityManager {
 
 
     @Override
-    public void createIndex() {
-        ei.initializeIndex();
-    }
-
-
-
-    @Override
     public void flushManagerCaches() {
         managerCache.invalidate();
     }
