@@ -26,6 +26,7 @@ import static org.apache.usergrid.corepersistence.CoreModule.EVENTS_DISABLED;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.MvccEntity;
+import org.apache.usergrid.persistence.collection.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.index.EntityIndex;
@@ -62,9 +63,11 @@ public class EntityVersionDeletedHandler implements EntityVersionDeleted {
     public EntityVersionDeletedHandler( final EntityManagerFactory emf ) {this.emf = emf;}
 
 
+
     @Override
-    public void versionDeleted(
-            final CollectionScope scope, final Id entityId, final List<MvccEntity> entityVersions) {
+    public void versionDeleted( final CollectionScope scope, final Id entityId,
+                                final List<MvccLogEntry> entityVersions ) {
+
 
         // This check is for testing purposes and for a test that to be able to dynamically turn
         // off and on delete previous versions so that it can test clean-up on read.
@@ -82,7 +85,7 @@ public class EntityVersionDeletedHandler implements EntityVersionDeleted {
 
         CpEntityManagerFactory cpemf = (CpEntityManagerFactory)emf;
 
-        final EntityIndex ei = cpemf.getManagerCache().getEntityIndex(scope);
+        final EntityIndex ei = cpemf.getManagerCache().getEntityIndex( scope );
 
         final IndexScope indexScope = new IndexScopeImpl(
                 new SimpleId(scope.getOwner().getUuid(), scope.getOwner().getType()),
@@ -90,10 +93,10 @@ public class EntityVersionDeletedHandler implements EntityVersionDeleted {
         );
 
         Observable.from( entityVersions )
-            .collect( ei.createBatch(), new Action2<EntityIndexBatch, MvccEntity>() {
+            .collect( ei.createBatch(), new Action2<EntityIndexBatch, MvccLogEntry>() {
                 @Override
-                public void call( final EntityIndexBatch entityIndexBatch, final MvccEntity mvccEntity ) {
-                    entityIndexBatch.deindex( indexScope, mvccEntity.getId(), mvccEntity.getVersion() );
+                public void call( final EntityIndexBatch entityIndexBatch, final MvccLogEntry mvccLogEntry ) {
+                    entityIndexBatch.deindex( indexScope, mvccLogEntry.getEntityId(), mvccLogEntry.getVersion() );
                 }
             } ).doOnNext( new Action1<EntityIndexBatch>() {
             @Override
@@ -102,5 +105,6 @@ public class EntityVersionDeletedHandler implements EntityVersionDeleted {
             }
         } ).toBlocking().last();
     }
+
 
 }

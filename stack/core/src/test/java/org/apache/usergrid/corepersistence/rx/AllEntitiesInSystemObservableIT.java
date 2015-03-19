@@ -24,18 +24,19 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.corepersistence.EntityWriteHelper;
 import org.apache.usergrid.corepersistence.ManagerCache;
+import org.apache.usergrid.corepersistence.rx.impl.AllEntitiesInSystemImpl;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.SimpleEntityRef;
+import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphManager;
+import org.apache.usergrid.persistence.graph.serialization.TargetIdObservable;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.inject.Injector;
@@ -52,10 +53,11 @@ import static org.junit.Assert.assertTrue;
  */
 public class AllEntitiesInSystemObservableIT extends AbstractCoreIT {
 
-    private final Logger logger = LoggerFactory.getLogger( AllEntitiesInSystemObservableIT.class );
-
     @Test
     public void testEntities() throws Exception {
+        Injector injector =  SpringResource.getInstance().getBean(Injector.class);
+        AllEntitiesInSystemImpl allEntitiesInSystemObservableImpl =injector.getInstance(AllEntitiesInSystemImpl.class);
+        TargetIdObservable targetIdObservable = injector.getInstance(TargetIdObservable.class);
 
         final EntityManager em = app.getEntityManager();
 
@@ -89,34 +91,25 @@ public class AllEntitiesInSystemObservableIT extends AbstractCoreIT {
 
 
         final ApplicationScope scope = CpNamingUtils.getApplicationScope( app.getId() );
-        final Id applicationId = scope.getApplication();
 
 
         final GraphManager gm = managerCache.getGraphManager( scope );
 
-        AllEntitiesInSystemObservable.getAllEntitiesInSystem( managerCache, 1000 ).doOnNext( new Action1<AllEntitiesInSystemObservable.ApplicationEntityGroup>() {
+        allEntitiesInSystemObservableImpl.getData().doOnNext( new Action1<EntityIdScope>() {
             @Override
-            public void call( final AllEntitiesInSystemObservable.ApplicationEntityGroup entity ) {
-
-                assertNotNull(entity);
-                assertNotNull(entity.applicationScope);
-                assertNotNull(entity.entityIds);
-
-                //not from our test, don't check it
-                if(!applicationId.equals( entity.applicationScope.getApplication() )){
-                    return;
-                }
-
-                for(Id id: entity.entityIds) {
+            public void call( final EntityIdScope entityIdScope ) {
+                assertNotNull(entityIdScope);
+                assertNotNull(entityIdScope.getCollectionScope());
+                assertNotNull(entityIdScope.getId());
 
                     //we should only emit each node once
-                    if ( id.getType().equals( type1 ) ) {
-                        assertTrue( "Element should be present on removal", type1Identities.remove( id ) );
+                    if ( entityIdScope.getId().getType().equals( type1 ) ) {
+                        assertTrue( "Element should be present on removal", type1Identities.remove(entityIdScope.getId() ) );
                     }
-                    else if ( id.getType().equals( type2 ) ) {
-                        assertTrue( "Element should be present on removal", type2Identities.remove( id ) );
+                    else if ( entityIdScope.getId().getType().equals( type2 ) ) {
+                        assertTrue( "Element should be present on removal", type2Identities.remove(entityIdScope.getId() ) );
                     }
-                }
+
             }
         } ).toBlocking().lastOrDefault( null );
 
@@ -127,7 +120,7 @@ public class AllEntitiesInSystemObservableIT extends AbstractCoreIT {
 
         //test connections
 
-        TargetIdObservable.getTargetNodes( gm, source ).doOnNext( new Action1<Id>() {
+        targetIdObservable.getTargetNodes( gm, source ).doOnNext( new Action1<Id>() {
             @Override
             public void call( final Id target ) {
 

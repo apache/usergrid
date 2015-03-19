@@ -23,7 +23,7 @@ import com.google.inject.assistedinject.Assisted;
 import com.netflix.astyanax.MutationBatch;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.event.EntityDeleted;
-import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.core.task.Task;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -36,6 +36,9 @@ import rx.schedulers.Schedulers;
 
 import java.util.Set;
 import java.util.UUID;
+
+import org.apache.commons.lang.NotImplementedException;
+
 import org.apache.usergrid.persistence.core.guice.ProxyImpl;
 
 
@@ -102,9 +105,10 @@ public class EntityDeletedTask implements Task<Void> {
         fireEvents();
         final MutationBatch entityDelete = entitySerializationStrategy.delete(collectionScope, entityId, version);
         final MutationBatch logDelete = logEntrySerializationStrategy.delete(collectionScope, entityId, version);
+
         entityDelete.execute();
         logDelete.execute();
-
+//
         return null;
     }
 

@@ -59,8 +59,6 @@ public class EntityVersionCreatedTaskTest {
 
         // create a latch for the event listener, and add it to the list of events
 
-        final int sizeToReturn = 0;
-
         final Set<EntityVersionCreated> listeners = mock( Set.class );
 
         when ( listeners.size()).thenReturn( 0 );

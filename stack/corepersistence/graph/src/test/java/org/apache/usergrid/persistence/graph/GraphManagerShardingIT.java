@@ -34,6 +34,7 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
+import org.apache.usergrid.persistence.core.util.IdGenerator;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEdgeMeta;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardApproximation;
@@ -43,7 +44,7 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import com.google.inject.Inject;
 
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createEdge;
-import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createId;
+import static org.apache.usergrid.persistence.core.util.IdGenerator.createId;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -76,7 +77,7 @@ public class GraphManagerShardingIT {
 
     @Before
     public void mockApp() {
-        this.scope = new ApplicationScopeImpl(createId("application")  );
+        this.scope = new ApplicationScopeImpl( IdGenerator.createId( "application" )  );
     }
 
 
@@ -85,7 +86,7 @@ public class GraphManagerShardingIT {
 
         GraphManager gm = emf.createEdgeManager( scope ) ;
 
-        final Id sourceId = createId( "source" );
+        final Id sourceId = IdGenerator.createId( "source" );
         final String edgeType = "test";
 
 
@@ -107,7 +108,7 @@ public class GraphManagerShardingIT {
         Id targetId = null;
 
         for(long i = 0; i < writeCount; i ++){
-            targetId = createId("target") ;
+            targetId = IdGenerator.createId( "target" ) ;
 
             final Edge edge = createEdge( sourceId, edgeType, targetId);
 
@@ -143,7 +144,7 @@ public class GraphManagerShardingIT {
 
         GraphManager gm = emf.createEdgeManager( scope ) ;
 
-        final Id targetId = createId( "target" );
+        final Id targetId = IdGenerator.createId( "target" );
         final String edgeType = "test";
 
 
@@ -161,7 +162,7 @@ public class GraphManagerShardingIT {
         Id sourceId = null;
 
         for(long i = 0; i < writeCount; i ++){
-            sourceId = createId("source") ;
+            sourceId = IdGenerator.createId( "source" ) ;
 
             final Edge edge = createEdge( sourceId, edgeType, targetId);
 

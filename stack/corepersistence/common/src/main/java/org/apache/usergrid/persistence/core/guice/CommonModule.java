@@ -22,6 +22,7 @@ package org.apache.usergrid.persistence.core.guice;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactoryImpl;
 import org.apache.usergrid.persistence.core.metrics.MetricsFig;
+import org.apache.usergrid.persistence.core.migration.data.*;
 import org.safehaus.guicyfig.GuicyFigModule;
 
 import org.apache.usergrid.persistence.core.astyanax.AstyanaxKeyspaceProvider;
@@ -30,11 +31,7 @@ import org.apache.usergrid.persistence.core.astyanax.CassandraConfigImpl;
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.core.consistency.TimeService;
 import org.apache.usergrid.persistence.core.consistency.TimeServiceImpl;
-import org.apache.usergrid.persistence.core.migration.data.DataMigration;
-import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
-import org.apache.usergrid.persistence.core.migration.data.DataMigrationManagerImpl;
-import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerialization;
-import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerializationImpl;
+import org.apache.usergrid.persistence.core.migration.data.MigrationPlugin;
 import org.apache.usergrid.persistence.core.migration.schema.Migration;
 import org.apache.usergrid.persistence.core.migration.schema.MigrationManager;
 import org.apache.usergrid.persistence.core.migration.schema.MigrationManagerFig;
@@ -69,7 +66,6 @@ public class CommonModule extends AbstractModule {
         Multibinder<Migration> migrationBinding = Multibinder.newSetBinder( binder(), Migration.class );
         migrationBinding.addBinding().to( Key.get( MigrationInfoSerialization.class ) );
 
-
         bind( TimeService.class ).to( TimeServiceImpl.class );
 
         bind( CassandraConfig.class ).to( CassandraConfigImpl.class );
@@ -83,14 +79,13 @@ public class CommonModule extends AbstractModule {
 
         bind( MetricsFactory.class ).to( MetricsFactoryImpl.class );
 
+        bind (MigrationInfoCache.class).to( MigrationInfoCacheImpl.class );
         install(new GuicyFigModule(MetricsFig.class));
 
-        //do multibindings for migrations
-        Multibinder<DataMigration> dataMigrationMultibinder = Multibinder.newSetBinder( binder(), DataMigration.class );
-//        dataMigrationMultibinder.addBinding();
-//        dataMigrationManagerMultibinder.addBinding().to( DataMigrationManagerImpl.class );
-//        migrationBinding.addBinding().to( Key.get( MigrationInfoSerialization.class ) );
 
+        //do multibindings for migrations
+        //create the empty multibinder so other plugins can use it
+         Multibinder.newSetBinder( binder(), MigrationPlugin.class);
     }
 
 

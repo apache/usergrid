@@ -15,20 +15,24 @@
  */
 package org.apache.usergrid.corepersistence;
 
-import com.google.common.base.Optional;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import static java.lang.String.CASE_INSENSITIVE_ORDER;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 
 import org.apache.commons.lang.StringUtils;
 
-import org.apache.usergrid.corepersistence.rx.AllEntitiesInSystemObservable;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.AbstractEntity;
 import org.apache.usergrid.persistence.Entity;
@@ -37,16 +41,15 @@ import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Results;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
-import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.CounterUtils;
 import org.apache.usergrid.persistence.cassandra.Setup;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
+import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
-import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
+import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.util.Health;
@@ -54,7 +57,6 @@ import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.exceptions.ApplicationAlreadyExistsException;
 import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
-import org.apache.usergrid.persistence.exceptions.OrganizationAlreadyExistsException;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
@@ -63,14 +65,23 @@ import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
-import org.apache.usergrid.utils.UUIDUtils;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
+import org.apache.usergrid.utils.UUIDUtils;
+
+import com.google.common.base.Optional;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.TypeLiteral;
+
 import rx.Observable;
+
+import static java.lang.String.CASE_INSENSITIVE_ORDER;
+
+import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
+import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 
 
 /**
@@ -100,7 +111,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
 
     private ManagerCache managerCache;
-    private DataMigrationManager dataMigrationManager;
+
+
+
 
     private CassandraService cassandraService;
     private CounterUtils counterUtils;
@@ -114,7 +127,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.counterUtils = counterUtils;
         this.injector = injector;
         this.managerCache = injector.getInstance( ManagerCache.class );
-        this.dataMigrationManager = injector.getInstance( DataMigrationManager.class );
         this.metricsFactory = injector.getInstance( MetricsFactory.class );
 
         this.orgApplicationCache = new OrgApplicationCacheImpl( this );
@@ -130,10 +142,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         return cassandraService;
     }
 
-
-    public ManagerCache getManagerCache() {
-        return managerCache;
-    }
 
 
     private void init() {
@@ -155,6 +163,20 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             throw new RuntimeException("Fatal error creating system application", ex);
         }
     }
+
+
+    public ManagerCache getManagerCache() {
+
+        if ( managerCache == null ) {
+            managerCache = injector.getInstance( ManagerCache.class );
+        }
+        return managerCache;
+    }
+
+    private Observable<EntityIdScope> getAllEntitiesObservable(){
+      return injector.getInstance( Key.get(new TypeLiteral< MigrationDataProvider<EntityIdScope>>(){})).getData();
+    }
+
 
 
     @Override
@@ -366,7 +388,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.rebuildApplicationIndexes(applicationId, new ProgressObserver() {
             @Override
             public void onProgress(EntityRef entity) {
-                logger.info("Restored entity {}:{}", entity.getType(), entity.getUuid());
+                logger.info( "Restored entity {}:{}", entity.getType(), entity.getUuid() );
             }
 
         });
@@ -602,8 +624,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     public long performEntityCount() {
         //TODO, this really needs to be a task that writes this data somewhere since this will get
         //progressively slower as the system expands
-        return AllEntitiesInSystemObservable
-            .getAllEntitiesInSystem( managerCache, 1000 ).longCount().toBlocking().last();
+        return (Long) getAllEntitiesObservable().longCount().toBlocking().last();
     }
 
 
@@ -707,41 +728,13 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         //explicitly invoke create index, we don't know if it exists or not in ES during a rebuild.
         em.createIndex();
-        Application app = em.getApplication();
+        em.reindex(po);
 
         em.reindex( po );
 
-        if(app!=null) {
-            logger.info("\n\nRebuilt index for application {} id {}\n", app.getName(), appId);
-        }else{
-            logger.info("\n\nDid not rebuild index for application id {}\n",  appId);
-        }
+        logger.info("\n\nRebuilt index for applicationId {} \n", appId );
     }
 
-
-    @Override
-    public void migrateData() throws Exception {
-         dataMigrationManager.migrate();
-    }
-
-
-    @Override
-    public String getMigrateDataStatus() {
-        return dataMigrationManager.getLastStatus();
-    }
-
-
-    @Override
-    public int getMigrateDataVersion() {
-        return dataMigrationManager.getCurrentVersion();
-    }
-
-
-    @Override
-    public void setMigrationVersion( final int version ) {
-        dataMigrationManager.resetToVersion( version );
-        dataMigrationManager.invalidate();
-    }
 
 
     @Override

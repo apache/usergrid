@@ -987,7 +987,12 @@ public class CpRelationManager implements RelationManager {
             if ( crs.isEmpty() || !crs.hasCursor() ) { // no results, no cursor, can't get more
                 satisfied = true;
             }
-            else if ( results.size() == originalLimit ) { // got what we need
+
+            /**
+             * In an edge case where we delete stale entities, we could potentially get more results than expected.  This will only occur once during the repair phase.
+             * We need to ensure that we short circuit if we overflow the requested limit during a repair.
+             */
+            else if ( results.size() >= originalLimit ) { // got what we need
                 satisfied = true;
             }
             else if ( crs.hasCursor() ) {

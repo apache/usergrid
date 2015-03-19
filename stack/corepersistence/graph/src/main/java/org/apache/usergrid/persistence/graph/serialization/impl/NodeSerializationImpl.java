@@ -38,7 +38,6 @@ import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKeySerializer;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
-import org.apache.usergrid.persistence.core.hystrix.HystrixCassandra;
 import org.apache.usergrid.persistence.core.migration.schema.Migration;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
@@ -52,6 +51,7 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.connectionpool.exceptions.NotFoundException;
 import com.netflix.astyanax.model.Column;
 import com.netflix.astyanax.model.Row;
@@ -150,21 +150,22 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
                 keyspace.prepareQuery( GRAPH_DELETE ).setConsistencyLevel( fig.getReadCL() );
 
 
+
+        Column<Boolean> result = null;
         try {
-            Column<Boolean> result = HystrixCassandra
-                    .user( query.getKey( ScopedRowKey.fromKey( scope.getApplication(), node ) ).getColumn( COLUMN_NAME ) )
+            result = query.getKey( ScopedRowKey.fromKey( scope.getApplication(), node ) ).getColumn( COLUMN_NAME ).execute()
                     .getResult();
-
-            return Optional.of( result.getLongValue() );
         }
-        catch (RuntimeException re ) {
-            if(re.getCause().getCause() instanceof   NotFoundException) {
-                //swallow, there's just no column
-                return Optional.absent();
-            }
-
-            throw re;
+        catch(NotFoundException nfe){
+             //swallow, there's just no column
+            return Optional.absent();
         }
+        catch ( ConnectionException e ) {
+            throw new RuntimeException( "Unable to connect to casandra", e );
+        }
+
+        return Optional.of( result.getLongValue() );
+
 
     }
 
@@ -193,9 +194,14 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
         }
 
 
-        final Rows<ScopedRowKey<Id>, Boolean> results = HystrixCassandra
-                .user( query.getRowSlice( keys ).withColumnSlice( Collections.singletonList( COLUMN_NAME ) ) )
-                .getResult();
+        final Rows<ScopedRowKey<Id>, Boolean> results;
+        try {
+            results = query.getRowSlice( keys ).withColumnSlice( Collections.singletonList( COLUMN_NAME )).execute()
+                    .getResult();
+        }
+        catch ( ConnectionException e ) {
+            throw new RuntimeException( "Unable to connect to casandra", e );
+        }
 
         for ( Row<ScopedRowKey<Id>, Boolean> row : results ) {
             Column<Boolean> column = row.getColumns().getColumnByName( COLUMN_NAME );
