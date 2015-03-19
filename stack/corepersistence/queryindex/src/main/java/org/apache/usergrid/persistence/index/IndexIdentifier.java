@@ -20,19 +20,14 @@
 
 package org.apache.usergrid.persistence.index;
 
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.index.impl.IndexingUtils;
-
 /**
  * Class is used to generate an index name and alias name
  */
 public class IndexIdentifier{
     private final IndexFig config;
-    private final ApplicationScope applicationScope;
 
-    public IndexIdentifier(IndexFig config, ApplicationScope applicationScope) {
+    public IndexIdentifier(IndexFig config) {
         this.config = config;
-        this.applicationScope = applicationScope;
     }
 
     /**
@@ -40,7 +35,7 @@ public class IndexIdentifier{
      * @return
      */
     public IndexAlias getAlias() {
-        return new IndexAlias(config,getIndexBase());
+        return new IndexAlias(config,config.getIndexPrefix());
     }
 
     /**
@@ -50,22 +45,12 @@ public class IndexIdentifier{
      */
     public String getIndex(String suffix) {
         if (suffix != null) {
-            return getIndexBase() + "_" + suffix;
+            return config.getIndexPrefix() + "_" + suffix;
         } else {
-            return getIndexBase();
+            return config.getIndexPrefix();
         }
     }
 
-    /**
-     * returns the base name for index which will be used to add an alias and index
-     * @return
-     */
-    private String getIndexBase() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(config.getIndexPrefix()).append(IndexingUtils.SEPARATOR);
-        IndexingUtils.idString(sb, applicationScope.getApplication());
-        return sb.toString();
-    }
 
     public class IndexAlias{
         private final String readAlias;
@@ -86,7 +71,7 @@ public class IndexIdentifier{
     }
 
     public String toString() {
-        return "application: " + applicationScope.getApplication().getUuid();
+        return "index id"+config.getIndexPrefix();
     }
 
 }

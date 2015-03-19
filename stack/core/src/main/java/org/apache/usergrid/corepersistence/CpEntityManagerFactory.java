@@ -25,6 +25,7 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -118,14 +119,16 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private CassandraService cassandraService;
     private CounterUtils counterUtils;
     private Injector injector;
+    private final EntityIndex entityIndex;
     private final MetricsFactory metricsFactory;
 
     public CpEntityManagerFactory(
-            final CassandraService cassandraService, final CounterUtils counterUtils, final Injector injector) {
+            final CassandraService cassandraService, final CounterUtils counterUtils, final Injector injector, final EntityIndex entityIndex) {
 
         this.cassandraService = cassandraService;
         this.counterUtils = counterUtils;
         this.injector = injector;
+        this.entityIndex = entityIndex;
         this.managerCache = injector.getInstance( ManagerCache.class );
         this.metricsFactory = injector.getInstance( MetricsFactory.class );
 
@@ -149,15 +152,17 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         EntityManager em = getEntityManager( CpNamingUtils.SYSTEM_APP_ID);
 
         try {
-            if ( em.getApplication() == null ) {
+            if (em.getApplication() == null) {
                 logger.info("Creating system application");
                 Map sysAppProps = new HashMap<String, Object>();
                 sysAppProps.put(PROPERTY_NAME, "systemapp");
                 em.create(CpNamingUtils.SYSTEM_APP_ID, TYPE_APPLICATION, sysAppProps);
                 em.getApplication();
-                em.createIndex();
-                em.refreshIndex();
             }
+
+            em.createIndex();
+            em.refreshIndex();
+
 
         } catch (Exception ex) {
             throw new RuntimeException("Fatal error creating system application", ex);
@@ -311,10 +316,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             properties = new TreeMap<String, Object>( CASE_INSENSITIVE_ORDER );
         }
         properties.put( PROPERTY_NAME, appName );
-        EntityManager appEm = getEntityManager( applicationId );
+        EntityManager appEm = getEntityManager( applicationId);
 
-        appEm.create( applicationId, TYPE_APPLICATION, properties );
-        appEm.createIndex();
+        appEm.create(applicationId, TYPE_APPLICATION, properties);
         appEm.resetRoles();
         appEm.refreshIndex();
 
@@ -354,9 +358,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             em.delete(appToDelete);
 
         }
-        // delete the application's index
-        EntityIndex ei = managerCache.getEntityIndex(new ApplicationScopeImpl(new SimpleId(applicationId, TYPE_APPLICATION)));
-        ei.deleteIndex();
         em.refreshIndex();
     }
 
@@ -367,7 +368,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         // remove old delete_appinfos Entity
         EntityManager em = getEntityManager(CpNamingUtils.SYSTEM_APP_ID);
         Query q = Query.fromQL(String.format("select * where applicationUuid = '%s'", applicationId.toString()));
-        Results results = em.searchCollection( em.getApplicationRef(), "deleted_appinfos", q);
+        Results results = em.searchCollection(em.getApplicationRef(), "deleted_appinfos", q);
         Entity appToRestore = results.getEntity();
 
         if ( appToRestore == null ) {
@@ -388,7 +389,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.rebuildApplicationIndexes(applicationId, new ProgressObserver() {
             @Override
             public void onProgress(EntityRef entity) {
-                logger.info( "Restored entity {}:{}", entity.getType(), entity.getUuid() );
+                logger.info("Restored entity {}:{}", entity.getType(), entity.getUuid());
             }
 
         });
@@ -413,7 +414,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     @Override
     public Map<String, UUID> getApplications() throws Exception {
-        return getApplications( false );
+        return getApplications(false);
     }
 
 
@@ -664,9 +665,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         maybeCreateIndexes();
         // system app
 
-        for ( EntityIndex index : getManagementIndexes() ) {
-            index.refresh();
-        }
+            entityIndex.refresh();
     }
 
 
@@ -676,13 +675,11 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             return;
         }
 
-        for ( EntityIndex index : getManagementIndexes() ) {
-            index.initializeIndex();
-        }
+        entityIndex.initializeIndex();
     }
 
 
-    private List<EntityIndex> getManagementIndexes() {
+    private List<ApplicationEntityIndex> getManagementIndexes() {
 
         return Arrays.asList( managerCache.getEntityIndex(
                 new ApplicationScopeImpl( new SimpleId( CpNamingUtils.SYSTEM_APP_ID, "application" ) ) ),
@@ -753,7 +750,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         EntityManager em = getEntityManager( appId );
 
         //explicitly invoke create index, we don't know if it exists or not in ES during a rebuild.
-        em.createIndex();
         Application app = em.getApplication();
 
         em.reindexCollection( po, collectionName, reverse );
@@ -764,7 +760,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     @Override
     public void addIndex(final UUID applicationId,final String indexSuffix,final int shards,final int replicas, final String writeConsistency){
-        EntityIndex entityIndex = managerCache.getEntityIndex(CpNamingUtils.getApplicationScope(applicationId));
         entityIndex.addIndex(indexSuffix, shards, replicas,writeConsistency);
     }
 
