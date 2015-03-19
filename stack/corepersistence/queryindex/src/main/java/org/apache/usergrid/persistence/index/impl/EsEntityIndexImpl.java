@@ -55,6 +55,8 @@ import org.elasticsearch.index.query.*;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.elasticsearch.indices.IndexMissingException;
 
+import org.elasticsearch.indices.InvalidAliasNameException;
+import org.elasticsearch.rest.action.admin.indices.alias.delete.AliasesMissingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -119,9 +121,6 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
         this.esProvider = provider;
         this.config = config;
-
-
-
         this.alias = indexIdentifier.getAlias();
         this.aliasCache = indexCache;
         this.addTimer = metricsFactory
@@ -143,14 +142,14 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
         if(indexes == null || indexes.length==0) {
             addIndex(null, numberOfShards, numberOfReplicas, config.getWriteConsistencyLevel());
         }
+
     }
 
     @Override
     public void addIndex(final String indexSuffix,final int numberOfShards, final int numberOfReplicas, final String writeConsistency) {
-        String normalizedSuffix =  StringUtils.isNotEmpty(indexSuffix) ? indexSuffix : null;
         try {
             //get index name with suffix attached
-            String indexName = indexIdentifier.getIndex(normalizedSuffix);
+            String indexName = indexIdentifier.getIndex(indexSuffix);
 
             //Create index
             try {
@@ -186,11 +185,9 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
             //We do NOT want to create an alias if the index already exists, we'll overwrite the indexes that
             //may have been set via other administrative endpoint
 
-            addAlias(normalizedSuffix);
+            addAlias(indexSuffix);
 
             testNewIndex();
-
-
 
         } catch (IndexAlreadyExistsException expected) {
             // this is expected to happen if index already exists, it's a no-op and swallow
@@ -202,51 +199,47 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
     @Override
     public void addAlias(final String indexSuffix) {
-
-        final Timer.Context timeRemoveAlias = updateAliasTimer.time();
+        Timer.Context timer = updateAliasTimer.time();
         try {
-
-
+            Boolean isAck;
             String indexName = indexIdentifier.getIndex(indexSuffix);
             final AdminClient adminClient = esProvider.getClient().admin();
 
-            String[] indexNames = getIndexesFromEs(AliasType.Write);
+            String[] indexNames = getIndexes(AliasType.Write);
 
-
-            final IndicesAliasesRequestBuilder aliasesRequestBuilder = adminClient.indices().prepareAliases();
-
-            //remove the write alias from it's target
+            int count = 0;
+            IndicesAliasesRequestBuilder aliasesRequestBuilder = adminClient.indices().prepareAliases();
             for ( String currentIndex : indexNames ) {
                 aliasesRequestBuilder.removeAlias( currentIndex, alias.getWriteAlias() );
-                logger.info("Removing existing write Alias Name [{}] from Index [{}]", alias.getWriteAlias(), currentIndex);
+                count++;
             }
+            if(count>0) {
+                isAck = aliasesRequestBuilder.execute().actionGet().isAcknowledged();
+                logger.info("Removed Index Name from Alias=[{}] ACK=[{}]", alias, isAck);
+            }
+            aliasesRequestBuilder = adminClient.indices().prepareAliases();
 
             //Added For Graphite Metrics
-
             // add read alias
-            aliasesRequestBuilder.addAlias(  indexName, alias.getReadAlias());
-            logger.info("Created new read Alias Name [{}] on Index [{}]", alias.getReadAlias(), indexName);
+            aliasesRequestBuilder.addAlias(
+                indexName, alias.getReadAlias());
 
-
+            //Added For Graphite Metrics
             //add write alias
-            aliasesRequestBuilder.addAlias( indexName, alias.getWriteAlias() );
+            aliasesRequestBuilder.addAlias(
+                indexName, alias.getWriteAlias());
 
-            logger.info("Created new write Alias Name [{}] on Index [{}]", alias.getWriteAlias(), indexName);
+            isAck = aliasesRequestBuilder.execute().actionGet().isAcknowledged();
 
-            final IndicesAliasesResponse result = aliasesRequestBuilder.execute().actionGet();
+            logger.info("Created new aliases ACK=[{}]",  isAck);
 
-            final boolean isAcknowledged = result.isAcknowledged();
-
-            if(!isAcknowledged){
-                throw new RuntimeException( "Unable to add aliases to the new index.  Elasticsearch did not acknowledge to the alias change for index '" + indexSuffix + "'");
-            }
-
-        }
-        finally{
-            //invalidate the alias
             aliasCache.invalidate(alias);
-            //stop the timer
-            timeRemoveAlias.stop();
+
+        } catch (Exception e) {
+            logger.warn("Failed to create alias ", e);
+        }
+        finally {
+            timer.stop();
         }
     }
 
@@ -254,7 +247,6 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     public String[] getIndexes(final AliasType aliasType) {
         return aliasCache.getIndexes(alias, aliasType);
     }
-
 
     /**
      * Get our index info from ES, but clear our cache first
@@ -265,8 +257,6 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
         aliasCache.invalidate( alias );
         return getIndexes( aliasType );
     }
-
-
 
     /**
      * Tests writing a document to a new index to ensure it's working correctly. See this post:

@@ -20,12 +20,15 @@
 
 package org.apache.usergrid.persistence.index;
 
+import com.google.inject.Inject;
+
 /**
  * Class is used to generate an index name and alias name
  */
 public class IndexIdentifier{
     private final IndexFig config;
 
+    @Inject
     public IndexIdentifier(IndexFig config) {
         this.config = config;
     }

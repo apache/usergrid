@@ -199,7 +199,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private EntityManager _getEntityManager( UUID applicationId ) {
 
         EntityManager em = new CpEntityManager();
-        em.init( this, applicationId );
+        em.init( this,entityIndex ,applicationId );
 
         return em;
     }

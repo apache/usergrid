@@ -36,6 +36,7 @@ import java.util.UUID;
 
 import javax.annotation.Resource;
 
+import org.apache.usergrid.persistence.index.EntityIndex;
 import org.elasticsearch.action.ListenableActionFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -214,7 +215,7 @@ public class EntityManagerImpl implements EntityManager {
 
 
     @Override
-    public void init(EntityManagerFactory emf, UUID applicationId) {
+    public void init(EntityManagerFactory emf, EntityIndex entityIndex, UUID applicationId) {
         init( (EntityManagerFactoryImpl)emf, null, null, applicationId, false);
     }
 
@@ -2894,12 +2895,6 @@ public class EntityManagerImpl implements EntityManager {
         //no op
     }
 
-
-    @Override
-    public ListenableActionFuture deleteIndex() {
-        //no op
-        return null;
-    }
 
 
     @Override

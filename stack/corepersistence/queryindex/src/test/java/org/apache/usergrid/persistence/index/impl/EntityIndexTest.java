@@ -81,22 +81,21 @@ public class EntityIndexTest extends BaseIT {
 
     @Test
     public void testIndex() throws IOException, InterruptedException {
-        Id appId = new SimpleId( "application" );
+        Id appId = new SimpleId("application");
+        ei.initializeIndex();
 
-        ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
+        ApplicationScope applicationScope = new ApplicationScopeImpl(appId);
         ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex(applicationScope);
 
-
         final String entityType = "thing";
-        IndexScope indexScope = new IndexScopeImpl( appId, "things" );
-        final SearchTypes searchTypes = SearchTypes.fromTypes( entityType );
+        IndexScope indexScope = new IndexScopeImpl(appId, "things");
+        final SearchTypes searchTypes = SearchTypes.fromTypes(entityType);
 
-        insertJsonBlob(entityIndex, entityType, indexScope, "/sample-large.json",101,0);
+        insertJsonBlob(entityIndex, entityType, indexScope, "/sample-large.json", 101, 0);
 
-       ei.refresh();
+        ei.refresh();
 
-
-        testQueries( indexScope, searchTypes, entityIndex );
+        testQueries(indexScope, searchTypes, entityIndex);
     }
 
     @Test
