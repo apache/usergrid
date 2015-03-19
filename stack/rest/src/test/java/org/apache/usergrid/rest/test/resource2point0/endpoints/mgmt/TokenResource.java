@@ -50,6 +50,12 @@ public class TokenResource extends NamedResource {
         return token;
     }
 
+
+    /**
+     * Convinece method to set the token needed for each call.
+     * @param token
+     * @return
+     */
     public TokenResource setToken(Token token) {
         this.context.setToken(token);
         return this;

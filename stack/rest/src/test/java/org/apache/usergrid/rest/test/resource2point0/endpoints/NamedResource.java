@@ -71,7 +71,10 @@ public abstract class NamedResource implements UrlResource {
     public WebResource getResource(boolean useToken,Token token) {
         WebResource resource = parent.getResource().path( getPath() );
         token = token !=null ? token : this.context.getToken();
-        return  useToken    ? resource.queryParam("access_token",token.getAccessToken()) :  parent.getResource().path( getPath() );
+        //error checking
+        if(token == null)
+            return resource;
+        return  useToken    ? resource.queryParam("access_token",token.getAccessToken()) :  resource;
     }
 
     protected WebResource addParametersToResource(WebResource resource, final QueryParameters parameters){
@@ -142,6 +145,14 @@ public abstract class NamedResource implements UrlResource {
     public <T> T post(Class<T> type, Object requestEntity) {
         GenericType<T> gt = new GenericType<>((Class) type);
         return getResource().type(MediaType.APPLICATION_JSON_TYPE)
+                            .accept( MediaType.APPLICATION_JSON )
+                            .post(gt.getRawClass(), requestEntity);
+
+    }
+
+    public <T> T postWithToken(Class<T> type, Object requestEntity) {
+        GenericType<T> gt = new GenericType<>((Class) type);
+        return getResource(true).type(MediaType.APPLICATION_JSON_TYPE)
                             .accept( MediaType.APPLICATION_JSON )
                             .post(gt.getRawClass(), requestEntity);
 

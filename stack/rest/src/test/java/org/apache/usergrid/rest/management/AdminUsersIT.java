@@ -41,6 +41,7 @@ import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.ManagementResource;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource2point0.model.Credentials;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource2point0.model.Token;
@@ -58,6 +59,7 @@ import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_TES
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_TEST_ACCOUNT_ADMIN_USER_PASSWORD;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -98,7 +100,8 @@ public class AdminUsersIT extends AbstractRestIT {
         this.refreshIndex();
 
         //Get the token using the new password
-        management.token().post( Token.class, new Token( username, "testPassword" )  );
+        Token adminToken = management.token().post( Token.class, new Token( username, "testPassword" )  );
+        management.token().setToken( adminToken );
 
         //Check that we cannot get the token using the old password
         try {
@@ -131,7 +134,8 @@ public class AdminUsersIT extends AbstractRestIT {
 
 
         //Get the token using the new password
-        management.token().post( Token.class, new Token( username, "testPassword" )  );
+        Token adminToken = management.token().post( Token.class, new Token( username, "testPassword" )  );
+        management.token().setToken( adminToken );
 
 
 
@@ -184,7 +188,7 @@ public class AdminUsersIT extends AbstractRestIT {
      */
     @Test
     public void mgmtUserFeed() throws Exception {
-
+        //TODO: fix or establish what the user feed should do
         Entity mgmtUserFeedEntity = management.users().user( clientSetup.getUsername() ).feed().get();
         String correctValue= "<a href=mailto:"+clientSetup.getUsername();  //user_org.apache.usergrid.rest.management.AdminUsersIT.mgmtUserFeed4c3e53e0-acc7-11e4-b527-0b8af3c5813f@usergrid.com">user_org.apache.usergrid.rest.management.AdminUsersIT.mgmtUserFeed4c3e53e0-acc7-11e4-b527-0b8af3c5813f (user_org.apache.usergrid.rest.management.AdminUsersIT.mgmtUserFeed4c3e53e0-acc7-11e4-b527-0b8af3c5813f@usergrid.com)</a> created a new organization account named org_org.apache.usergrid.rest.management.AdminUsersIT.mgmtUserFeed4c3ec910-acc7-11e4-94c8-33f0d48a5559
 
@@ -192,6 +196,7 @@ public class AdminUsersIT extends AbstractRestIT {
 
         ArrayList<Map<String,Object>> feedEntityMap = ( ArrayList ) mgmtUserFeedEntity.get( "entities" );
         assertNotNull( feedEntityMap );
+        assertNotEquals( 0,feedEntityMap.size() );
         assertNotNull( feedEntityMap.get( 0 ).get( "title" )  );
         assertTrue("Needs to contain the feed of the specific management user",
             ((String)(feedEntityMap.get( 0 ).get( "title" ))).contains(clientSetup.getUsername() ));
@@ -600,20 +605,29 @@ public class AdminUsersIT extends AbstractRestIT {
 
         Entity adminUserPayload = new Entity();
         String username = "listOrgUsersByName"+UUIDUtils.newTimeUUID();
+        Credentials orgCredentials = clientSetup.getClientCredentials();
         adminUserPayload.put( "username", username );
         adminUserPayload.put( "name", username );
         adminUserPayload.put( "email", username+"@usergrid.com" );
         adminUserPayload.put( "password", username );
 
-        //post new admin user besides the default
-        management().orgs().organization( clientSetup.getOrganizationName() ).users().post(ApiResponse.class ,adminUserPayload );
+//        //If we comment this out it works, shouldn't using an organization Token for an endpoint
+        //with organization access work?
+        //TODO:investigate above comment
+//        Token organizationToken =
+//            management().token().post( Token.class,
+//                new Token( "client_credentials", orgCredentials.getClientId(), orgCredentials.getClientSecret() ) );
+//        management().token().setToken( organizationToken );
+
+        //Create admin user
+        management().orgs().organization( clientSetup.getOrganizationName() ).users().postWithToken(ApiResponse.class ,adminUserPayload );
 
         refreshIndex();
 
         //Retrieves the admin users
-        Entity adminUsers = management().orgs().organization( clientSetup.getOrganizationName() ).users().get(Entity.class);
+        ApiResponse adminUsers = management().orgs().organization( clientSetup.getOrganizationName() ).users().get(ApiResponse.class);
 
-        assertEquals("There need to be 2 admin users",2,( ( ArrayList ) adminUsers.getResponse().getData() ).size());
+        assertEquals("There need to be 2 admin users",2,( ( ArrayList ) adminUsers.getData() ).size());
 
     }
 
@@ -627,7 +641,7 @@ public class AdminUsersIT extends AbstractRestIT {
     public void createOrgFromUserConnectionFail() throws Exception {
 
         Token token = management().token().post(Token.class ,new Token( clientSetup.getUsername(),clientSetup.getPassword() ) );
-
+        management().token().setToken( token );
         // try to create the same org again off the connection
         try {
             management().users().user( clientSetup.getUsername() ).organizations().post( clientSetup.getOrganization(),token );
