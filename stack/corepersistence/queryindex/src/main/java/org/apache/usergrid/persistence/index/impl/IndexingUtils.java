@@ -96,21 +96,6 @@ public class IndexingUtils {
         return sb.toString();
     }
 
-
-    /**
-     * Create the facilities to retrieve an index name and alias name
-     * @param fig
-     * @param applicationScope
-     * @return
-     */
-    public static IndexIdentifier createIndexIdentifier(IndexFig fig, ApplicationScope applicationScope) {
-        return new IndexIdentifier(fig,applicationScope);
-    }
-
-
-
-
-
     /**
      * Create the index doc from the given entity
      * @param entity

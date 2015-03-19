@@ -76,13 +76,13 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
 
     public EsEntityIndexBatchImpl(final ApplicationScope applicationScope,
-                                  final IndexBufferProducer indexBatchBufferProducer,final IndexFig config,
-                                  final AliasedEntityIndex entityIndex ) {
+                                  final IndexBufferProducer indexBatchBufferProducer,
+                                  final AliasedEntityIndex entityIndex, IndexIdentifier indexIdentifier ) {
 
         this.applicationScope = applicationScope;
         this.indexBatchBufferProducer = indexBatchBufferProducer;
         this.entityIndex = entityIndex;
-        this.indexIdentifier = IndexingUtils.createIndexIdentifier(config, applicationScope);
+        this.indexIdentifier = indexIdentifier;
         this.alias = indexIdentifier.getAlias();
         //constrained
         this.container = new IndexOperationMessage();
@@ -96,7 +96,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         ValidationUtils.verifyVersion( entity.getVersion() );
         //add app id for indexing
         entity.setField(
-            new StringField(APPLICATION_ID_FIELDNAME,IndexingUtils.idString(applicationScope.getApplication()))
+            new StringField(APPLICATION_ID_FIELDNAME, IndexingUtils.idString(applicationScope.getApplication()))
         );
         final String context = createContextName(indexScope);
 

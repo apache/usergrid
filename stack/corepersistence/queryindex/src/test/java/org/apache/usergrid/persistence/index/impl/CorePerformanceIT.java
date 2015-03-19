@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.usergrid.persistence.index.*;
 import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -40,11 +41,6 @@ import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
-import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.EntityIndexBatch;
-import org.apache.usergrid.persistence.index.EntityIndexFactory;
-import org.apache.usergrid.persistence.index.IndexScope;
-import org.apache.usergrid.persistence.index.SearchTypes;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
 import org.apache.usergrid.persistence.index.query.EntityResults;
@@ -83,6 +79,7 @@ public class CorePerformanceIT extends BaseIT {
 
     static EntityCollectionManagerFactory ecmf;
     static EntityIndexFactory ecif ;
+    static EntityIndex ecf;
 
 
     @Ignore("Relies on finefoods.txt which must be downloaded separately")
@@ -97,6 +94,7 @@ public class CorePerformanceIT extends BaseIT {
 
         ecmf = injector.getInstance( EntityCollectionManagerFactory.class );
         ecif = injector.getInstance( EntityIndexFactory.class );
+        ecf = injector.getInstance(EntityIndex.class);
 
         final ApplicationScope scope = new ApplicationScopeImpl( new SimpleId( "application" ) );
 
@@ -174,7 +172,7 @@ public class CorePerformanceIT extends BaseIT {
 
         public void run() {
 
-            EntityIndex eci =   ecif.createEntityIndex( scope);
+            ApplicationEntityIndex eci =   ecif.createApplicationEntityIndex(scope);
             EntityCollectionManager ecm = ecmf.createCollectionManager( new CollectionScopeImpl( scope.getApplication(), indexScope.getOwner(), indexScope.getName() ) );
 
             Query query = Query.fromQL( "review_score > 0"); // get all reviews;
@@ -219,7 +217,8 @@ public class CorePerformanceIT extends BaseIT {
             CollectionScope collectionScope = new CollectionScopeImpl(
                     applicationScope.getApplication(), indexScope.getOwner(), indexScope.getName() );
             EntityCollectionManager ecm = ecmf.createCollectionManager(collectionScope );
-            EntityIndex eci = ecif.createEntityIndex(applicationScope );
+            ApplicationEntityIndex eci =   ecif.createApplicationEntityIndex(applicationScope);
+
 
             FileReader fr;
             try {
@@ -304,7 +303,7 @@ public class CorePerformanceIT extends BaseIT {
                 throw new RuntimeException("Error reading file", ex);
             }
 
-            eci.refresh();
+            ecf.refresh();
         }
     }
 
@@ -312,7 +311,8 @@ public class CorePerformanceIT extends BaseIT {
     public void runSelectedQueries(final ApplicationScope scope,  List<IndexScope> indexScopes ) {
 
         for ( IndexScope indexScope : indexScopes ) {
-            EntityIndex eci = ecif.createEntityIndex(scope );
+            ApplicationEntityIndex eci =   ecif.createApplicationEntityIndex(scope);
+
 
             // TODO: come up with more and more complex queries for CorePerformanceIT
 
@@ -330,7 +330,7 @@ public class CorePerformanceIT extends BaseIT {
         }
     }
 
-    public static void query(final IndexScope indexScope, final EntityIndex eci, final String query ) {;
+    public static void query(final IndexScope indexScope, final ApplicationEntityIndex eci, final String query ) {;
         Query q = Query.fromQL(query) ;
 //        CandidateResults candidateResults = eci.search(indexScope,  q );  TODO FIXME
 //        log.info("size = {} returned from query {}", candidateResults.size(), q.getQl() );

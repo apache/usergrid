@@ -20,19 +20,14 @@
 
 package org.apache.usergrid.persistence.index;
 
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.index.impl.IndexingUtils;
-
 /**
  * Class is used to generate an index name and alias name
  */
 public class IndexIdentifier{
     private final IndexFig config;
-    private final ApplicationScope applicationScope;
 
-    public IndexIdentifier(IndexFig config, ApplicationScope applicationScope) {
+    public IndexIdentifier(IndexFig config) {
         this.config = config;
-        this.applicationScope = applicationScope;
     }
 
     /**
@@ -76,7 +71,7 @@ public class IndexIdentifier{
     }
 
     public String toString() {
-        return "application: " + applicationScope.getApplication().getUuid();
+        return "index id"+config.getIndexPrefix();
     }
 
 }

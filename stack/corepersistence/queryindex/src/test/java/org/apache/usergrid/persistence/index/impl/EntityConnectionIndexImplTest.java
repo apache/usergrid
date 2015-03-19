@@ -21,6 +21,7 @@ package org.apache.usergrid.persistence.index.impl;
 import java.io.IOException;
 import java.util.HashMap;
 
+import org.apache.usergrid.persistence.index.*;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -30,11 +31,6 @@ import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.test.UseModules;
-import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.EntityIndexBatch;
-import org.apache.usergrid.persistence.index.EntityIndexFactory;
-import org.apache.usergrid.persistence.index.IndexScope;
-import org.apache.usergrid.persistence.index.SearchTypes;
 import org.apache.usergrid.persistence.index.exceptions.QueryParseException;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
 import org.apache.usergrid.persistence.index.query.CandidateResult;
@@ -65,6 +61,8 @@ public class EntityConnectionIndexImplTest extends BaseIT {
     @Inject
     public EntityIndexFactory ecif;
 
+    @Inject
+    public EntityIndex ei;
 
     @Test
     public void testBasicOperation() throws IOException, InterruptedException {
@@ -117,8 +115,7 @@ public class EntityConnectionIndexImplTest extends BaseIT {
         IndexScope otherIndexScope =
                 new IndexScopeImpl( new SimpleId( UUIDGenerator.newTimeUUID(), "animal" ), "likes" );
 
-        EntityIndex personLikesIndex = ecif.createEntityIndex( applicationScope );
-        personLikesIndex.initializeIndex();
+        ApplicationEntityIndex personLikesIndex = ecif.createApplicationEntityIndex(applicationScope);
 
         EntityIndexBatch batch = personLikesIndex.createBatch();
 
@@ -137,7 +134,7 @@ public class EntityConnectionIndexImplTest extends BaseIT {
         batch.index( otherIndexScope, oj );
 
         batch.execute().get();
-        personLikesIndex.refresh();
+        ei.refresh();
 
 
         Thread.sleep( 2000 );
@@ -247,8 +244,7 @@ public class EntityConnectionIndexImplTest extends BaseIT {
         IndexScope otherIndexScope =
                 new IndexScopeImpl( new SimpleId( UUIDGenerator.newTimeUUID(), "animal" ), "likes" );
 
-        EntityIndex personLikesIndex = ecif.createEntityIndex( applicationScope );
-        personLikesIndex.initializeIndex();
+        ApplicationEntityIndex personLikesIndex = ecif.createApplicationEntityIndex(applicationScope);
 
         EntityIndexBatch batch = personLikesIndex.createBatch();
 
@@ -267,7 +263,7 @@ public class EntityConnectionIndexImplTest extends BaseIT {
         batch.index( otherIndexScope, oj );
 
         batch.execute().get();
-        personLikesIndex.refresh();
+        ei.refresh();
 
 
         // now, let's search for muffins
@@ -285,7 +281,7 @@ public class EntityConnectionIndexImplTest extends BaseIT {
         batch.deindex( searchScope, muffin );
         batch.deindex( searchScope, oj );
         batch.execute().get();
-        personLikesIndex.refresh();
+        ei.refresh();
 
         likes = personLikesIndex.search( searchScope,
                 SearchTypes.fromTypes( muffin.getId().getType(), egg.getId().getType(), oj.getId().getType() ),

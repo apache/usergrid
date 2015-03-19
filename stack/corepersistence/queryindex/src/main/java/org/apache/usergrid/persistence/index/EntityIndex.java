@@ -26,13 +26,14 @@ import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.elasticsearch.action.ListenableActionFuture;
+import rx.Observable;
 
 import java.util.Map;
 import java.util.concurrent.Future;
 
 
 /**
- * Provides indexing of Entities within a scope.
+ * Provides management operations for single index
  */
 public interface EntityIndex {
 
@@ -41,12 +42,6 @@ public interface EntityIndex {
      * Otherwise we're introducing slowness into our system
      */
     public void initializeIndex();
-
-    /**
-     * Delete the index from ES
-     */
-    public ListenableActionFuture deleteIndex();
-
     /**
      * Create an index and add to alias, will create alias and remove any old index from write alias if alias already exists
      * @param indexSuffix index name
@@ -56,27 +51,13 @@ public interface EntityIndex {
      */
     public void addIndex(final String indexSuffix, final int shards, final int replicas, final String writeConsistency);
 
-    /**
-     * Create the index batch.
-     */
-    public EntityIndexBatch createBatch();
-
-
-    /**
-     * Execute query in Usergrid syntax.
-     */
-    public CandidateResults search(final IndexScope indexScope, final SearchTypes searchType, Query query );
 
     /**
      * Refresh the index.
      */
     public void refresh();
 
-    /**
-     * Return the number of pending tasks in the cluster
-     * @return
-     */
-    public int getPendingTasks();
+
 
     /**
      * Check health of cluster.
