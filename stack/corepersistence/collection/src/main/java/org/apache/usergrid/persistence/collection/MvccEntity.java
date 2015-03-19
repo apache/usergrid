@@ -41,8 +41,11 @@ public interface MvccEntity extends EntityVersion{
         COMPLETE,
 
         /**
-         * The entity being written represents a partial entity
+         * The entity being written represents a partial entity.
+         *
+         * This will be removed after v3 serialization deployment
          */
+        @Deprecated()
         PARTIAL,
 
         /**

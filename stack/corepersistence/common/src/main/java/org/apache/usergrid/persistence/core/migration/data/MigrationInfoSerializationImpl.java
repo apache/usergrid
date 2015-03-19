@@ -22,7 +22,11 @@ package org.apache.usergrid.persistence.core.migration.data;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import org.apache.cassandra.db.marshal.BytesType;
 import org.apache.cassandra.db.marshal.UTF8Type;
 
@@ -45,7 +49,6 @@ import com.netflix.astyanax.serializers.StringSerializer;
 @Singleton
 public class MigrationInfoSerializationImpl implements MigrationInfoSerialization {
 
-
     /**
      * Just a hard coded scope since we need it
      */
@@ -63,7 +66,10 @@ public class MigrationInfoSerializationImpl implements MigrationInfoSerializatio
             new MultiTennantColumnFamily<>( "Data_Migration_Info", ROW_KEY_SER, STRING_SERIALIZER );
 
 
-    private static final ScopedRowKey<String> ROW_KEY = ScopedRowKey.fromKey( STATIC_ID, "" );
+    /**
+     * The row key we previously used to store versions.  This is required to migrate versions in each module to the correct version
+     */
+    private static final ScopedRowKey<String> LEGACY_ROW_KEY = ScopedRowKey.fromKey( STATIC_ID, "" );
 
     private static final String COL_STATUS_MESSAGE = "statusMessage";
 
@@ -81,10 +87,12 @@ public class MigrationInfoSerializationImpl implements MigrationInfoSerializatio
 
 
     @Override
-    public void setStatusMessage( final String message ) {
+    public void setStatusMessage(final String pluginName,  final String message ) {
+
+        final ScopedRowKey<String> rowKey = ScopedRowKey.fromKey( STATIC_ID, pluginName);
 
         try {
-            keyspace.prepareColumnMutation( CF_MIGRATION_INFO, ROW_KEY, COL_STATUS_MESSAGE ).putValue( message, null )
+            keyspace.prepareColumnMutation( CF_MIGRATION_INFO, rowKey, COL_STATUS_MESSAGE ).putValue( message, null )
                     .execute();
         }
         catch ( ConnectionException e ) {
@@ -94,9 +102,12 @@ public class MigrationInfoSerializationImpl implements MigrationInfoSerializatio
 
 
     @Override
-    public String getStatusMessage() {
+    public String getStatusMessage(final String pluginName) {
+
+        final ScopedRowKey<String> rowKey = ScopedRowKey.fromKey( STATIC_ID, pluginName);
+
         try {
-            return keyspace.prepareQuery( CF_MIGRATION_INFO ).getKey( ROW_KEY ).getColumn( COL_STATUS_MESSAGE )
+            return keyspace.prepareQuery( CF_MIGRATION_INFO ).getKey( rowKey ).getColumn( COL_STATUS_MESSAGE )
                            .execute().getResult().getStringValue();
         }
         //swallow, it doesn't exist
@@ -110,9 +121,12 @@ public class MigrationInfoSerializationImpl implements MigrationInfoSerializatio
 
 
     @Override
-    public void setVersion( final int version ) {
+    public void setVersion(final String pluginName, final int version ) {
+
+        final ScopedRowKey<String> rowKey = ScopedRowKey.fromKey( STATIC_ID, pluginName);
+
         try {
-            keyspace.prepareColumnMutation( CF_MIGRATION_INFO, ROW_KEY, COLUMN_VERSION ).putValue( version, null )
+            keyspace.prepareColumnMutation( CF_MIGRATION_INFO, rowKey, COLUMN_VERSION ).putValue( version, null )
                     .execute();
         }
         catch ( ConnectionException e ) {
@@ -122,9 +136,12 @@ public class MigrationInfoSerializationImpl implements MigrationInfoSerializatio
 
 
     @Override
-    public int getVersion() {
+    public int getVersion(final String pluginName) {
+
+        final ScopedRowKey<String> rowKey = ScopedRowKey.fromKey( STATIC_ID, pluginName);
+
         try {
-            return keyspace.prepareQuery( CF_MIGRATION_INFO ).getKey( ROW_KEY ).getColumn( COLUMN_VERSION ).execute()
+            return keyspace.prepareQuery( CF_MIGRATION_INFO ).getKey( rowKey ).getColumn( COLUMN_VERSION ).execute()
                            .getResult().getIntegerValue();
         }
         //swallow, it doesn't exist
@@ -138,9 +155,12 @@ public class MigrationInfoSerializationImpl implements MigrationInfoSerializatio
 
 
     @Override
-    public void setStatusCode( final int status ) {
+    public void setStatusCode(final String pluginName, final int status ) {
+
+        final ScopedRowKey<String> rowKey = ScopedRowKey.fromKey( STATIC_ID, pluginName);
+
         try {
-            keyspace.prepareColumnMutation( CF_MIGRATION_INFO, ROW_KEY, COLUMN_STATUS_CODE ).putValue( status, null )
+            keyspace.prepareColumnMutation( CF_MIGRATION_INFO, rowKey, COLUMN_STATUS_CODE ).putValue( status, null )
                     .execute();
         }
         catch ( ConnectionException e ) {
@@ -150,9 +170,28 @@ public class MigrationInfoSerializationImpl implements MigrationInfoSerializatio
 
 
     @Override
-    public int getStatusCode() {
+    public int getStatusCode(final String pluginName) {
+
+        final ScopedRowKey<String> rowKey = ScopedRowKey.fromKey( STATIC_ID, pluginName);
+
         try {
-            return keyspace.prepareQuery( CF_MIGRATION_INFO ).getKey( ROW_KEY ).getColumn( COLUMN_STATUS_CODE )
+            return keyspace.prepareQuery( CF_MIGRATION_INFO ).getKey( rowKey ).getColumn( COLUMN_STATUS_CODE )
+                           .execute().getResult().getIntegerValue();
+        }
+        //swallow, it doesn't exist
+        catch ( NotFoundException nfe ) {
+            return 0;
+        }
+        catch ( ConnectionException e ) {
+            throw new DataMigrationException( "Unable to retrieve status", e );
+        }
+    }
+
+
+    @Override
+    public int getSystemVersion() {
+        try {
+            return keyspace.prepareQuery( CF_MIGRATION_INFO ).getKey( LEGACY_ROW_KEY ).getColumn( COLUMN_VERSION )
                            .execute().getResult().getIntegerValue();
         }
         //swallow, it doesn't exist

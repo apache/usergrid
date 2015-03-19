@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.apache.usergrid.persistence.index.*;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -46,10 +47,6 @@ import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
-import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.EntityIndexFactory;
-import org.apache.usergrid.persistence.index.IndexScope;
-import org.apache.usergrid.persistence.index.SearchTypes;
 import org.apache.usergrid.persistence.index.impl.IndexScopeImpl;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
 import org.apache.usergrid.persistence.index.query.Query;
@@ -123,7 +120,14 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         assertTrue( "New version is greater than old",
                 UUIDComparator.staticCompare( newVersion, oldVersion ) > 0 );
 
-        assertEquals( 2, queryCollectionCp( "things", "thing", "select *" ).size() );
+        CandidateResults results;
+        do{
+             results = queryCollectionCp( "things", "thing", "select *" );
+            if(results.size()!=2){
+                Thread.sleep(200);
+            }
+        }while(results.size()!=2);
+        assertEquals( 2, results.size() );
     }
 
 
@@ -154,24 +158,42 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
         UUID newVersion =  getCpEntity( thing ).getVersion();
 
+        CandidateResults candidateResults = null;
 
-        assertEquals( 2, queryCollectionCp( "things", "thing", "select * order by ordinal desc" ).size() );
+        do{
+            candidateResults = queryCollectionCp("things", "thing", "select * order by ordinal desc");
+            if(candidateResults.size()!=2){
+                Thread.sleep(200);
+            }
+        }while(candidateResults.size()<2);
+
+        assertEquals(2, candidateResults.size());
 
         //now run enable events and ensure we clean up
-        System.setProperty( EVENTS_DISABLED, "false" );
+        System.setProperty(EVENTS_DISABLED, "false");
 
-        final Results results = queryCollectionEm( "things", "select * order by ordinal desc" );
-
+        Results results = null;
+        do{
+            results =  queryCollectionEm("things", "select * order by ordinal desc");;
+            if(results.size()!=1){
+                Thread.sleep(200);
+            }
+        }while(results.size()<1);
         assertEquals( 1, results.size() );
         assertEquals(1, results.getEntities().get( 0 ).getProperty( "ordinal" ));
 
         em.refreshIndex();
 
         //ensure it's actually gone
-        final CandidateResults candidates =  queryCollectionCp( "things", "thing", "select * order by ordinal desc" );
-        assertEquals( 1, candidates.size() );
+        do{
+            candidateResults = queryCollectionCp( "things", "thing", "select * order by ordinal desc" );
+            if(candidateResults.size()!=1){
+                Thread.sleep(200);
+            }
+        }while(candidateResults.size()!=1);
+        assertEquals(1, candidateResults.size());
 
-        assertEquals(newVersion, candidates.get( 0 ).getVersion());
+        assertEquals(newVersion, candidateResults.get(0).getVersion());
     }
 
 
@@ -483,7 +505,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
         ApplicationScope as = new ApplicationScopeImpl(
             new SimpleId( em.getApplicationId(), TYPE_APPLICATION ) );
-        EntityIndex ei = eif.createEntityIndex( as );
+        ApplicationEntityIndex ei = eif.createApplicationEntityIndex(as);
 
         IndexScope is = new IndexScopeImpl( new SimpleId( em.getApplicationId(), TYPE_APPLICATION ),
                 CpNamingUtils.getCollectionScopeNameFromCollectionName( collName ) );

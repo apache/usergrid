@@ -37,6 +37,7 @@ import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
+import org.apache.usergrid.persistence.core.util.IdGenerator;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -48,7 +49,7 @@ import rx.Observable;
 import rx.Subscriber;
 
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createEdge;
-import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createId;
+import static org.apache.usergrid.persistence.core.util.IdGenerator.createId;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
@@ -179,12 +180,12 @@ public class GraphManagerStressTest {
     public void writeThousandsSingleSource() throws InterruptedException {
         EdgeGenerator generator = new EdgeGenerator() {
 
-            private Id sourceId = createId( "source" );
+            private Id sourceId = IdGenerator.createId( "source" );
 
 
             @Override
             public Edge newEdge() {
-                Edge edge = createEdge( sourceId, "test", createId( "target" ) );
+                Edge edge = createEdge( sourceId, "test", IdGenerator.createId( "target" ) );
 
 
                 return edge;
@@ -206,12 +207,12 @@ public class GraphManagerStressTest {
     public void writeThousandsSingleTarget() throws InterruptedException {
         EdgeGenerator generator = new EdgeGenerator() {
 
-            private Id targetId = createId( "target" );
+            private Id targetId = IdGenerator.createId( "target" );
 
 
             @Override
             public Edge newEdge() {
-                Edge edge = createEdge( createId( "source" ), "test", targetId );
+                Edge edge = createEdge( IdGenerator.createId( "source" ), "test", targetId );
 
 
                 return edge;

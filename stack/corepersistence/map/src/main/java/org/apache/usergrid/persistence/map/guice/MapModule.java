@@ -42,12 +42,8 @@ public class MapModule extends AbstractModule {
 
     @Override
     protected void configure() {
-
-        // create a guice factory for getting our collection manager
-        bind(MapManagerFactory.class).to( MapManagerFactoryImpl.class );
-
-        bind( MapSerialization.class).to( MapSerializationImpl.class );
-
+        bind(MapManagerFactory.class).to(MapManagerFactoryImpl.class);
+        bind(MapSerialization.class).to( MapSerializationImpl.class );
 
         Multibinder<Migration> migrationBinding = Multibinder.newSetBinder( binder(), Migration.class );
         migrationBinding.addBinding().to(  Key.get( MapSerialization.class ) );

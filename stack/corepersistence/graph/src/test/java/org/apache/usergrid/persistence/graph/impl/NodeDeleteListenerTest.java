@@ -35,6 +35,7 @@ import org.apache.usergrid.persistence.core.guice.ProxyImpl;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
+import org.apache.usergrid.persistence.core.util.IdGenerator;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.GraphManager;
@@ -53,7 +54,7 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createEdge;
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createGetByEdge;
-import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createId;
+import static org.apache.usergrid.persistence.core.util.IdGenerator.createId;
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createSearchByEdge;
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createSearchEdge;
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createSearchIdType;
@@ -329,7 +330,7 @@ public class NodeDeleteListenerTest {
 
         //create loads of edges to easily delete.  We'll keep all the types of "test"
         final int edgeCount = graphFig.getScanPageSize() * 2;
-        Id toDelete = createId( "toDelete" );
+        Id toDelete = IdGenerator.createId( "toDelete" );
         final String edgeType = "test";
 
         int countSaved = 0;
@@ -342,11 +343,11 @@ public class NodeDeleteListenerTest {
 
             //mix up source vs target, good for testing as well as create a lot of sub types to ensure they're removed
             if ( i % 2 == 0 ) {
-                edge = createEdge( toDelete, edgeType, createId( "target" + Math.random() ) );
+                edge = createEdge( toDelete, edgeType, IdGenerator.createId( "target" + Math.random() ) );
                 sourceCount++;
             }
             else {
-                edge = createEdge( createId( "source" + Math.random() ), edgeType, toDelete );
+                edge = createEdge( IdGenerator.createId( "source" + Math.random() ), edgeType, toDelete );
                 targetCount++;
             }
 

@@ -20,6 +20,7 @@ package org.apache.usergrid;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -144,7 +145,11 @@ public class CoreApplication implements Application, TestRule {
     protected void after( Description description ) {
         LOG.info( "Test {}: finish with application", description.getDisplayName() );
 
-        setup.getEmf().getEntityManager( id ).deleteIndex();
+//        try {
+//            setup.getEmf().getEntityManager(id).().get();
+//        }catch (Exception ee){
+//            throw new RuntimeException(ee);
+//        }
     }
 
 

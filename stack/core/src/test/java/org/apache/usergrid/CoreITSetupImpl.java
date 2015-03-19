@@ -130,6 +130,7 @@ public class CoreITSetupImpl implements CoreITSetup {
     @Override
     public UUID createApplication( String organizationName, String applicationName ) throws Exception {
 
+        emf.setup();
         if ( USE_DEFAULT_APPLICATION ) {
             return emf.getDefaultAppId();
         }

@@ -25,6 +25,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang.RandomStringUtils;
+import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -175,17 +176,17 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
         // ----------------- delete the system and application indexes
 
         logger.debug("Deleting app index index");
-        //deleteIndex( CpNamingUtils.SYSTEM_APP_ID );
-        deleteIndex( em.getApplicationId() );
-
-        // ----------------- test that we can read them, should fail
-
-        logger.debug("Reading data, should fail this time ");
-        try {
-            readData( em,  "testTypes", entityCount, 0 );
-            fail("should have failed to read data");
-
-        } catch (Exception expected) {}
+//        //deleteIndex( CpNamingUtils.SYSTEM_APP_ID );
+//        deleteIndex( em.getApplicationId() );
+//
+//        // ----------------- test that we can read them, should fail
+//
+//        logger.debug("Reading data, should fail this time ");
+//        try {
+//            readData( em,  "testTypes", entityCount, 0 );
+//            fail("should have failed to read data");
+//
+//        } catch (Exception expected) {}
 
         // ----------------- rebuild index for catherders only
 
@@ -313,20 +314,20 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
         logger.debug("Deleting app index and system app index");
 
-        deleteIndex( em.getApplicationId() );
-
-        // deleting sytem app index will interfere with other concurrently running tests
-        //deleteIndex( CpNamingUtils.SYSTEM_APP_ID );
-
-
-        // ----------------- test that we can read them, should fail
-
-        logger.debug("Reading data, should fail this time ");
-        try {
-            readData( em, "testTypes", entityCount, 3 );
-            fail("should have failed to read data");
-
-        } catch (Exception expected) {}
+//        deleteIndex( em.getApplicationId() );
+//
+//        // deleting sytem app index will interfere with other concurrently running tests
+//        //deleteIndex( CpNamingUtils.SYSTEM_APP_ID );
+//
+//
+//        // ----------------- test that we can read them, should fail
+//
+//        logger.debug("Reading data, should fail this time ");
+//        try {
+//            readData( em, "testTypes", entityCount, 3 );
+//            fail("should have failed to read data");
+//
+//        } catch (Exception expected) {}
 
         // ----------------- rebuild index
 
@@ -374,21 +375,20 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
         readData( em, "testTypes", entityCount, 3 );
     }
 
-    /**
-     * Delete index for all applications, just need the one to get started.
-     */
-    private void deleteIndex( UUID appUuid ) {
-
-        Injector injector = SpringResource.getInstance().getBean( Injector.class );
-        EntityIndexFactory eif = injector.getInstance( EntityIndexFactory.class );
-
-        Id appId = new SimpleId( appUuid, "application");
-        ApplicationScope scope = new ApplicationScopeImpl( appId );
-        EntityIndex ei = eif.createEntityIndex(scope);
-        EsEntityIndexImpl eeii = (EsEntityIndexImpl)ei;
-
-        eeii.deleteIndex();
-    }
+//    /**
+//     * Delete index for all applications, just need the one to get started.
+//     */
+//    private void deleteIndex( UUID appUuid ) {
+//
+//        Injector injector = SpringResource.getInstance().getBean( Injector.class );
+//        EntityIndexFactory eif = injector.getInstance( EntityIndexFactory.class );
+//
+//        Id appId = new SimpleId( appUuid, "application");
+//        ApplicationScope scope = new ApplicationScopeImpl( appId );
+//        ApplicationEntityIndex ei = eif.createApplicationEntityIndex(scope);
+//        EsEntityIndexImpl eeii = (EsEntityIndexImpl)ei;
+//
+//    }
 
 
     private int readData( EntityManager em,

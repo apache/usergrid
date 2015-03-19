@@ -36,6 +36,8 @@ import java.util.UUID;
 import com.codahale.metrics.Meter;
 import org.apache.usergrid.persistence.collection.FieldSet;
 import org.apache.usergrid.persistence.core.future.BetterFuture;
+import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
+import org.elasticsearch.action.ListenableActionFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
@@ -210,6 +212,7 @@ public class CpEntityManager implements EntityManager {
     private Timer entGetRepairedEntityTimer;
     private Timer updateEntityTimer;
     private Meter updateEntityMeter;
+    private EntityIndex ei;
 
     //    /** Short-term cache to keep us from reloading same Entity during single request. */
 //    private LoadingCache<EntityScope, org.apache.usergrid.persistence.model.entity.Entity> entityCache;
@@ -220,7 +223,8 @@ public class CpEntityManager implements EntityManager {
     }
 
     @Override
-    public void init( EntityManagerFactory emf, UUID applicationId ) {
+    public void init( EntityManagerFactory emf, EntityIndex ei, UUID applicationId ) {
+        this.ei = ei;
 
         Preconditions.checkNotNull( emf, "emf must not be null" );
         Preconditions.checkNotNull( applicationId, "applicationId must not be null" );
@@ -285,7 +289,6 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public Health getIndexHealth() {
-        EntityIndex ei = managerCache.getEntityIndex( applicationScope );
         return ei.getIndexHealth();
     }
 
@@ -1078,7 +1081,7 @@ public class CpEntityManager implements EntityManager {
                 getCollectionScopeNameFromEntityType( entityRef.getType() ) );
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
-        EntityIndex ei = managerCache.getEntityIndex( getApplicationScope() );
+        ApplicationEntityIndex aei = managerCache.getEntityIndex( getApplicationScope() );
 
         Id entityId = new SimpleId( entityRef.getUuid(), entityRef.getType() );
 
@@ -1105,7 +1108,7 @@ public class CpEntityManager implements EntityManager {
 
         //Adding graphite metrics
         Timer.Context timeESBatch = esDeletePropertyTimer.time();
-        BetterFuture future = ei.createBatch().index( defaultIndexScope, cpEntity ).execute();
+        BetterFuture future = aei.createBatch().index( defaultIndexScope, cpEntity ).execute();
         timeESBatch.stop();
         // update in all containing collections and connection indexes
         CpRelationManager rm = ( CpRelationManager ) getRelationManager( entityRef );
@@ -2886,26 +2889,7 @@ public class CpEntityManager implements EntityManager {
 
         // refresh factory indexes
         emf.refreshIndex();
-
-        // refresh this Entity Manager's application's index
-        EntityIndex ei = managerCache.getEntityIndex( getApplicationScope() );
-        ei.refresh();
     }
-
-
-    @Override
-    public void createIndex() {
-        EntityIndex ei = managerCache.getEntityIndex( applicationScope );
-        ei.initializeIndex();
-    }
-
-    public void deleteIndex(){
-        EntityIndex ei = managerCache.getEntityIndex( applicationScope );
-        ei.deleteIndex();
-    }
-
-
-
 
 
     @Override
@@ -2980,8 +2964,8 @@ public class CpEntityManager implements EntityManager {
                                     org.apache.usergrid.persistence.model.entity.Entity memberEntity,
                                     String collName ) {
 
-        final EntityIndex ei = getManagerCache().getEntityIndex( getApplicationScope() );
-        final EntityIndexBatch batch = ei.createBatch();
+        final ApplicationEntityIndex aie = getManagerCache().getEntityIndex( getApplicationScope() );
+        final EntityIndexBatch batch = aie.createBatch();
 
         // index member into entity collection | type scope
         IndexScope collectionIndexScope = new IndexScopeImpl( collectionEntity.getId(),

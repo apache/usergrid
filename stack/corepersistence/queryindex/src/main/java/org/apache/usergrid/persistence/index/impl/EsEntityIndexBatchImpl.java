@@ -56,15 +56,7 @@ import com.codahale.metrics.Timer;
 import rx.Observable;
 import rx.functions.Func1;
 
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ANALYZED_STRING_PREFIX;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.BOOLEAN_PREFIX;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ENTITYID_ID_FIELDNAME;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ENTITY_CONTEXT_FIELDNAME;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.GEO_PREFIX;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.NUMBER_PREFIX;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.STRING_PREFIX;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createContextName;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createIndexDocId;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.*;
 
 
 public class EsEntityIndexBatchImpl implements EntityIndexBatch {
@@ -84,13 +76,13 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
 
     public EsEntityIndexBatchImpl(final ApplicationScope applicationScope,
-                                  final IndexBufferProducer indexBatchBufferProducer,final IndexFig config,
-                                  final AliasedEntityIndex entityIndex ) {
+                                  final IndexBufferProducer indexBatchBufferProducer,
+                                  final AliasedEntityIndex entityIndex, IndexIdentifier indexIdentifier ) {
 
         this.applicationScope = applicationScope;
         this.indexBatchBufferProducer = indexBatchBufferProducer;
         this.entityIndex = entityIndex;
-        this.indexIdentifier = IndexingUtils.createIndexIdentifier(config, applicationScope);
+        this.indexIdentifier = indexIdentifier;
         this.alias = indexIdentifier.getAlias();
         //constrained
         this.container = new IndexOperationMessage();
@@ -102,7 +94,10 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         IndexValidationUtils.validateIndexScope( indexScope );
         ValidationUtils.verifyEntityWrite( entity );
         ValidationUtils.verifyVersion( entity.getVersion() );
-
+        //add app id for indexing
+        entity.setField(
+            new StringField(APPLICATION_ID_FIELDNAME, IndexingUtils.idString(applicationScope.getApplication()))
+        );
         final String context = createContextName(indexScope);
 
         if ( log.isDebugEnabled() ) {
@@ -125,10 +120,8 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         String indexId = createIndexDocId( entity, context );
 
         log.debug( "Indexing entity documentId {} data {} ", indexId, entityAsMap );
-        final String entityType = entity.getId().getType();
-
-
-        container.addIndexRequest(new IndexRequest(alias.getWriteAlias(), entityType, indexId, entityAsMap));
+        final SearchType entityType =SearchType.fromId(entity.getId());
+        container.addIndexRequest(new IndexRequest(alias.getWriteAlias(), entityType.getTypeName(applicationScope), indexId, entityAsMap));
 
         return this;
     }
@@ -142,7 +135,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         ValidationUtils.verifyVersion( version );
 
         final String context = createContextName(indexScope);
-        final String entityType = id.getType();
+        final SearchType entityType =SearchType.fromId(id);
 
         final String indexId = createIndexDocId( id, version, context );
 
@@ -161,14 +154,13 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
                 } );
         }
 
-
         String[] indexes = entityIndex.getIndexes(AliasedEntityIndex.AliasType.Read);
         //get the default index if no alias exists yet
         if(indexes == null ||indexes.length == 0){
             indexes = new String[]{indexIdentifier.getIndex(null)};
         }
 
-        container.addDeIndexRequest( new DeIndexRequest( indexes, entityType, indexId ) );
+        container.addDeIndexRequest( new DeIndexRequest( indexes, entityType.getTypeName(applicationScope), indexId ) );
 
         log.debug("Deindexed Entity with index id " + indexId);
 
@@ -265,7 +257,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
             }
             else if ( f instanceof EntityObjectField ) {
                 EntityObject eo = ( EntityObject ) field.getValue();
-                entityMap.put( field.getName().toLowerCase(), entityToMap( eo ) ); // recursion
+                entityMap.put( field.getName().toLowerCase(), entityToMap(eo) ); // recursion
             }
             else if ( f instanceof StringField ) {
 
@@ -284,12 +276,11 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
                 locMap.put( "lon", locField.getValue().getLongitude() );
                 entityMap.put( GEO_PREFIX + field.getName().toLowerCase(), locMap );
             }
-            else if (  f instanceof DoubleField
-                    || f instanceof FloatField
-                    || f instanceof IntegerField
-                    || f instanceof LongField ) {
-
-                entityMap.put( NUMBER_PREFIX + field.getName().toLowerCase(), field.getValue() );
+            else if( f instanceof DoubleField || f instanceof  FloatField){
+                entityMap.put( DOUBLE_PREFIX + field.getName().toLowerCase(), field.getValue() );
+            }
+            else if( f instanceof LongField || f instanceof IntegerField){
+                entityMap.put( LONG_PREFIX + field.getName().toLowerCase(), field.getValue() );
             }
             else if ( f instanceof BooleanField ) {
 
