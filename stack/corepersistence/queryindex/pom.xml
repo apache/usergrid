@@ -108,6 +108,14 @@
         </dependency>
 
         <dependency>
+                  <groupId>${project.parent.groupId}</groupId>
+                  <artifactId>queue</artifactId>
+                  <version>${project.version}</version>
+                  <type>jar</type>
+              </dependency>
+
+
+        <dependency>
             <groupId>org.elasticsearch</groupId>
             <artifactId>elasticsearch</artifactId>
             <version>${elasticsearch.version}</version>
@@ -131,13 +139,18 @@
             <classifier>tests</classifier>
         </dependency>
 
-
+        <dependency>
+            <groupId>${project.parent.groupId}</groupId>
+            <artifactId>queue</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
 
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
             <version>${slf4j.version}</version>
-            <scope>test</scope>
         </dependency>
 
         <!-- common stuff, logging, etc.-->

@@ -29,7 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.guice.ProxyImpl;
-import org.apache.usergrid.persistence.core.hystrix.HystrixCassandra;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
@@ -47,6 +46,7 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import rx.Observable;
 import rx.functions.Action0;
@@ -129,7 +129,12 @@ public class NodeDeleteListenerImpl implements NodeDeleteListener {
                                 .doOnCompleted( new Action0() {
                                     @Override
                                     public void call() {
-                                        HystrixCassandra.async(nodeSerialization.delete( scope, node, maxVersion.get() ));
+                                        try {
+                                            nodeSerialization.delete( scope, node, maxVersion.get()).execute();
+                                        }
+                                        catch ( ConnectionException e ) {
+                                            throw new RuntimeException( "Unable to connect to casandra", e );
+                                        }
                                     }
                                 } );
                     }
@@ -210,7 +215,12 @@ public class NodeDeleteListenerImpl implements NodeDeleteListener {
                             targetNodes.add( new TargetPair( edge.getTargetNode(), edge.getType() ) );
                         }
 
-                        HystrixCassandra.async( batch );
+                        try {
+                            batch.execute();
+                        }
+                        catch ( ConnectionException e ) {
+                            throw new RuntimeException( "Unable to connect to casandra", e );
+                        }
 
                         //now  delete meta data
 

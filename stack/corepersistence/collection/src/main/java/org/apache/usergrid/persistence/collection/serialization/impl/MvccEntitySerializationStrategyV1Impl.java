@@ -194,7 +194,7 @@ public class MvccEntitySerializationStrategyV1Impl extends MvccEntitySerializati
             // it's been deleted, remove it
 
             if ( Arrays.equals( STATE_DELETED, state ) ) {
-                return new EntityWrapper( MvccEntity.Status.COMPLETE, Optional.<Entity>absent() );
+                return new EntityWrapper( MvccEntity.Status.DELETED, Optional.<Entity>absent() );
             }
 
             Entity storedEntity;

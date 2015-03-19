@@ -16,28 +16,53 @@
  */
 package org.apache.usergrid.persistence.core.future;
 
+
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
+
 
 /**
  * Future without the exception nastiness
  */
-public  class BetterFuture<T> extends FutureTask<T> {
-    public BetterFuture(Callable<T> callable){
-        super(callable);
+public class BetterFuture<T> extends FutureTask<T> {
+
+    private Throwable error;
+
+
+    public BetterFuture( Callable<T> callable ) {
+        super( callable );
     }
 
-    public void done(){
+
+    public void setError( final Throwable t ) {
+        this.error = t;
+    }
+
+
+    public void done() {
         run();
     }
 
-    public T get(){
+
+    public T get() {
+
+        T returnValue = null;
+
         try {
-            return super.get();
-        }catch (Exception e){
-            throw new RuntimeException(e);
+            returnValue = super.get();
         }
+        catch ( InterruptedException e ) {
+            //swallow
+        }
+        catch ( ExecutionException e ) {
+            //swallow
+        }
+
+        if ( error != null ) {
+           throw new RuntimeException( "Error in getting future", error );
+        }
+
+        return returnValue;
     }
-
-
 }

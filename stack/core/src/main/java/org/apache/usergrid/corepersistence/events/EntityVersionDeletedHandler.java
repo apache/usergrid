@@ -18,6 +18,8 @@
 package org.apache.usergrid.corepersistence.events;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
 import java.util.List;
 import org.apache.usergrid.corepersistence.CpEntityManagerFactory;
 import static org.apache.usergrid.corepersistence.CoreModule.EVENTS_DISABLED;
@@ -35,6 +37,10 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import rx.Observable;
+import rx.functions.Action1;
+import rx.functions.Action2;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
@@ -44,14 +50,17 @@ import rx.schedulers.Schedulers;
  * TODO: do we need this? Don't our version-created and entity-deleted handlers take care of this?
  * If we do need it then it should be wired in via GuiceModule in the corepersistence package.
  */
+@Singleton
 public class EntityVersionDeletedHandler implements EntityVersionDeleted {
     private static final Logger logger = LoggerFactory.getLogger(EntityVersionDeletedHandler.class );
 
-    @Inject
-    private SerializationFig serializationFig;
+
+
+
+    private final EntityManagerFactory emf;
 
     @Inject
-    private EntityManagerFactory emf;
+    public EntityVersionDeletedHandler( final EntityManagerFactory emf ) {this.emf = emf;}
 
 
 
@@ -66,39 +75,35 @@ public class EntityVersionDeletedHandler implements EntityVersionDeleted {
             return;
         }
 
-        logger.debug("Handling versionDeleted count={} event for entity {}:{} v {} "
-                + "scope\n   name: {}\n   owner: {}\n   app: {}",
-            new Object[] {
-                entityVersions.size(),
-                entityId.getType(),
-                entityId.getUuid(),
-                scope.getName(),
-                scope.getOwner(),
-                scope.getApplication()});
+        if(logger.isDebugEnabled()) {
+            logger.debug( "Handling versionDeleted count={} event for entity {}:{} v {} " + "scope\n   name: {}\n   owner: {}\n   app: {}",
+                new Object[] {
+                    entityVersions.size(), entityId.getType(), entityId.getUuid(), scope.getName(), scope.getOwner(),
+                    scope.getApplication()
+                } );
+        }
 
         CpEntityManagerFactory cpemf = (CpEntityManagerFactory)emf;
 
-        final EntityIndex ei = cpemf.getManagerCache().getEntityIndex(scope);
-
-        final EntityIndexBatch eibatch = ei.createBatch();
+        final EntityIndex ei = cpemf.getManagerCache().getEntityIndex( scope );
 
         final IndexScope indexScope = new IndexScopeImpl(
                 new SimpleId(scope.getOwner().getUuid(), scope.getOwner().getType()),
                 scope.getName()
         );
 
-        rx.Observable.from( entityVersions )
-            .buffer(serializationFig.getBufferSize())
-            .map(new Func1<List<MvccLogEntry>, List<MvccLogEntry>>() {
+        Observable.from( entityVersions )
+            .collect( ei.createBatch(), new Action2<EntityIndexBatch, MvccLogEntry>() {
                 @Override
-                public List<MvccLogEntry> call(List<MvccLogEntry> entityList) {
-                    for (MvccLogEntry entity : entityList) {
-                        eibatch.deindex(indexScope, entityId, entity.getVersion());
-                    }
-                    eibatch.execute();
-                    return entityList;
+                public void call( final EntityIndexBatch entityIndexBatch, final MvccLogEntry mvccLogEntry ) {
+                    entityIndexBatch.deindex( indexScope, mvccLogEntry.getEntityId(), mvccLogEntry.getVersion() );
                 }
-            }).toBlocking().last();
+            } ).doOnNext( new Action1<EntityIndexBatch>() {
+            @Override
+            public void call( final EntityIndexBatch entityIndexBatch ) {
+                entityIndexBatch.execute();
+            }
+        } ).toBlocking().last();
     }
 
 

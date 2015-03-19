@@ -522,7 +522,6 @@ public class ManagementServiceImpl implements ManagementService {
 
         em.addToCollection( organizationEntity, "users", new SimpleEntityRef( User.ENTITY_TYPE, user.getUuid() ) );
 
-        em.refreshIndex();
 
         writeUserToken( smf.getManagementAppId(), organizationEntity, encryptionService
                 .plainTextCredentials( generateOAuthSecretKey( AuthPrincipalType.ORGANIZATION ), user.getUuid(),
@@ -539,7 +538,7 @@ public class ManagementServiceImpl implements ManagementService {
 
         startOrganizationActivationFlow( organization );
 
-        em.refreshIndex();
+
 
         return organization;
     }
@@ -1638,7 +1637,7 @@ public class ManagementServiceImpl implements ManagementService {
                     + ")</a> created a new application named " + applicationName, null );
         }
 
-        em.refreshIndex();
+
 
         return new ApplicationInfo( applicationId, appInfo.getName() );
     }
@@ -1697,7 +1696,7 @@ public class ManagementServiceImpl implements ManagementService {
                     + ")</a> restored an application named " + appInfo.getName(), null );
         }
 
-        em.refreshIndex();
+
 
         return new ApplicationInfo( applicationId, appInfo.getName() );
     }
@@ -2439,7 +2438,7 @@ public class ManagementServiceImpl implements ManagementService {
         if ( sendEmail ) {
             startOrganizationActivationFlow( organization );
         }
-        em.refreshIndex();
+
     }
 
 

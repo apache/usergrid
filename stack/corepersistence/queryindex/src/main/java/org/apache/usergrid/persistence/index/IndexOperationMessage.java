@@ -16,50 +16,123 @@
  */
 package org.apache.usergrid.persistence.index;
 
-import org.apache.usergrid.persistence.core.future.BetterFuture;
-import org.elasticsearch.action.ActionRequestBuilder;
-import org.elasticsearch.action.support.replication.ShardReplicationOperationRequestBuilder;
 
-import java.util.Iterator;
+import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentLinkedQueue;
+
+import org.apache.usergrid.persistence.core.future.BetterFuture;
+import org.apache.usergrid.persistence.index.impl.DeIndexRequest;
+import org.apache.usergrid.persistence.index.impl.IndexRequest;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 
 /**
  * Container for index operations.
  */
-public  class IndexOperationMessage {
-    private final ConcurrentLinkedQueue<ActionRequestBuilder> builders;
+public class IndexOperationMessage implements Serializable {
+    private final Set<IndexRequest> indexRequests;
+    private final Set<DeIndexRequest> deIndexRequests;
+
+
+
     private final BetterFuture<IndexOperationMessage> containerFuture;
 
-    public IndexOperationMessage(){
+
+    public IndexOperationMessage() {
         final IndexOperationMessage parent = this;
-        builders = new ConcurrentLinkedQueue<>();
-        this.containerFuture = new BetterFuture<>(new Callable<IndexOperationMessage>() {
+        this.indexRequests = new HashSet<>();
+        this.deIndexRequests = new HashSet<>();
+        this.containerFuture = new BetterFuture<>( new Callable<IndexOperationMessage>() {
             @Override
             public IndexOperationMessage call() throws Exception {
                 return parent;
             }
-        });
+        } );
     }
 
-    public void addOperation(ActionRequestBuilder builder){
-        builders.add(builder);
+
+    public void addIndexRequest( final IndexRequest indexRequest ) {
+        indexRequests.add( indexRequest );
     }
 
-    /**
-     * return operations for the message
-     * @return
-     */
-    public ConcurrentLinkedQueue<ActionRequestBuilder> getOperations(){
-        return builders;
+
+    public void addAllIndexRequest( final Set<IndexRequest> indexRequests ) {
+        this.indexRequests.addAll( indexRequests );
+    }
+
+
+    public void addDeIndexRequest( final DeIndexRequest deIndexRequest ) {
+        this.deIndexRequests.add( deIndexRequest );
+    }
+
+
+    public void addAllDeIndexRequest( final Set<DeIndexRequest> deIndexRequests ) {
+        this.deIndexRequests.addAll( deIndexRequests );
+    }
+
+
+    public Set<IndexRequest> getIndexRequests() {
+        return indexRequests;
+    }
+
+
+    public Set<DeIndexRequest> getDeIndexRequests() {
+        return deIndexRequests;
+    }
+
+
+    @JsonIgnore
+    public boolean isEmpty(){
+        return indexRequests.isEmpty() && deIndexRequests.isEmpty();
     }
 
     /**
      * return the promise
-     * @return
      */
-    public BetterFuture<IndexOperationMessage> getFuture(){
+    @JsonIgnore
+    public BetterFuture<IndexOperationMessage> getFuture() {
         return containerFuture;
     }
 
+
+    @Override
+    public boolean equals( final Object o ) {
+        if ( this == o ) {
+            return true;
+        }
+        if ( o == null || getClass() != o.getClass() ) {
+            return false;
+        }
+
+        final IndexOperationMessage that = ( IndexOperationMessage ) o;
+
+        if ( !deIndexRequests.equals( that.deIndexRequests ) ) {
+            return false;
+        }
+        if ( !indexRequests.equals( that.indexRequests ) ) {
+            return false;
+        }
+
+        return true;
+    }
+
+
+    @Override
+    public int hashCode() {
+        int result = indexRequests.hashCode();
+        result = 31 * result + deIndexRequests.hashCode();
+        return result;
+    }
+
+    public void done() {
+        //if this has been serialized, it could be null. don't NPE if it is, there's nothing to ack
+        final BetterFuture<IndexOperationMessage> future = getFuture();
+
+        if(future != null ){
+            future.done();
+        }
+    }
 }

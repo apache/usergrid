@@ -25,24 +25,24 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.junit.Before;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
-import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.queue.guice.TestQueueModule;
-import org.apache.usergrid.persistence.queue.impl.QueueScopeFactoryImpl;
 import org.apache.usergrid.persistence.queue.impl.QueueScopeImpl;
+import org.apache.usergrid.persistence.queue.impl.UsergridAwsCredentialsProvider;
 
 import com.google.inject.Inject;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
+
 
 @RunWith( ITRunner.class )
 @UseModules( { TestQueueModule.class } )
@@ -53,8 +53,12 @@ public class QueueManagerTest {
     @Inject
     protected QueueManagerFactory qmf;
 
-    @Inject
-    protected QueueScopeFactory queueScopeFactory;
+    /**
+     * Mark tests as ignored if now AWS creds are present
+     */
+    @Rule
+    public NoAWSCredsRule awsCredsRule = new NoAWSCredsRule();
+
 
     protected QueueScope scope;
     private QueueManager qm;
@@ -62,21 +66,11 @@ public class QueueManagerTest {
 
     @Before
     public void mockApp() {
-        this.scope = new QueueScopeImpl( new SimpleId( "application" ), "testQueue" );
+        this.scope = new QueueScopeImpl(  "testQueue" );
         qm = qmf.getQueueManager(scope);
-        queueScopeFactory = new QueueScopeFactoryImpl(queueFig);
     }
 
-    @Test
-    public void scopeFactory(){
-        UUID uuid = UUID.randomUUID();
-        String key = "test";
-        QueueScope scope =queueScopeFactory.getScope(uuid,key);
-        assertEquals(key,scope.getName());
-        assertEquals(scope.getApplication().getUuid(),uuid);
-    }
 
-    @Ignore("need aws creds")
     @Test
     public void send() throws IOException,ClassNotFoundException{
         String value = "bodytest";
@@ -92,7 +86,6 @@ public class QueueManagerTest {
 
     }
 
-    @Ignore("need aws creds")
     @Test
     public void sendMore() throws IOException,ClassNotFoundException{
         HashMap<String,String> values = new HashMap<>();

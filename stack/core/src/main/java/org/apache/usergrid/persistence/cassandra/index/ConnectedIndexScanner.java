@@ -27,7 +27,6 @@ import java.util.UUID;
 import org.springframework.util.Assert;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 
-import com.yammer.metrics.annotation.Metered;
 
 import me.prettyprint.hector.api.beans.HColumn;
 
@@ -249,7 +248,6 @@ public class ConnectedIndexScanner implements IndexScanner {
      * @see java.util.Iterator#next()
      */
     @Override
-    @Metered( group = "core", name = "IndexBucketScanner_load" )
     public Set<HColumn<ByteBuffer, ByteBuffer>> next() {
         Set<HColumn<ByteBuffer, ByteBuffer>> returnVal = lastResults;
 

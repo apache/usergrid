@@ -15,14 +15,12 @@
  */
 package org.apache.usergrid.corepersistence;
 
-import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
-import com.yammer.metrics.annotation.Metered;
 import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.exception.ConflictException;
@@ -391,20 +389,17 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
 
     @Override
-    @Metered(group = "core", name = "EntityManagerFactory_getApplication")
     public Map<String, UUID> getApplications() throws Exception {
         return getApplications(false);
     }
 
 
     @Override
-    @Metered(group = "core", name = "EntityManagerFactory_getApplication")
     public Map<String, UUID> getDeletedApplications() throws Exception {
         return getApplications( true );
     }
 
 
-    @Metered(group = "core", name = "EntityManagerFactory_getApplication")
     public Map<String, UUID> getApplications(boolean deleted) throws Exception {
 
         Map<String, UUID> appMap = new HashMap<String, UUID>();

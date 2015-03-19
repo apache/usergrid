@@ -49,6 +49,8 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
+import net.jcip.annotations.NotThreadSafe;
+
 
 @RunWith( ITRunner.class )
 @UseModules( TestCollectionModule.class )

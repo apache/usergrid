@@ -24,10 +24,14 @@ import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.index.*;
-import org.apache.usergrid.persistence.model.field.*;
+import org.apache.usergrid.persistence.model.field.ArrayField;
+import org.apache.usergrid.persistence.model.field.EntityObjectField;
+import org.apache.usergrid.persistence.model.field.UUIDField;
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -47,6 +51,7 @@ import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -66,8 +71,14 @@ public class EntityIndexTest extends BaseIT {
     @Inject
     public EntityIndexFactory eif;
 
+    //TODO T.N. Remove this when we move the cursor mapping back to core
+    @Inject
+    @Rule
+    public MigrationManagerRule migrationManagerRule;
+
+
     @Test
-    public void testIndex() throws IOException {
+    public void testIndex() throws IOException, InterruptedException {
         Id appId = new SimpleId( "application" );
 
         ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
@@ -83,11 +94,12 @@ public class EntityIndexTest extends BaseIT {
 
         entityIndex.refresh();
 
-        testQueries( indexScope, searchTypes,  entityIndex );
+
+        testQueries( indexScope, searchTypes, entityIndex );
     }
 
     @Test
-//    @Ignore("this is a problem i will work on when i can breathe")
+    @Ignore("this is a problem i will work on when i can breathe")
     public void testIndexVariations() throws IOException {
         Id appId = new SimpleId( "application" );
 
@@ -107,8 +119,6 @@ public class EntityIndexTest extends BaseIT {
         batch.index(indexScope, entity);
         batch.execute().get();
 
-        entity = new Entity( entityType );
-        entity.setField(new UUIDField(IndexingUtils.ENTITYID_ID_FIELDNAME, UUID.randomUUID()));
         EntityUtils.setVersion(entity, UUIDGenerator.newTimeUUID());
         List<String> list = new ArrayList<>();
         list.add("test");
@@ -116,9 +126,6 @@ public class EntityIndexTest extends BaseIT {
         batch.index(indexScope, entity);
         batch.execute().get();
 
-
-        entity = new Entity( entityType );
-        entity.setField(new UUIDField(IndexingUtils.ENTITYID_ID_FIELDNAME, UUID.randomUUID()));
         EntityUtils.setVersion(entity, UUIDGenerator.newTimeUUID());
         EntityObject testObj = new EntityObject();
         testObj.setField(new StringField("test","testFiedl"));
@@ -126,32 +133,9 @@ public class EntityIndexTest extends BaseIT {
         batch.index(indexScope, entity);
         batch.execute().get();
 
-        entity = new Entity( entityType );
-        entity.setField(new UUIDField(IndexingUtils.ENTITYID_ID_FIELDNAME, UUID.randomUUID()));
-        EntityUtils.setVersion(entity, UUIDGenerator.newTimeUUID());
-        List<Integer> listint = new ArrayList<>();
-        listint.add(0);
-        entity.setField(new ArrayField<Integer>("testfield", listint));
-        batch.index(indexScope, entity);
-        batch.execute().get();
-
-        entity = new Entity( entityType );
-        entity.setField(new UUIDField(IndexingUtils.ENTITYID_ID_FIELDNAME, UUID.randomUUID()));
-        EntityUtils.setVersion(entity, UUIDGenerator.newTimeUUID());
-        List<EntityObject> listObj = new ArrayList<>();
-        EntityObject listObjField = new EntityObject();
-        listObjField.setField(new StringField("testasf","somevalue"));
-        listObj.add(listObjField);
-        listObjField = new EntityObject();
-        listObjField.setField(new IntegerField("testasf",0));
-        listObj.add(listObjField);
-        entity.setField(new ArrayField<EntityObject>("testfield", listObj));
-        batch.index(indexScope, entity);
-        batch.execute().get();
-
         entityIndex.refresh();
-        testQuery(indexScope, searchTypes, entityIndex, "select *", 5);
 
+        testQueries( indexScope, searchTypes,  entityIndex );
     }
 
     @Test
@@ -279,7 +263,6 @@ public class EntityIndexTest extends BaseIT {
         entityIndex.refresh();
 
         //Hilda Youn
-
         testQuery(indexScope, searchTypes, entityIndex, "name = 'Bowers Oneil'", 0);
 
     }
@@ -686,15 +669,12 @@ public class EntityIndexTest extends BaseIT {
 
         for ( int i = 0; i < size; i++ ) {
             final String middleName = "middleName" + UUIDUtils.newTimeUUID();
-            Map<String, Object> properties = new LinkedHashMap<String, Object>();
-            properties.put( "username", "edanuff" );
-            properties.put( "email", "ed@anuff.com" );
-            properties.put( "middlename", middleName );
 
             Map entityMap = new HashMap() {{
                 put( "username", "edanuff" );
                 put( "email", "ed@anuff.com" );
                 put( "middlename", middleName );
+                put( "created", System.nanoTime() );
             }};
 
             final Id userId = new SimpleId( "user" );
@@ -726,7 +706,7 @@ public class EntityIndexTest extends BaseIT {
 
         for ( int i = 0; i < expectedPages; i++ ) {
             //**
-            final Query query = Query.fromQL( "select *" );
+            final Query query = Query.fromQL( "select * order by created" );
             query.setLimit( limit );
 
             if ( cursor != null ) {

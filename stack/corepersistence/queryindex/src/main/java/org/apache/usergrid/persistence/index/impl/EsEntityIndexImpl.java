@@ -18,51 +18,23 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
-import com.codahale.metrics.Meter;
-import com.codahale.metrics.Timer;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.inject.Inject;
-import com.google.inject.assistedinject.Assisted;
-import com.yammer.metrics.core.Clock;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.usergrid.persistence.core.future.BetterFuture;
-import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.core.util.Health;
-import org.apache.usergrid.persistence.core.util.ValidationUtils;
-import org.apache.usergrid.persistence.index.*;
-import org.apache.usergrid.persistence.index.exceptions.IndexException;
-import org.apache.usergrid.persistence.index.query.CandidateResult;
-import org.apache.usergrid.persistence.index.query.CandidateResults;
-import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.index.utils.UUIDUtils;
-import org.apache.usergrid.persistence.map.MapManager;
-import org.apache.usergrid.persistence.map.MapManagerFactory;
-import org.apache.usergrid.persistence.map.MapScope;
-import org.apache.usergrid.persistence.map.impl.MapScopeImpl;
-import org.apache.usergrid.persistence.model.entity.Id;
-import org.apache.usergrid.persistence.model.entity.SimpleId;
-import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-import org.elasticsearch.action.ActionListener;
-import org.elasticsearch.action.ListenableActionFuture;
-import org.elasticsearch.action.ShardOperationFailedException;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.cluster.tasks.PendingClusterTasksRequest;
 import org.elasticsearch.action.admin.cluster.tasks.PendingClusterTasksResponse;
+import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesResponse;
-import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
-import org.elasticsearch.action.admin.indices.alias.get.GetAliasesResponse;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
-import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateResponse;
-import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
-import org.elasticsearch.action.deletebyquery.IndexDeleteByQueryResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequestBuilder;
@@ -71,11 +43,12 @@ import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
-import org.elasticsearch.index.query.*;
+import org.elasticsearch.index.query.FilterBuilder;
+import org.elasticsearch.index.query.MatchAllQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.elasticsearch.indices.IndexMissingException;
-import org.elasticsearch.indices.InvalidAliasNameException;
-import org.elasticsearch.rest.action.admin.indices.alias.delete.AliasesMissingException;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.sort.FieldSortBuilder;
@@ -83,17 +56,45 @@ import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import rx.Observable;
-import rx.functions.Func1;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.ArrayUtils;
 
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.*;
+import org.apache.usergrid.persistence.core.future.BetterFuture;
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.util.Health;
+import org.apache.usergrid.persistence.core.util.ValidationUtils;
+import org.apache.usergrid.persistence.index.AliasedEntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndexBatch;
+import org.apache.usergrid.persistence.index.IndexBufferProducer;
+import org.apache.usergrid.persistence.index.IndexFig;
+import org.apache.usergrid.persistence.index.IndexIdentifier;
+import org.apache.usergrid.persistence.index.IndexOperationMessage;
+import org.apache.usergrid.persistence.index.IndexScope;
+import org.apache.usergrid.persistence.index.SearchTypes;
+import org.apache.usergrid.persistence.index.exceptions.IndexException;
+import org.apache.usergrid.persistence.index.query.CandidateResult;
+import org.apache.usergrid.persistence.index.query.CandidateResults;
+import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.map.MapManager;
+import org.apache.usergrid.persistence.map.MapManagerFactory;
+import org.apache.usergrid.persistence.map.MapScope;
+import org.apache.usergrid.persistence.map.impl.MapScopeImpl;
+import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+
+import com.codahale.metrics.Timer;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
+
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.BOOLEAN_PREFIX;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.NUMBER_PREFIX;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.SPLITTER;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.STRING_PREFIX;
 
 
 /**
@@ -111,11 +112,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     private final IndexBufferProducer indexBatchBufferProducer;
     private final IndexFig indexFig;
     private final Timer addTimer;
-    private final Timer addWriteAliasTimer;
-    private final Timer addReadAliasTimer;
+    private final Timer updateAliasTimer;
     private final Timer searchTimer;
-    private final Timer allVersionsTimerFuture;
-    private final Timer deletePreviousTimerFuture;
 
     /**
      * We purposefully make this per instance. Some indexes may work, while others may fail
@@ -130,7 +128,6 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
     private final IndexFig config;
 
-    private final MetricsFactory metricsFactory;
 
 
     //number of times to wait for the index to refresh properly.
@@ -146,13 +143,10 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     private static final MatchAllQueryBuilder MATCH_ALL_QUERY_BUILDER = QueryBuilders.matchAllQuery();
 
     private EsIndexCache aliasCache;
-    private Timer removeAliasTimer;
     private Timer mappingTimer;
     private Timer refreshTimer;
     private Timer cursorTimer;
     private Timer getVersionsTimer;
-    private Timer allVersionsTimer;
-    private Timer deletePreviousTimer;
 
     private final MapManager mapManager;
 
@@ -171,37 +165,25 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
         this.esProvider = provider;
         this.config = config;
         this.cursorTimeout = config.getQueryCursorTimeout();
-        this.indexIdentifier = IndexingUtils.createIndexIdentifier(config, appScope);
+        this.indexIdentifier = IndexingUtils.createIndexIdentifier( config, appScope );
         this.alias = indexIdentifier.getAlias();
         this.failureMonitor = new FailureMonitorImpl( config, provider );
         this.aliasCache = indexCache;
-        this.metricsFactory = metricsFactory;
         this.addTimer = metricsFactory
-            .getTimer( EsEntityIndexImpl.class, "es.entity.index.add.index.timer" );
-        this.removeAliasTimer = metricsFactory
-            .getTimer( EsEntityIndexImpl.class, "es.entity.index.remove.index.alias.timer" );
-        this.addReadAliasTimer = metricsFactory
-            .getTimer( EsEntityIndexImpl.class, "es.entity.index.add.read.alias.timer" );
-        this.addWriteAliasTimer = metricsFactory
-            .getTimer( EsEntityIndexImpl.class, "es.entity.index.add.write.alias.timer" );
+            .getTimer( EsEntityIndexImpl.class, "add.timer" );
+        this.updateAliasTimer = metricsFactory
+            .getTimer( EsEntityIndexImpl.class, "update.alias.timer" );
         this.mappingTimer = metricsFactory
-            .getTimer( EsEntityIndexImpl.class, "es.entity.index.create.mapping.timer" );
+            .getTimer( EsEntityIndexImpl.class, "create.mapping.timer" );
         this.refreshTimer = metricsFactory
-            .getTimer( EsEntityIndexImpl.class, "es.entity.index.refresh.timer" );
+            .getTimer( EsEntityIndexImpl.class, "refresh.timer" );
         this.searchTimer =metricsFactory
-            .getTimer( EsEntityIndexImpl.class, "es.entity.index.search.timer" );
+            .getTimer( EsEntityIndexImpl.class, "search.timer" );
         this.cursorTimer = metricsFactory
-            .getTimer( EsEntityIndexImpl.class, "es.entity.index.search.cursor.timer" );
+            .getTimer( EsEntityIndexImpl.class, "search.cursor.timer" );
         this.getVersionsTimer =metricsFactory
-            .getTimer( EsEntityIndexImpl.class, "es.entity.index.get.versions.timer" );
-        this.allVersionsTimer =  metricsFactory
-            .getTimer( EsEntityIndexImpl.class, "es.entity.index.delete.all.versions.timer" );
-        this.deletePreviousTimer = metricsFactory
-            .getTimer( EsEntityIndexImpl.class, "es.entity.index.delete.previous.versions.timer" );
-        this.allVersionsTimerFuture =  metricsFactory
-            .getTimer( EsEntityIndexImpl.class, "es.entity.index.delete.all.versions.timer.future" );
-        this.deletePreviousTimerFuture = metricsFactory
-            .getTimer( EsEntityIndexImpl.class, "es.entity.index.delete.previous.versions.timer.future" );
+            .getTimer( EsEntityIndexImpl.class, "get.versions.timer" );
+
 
         final MapScope mapScope = new MapScopeImpl( appScope.getApplication(), "cursorcache" );
 
@@ -212,7 +194,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     public void initializeIndex() {
         final int numberOfShards = config.getNumberOfShards();
         final int numberOfReplicas = config.getNumberOfReplicas();
-        String[] indexes = getIndexes(AliasType.Write);
+        String[] indexes = getIndexesFromEs(AliasType.Write);
         if(indexes == null || indexes.length==0) {
             addIndex(null, numberOfShards, numberOfReplicas, config.getWriteConsistencyLevel());
         }
@@ -275,60 +257,51 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
     @Override
     public void addAlias(final String indexSuffix) {
+
+        final Timer.Context timeRemoveAlias = updateAliasTimer.time();
         try {
-            Boolean isAck;
+
+
             String indexName = indexIdentifier.getIndex(indexSuffix);
             final AdminClient adminClient = esProvider.getClient().admin();
 
-            String[] indexNames = getIndexes(AliasType.Write);
+            String[] indexNames = getIndexesFromEs( AliasType.Write );
 
+
+            final IndicesAliasesRequestBuilder aliasesRequestBuilder = adminClient.indices().prepareAliases();
+
+            //remove the write alias from it's target
             for ( String currentIndex : indexNames ) {
-
-                final Timer.Context timeRemoveAlias = removeAliasTimer.time();
-
-                try {
-                    //Added For Graphite Metrics
-
-                    isAck = adminClient.indices().prepareAliases().removeAlias( currentIndex, alias.getWriteAlias() )
-                                       .execute().actionGet().isAcknowledged();
-
-                    logger.info( "Removed Index Name [{}] from Alias=[{}] ACK=[{}]", currentIndex, alias, isAck );
-                }
-                catch ( AliasesMissingException aie ) {
-                    logger.info( "Alias does not exist Index Name [{}] from Alias=[{}] ACK=[{}]", currentIndex, alias,
-                        aie.getMessage() );
-                    continue;
-                }
-                catch ( InvalidAliasNameException iane ) {
-                    logger.info( "Alias does not exist Index Name [{}] from Alias=[{}] ACK=[{}]", currentIndex, alias,
-                        iane.getMessage() );
-                    continue;
-                }
-                finally {
-                    timeRemoveAlias.stop();
-                }
+                aliasesRequestBuilder.removeAlias( currentIndex, alias.getWriteAlias() );
+                logger.info("Removing existing write Alias Name [{}] from Index [{}]", alias.getWriteAlias(), currentIndex);
             }
 
             //Added For Graphite Metrics
-            Timer.Context timeAddReadAlias = addReadAliasTimer.time();
+
             // add read alias
-            isAck = adminClient.indices().prepareAliases().addAlias(
-                    indexName, alias.getReadAlias()).execute().actionGet().isAcknowledged();
-            timeAddReadAlias.stop();
-            logger.info("Created new read Alias Name [{}] ACK=[{}]", alias.getReadAlias(), isAck);
+            aliasesRequestBuilder.addAlias(  indexName, alias.getReadAlias());
+            logger.info( "Created new read Alias Name [{}] on Index [{}]", alias.getReadAlias(), indexName );
 
-            //Added For Graphite Metrics
-            Timer.Context timeAddWriteAlias = addWriteAliasTimer.time();
+
             //add write alias
-            isAck = adminClient.indices().prepareAliases().addAlias(
-                    indexName, alias.getWriteAlias()).execute().actionGet().isAcknowledged();
-            timeAddWriteAlias.stop();
-            logger.info("Created new write Alias Name [{}] ACK=[{}]", alias.getWriteAlias(), isAck);
+            aliasesRequestBuilder.addAlias( indexName, alias.getWriteAlias() );
 
+            logger.info("Created new write Alias Name [{}] on Index [{}]", alias.getWriteAlias(), indexName);
+
+            final IndicesAliasesResponse result = aliasesRequestBuilder.execute().actionGet();
+
+            final boolean isAcknowledged = result.isAcknowledged();
+
+            if(!isAcknowledged){
+                throw new RuntimeException( "Unable to add aliases to the new index.  Elasticsearch did not acknowledge to the alias change for index '" + indexSuffix + "'");
+            }
+
+        }
+        finally{
+            //invalidate the alias
             aliasCache.invalidate(alias);
-
-        } catch (Exception e) {
-            logger.warn("Failed to create alias ", e);
+            //stop the timer
+            timeRemoveAlias.stop();
         }
     }
 
@@ -336,6 +309,18 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     public String[] getIndexes(final AliasType aliasType) {
         return aliasCache.getIndexes(alias, aliasType);
     }
+
+
+    /**
+     * Get our index info from ES, but clear our cache first
+     * @param aliasType
+     * @return
+     */
+    public String[] getIndexesFromEs(final AliasType aliasType){
+        aliasCache.invalidate( alias );
+        return getIndexes( aliasType );
+    }
+
 
 
     /**
@@ -385,8 +370,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
      */
     private void createMappings(final String indexName) throws IOException {
 
-        XContentBuilder xcb = IndexingUtils.createDoubleStringIndexMapping(
-            XContentFactory.jsonBuilder(), DEFAULT_TYPE );
+        XContentBuilder xcb = IndexingUtils.createDoubleStringIndexMapping( XContentFactory.jsonBuilder(),
+            DEFAULT_TYPE );
 
 
         //Added For Graphite Metrics
@@ -403,7 +388,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     @Override
     public EntityIndexBatch createBatch() {
         EntityIndexBatch batch = new EsEntityIndexBatchImpl(
-                applicationScope, esProvider.getClient(),indexBatchBufferProducer, config, this, metricsFactory );
+                applicationScope, indexBatchBufferProducer, config, this );
         return batch;
     }
 
@@ -412,7 +397,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     public CandidateResults search(final IndexScope indexScope, final SearchTypes searchTypes,
             final Query query ) {
 
-        final String context = IndexingUtils.createContextName(indexScope);
+        final String context = IndexingUtils.createContextName( indexScope );
         final String[] entityTypes = searchTypes.getTypeNames();
 
         QueryBuilder qb = query.createQueryBuilder(context);
@@ -561,6 +546,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
         if ( candidates.size() >= query.getLimit() ) {
             //USERGRID-461 our cursor is getting too large, map it to a new time UUID
+            //TODO T.N., this shouldn't live here. This should live at the UG core tier.  However the RM/EM are an absolute mess, so until they're refactored, this is it's home
 
             final String userCursorString = org.apache.usergrid.persistence.index.utils.StringUtils.sanitizeUUID( UUIDGenerator.newTimeUUID() );
 
@@ -622,7 +608,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     public int getPendingTasks() {
 
         final PendingClusterTasksResponse tasksResponse = esProvider.getClient().admin()
-                .cluster().pendingClusterTasks(new PendingClusterTasksRequest()).actionGet();
+                .cluster().pendingClusterTasks( new PendingClusterTasksRequest() ).actionGet();
 
         return tasksResponse.pendingTasks().size();
     }
@@ -662,114 +648,6 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
         return parseResults(searchResponse, new Query());
     }
-
-
-    @Override
-    public ListenableActionFuture deleteAllVersionsOfEntity(final Id entityId ) {
-
-        String idString = IndexingUtils.idString(entityId).toLowerCase();
-
-        final TermQueryBuilder tqb = QueryBuilders.termQuery(ENTITYID_ID_FIELDNAME, idString);
-
-        //Added For Graphite Metrics
-        final Timer.Context timeDeleteAllVersions =allVersionsTimer.time();
-        final Timer.Context timeDeleteAllVersionsFuture = allVersionsTimerFuture.time();
-        final ListenableActionFuture<DeleteByQueryResponse> response = esProvider.getClient()
-            .prepareDeleteByQuery( alias.getWriteAlias() ).setQuery( tqb ).execute();
-
-        response.addListener( new ActionListener<DeleteByQueryResponse>() {
-
-            @Override
-            public void onResponse( DeleteByQueryResponse response) {
-                timeDeleteAllVersions.stop();
-                logger.debug( "Deleted entity {}:{} from all index scopes with response status = {}",
-                    entityId.getType(), entityId.getUuid(), response.status().toString() );
-
-                checkDeleteByQueryResponse(tqb, response);
-            }
-
-
-            @Override
-            public void onFailure( Throwable e ) {
-                timeDeleteAllVersions.stop();
-                logger.error( "Failed to delete entity {}:{} from all index scopes with error {}",
-                    entityId.getType(), entityId.getUuid(), e);
-
-
-            }
-        });
-        timeDeleteAllVersionsFuture.stop();
-        return response;
-    }
-
-
-    @Override
-    public ListenableActionFuture deletePreviousVersions(final Id entityId, final UUID version) {
-
-        String idString = IndexingUtils.idString( entityId ).toLowerCase();
-
-        final FilteredQueryBuilder fqb = QueryBuilders.filteredQuery(
-                QueryBuilders.termQuery(ENTITYID_ID_FIELDNAME, idString),
-            FilterBuilders.rangeFilter(ENTITY_VERSION_FIELDNAME).lt(version.timestamp())
-        );
-
-        //Added For Graphite Metrics
-        //Checks the time from the execute to the response below
-        final Timer.Context timeDeletePreviousVersions = deletePreviousTimer.time();
-        final Timer.Context timeDeletePreviousVersionFuture = deletePreviousTimerFuture.time();
-        final ListenableActionFuture<DeleteByQueryResponse> response = esProvider.getClient()
-            .prepareDeleteByQuery(alias.getWriteAlias()).setQuery(fqb).execute();
-
-        //Added For Graphite Metrics
-        response.addListener(new ActionListener<DeleteByQueryResponse>() {
-            @Override
-            public void onResponse(DeleteByQueryResponse response) {
-                timeDeletePreviousVersions.stop();
-                //error message needs to be retooled so that it describes the entity more throughly
-                logger
-                    .debug("Deleted entity {}:{} with version {} from all " + "index scopes with response status = {}",
-                        entityId.getType(), entityId.getUuid(), version, response.status().toString());
-
-                checkDeleteByQueryResponse( fqb, response );
-            }
-
-
-            @Override
-            public void onFailure( Throwable e ) {
-                logger.error( "Deleted entity {}:{} from all index scopes with error {}", entityId.getType(),
-                    entityId.getUuid(), e );
-            }
-        } );
-
-        timeDeletePreviousVersionFuture.stop();
-
-        return response;
-    }
-
-
-    /**
-     * Validate the response doesn't contain errors, if it does, fail fast at the first error we encounter
-     */
-    private void checkDeleteByQueryResponse(
-            final QueryBuilder query, final DeleteByQueryResponse response ) {
-
-        for ( IndexDeleteByQueryResponse indexDeleteByQueryResponse : response ) {
-            final ShardOperationFailedException[] failures = indexDeleteByQueryResponse.getFailures();
-
-            for ( ShardOperationFailedException failedException : failures ) {
-                logger.error( String.format("Unable to delete by query %s. "
-                        + "Failed with code %d and reason %s on shard %s in index %s",
-                    query.toString(),
-                    failedException.status().getStatus(),
-                    failedException.reason(),
-                        failedException.shardId(),
-                    failedException.index() )
-                );
-            }
-
-        }
-    }
-
 
     /**
      * Completely delete an index.
@@ -844,8 +722,11 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     public Health getIndexHealth() {
 
         try {
-            ClusterHealthResponse chr = esProvider.getClient().admin().cluster().health(
-                    new ClusterHealthRequest(new String[]{indexIdentifier.getIndex(null)})).get();
+           final ActionFuture<ClusterHealthResponse> future =  esProvider.getClient().admin().cluster().health(
+               new ClusterHealthRequest( new String[] { indexIdentifier.getIndex( null ) } ) );
+
+            //only wait 2 seconds max
+            ClusterHealthResponse chr = future.actionGet( 2000 );
             return Health.valueOf( chr.getStatus().name() );
         }
         catch ( Exception ex ) {

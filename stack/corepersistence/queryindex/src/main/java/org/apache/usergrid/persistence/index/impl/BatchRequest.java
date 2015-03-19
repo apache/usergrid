@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -16,16 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.collection;
+
+package org.apache.usergrid.persistence.index.impl;
 
 
-import java.util.UUID;
+import java.io.Serializable;
 
-import org.apache.usergrid.persistence.collection.impl.EntityVersionCreatedTask;
-import org.apache.usergrid.persistence.model.entity.Entity;
-import org.apache.usergrid.persistence.model.entity.Id;
+import org.elasticsearch.action.bulk.BulkRequestBuilder;
+import org.elasticsearch.client.Client;
 
-public interface EntityVersionCreatedFactory {
-    public EntityVersionCreatedTask getTask( final CollectionScope scope, final Entity entity);
 
+/**
+ * A batch request we can serialize and construct on receive
+ */
+public interface BatchRequest extends Serializable {
+
+
+    /**
+     * Passing the client and the bulk request, add ourselves to the bulk request
+     * @param client
+     * @param bulkRequest
+     */
+    public void doOperation(final Client client, final BulkRequestBuilder bulkRequest );
 }

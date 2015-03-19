@@ -23,6 +23,7 @@ import java.util.Iterator;
 
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import com.netflix.astyanax.model.ConsistencyLevel;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.core.migration.schema.Migration;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -63,6 +64,17 @@ public interface UniqueValueSerializationStrategy extends Migration {
      * @throws ConnectionException on error connecting to Cassandra
      */
     public UniqueValueSet load( CollectionScope collectionScope, Collection<Field> fields ) throws ConnectionException;
+
+    /**
+    * Load UniqueValue that matches field from collection or null if that value does not exist.
+    *
+    * @param colScope Collection scope in which to look for field name/value
+    * @param consistencyLevel Consistency level of query
+    * @param fields Field name/value to search for
+    * @return UniqueValueSet containing fields from the collection that exist in cassandra
+    * @throws ConnectionException on error connecting to Cassandra
+    */
+    public UniqueValueSet load( CollectionScope colScope, ConsistencyLevel consistencyLevel, Collection<Field> fields ) throws ConnectionException;
 
 
     /**

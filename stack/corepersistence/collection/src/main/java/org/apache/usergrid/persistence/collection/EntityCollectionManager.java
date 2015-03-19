@@ -20,8 +20,6 @@ package org.apache.usergrid.persistence.collection;
 
 
 import java.util.Collection;
-
-import org.apache.usergrid.persistence.core.CPManager;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -32,7 +30,7 @@ import rx.Observable;
 /**
  * The operations for performing changes on an entity
  */
-public interface EntityCollectionManager extends CPManager {
+public interface EntityCollectionManager {
 
     /**
      * Write the entity in the entity collection.  This is an entire entity, it's contents will
@@ -57,6 +55,9 @@ public interface EntityCollectionManager extends CPManager {
      */
     public Observable<VersionSet> getLatestVersion( Collection<Id> entityId );
 
+
+    public Observable<FieldSet> getEntitiesFromFields( Collection<Field> fields );
+
     /**
      * Gets the Id for a field
      * @return most likely a single Id, watch for onerror events
@@ -64,9 +65,16 @@ public interface EntityCollectionManager extends CPManager {
     public Observable<Id> getIdField(final Field field);
 
     /**
+     * Audit a unique field, and remove any stale entries in the system
+     * @param field The field to audit within this collection scope.
+
+    public Observable<Integer> auditUniqueField(final Field field);
+     */
+    /**
      * Load all the entityIds into the observable entity set
      */
     public Observable<EntitySet> load(Collection<Id> entityIds);
+
 
     /**
      * Returns health of entity data store.

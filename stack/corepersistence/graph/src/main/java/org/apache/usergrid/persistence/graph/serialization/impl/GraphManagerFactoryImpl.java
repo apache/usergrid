@@ -26,6 +26,8 @@ import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.assistedinject.Assisted;
+
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.GraphManager;
@@ -51,29 +53,28 @@ public class GraphManagerFactoryImpl implements GraphManagerFactory {
     private final GraphFig graphFig;
     private final EdgeDeleteListener edgeDeleteListener;
     private final NodeDeleteListener nodeDeleteListener;
+    private final MetricsFactory metricsFactory;
 
     private LoadingCache<ApplicationScope, GraphManager> gmCache =
         CacheBuilder.newBuilder().maximumSize( 1000 ).build( new CacheLoader<ApplicationScope, GraphManager>() {
             public GraphManager load(
                 ApplicationScope scope ) {
-                return new GraphManagerImpl(edgeMetadataSerialization,edgeSerialization,nodeSerialization,graphFig,edgeDeleteListener,nodeDeleteListener,scope);
+                return new GraphManagerImpl(edgeMetadataSerialization,edgeSerialization,nodeSerialization,graphFig,edgeDeleteListener,nodeDeleteListener,scope, metricsFactory);
             }
         } );
 
     @Inject
-    public GraphManagerFactoryImpl(final EdgeMetadataSerialization edgeMetadataSerialization,
-                                   final EdgeSerialization edgeSerialization,
-                                   final NodeSerialization nodeSerialization,
-                                   final GraphFig graphFig,
-                                   final EdgeDeleteListener edgeDeleteListener,
-                                   final NodeDeleteListener nodeDeleteListener
-    ){
+    public GraphManagerFactoryImpl( final EdgeMetadataSerialization edgeMetadataSerialization, final
+    EdgeSerialization edgeSerialization,
+                                    final NodeSerialization nodeSerialization, final GraphFig graphFig, final EdgeDeleteListener edgeDeleteListener,
+                                    final NodeDeleteListener nodeDeleteListener, final MetricsFactory metricsFactory ){
         this.edgeMetadataSerialization = edgeMetadataSerialization;
         this.edgeSerialization = edgeSerialization;
         this.nodeSerialization = nodeSerialization;
         this.graphFig = graphFig;
         this.edgeDeleteListener = edgeDeleteListener;
         this.nodeDeleteListener = nodeDeleteListener;
+        this.metricsFactory = metricsFactory;
     }
 
     @Override

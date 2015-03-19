@@ -108,7 +108,6 @@ import org.apache.usergrid.utils.UUIDUtils;
 
 import com.codahale.metrics.Timer;
 import com.google.common.base.Preconditions;
-import com.yammer.metrics.annotation.Metered;
 
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.DynamicComposite;
@@ -490,7 +489,6 @@ public class CpRelationManager implements RelationManager {
 
 
     @SuppressWarnings( "unchecked" )
-    @Metered( group = "core", name = "RelationManager_isOwner" )
     @Override
     public boolean isCollectionMember( String collName, EntityRef entity ) throws Exception {
 
@@ -742,7 +740,6 @@ public class CpRelationManager implements RelationManager {
 
 
     @Override
-    @Metered( group = "core", name = "RelationManager_createItemInCollection" )
     public Entity createItemInCollection(
         String collName, String itemType, Map<String, Object> properties) throws Exception {
 
@@ -990,7 +987,12 @@ public class CpRelationManager implements RelationManager {
             if ( crs.isEmpty() || !crs.hasCursor() ) { // no results, no cursor, can't get more
                 satisfied = true;
             }
-            else if ( results.size() == originalLimit ) { // got what we need
+
+            /**
+             * In an edge case where we delete stale entities, we could potentially get more results than expected.  This will only occur once during the repair phase.
+             * We need to ensure that we short circuit if we overflow the requested limit during a repair.
+             */
+            else if ( results.size() >= originalLimit ) { // got what we need
                 satisfied = true;
             }
             else if ( crs.hasCursor() ) {
@@ -1012,7 +1014,6 @@ public class CpRelationManager implements RelationManager {
 
 
     @Override
-    @Metered( group = "core", name = "RelationManager_createConnection_connection_ref" )
     public ConnectionRef createConnection( ConnectionRef connection ) throws Exception {
 
         return createConnection( connection.getConnectionType(), connection.getConnectedEntity() );
@@ -1020,7 +1021,6 @@ public class CpRelationManager implements RelationManager {
 
 
     @Override
-    @Metered( group = "core", name = "RelationManager_createConnection_connectionType" )
     public ConnectionRef createConnection( String connectionType, EntityRef connectedEntityRef ) throws Exception {
 
         headEntity = em.validate( headEntity );
@@ -1091,7 +1091,6 @@ public class CpRelationManager implements RelationManager {
 
 
     @SuppressWarnings( "unchecked" )
-    @Metered( group = "core", name = "CpRelationManager_batchUpdateEntityConnection" )
     public Mutator<ByteBuffer> batchUpdateEntityConnection(
             Mutator<ByteBuffer> batch,
             boolean disconnect,
@@ -1200,7 +1199,6 @@ public class CpRelationManager implements RelationManager {
 
 
     @Override
-    @Metered( group = "core", name = "RelationManager_createConnection_paired_connection_type" )
     public ConnectionRef createConnection(
             String pairedConnectionType,
             EntityRef pairedEntity,
@@ -1212,7 +1210,6 @@ public class CpRelationManager implements RelationManager {
 
 
     @Override
-    @Metered( group = "core", name = "RelationManager_createConnection_connected_entity_ref" )
     public ConnectionRef createConnection( ConnectedEntityRef... connections ) throws Exception {
 
         throw new UnsupportedOperationException( "Paired connections not supported" );
@@ -1680,7 +1677,6 @@ public class CpRelationManager implements RelationManager {
      * @return The indexUpdate with batch mutations
      * @throws Exception the exception
      */
-    @Metered( group = "core", name = "RelationManager_batchUpdateCollectionIndex" )
     public IndexUpdate batchUpdateCollectionIndex(
             IndexUpdate indexUpdate, EntityRef owner, String collectionName )
             throws Exception {
@@ -1779,7 +1775,6 @@ public class CpRelationManager implements RelationManager {
     }
 
 
-    @Metered(group = "core", name = "RelationManager_batchStartIndexUpdate")
     public IndexUpdate batchStartIndexUpdate(
         Mutator<ByteBuffer> batch, Entity entity, String entryName,
         Object entryValue, UUID timestampUuid, boolean schemaHasProperty,
@@ -1939,7 +1934,6 @@ public class CpRelationManager implements RelationManager {
      *
      * @throws Exception the exception
      */
-    @Metered(group = "core", name = "RelationManager_batchUpdateBackwardConnectionsDictionaryIndexes")
     public IndexUpdate batchUpdateBackwardConnectionsDictionaryIndexes(
             IndexUpdate indexUpdate ) throws Exception {
 
@@ -2006,7 +2000,6 @@ public class CpRelationManager implements RelationManager {
      *
      * @throws Exception the exception
      */
-    @Metered(group = "core", name = "RelationManager_batchUpdateConnectionIndex")
     public IndexUpdate batchUpdateConnectionIndex(
             IndexUpdate indexUpdate, ConnectionRefImpl connection ) throws Exception {
 
@@ -2135,7 +2128,6 @@ public class CpRelationManager implements RelationManager {
     }
 
 
-    @Metered( group = "core", name = "RelationManager_batchDeleteConnectionIndexEntries" )
     public Mutator<ByteBuffer> batchDeleteConnectionIndexEntries(
             IndexUpdate indexUpdate,
             IndexUpdate.IndexEntry entry,
@@ -2190,7 +2182,6 @@ public class CpRelationManager implements RelationManager {
     }
 
 
-    @Metered( group = "core", name = "RelationManager_batchAddConnectionIndexEntries" )
     public Mutator<ByteBuffer> batchAddConnectionIndexEntries( IndexUpdate indexUpdate, IndexUpdate.IndexEntry entry,
                                                                ConnectionRefImpl conn, UUID[] index_keys ) {
 

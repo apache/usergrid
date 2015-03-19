@@ -128,7 +128,7 @@ public class EntityVersionCleanupTaskTest {
 
         EntityVersionCleanupTask cleanupTask =
                 new EntityVersionCleanupTask( serializationFig, less, uvss, keyspace, listeners, appScope, entityId,
-                        version );
+                        version, false );
 
         final MutationBatch newBatch = mock( MutationBatch.class );
 
@@ -209,8 +209,7 @@ public class EntityVersionCleanupTaskTest {
 
 
         EntityVersionCleanupTask cleanupTask =
-                new EntityVersionCleanupTask( serializationFig, less, uvss, keyspace, listeners, appScope, entityId,
-                        version );
+                new EntityVersionCleanupTask( serializationFig, less, uvss, keyspace, listeners, appScope, entityId, version, false );
 
         final MutationBatch newBatch = mock( MutationBatch.class );
 
@@ -290,7 +289,7 @@ public class EntityVersionCleanupTaskTest {
 
         EntityVersionCleanupTask cleanupTask =
                 new EntityVersionCleanupTask( serializationFig, less, uvss, keyspace, listeners, appScope, entityId,
-                        version );
+                        version, false );
 
         final MutationBatch newBatch = mock( MutationBatch.class );
 
@@ -390,7 +389,7 @@ public class EntityVersionCleanupTaskTest {
 
         EntityVersionCleanupTask cleanupTask =
                 new EntityVersionCleanupTask( serializationFig, less, uvss, keyspace, listeners, appScope, entityId,
-                        version );
+                        version, false );
 
         final MutationBatch newBatch = mock( MutationBatch.class );
 
@@ -517,7 +516,7 @@ public class EntityVersionCleanupTaskTest {
 
         EntityVersionCleanupTask cleanupTask =
                 new EntityVersionCleanupTask( serializationFig, less, uvss, keyspace, listeners, appScope, entityId,
-                        version );
+                        version, false);
 
         final MutationBatch newBatch = mock( MutationBatch.class );
 
@@ -645,7 +644,7 @@ public class EntityVersionCleanupTaskTest {
 
         EntityVersionCleanupTask cleanupTask =
                 new EntityVersionCleanupTask( serializationFig, less, uvss, keyspace, listeners, appScope, entityId,
-                        version );
+                        version, false );
 
         final MutationBatch newBatch = mock( MutationBatch.class );
 

@@ -358,6 +358,8 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
             registry.remove( meterName );
             logger.info("Rebuilt index");
 
+            setup.getEmf().refreshIndex();
+
         } catch (Exception ex) {
             logger.error("Error rebuilding index", ex);
             fail();

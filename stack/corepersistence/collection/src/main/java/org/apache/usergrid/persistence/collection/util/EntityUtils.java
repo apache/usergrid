@@ -2,15 +2,15 @@ package org.apache.usergrid.persistence.collection.util;
 
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.Collection;
 import java.util.UUID;
+import org.apache.usergrid.persistence.model.field.Field;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
 
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
-import org.apache.usergrid.persistence.model.field.Field;
 
 
 /**

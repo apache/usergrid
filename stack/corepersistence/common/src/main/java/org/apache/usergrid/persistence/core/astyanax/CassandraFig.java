@@ -33,6 +33,8 @@ import org.safehaus.guicyfig.Key;
 public interface CassandraFig extends GuicyFig {
 
 
+    public static final String READ_CONSISTENT_CL = "usergrid.consistent.read.cl";
+
     public static final String READ_CL = "usergrid.read.cl";
 
     public static final String WRITE_CL = "usergrid.write.cl";
@@ -77,10 +79,13 @@ public interface CassandraFig extends GuicyFig {
     @Default( "false" )
     boolean isEmbedded();
 
-
-    @Default("CL_QUORUM")
+    @Default("CL_LOCAL_ONE")
     @Key(READ_CL)
     String getReadCL();
+
+    @Default("CL_LOCAL_QUORUM")
+    @Key(READ_CONSISTENT_CL)
+    String getConsistentReadCL();
 
     @Default("CL_QUORUM")
     @Key(WRITE_CL)

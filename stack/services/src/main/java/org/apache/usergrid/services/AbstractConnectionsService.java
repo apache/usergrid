@@ -172,13 +172,13 @@ public class AbstractConnectionsService extends AbstractService {
         Results r = null;
 
         if ( connecting() ) {
-            r = em.getConnectingEntities( 
-                new SimpleEntityRef( context.getOwner().getType(), context.getOwner().getUuid()), 
+            r = em.getConnectingEntities(
+                new SimpleEntityRef( context.getOwner().getType(), context.getOwner().getUuid()),
                 context.getCollectionName(), null, Level.ALL_PROPERTIES );
         }
         else {
-            r = em.getConnectedEntities( 
-                new SimpleEntityRef( context.getOwner().getType(), context.getOwner().getUuid()), 
+            r = em.getConnectedEntities(
+                new SimpleEntityRef( context.getOwner().getType(), context.getOwner().getUuid()),
                 context.getCollectionName(), null, Level.ALL_PROPERTIES );
         }
 
@@ -239,7 +239,7 @@ public class AbstractConnectionsService extends AbstractService {
             throw new ServiceResourceNotFoundException( context );
         }
 
-        if ( results.size() == 1 && !em.isConnectionMember( 
+        if ( results.size() == 1 && !em.isConnectionMember(
                 context.getOwner(), context.getCollectionName(), results.getEntity() ) ) {
             throw new ServiceResourceNotFoundException( context );
         }
@@ -263,14 +263,9 @@ public class AbstractConnectionsService extends AbstractService {
                 nameProperty = "name";
             }
 
-            EntityRef ref = em.getAlias( query.getEntityType(), name );
-            if ( ref == null ) {
-                return null;
-            }
-
             //TODO T.N. USERGRID-1919 actually validate this is connected
 
-            Entity entity = em.get( ref );
+            Entity entity = em.getUniqueEntityFromAlias( query.getEntityType(), name );
             if ( entity == null ) {
                 return null;
             }
@@ -294,7 +289,7 @@ public class AbstractConnectionsService extends AbstractService {
         }
 
 //        query.setLimit( count );
-        // usergrid-2389: User defined limit in the query is ignored. Fixed it by following 
+        // usergrid-2389: User defined limit in the query is ignored. Fixed it by following
         // same style in AstractCollectionService
         query.setLimit( query.getLimit( count ) );
         query.setResultsLevel( level );
@@ -309,11 +304,11 @@ public class AbstractConnectionsService extends AbstractService {
             else {
 //            	r = em.getConnectingEntities( context.getOwner().getUuid(), query.getConnectionType(),
 //            			query.getEntityType(), level );
-                // usergrid-2389: User defined limit in the query is ignored. Fixed it by adding 
+                // usergrid-2389: User defined limit in the query is ignored. Fixed it by adding
                 // the limit to the method parameter downstream.
-            	r = em.getConnectingEntities( 
-                    new SimpleEntityRef( context.getOwner().getType(), context.getOwner().getUuid()), 
-                    query.getConnectionType(),query.getEntityType(), level , query.getLimit()); 
+            	r = em.getConnectingEntities(
+                    new SimpleEntityRef( context.getOwner().getType(), context.getOwner().getUuid()),
+                    query.getConnectionType(),query.getEntityType(), level , query.getLimit());
             }
         }
         else {
@@ -366,11 +361,7 @@ public class AbstractConnectionsService extends AbstractService {
             if ( query.containsSingleNameOrEmailIdentifier() ) {
                 String name = query.getSingleNameOrEmailIdentifier();
 
-                EntityRef ref = em.getAlias( query.getEntityType(), name );
-                if ( ref == null ) {
-                    throw new ServiceResourceNotFoundException( context );
-                }
-                entity = em.get( ref );
+                entity = em.getUniqueEntityFromAlias( query.getEntityType(), name );
                 if ( entity == null ) {
                     throw new ServiceResourceNotFoundException( context );
                 }
@@ -481,11 +472,7 @@ public class AbstractConnectionsService extends AbstractService {
                 nameProperty = "name";
             }
 
-            EntityRef ref = em.getAlias( query.getEntityType(), name );
-            if ( ref == null ) {
-                throw new ServiceResourceNotFoundException( context );
-            }
-            Entity entity = em.get( ref );
+            Entity entity = em.getUniqueEntityFromAlias( query.getEntityType(), name );
             if ( entity == null ) {
                 throw new ServiceResourceNotFoundException( context );
             }
