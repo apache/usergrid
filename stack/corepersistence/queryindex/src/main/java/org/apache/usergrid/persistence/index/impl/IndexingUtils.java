@@ -65,8 +65,10 @@ public class IndexingUtils {
       * @param scope
       * @return
       */
-     public static String createContextName( IndexScope scope ) {
+     public static String createContextName(ApplicationScope applicationScope, IndexScope scope ) {
          StringBuilder sb = new StringBuilder();
+         idString(sb,applicationScope.getApplication());
+         sb.append(SEPARATOR);
          idString(sb, scope.getOwner());
          sb.append( SEPARATOR );
          sb.append( scope.getName() );

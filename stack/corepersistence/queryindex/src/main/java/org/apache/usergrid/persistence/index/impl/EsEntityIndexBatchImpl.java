@@ -98,7 +98,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         entity.setField(
             new StringField(APPLICATION_ID_FIELDNAME, IndexingUtils.idString(applicationScope.getApplication()))
         );
-        final String context = createContextName(indexScope);
+        final String context = createContextName(applicationScope,indexScope);
 
         if ( log.isDebugEnabled() ) {
             log.debug( "Indexing entity {}:{}\n   alias: {}\n" +
@@ -134,7 +134,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         ValidationUtils.verifyIdentity(id);
         ValidationUtils.verifyVersion( version );
 
-        final String context = createContextName(indexScope);
+        final String context = createContextName(applicationScope,indexScope);
         final SearchType entityType =SearchType.fromId(id);
 
         final String indexId = createIndexDocId( id, version, context );
