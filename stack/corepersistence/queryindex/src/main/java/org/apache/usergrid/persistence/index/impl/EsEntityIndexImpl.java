@@ -63,7 +63,6 @@ import org.elasticsearch.rest.action.admin.indices.alias.delete.AliasesMissingEx
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 import java.io.IOException;
 
 
