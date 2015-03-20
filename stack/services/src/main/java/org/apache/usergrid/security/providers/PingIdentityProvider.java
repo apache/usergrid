@@ -129,7 +129,7 @@ public class PingIdentityProvider extends AbstractProvider {
                               .header("Content-Length", "0")
                               .post( JsonNode.class );
 
-        String rawEmail = node.get( "access_token" ).get( "subject" ).getTextValue();
+        String rawEmail = node.get( "access_token" ).get( "subject" ).asText();
 
         Map<String, Object> userMap = new HashMap<String, Object>();
         userMap.put( "expiration", node.get( "expires_in" ).getLongValue() );
