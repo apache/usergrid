@@ -110,84 +110,81 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
             final UUID appId = em.getApplication().getUuid();
             final Map<String,Object> payloads = notification.getPayloads();
 
-            final Func1<Entity,Entity> entityListFunct = new Func1<Entity, Entity>() {
-                @Override
-                public Entity call(Entity entity) {
+            final Func1<Entity,Entity> entityListFunct = entity -> {
 
-                    try {
+                try {
 
-                        long now = System.currentTimeMillis();
-                        List<EntityRef> devicesRef = getDevices(entity); // resolve group
+                    long now = System.currentTimeMillis();
+                    List<EntityRef> devicesRef = getDevices(entity); // resolve group
 
-                        LOG.info("notification {} queue  {} devices, duration "+(System.currentTimeMillis()-now)+" ms", notification.getUuid(), devicesRef.size());
+                    LOG.info("notification {} queue  {} devices, duration "+(System.currentTimeMillis()-now)+" ms", notification.getUuid(), devicesRef.size());
 
-                        for (EntityRef deviceRef : devicesRef) {
-                            LOG.info("notification {} starting to queue device {} ", notification.getUuid(), deviceRef.getUuid());
-                            long hash = MurmurHash.hash(deviceRef.getUuid());
-                            if (sketch.estimateCount(hash) > 0) { //look for duplicates
-                                LOG.warn("Maybe Found duplicate device: {}", deviceRef.getUuid());
-                                continue;
-                            } else {
-                                sketch.add(hash, 1);
-                            }
-                            String notifierId = null;
-                            String notifierKey = null;
-
-                            //find the device notifier info, match it to the payload
-                            for (Map.Entry<String, Object> entry : payloads.entrySet()) {
-                                ProviderAdapter adapter = notifierMap.get(entry.getKey().toLowerCase());
-                                now = System.currentTimeMillis();
-                                String providerId = getProviderId(deviceRef, adapter.getNotifier());
-                                if (providerId != null) {
-                                    notifierId = providerId;
-                                    notifierKey = entry.getKey().toLowerCase();
-                                    break;
-                                }
-                                LOG.info("Provider query for notification {} device {} took "+(System.currentTimeMillis()-now)+" ms",notification.getUuid(),deviceRef.getUuid());
-                            }
-
-                            if (notifierId == null) {
-                                LOG.info("Notifier did not match for device {} ", deviceRef);
-                                continue;
-                            }
-
-                            ApplicationQueueMessage message = new ApplicationQueueMessage(appId, notification.getUuid(), deviceRef.getUuid(), notifierKey, notifierId);
-                            if (notification.getQueued() == null) {
-                                // update queued time
-                                now = System.currentTimeMillis();
-                                notification.setQueued(System.currentTimeMillis());
-                                LOG.info("notification {} device {} queue time set. duration "+(System.currentTimeMillis()-now)+" ms", notification.getUuid(), deviceRef.getUuid());
-                            }
-                            now = System.currentTimeMillis();
-                            qm.sendMessage(message);
-                            LOG.info("notification {} post-queue to device {} duration " + (System.currentTimeMillis() - now) + " ms "+queueName+" queue", notification.getUuid(), deviceRef.getUuid());
-                            deviceCount.incrementAndGet();
-                            queueMeter.mark();
+                    for (EntityRef deviceRef : devicesRef) {
+                        LOG.info("notification {} starting to queue device {} ", notification.getUuid(), deviceRef.getUuid());
+                        long hash = MurmurHash.hash(deviceRef.getUuid());
+                        if (sketch.estimateCount(hash) > 0) { //look for duplicates
+                            LOG.warn("Maybe Found duplicate device: {}", deviceRef.getUuid());
+                            continue;
+                        } else {
+                            sketch.add(hash, 1);
                         }
-                    } catch (Exception deviceLoopException) {
-                        LOG.error("Failed to add devices", deviceLoopException);
-                        errorMessages.add("Failed to add devices for entity: " + entity.getUuid() + " error:" + deviceLoopException);
+                        String notifierId = null;
+                        String notifierKey = null;
+
+                        //find the device notifier info, match it to the payload
+                        for (Map.Entry<String, Object> entry : payloads.entrySet()) {
+                            ProviderAdapter adapter = notifierMap.get(entry.getKey().toLowerCase());
+                            now = System.currentTimeMillis();
+                            String providerId = getProviderId(deviceRef, adapter.getNotifier());
+                            if (providerId != null) {
+                                notifierId = providerId;
+                                notifierKey = entry.getKey().toLowerCase();
+                                break;
+                            }
+                            LOG.info("Provider query for notification {} device {} took "+(System.currentTimeMillis()-now)+" ms",notification.getUuid(),deviceRef.getUuid());
+                        }
+
+                        if (notifierId == null) {
+                            LOG.info("Notifier did not match for device {} ", deviceRef);
+                            continue;
+                        }
+
+                        ApplicationQueueMessage message = new ApplicationQueueMessage(appId, notification.getUuid(), deviceRef.getUuid(), notifierKey, notifierId);
+                        if (notification.getQueued() == null) {
+                            // update queued time
+                            now = System.currentTimeMillis();
+                            notification.setQueued(System.currentTimeMillis());
+                            LOG.info("notification {} device {} queue time set. duration "+(System.currentTimeMillis()-now)+" ms", notification.getUuid(), deviceRef.getUuid());
+                        }
+                        now = System.currentTimeMillis();
+                        qm.sendMessage(message);
+                        LOG.info("notification {} post-queue to device {} duration " + (System.currentTimeMillis() - now) + " ms "+queueName+" queue", notification.getUuid(), deviceRef.getUuid());
+                        deviceCount.incrementAndGet();
+                        queueMeter.mark();
                     }
-                    return entity;
+                } catch (Exception deviceLoopException) {
+                    LOG.error("Failed to add devices", deviceLoopException);
+                    errorMessages.add("Failed to add devices for entity: " + entity.getUuid() + " error:" + deviceLoopException);
                 }
+                return entity;
             };
 
             long now = System.currentTimeMillis();
-            Observable o = rx.Observable.create(new IteratorObservable<Entity>(iterator))
-                    .parallel(new Func1<Observable<Entity>, Observable<Entity>>() {
-                        @Override
-                        public rx.Observable<Entity> call(rx.Observable<Entity> deviceObservable) {
-                            return deviceObservable.map(entityListFunct);
-                        }
-                    }, Schedulers.io())
-                    .doOnError(new Action1<Throwable>() {
-                        @Override
-                        public void call(Throwable throwable) {
-                            LOG.error("Failed while writing", throwable);
-                        }
-                    });
-            o.toBlocking().lastOrDefault(null);
-            LOG.info("notification {} done queueing duration {} ms", notification.getUuid(), System.currentTimeMillis() - now);
+
+
+            //process up to 10 concurrently
+            Observable o = rx.Observable.create( new IteratorObservable<Entity>( iterator ) )
+
+                                        .flatMap( entity -> Observable.just( entity ).map( entityListFunct )
+                                                                      .doOnError( throwable -> {
+                                                                          LOG.error( "Failed while writing",
+                                                                              throwable );
+                                                                      } ).subscribeOn( Schedulers.io() )
+
+                                            , 10 );
+
+            o.toBlocking().lastOrDefault( null );
+            LOG.info( "notification {} done queueing duration {} ms", notification.getUuid(), System.currentTimeMillis() - now);
         }
 
         // update queued time
@@ -338,48 +335,39 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                 return message;
             }
         };
-        Observable o = rx.Observable.from(messages)
-                .parallel(new Func1<rx.Observable<QueueMessage>, rx.Observable<ApplicationQueueMessage>>() {
-                    @Override
-                    public rx.Observable<ApplicationQueueMessage> call(rx.Observable<QueueMessage> messageObservable) {
-                        return messageObservable.map(func);
-                    }
-                }, Schedulers.io())
-                .buffer(messages.size())
-                .map(new Func1<List<ApplicationQueueMessage>, HashMap<UUID, ApplicationQueueMessage>>() {
-                    @Override
-                    public HashMap<UUID, ApplicationQueueMessage> call(List<ApplicationQueueMessage> queueMessages) {
-                        //for gcm this will actually send notification
-                        for (ProviderAdapter providerAdapter : notifierMap.values()) {
-                            try {
-                                providerAdapter.doneSendingNotifications();
-                            } catch (Exception e) {
-                                LOG.error("providerAdapter.doneSendingNotifications: ", e);
-                            }
-                        }
-                        //TODO: check if a notification is done and mark it
-                        HashMap<UUID, ApplicationQueueMessage> notifications = new HashMap<UUID, ApplicationQueueMessage>();
-                        for (ApplicationQueueMessage message : queueMessages) {
-                            if (notifications.get(message.getNotificationId()) == null) {
-                                try {
-                                    TaskManager taskManager = taskMap.get(message.getNotificationId());
-                                    notifications.put(message.getNotificationId(), message);
-                                    taskManager.finishedBatch();
-                                } catch (Exception e) {
-                                    LOG.error("Failed to finish batch", e);
-                                }
-                            }
 
+        //from each queue message, process them in parallel up to 10 at a time
+        Observable o = rx.Observable.from( messages ).flatMap( queueMessage -> {
+
+
+            return Observable.just( queueMessage ).map( func ).buffer( messages.size() ).map( queueMessages -> {
+                //for gcm this will actually send notification
+                for ( ProviderAdapter providerAdapter : notifierMap.values() ) {
+                    try {
+                        providerAdapter.doneSendingNotifications();
+                    }
+                    catch ( Exception e ) {
+                        LOG.error( "providerAdapter.doneSendingNotifications: ", e );
+                    }
+                }
+                //TODO: check if a notification is done and mark it
+                HashMap<UUID, ApplicationQueueMessage> notifications = new HashMap<>();
+                for ( ApplicationQueueMessage message : queueMessages ) {
+                    if ( notifications.get( message.getNotificationId() ) == null ) {
+                        try {
+                            TaskManager taskManager = taskMap.get( message.getNotificationId() );
+                            notifications.put( message.getNotificationId(), message );
+                            taskManager.finishedBatch();
                         }
-                        return notifications;
+                        catch ( Exception e ) {
+                            LOG.error( "Failed to finish batch", e );
+                        }
                     }
-                })
-                .doOnError(new Action1<Throwable>() {
-                    @Override
-                    public void call(Throwable throwable) {
-                        LOG.error("Failed while sending",throwable);
-                    }
-                });
+                }
+                return notifications;
+            } ).doOnError( throwable -> LOG.error( "Failed while sending", throwable ) );
+        }, 10 );
+
         return o;
     }
 
@@ -400,7 +388,8 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
      * {"winphone":"mymessage","apple":"mymessage"}
      * TODO: document this method better
      */
-    private Map<String, Object> translatePayloads(Map<String, Object> payloads, Map<Object, ProviderAdapter> notifierMap) throws Exception {
+    private Map<String, Object> translatePayloads(Map<String, Object> payloads, Map<Object, ProviderAdapter>
+        notifierMap) throws Exception {
         Map<String, Object> translatedPayloads = new HashMap<String, Object>(  payloads.size());
         for (Map.Entry<String, Object> entry : payloads.entrySet()) {
             String payloadKey = entry.getKey().toLowerCase();

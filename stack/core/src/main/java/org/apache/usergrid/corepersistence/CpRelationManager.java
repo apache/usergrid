@@ -277,7 +277,7 @@ public class CpRelationManager implements RelationManager {
         Observable<String> types= gm.getEdgeTypesFromSource(
             new SimpleSearchEdgeType( cpHeadEntity.getId(), edgeTypePrefix,  null ));
 
-        Iterator<String> iter = types.toBlockingObservable().getIterator();
+        Iterator<String> iter = types.toBlocking().getIterator();
         while ( iter.hasNext() ) {
             indexes.add( iter.next() );
         }
@@ -343,7 +343,7 @@ public class CpRelationManager implements RelationManager {
             Observable<Edge> edges = gm.loadEdgesToTarget( new SimpleSearchByEdgeType(
                 cpHeadEntity.getId(), etype, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING, null ));
 
-            Iterator<Edge> iter = edges.toBlockingObservable().getIterator();
+            Iterator<Edge> iter = edges.toBlocking().getIterator();
             while ( iter.hasNext() ) {
                 Edge edge = iter.next();
 
@@ -380,7 +380,7 @@ public class CpRelationManager implements RelationManager {
         final GraphManager gm = managerCache.getGraphManager( applicationScope );
 
         Iterator<String> edgeTypesToTarget = gm.getEdgeTypesToTarget( new SimpleSearchEdgeType(
-            cpHeadEntity.getId(), null, null) ).toBlockingObservable().getIterator();
+            cpHeadEntity.getId(), null, null) ).toBlocking().getIterator();
 
         logger.debug("updateContainingCollectionsAndCollections(): "
                 + "Searched for edges to target {}:{}\n   in scope {}\n   found: {}",
@@ -481,7 +481,7 @@ public class CpRelationManager implements RelationManager {
             SearchByEdgeType.Order.DESCENDING,
             null ) );
 
-        return edges.toBlockingObservable().firstOrDefault( null ) != null;
+        return edges.toBlocking().firstOrDefault( null ) != null;
     }
 
 
@@ -508,7 +508,7 @@ public class CpRelationManager implements RelationManager {
             SearchByEdgeType.Order.DESCENDING,
             null ) );
 
-        return edges.toBlockingObservable().firstOrDefault( null ) != null;
+        return edges.toBlocking().firstOrDefault( null ) != null;
     }
 
 
@@ -525,7 +525,7 @@ public class CpRelationManager implements RelationManager {
             SearchByEdgeType.Order.DESCENDING,
             null ) ); // last
 
-        Iterator<Edge> iterator = edgesToTarget.toBlockingObservable().getIterator();
+        Iterator<Edge> iterator = edgesToTarget.toBlocking().getIterator();
         int count = 0;
         while ( iterator.hasNext() ) {
             iterator.next();
@@ -566,7 +566,7 @@ public class CpRelationManager implements RelationManager {
         Observable<String> str = gm.getEdgeTypesFromSource(
                 new SimpleSearchEdgeType( cpHeadEntity.getId(), null, null ) );
 
-        Iterator<String> iter = str.toBlockingObservable().getIterator();
+        Iterator<String> iter = str.toBlocking().getIterator();
         while ( iter.hasNext() ) {
             String edgeType = iter.next();
             indexes.add( CpNamingUtils.getCollectionName( edgeType ) );
@@ -689,7 +689,7 @@ public class CpRelationManager implements RelationManager {
         // create graph edge connection from head entity to member entity
         Edge edge = new SimpleEdge( cpHeadEntity.getId(), edgeType, memberEntity.getId(), uuidHash );
         GraphManager gm = managerCache.getGraphManager( applicationScope );
-        gm.writeEdge( edge ).toBlockingObservable().last();
+        gm.writeEdge( edge ).toBlocking().last();
 
         logger.debug( "Wrote edgeType {}\n   from {}:{}\n   to {}:{}\n   scope {}:{}",
             new Object[] {
@@ -852,7 +852,7 @@ public class CpRelationManager implements RelationManager {
                 cpHeadEntity.getId(),
                 CpNamingUtils.getEdgeTypeFromCollectionName( collName ),
                 memberEntity.getId(), UUIDUtils.getUUIDLong( memberEntity.getId().getUuid() ) );
-        gm.deleteEdge( collectionToItemEdge ).toBlockingObservable().last();
+        gm.deleteEdge( collectionToItemEdge ).toBlocking().last();
 
         // remove edge from item to collection
         Edge itemToCollectionEdge = new SimpleEdge(
@@ -862,7 +862,7 @@ public class CpRelationManager implements RelationManager {
                 cpHeadEntity.getId(),
                 UUIDUtils.getUUIDLong( cpHeadEntity.getId().getUuid() ) );
 
-        gm.deleteEdge( itemToCollectionEdge ).toBlockingObservable().last();
+        gm.deleteEdge( itemToCollectionEdge ).toBlocking().last();
 
         // special handling for roles collection of a group
         if ( headEntity.getType().equals( Group.ENTITY_TYPE ) ) {
@@ -1055,7 +1055,7 @@ public class CpRelationManager implements RelationManager {
                 cpHeadEntity.getId(), edgeType, targetEntity.getId(), System.currentTimeMillis() );
 
         GraphManager gm = managerCache.getGraphManager( applicationScope );
-        gm.writeEdge( edge ).toBlockingObservable().last();
+        gm.writeEdge( edge ).toBlocking().last();
 
         ApplicationEntityIndex ei = managerCache.getEntityIndex( applicationScope );
         EntityIndexBatch batch = ei.createBatch();
@@ -1287,7 +1287,7 @@ public class CpRelationManager implements RelationManager {
                 System.currentTimeMillis() );
 
         GraphManager gm = managerCache.getGraphManager( applicationScope );
-        gm.deleteEdge( edge ).toBlockingObservable().last();
+        gm.deleteEdge( edge ).toBlocking().last();
 
         final ApplicationEntityIndex ei = managerCache.getEntityIndex( applicationScope );
         final EntityIndexBatch batch = ei.createBatch();

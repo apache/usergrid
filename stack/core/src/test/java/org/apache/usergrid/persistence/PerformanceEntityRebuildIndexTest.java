@@ -82,7 +82,6 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
     @After
     public void printReport() {
-
         logger.debug("Printing metrics report");
         reporter.report();
         reporter.stop();
@@ -428,8 +427,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
         }
 
         if ( expectedEntities != -1 && expectedEntities != count ) {
-            throw new RuntimeException("Did not get expected "
-                    + expectedEntities + " entities, instead got " + count );
+            throw new RuntimeException("Did not get expected " + expectedEntities + " entities, instead got " + count );
         }
         return count;
     }

@@ -24,10 +24,10 @@
         <artifactId>chop-maven-plugin</artifactId>
         <version>${chop.version}</version>
 
-        
+
         NOTE: you should be putting most of these variables into your settings.xml
         as an automatically activated profile.
-        
+
 
         <configuration>
           <accessKey>${aws.s3.key}</accessKey>
@@ -48,11 +48,11 @@
           <runnerKeyPairName>${runner.keypair.name}</runnerKeyPairName>
           <runnerCount>6</runnerCount>
           <securityGroupExceptions>
-            
+
             Add your own IP address as an exception to allow access
             but please do this in the settings.xml file .. essentially
             all parameters should be in the settings.xml file.
-            
+
             <param>${myip.address}/32:24981</param>
             <param>${myip.address}/32:22</param>
           </securityGroupExceptions>
@@ -81,13 +81,7 @@
 
 
 
-    <!-- lang utils for setting uuids etc -->
 
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-lang3</artifactId>
-      <version>${commons.lang.version}</version>
-    </dependency>
 
     <!-- tests -->
 

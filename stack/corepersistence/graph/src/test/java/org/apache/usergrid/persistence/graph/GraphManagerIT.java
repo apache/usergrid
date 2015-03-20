@@ -964,20 +964,25 @@ public abstract class GraphManagerIT {
         Id targetId2 = new SimpleId( "target2" );
 
 
-        Edge edge1 = createEdge( sourceId, "test", targetId1, System.currentTimeMillis() );
+        long startTime = System.currentTimeMillis();
+
+        long edge1Time = startTime;
+        long edge2Time = edge1Time+1;
+
+        final long maxVersion= edge2Time;
+
+        Edge edge1 = createEdge( sourceId, "test", targetId1, edge1Time);
 
         gm.writeEdge( edge1 ).toBlocking().singleOrDefault( null );
 
-        Edge edge2 = createEdge( sourceId, "test", targetId2, System.currentTimeMillis() );
+        Edge edge2 = createEdge( sourceId, "test", targetId2, edge2Time );
 
         gm.writeEdge( edge2 ).toBlocking().singleOrDefault( null );
 
 
-        final long maxVersion = System.currentTimeMillis();
 
-
-        assertTrue( Long.compare( maxVersion, edge2.getTimestamp() ) > 0 );
-        assertTrue( Long.compare( maxVersion, edge1.getTimestamp() ) > 0 );
+        assertTrue( Long.compare( maxVersion, edge2.getTimestamp() ) >= 0 );
+        assertTrue( Long.compare( maxVersion, edge1.getTimestamp() ) >= 0 );
 
 
         //get our 2 edges
