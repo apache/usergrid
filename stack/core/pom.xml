@@ -88,10 +88,9 @@
                 <forkCount>${usergrid.it.forkCount}</forkCount>
                 <threadCount>${usergrid.it.threads}</threadCount>
                 <reuseForks>true</reuseForks>
-                <argLine>-Dtest.barrier.timestamp=${maven.build.timestamp} -Dtest.clean.storage=true -Xmx${ug.heapmax}
-                    -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8
-                    -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}
-                </argLine>
+                <argLine>-Dtest.barrier.timestamp=${maven.build.timestamp} -Dtest.clean.storage=true -Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline} </argLine>
+                <!-- see this page for documentation on classloading issues http://maven.apache.org/surefire/maven-surefire-plugin/examples/class-loading.html -->
+                <useSystemClassLoader>false</useSystemClassLoader>
                 <includes>
                     <include>**/*IT.java</include>
                     <include>**/*Test.java</include>
