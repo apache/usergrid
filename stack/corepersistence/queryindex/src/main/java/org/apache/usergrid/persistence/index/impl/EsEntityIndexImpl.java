@@ -327,6 +327,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
 
     public void refresh() {
+
         refreshIndexMeter.mark();
         final Timer.Context timeRefreshIndex = refreshTimer.time();
         BetterFuture future = indexBatchBufferProducer.put(new IndexOperationMessage());
