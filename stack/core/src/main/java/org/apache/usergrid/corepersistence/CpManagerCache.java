@@ -25,6 +25,7 @@ import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
+import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.map.MapManager;
@@ -62,16 +63,15 @@ public class CpManagerCache implements ManagerCache {
 
     @Override
     public EntityCollectionManager getEntityCollectionManager( CollectionScope scope ) {
-
         //cache is now in the colletion manager level
         return ecmf.createCollectionManager( scope );
     }
 
 
     @Override
-    public EntityIndex getEntityIndex( ApplicationScope appScope ) {
+    public ApplicationEntityIndex getEntityIndex( ApplicationScope appScope ) {
 
-            return eif.createEntityIndex( appScope );
+            return eif.createApplicationEntityIndex( appScope );
 
     }
 

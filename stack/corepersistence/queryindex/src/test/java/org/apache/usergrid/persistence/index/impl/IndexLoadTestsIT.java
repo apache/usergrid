@@ -162,13 +162,13 @@ public class IndexLoadTestsIT extends BaseIT {
         final Id applicationId = new SimpleId( applicationUUID, "application" );
         final ApplicationScope scope = new ApplicationScopeImpl( applicationId );
 
-        final EntityIndex index = entityIndexFactory.createEntityIndex( scope );
 
         final IndexScope indexScope = new IndexScopeImpl( applicationId, "test" );
 
         //create our index if it doesn't exist
         index.initializeIndex();
 
+        final Observable<Entity> createEntities = createStreamFromWorkers( index, applicationId );
 
         //delay our verification for indexing to happen
         final Observable<DataLoadResult> dataLoadResults =

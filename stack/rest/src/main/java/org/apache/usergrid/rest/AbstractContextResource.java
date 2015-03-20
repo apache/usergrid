@@ -28,6 +28,8 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
+import com.google.inject.Injector;
+import org.apache.usergrid.persistence.index.EntityIndex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.mq.QueueManagerFactory;
@@ -54,9 +56,13 @@ import org.slf4j.LoggerFactory;
 
 public abstract class AbstractContextResource {
 
-    protected static final TypeReference<Map<String, Object>> mapTypeReference = new TypeReference<Map<String, Object>>() {};
-    protected static final TypeReference<List<Object>> listTypeReference = new TypeReference<List<Object>>() {};
-    protected static final   ObjectMapper mapper = new ObjectMapper();
+    protected static final TypeReference<Map<String, Object>> mapTypeReference = new TypeReference<Map<String, Object>>() {
+    };
+    protected static final TypeReference<List<Object>> listTypeReference = new TypeReference<List<Object>>() {
+    };
+    protected static final ObjectMapper mapper = new ObjectMapper();
+
+    private EntityIndex entityIndex;
 
 
     protected AbstractContextResource parent;
@@ -98,9 +104,12 @@ public abstract class AbstractContextResource {
     protected QueueManagerFactory qmf;
 
     @Autowired
+    protected Injector injector;
+
+    @Autowired
     protected TokenService tokens;
 
-    private static final Logger logger = LoggerFactory.getLogger( AbstractContextResource.class );
+    private static final Logger logger = LoggerFactory.getLogger(AbstractContextResource.class);
 
 
     public AbstractContextResource() {
@@ -112,26 +121,26 @@ public abstract class AbstractContextResource {
     }
 
 
-    public void setParent( AbstractContextResource parent ) {
+    public void setParent(AbstractContextResource parent) {
         this.parent = parent;
     }
 
 
-    public <T extends AbstractContextResource> T getSubResource( Class<T> t ) {
+    public <T extends AbstractContextResource> T getSubResource(Class<T> t) {
         logger.debug("getSubResource: " + t.getCanonicalName());
-        T subResource = resourceContext.getResource( t );
-        subResource.setParent( this );
+        T subResource = resourceContext.getResource(t);
+        subResource.setParent(this);
         return subResource;
     }
 
 
-    public PathSegment getFirstPathSegment( String name ) {
-        if ( name == null ) {
+    public PathSegment getFirstPathSegment(String name) {
+        if (name == null) {
             return null;
         }
         List<PathSegment> segments = uriInfo.getPathSegments();
-        for ( PathSegment segment : segments ) {
-            if ( name.equals( segment.getPath() ) ) {
+        for (PathSegment segment : segments) {
+            if (name.equals(segment.getPath())) {
                 return segment;
             }
         }
@@ -140,70 +149,73 @@ public abstract class AbstractContextResource {
 
 
     public boolean useReCaptcha() {
-        return StringUtils.isNotBlank( properties.getRecaptchaPublic() )
-                && StringUtils.isNotBlank( properties.getRecaptchaPrivate() );
+        return StringUtils.isNotBlank(properties.getRecaptchaPublic())
+            && StringUtils.isNotBlank(properties.getRecaptchaPrivate());
     }
 
 
     public String getReCaptchaHtml() {
-        if ( !useReCaptcha() ) {
+        if (!useReCaptcha()) {
             return "";
         }
         ReCaptcha c = ReCaptchaFactory.newSecureReCaptcha(
-                properties.getRecaptchaPublic(), properties.getRecaptchaPrivate(), false );
-        return c.createRecaptchaHtml( null, null );
+            properties.getRecaptchaPublic(), properties.getRecaptchaPrivate(), false);
+        return c.createRecaptchaHtml(null, null);
     }
 
 
-    public void sendRedirect( String location ) {
-        if ( StringUtils.isNotBlank( location ) ) {
-            throw new RedirectionException( location );
+    public void sendRedirect(String location) {
+        if (StringUtils.isNotBlank(location)) {
+            throw new RedirectionException(location);
         }
     }
 
 
-    public Viewable handleViewable( String template, Object model ) {
+    public Viewable handleViewable(String template, Object model) {
 
         String className = this.getClass().getName().toLowerCase();
         String packageName = AbstractContextResource.class.getPackage().getName();
 
         String template_property = "usergrid.view" +
-            StringUtils.removeEnd( className.toLowerCase(), "resource" )
-                .substring( packageName.length() ) + "." + template.toLowerCase();
+            StringUtils.removeEnd(className.toLowerCase(), "resource")
+                .substring(packageName.length()) + "." + template.toLowerCase();
 
-        String redirect_url = properties.getProperty( template_property );
+        String redirect_url = properties.getProperty(template_property);
 
-        if ( StringUtils.isNotBlank( redirect_url ) ) {
+        if (StringUtils.isNotBlank(redirect_url)) {
             logger.debug("Redirecting to URL: ", redirect_url);
-            sendRedirect( redirect_url );
+            sendRedirect(redirect_url);
         }
         logger.debug("Dispatching to viewable with template: {}",
-                template, template_property );
+            template, template_property);
 
-        Viewable viewable = new Viewable( template, model, this.getClass() );
+        Viewable viewable = new Viewable(template, model, this.getClass());
         return viewable;
     }
 
 
-
     protected ApiResponse createApiResponse() {
-        return new ApiResponse( properties );
+        return new ApiResponse(properties);
     }
 
+    protected EntityIndex getEntityIndex(){
+        entityIndex = entityIndex == null ? injector.getInstance(EntityIndex.class) : entityIndex;
+        return entityIndex;
+    }
     /**
-          * Next three new methods necessary to work around inexplicable problems with EntityHolder.
-          * This problem happens consistently when you deploy "two-dot-o" to Tomcat:
-          * https://groups.google.com/forum/#!topic/usergrid/yyAJdmsBfig
-          */
-         protected Object readJsonToObject( String content ) throws IOException {
+     * Next three new methods necessary to work around inexplicable problems with EntityHolder.
+     * This problem happens consistently when you deploy "two-dot-o" to Tomcat:
+     * https://groups.google.com/forum/#!topic/usergrid/yyAJdmsBfig
+     */
+    protected Object readJsonToObject(String content) throws IOException {
 
-             JsonNode jsonNode = mapper.readTree( content );
-             Object jsonObject;
-             if ( jsonNode.isArray() ) {
-                 jsonObject = mapper.readValue( content, listTypeReference );
-             } else {
-                 jsonObject = mapper.readValue( content, mapTypeReference );
-             }
-             return jsonObject;
-         }
+        JsonNode jsonNode = mapper.readTree(content);
+        Object jsonObject;
+        if (jsonNode.isArray()) {
+            jsonObject = mapper.readValue(content, listTypeReference);
+        } else {
+            jsonObject = mapper.readValue(content, mapTypeReference);
+        }
+        return jsonObject;
+    }
 }
