@@ -101,10 +101,8 @@ public class CpWalker {
             edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( collectionName );
         }
 
-        Observable<String> edgeTypes = gm.getEdgeTypesFromSource(
-            new SimpleSearchEdgeType( applicationId, edgeType, null ) );
-
-        edgeTypes.flatMap( emittedEdgeType -> {
+        Observable<Edge> edges = gm.getEdgeTypesFromSource(
+                    new SimpleSearchEdgeType( applicationId, edgeType, null ) ).flatMap( emittedEdgeType -> {
 
             logger.debug( "Loading edges of type {} from node {}", edgeType, applicationId );
 
@@ -136,6 +134,6 @@ public class CpWalker {
         }, 100 );
 
         // wait for it to complete
-        edgeTypes.toBlocking().lastOrDefault( null ); // end foreach on edges
+        edges.toBlocking().lastOrDefault( null ); // end foreach on edges
     }
 }
