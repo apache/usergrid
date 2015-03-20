@@ -122,9 +122,8 @@
       <usergrid.it.parallel>methods</usergrid.it.parallel>
       <usergrid.it.reuseForks>true</usergrid.it.reuseForks>
 
-      <!-- run with 1 fork and 1 thread until we figure out how to make tests run concurrently again -->
-      <usergrid.it.forkCount>1</usergrid.it.forkCount>
-      <usergrid.it.threads>1</usergrid.it.threads>
+      <usergrid.it.forkCount>4</usergrid.it.forkCount>
+      <usergrid.it.threads>8</usergrid.it.threads>
 
       <metrics.version>3.0.0</metrics.version>
       <rx.version>0.19.6</rx.version>

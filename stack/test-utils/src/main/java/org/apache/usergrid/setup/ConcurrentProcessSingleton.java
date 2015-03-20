@@ -28,17 +28,21 @@ import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.lock.MultiProcessBarrier;
 import org.apache.usergrid.lock.MultiProcessLocalLock;
 
+import java.io.IOException;
+
 
 /**
  * A singleton that starts cassandra and configures it once per JVM
  */
 public class ConcurrentProcessSingleton {
 
+    private static final Logger logger = LoggerFactory.getLogger( ConcurrentProcessSingleton.class );
 
-    private static final String TEMP_FILE_PATH =
-        "target/surefirelocks/start_barrier-" + System.getProperty( "test.barrier.timestamp", "default" );
+    private static final String TEMP_FILE_PATH = "target/surefirelocks/start_barrier-"
+        + System.getProperty( "test.barrier.timestamp", "default" );
 
-    public static final int LOCK_PORT = Integer.parseInt( System.getProperty( "test.lock.port", "10101" ) );
+    public static final int LOCK_PORT = Integer.parseInt(
+        System.getProperty( "test.lock.port", "10101" ) );
 
     public static final boolean CLEAN_STORAGE =
         Boolean.parseBoolean( System.getProperty( "test.clean.storage", "false" ) );
@@ -46,7 +50,6 @@ public class ConcurrentProcessSingleton {
 
     public static final long ONE_MINUTE = 60000;
 
-    private static final Logger logger = LoggerFactory.getLogger( ConcurrentProcessSingleton.class );
 
     private final MultiProcessLocalLock lock = new MultiProcessLocalLock( LOCK_PORT );
     private final MultiProcessBarrier barrier = new MultiProcessBarrier( TEMP_FILE_PATH );
@@ -75,29 +78,29 @@ public class ConcurrentProcessSingleton {
         try {
 
             logger.info( "Trying to get a lock to setup system" );
-            //we have a lock, so init the system
+
+            // we have a lock, so init the system
             if ( lock.tryLock() ) {
 
                 logger.info( "Lock acquired, setting up system" );
 
-                final SchemaManager schemaManager = SpringResource.getInstance().getBean( SchemaManager.class );
+                final SchemaManager schemaManager =
+                    SpringResource.getInstance().getBean( SchemaManager.class );
 
-
-                //maybe delete existing column families and indexes
+                // maybe delete existing column families and indexes
                 if ( CLEAN_STORAGE ) {
                     logger.info("Destroying current database");
                     schemaManager.destroy();
                 }
 
-                //create our schema
+                // create our schema
                 logger.info("Creating database");
                 schemaManager.create();
 
                 logger.info("Populating database");
                 schemaManager.populateBaseData();
 
-
-                //signal to other processes we've migrated, and they can proceed
+                // signal to other processes we've migrated, and they can proceed
                 barrier.proceed();
             }
 
@@ -106,7 +109,8 @@ public class ConcurrentProcessSingleton {
             barrier.await( ONE_MINUTE );
             logger.info( "Setup to complete" );
 
-            lock.maybeReleaseLock();
+            // Commented out: Never release the lock, otherwise some other JVM may destroy the schema
+            // lock.maybeReleaseLock();
         }
         catch ( Exception e ) {
             throw new RuntimeException( "Unable to initialize system", e );
@@ -115,18 +119,16 @@ public class ConcurrentProcessSingleton {
 
 
     /**
-     * Get an instance of this singleton.  If it is the first time this instance is created it will also initialize the
-     * system
+     * Get an instance of this singleton.  If it is the first time this instance is
+     * created it will also initialize the system
      */
     public static synchronized ConcurrentProcessSingleton getInstance() {
         if ( instance != null ) {
             return instance;
         }
 
-
         instance = new ConcurrentProcessSingleton();
         instance.startSystem();
-
 
         return instance;
     }
