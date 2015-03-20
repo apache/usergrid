@@ -38,7 +38,7 @@ import org.apache.usergrid.utils.JsonUtils;
 import com.google.inject.Injector;
 
 
-public class CoreITSetupImpl implements CoreITSetup {
+public class CoreITSetupImpl implements CoreITSetup, TestEntityIndex {
     private static final Logger LOG = LoggerFactory.getLogger( CoreITSetupImpl.class );
     private final Injector injector;
 
@@ -156,7 +156,17 @@ public class CoreITSetupImpl implements CoreITSetup {
     }
 
     @Override
-    public EntityIndex getEntityIndex(){
-        return getInjector().getInstance(EntityIndex.class);
+    public TestEntityIndex getEntityIndex(){
+        return this;
+    }
+
+    @Override
+    public void refresh(){
+        try{
+            Thread.sleep(50);
+        }catch (InterruptedException ie){
+
+        }
+        getEntityIndex().refresh();
     }
 }

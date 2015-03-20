@@ -47,5 +47,5 @@ public interface CoreITSetup extends TestRule {
 
     Injector getInjector();
 
-     EntityIndex getEntityIndex();
+    TestEntityIndex getEntityIndex();
 }
