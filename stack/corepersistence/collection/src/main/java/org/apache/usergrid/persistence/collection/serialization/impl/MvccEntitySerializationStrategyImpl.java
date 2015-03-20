@@ -176,77 +176,52 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
         }
 
 
-       final EntitySetImpl entitySetResults =  Observable.from( rowKeys )
-               //buffer our entities per request, then for that buffer, execute the query in parallel (if neccessary)
-                                                         .buffer(entitiesPerRequest )
-                                                         .parallel( new Func1<Observable<List<ScopedRowKey
-                <CollectionPrefixedKey<Id>>>>, Observable<Rows<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID>>>() {
+        final EntitySetImpl entitySetResults = Observable.from( rowKeys )
+            //buffer our entities per request, then for that buffer, execute the query in parallel (if neccessary)
+            .buffer( entitiesPerRequest ).flatMap( listObservable -> {
 
 
-            @Override
-            public Observable<Rows<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID>> call(
-                    final Observable<List<ScopedRowKey<CollectionPrefixedKey<Id>>>> listObservable ) {
+                //here, we execute our query then emit the items either in parallel, or on the current thread
+                // if we have more than 1 request
+                return Observable.just( listObservable ).map( scopedRowKeys -> {
 
-
-                 //here, we execute our query then emit the items either in parallel, or on the current thread if we have more than 1 request
-                return listObservable.map( new Func1<List<ScopedRowKey<CollectionPrefixedKey<Id>>>,
-                        Rows<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID>>() {
-
-
-                    @Override
-                    public Rows<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> call(
-                            final List<ScopedRowKey<CollectionPrefixedKey<Id>>> scopedRowKeys ) {
-
-                            try {
-                                return keyspace.prepareQuery( columnFamily ).getKeySlice( rowKeys )
-                                                              .withColumnRange( maxVersion, null, false,
-                                                                      1 ).execute().getResult();
-                            }
-                            catch ( ConnectionException e ) {
-                                throw new CollectionRuntimeException( null, collectionScope, "An error occurred connecting to cassandra",
-                                        e );
-                            }
+                    try {
+                        return keyspace.prepareQuery( columnFamily ).getKeySlice( rowKeys )
+                                       .withColumnRange( maxVersion, null, false, 1 ).execute().getResult();
                     }
-                } );
-
-
-
-            }
-        }, scheduler )
-
-               //reduce all the output into a single Entity set
-               .reduce( new EntitySetImpl( entityIds.size() ),
-                new Func2<EntitySetImpl, Rows<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID>, EntitySetImpl>() {
-                    @Override
-                    public EntitySetImpl call( final EntitySetImpl entitySet,
-                                               final Rows<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> rows ) {
-
-                        final Iterator<Row<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID>> latestEntityColumns = rows.iterator();
-
-                        while ( latestEntityColumns.hasNext() ) {
-                                   final Row<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> row = latestEntityColumns.next();
-
-                                   final ColumnList<UUID> columns = row.getColumns();
-
-                                   if ( columns.size() == 0 ) {
-                                       continue;
-                                   }
-
-                                   final Id entityId = row.getKey().getKey().getSubKey();
-
-                                   final Column<UUID> column = columns.getColumnByIndex( 0 );
-
-                                   final MvccEntity parsedEntity =
-                                           new MvccColumnParser( entityId, getEntitySerializer() ).parseColumn( column );
-
-                                    entitySet.addEntity( parsedEntity );
-                               }
-
-
-
-                        return entitySet;
+                    catch ( ConnectionException e ) {
+                        throw new CollectionRuntimeException( null, collectionScope,
+                            "An error occurred connecting to cassandra", e );
                     }
-                } ).toBlocking().last();
+                } ).subscribeOn( scheduler );
+            }, 10 )
+
+            .reduce( new EntitySetImpl( entityIds.size() ), ( entitySet, rows ) -> {
+                final Iterator<Row<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID>> latestEntityColumns =
+                    rows.iterator();
+
+                while ( latestEntityColumns.hasNext() ) {
+                    final Row<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> row = latestEntityColumns.next();
+
+                    final ColumnList<UUID> columns = row.getColumns();
+
+                    if ( columns.size() == 0 ) {
+                        continue;
+                    }
+
+                    final Id entityId = row.getKey().getKey().getSubKey();
+
+                    final Column<UUID> column = columns.getColumnByIndex( 0 );
+
+                    final MvccEntity parsedEntity =
+                        new MvccColumnParser( entityId, getEntitySerializer() ).parseColumn( column );
+
+                    entitySet.addEntity( parsedEntity );
+                }
+
+
+                return entitySet;
+            } ).toBlocking().last();
 
         return entitySetResults;
 

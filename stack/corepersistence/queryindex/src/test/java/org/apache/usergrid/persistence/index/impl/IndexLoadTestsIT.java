@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -32,7 +33,6 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.guice.IndexTestFig;
@@ -41,13 +41,11 @@ import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.IntegerField;
-import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.google.inject.Inject;
 
 import rx.Observable;
 import rx.functions.Action1;
-import rx.functions.Action2;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
@@ -57,6 +55,7 @@ import rx.schedulers.Schedulers;
  */
 @RunWith( EsRunner.class )
 @UseModules( { TestIndexModule.class } )
+@Ignore( "Should only be run during load tests of elasticsearch" )
 public class IndexLoadTestsIT extends BaseIT {
     private static final Logger log = LoggerFactory.getLogger( IndexLoadTestsIT.class );
 
@@ -70,13 +69,14 @@ public class IndexLoadTestsIT extends BaseIT {
     @Inject
     public EntityIndexFactory entityIndexFactory;
 
+
     @Test
-    public void testHeavyLoad(){
+    public void testHeavyLoad() {
 
         final UUID applicationUUID = UUID.fromString( indexTestFig.getApplicationId() );
 
-        final Id applicationId = new SimpleId(applicationUUID, "application");
-        final ApplicationScope scope = new ApplicationScopeImpl( applicationId  );
+        final Id applicationId = new SimpleId( applicationUUID, "application" );
+        final ApplicationScope scope = new ApplicationScopeImpl( applicationId );
 
         final EntityIndex index = entityIndexFactory.createEntityIndex( scope );
 
@@ -87,83 +87,52 @@ public class IndexLoadTestsIT extends BaseIT {
 
         //run them all
         createEntities.toBlocking().last();
-
-
-
-
     }
 
-    public Observable<Entity> createStreamFromWorkers(final EntityIndex entityIndex, final Id ownerId){
+
+    public Observable<Entity> createStreamFromWorkers( final EntityIndex entityIndex, final Id ownerId ) {
 
         //create a sequence of observables.  Each index will be it's own worker thread using the Schedulers.newthread()
-     return Observable.range( 0, indexTestFig.getNumberOfWorkers() ).parallel( new Func1<Observable<Integer>, Observable<Entity>>() {
-
-
-          @Override
-          public Observable<Entity> call( final Observable<Integer> integerObservable ) {
-             return integerObservable.flatMap( new Func1<Integer, Observable<Entity>>() {
-                  @Override
-                  public Observable<Entity> call( final Integer integer ) {
-                      return createWriteObservable( entityIndex, ownerId, integer );
-                  }
-              } );
-
-          }
-      }, Schedulers.newThread() );
+        return Observable.range( 0, indexTestFig.getNumberOfWorkers() ).flatMap(
+            integer -> createWriteObservable( entityIndex, ownerId, integer ).subscribeOn( Schedulers.newThread() ) );
     }
 
 
-    private Observable<Entity> createWriteObservable( final EntityIndex entityIndex, final Id ownerId, final int workerIndex){
+    private Observable<Entity> createWriteObservable( final EntityIndex entityIndex, final Id ownerId,
+                                                      final int workerIndex ) {
 
 
         final IndexScope scope = new IndexScopeImpl( ownerId, "test" );
 
 
-
-       return  Observable.range( 0, indexTestFig.getNumberOfRecords() )
+        return Observable.range( 0, indexTestFig.getNumberOfRecords() )
 
             //create our entity
-                  .map( new Func1<Integer, Entity>() {
-            @Override
-            public Entity call( final Integer integer ) {
-                final Entity entity = new Entity("test");
+            .map( new Func1<Integer, Entity>() {
+                @Override
+                public Entity call( final Integer integer ) {
+                    final Entity entity = new Entity( "test" );
 
-                entity.setField( new IntegerField("workerIndex", workerIndex));
-                entity.setField( new IntegerField( "ordinal", integer ) );
+                    entity.setField( new IntegerField( "workerIndex", workerIndex ) );
+                    entity.setField( new IntegerField( "ordinal", integer ) );
 
-                return entity;
-            }
-        } ).buffer( indexTestFig.getBufferSize() ).doOnNext( new Action1<List<Entity>>() {
-            @Override
-            public void call( final List<Entity> entities ) {
-                //take our entities and roll them into a batch
-                  Observable.from( entities ).collect( entityIndex.createBatch(), new Action2<EntityIndexBatch, Entity>() {
+                    return entity;
+                }
+            } ).buffer( indexTestFig.getBufferSize() ).doOnNext( new Action1<List<Entity>>() {
+                @Override
+                public void call( final List<Entity> entities ) {
+                    //take our entities and roll them into a batch
+                    Observable.from( entities )
+                              .collect( () -> entityIndex.createBatch(), ( entityIndexBatch, entity ) -> {
 
-
-                    @Override
-                    public void call( final EntityIndexBatch entityIndexBatch, final Entity entity ) {
-                        entityIndexBatch.index(scope, entity  );
-                    }
-                } ).doOnNext( new Action1<EntityIndexBatch>() {
-                    @Override
-                    public void call( final EntityIndexBatch entityIndexBatch ) {
+                                  entityIndexBatch.index( scope, entity );
+                              } ).doOnNext( entityIndexBatch -> {
                         entityIndexBatch.execute();
-                    }
-                } ).toBlocking().last();
-            }
-        } )
+                    } ).toBlocking().last();
+                }
+            } )
 
-            //translate back into a stream of entities for the caller to use
-           .flatMap( new Func1<List<Entity>, Observable<Entity>>() {
-            @Override
-            public Observable<Entity> call( final List<Entity> entities ) {
-                return Observable.from( entities );
-            }
-        } );
-
+                //translate back into a stream of entities for the caller to use
+            .flatMap(entities -> Observable.from( entities ) );
     }
-
-
-
-
 }

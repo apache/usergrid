@@ -159,7 +159,7 @@ public class EntityVersionCleanupTask implements Task<Void> {
                             throw new RuntimeException( "Unable to execute batch mutation", e );
                         }
                     }
-                } ).subscribeOn( Schedulers.io() ).longCount().toBlocking();
+                } ).subscribeOn( Schedulers.io() ).countLong().toBlocking();
 
 
         //start calling the listeners for remove log entries
@@ -201,7 +201,7 @@ public class EntityVersionCleanupTask implements Task<Void> {
                             throw new RuntimeException( "Unable to execute batch mutation", e );
                         }
                     }
-                } ).subscribeOn( Schedulers.io() ).longCount().toBlocking();
+                } ).subscribeOn( Schedulers.io() ).countLong().toBlocking();
 
         //wait or this to complete
         final Long removedCount = uniqueValueCleanup.last();
@@ -232,21 +232,14 @@ public class EntityVersionCleanupTask implements Task<Void> {
         logger.debug( "Started firing {} listeners", listenerSize );
 
         //if we have more than 1, run them on the rx scheduler for a max of 8 operations at a time
-        Observable.from( listeners )
-                  .parallel( new Func1<Observable<EntityVersionDeleted>, Observable<EntityVersionDeleted>>() {
 
-                      @Override
-                      public Observable<EntityVersionDeleted> call(
-                              final Observable<EntityVersionDeleted> entityVersionDeletedObservable ) {
 
-                          return entityVersionDeletedObservable.doOnNext( new Action1<EntityVersionDeleted>() {
-                              @Override
-                              public void call( final EntityVersionDeleted listener ) {
-                                  listener.versionDeleted( scope, entityId, versions );
-                              }
-                          } );
-                      }
-                  }, Schedulers.io() ).toBlocking().last();
+        //if we have more than 1, run them on the rx scheduler for a max of 10 operations at a time
+        Observable.from(listeners).flatMap( currentListener -> Observable.just( currentListener ).doOnNext( listener -> {
+            listener.versionDeleted( scope, entityId, versions );
+        } ).subscribeOn( Schedulers.io() ), 10 ).toBlocking().last();
+
+
 
         logger.debug( "Finished firing {} listeners", listenerSize );
     }

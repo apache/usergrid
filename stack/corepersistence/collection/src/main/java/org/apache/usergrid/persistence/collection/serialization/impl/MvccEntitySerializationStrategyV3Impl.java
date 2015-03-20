@@ -185,82 +185,55 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
 
         final EntitySetImpl entitySetResults = Observable.from( rowKeys )
-                //buffer our entities per request, then for that buffer, execute the query in parallel (if neccessary)
-                .buffer( entitiesPerRequest ).parallel(
-                        new Func1<Observable<List<ScopedRowKey<CollectionPrefixedKey<Id>>>>,
-                                Observable<Rows<ScopedRowKey<CollectionPrefixedKey<Id>>, Boolean>>>() {
+            //buffer our entities per request, then for that buffer, execute the query in parallel (if neccessary)
+            .buffer( entitiesPerRequest ).flatMap( listObservable -> {
 
 
-                            @Override
-                            public Observable<Rows<ScopedRowKey<CollectionPrefixedKey<Id>>, Boolean>> call(
-                                    final Observable<List<ScopedRowKey<CollectionPrefixedKey<Id>>>> listObservable ) {
+                //here, we execute our query then emit the items either in parallel, or on the current thread
+                // if we have more than 1 request
+                return Observable.just( listObservable ).map( scopedRowKeys -> {
 
 
-                                //here, we execute our query then emit
-                                // the items either in parallel, or on
-                                // the current thread if we have more
-                                // than 1 request
-                                return listObservable
-                                        .map( new Func1<List<ScopedRowKey<CollectionPrefixedKey<Id>>>,
-                                                Rows<ScopedRowKey<CollectionPrefixedKey<Id>>, Boolean>>() {
+                    try {
+                        return keyspace.prepareQuery( CF_ENTITY_DATA ).getKeySlice( rowKeys )
+                                       .withColumnSlice( COL_VALUE ).execute().getResult();
+                    }
+                    catch ( ConnectionException e ) {
+                        throw new CollectionRuntimeException( null, collectionScope,
+                            "An error occurred connecting to cassandra", e );
+                    }
+                } ).subscribeOn( scheduler );
+            }, 10 )
+
+            .reduce( new EntitySetImpl( entityIds.size() ), ( entitySet, rows ) -> {
+                final Iterator<Row<ScopedRowKey<CollectionPrefixedKey<Id>>, Boolean>> latestEntityColumns =
+                    rows.iterator();
+
+                while ( latestEntityColumns.hasNext() ) {
+                    final Row<ScopedRowKey<CollectionPrefixedKey<Id>>, Boolean> row = latestEntityColumns.next();
+
+                    final ColumnList<Boolean> columns = row.getColumns();
+
+                    if ( columns.size() == 0 ) {
+                        continue;
+                    }
+
+                    final Id entityId = row.getKey().getKey().getSubKey();
+
+                    final Column<Boolean> column = columns.getColumnByIndex( 0 );
+
+                    final MvccEntity parsedEntity =
+                        new MvccColumnParser( entityId, entitySerializer ).parseColumn( column );
 
 
-                                            @Override
-                                            public Rows<ScopedRowKey<CollectionPrefixedKey<Id>>, Boolean> call(
-                                                    final List<ScopedRowKey<CollectionPrefixedKey<Id>>> scopedRowKeys
-                                                                                                           ) {
-
-                                                try {
-                                                    return keyspace.prepareQuery( CF_ENTITY_DATA )
-                                                                   .getKeySlice( rowKeys )
-                                                                    .withColumnSlice( COL_VALUE )
-                                                                   .execute().getResult();
-                                                }
-                                                catch ( ConnectionException e ) {
-                                                    throw new CollectionRuntimeException( null, collectionScope,
-                                                            "An error occurred connecting to cassandra", e );
-                                                }
-                                            }
-                                        } );
-                            }
-                        }, scheduler )
-
-                        //reduce all the output into a single Entity set
-                .reduce( new EntitySetImpl( entityIds.size() ),
-                        new Func2<EntitySetImpl, Rows<ScopedRowKey<CollectionPrefixedKey<Id>>, Boolean>, EntitySetImpl>() {
-                            @Override
-                            public EntitySetImpl call( final EntitySetImpl entitySet,
-                                                       final Rows<ScopedRowKey<CollectionPrefixedKey<Id>>, Boolean> rows
-                                                     ) {
-
-                                final Iterator<Row<ScopedRowKey<CollectionPrefixedKey<Id>>, Boolean>> latestEntityColumns =
-                                        rows.iterator();
-
-                                while ( latestEntityColumns.hasNext() ) {
-                                    final Row<ScopedRowKey<CollectionPrefixedKey<Id>>, Boolean> row =
-                                            latestEntityColumns.next();
-
-                                    final ColumnList<Boolean> columns = row.getColumns();
-
-                                    if ( columns.size() == 0 ) {
-                                        continue;
-                                    }
-
-                                    final Id entityId = row.getKey().getKey().getSubKey();
-
-                                    final Column<Boolean> column = columns.getColumnByIndex( 0 );
-
-                                    final MvccEntity parsedEntity =
-                                            new MvccColumnParser( entityId, entitySerializer ).parseColumn( column );
+                    entitySet.addEntity( parsedEntity );
+                }
 
 
-                                    entitySet.addEntity( parsedEntity );
-                                }
+                return entitySet;
+            } ).toBlocking().last();
 
 
-                                return entitySet;
-                            }
-                        } ).toBlocking().last();
 
         return entitySetResults;
     }

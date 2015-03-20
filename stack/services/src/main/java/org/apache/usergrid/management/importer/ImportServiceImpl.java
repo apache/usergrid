@@ -937,18 +937,12 @@ public class ImportServiceImpl implements ImportService {
         // potentially skip the first n if this is a resume operation
         final int entityNumSkip = (int)tracker.getTotalEntityCount();
 
-        // with this code we get asynchronous behavior and testImportWithMultipleFiles will fail
-       final int entityCount =  entityEventObservable.takeWhile( new Func1<WriteEvent, Boolean>() {
-            @Override
-            public Boolean call( final WriteEvent writeEvent ) {
-                return !tracker.shouldStopProcessingEntities();
-            }
-        } ).skip(entityNumSkip).parallel(new Func1<Observable<WriteEvent>, Observable<WriteEvent>>() {
-            @Override
-            public Observable<WriteEvent> call(Observable<WriteEvent> entityWrapperObservable) {
-                return entityWrapperObservable.doOnNext(doWork);
-            }
-        }, Schedulers.io()).reduce(0, heartbeatReducer).toBlocking().last();
+
+        entityEventObservable.takeWhile( writeEvent -> !tracker.shouldStopProcessingEntities() ).skip( entityNumSkip )
+            .flatMap( writeEvent -> {
+                return Observable.just( writeEvent ).doOnNext( doWork );
+            }, 10 ).reduce( 0, heartbeatReducer ).toBlocking().last();
+
 
         jp.close();
 
@@ -979,17 +973,11 @@ public class ImportServiceImpl implements ImportService {
         final int connectionNumSkip = (int)tracker.getTotalConnectionCount();
 
         // with this code we get asynchronous behavior and testImportWithMultipleFiles will fail
-        final int connectionCount = otherEventObservable.takeWhile( new Func1<WriteEvent, Boolean>() {
-            @Override
-            public Boolean call( final WriteEvent writeEvent ) {
-                return !tracker.shouldStopProcessingConnections();
-            }
-        } ).skip(connectionNumSkip).parallel(new Func1<Observable<WriteEvent>, Observable<WriteEvent>>() {
-            @Override
-            public Observable<WriteEvent> call(Observable<WriteEvent> entityWrapperObservable) {
-                return entityWrapperObservable.doOnNext(doWork);
-            }
-        }, Schedulers.io()).reduce(0, heartbeatReducer).toBlocking().last();
+        final int connectionCount = otherEventObservable.takeWhile(
+            writeEvent -> !tracker.shouldStopProcessingConnections() ).skip(connectionNumSkip).flatMap( entityWrapper ->{
+                return Observable.just(entityWrapper).doOnNext( doWork ).subscribeOn( Schedulers.io() );
+
+        }, 10 ).reduce(0, heartbeatReducer).toBlocking().last();
 
         jp.close();
 

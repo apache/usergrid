@@ -451,7 +451,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                 fromEntityId, edgeType, Long.MAX_VALUE,
                 SearchByEdgeType.Order.DESCENDING, null ));
 
-        Iterator<Edge> iter = edges.toBlockingObservable().getIterator();
+        //TODO This is wrong, and will result in OOM if there are too many applications.  This needs to stream properly with a buffer
+        Iterator<Edge> iter = edges.toBlocking().getIterator();
         while ( iter.hasNext() ) {
 
             Edge edge = iter.next();
@@ -469,7 +470,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
             org.apache.usergrid.persistence.model.entity.Entity e =
                     managerCache.getEntityCollectionManager( collScope ).load( targetId )
-                        .toBlockingObservable().lastOrDefault(null);
+                        .toBlocking().lastOrDefault(null);
 
             if ( e == null ) {
                 logger.warn("Applicaion {} in index but not found in collections", targetId );
@@ -624,7 +625,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     public long performEntityCount() {
         //TODO, this really needs to be a task that writes this data somewhere since this will get
         //progressively slower as the system expands
-        return (Long) getAllEntitiesObservable().longCount().toBlocking().last();
+        return (Long) getAllEntitiesObservable().countLong().toBlocking().last();
     }
 
 
