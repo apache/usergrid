@@ -37,6 +37,7 @@ import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.test.UseModules;
+import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexScope;
@@ -103,6 +104,9 @@ public class IndexLoadTestsIT extends BaseIT {
     public EntityIndexFactory entityIndexFactory;
 
     @Inject
+    public EntityIndex entityIndex;
+
+    @Inject
     public MetricsFactory metricsFactory;
 
     private Meter batchWriteTPS;
@@ -115,7 +119,10 @@ public class IndexLoadTestsIT extends BaseIT {
 
 
     @Before
-    public void setupMeters() {
+    public void setupIndexAndMeters() {
+
+        entityIndex.initializeIndex();
+
         batchWriteTPS = metricsFactory.getMeter( IndexLoadTestsIT.class, "write.tps" );
 
         batchWriteTimer = metricsFactory.getTimer( IndexLoadTestsIT.class, "write.timer" );
@@ -165,14 +172,14 @@ public class IndexLoadTestsIT extends BaseIT {
 
         final IndexScope indexScope = new IndexScopeImpl( applicationId, "test" );
 
-        //create our index if it doesn't exist
-        index.initializeIndex();
+        final ApplicationEntityIndex appEntityIndex = entityIndexFactory.createApplicationEntityIndex( scope );
 
-        final Observable<Entity> createEntities = createStreamFromWorkers( index, applicationId );
+
+        //create our index if it doesn't exist
 
         //delay our verification for indexing to happen
         final Observable<DataLoadResult> dataLoadResults =
-            createStreamFromWorkers( index, indexScope, uniqueIdentifier ).buffer( indexTestFig.getBufferSize() )
+            createStreamFromWorkers( appEntityIndex, indexScope, uniqueIdentifier ).buffer( indexTestFig.getBufferSize() )
                 //perform a delay to let ES index from our batches
                 .delay( indexTestFig.getValidateWait(), TimeUnit.MILLISECONDS )
                     //do our search in parallel, otherwise this test will take far too long
@@ -188,7 +195,7 @@ public class IndexLoadTestsIT extends BaseIT {
 
 
                         //execute our search
-                        final CandidateResults results = index
+                        final CandidateResults results = appEntityIndex
                             .search( indexScope, SearchTypes.fromTypes( indexScope.getName() ), Query.fromQLNullSafe(
                                 "select * where " + FIELD_WORKER_INDEX + "  = " + workerIndex + " AND " + FIELD_ORDINAL
                                     + " = " + ordinal + " AND " + FIELD_UNIQUE_IDENTIFIER + " = '" + uniqueIdentifier
@@ -239,7 +246,7 @@ public class IndexLoadTestsIT extends BaseIT {
     }
 
 
-    public Observable<Entity> createStreamFromWorkers( final EntityIndex entityIndex, final IndexScope indexScope,
+    public Observable<Entity> createStreamFromWorkers( final ApplicationEntityIndex entityIndex, final IndexScope indexScope,
                                                        final String uniqueIdentifier ) {
 
         //create a sequence of observables.  Each index will be it's own worker thread using the Schedulers.newthread()
@@ -249,7 +256,7 @@ public class IndexLoadTestsIT extends BaseIT {
     }
 
 
-    private Observable<Entity> createWriteObservable( final EntityIndex entityIndex, final IndexScope indexScope,
+    private Observable<Entity> createWriteObservable( final ApplicationEntityIndex entityIndex, final IndexScope indexScope,
                                                       final String uniqueIdentifier, final int workerIndex ) {
 
 
