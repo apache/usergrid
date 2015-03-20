@@ -20,13 +20,12 @@
 package org.apache.usergrid.setup;
 
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.usergrid.cassandra.SchemaManager;
 import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.lock.MultiProcessBarrier;
 import org.apache.usergrid.lock.MultiProcessLocalLock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
@@ -109,8 +108,18 @@ public class ConcurrentProcessSingleton {
             barrier.await( ONE_MINUTE );
             logger.info( "Setup to complete" );
 
-            // Commented out: Never release the lock, otherwise some other JVM may destroy the schema
-            // lock.maybeReleaseLock();
+            Runtime.getRuntime().addShutdownHook( new Thread(  ){
+                @Override
+                public void run() {
+                    try {
+                        lock.maybeReleaseLock();
+                    }
+                    catch ( IOException e ) {
+                        throw new RuntimeException( "Unable to release lock" );
+                    }
+                }
+            });
+
         }
         catch ( Exception e ) {
             throw new RuntimeException( "Unable to initialize system", e );

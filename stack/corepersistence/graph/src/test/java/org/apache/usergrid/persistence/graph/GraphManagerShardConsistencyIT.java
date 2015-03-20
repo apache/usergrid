@@ -516,7 +516,7 @@ public class GraphManagerShardConsistencyIT {
                                                             }
                                                         } )
 
-                                                        .longCount().toBlocking().last();
+                                                        .countLong().toBlocking().last();
 
 
 //                if(returnedEdgeCount != count[0]-duplicate[0]){

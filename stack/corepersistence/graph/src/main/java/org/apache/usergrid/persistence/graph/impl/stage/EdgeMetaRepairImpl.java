@@ -176,6 +176,8 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
                          * Sum up the total number of edges we had, then execute the mutation if we have
                          * anything to do
                          */
+
+
                         return MathObservable.sumInteger( Observable.merge( checks ) )
                                              .doOnNext( new Action1<Integer>() {
                                                             @Override
