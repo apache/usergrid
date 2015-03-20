@@ -293,6 +293,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex{
                 });
                 return Observable.from(response);
             })
+            .doOnError( t -> logger.error("Failed on delete application",t))
             .doOnCompleted(() -> timer.stop());
     }
 
