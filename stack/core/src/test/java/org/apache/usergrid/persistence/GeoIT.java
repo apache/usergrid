@@ -177,7 +177,7 @@ public class GeoIT extends AbstractCoreIT {
         Map<String, Object> restaurantProps = new LinkedHashMap<String, Object>();
         restaurantProps.put("name", "Brickhouse");
         restaurantProps.put("address", "426 Brannan Street");
-        restaurantProps.put("location", getLocation(37.776753, -122.407846));
+        restaurantProps.put("location", getLocation(37.779632, -122.395131));
 
         Entity restaurant = em.create("restaurant", restaurantProps);
         assertNotNull(restaurant);
