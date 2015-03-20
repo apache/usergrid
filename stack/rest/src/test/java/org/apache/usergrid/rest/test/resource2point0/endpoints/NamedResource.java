@@ -185,4 +185,14 @@ public abstract class NamedResource implements UrlResource {
 
     }
 
+    public <T> T get(Class<T> type,QueryParameters queryParameters) {
+        WebResource resource = getResource();
+        resource = addParametersToResource(resource, queryParameters);
+        GenericType<T> gt = new GenericType<>((Class) type);
+        return resource.type(MediaType.APPLICATION_JSON_TYPE)
+                                  .accept( MediaType.APPLICATION_JSON )
+                                  .get( gt.getRawClass() );
+
+    }
+
 }

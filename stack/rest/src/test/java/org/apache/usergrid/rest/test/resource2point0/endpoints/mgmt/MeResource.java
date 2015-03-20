@@ -17,40 +17,16 @@
 package org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt;
 
 
-import org.apache.usergrid.rest.test.resource2point0.endpoints.*;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.NamedResource;
+import org.apache.usergrid.rest.test.resource2point0.endpoints.UrlResource;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 
 /**
- * Contains the REST methods to interacting with the ManagementEndpoints
+ * Calls the management/me endpoints
  */
-public class ManagementResource extends NamedResource {
-    public ManagementResource( final ClientContext context, final UrlResource parent ) {
-        super( "management", context, parent );
+public class MeResource extends NamedResource {
+    public MeResource( final ClientContext context, final UrlResource parent ) {
+        super( "me", context, parent );
     }
-
-    public TokenResource token(){
-        return new TokenResource( context, this );
-    }
-
-    public MeResource me(){
-        return new MeResource( context, this );
-    }
-
-    public AuthorizeResource authorize(){
-        return new AuthorizeResource( context, this );
-    }
-
-    public OrgResource orgs() {
-        return new OrgResource( context, this );
-    }
-
-    public UsersResource users() {
-        return new UsersResource( context, this );
-    }
-
-    public EntityEndpoint get(final String identifier){
-        return new EntityEndpoint(identifier, context, this);
-    }
-
 }

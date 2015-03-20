@@ -28,12 +28,16 @@ import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
+import org.apache.usergrid.rest.test.resource2point0.model.Organization;
 import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource2point0.model.Token;
 
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+
+import org.jclouds.rest.annotations.Api;
+import org.junit.Ignore;
 import org.junit.Test;
 
 
@@ -51,17 +55,10 @@ public class AccessTokenIT extends AbstractRestIT {
 
         long ttl = 2000;
 
-        QueryParameters queryParameters = new QueryParameters();
-        queryParameters.addParam( "grant_type", "password" );
-        queryParameters.addParam( "username", clientSetup.getUsername() );
-        queryParameters.addParam( "password", clientSetup.getPassword());
-        queryParameters.addParam( "ttl", String.valueOf(ttl) );
-
-        Token adminToken = management().token().
-            get( queryParameters );
+        tokenSetup( ttl );
 
         long startTime = System.currentTimeMillis();
-        Entity user = management().users().user( clientSetup.getUsername() ).get();
+        Entity user = new Entity(management().users().user( clientSetup.getUsername() ).get(ApiResponse.class));
 
 
         assertEquals(clientSetup.getUsername(), user.get( "username" ));
@@ -71,7 +68,7 @@ public class AccessTokenIT extends AbstractRestIT {
 
         ClientResponse.Status responseStatus = null;
         try {
-            management().users().user( clientSetup.getUsername() ).get();
+            management().users().user( clientSetup.getUsername() ).get( ApiResponse.class);
         } catch (UniformInterfaceException uie) {
             responseStatus = uie.getResponse().getClientResponseStatus();
         }
@@ -79,82 +76,69 @@ public class AccessTokenIT extends AbstractRestIT {
         assertEquals(ClientResponse.Status.UNAUTHORIZED, responseStatus);
     }
 
-//    @Test
-//    public void token() throws Exception {
-//        JsonNode node = mapper.readTree(resource()
-//                .path("/management/token")
-//                .queryParam("grant_type", "password")
-//                .queryParam("username", "test@usergrid.com")
-//                .queryParam("password", "test")
-//                .accept(MediaType.APPLICATION_JSON)
-//                .get(String.class));
-//
-//        logNode(node);
-//        String token = node.get("access_token").textValue();
-//        assertNotNull(token);
-//
-//        // set an organization property
-//        HashMap<String, Object> payload = new HashMap<String, Object>();
-//        Map<String, Object> properties = new HashMap<String, Object>();
-//        properties.put("securityLevel", 5);
-//        payload.put(OrganizationsResource.ORGANIZATION_PROPERTIES, properties);
-//        node = mapper.readTree(resource()
-//                .path("/management/organizations/test-organization")
-//                .queryParam("access_token", superAdminToken())
-//                .accept(MediaType.APPLICATION_JSON)
-//                .type(MediaType.APPLICATION_JSON_TYPE)
-//                .put(String.class, payload));
-//
-//        refreshIndex("test-organization", "test-app");
-//
-//        // ensure the organization property is included
-//        node = mapper.readTree(resource().path("/management/token").queryParam("access_token", token)
-//                .accept(MediaType.APPLICATION_JSON).get(String.class));
-//        logNode(node);
-//
-//        JsonNode securityLevel = node.findValue("securityLevel");
-//        assertNotNull(securityLevel);
-//        assertEquals(5L, securityLevel.asLong());
-//    }
-//
-//    @Test
-//    public void meToken() throws Exception {
-//        JsonNode node = mapper.readTree(resource()
-//                .path("/management/me")
-//                .queryParam("grant_type", "password")
-//                .queryParam("username", "test@usergrid.com")
-//                .queryParam("password", "test")
-//                .accept(MediaType.APPLICATION_JSON)
-//                .get(String.class));
-//
-//        logNode(node);
-//        String token = node.get("access_token").textValue();
-//        assertNotNull(token);
-//
-//        node = mapper.readTree(resource()
-//                .path("/management/me")
-//                .queryParam("access_token", token)
-//                .accept(MediaType.APPLICATION_JSON)
-//                .get(String.class));
-//        logNode(node);
-//
-//        assertNotNull(node.get("passwordChanged"));
-//        assertNotNull(node.get("access_token"));
-//        assertNotNull(node.get("expires_in"));
-//        JsonNode userNode = node.get("user");
-//        assertNotNull(userNode);
-//        assertNotNull(userNode.get("uuid"));
-//        assertNotNull(userNode.get("username"));
-//        assertNotNull(userNode.get("email"));
-//        assertNotNull(userNode.get("name"));
-//        assertNotNull(userNode.get("properties"));
-//        JsonNode orgsNode = userNode.get("organizations");
-//        assertNotNull(orgsNode);
-//        JsonNode orgNode = orgsNode.get("test-organization");
-//        assertNotNull(orgNode);
-//        assertNotNull(orgNode.get("name"));
-//        assertNotNull(orgNode.get("properties"));
-//    }
+
+    private Token tokenSetup( final long ttl ) {
+        QueryParameters queryParameters = getQueryParameters( ttl );
+
+        Token adminToken = management().token().
+            get(Token.class, queryParameters );
+        management().token().setToken( adminToken );
+
+        return adminToken;
+    }
+
+    private Token tokenMeSetup( final long ttl ) {
+        QueryParameters queryParameters = getQueryParameters( ttl );
+
+        Token adminToken = management().me().
+            get(Token.class, queryParameters );
+        management().token().setToken( adminToken );
+
+        return adminToken;
+    }
+
+
+    private QueryParameters getQueryParameters( final long ttl ) {
+        QueryParameters queryParameters = new QueryParameters();
+        queryParameters.addParam( "grant_type", "password" );
+        queryParameters.addParam( "username", clientSetup.getUsername() );
+        queryParameters.addParam( "password", clientSetup.getPassword());
+        if(ttl != 0)
+            queryParameters.addParam( "ttl", String.valueOf(ttl) );
+        return queryParameters;
+    }
+    
+    @Test
+    public void meToken() throws Exception {
+        tokenMeSetup( 0 );
+
+        ApiResponse response = management().me().get(ApiResponse.class);
+
+        assertNotNull( response );
+        assertNotNull(response.getAccessToken());
+
+        Map<String,Object> responseProperties = response.getProperties();
+
+
+        assertNotNull( responseProperties.get( "passwordChanged" ) );
+        assertNotNull(responseProperties.get("expires_in"));
+        Map<String,Object> userProperties = ( Map<String, Object> ) responseProperties.get("user");
+        assertNotNull( userProperties );
+        //user verification
+        assertNotNull(userProperties.get("uuid"));
+        assertNotNull(userProperties.get("username"));
+        assertNotNull(userProperties.get("email"));
+        assertNotNull(userProperties.get("name"));
+        assertNotNull(userProperties.get("properties"));
+
+        Map<String,Object> org = ( Map<String, Object> ) userProperties.get("organizations");
+        Map<String,Object> orgProperties = ( Map<String, Object> )
+            org.get( clientSetup.getOrganizationName().toLowerCase() );
+
+        assertNotNull(orgProperties);
+        assertNotNull(orgProperties.get("name"));
+        assertNotNull(orgProperties.get("properties"));
+    }
 //
 //    @Test
 //    public void meTokenPost() throws Exception {
