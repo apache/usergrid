@@ -121,7 +121,7 @@ public class EdgeDataMigrationImplTest implements DataMigrationResetRule.DataMig
 
 
         //walk from s1 and s2
-        final Observable<GraphNode> graphNodes = Observable.from( new GraphNode( applicationScope, sourceId1), new GraphNode(applicationScope, sourceId2 ) );
+        final Observable<GraphNode> graphNodes = Observable.just( new GraphNode( applicationScope, sourceId1), new GraphNode(applicationScope, sourceId2 ) );
 
         final MigrationDataProvider<GraphNode> testMigrationProvider = new MigrationDataProvider<GraphNode>() {
             @Override

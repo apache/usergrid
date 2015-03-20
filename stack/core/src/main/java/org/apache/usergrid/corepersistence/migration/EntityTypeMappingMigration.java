@@ -37,6 +37,7 @@ import com.google.inject.Inject;
 import rx.Observable;
 import rx.functions.Action1;
 import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 
 /**
@@ -63,36 +64,26 @@ public class EntityTypeMappingMigration implements DataMigration<EntityIdScope> 
         final AtomicLong atomicLong = new AtomicLong();
 
 
-        allEntitiesInSystemObservable.getData()
-                                            //process the entities in parallel
-         .parallel( new Func1<Observable<EntityIdScope>, Observable<EntityIdScope>>() {
+        //migrate up to 100 types simultaneously
+        allEntitiesInSystemObservable.getData().flatMap( entityIdScope -> {
+            return Observable.just( entityIdScope ).doOnNext( entityIdScopeObservable -> {
+                final MapScope ms = CpNamingUtils
+                                                 .getEntityTypeMapScope( entityIdScope.getCollectionScope().getApplication() );
 
+                                             final MapManager mapManager = managerCache.getMapManager( ms );
 
-                 @Override
-                 public Observable<EntityIdScope> call( final Observable<EntityIdScope> entityIdScopeObservable ) {
+                                             final UUID entityUuid = entityIdScope.getId().getUuid();
+                                             final String entityType = entityIdScope.getId().getType();
 
-                     //for each entity observable, get the map scope and write it to the map
-                     return entityIdScopeObservable.doOnNext( new Action1<EntityIdScope>() {
-                         @Override
-                         public void call( final EntityIdScope entityIdScope ) {
-                             final MapScope ms = CpNamingUtils
-                                 .getEntityTypeMapScope( entityIdScope.getCollectionScope().getApplication() );
+                                             mapManager.putString( entityUuid.toString(), entityType );
 
-                             final MapManager mapManager = managerCache.getMapManager( ms );
+                                             if ( atomicLong.incrementAndGet() % 100 == 0 ) {
+                                                 observer.update( getMaxVersion(),
+                                                     String.format( "Updated %d entities", atomicLong.get() ) );
+                                             }
 
-                             final UUID entityUuid = entityIdScope.getId().getUuid();
-                             final String entityType = entityIdScope.getId().getType();
-
-                             mapManager.putString( entityUuid.toString(), entityType );
-
-                             if ( atomicLong.incrementAndGet() % 100 == 0 ) {
-                                 observer.update( getMaxVersion(),
-                                     String.format( "Updated %d entities", atomicLong.get() ) );
-                             }
-                         }
-                     } );
-                 }
-             } ).count().toBlocking().last();
+            } ).subscribeOn( Schedulers.io() );
+        }, 100 ).count().toBlocking().last();
 
 
         return getMaxVersion();

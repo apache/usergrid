@@ -20,6 +20,8 @@
 package org.apache.usergrid.setup;
 
 
+import java.io.IOException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -106,7 +108,19 @@ public class ConcurrentProcessSingleton {
             barrier.await( ONE_MINUTE );
             logger.info( "Setup to complete" );
 
-            lock.maybeReleaseLock();
+
+            Runtime.getRuntime().addShutdownHook( new Thread(  ){
+                @Override
+                public void run() {
+                    try {
+                        lock.maybeReleaseLock();
+                    }
+                    catch ( IOException e ) {
+                        throw new RuntimeException( "Unable to release lock" );
+                    }
+                }
+            });
+
         }
         catch ( Exception e ) {
             throw new RuntimeException( "Unable to initialize system", e );

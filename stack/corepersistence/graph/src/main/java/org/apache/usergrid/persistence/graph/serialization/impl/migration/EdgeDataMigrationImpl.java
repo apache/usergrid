@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import rx.Observable;
 import rx.functions.Action1;
 import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
@@ -75,61 +76,49 @@ public class EdgeDataMigrationImpl implements DataMigration<GraphNode> {
     }
 
 
-
-
     @Override
-       public int migrate( final int currentVersion, final MigrationDataProvider<GraphNode> migrationDataProvider,
-                           final ProgressObserver observer ) {
+    public int migrate( final int currentVersion, final MigrationDataProvider<GraphNode> migrationDataProvider,
+                        final ProgressObserver observer ) {
 
         final AtomicLong counter = new AtomicLong();
 
-        final MigrationRelationship<EdgeMetadataSerialization>
-                migration = allVersions.getMigrationRelationship( currentVersion );
+        final MigrationRelationship<EdgeMetadataSerialization> migration =
+            allVersions.getMigrationRelationship( currentVersion );
 
-       final Observable<List<Edge>> observable =  migrationDataProvider.getData().flatMap( new Func1<GraphNode,
-           Observable<List<Edge>>>() {
-            @Override
-            public Observable<List<Edge>> call( final GraphNode graphNode ) {
-                final GraphManager gm = graphManagerFactory.createEdgeManager( graphNode.applicationScope );
+        final Observable<List<Edge>> observable = migrationDataProvider.getData().flatMap( graphNode -> {
+            final GraphManager gm = graphManagerFactory.createEdgeManager( graphNode.applicationScope );
 
-                //get edges from the source
-                return edgesFromSourceObservable.edgesFromSource( gm, graphNode.entryNode ).buffer( 1000 ).parallel( new Func1<Observable<List<Edge>>, Observable<List<Edge>>>() {
-                                                  @Override
-                                                  public Observable<List<Edge>> call( final Observable<List<Edge>> listObservable ) {
-                          return listObservable.doOnNext( new Action1<List<Edge>>() {
-                              @Override
-                              public void call( List<Edge> edges ) {
-                                  final MutationBatch batch = keyspace.prepareMutationBatch();
+            //get edges from the source
+            return edgesFromSourceObservable.edgesFromSource( gm, graphNode.entryNode ).buffer( 1000 )
+                                            .doOnNext( edges -> {
+                                                    final MutationBatch batch = keyspace.prepareMutationBatch();
 
-                                  for ( Edge edge : edges ) {
-                                      logger.info( "Migrating meta for edge {}", edge );
-                                      final MutationBatch edgeBatch =
-                                              migration.to.writeEdge(  graphNode.applicationScope, edge );
-                                      batch.mergeShallow( edgeBatch );
-                                  }
+                                                    for ( Edge edge : edges ) {
+                                                        logger.info( "Migrating meta for edge {}", edge );
+                                                        final MutationBatch edgeBatch =
+                                                            migration.to.writeEdge( graphNode.applicationScope, edge );
+                                                        batch.mergeShallow( edgeBatch );
+                                                    }
 
-                                  try {
-                                      batch.execute();
-                                  }
-                                  catch ( ConnectionException e ) {
-                                      throw new RuntimeException( "Unable to perform migration", e );
-                                  }
+                                                    try {
+                                                        batch.execute();
+                                                    }
+                                                    catch ( ConnectionException e ) {
+                                                        throw new RuntimeException( "Unable to perform migration", e );
+                                                    }
 
-                                  //update the observer so the admin can see it
-                                  final long newCount = counter.addAndGet( edges.size() );
+                                                    //update the observer so the admin can see it
+                                                    final long newCount = counter.addAndGet( edges.size() );
 
-                                  observer.update( migration.to.getImplementationVersion(),
-                                          String.format( "Currently running.  Rewritten %d edge types",
-                                                  newCount ) );
-                              }
-                          } );
-                  } } );
-            }} );
+                                                    observer.update( migration.to.getImplementationVersion(), String
+                                                        .format( "Currently running.  Rewritten %d edge types",
+                                                            newCount ) );
+                                                } ).subscribeOn( Schedulers.io() );
+        }, 10 );
 
-        observable.longCount().toBlocking().last();
+        observable.countLong().toBlocking().last();
 
         return migration.to.getImplementationVersion();
-
     }
 
 

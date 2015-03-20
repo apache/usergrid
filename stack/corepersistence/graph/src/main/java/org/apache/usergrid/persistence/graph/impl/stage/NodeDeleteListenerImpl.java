@@ -103,7 +103,7 @@ public class NodeDeleteListenerImpl implements NodeDeleteListener {
     public Observable<Integer> receive( final ApplicationScope scope, final Id node, final UUID timestamp ) {
 
 
-        return Observable.from( node )
+        return Observable.just( node )
 
                 //delete source and targets in parallel and merge them into a single observable
                 .flatMap( new Func1<Id, Observable<Integer>>() {
