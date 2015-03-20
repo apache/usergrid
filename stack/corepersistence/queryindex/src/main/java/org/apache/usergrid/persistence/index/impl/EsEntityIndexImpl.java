@@ -340,12 +340,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
             public boolean doOp() {
                 try {
 
-                    Set<String> indexSet = new HashSet<>();
-                    List<String> reads =  Arrays.asList(getIndexes(AliasType.Read));
-                    List<String> writes = Arrays.asList(getIndexes(AliasType.Write));
-                    indexSet.addAll(reads);
-                    indexSet.addAll(writes);
-                    String[] indexes = indexSet.toArray(new String[0]);
+                    final String[] indexes = getUniqueIndexes();
 
                     if ( indexes.length == 0 ) {
                         logger.debug( "Not refreshing indexes. none found");
@@ -378,7 +373,14 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
         doInRetry(retryOperation);
     }
 
-
+    public String[] getUniqueIndexes() {
+        Set<String> indexSet = new HashSet<>();
+        List<String> reads =  Arrays.asList(getIndexes(AliasType.Read));
+        List<String> writes = Arrays.asList(getIndexes(AliasType.Write));
+        indexSet.addAll(reads);
+        indexSet.addAll(writes);
+        return indexSet.toArray(new String[0]);
+    }
 
 
     /**

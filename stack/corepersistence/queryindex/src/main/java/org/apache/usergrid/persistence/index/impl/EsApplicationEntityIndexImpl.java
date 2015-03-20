@@ -270,12 +270,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex{
         deleteApplicationMeter.mark();
         String idString = IndexingUtils.idString(applicationScope.getApplication());
         final TermQueryBuilder tqb = QueryBuilders.termQuery(APPLICATION_ID_FIELDNAME, idString);
-        Set<String> indexSet = new HashSet<>();
-        List<String> reads =  Arrays.asList(entityIndex.getIndexes(AliasedEntityIndex.AliasType.Read));
-        List<String> writes = Arrays.asList(entityIndex.getIndexes(AliasedEntityIndex.AliasType.Write));
-        indexSet.addAll(reads);
-        indexSet.addAll(writes);
-        String[] indexes = indexSet.toArray(new String[0]);
+        final String[] indexes = entityIndex.getUniqueIndexes();
         Timer.Context timer = deleteApplicationTimer.time();
         //Added For Graphite Metrics
         return Observable.from(indexes)
