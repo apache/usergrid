@@ -40,7 +40,8 @@ public class ConcurrentProcessSingleton {
     private static final String TEMP_FILE_PATH = "target/surefirelocks/start_barrier-"
         + System.getProperty( "test.barrier.timestamp", "default" );
 
-    public static final int LOCK_PORT = Integer.parseInt( System.getProperty( "test.lock.port", "10101" ) );
+    public static final int LOCK_PORT = Integer.parseInt(
+        System.getProperty( "test.lock.port", "10101" ) );
 
     public static final boolean CLEAN_STORAGE =
         Boolean.parseBoolean( System.getProperty( "test.clean.storage", "false" ) );
@@ -100,17 +101,12 @@ public class ConcurrentProcessSingleton {
 
                 // signal to other processes we've migrated, and they can proceed
                 barrier.proceed();
-
-                logger.info( "Waiting for setup to complete" );
-                barrier.await( ONE_MINUTE );
-                logger.info( "Setup to complete" );
-
-                lock.maybeReleaseLock();
-
-            } else {
-                throw new RuntimeException( "Unable to initialize system: could not get lock."
-                    +" Some other process must be binding to port " + LOCK_PORT );
             }
+
+
+            logger.info( "Waiting for setup to complete" );
+            barrier.await( ONE_MINUTE );
+            logger.info( "Setup to complete" );
 
             Runtime.getRuntime().addShutdownHook( new Thread(  ){
                 @Override
@@ -125,7 +121,6 @@ public class ConcurrentProcessSingleton {
             });
 
         }
-
         catch ( Exception e ) {
             throw new RuntimeException( "Unable to initialize system", e );
         }
