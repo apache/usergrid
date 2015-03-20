@@ -409,11 +409,6 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
     }
 
     @Override
-    public void refreshIndex() {
-        // no op
-    }
-
-    @Override
     public void flushEntityManagerCaches() {
         // no-op
     }

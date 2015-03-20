@@ -407,7 +407,7 @@ public class IteratingQueryIT {
 
     protected void singleOrderByComplexIntersection( IoHelper io ) throws Exception {
 
-        int size = 200;
+        int size = 10;
         int queryLimit = Query.MAX_LIMIT;
 
         // the number of entities that should be written including an intersection
@@ -481,7 +481,7 @@ public class IteratingQueryIT {
     protected void singleOrderByNoIntersection( IoHelper io ) throws Exception {
         io.doSetup();
 
-        int size = 200;
+        int size = 5;
         int queryLimit = Query.MAX_LIMIT;
 
         // the number of entities that should be written including an intersection
@@ -529,7 +529,7 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        int size = 200;
+        int size = 10;
         int queryLimit = Query.MAX_LIMIT;
 
         // the number of entities that should be written including an intersection
@@ -599,7 +599,7 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        int size = 200;
+        int size = 10;
         int queryLimit = Query.MAX_LIMIT;
 
         // the number of entities that should be written including an intersection
@@ -669,7 +669,7 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        int size = 200;
+        int size = 10;
         int queryLimit = Query.MAX_LIMIT;
 
         int matchMax = queryLimit - 1;
@@ -729,7 +729,7 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        int size = 200;
+        int size = 10;
         int queryLimit = 100;
         int startValue = 100;
 
@@ -791,7 +791,7 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        int size = 200;
+        int size = 10;
         int queryLimit = 50;
         int startValue = 100;
 
@@ -853,7 +853,7 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        int size = 200;
+        int size = 10;
         int queryLimit = 100;
         int startValue = 100;
 
@@ -914,7 +914,7 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        int size = 200;
+        int size = 10;
         int queryLimit = 100;
         int startValue = 99;
 
@@ -975,7 +975,7 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        int size = 200;
+        int size = 10;
         int queryLimit = 100;
         int startValue = 50;
         int endValue = 150;
@@ -1038,7 +1038,7 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        int size = 200;
+        int size = 10;
         int queryLimit = 100;
         int startValue = 50;
         int endValue = 150;
@@ -1123,7 +1123,7 @@ public class IteratingQueryIT {
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        app.getEntityManager().refreshIndex();
+        app.refreshIndex();
 
         Query query = new Query();
         query.setLimit( 100 );
@@ -1159,7 +1159,7 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        int size = 200;
+        int size = 10;
         int queryLimit = Query.MAX_LIMIT;
 
         // the number of entities that should be written including an intersection
@@ -1224,7 +1224,7 @@ public class IteratingQueryIT {
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        app.getEntityManager().refreshIndex();
+        app.refreshIndex();
 
         Query query = Query.fromQL( "select * order by boolean desc, index asc" );
         query.setLimit( queryLimit );
@@ -1266,7 +1266,7 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        int size = 200;
+        int size = 10;
         int queryLimit = Query.MAX_LIMIT;
 
         // the number of entities that should be written including an intersection
@@ -1330,7 +1330,7 @@ public class IteratingQueryIT {
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        app.getEntityManager().refreshIndex();
+        app.refreshIndex();
 
         Query query =
                 Query.fromQL( "select * where intersect = true OR intersect2 = true order by created, intersect desc" );
@@ -1378,7 +1378,7 @@ public class IteratingQueryIT {
         /**
          * Leave this as a large size.  We have to write over 1k to reproduce this issue
          */
-        int size = 200;
+        int size = 10;
 
         long start = System.currentTimeMillis();
 

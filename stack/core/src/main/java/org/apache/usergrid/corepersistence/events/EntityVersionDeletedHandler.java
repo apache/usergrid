@@ -28,6 +28,8 @@ import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
+import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
+import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.impl.IndexScopeImpl;
@@ -80,7 +82,7 @@ public class EntityVersionDeletedHandler implements EntityVersionDeleted {
 
         CpEntityManagerFactory cpemf = ( CpEntityManagerFactory ) emf;
 
-        final EntityIndex ei = cpemf.getManagerCache().getEntityIndex( scope );
+        final ApplicationEntityIndex ei = cpemf.getManagerCache().getEntityIndex( scope );
 
         final IndexScope indexScope =
             new IndexScopeImpl( new SimpleId( scope.getOwner().getUuid(), scope.getOwner().getType() ),

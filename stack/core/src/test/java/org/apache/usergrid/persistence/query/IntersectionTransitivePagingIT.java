@@ -90,7 +90,7 @@ public class IntersectionTransitivePagingIT{
         io.doSetup();
 
 
-        int writeSize =200;
+        int writeSize = 10;
 
         List<UUID> expected = new ArrayList<UUID>(writeSize);
 

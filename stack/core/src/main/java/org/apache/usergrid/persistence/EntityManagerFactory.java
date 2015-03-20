@@ -117,8 +117,6 @@ public interface EntityManagerFactory {
 
     public UUID getDefaultAppId();
 
-    public void refreshIndex();
-
     public void rebuildAllIndexes( ProgressObserver po ) throws Exception;
 
     public void rebuildInternalIndexes( ProgressObserver po ) throws Exception;

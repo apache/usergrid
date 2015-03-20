@@ -19,6 +19,8 @@ package org.apache.usergrid;
 
 import java.util.UUID;
 
+import com.google.inject.Injector;
+import org.apache.usergrid.persistence.index.EntityIndex;
 import org.junit.rules.TestRule;
 
 import org.apache.usergrid.mq.QueueManagerFactory;
@@ -42,4 +44,8 @@ public interface CoreITSetup extends TestRule {
     UUID createApplication( String organizationName, String applicationName ) throws Exception;
 
     void dump( String name, Object obj );
+
+    Injector getInjector();
+
+    TestEntityIndex getEntityIndex();
 }

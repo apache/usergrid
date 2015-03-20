@@ -50,15 +50,11 @@ import org.apache.usergrid.persistence.index.query.tree.WithinOperand;
 
 import com.google.common.base.Joiner;
 
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ANALYZED_STRING_PREFIX;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.BOOLEAN_PREFIX;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.GEO_PREFIX;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.NUMBER_PREFIX;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.STRING_PREFIX;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.*;
 
 
 /**
- * Visits tree of  parsed Query operands and populates 
+ * Visits tree of  parsed Query operands and populates
  * ElasticSearch QueryBuilder that represents the query.
  */
 public class EsQueryVistor implements QueryVisitor {
@@ -67,7 +63,7 @@ public class EsQueryVistor implements QueryVisitor {
     Stack<QueryBuilder> stack = new Stack<QueryBuilder>();
     List<FilterBuilder> filterBuilders = new ArrayList<FilterBuilder>();
 
-    
+
     @Override
     public void visit( AndOperand op ) throws IndexException {
 
@@ -157,14 +153,14 @@ public class EsQueryVistor implements QueryVisitor {
         Object value = op.getLiteral().getValue();
 
         BoolQueryBuilder qb = QueryBuilders.boolQuery(); // let's do a boolean OR
-        qb.minimumNumberShouldMatch(1); 
+        qb.minimumNumberShouldMatch(1);
 
         // field is an entity/array that needs no name prefix
         qb = qb.should( QueryBuilders.matchQuery( name, value ) );
 
         // OR field is a string and needs the prefix on the name
         qb = qb.should( QueryBuilders.matchQuery( addPrefix( value.toString(), name, true), value));
-        
+
         stack.push( qb );
     }
 
@@ -186,7 +182,7 @@ public class EsQueryVistor implements QueryVisitor {
         FilterBuilder fb = FilterBuilders.geoDistanceFilter( name )
            .lat( lat ).lon( lon ).distance( distance, DistanceUnit.METERS );
         filterBuilders.add( fb );
-    } 
+    }
 
 
     @Override
@@ -222,19 +218,19 @@ public class EsQueryVistor implements QueryVisitor {
             qb.minimumNumberShouldMatch(1);
 
             // field is an entity/array that does not need a prefix on its name
-            // TODO is this right now that we've updated our doc structure?  
+            // TODO is this right now that we've updated our doc structure?
             // Should this be "must" instead of should?
             qb = qb.should( QueryBuilders.wildcardQuery( name, svalue ) );
-           
+
             // or field is just a string that does need a prefix
             if ( svalue.indexOf("*") != -1 ) {
                 qb = qb.should( QueryBuilders.wildcardQuery( addPrefix( value, name ), svalue ) );
             } else {
                 qb = qb.should( QueryBuilders.termQuery(     addPrefix( value, name ), value ));
-            } 
+            }
             stack.push( qb );
             return;
-        } 
+        }
 
         // assume all other types need prefix
         stack.push( QueryBuilders.termQuery( addPrefix( value, name ), value ));
@@ -276,29 +272,38 @@ public class EsQueryVistor implements QueryVisitor {
         if ( parts.length > 1 ) {
             name = parts[ parts.length - 1 ];
         }
-        
+
         if ( value instanceof String && analyzed ) {
             name = addAnalyzedStringPrefix( name );
 
         } else if ( value instanceof String ) {
             name = addStringPrefix( name );
 
-        } else if ( value instanceof Number ) {
-            name = addNumberPrefix( name );
+        }else if ( value instanceof Integer ) {
+            name = addLongPrefix(name);
+
+        }else if ( value instanceof Long ) {
+            name = addLongPrefix(name);
+
+        } else if ( value instanceof Float ) {
+            name = addDoublePrefix(name);
+
+        }else if ( value instanceof Float ) {
+            name = addDoublePrefix(name);
 
         } else if ( value instanceof Boolean ) {
-            name = addBooleanPrefix( name );
+            name = addBooleanPrefix(name);
 
         } else if ( value instanceof UUID ) {
-            name = addStringPrefix( name );
+            name = addStringPrefix(name);
         }
 
-        // re-create nested property name 
+        // re-create nested property name
         if ( parts.length > 1 ) {
             parts[parts.length - 1] = name;
             Joiner joiner = Joiner.on(".").skipNulls();
             return joiner.join(parts);
-        } 
+        }
 
         return name;
     }
@@ -307,34 +312,41 @@ public class EsQueryVistor implements QueryVisitor {
     private String addAnalyzedStringPrefix( String name ) {
         if ( name.startsWith( ANALYZED_STRING_PREFIX ) ) {
             return name;
-        }  
+        }
         return ANALYZED_STRING_PREFIX + name;
-    } 
-   
+    }
+
 
     private String addStringPrefix( String name ) {
         if ( name.startsWith( STRING_PREFIX ) ) {
             return name;
-        } 
+        }
         return STRING_PREFIX + name;
-    } 
-   
+    }
 
-    private String addNumberPrefix( String name ) {
-        if ( name.startsWith( NUMBER_PREFIX ) ) {
+
+    private String addDoublePrefix( String name ) {
+        if ( name.startsWith( DOUBLE_PREFIX ) ) {
             return name;
-        } 
-        return NUMBER_PREFIX + name;
-    } 
-   
+        }
+        return DOUBLE_PREFIX + name;
+    }
+
+    private String addLongPrefix( String name ) {
+        if ( name.startsWith( LONG_PREFIX ) ) {
+            return name;
+        }
+        return LONG_PREFIX + name;
+    }
+
 
     private String addBooleanPrefix( String name ) {
         if ( name.startsWith( BOOLEAN_PREFIX ) ) {
             return name;
-        } 
+        }
         return BOOLEAN_PREFIX + name;
-    } 
-   
+    }
+
 
     @Override
     public QueryBuilder getQueryBuilder() {
@@ -354,10 +366,10 @@ public class EsQueryVistor implements QueryVisitor {
 			for ( FilterBuilder fb : filterBuilders ) {
 				if ( andFilter == null ) {
 					andFilter = FilterBuilders.andFilter( fb );
-				} else {	
+				} else {
 					andFilter = FilterBuilders.andFilter( andFilter, fb );
 				}
-			}	
+			}
 
 		} else if ( !filterBuilders.isEmpty() ) {
 			return filterBuilders.get(0);
