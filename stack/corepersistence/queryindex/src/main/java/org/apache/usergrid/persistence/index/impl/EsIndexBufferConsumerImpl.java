@@ -321,19 +321,15 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
         failureMonitor.success();
 
         for (BulkItemResponse response : responses) {
+
             if (response.isFailed()) {
-
-                final BulkItemResponse.Failure failure = response.getFailure();
-
-                final String message;
-
-                if(failure != null) {
-                    message =  "Unable to index documents.  Errors are :" + response.getFailure().getMessage();
-                }else{
-                    message =  "Unable to index documents.  Response is :" + response.getResponse();
-                }
-
-                throw new RuntimeException(message);
+                // log error and continue processing
+                log.error("Unable to index id={}, type={}, index={}, failureMessage={} ",
+                    response.getId(),
+                    response.getType(),
+                    response.getIndex(),
+                    response.getFailureMessage()
+                );
             }
         }
     }
