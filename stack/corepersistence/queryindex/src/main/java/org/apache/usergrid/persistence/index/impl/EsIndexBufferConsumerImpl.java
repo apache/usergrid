@@ -329,6 +329,8 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
 
         failureMonitor.success();
 
+        boolean error = false;
+
         for (BulkItemResponse response : responses) {
 
             if (response.isFailed()) {
@@ -339,7 +341,14 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
                     response.getIndex(),
                     response.getFailureMessage()
                 );
+
+                error = true;
             }
+        }
+
+        if ( error ) {
+            // TODO: throw error once onErrorResumeNext() implemented in startWorker()
+            //throw new RuntimeException("Error during processing of bulk index operations")
         }
     }
 }
