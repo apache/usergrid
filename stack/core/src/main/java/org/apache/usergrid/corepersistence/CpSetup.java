@@ -107,11 +107,6 @@ public class CpSetup implements Setup {
 
         setupStaticKeyspace();
 
-        ApplicationScope applicationScope = new ApplicationScopeImpl(new SimpleId( CpNamingUtils.SYSTEM_APP_ID,"application"));
-        ApplicationEntityIndex applicationEntityIndex = entityIndexFactory.createApplicationEntityIndex(applicationScope);
-        //force the EMF creation of indexes before creating the default applications
-        applicationEntityIndex.initializeIndex();
-
         injector.getInstance( DataMigrationManager.class ).migrate();
 
         logger.info( "Setting up default applications" );

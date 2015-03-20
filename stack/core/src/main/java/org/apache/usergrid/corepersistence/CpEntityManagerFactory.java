@@ -253,7 +253,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                                        Map<String, Object> properties ) throws Exception {
 
 
-
         //Ensure our management system exists before creating our application
         init();
 
@@ -266,8 +265,11 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             throw new ApplicationAlreadyExistsException( appName );
         }
 
-        getSetup().setupApplicationKeyspace( applicationId, appName );
+        ApplicationScope applicationScope = new ApplicationScopeImpl(new SimpleId( applicationId,"application"));
+        ApplicationEntityIndex applicationEntityIndex = entityIndexFactory.createApplicationEntityIndex(applicationScope);
+        applicationEntityIndex.initializeIndex();
 
+        getSetup().setupApplicationKeyspace( applicationId, appName );
 
         final Optional<UUID> cachedValue = orgApplicationCache.getOrganizationId( organizationName );
 
