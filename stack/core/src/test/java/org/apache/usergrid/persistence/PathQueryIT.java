@@ -65,7 +65,7 @@ public class PathQueryIT extends AbstractCoreIT {
             }
         }
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         // pick an arbitrary user, ensure it has 5 devices
         Results devices = em.getCollection( users.get( 10 ), "devices", null, 20, Level.IDS, false );
@@ -137,7 +137,7 @@ public class PathQueryIT extends AbstractCoreIT {
             }
         }
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         // pick an arbitrary group, ensure it has 7 users
         Results ru = em.getCollection( groups.get( 2 ), "users", null, 20, Level.IDS, false );
@@ -154,7 +154,7 @@ public class PathQueryIT extends AbstractCoreIT {
             }
         }
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         // pick an arbitrary user, ensure it has 7 devices
         Results rd = em.getCollection( users.get( 6 ), "devices", null, 20, Level.IDS, false );

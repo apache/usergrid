@@ -37,8 +37,8 @@ public class UsersServiceIT extends AbstractServiceIT {
 
         Entity user = app.create( "user" );
         assertNotNull( user );
+        setup.getEntityIndex().refresh();
 
-        app.getEntityManager().refreshIndex();
 
         app.testRequest( ServiceAction.POST, 1, "users", user.getUuid(), "roles", "admin" );
         app.testRequest( ServiceAction.POST, 1, "users", user.getUuid(), "roles", "manager" );

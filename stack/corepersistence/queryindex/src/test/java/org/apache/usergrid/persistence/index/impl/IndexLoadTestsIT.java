@@ -22,6 +22,7 @@ package org.apache.usergrid.persistence.index.impl;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -69,6 +70,9 @@ public class IndexLoadTestsIT extends BaseIT {
     @Inject
     public EntityIndexFactory entityIndexFactory;
 
+    @Inject
+    public EntityIndex index;
+
 
     @Test
     public void testHeavyLoad() {
@@ -78,19 +82,19 @@ public class IndexLoadTestsIT extends BaseIT {
         final Id applicationId = new SimpleId( applicationUUID, "application" );
         final ApplicationScope scope = new ApplicationScopeImpl( applicationId );
 
-        final EntityIndex index = entityIndexFactory.createEntityIndex( scope );
 
         //create our index if it doesn't exist
         index.initializeIndex();
 
-        final Observable<Entity> createEntities = createStreamFromWorkers( index, applicationId );
+        ApplicationEntityIndex applicationEntityIndex = entityIndexFactory.createApplicationEntityIndex(scope);
+        final Observable<Entity> createEntities = createStreamFromWorkers( applicationEntityIndex, applicationId );
 
         //run them all
         createEntities.toBlocking().last();
     }
 
 
-    public Observable<Entity> createStreamFromWorkers( final EntityIndex entityIndex, final Id ownerId ) {
+    public Observable<Entity> createStreamFromWorkers( final ApplicationEntityIndex entityIndex, final Id ownerId ) {
 
         //create a sequence of observables.  Each index will be it's own worker thread using the Schedulers.newthread()
         return Observable.range( 0, indexTestFig.getNumberOfWorkers() ).flatMap(
@@ -98,7 +102,7 @@ public class IndexLoadTestsIT extends BaseIT {
     }
 
 
-    private Observable<Entity> createWriteObservable( final EntityIndex entityIndex, final Id ownerId,
+    private Observable<Entity> createWriteObservable( final ApplicationEntityIndex entityIndex, final Id ownerId,
                                                       final int workerIndex ) {
 
 

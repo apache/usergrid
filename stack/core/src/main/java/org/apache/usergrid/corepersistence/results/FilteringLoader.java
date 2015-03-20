@@ -30,6 +30,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,7 +83,7 @@ public class FilteringLoader implements ResultsLoader {
         this.applicationScope = applicationScope;
         this.indexScope = indexScope;
 
-        final EntityIndex index = managerCache.getEntityIndex( applicationScope );
+        final ApplicationEntityIndex index = managerCache.getEntityIndex( applicationScope );
 
         indexBatch = index.createBatch();
     }

@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 
+import com.google.inject.Injector;
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.batch.JobExecution.Status;
 import org.apache.usergrid.batch.JobRuntime;
@@ -35,6 +36,7 @@ import org.apache.usergrid.mq.QueueQuery;
 import org.apache.usergrid.mq.QueueResults;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.Schema;
@@ -49,7 +51,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
 
 /**
- * Should be referenced by services as a SchedulerService instance. Only the internal job 
+ * Should be referenced by services as a SchedulerService instance. Only the internal job
  * runtime should refer to this as a JobAccessor
  */
 public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobRuntimeService {
@@ -74,6 +76,8 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
 
     /** Timeout for how long to set the transaction timeout from the queue. Default is 30000 */
     private long jobTimeout = 30000;
+    private Injector injector;
+    private EntityIndex entityIndex;
 
 
     /**
@@ -141,7 +145,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
          */
         try {
             LOG.debug( "deleteJob {}", jobId );
-            getEm().delete( new SimpleEntityRef( 
+            getEm().delete( new SimpleEntityRef(
                 Schema.getDefaultSchema().getEntityType(JobData.class), jobId ) );
         }
         catch ( Exception e ) {
@@ -319,7 +323,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
 
         String jobDataType = Schema.getDefaultSchema().getEntityType(JobData.class);
 
-        return getEm().searchCollection( getEm().getApplicationRef(), 
+        return getEm().searchCollection( getEm().getApplicationRef(),
                 Schema.defaultCollectionName(jobDataType), query );
     }
 
@@ -400,6 +404,10 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
         this.emf = emf;
     }
 
+    /** @param injector **/
+    @Autowired
+    public void setInjector( Injector injector){ this.injector = injector;}
+
 
     /** @param jobQueueName the jobQueueName to set */
     public void setJobQueueName( String jobQueueName ) {
@@ -428,6 +436,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
 
     @Override
     public void refreshIndex() {
-        getEm().refreshIndex();
+        this.entityIndex = entityIndex == null ? injector.getInstance(EntityIndex.class) : entityIndex;
+        entityIndex.refresh();
     }
 }

@@ -19,6 +19,8 @@ package org.apache.usergrid.corepersistence;
 
 import java.util.UUID;
 
+import com.google.inject.Binding;
+import org.apache.usergrid.persistence.index.EntityIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,6 +66,7 @@ public class CpSetup implements Setup {
     private final CassandraService cass;
 
     private final EntityManagerFactory emf;
+    private final EntityIndex entityIndex;
 
 
     /**
@@ -75,6 +78,7 @@ public class CpSetup implements Setup {
         this.emf = emf;
         this.cass = cassandraService;
         this.injector = injector;
+        this.entityIndex = injector.getInstance(EntityIndex.class);
     }
 
 
@@ -95,7 +99,7 @@ public class CpSetup implements Setup {
         setupStaticKeyspace();
 
         //force the EMF creation of indexes before creating the default applications
-        emf.refreshIndex();
+        entityIndex.initializeIndex();
 
         injector.getInstance( DataMigrationManager.class ).migrate();
 

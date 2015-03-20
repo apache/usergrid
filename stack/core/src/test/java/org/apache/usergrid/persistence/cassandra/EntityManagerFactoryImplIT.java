@@ -116,7 +116,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
         properties2.put( "Year", 1992 );
         Entity film2 = em.create( "film", properties2 );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         // TODO: this assertion should work!
         //assertNotNull( "cannot lookup app by name", setup.getEmf().lookupApplication("test-app-" + rand) );
@@ -125,7 +125,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
         setup.getEmf().deleteApplication( applicationId );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         Func2<UUID, Map<String, UUID> ,Boolean> findApps = new Func2<UUID,Map<String, UUID> ,Boolean>() {
             @Override
