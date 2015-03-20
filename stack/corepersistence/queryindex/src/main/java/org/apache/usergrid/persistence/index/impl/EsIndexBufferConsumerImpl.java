@@ -189,40 +189,49 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
                         }
                         while ( true );
                     }
-                } ).subscribeOn( Schedulers.newThread() ).doOnNext( new Action1<List<IndexOperationMessage>>() {
+                } ).subscribeOn(Schedulers.newThread()).doOnNext(new Action1<List<IndexOperationMessage>>() {
                 @Override
-                public void call( List<IndexOperationMessage> containerList ) {
-                    if ( containerList.size() == 0 ) {
+                public void call(List<IndexOperationMessage> containerList) {
+                    if (containerList.size() == 0) {
                         return;
                     }
 
-                    flushMeter.mark( containerList.size() );
+                    flushMeter.mark(containerList.size());
                     Timer.Context time = flushTimer.time();
 
 
-                    execute( containerList );
+                    execute(containerList);
 
                     time.stop();
 
                 }
-            } )
+            })
                 //ack after we process
-                .doOnNext( new Action1<List<IndexOperationMessage>>() {
+                .doOnNext(new Action1<List<IndexOperationMessage>>() {
                     @Override
-                    public void call( final List<IndexOperationMessage> indexOperationMessages ) {
-                        bufferQueue.ack( indexOperationMessages );
+                    public void call(final List<IndexOperationMessage> indexOperationMessages) {
+                        bufferQueue.ack(indexOperationMessages);
                         //release  so we know we've done processing
-                        inFlight.addAndGet( -1 * indexOperationMessages.size() );
+                        inFlight.addAndGet(-1 * indexOperationMessages.size());
                     }
-                } ).doOnError( new Action1<Throwable>() {
+                })
+                    // TODO: implement on error resume next instead of onError
+//                .onErrorResumeNext(new Func1<Throwable, Observable<IndexOperationMessage>>() {
+//
+//                    @Override
+//                    public Observable<IndexOperationMessage> call(Throwable throwable) {
+//                        return null;
+//                    }
+//                })
+                .doOnError(new Action1<Throwable>() {
                     @Override
-                    public void call( final Throwable throwable ) {
+                    public void call(final Throwable throwable) {
 
-                        log.error( "An exception occurred when trying to deque and write to elasticsearch.  Ignoring",
-                            throwable );
+                        log.error("An exception occurred when trying to deque and write to elasticsearch.  Ignoring",
+                            throwable);
                         indexErrorCounter.inc();
                     }
-                } );
+                });
 
             //start in the background
 
