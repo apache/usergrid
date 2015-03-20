@@ -204,6 +204,13 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         return indexBatchBufferProducer.put(tempContainer);
     }
 
+
+    @Override
+    public int size() {
+        return container.getDeIndexRequests().size() + container.getIndexRequests().size();
+    }
+
+
     /**
      * Set the entity as a map with the context
      *
@@ -241,23 +248,24 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
             Field field = ( Field ) f;
 
-            if ( f instanceof ListField ) {
-                List list = ( List ) field.getValue();
-                entityMap.put( field.getName().toLowerCase(),
-                        new ArrayList( processCollectionForMap( list ) ) );
 
-                if ( !list.isEmpty() ) {
-                    if ( list.get( 0 ) instanceof String ) {
-                        entityMap.put( ANALYZED_STRING_PREFIX + field.getName().toLowerCase(),
-                                new ArrayList( processCollectionForMap( list ) ) );
-                    }
-                }
-            }
-            else if ( f instanceof ArrayField ) {
+            if ( f instanceof ArrayField ) {
                 List list = ( List ) field.getValue();
                 entityMap.put( field.getName().toLowerCase(),
                         new ArrayList( processCollectionForMap( list ) ) );
             }
+            else if ( f instanceof ListField ) {
+                           List list = ( List ) field.getValue();
+                           entityMap.put( field.getName().toLowerCase(),
+                                   new ArrayList( processCollectionForMap( list ) ) );
+
+                           if ( !list.isEmpty() ) {
+                               if ( list.get( 0 ) instanceof String ) {
+                                   entityMap.put( ANALYZED_STRING_PREFIX + field.getName().toLowerCase(),
+                                           new ArrayList( processCollectionForMap( list ) ) );
+                               }
+                           }
+                       }
             else if ( f instanceof SetField ) {
                 Set set = ( Set ) field.getValue();
                 entityMap.put( field.getName().toLowerCase(),
