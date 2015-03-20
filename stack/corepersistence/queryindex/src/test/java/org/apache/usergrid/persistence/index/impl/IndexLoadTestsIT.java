@@ -81,12 +81,12 @@ public class IndexLoadTestsIT extends BaseIT {
 
         final Id applicationId = new SimpleId( applicationUUID, "application" );
         final ApplicationScope scope = new ApplicationScopeImpl( applicationId );
+        ApplicationEntityIndex applicationEntityIndex = entityIndexFactory.createApplicationEntityIndex(scope);
 
 
         //create our index if it doesn't exist
-        index.initializeIndex();
+        applicationEntityIndex.initializeIndex();
 
-        ApplicationEntityIndex applicationEntityIndex = entityIndexFactory.createApplicationEntityIndex(scope);
         final Observable<Entity> createEntities = createStreamFromWorkers( applicationEntityIndex, applicationId );
 
         //run them all

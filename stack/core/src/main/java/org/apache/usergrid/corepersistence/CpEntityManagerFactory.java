@@ -25,7 +25,9 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.hazelcast.core.IdGenerator;
 import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -92,6 +94,7 @@ import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 public class CpEntityManagerFactory implements EntityManagerFactory, ApplicationContextAware {
 
     private static final Logger logger = LoggerFactory.getLogger( CpEntityManagerFactory.class );
+    private final EntityIndexFactory entityIndexFactory;
 
     private ApplicationContext applicationContext;
 
@@ -129,6 +132,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.counterUtils = counterUtils;
         this.injector = injector;
         this.entityIndex = injector.getInstance(EntityIndex.class);
+        this.entityIndexFactory = injector.getInstance(EntityIndexFactory.class);
         this.managerCache = injector.getInstance( ManagerCache.class );
         this.metricsFactory = injector.getInstance( MetricsFactory.class );
 
@@ -160,7 +164,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                 em.getApplication();
             }
 
-            entityIndex.initializeIndex();
+            ApplicationScope appScope = new ApplicationScopeImpl(new SimpleId( CpNamingUtils.SYSTEM_APP_ID, "application" ) );
+            ApplicationEntityIndex applicationEntityIndex = entityIndexFactory.createApplicationEntityIndex(appScope);
+            applicationEntityIndex.initializeIndex();
             entityIndex.refresh();
 
 
@@ -722,9 +728,10 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     public void rebuildApplicationIndexes( UUID appId, ProgressObserver po ) throws Exception {
 
         EntityManager em = getEntityManager( appId );
-
+        ApplicationScope applicationScope = new ApplicationScopeImpl( new SimpleId( CpNamingUtils.SYSTEM_APP_ID, "application" ));
         //explicitly invoke create index, we don't know if it exists or not in ES during a rebuild.
-        entityIndex.initializeIndex();
+        ApplicationEntityIndex applicationEntityIndex = entityIndexFactory.createApplicationEntityIndex(applicationScope);
+        applicationEntityIndex.initializeIndex();
         em.reindex(po);
 
         em.reindex( po );

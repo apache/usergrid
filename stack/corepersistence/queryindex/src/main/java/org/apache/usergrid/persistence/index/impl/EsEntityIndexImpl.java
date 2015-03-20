@@ -139,16 +139,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
     }
 
-    @Override
-    public void initializeIndex() {
-        final int numberOfShards = config.getNumberOfShards();
-        final int numberOfReplicas = config.getNumberOfReplicas();
-        String[] indexes = getIndexesFromEs(AliasType.Write);
-        if(indexes == null || indexes.length==0) {
-            addIndex(null, numberOfShards, numberOfReplicas, config.getWriteConsistencyLevel());
-        }
 
-    }
 
     @Override
     public void addIndex(final String indexSuffix,final int numberOfShards, final int numberOfReplicas, final String writeConsistency) {
