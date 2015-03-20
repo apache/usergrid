@@ -20,17 +20,14 @@
 package org.apache.usergrid.setup;
 
 
-import org.apache.usergrid.persistence.core.util.AvailablePortFinder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.usergrid.cassandra.SchemaManager;
 import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.lock.MultiProcessBarrier;
 import org.apache.usergrid.lock.MultiProcessLocalLock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.concurrent.TimeoutException;
 
 
 /**
@@ -115,8 +112,18 @@ public class ConcurrentProcessSingleton {
                     +" Some other process must be binding to port " + LOCK_PORT );
             }
 
-            // Commented out: Never release the lock, otherwise some other JVM may destroy the schema
-            // lock.maybeReleaseLock();
+            Runtime.getRuntime().addShutdownHook( new Thread(  ){
+                @Override
+                public void run() {
+                    try {
+                        lock.maybeReleaseLock();
+                    }
+                    catch ( IOException e ) {
+                        throw new RuntimeException( "Unable to release lock" );
+                    }
+                }
+            });
+
         }
 
         catch ( Exception e ) {
