@@ -95,9 +95,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         ValidationUtils.verifyEntityWrite( entity );
         ValidationUtils.verifyVersion( entity.getVersion() );
         //add app id for indexing
-        entity.setField(
-            new StringField(APPLICATION_ID_FIELDNAME, IndexingUtils.idString(applicationScope.getApplication()))
-        );
+
         final String context = createContextName(applicationScope,indexScope);
 
         if ( log.isDebugEnabled() ) {
@@ -110,7 +108,8 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         ValidationUtils.verifyEntityWrite( entity );
 
         Map<String, Object> entityAsMap = entityToMap( entity, context );
-
+        //add app id
+        entityAsMap.put(APPLICATION_ID_FIELDNAME, idString(applicationScope.getApplication()));
         // need prefix here because we index UUIDs as strings
 
         // let caller add these fields if needed

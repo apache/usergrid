@@ -64,6 +64,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.*;
 
 
 /**
@@ -338,10 +339,13 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
             @Override
             public boolean doOp() {
                 try {
-                    String[] indexes = ArrayUtils.addAll(
-                        getIndexes(AliasType.Read),
-                        getIndexes(AliasType.Write)
-                    );
+
+                    Set<String> indexSet = new HashSet<>();
+                    List<String> reads =  Arrays.asList(getIndexes(AliasType.Read));
+                    List<String> writes = Arrays.asList(getIndexes(AliasType.Write));
+                    indexSet.addAll(reads);
+                    indexSet.addAll(writes);
+                    String[] indexes = indexSet.toArray(new String[0]);
 
                     if ( indexes.length == 0 ) {
                         logger.debug( "Not refreshing indexes. none found");

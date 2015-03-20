@@ -94,40 +94,35 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
     public void testUpdateVersioning() throws Exception {
 
         // turn off post processing stuff that cleans up stale entities
-        System.setProperty( EVENTS_DISABLED, "true" );
+        System.setProperty(EVENTS_DISABLED, "true");
 
         final EntityManager em = app.getEntityManager();
 
-        Entity thing = em.create( "thing", new HashMap<String, Object>() {{
-            put( "name", "thing1" );
-        }} );
+        Entity thing = em.create("thing", new HashMap<String, Object>() {{
+            put("name", "thing1");
+        }});
         app.refreshIndex();
 
-        assertEquals( 1, queryCollectionCp( "things", "thing", "select *" ).size() );
+        assertEquals(1, queryCollectionCp("things", "thing", "select *").size());
 
-        org.apache.usergrid.persistence.model.entity.Entity cpEntity = getCpEntity( thing );
+        org.apache.usergrid.persistence.model.entity.Entity cpEntity = getCpEntity(thing);
         UUID oldVersion = cpEntity.getVersion();
 
-        em.updateProperties( thing, new HashMap<String, Object>() {{
-            put( "stuff", "widget" );
-        }} );
+        em.updateProperties(thing, new HashMap<String, Object>() {{
+            put("stuff", "widget");
+        }});
         app.refreshIndex();
 
-        org.apache.usergrid.persistence.model.entity.Entity cpUpdated = getCpEntity( thing );
-        assertEquals( "widget", cpUpdated.getField( "stuff" ).getValue() );
+        org.apache.usergrid.persistence.model.entity.Entity cpUpdated = getCpEntity(thing);
+        assertEquals("widget", cpUpdated.getField("stuff").getValue());
         UUID newVersion = cpUpdated.getVersion();
 
-        assertTrue( "New version is greater than old",
-                UUIDComparator.staticCompare( newVersion, oldVersion ) > 0 );
+        assertTrue("New version is greater than old",
+            UUIDComparator.staticCompare(newVersion, oldVersion) > 0);
 
         CandidateResults results;
-        do{
-             results = queryCollectionCp( "things", "thing", "select *" );
-            if(results.size()!=2){
-                Thread.sleep(200);
-            }
-        }while(results.size()!=2);
-        assertEquals( 2, results.size() );
+        results = queryCollectionCp("things", "thing", "select *");
+        assertEquals(2, results.size());
     }
 
 
@@ -160,37 +155,28 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
         CandidateResults candidateResults = null;
 
-        do{
-            candidateResults = queryCollectionCp("things", "thing", "select * order by ordinal desc");
-            if(candidateResults.size()!=2){
-                Thread.sleep(200);
-            }
-        }while(candidateResults.size()<2);
+
+        candidateResults = queryCollectionCp("things", "thing", "select * order by ordinal desc");
+        if(candidateResults.size()!=2){
+            Thread.sleep(200);
+        }
+
 
         assertEquals(2, candidateResults.size());
 
         //now run enable events and ensure we clean up
         System.setProperty(EVENTS_DISABLED, "false");
 
-        Results results = null;
-        do{
-            results =  queryCollectionEm("things", "select * order by ordinal desc");;
-            if(results.size()!=1){
-                Thread.sleep(200);
-            }
-        }while(results.size()<1);
+        Results results =  queryCollectionEm("things", "select * order by ordinal desc");
+
         assertEquals( 1, results.size() );
         assertEquals(1, results.getEntities().get( 0 ).getProperty( "ordinal" ));
 
         app.refreshIndex();
 
         //ensure it's actually gone
-        do{
-            candidateResults = queryCollectionCp( "things", "thing", "select * order by ordinal desc" );
-            if(candidateResults.size()!=1){
-                Thread.sleep(200);
-            }
-        }while(candidateResults.size()!=1);
+        candidateResults = queryCollectionCp( "things", "thing", "select * order by ordinal desc" );
+
         assertEquals(1, candidateResults.size());
 
         assertEquals(newVersion, candidateResults.get(0).getVersion());
@@ -397,7 +383,6 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
             //trigger the repair
             results = queryCollectionEm("things", "select *");
             crs = queryCollectionCp("things", "thing", "select *");
-            Thread.sleep(100);
 
         } while ((results.hasCursor() || crs.size() > 0) && count++ < 2000 );
 
@@ -462,8 +447,6 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         // wait for indexes to be cleared for the deleted entities
         count = 0;
         do {
-            queryCollectionEm("dogs", "select *");
-            Thread.sleep(100);
             crs = queryCollectionCp("dogs", "dog", "select *");
         } while ( crs.size() != numEntities && count++ < 15 );
 

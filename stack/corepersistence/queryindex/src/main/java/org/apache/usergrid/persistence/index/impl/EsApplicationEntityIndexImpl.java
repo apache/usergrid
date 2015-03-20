@@ -22,6 +22,8 @@ package org.apache.usergrid.persistence.index.impl;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
 import com.google.common.base.Preconditions;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import org.apache.commons.lang3.ArrayUtils;
@@ -62,9 +64,7 @@ import rx.Observable;
 import rx.functions.Action1;
 import rx.schedulers.Schedulers;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -89,6 +89,8 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex{
     private final IndexFig indexFig;
     private final EsProvider esProvider;
     private final IndexIdentifier.IndexAlias alias;
+    private final Timer deleteApplicationTimer;
+    private final Meter deleteApplicationMeter;
     private FailureMonitor failureMonitor;
     private final int cursorTimeout;
     @Inject
@@ -109,10 +111,15 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex{
 
         mapManager = mapManagerFactory.createMapManager(mapScope);
         this.searchTimer = metricsFactory
-            .getTimer(EsEntityIndexImpl.class, "search.timer");
+            .getTimer(EsApplicationEntityIndexImpl.class, "search.timer");
         this.cursorTimer = metricsFactory
-            .getTimer(EsEntityIndexImpl.class, "search.cursor.timer");
+            .getTimer(EsApplicationEntityIndexImpl.class, "search.cursor.timer");
         this.cursorTimeout = config.getQueryCursorTimeout();
+
+        this.deleteApplicationTimer = metricsFactory
+            .getTimer(EsApplicationEntityIndexImpl.class, "delete.application");
+        this.deleteApplicationMeter = metricsFactory
+            .getMeter(EsApplicationEntityIndexImpl.class, "delete.application.meter");
 
         this.alias = indexIdentifier.getAlias();
 
@@ -255,6 +262,69 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex{
 
         return parseResults(searchResponse, query);
     }
+
+    /**
+     * Completely delete an index.
+     */
+    public Observable deleteApplication() {
+        deleteApplicationMeter.mark();
+        String idString = IndexingUtils.idString(applicationScope.getApplication());
+        final TermQueryBuilder tqb = QueryBuilders.termQuery(APPLICATION_ID_FIELDNAME, idString);
+        Set<String> indexSet = new HashSet<>();
+        List<String> reads =  Arrays.asList(entityIndex.getIndexes(AliasedEntityIndex.AliasType.Read));
+        List<String> writes = Arrays.asList(entityIndex.getIndexes(AliasedEntityIndex.AliasType.Write));
+        indexSet.addAll(reads);
+        indexSet.addAll(writes);
+        String[] indexes = indexSet.toArray(new String[0]);
+        Timer.Context timer = deleteApplicationTimer.time();
+        //Added For Graphite Metrics
+        return Observable.from(indexes)
+            .flatMap(index -> {
+
+                final ListenableActionFuture<DeleteByQueryResponse> response = esProvider.getClient()
+                    .prepareDeleteByQuery(alias.getWriteAlias()).setQuery(tqb).execute();
+
+                response.addListener(new ActionListener<DeleteByQueryResponse>() {
+
+                    @Override
+                    public void onResponse(DeleteByQueryResponse response) {
+                        checkDeleteByQueryResponse(tqb, response);
+                    }
+
+                    @Override
+                    public void onFailure(Throwable e) {
+                        logger.error("failed on delete index", e);
+                    }
+                });
+                return Observable.from(response);
+            })
+            .doOnCompleted(() -> timer.stop());
+    }
+
+    /**
+     * Validate the response doesn't contain errors, if it does, fail fast at the first error we encounter
+     */
+    private void checkDeleteByQueryResponse(
+        final QueryBuilder query, final DeleteByQueryResponse response ) {
+
+        for ( IndexDeleteByQueryResponse indexDeleteByQueryResponse : response ) {
+            final ShardOperationFailedException[] failures = indexDeleteByQueryResponse.getFailures();
+
+            for ( ShardOperationFailedException failedException : failures ) {
+                logger.error( String.format("Unable to delete by query %s. "
+                            + "Failed with code %d and reason %s on shard %s in index %s",
+                        query.toString(),
+                        failedException.status().getStatus(),
+                        failedException.reason(),
+                        failedException.shardId(),
+                        failedException.index() )
+                );
+            }
+
+        }
+    }
+
+
 
 
     private CandidateResults parseResults( final SearchResponse searchResponse, final Query query ) {
