@@ -35,6 +35,7 @@ import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import org.elasticsearch.action.ActionFuture;
 
+import org.elasticsearch.action.ShardOperationFailedException;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.cluster.tasks.PendingClusterTasksRequest;
@@ -47,6 +48,7 @@ import org.elasticsearch.action.admin.indices.alias.IndicesAliasesResponse;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
 
+import org.elasticsearch.action.admin.indices.refresh.RefreshResponse;
 import org.elasticsearch.client.AdminClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
@@ -346,9 +348,20 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
                         return true;
                     }
                     //Added For Graphite Metrics
-                    esProvider.getClient().admin().indices().prepareRefresh( indexes ).execute().actionGet();
+                    RefreshResponse response = esProvider.getClient().admin().indices().prepareRefresh( indexes ).execute().actionGet();
+                    int failedShards = response.getFailedShards();
+                    int successfulShards = response.getSuccessfulShards();
+                    ShardOperationFailedException[] sfes = response.getShardFailures();
+                    if(sfes!=null) {
+                        for (ShardOperationFailedException sfe : sfes) {
+                            logger.error("Failed to refresh index:{} reason:{}", sfe.index(), sfe.reason());
+                        }
+                    }
+                    logger.debug("Refreshed indexes: {},success:{} failed:{} ", StringUtils.join(indexes, ", "),successfulShards,failedShards);
                     timeRefreshIndex.stop();
-                    logger.debug("Refreshed indexes: {}", StringUtils.join(indexes, ", "));
+                    if(failedShards>0){
+                        throw new RuntimeException("Failed to update all shards in refresh operation");
+                    }
                     return true;
                 }
                 catch ( IndexMissingException e ) {
