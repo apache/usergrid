@@ -76,7 +76,7 @@ public class CountingMutatorIT extends AbstractCoreIT {
         properties.put( "username", "testuser" );
         properties.put( "email", "test@foo.bar" );
         Entity created = em.create( "user", properties );
-        em.refreshIndex();
+        app.refreshIndex();
 
         Entity returned = em.get( created.getUuid() );
 
@@ -91,7 +91,7 @@ public class CountingMutatorIT extends AbstractCoreIT {
 
 
             Entity connectedEntity = em.create( "user", connectedProps );
-            em.refreshIndex();
+            app.refreshIndex();
 
             // Connect from our new entity to our root one so it's updated when paging
             em.createConnection( connectedEntity, "following", returned );

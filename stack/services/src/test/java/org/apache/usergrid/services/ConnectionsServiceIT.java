@@ -98,14 +98,16 @@ public class ConnectionsServiceIT extends AbstractServiceIT {
       Entity bar = app.testRequest( ServiceAction.POST, 1, "bars" ).getEntity();
       assertNotNull( bar );
 
-      app.getEntityManager().refreshIndex();
+        setup.getEntityIndex().refresh();
 
-      //POST users/conn-user1/user2/UUID
+
+        //POST users/conn-user1/user2/UUID
       app.testRequest( ServiceAction.POST, 1, "foos", "foo", "bars", bar.getUuid() ); // should succeed
 
-      app.getEntityManager().refreshIndex();
+        setup.getEntityIndex().refresh();
 
-      try {
+
+        try {
         //POST users/conn-user1/user2/bar
         app.testRequest( ServiceAction.POST, 1, "foos", "foo", "bars", "bar" );
         Assert.fail();

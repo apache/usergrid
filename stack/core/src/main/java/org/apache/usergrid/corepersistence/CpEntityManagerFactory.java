@@ -309,7 +309,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         catch ( DuplicateUniquePropertyExistsException e ) {
             throw new ApplicationAlreadyExistsException( appName );
         }
-        em.refreshIndex();
+        entityIndex.refresh();
 
         // create application entity
         if ( properties == null ) {
@@ -320,7 +320,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         appEm.create(applicationId, TYPE_APPLICATION, properties);
         appEm.resetRoles();
-        appEm.refreshIndex();
+        entityIndex.refresh();
 
         logger.info("Initialized application {}", appName );
 
@@ -358,7 +358,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             em.delete(appToDelete);
 
         }
-        em.refreshIndex();
+        entityIndex.refresh();
     }
 
 
@@ -383,7 +383,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         appProps.put("type", "appinfo");
         Entity restoredApp = em.create("appinfo", appToRestore.getProperties());
 
-        em.refreshIndex();
+        entityIndex.refresh();
 
         // rebuild the apps index
         this.rebuildApplicationIndexes(applicationId, new ProgressObserver() {

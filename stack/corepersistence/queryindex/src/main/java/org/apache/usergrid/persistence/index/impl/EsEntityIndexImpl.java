@@ -327,7 +327,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
     public void refresh() {
         refreshIndexMeter.mark();
-
+        final Timer.Context timeRefreshIndex = refreshTimer.time();
         BetterFuture future = indexBatchBufferProducer.put(new IndexOperationMessage());
         future.get();
         //loop through all batches and retrieve promises and call get
@@ -346,7 +346,6 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
                         return true;
                     }
                     //Added For Graphite Metrics
-                    Timer.Context timeRefreshIndex = refreshTimer.time();
                     esProvider.getClient().admin().indices().prepareRefresh( indexes ).execute().actionGet();
                     timeRefreshIndex.stop();
                     logger.debug("Refreshed indexes: {}", StringUtils.join(indexes, ", "));

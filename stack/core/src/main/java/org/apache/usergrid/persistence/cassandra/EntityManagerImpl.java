@@ -2884,11 +2884,6 @@ public class EntityManagerImpl implements EntityManager {
         return Results.fromEntities( entities );
     }
 
-    @Override
-    public void refreshIndex() {
-        // no action necessary
-    }
-
 
 
     @Override

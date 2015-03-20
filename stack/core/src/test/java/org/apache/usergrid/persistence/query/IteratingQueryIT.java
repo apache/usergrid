@@ -1123,7 +1123,7 @@ public class IteratingQueryIT {
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        app.getEntityManager().refreshIndex();
+        app.refreshIndex();
 
         Query query = new Query();
         query.setLimit( 100 );
@@ -1224,7 +1224,7 @@ public class IteratingQueryIT {
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        app.getEntityManager().refreshIndex();
+        app.refreshIndex();
 
         Query query = Query.fromQL( "select * order by boolean desc, index asc" );
         query.setLimit( queryLimit );
@@ -1330,7 +1330,7 @@ public class IteratingQueryIT {
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        app.getEntityManager().refreshIndex();
+        app.refreshIndex();
 
         Query query =
                 Query.fromQL( "select * where intersect = true OR intersect2 = true order by created, intersect desc" );

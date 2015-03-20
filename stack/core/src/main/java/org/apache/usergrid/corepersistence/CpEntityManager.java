@@ -2884,13 +2884,6 @@ public class CpEntityManager implements EntityManager {
     }
 
 
-    @Override
-    public void refreshIndex() {
-
-        // refresh factory indexes
-        emf.refreshIndex();
-    }
-
 
     @Override
     public void flushManagerCaches() {

@@ -22,6 +22,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
+import com.google.inject.Injector;
+import org.apache.usergrid.persistence.index.EntityIndex;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -49,6 +51,7 @@ public class CoreApplication implements Application, TestRule {
     protected CoreITSetup setup;
     protected EntityManager em;
     protected Map<String, Object> properties = new LinkedHashMap<String, Object>();
+    private EntityIndex entityIndex;
 
 
     public CoreApplication( CoreITSetup setup ) {
@@ -143,7 +146,7 @@ public class CoreApplication implements Application, TestRule {
 
 
     protected void after( Description description ) {
-        LOG.info( "Test {}: finish with application", description.getDisplayName() );
+        LOG.info("Test {}: finish with application", description.getDisplayName());
 
 //        try {
 //            setup.getEmf().getEntityManager(id).().get();
@@ -165,7 +168,9 @@ public class CoreApplication implements Application, TestRule {
         assertNotNull( id );
 
         em = setup.getEmf().getEntityManager( id );
-        assertNotNull( em );
+        Injector injector = setup.getInjector();
+        entityIndex = injector.getInstance(EntityIndex.class);
+        assertNotNull(em);
 
         LOG.info( "Created new application {} in organization {}", appName, orgName );
 
@@ -211,7 +216,7 @@ public class CoreApplication implements Application, TestRule {
 
     @Override
     public void refreshIndex() {
-        em.refreshIndex();
+        entityIndex.refresh();
     }
 
 

@@ -145,7 +145,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
                     shepardCount++;
                 }
 
-                em.refreshIndex();
+                app.refreshIndex();
 
 //                em.createConnection(entity, "herds", cat1);
 //                em.createConnection(entity, "herds", cat2);
@@ -165,7 +165,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
         }
 
         logger.info("Created {} entities", entityCount);
-        em.refreshIndex();
+        app.refreshIndex();
 
         // ----------------- test that we can read them, should work fine
 
@@ -283,7 +283,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
                 entityMap.put("key", entityCount );
                 entity = em.create("testType", entityMap );
 
-                em.refreshIndex();
+                app.refreshIndex();
 
                 em.createConnection(entity, "herds", cat1);
                 em.createConnection(entity, "herds", cat2);
@@ -303,7 +303,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
         }
 
         logger.info("Created {} entities", entityCount);
-        em.refreshIndex();
+        app.refreshIndex();
 
         // ----------------- test that we can read them, should work fine
 
@@ -363,7 +363,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
             registry.remove( meterName );
             logger.info("Rebuilt index");
 
-            setup.getEmf().refreshIndex();
+            app.refreshIndex();
 
         } catch (Exception ex) {
             logger.error("Error rebuilding index", ex);
@@ -394,7 +394,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
     private int readData( EntityManager em,
         String collectionName, int expectedEntities, int expectedConnections ) throws Exception {
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         Query q = Query.fromQL("select * where key1=1000");
         q.setLimit(40);

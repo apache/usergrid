@@ -70,7 +70,7 @@ public class OrganizationIT {
         //createOrganization( orgName, user, false );
         assertNotNull( organization );
 
-        setup.getEmf().getEntityManager( setup.getSmf().getManagementAppId() ).refreshIndex();
+        setup.getEntityIndex().refresh();
         Map<UUID, String> userOrganizations = setup.getMgmtSvc().getOrganizationsForAdminUser(
             organization.getOwner().getUuid() );
         assertEquals( "wrong number of organizations", 1, userOrganizations.size() );
@@ -82,8 +82,8 @@ public class OrganizationIT {
         UUID applicationId = setup.getMgmtSvc().createApplication( organization.getOrganization().getUuid(), "ed-application" ).getId();
         assertNotNull( applicationId );
 
-        setup.getEmf().getEntityManager( setup.getSmf().getManagementAppId() ).refreshIndex();
-        setup.getEmf().getEntityManager( applicationId ).refreshIndex();
+
+        setup.getEntityIndex().refresh();
 
         Map<UUID, String> applications = setup.getMgmtSvc().getApplicationsForOrganization( organization.getOrganization().getUuid() );
         assertEquals( "wrong number of applications", 1, applications.size() );
@@ -97,7 +97,7 @@ public class OrganizationIT {
 
         setup.getMgmtSvc().activateOrganization( organization2 );
 
-        setup.getEmf().getEntityManager( setup.getSmf().getManagementAppId() ).refreshIndex();
+        setup.getEntityIndex().refresh();
 
         UserInfo u = setup.getMgmtSvc().verifyAdminUserPasswordCredentials( organization.getOwner().getUuid().toString(), "test" );
         assertNotNull( u );
@@ -215,7 +215,7 @@ public class OrganizationIT {
         OrganizationInfo organization2 = setup.getMgmtSvc().createOrganization(uniqueOrg(), user, false );
         assertNotNull( organization2 );
 
-        setup.getEmf().getEntityManager( setup.getSmf().getManagementAppId() ).refreshIndex();
+        setup.getEntityIndex().refresh();
         Map<UUID, String> userOrganizations = setup.getMgmtSvc().getOrganizationsForAdminUser( user.getUuid() );
         assertEquals( "wrong number of organizations", 2, userOrganizations.size() );
 

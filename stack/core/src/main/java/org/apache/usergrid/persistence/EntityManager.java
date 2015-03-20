@@ -685,12 +685,6 @@ public interface EntityManager {
     /** @return the cass */
     CassandraService getCass();
 
-    /**
-     * Refresh the applications index -- use sparingly.
-     */
-    void refreshIndex();
-
-
     public void init( EntityManagerFactory emf, EntityIndex entityIndex, UUID applicationId);
 
     /** For testing purposes */

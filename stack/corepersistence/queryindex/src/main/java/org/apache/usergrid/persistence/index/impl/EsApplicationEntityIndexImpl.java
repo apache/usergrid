@@ -129,7 +129,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex{
     public CandidateResults search(final IndexScope indexScope, final SearchTypes searchTypes,
                                    final Query query ) {
 
-        final String context = IndexingUtils.createContextName(indexScope);
+        final String context = IndexingUtils.createContextName(applicationScope,indexScope);
         final String[] entityTypes = searchTypes.getTypeNames(applicationScope);
         QueryBuilder qb = query.createQueryBuilder(context);
         SearchResponse searchResponse;

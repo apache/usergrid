@@ -55,7 +55,7 @@ public class CollectionIoHelper implements IoHelper {
 
     @Override
     public Results getResults( Query query ) throws Exception {
-        app.getEntityManager().refreshIndex();
+        app.refreshIndex();
         return app.getEntityManager().searchCollection( app.getEntityManager().getApplicationRef(), "tests", query );
     }
 }
