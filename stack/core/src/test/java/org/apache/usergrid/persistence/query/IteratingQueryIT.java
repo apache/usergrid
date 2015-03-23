@@ -730,8 +730,8 @@ public class IteratingQueryIT {
         io.doSetup();
 
         int size = 10;
-        int queryLimit = 100;
-        int startValue = 100;
+        int queryLimit = 10;
+        int startValue = 1;
 
         long start = System.currentTimeMillis();
 
@@ -793,7 +793,7 @@ public class IteratingQueryIT {
 
         int size = 10;
         int queryLimit = 50;
-        int startValue = 100;
+        int startValue = 1;
 
         long start = System.currentTimeMillis();
 
@@ -854,8 +854,8 @@ public class IteratingQueryIT {
         io.doSetup();
 
         int size = 10;
-        int queryLimit = 100;
-        int startValue = 100;
+        int queryLimit = 10;
+        int startValue = 1;
 
         long start = System.currentTimeMillis();
 
@@ -915,7 +915,7 @@ public class IteratingQueryIT {
         io.doSetup();
 
         int size = 10;
-        int queryLimit = 100;
+        int queryLimit = 10;
         int startValue = 99;
 
         long start = System.currentTimeMillis();
@@ -976,7 +976,7 @@ public class IteratingQueryIT {
         io.doSetup();
 
         int size = 10;
-        int queryLimit = 100;
+        int queryLimit = 10;
         int startValue = 50;
         int endValue = 150;
 
@@ -1039,7 +1039,7 @@ public class IteratingQueryIT {
         io.doSetup();
 
         int size = 10;
-        int queryLimit = 100;
+        int queryLimit = 10;
         int startValue = 50;
         int endValue = 150;
 
