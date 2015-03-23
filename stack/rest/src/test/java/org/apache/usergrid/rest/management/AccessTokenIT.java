@@ -16,29 +16,25 @@
  */
 package org.apache.usergrid.rest.management;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import java.io.IOException;
+import java.util.Map;
+
+import org.junit.Test;
+
+import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource2point0.model.Entity;
+import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
+import org.apache.usergrid.rest.test.resource2point0.model.Token;
+
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.representation.Form;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import javax.ws.rs.core.MediaType;
-import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
-import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
-import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
-import org.apache.usergrid.rest.test.resource2point0.model.Entity;
-import org.apache.usergrid.rest.test.resource2point0.model.Organization;
-import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
-import org.apache.usergrid.rest.test.resource2point0.model.Token;
 
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-
-import org.jclouds.rest.annotations.Api;
-import org.junit.Ignore;
-import org.junit.Test;
+import static org.junit.Assert.fail;
 
 
 /**
@@ -107,7 +103,7 @@ public class AccessTokenIT extends AbstractRestIT {
             queryParameters.addParam( "ttl", String.valueOf(ttl) );
         return queryParameters;
     }
-    
+
     @Test
     public void meToken() throws Exception {
         tokenMeSetup( 0 );
@@ -139,221 +135,171 @@ public class AccessTokenIT extends AbstractRestIT {
         assertNotNull(orgProperties.get("name"));
         assertNotNull(orgProperties.get("properties"));
     }
-//
-//    @Test
-//    public void meTokenPost() throws Exception {
-//        Map<String, String> payload
-//                = hashMap("grant_type", "password")
-//                .map("username", "test@usergrid.com").map("password", "test");
-//
-//        JsonNode node = mapper.readTree(resource()
-//                .path("/management/me")
-//                .accept(MediaType.APPLICATION_JSON)
-//                .type(MediaType.APPLICATION_JSON_TYPE)
-//                .post(String.class, payload));
-//
-//        logNode(node);
-//        String token = node.get("access_token").textValue();
-//
-//        assertNotNull(token);
-//
-//        refreshIndex("test-organization", "test-app");
-//
-//        node = mapper.readTree(resource()
-//                .path("/management/me")
-//                .queryParam("access_token", token)
-//                .accept(MediaType.APPLICATION_JSON)
-//                .get(String.class));
-//        logNode(node);
-//    }
-//
-//    @Test
-//    public void meTokenPostForm() throws IOException {
-//
-//        Form form = new Form();
-//        form.add("grant_type", "password");
-//        form.add("username", "test@usergrid.com");
-//        form.add("password", "test");
-//
-//        JsonNode node = mapper.readTree(resource()
-//                .path("/management/me")
-//                .accept(MediaType.APPLICATION_JSON)
-//                .type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
-//                .entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE)
-//                .post(String.class));
-//
-//        logNode(node);
-//        String token = node.get("access_token").textValue();
-//
-//        assertNotNull(token);
-//
-//        refreshIndex("test-organization", "test-app");
-//
-//        node = mapper.readTree(resource()
-//                .path("/management/me")
-//                .queryParam("access_token", token)
-//                .accept(MediaType.APPLICATION_JSON).get(String.class));
-//        logNode(node);
-//    }
-//
-//    @Test
-//    public void ttlNan() throws Exception {
-//
-//        Map<String, String> payload = hashMap("grant_type", "password")
-//                .map("username", "test@usergrid.com")
-//                .map("password", "test")
-//                .map("ttl", "derp");
-//
-//        ClientResponse.Status responseStatus = null;
-//        try {
-//            resource().path("/management/token")
-//                    .accept(MediaType.APPLICATION_JSON)
-//                    .type(MediaType.APPLICATION_JSON_TYPE)
-//                    .post(String.class, payload);
-//        } catch (UniformInterfaceException uie) {
-//            responseStatus = uie.getResponse().getClientResponseStatus();
-//        }
-//
-//        assertEquals(ClientResponse.Status.BAD_REQUEST, responseStatus);
-//    }
-//
-//    @Test
-//    public void ttlOverMax() throws Exception {
-//
-//        Map<String, String> payload = hashMap("grant_type", "password")
-//                .map("username", "test@usergrid.com")
-//                .map("password", "test")
-//                .map("ttl", Long.MAX_VALUE + "");
-//
-//        ClientResponse.Status responseStatus = null;
-//
-//        try {
-//            resource().path("/management/token")
-//                    .accept(MediaType.APPLICATION_JSON)
-//                    .type(MediaType.APPLICATION_JSON_TYPE)
-//                    .post(String.class, payload);
-//        } catch (UniformInterfaceException uie) {
-//            responseStatus = uie.getResponse().getClientResponseStatus();
-//        }
-//
-//        assertEquals(ClientResponse.Status.BAD_REQUEST, responseStatus);
-//    }
-//
-//    @Test
-//    public void revokeToken() throws Exception {
-//        String token1 = super.adminToken();
-//        String token2 = super.adminToken();
-//
-//        JsonNode response = mapper.readTree(resource().path("/management/users/test")
-//                .queryParam("access_token", token1)
-//                .accept(MediaType.APPLICATION_JSON)
-//                .type(MediaType.APPLICATION_JSON_TYPE)
-//                .get(String.class));
-//
-//        assertEquals("test@usergrid.com", response.get("data").get("email").asText());
-//
-//        response = mapper.readTree(resource().path("/management/users/test")
-//                .queryParam("access_token", token2)
-//                .accept(MediaType.APPLICATION_JSON)
-//                .type(MediaType.APPLICATION_JSON_TYPE)
-//                .get(String.class));
-//
-//        assertEquals("test@usergrid.com", response.get("data").get("email").asText());
-//
-//        // now revoke the tokens
-//        response = mapper.readTree(resource().path("/management/users/test/revoketokens")
-//                .queryParam("access_token", superAdminToken())
-//                .accept(MediaType.APPLICATION_JSON)
-//                .type(MediaType.APPLICATION_JSON_TYPE)
-//                .post(String.class));
-//
-//        refreshIndex("test-organization", "test-app");
-//
-//        // the tokens shouldn't work
-//        ClientResponse.Status status = null;
-//
-//        try {
-//            response = mapper.readTree(resource().path("/management/users/test")
-//                    .queryParam("access_token", token1)
-//                    .accept(MediaType.APPLICATION_JSON)
-//                    .type(MediaType.APPLICATION_JSON_TYPE)
-//                    .get(String.class));
-//        } catch (UniformInterfaceException uie) {
-//            status = uie.getResponse().getClientResponseStatus();
-//        }
-//
-//        assertEquals(ClientResponse.Status.UNAUTHORIZED, status);
-//
-//        status = null;
-//
-//        try {
-//            response = mapper.readTree(resource().path("/management/users/test")
-//                    .queryParam("access_token", token2)
-//                    .accept(MediaType.APPLICATION_JSON)
-//                    .type(MediaType.APPLICATION_JSON_TYPE)
-//                    .get(String.class));
-//        } catch (UniformInterfaceException uie) {
-//            status = uie.getResponse().getClientResponseStatus();
-//        }
-//
-//        assertEquals(ClientResponse.Status.UNAUTHORIZED, status);
-//
-//        String token3 = super.adminToken();
-//        String token4 = super.adminToken();
-//
-//        response = mapper.readTree(resource().path("/management/users/test")
-//                .queryParam("access_token", token3)
-//                .accept(MediaType.APPLICATION_JSON)
-//                .type(MediaType.APPLICATION_JSON_TYPE)
-//                .get(String.class));
-//
-//        assertEquals("test@usergrid.com", response.get("data").get("email").asText());
-//
-//        response = mapper.readTree(resource().path("/management/users/test")
-//                .queryParam("access_token", token4)
-//                .accept(MediaType.APPLICATION_JSON)
-//                .type(MediaType.APPLICATION_JSON_TYPE)
-//                .get(String.class));
-//
-//        assertEquals("test@usergrid.com", response.get("data").get("email").asText());
-//
-//        // now revoke the token3
-//        response = mapper.readTree(resource().path("/management/users/test/revoketoken")
-//                .queryParam("access_token", token3)
-//                .queryParam("token", token3)
-//                .accept(MediaType.APPLICATION_JSON)
-//                .type(MediaType.APPLICATION_JSON_TYPE)
-//                .post(String.class));
-//
-//        // the token3 shouldn't work
-//        status = null;
-//
-//        try {
-//            response = mapper.readTree(resource().path("/management/users/test")
-//                    .queryParam("access_token", token3)
-//                    .accept(MediaType.APPLICATION_JSON)
-//                    .type(MediaType.APPLICATION_JSON_TYPE)
-//                    .get(String.class));
-//        } catch (UniformInterfaceException uie) {
-//            status = uie.getResponse().getClientResponseStatus();
-//        }
-//
-//        assertEquals(ClientResponse.Status.UNAUTHORIZED, status);
-//
-//        status = null;
-//
-//        try {
-//            response = mapper.readTree(resource().path("/management/users/test")
-//                    .queryParam("access_token", token4)
-//                    .accept(MediaType.APPLICATION_JSON)
-//                    .type(MediaType.APPLICATION_JSON_TYPE)
-//                    .get(String.class));
-//
-//            status = ClientResponse.Status.OK;
-//        } catch (UniformInterfaceException uie) {
-//            status = uie.getResponse().getClientResponseStatus();
-//        }
-//
-//        assertEquals(ClientResponse.Status.OK, status);
-//    }
+
+
+    /**
+     * Verify that we can POST and GET using the token that was returned.
+     * @throws Exception
+     */
+    @Test
+    public void meTokenPost() throws Exception {
+        Map<String, String> payload
+                = hashMap("grant_type", "password")
+                .map("username", clientSetup.getUsername()).map("password", clientSetup.getPassword());
+
+        Token token = management().me().post( Token.class, payload );
+
+        assertNotNull( token );
+        assertNotNull( token.getAccessToken() );
+        management().token().setToken( token );
+
+        refreshIndex();
+
+        assertNotNull( management().me().get( Token.class ) );
+
+    }
+
+
+    /**
+     * Verifies that we can POST using a form and GET using the token that was returned.
+     * @throws IOException
+     */
+    @Test
+    public void meTokenPostForm() throws IOException {
+
+        Form form = new Form();
+        form.add("grant_type", "password");
+        form.add("username", clientSetup.getUsername());
+        form.add("password", clientSetup.getPassword());
+
+        Token adminToken = management().me().post( Token.class,form );
+
+        assertNotNull( adminToken );
+        assertNotNull( adminToken.getAccessToken() );
+
+        refreshIndex();
+
+        assertNotNull( management().me().get( Token.class ) );
+
+    }
+
+
+    /**
+     * Checks we get approriate response when giving a bad ttl request
+     * @throws Exception
+     */
+    @Test
+    public void ttlNan() throws Exception {
+
+        Map<String, String> payload = hashMap("grant_type", "password")
+                .map("username", clientSetup.getUsername())
+                .map("password", clientSetup.getPassword())
+                .map("ttl", "derp");
+
+        try {
+            management().token().post( Token.class,payload );
+        } catch (UniformInterfaceException uie) {
+            assertEquals(ClientResponse.Status.BAD_REQUEST, uie.getResponse().getClientResponseStatus());
+        }
+
+    }
+
+    /**
+     * Checks we get approriate response when giving a bad ttl request
+     * @throws Exception
+     */
+    @Test
+    public void ttlOverMax() throws Exception {
+
+        Map<String, String> payload = hashMap("grant_type", "password")
+            .map("username", clientSetup.getUsername())
+            .map("password", clientSetup.getPassword())
+            .map("ttl", Long.MAX_VALUE + "");
+
+        try {
+            management().token().post( Token.class, payload );
+        } catch (UniformInterfaceException uie) {
+            assertEquals(ClientResponse.Status.BAD_REQUEST, uie.getResponse().getClientResponseStatus());
+        }
+
+    }
+
+    /**
+     * Tests that we can revoke all of the tokens that have been assigned to a specific user
+     * @throws Exception
+     */
+    @Test
+    public void revokeTokens() throws Exception {
+        Token token1 = getAdminToken();
+        Token token2 = getAdminToken();
+
+        // using a superuser token, revoke all tokens associated with the admin user
+        management().token().setToken( clientSetup.getSuperuserToken() );
+        management().users().user( clientSetup.getUsername() ).revokeTokens().post( ApiResponse.class );
+
+        refreshIndex();
+
+
+        //test that token 1 doesn't work
+        try {
+            management().token().setToken( token1 );
+            management().users().user( clientSetup.getUsername() ).get();
+            fail( "Token1 should have been revoked" );
+        }
+        catch ( UniformInterfaceException uie ) {
+            assertEquals( ClientResponse.Status.UNAUTHORIZED, uie.getResponse().getClientResponseStatus());
+        }
+
+
+        //test that token 2 doesn't work
+        try {
+            management().token().setToken( token2 );
+            management().users().user( clientSetup.getUsername() ).get();
+            fail( "Token2 should have been revoked" );
+        }
+        catch ( UniformInterfaceException uie ) {
+            assertEquals( ClientResponse.Status.UNAUTHORIZED, uie.getResponse().getClientResponseStatus());
+        }
+    }
+
+    /**
+     * Tests that we can revoke a single token that has been assigned to a specific user
+     * @throws Exception
+     */
+    @Test
+    public void revokeSingleToken() throws Exception {
+        Token token1 = getAdminToken();
+        Token token2 = getAdminToken();
+
+        // using a superuser token, revoke specific token associated with the admin user
+        QueryParameters queryParameters = new QueryParameters();
+        queryParameters.addParam( "token", token1.getAccessToken() );
+
+        management().token().setToken( clientSetup.getSuperuserToken() );
+        management().users().user( clientSetup.getUsername() ).revokeToken().post( ApiResponse.class,queryParameters );
+
+        refreshIndex();
+
+
+        //test that token 1 doesn't work
+        try {
+            management().token().setToken( token1 );
+            management().users().user( clientSetup.getUsername() ).get();
+            fail( "Token1 should have been revoked" );
+        }
+        catch ( UniformInterfaceException uie ) {
+            assertEquals( ClientResponse.Status.UNAUTHORIZED, uie.getResponse().getClientResponseStatus());
+        }
+
+
+        //test that token 2 still works
+        try {
+            management().token().setToken( token2 );
+            management().users().user( clientSetup.getUsername() ).get();
+        }
+        catch ( UniformInterfaceException uie ) {
+            fail( "Token2 shouldn't have been revoked" );
+
+        }
+    }
 }

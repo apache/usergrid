@@ -33,6 +33,8 @@ import java.util.Set;
 import java.util.UUID;
 
 import javax.ws.rs.core.MediaType;
+import com.sun.jersey.api.representation.Form;
+
 
 
 /**
@@ -150,6 +152,16 @@ public abstract class NamedResource implements UrlResource {
 
     }
 
+    public <T> T post(Class<T> type, QueryParameters queryParameters) {
+        WebResource resource = getResource();
+        resource = addParametersToResource(resource, queryParameters);
+        GenericType<T> gt = new GenericType<>((Class) type);
+        return resource.type(MediaType.APPLICATION_JSON_TYPE)
+                            .accept( MediaType.APPLICATION_JSON )
+                            .post(gt.getRawClass());
+
+    }
+
     public <T> T postWithToken(Class<T> type, Object requestEntity) {
         GenericType<T> gt = new GenericType<>((Class) type);
         return getResource(true).type(MediaType.APPLICATION_JSON_TYPE)
@@ -167,14 +179,15 @@ public abstract class NamedResource implements UrlResource {
 
     }
 
-    //Get Resources
-//    public Entity get() {
-//        WebResource resource = getResource(true);
-//
-//        ApiResponse response = resource.type( MediaType.APPLICATION_JSON_TYPE )
-//                                       .accept( MediaType.APPLICATION_JSON ).get( ApiResponse.class);
-//        return new Entity(response);
-//    }
+    public <T> T post(Class<T> type, Form requestEntity) {
+        GenericType<T> gt = new GenericType<>((Class) type);
+        return getResource()
+        .accept( MediaType.APPLICATION_JSON )
+        .type( MediaType.APPLICATION_FORM_URLENCODED_TYPE )
+        .entity( requestEntity, MediaType.APPLICATION_FORM_URLENCODED_TYPE )
+        .post( gt.getRawClass() );
+
+    }
 
     //For edge cases like Organizations and Tokens without any payload
     public <T> T get(Class<T> type) {
