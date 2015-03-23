@@ -23,6 +23,7 @@ package org.apache.usergrid.rest.test.resource2point0;
 
 import java.io.IOException;
 
+import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Application;
 import org.apache.usergrid.rest.test.resource2point0.model.Credentials;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
@@ -48,6 +49,7 @@ public class ClientSetup implements TestRule {
     protected String password;
     protected String orgName;
     protected String appName;
+    protected String appUuid;
     protected Token superuserToken;
     protected String superuserName = "superuser";
     protected String superuserPassword = "superpassword";
@@ -112,7 +114,8 @@ public class ClientSetup implements TestRule {
 
         //restClient.management().token().post(Token.class,new Token(username,password));
 
-        restClient.management().orgs().organization(organization.getName()).app().post(new Application(appName));
+        ApiResponse appResponse = restClient.management().orgs().organization(organization.getName()).app().post(new Application(appName));
+        appUuid = ( String ) appResponse.getEntities().get( 0 ).get( "uuid" );
         refreshIndex();
 
     }
@@ -128,6 +131,10 @@ public class ClientSetup implements TestRule {
     public String getOrganizationName(){return orgName;}
 
     public String getAppName() {return appName;}
+
+    public String getAppUuid() {
+        return appUuid;
+    }
 
     public Token getSuperuserToken() {
         return superuserToken;
