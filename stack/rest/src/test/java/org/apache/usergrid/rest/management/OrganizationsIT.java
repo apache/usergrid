@@ -73,7 +73,7 @@ public class OrganizationsIT extends AbstractRestIT {
 
         //Creates token
         Token token =
-                clientSetup.getRestClient().management().token().post( new Token( "password",
+                clientSetup.getRestClient().management().token().post(Token.class, new Token( "password",
                         organization.getUsername(), organization.getPassword() ) );
 
         assertNotNull( token );
@@ -109,7 +109,7 @@ public class OrganizationsIT extends AbstractRestIT {
 
         //Ensure that the token from the newly created organization works.
         Token tokenPayload = new Token( "password", organization.getUsername(), organization.getPassword() );
-        Token tokenReturned = clientSetup.getRestClient().management().token().post( tokenPayload );
+        Token tokenReturned = clientSetup.getRestClient().management().token().post(Token.class, tokenPayload );
 
         assertNotNull( tokenReturned );
 
@@ -131,7 +131,7 @@ public class OrganizationsIT extends AbstractRestIT {
         tokenPayload = new Token( "password", organization.getName() + "test", organization.getPassword() );
         Token tokenError = null;
         try {
-            tokenError = clientSetup.getRestClient().management().token().post( tokenPayload );
+            tokenError = clientSetup.getRestClient().management().token().post(Token.class, tokenPayload );
             fail( "Should not have created user" );
         }
         catch ( UniformInterfaceException ex ) {
@@ -163,7 +163,7 @@ public class OrganizationsIT extends AbstractRestIT {
 
         //get token from organization that was created to verify it exists.
         Token tokenPayload = new Token( "password", organization.getUsername(), organization.getPassword() );
-        Token tokenReturned = clientSetup.getRestClient().management().token().post( tokenPayload );
+        Token tokenReturned = clientSetup.getRestClient().management().token().post(Token.class, tokenPayload );
 
         assertNotNull( tokenReturned );
 
@@ -186,7 +186,7 @@ public class OrganizationsIT extends AbstractRestIT {
         tokenPayload = new Token( "password", organization.getUsername()+"test", organization.getPassword()+"test" );
         Token tokenError = null;
         try {
-            tokenError = clientSetup.getRestClient().management().token().post( tokenPayload );
+            tokenError = clientSetup.getRestClient().management().token().post(Token.class, tokenPayload );
             fail( "Should not have created organization" );
         }
         catch ( UniformInterfaceException ex ) {
@@ -225,7 +225,7 @@ public class OrganizationsIT extends AbstractRestIT {
 
         //get token from organization that was created to verify it exists. also sets the current context.
         Token tokenPayload = new Token( "password", organization.getName(), organization.getPassword() );
-        Token tokenReturned = clientSetup.getRestClient().management().token().post( tokenPayload );
+        Token tokenReturned = clientSetup.getRestClient().management().token().post(Token.class, tokenPayload );
 
         assertNotNull( tokenReturned );
 
@@ -263,7 +263,7 @@ public class OrganizationsIT extends AbstractRestIT {
 
         //get token from organization that was created to verify it exists. also sets the current context.
         Token tokenPayload = new Token( "password", organization.getName(), organization.getPassword() );
-        Token tokenReturned = clientSetup.getRestClient().management().token().post( tokenPayload );
+        Token tokenReturned = clientSetup.getRestClient().management().token().post(Token.class, tokenPayload );
 
         assertNotNull( tokenReturned );
 
@@ -310,7 +310,7 @@ public class OrganizationsIT extends AbstractRestIT {
         adminUserPayload.put( "password", username );
 
         //create adminUser
-        Entity adminUserResponse = restClient.management().orgs().organization( clientSetup.getOrganizationName() ).users().post( adminUserPayload );
+        Entity adminUserResponse = restClient.management().orgs().organization( clientSetup.getOrganizationName() ).users().post(Entity.class, adminUserPayload );
 
         //verify that the response contains the correct data
         assertNotNull( adminUserResponse );

@@ -51,11 +51,11 @@ public class ApplicationResource extends NamedResource {
             .accept(MediaType.APPLICATION_JSON).post(application);
     }
 
-    public Entity post(Entity payload){
-        ApiResponse response = getResource(true).type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
-            .post(ApiResponse.class, payload);
-        return new Entity(response);
-    }
+//    public Entity post(Entity payload){
+//        ApiResponse response = getResource(true).type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
+//            .post(ApiResponse.class, payload);
+//        return new Entity(response);
+//    }
 
 
     public Entity get() {

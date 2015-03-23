@@ -24,6 +24,8 @@ package org.apache.usergrid.rest.test.resource2point0;
 import java.io.IOException;
 
 import org.apache.usergrid.rest.test.resource2point0.model.Application;
+import org.apache.usergrid.rest.test.resource2point0.model.Credentials;
+import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.apache.usergrid.rest.test.resource2point0.model.Token;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -49,6 +51,7 @@ public class ClientSetup implements TestRule {
     protected Token superuserToken;
     protected String superuserName = "superuser";
     protected String superuserPassword = "superpassword";
+    protected Credentials clientCredentials;
 
     protected Organization organization;
     protected Application application;
@@ -91,16 +94,21 @@ public class ClientSetup implements TestRule {
         String name = testClass + "." + methodName;
 
         restClient.superuserSetup();
-        superuserToken = restClient.management().token().post( new Token( superuserName, superuserPassword ) );
+        superuserToken = restClient.management().token().post(Token.class, new Token( superuserName, superuserPassword ) );
+        restClient.management().token().setToken( superuserToken );
+
 
         username = "user_"+name + UUIDUtils.newTimeUUID();
         password = username;
         orgName = "org_"+name+UUIDUtils.newTimeUUID();
         appName = "app_"+name+UUIDUtils.newTimeUUID();
 
-        organization = restClient.management().orgs().post(new Organization( orgName,username,username+"@usergrid.com",username,username, null  ));
+        organization = restClient.management().orgs()
+                                 .post( new Organization( orgName, username, username + "@usergrid.com", username,
+                                     username, null ) );
+        clientCredentials = restClient.management().orgs().organization( orgName ).credentials().get();
 
-        restClient.management().token().post(new Token(username,username));
+        Token token = restClient.management().token().post(Token.class,new Token(username,username));
 
         restClient.management().orgs().organization(organization.getName()).app().post(new Application(appName));
 
@@ -128,6 +136,10 @@ public class ClientSetup implements TestRule {
 
     public String getSuperuserPassword() {
         return superuserPassword;
+    }
+
+    public Credentials getClientCredentials() {
+        return clientCredentials;
     }
 
     public void refreshIndex() {
