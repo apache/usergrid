@@ -916,7 +916,7 @@ public class IteratingQueryIT {
 
         int size = 10;
         int queryLimit = 10;
-        int startValue = 99;
+        int startValue = 1;
 
         long start = System.currentTimeMillis();
 
