@@ -17,37 +17,34 @@
  *  * directory of this distribution.
  *
  */
-
 package org.apache.usergrid.persistence.index;
 
+import com.google.common.util.concurrent.ListenableFuture;
+import org.apache.usergrid.persistence.index.query.CandidateResults;
+import org.apache.usergrid.persistence.index.query.Query;
+import org.elasticsearch.action.ListenableActionFuture;
+import rx.Observable;
+
 /**
- * EntityIndex with aliases for multiple indexes
+ * Classy class class.
  */
-public interface AliasedEntityIndex extends EntityIndex{
+public interface ApplicationEntityIndex {
+
 
     /**
-     * Get the indexes for an alias
-     * @param aliasType name of alias
-     * @return list of index names
+     * Create the index batch.
      */
-    public String[] getIndexes(final AliasType aliasType);
+    public EntityIndexBatch createBatch();
+
 
     /**
-     * get all unique indexes
+     * Execute query in Usergrid syntax.
+     */
+    public CandidateResults search(final IndexScope indexScope, final SearchTypes searchType, Query query );
+
+    /**
+     * delete all application records
      * @return
      */
-    public String[] getUniqueIndexes();
-
-    /**
-     * Add alias to index, will remove old index from write alias
-     * @param indexSuffix must be different than current index
-     */
-    public void addAlias(final String indexSuffix);
-
-    /**
-     * type of alias
-     */
-    public enum AliasType {
-        Read, Write
-    }
+    public Observable deleteApplication();
 }

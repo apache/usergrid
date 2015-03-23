@@ -66,7 +66,7 @@ public class RoleIT {
         UUID applicationId = setup.getMgmtSvc().createApplication( organization.getUuid(), "test-app" ).getId();
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
-        em.refreshIndex();
+        setup.getEntityIndex().refresh();
 
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
         properties.put( "username", "edanuff5" );
@@ -75,7 +75,7 @@ public class RoleIT {
         User user = em.create( User.ENTITY_TYPE, User.class, properties );
 
         em.createRole( "logged-in", "Logged In", 1000 );
-        em.refreshIndex();
+        setup.getEntityIndex().refresh();
         em.addUserToRole( user.getUuid(), "logged-in" );
 
         String accessToken = setup.getMgmtSvc().getAccessTokenForAppUser( applicationId, user.getUuid(), 0 );

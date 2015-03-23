@@ -1613,7 +1613,6 @@ public class ManagementServiceImpl implements ManagementService {
         OrganizationInfo organizationInfo = getOrganizationByUuid( organizationId );
         Entity appInfo = emf.createApplicationV2(
             organizationInfo.getName(), applicationName, properties);
-        em.refreshIndex();
 
         writeUserToken( smf.getManagementAppId(), appInfo,
             encryptionService.plainTextCredentials(

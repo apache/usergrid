@@ -21,6 +21,23 @@ import com.google.common.cache.LoadingCache;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.exception.ConflictException;
@@ -95,6 +112,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private CassandraService cassandraService;
     private CounterUtils counterUtils;
     private Injector injector;
+    private final EntityIndex entityIndex;
     private final MetricsFactory metricsFactory;
 
     public CpEntityManagerFactory(
@@ -103,6 +121,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.cassandraService = cassandraService;
         this.counterUtils = counterUtils;
         this.injector = injector;
+        this.entityIndex = injector.getInstance(EntityIndex.class);
         this.managerCache = injector.getInstance( ManagerCache.class );
         this.metricsFactory = injector.getInstance( MetricsFactory.class );
         this.applicationIdCache = new ApplicationIdCacheImpl( this );
@@ -131,9 +150,10 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                 mgmtAppProps.put(PROPERTY_NAME, "systemapp");
                 em.create( getManagementAppId(), TYPE_APPLICATION, mgmtAppProps);
                 em.getApplication();
-                em.createIndex();
-                em.refreshIndex();
             }
+
+            entityIndex.initializeIndex();
+            entityIndex.refresh();
 
         } catch (Exception ex) {
             throw new RuntimeException("Fatal error creating system application", ex);
@@ -163,14 +183,14 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         catch ( Exception ex ) {
             logger.error("Error getting oldAppInfo manager", ex);
         }
-        return _getEntityManager( applicationId );
+        return _getEntityManager(applicationId);
     }
 
 
     private EntityManager _getEntityManager( UUID applicationId ) {
 
         EntityManager em = new CpEntityManager();
-        em.init( this, applicationId );
+        em.init( this,entityIndex ,applicationId );
 
         return em;
     }
@@ -232,17 +252,22 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         // create application info entity
 
-        getSetup().setupApplicationKeyspace( applicationId, appName );
+        try {
+            em.create( CpNamingUtils.APPLICATION_INFO, properties );
+        }
+        catch ( DuplicateUniquePropertyExistsException e ) {
+            throw new ApplicationAlreadyExistsException( appName );
+        }
+        entityIndex.refresh();
 
         if ( properties == null ) {
             properties = new TreeMap<>( CASE_INSENSITIVE_ORDER );
         }
         properties.put( PROPERTY_NAME, appName );
-        EntityManager appEm = getEntityManager( applicationId );
-        appEm.create( applicationId, TYPE_APPLICATION, properties );
-        appEm.createIndex();
+        EntityManager appEm = getEntityManager( applicationId);
+        appEm.create(applicationId, TYPE_APPLICATION, properties);
         appEm.resetRoles();
-        appEm.refreshIndex();
+        entityIndex.refresh();
 
         // create application info entity in the management app
 
@@ -257,7 +282,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         } catch (DuplicateUniquePropertyExistsException e) {
             throw new ApplicationAlreadyExistsException(appName);
         }
-        em.refreshIndex();
 
         // evict app Id from cache
         applicationIdCache.evictAppId(appName);
@@ -317,14 +341,11 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         // delete the app from the application_info collection and delete its index
 
         em.delete(appInfoToDelete);
-        em.refreshIndex();
 
-        final EntityIndex entityIndex = managerCache.getEntityIndex(
+        final ApplicationEntityIndex entityIndex = managerCache.getEntityIndex(
             new ApplicationScopeImpl(new SimpleId(applicationId, TYPE_APPLICATION)));
 
         applicationIdCache.evictAppId(appInfoToDelete.getName());
-
-        entityIndex.deleteIndex();
     }
 
 
@@ -335,7 +356,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         EntityManager em = getEntityManager(getManagementAppId());
 
-        final Results results = em.searchCollection(em.getApplicationRef(), CpNamingUtils.DELETED_APPLICATION_INFOS,
+        final Results results = em.searchCollection(
+            em.getApplicationRef(), CpNamingUtils.DELETED_APPLICATION_INFOS,
             Query.fromQL("select * where " + PROPERTY_APPLICATION_ID + " = " + applicationId.toString()));
         Entity deletedAppInfo = results.getEntity();
 
@@ -362,6 +384,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         // delete the deleted app entity rebuild the app index
 
         em.delete(deletedAppInfo);
+        entityIndex.refresh();
 
         this.rebuildApplicationIndexes(applicationId, new ProgressObserver() {
             @Override
@@ -634,24 +657,19 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         // refresh special indexes without calling EntityManager refresh because stack overflow
         maybeCreateIndexes();
 
-        for ( EntityIndex index : getManagementIndexes() ) {
-            index.refresh();
-        }
+        entityIndex.refresh();
     }
-
 
     private void maybeCreateIndexes() {
         if ( indexInitialized.getAndSet( true ) ) {
             return;
         }
 
-        for ( EntityIndex index : getManagementIndexes() ) {
-            index.initializeIndex();
-        }
+//        entityIndex.initializeIndex();
     }
 
 
-    private List<EntityIndex> getManagementIndexes() {
+    private List<ApplicationEntityIndex> getManagementIndexes() {
 
         return Arrays.asList(
             managerCache.getEntityIndex( // management app
@@ -692,7 +710,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         EntityManager em = getEntityManager( appId );
 
         //explicitly invoke create index, we don't know if it exists or not in ES during a rebuild.
-        em.createIndex();
+        entityIndex.initializeIndex();
         em.reindex(po);
 
         em.reindex( po );
@@ -723,10 +741,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         EntityManager em = getEntityManager( appId );
 
         //explicitly invoke create index, we don't know if it exists or not in ES during a rebuild.
-        em.createIndex();
         Application app = em.getApplication();
 
-        em.reindexCollection( po, collectionName, reverse );
+        em.reindexCollection(po, collectionName, reverse);
 
         logger.info("\n\nRebuilt index for application {} id {} collection {}\n",
             new Object[]{app.getName(), appId, collectionName});
@@ -734,7 +751,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     @Override
     public void addIndex(final UUID applicationId,final String indexSuffix,final int shards,final int replicas, final String writeConsistency){
-        EntityIndex entityIndex = managerCache.getEntityIndex(CpNamingUtils.getApplicationScope(applicationId));
         entityIndex.addIndex(indexSuffix, shards, replicas,writeConsistency);
     }
 

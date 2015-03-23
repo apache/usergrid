@@ -24,6 +24,7 @@ import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphManager;
+import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapScope;
@@ -47,7 +48,7 @@ public interface ManagerCache {
      * @param appScope
      * @return
      */
-    EntityIndex getEntityIndex(ApplicationScope appScope);
+    ApplicationEntityIndex getEntityIndex( ApplicationScope appScope );
 
     /**
      * Get the graph manager for the graph scope

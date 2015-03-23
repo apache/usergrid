@@ -118,7 +118,7 @@ public class ExportServiceIT {
         organization = newOrgAppAdminRule.getOrganizationInfo();
         applicationId = newOrgAppAdminRule.getApplicationInfo().getId();
 
-        setup.getEmf().refreshIndex();
+        setup.getEntityIndex().refresh();
     }
 
 
@@ -272,7 +272,7 @@ public class ExportServiceIT {
 
             entity[i] = em.create( "users", userProperties );
         }
-        em.refreshIndex();
+        setup.getEntityIndex().refresh();
         //creates connections
         em.createConnection( em.get( new SimpleEntityRef( "user", entity[0].getUuid() ) ), "Vibrations",
             em.get( new SimpleEntityRef( "user", entity[1].getUuid() ) ) );
@@ -506,7 +506,7 @@ public class ExportServiceIT {
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
 
-       em.refreshIndex();
+       setup.getEntityIndex().refresh();
 
         exportService.doExport( jobExecution );
 
@@ -577,7 +577,7 @@ public class ExportServiceIT {
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
 
-        em.refreshIndex();
+        setup.getEntityIndex().refresh();
 
         exportService.doExport( jobExecution );
 
@@ -612,7 +612,7 @@ public class ExportServiceIT {
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
         em.createApplicationCollection( "baconators" );
-        em.refreshIndex();
+        setup.getEntityIndex().refresh();
 
         //initialize user object to be posted
         Map<String, Object> userProperties = null;
@@ -645,7 +645,7 @@ public class ExportServiceIT {
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
 
-        em.refreshIndex();
+        setup.getEntityIndex().refresh();
 
         exportService.doExport( jobExecution );
 

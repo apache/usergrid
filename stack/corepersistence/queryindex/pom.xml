@@ -45,45 +45,24 @@
                 </executions>
             </plugin>
 
-<!--            <plugin>
-                <groupId>org.safehaus.chop</groupId>
-                <artifactId>chop-maven-plugin</artifactId>
-                <version>${chop.version}</version>
 
+            <plugin>
+                       <groupId>org.apache.maven.plugins</groupId>
+                       <artifactId>maven-surefire-plugin</artifactId>
 
-                NOTE: you should be putting most of these variables into your settings.xml
-                as an automatically activated profile.
+                       <configuration>
+                           <includes>
+                               <include>**/*IT.java</include>
+                               <include>**/*Test.java</include>
+                           </includes>
+                           <!-- run this one manually to stress test -->
+                           <excludes>
+                               <exclude>**/IndexLoadTestsIT.java</exclude>
+                           </excludes>
 
+                       </configuration>
 
-                <configuration>
-                    <accessKey>${aws.s3.key}</accessKey>
-                    <secretKey>${aws.s3.secret}</secretKey>
-                    <availabilityZone>${availabilityZone}</availabilityZone>
-                    <bucketName>${aws.s3.bucket}</bucketName>
-                    <managerAppUsername>admin</managerAppUsername>
-                    <managerAppPassword>${manager.app.password}</managerAppPassword>
-                    <testPackageBase>org.apache.usergrid</testPackageBase>
-                    <runnerSSHKeyFile>${runner.ssh.key.file}</runnerSSHKeyFile>
-                    <failIfCommitNecessary>false</failIfCommitNecessary>
-                    <amiID>${ami.id}</amiID>
-                    <instanceType>m1.large</instanceType>
-                    <resultsDirectory>${resultsDirectory}</resultsDirectory>
-                    <dumpType>${dumpType}</dumpType>
-                    <coldRestartTomcat>true</coldRestartTomcat>
-                    <awsSecurityGroup>${security.group}</awsSecurityGroup>
-                    <runnerKeyPairName>${runner.keypair.name}</runnerKeyPairName>
-                    <runnerCount>6</runnerCount>
-                    <securityGroupExceptions>
-
-                        Add your own IP address as an exception to allow access
-                        but please do this in the settings.xml file .. essentially
-                        all parameters should be in the settings.xml file.
-
-                        <param>${myip.address}/32:24981</param>
-                        <param>${myip.address}/32:22</param>
-                    </securityGroupExceptions>
-                </configuration>
-            </plugin>-->
+                   </plugin>
 
         </plugins>
     </build>

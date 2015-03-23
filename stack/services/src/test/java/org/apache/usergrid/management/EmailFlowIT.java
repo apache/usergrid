@@ -281,7 +281,7 @@ public class EmailFlowIT {
         String activation_url = String.format( setup.get( PROPERTIES_USER_ACTIVATION_URL ), orgName, appName,
             appUser.getUuid().toString() );
 
-        setup.getEmf().refreshIndex();
+        setup.getEntityIndex().refresh();
 
         // Activation
         setup.getMgmtSvc().startAppUserActivationFlow( app.getId(), appUser );
@@ -354,7 +354,7 @@ public class EmailFlowIT {
         orgOwner = createOwnerAndOrganization( orgName, appName, userName, email, passwd, false, false );
         assertNotNull( orgOwner );
 
-        setup.getEmf().refreshIndex();
+        setup.getEntityIndex().refresh();
 
         ApplicationInfo app = setup.getMgmtSvc().createApplication( orgOwner.getOrganization().getUuid(), appName );
         assertNotNull( app );
@@ -464,7 +464,7 @@ public class EmailFlowIT {
         userProps.put( "activated", activated );
 
         User user = em.create( User.ENTITY_TYPE, User.class, userProps );
-        em.refreshIndex();
+        setup.getEntityIndex().refresh();
 
         return user;
     }

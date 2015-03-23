@@ -38,7 +38,7 @@ public interface IndexTestFig extends GuicyFig {
     @Default( "16" )
     public int getNumberOfWorkers();
 
-    @Key( "stresstest.numberofRecords" )
+    @Key( "stresstest.numberOfRecords" )
     @Default( "10000" )
     public int getNumberOfRecords();
 
@@ -54,4 +54,9 @@ public interface IndexTestFig extends GuicyFig {
     @Key( "stresstest.applicationId" )
     @Default( "0df46683-cdab-11e4-83c2-d2be4de3081a" )
     public String getApplicationId();
+
+    @Key( "stresstest.readThreads" )
+    @Default( "40" )
+    public int getConcurrentReadThreads();
+
 }

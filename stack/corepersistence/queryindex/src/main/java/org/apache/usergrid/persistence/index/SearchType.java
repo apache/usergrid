@@ -17,37 +17,33 @@
  *  * directory of this distribution.
  *
  */
-
 package org.apache.usergrid.persistence.index;
 
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.index.impl.IndexingUtils;
+import org.apache.usergrid.persistence.model.entity.Id;
+
 /**
- * EntityIndex with aliases for multiple indexes
+ * Classy class class.
  */
-public interface AliasedEntityIndex extends EntityIndex{
+public class SearchType{
+    private final String type;
 
-    /**
-     * Get the indexes for an alias
-     * @param aliasType name of alias
-     * @return list of index names
-     */
-    public String[] getIndexes(final AliasType aliasType);
+    private SearchType( final String type ) {this.type = type;}
 
-    /**
-     * get all unique indexes
-     * @return
-     */
-    public String[] getUniqueIndexes();
+    public static SearchType fromType( final String type ) {
+        return new SearchType( type );
+    }
 
-    /**
-     * Add alias to index, will remove old index from write alias
-     * @param indexSuffix must be different than current index
-     */
-    public void addAlias(final String indexSuffix);
 
-    /**
-     * type of alias
-     */
-    public enum AliasType {
-        Read, Write
+    public static SearchType fromId( final Id id ) {
+        return new SearchType( id.getType() );
+    }
+
+
+
+    public String getTypeName(ApplicationScope applicationScope) {
+        final String typeName =  IndexingUtils.getType(applicationScope, type);
+        return typeName;
     }
 }

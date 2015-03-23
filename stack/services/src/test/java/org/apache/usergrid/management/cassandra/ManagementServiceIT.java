@@ -98,7 +98,7 @@ public class ManagementServiceIT {
         adminUser = orgAppAdminRule.getAdminInfo();
         applicationId = orgAppAdminRule.getApplicationInfo().getId();
 
-        setup.getEmf().refreshIndex();
+        setup.getEntityIndex().refresh();
     }
 
 
@@ -196,7 +196,7 @@ public class ManagementServiceIT {
 
         setup.getMgmtSvc().activateAppUser( applicationId, user.getUuid() );
 
-        em.refreshIndex();
+        setup.getEntityIndex().refresh();
 
         user = em.get( entity.getUuid(), User.class );
 
@@ -492,7 +492,7 @@ public class ManagementServiceIT {
                                           false, false );
 
         EntityManager em = setup.getEmf().getEntityManager( setup.getSmf().getManagementAppId() );
-        em.refreshIndex();
+        setup.getEntityIndex().refresh();
 
         UserInfo authedUser = setup.getMgmtSvc().verifyAdminUserPasswordCredentials( username, password );
 
@@ -543,7 +543,7 @@ public class ManagementServiceIT {
 
         em.addToDictionary( storedUser, DICTIONARY_CREDENTIALS, "password", info );
 
-        em.refreshIndex();
+        setup.getEntityIndex().refresh();
 
 
         //verify authorization works
@@ -581,7 +581,7 @@ public class ManagementServiceIT {
         EntityManager em = setup.getEmf().getEntityManager( setup.getEmf().getManagementAppId() );
 
         User storedUser = em.create( user );
-        em.refreshIndex();
+        setup.getEntityIndex().refresh();
 
 
         UUID userId = storedUser.getUuid();
@@ -650,7 +650,7 @@ public class ManagementServiceIT {
 
         User storedUser = em.create( user );
 
-        em.refreshIndex();
+        setup.getEntityIndex().refresh();
 
         UUID userId = storedUser.getUuid();
 
@@ -667,7 +667,7 @@ public class ManagementServiceIT {
 
         setup.getMgmtSvc().setAppUserPassword( appId, userId, password, newPassword );
 
-        em.refreshIndex();
+        setup.getEntityIndex().refresh();
 
         //verify authorization works
         authedUser = setup.getMgmtSvc().verifyAppUserPasswordCredentials( appId, username, newPassword );
@@ -696,7 +696,7 @@ public class ManagementServiceIT {
 
         User storedUser = em.create( user );
 
-        em.refreshIndex();
+        setup.getEntityIndex().refresh();
 
         UUID userId = storedUser.getUuid();
 
@@ -726,7 +726,7 @@ public class ManagementServiceIT {
 
         setup.getMgmtSvc().setAppUserPassword( appId, userId, password, newPassword );
 
-        em.refreshIndex();
+        setup.getEntityIndex().refresh();
 
         //verify authorization works
         authedUser = setup.getMgmtSvc().verifyAppUserPasswordCredentials( appId, username, newPassword );
@@ -757,7 +757,7 @@ public class ManagementServiceIT {
 
         User storedUser = em.create( user );
 
-        em.refreshIndex();
+        setup.getEntityIndex().refresh();
 
         UUID userId = storedUser.getUuid();
 
@@ -794,7 +794,7 @@ public class ManagementServiceIT {
 
         setup.getMgmtSvc().setAppUserPassword( appId, userId, password, newPassword );
 
-        em.refreshIndex();
+        setup.getEntityIndex().refresh();
 
         //verify authorization works
         authedUser = setup.getMgmtSvc().verifyAppUserPasswordCredentials( appId, username, newPassword );

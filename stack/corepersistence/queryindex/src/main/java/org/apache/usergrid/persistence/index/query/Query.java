@@ -67,7 +67,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-
+/**
+ * TODO, this is a copy from 1.0 and a mess.  Clean this up to be clearer as we iterate on our refactor of EM/RM
+ * Query should only be used for term querying, not identity of name lookup, that should
+ * come directly from cassandra
+ */
 public class Query {
     private static final Logger logger = LoggerFactory.getLogger( Query.class );
 

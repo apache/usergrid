@@ -93,7 +93,7 @@ public class IntersectionUnionPagingIT {
     private Set<String> performSetup( final IoHelper io ) throws Exception {
         io.doSetup();
 
-        int size = 200;
+        int size =10;
 
         long start = System.currentTimeMillis();
 

@@ -405,10 +405,9 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
         return MANAGEMENT_APPLICATION_ID;
     }
 
-
     @Override
     public void refreshIndex() {
-        // no op
+        throw new UnsupportedOperationException("Not supported.");
     }
 
     @Override

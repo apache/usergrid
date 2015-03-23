@@ -17,37 +17,11 @@
  *  * directory of this distribution.
  *
  */
-
-package org.apache.usergrid.persistence.index;
+package org.apache.usergrid;
 
 /**
- * EntityIndex with aliases for multiple indexes
+ * abstract refresh implementation
  */
-public interface AliasedEntityIndex extends EntityIndex{
-
-    /**
-     * Get the indexes for an alias
-     * @param aliasType name of alias
-     * @return list of index names
-     */
-    public String[] getIndexes(final AliasType aliasType);
-
-    /**
-     * get all unique indexes
-     * @return
-     */
-    public String[] getUniqueIndexes();
-
-    /**
-     * Add alias to index, will remove old index from write alias
-     * @param indexSuffix must be different than current index
-     */
-    public void addAlias(final String indexSuffix);
-
-    /**
-     * type of alias
-     */
-    public enum AliasType {
-        Read, Write
-    }
+public interface TestEntityIndex {
+    void refresh();
 }

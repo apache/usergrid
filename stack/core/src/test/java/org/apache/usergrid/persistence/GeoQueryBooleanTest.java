@@ -84,7 +84,7 @@ public class GeoQueryBooleanTest extends AbstractCoreIT {
         Entity user2 = em.create( "user", properties );
         assertNotNull( user2 );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         // define center point about 300m from that location
         Point center = new Point( 37.774277, -122.404744 );
@@ -163,7 +163,7 @@ public class GeoQueryBooleanTest extends AbstractCoreIT {
         Entity userFred = em.create( "user", properties );
         assertNotNull( userFred );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         // define center point about 300m from that location
         Point center = new Point( 37.774277, -122.404744 );
