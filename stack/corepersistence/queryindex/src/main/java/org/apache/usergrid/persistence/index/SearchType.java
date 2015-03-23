@@ -40,10 +40,12 @@ public class SearchType{
         return new SearchType( id.getType() );
     }
 
-
-
     public String getTypeName(ApplicationScope applicationScope) {
-        final String typeName =  IndexingUtils.getType(applicationScope, type);
-        return typeName;
+            return  IndexingUtils.getType(applicationScope, type);
+    }
+
+    public String[] getTypeNames(ApplicationScope applicationScope) {
+        final String[] typeNames =   new String[]{type , IndexingUtils.getType(applicationScope, type)};
+        return typeNames;
     }
 }

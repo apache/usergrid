@@ -42,10 +42,11 @@ public class SearchTypes {
 
 
     public String[] getTypeNames(ApplicationScope applicationScope) {
-        String[] typeNames = new String[types.length];
+        String[] typeNames = new String[types.length*2];
         int i =0 ;
         for(String type : types){
             typeNames[i++] = IndexingUtils.getType(applicationScope,type);
+            typeNames[i++] = type;
         }
         return typeNames;
     }

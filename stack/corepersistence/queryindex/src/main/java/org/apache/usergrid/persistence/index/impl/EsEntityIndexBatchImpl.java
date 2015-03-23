@@ -159,8 +159,11 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
             indexes = new String[]{indexIdentifier.getIndex(null)};
         }
 
-        container.addDeIndexRequest( new DeIndexRequest( indexes, entityType.getTypeName(applicationScope), indexId ) );
 
+        String[] typeNames = entityType.getTypeNames(applicationScope);
+        for(String type : typeNames) {
+            container.addDeIndexRequest(new DeIndexRequest(indexes, type, indexId));
+        }
         log.debug("Deindexed Entity with index id " + indexId);
 
         return this;
@@ -242,12 +245,12 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
             if ( f instanceof ArrayField ) {
                 List list = ( List ) field.getValue();
-                entityMap.put( field.getName().toLowerCase(),
+                entityMap.put( ARRAY_PREFIX + field.getName().toLowerCase(),
                         new ArrayList( processCollectionForMap( list ) ) );
             }
             else if ( f instanceof ListField ) {
                            List list = ( List ) field.getValue();
-                           entityMap.put( field.getName().toLowerCase(),
+                           entityMap.put(ARRAY_PREFIX + field.getName().toLowerCase(),
                                    new ArrayList( processCollectionForMap( list ) ) );
 
                            if ( !list.isEmpty() ) {
@@ -259,12 +262,12 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
                        }
             else if ( f instanceof SetField ) {
                 Set set = ( Set ) field.getValue();
-                entityMap.put( field.getName().toLowerCase(),
+                entityMap.put(SET_PREFIX+ field.getName().toLowerCase(),
                         new ArrayList( processCollectionForMap( set ) ) );
             }
             else if ( f instanceof EntityObjectField ) {
                 EntityObject eo = ( EntityObject ) field.getValue();
-                entityMap.put( field.getName().toLowerCase(), entityToMap(eo) ); // recursion
+                entityMap.put(EO_PREFIX + field.getName().toLowerCase(), entityToMap(eo) ); // recursion
             }
             else if ( f instanceof StringField ) {
 
