@@ -63,23 +63,23 @@ public class SimpleTest {
 
 
         Edge testTargetEdge = createEdge( sourceId1, "test", targetId1, System.currentTimeMillis() );
-        gm.writeEdge( testTargetEdge ).toBlockingObservable().singleOrDefault( null );
+        gm.writeEdge( testTargetEdge ).toBlocking().singleOrDefault( null );
 
         Edge testTarget2Edge = createEdge( sourceId2, "edgeType1", targetId1, System.currentTimeMillis() );
-        gm.writeEdge( testTarget2Edge ).toBlockingObservable().singleOrDefault( null );
+        gm.writeEdge( testTarget2Edge ).toBlocking().singleOrDefault( null );
 
         Edge test2TargetEdge = createEdge( sourceId1, "edgeType1", targetId1, System.currentTimeMillis() );
-        gm.writeEdge( test2TargetEdge ).toBlockingObservable().singleOrDefault( null );
+        gm.writeEdge( test2TargetEdge ).toBlocking().singleOrDefault( null );
 
         Edge test3TargetEdge = createEdge( sourceId1, "edgeType2", targetId1, System.currentTimeMillis() );
-        gm.writeEdge( test3TargetEdge ).toBlockingObservable().singleOrDefault( null );
+        gm.writeEdge( test3TargetEdge ).toBlocking().singleOrDefault( null );
 
         int count = gm.getEdgeTypesToTarget( new SimpleSearchEdgeType(targetId1, null, null) )
-                .count().toBlockingObservable().last();
+                .count().toBlocking().last();
         assertEquals( 3, count );
 
         count = gm.getEdgeTypesToTarget( new SimpleSearchEdgeType(targetId1, "edgeType", null) )
-                .count().toBlockingObservable().last();
+                .count().toBlocking().last();
         assertEquals( 2, count );
     }
 

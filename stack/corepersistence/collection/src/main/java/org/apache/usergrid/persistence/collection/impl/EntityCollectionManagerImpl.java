@@ -235,7 +235,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getType(), "Entity type is required in this stage" );
 
         final Timer.Context timer = deleteTimer.time();
-        Observable<Id> o = Observable.from(new CollectionIoEvent<Id>(collectionScope, entityId))
+        Observable<Id> o = Observable.just( new CollectionIoEvent<Id>( collectionScope, entityId ) )
             .map(markStart)
             .doOnNext( markCommit )
             .map(new Func1<CollectionIoEvent<MvccEntity>, Id>() {
@@ -284,7 +284,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                     return Observable.empty();
                 }
 
-                return Observable.from(entity.getEntity().get());
+                return Observable.just( entity.getEntity().get() );
             }
         })
             .doOnNext( new Action1<Entity>() {
@@ -449,19 +449,19 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     public Observable<CollectionIoEvent<MvccEntity>> stageRunner( CollectionIoEvent<Entity> writeData,
                                                                   WriteStart writeState ) {
 
-        return Observable.from( writeData ).map( writeState ).doOnNext( new Action1<CollectionIoEvent<MvccEntity>>() {
+        return Observable.just( writeData ).map( writeState ).doOnNext( new Action1<CollectionIoEvent<MvccEntity>>() {
 
                     @Override
                     public void call( final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent ) {
 
                         Observable<CollectionIoEvent<MvccEntity>> unique =
-                                Observable.from( mvccEntityCollectionIoEvent ).subscribeOn( Schedulers.io() )
+                                Observable.just( mvccEntityCollectionIoEvent ).subscribeOn( Schedulers.io() )
                                           .doOnNext( writeVerifyUnique );
 
 
                         // optimistic verification
                         Observable<CollectionIoEvent<MvccEntity>> optimistic =
-                                Observable.from( mvccEntityCollectionIoEvent ).subscribeOn( Schedulers.io() )
+                                Observable.just( mvccEntityCollectionIoEvent ).subscribeOn( Schedulers.io() )
                                           .doOnNext( writeOptimisticVerify );
 
 

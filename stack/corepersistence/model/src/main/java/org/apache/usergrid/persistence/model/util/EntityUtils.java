@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.collection.util;
+package org.apache.usergrid.persistence.model.util;
 
 
 import java.util.ArrayList;

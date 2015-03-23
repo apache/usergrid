@@ -188,7 +188,7 @@ public class GraphManagerImpl implements GraphManager {
         final Timer.Context timer = writeEdgeTimer.time();
         final Meter meter = writeEdgeMeter;
 
-        return Observable.from( markedEdge ).map( new Func1<MarkedEdge, Edge>() {
+        return Observable.just( markedEdge ).map( new Func1<MarkedEdge, Edge>() {
             @Override
             public Edge call( final MarkedEdge edge ) {
 
@@ -234,7 +234,7 @@ public class GraphManagerImpl implements GraphManager {
 
         final Timer.Context timer = deleteEdgeTimer.time();
         final Meter meter = deleteEdgeMeter;
-        return Observable.from(markedEdge).map(new Func1<MarkedEdge, Edge>() {
+        return Observable.just(markedEdge).map(new Func1<MarkedEdge, Edge>() {
             @Override
             public Edge call(final MarkedEdge edge) {
 
@@ -281,7 +281,7 @@ public class GraphManagerImpl implements GraphManager {
     public Observable<Id> deleteNode( final Id node, final long timestamp ) {
         final Timer.Context timer = deleteNodeTimer.time();
         final Meter meter = deleteNodeMeter;
-        return Observable.from( node ).map( new Func1<Id, Id>() {
+        return Observable.just( node ).map( new Func1<Id, Id>() {
             @Override
             public Id call( final Id id ) {
 

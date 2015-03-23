@@ -25,6 +25,9 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.hazelcast.core.IdGenerator;
+import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -91,6 +94,7 @@ import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 public class CpEntityManagerFactory implements EntityManagerFactory, ApplicationContextAware {
 
     private static final Logger logger = LoggerFactory.getLogger( CpEntityManagerFactory.class );
+    private final EntityIndexFactory entityIndexFactory;
 
     private ApplicationContext applicationContext;
 
@@ -118,6 +122,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private CassandraService cassandraService;
     private CounterUtils counterUtils;
     private Injector injector;
+    private final EntityIndex entityIndex;
     private final MetricsFactory metricsFactory;
 
     public CpEntityManagerFactory(
@@ -126,6 +131,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.cassandraService = cassandraService;
         this.counterUtils = counterUtils;
         this.injector = injector;
+        this.entityIndex = injector.getInstance(EntityIndex.class);
+        this.entityIndexFactory = injector.getInstance(EntityIndexFactory.class);
         this.managerCache = injector.getInstance( ManagerCache.class );
         this.metricsFactory = injector.getInstance( MetricsFactory.class );
 
@@ -149,15 +156,19 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         EntityManager em = getEntityManager( CpNamingUtils.SYSTEM_APP_ID);
 
         try {
-            if ( em.getApplication() == null ) {
+            if (em.getApplication() == null) {
                 logger.info("Creating system application");
                 Map sysAppProps = new HashMap<String, Object>();
                 sysAppProps.put(PROPERTY_NAME, "systemapp");
                 em.create(CpNamingUtils.SYSTEM_APP_ID, TYPE_APPLICATION, sysAppProps);
                 em.getApplication();
-                em.createIndex();
-                em.refreshIndex();
             }
+
+            ApplicationScope appScope = new ApplicationScopeImpl(new SimpleId( CpNamingUtils.SYSTEM_APP_ID, "application" ) );
+            ApplicationEntityIndex applicationEntityIndex = entityIndexFactory.createApplicationEntityIndex(appScope);
+            applicationEntityIndex.initializeIndex();
+            entityIndex.refresh();
+
 
         } catch (Exception ex) {
             throw new RuntimeException("Fatal error creating system application", ex);
@@ -194,7 +205,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private EntityManager _getEntityManager( UUID applicationId ) {
 
         EntityManager em = new CpEntityManager();
-        em.init( this, applicationId );
+        em.init( this,entityIndex ,applicationId );
 
         return em;
     }
@@ -242,7 +253,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                                        Map<String, Object> properties ) throws Exception {
 
 
-
         //Ensure our management system exists before creating our application
         init();
 
@@ -255,8 +265,11 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             throw new ApplicationAlreadyExistsException( appName );
         }
 
-        getSetup().setupApplicationKeyspace( applicationId, appName );
+        ApplicationScope applicationScope = new ApplicationScopeImpl(new SimpleId( applicationId,"application"));
+        ApplicationEntityIndex applicationEntityIndex = entityIndexFactory.createApplicationEntityIndex(applicationScope);
+        applicationEntityIndex.initializeIndex();
 
+        getSetup().setupApplicationKeyspace( applicationId, appName );
 
         final Optional<UUID> cachedValue = orgApplicationCache.getOrganizationId( organizationName );
 
@@ -304,19 +317,18 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         catch ( DuplicateUniquePropertyExistsException e ) {
             throw new ApplicationAlreadyExistsException( appName );
         }
-        em.refreshIndex();
+        entityIndex.refresh();
 
         // create application entity
         if ( properties == null ) {
             properties = new TreeMap<String, Object>( CASE_INSENSITIVE_ORDER );
         }
         properties.put( PROPERTY_NAME, appName );
-        EntityManager appEm = getEntityManager( applicationId );
+        EntityManager appEm = getEntityManager( applicationId);
 
-        appEm.create( applicationId, TYPE_APPLICATION, properties );
-        appEm.createIndex();
+        appEm.create(applicationId, TYPE_APPLICATION, properties);
         appEm.resetRoles();
-        appEm.refreshIndex();
+        entityIndex.refresh();
 
         logger.info("Initialized application {}", appName );
 
@@ -354,10 +366,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             em.delete(appToDelete);
 
         }
-        // delete the application's index
-        EntityIndex ei = managerCache.getEntityIndex(new ApplicationScopeImpl(new SimpleId(applicationId, TYPE_APPLICATION)));
-        ei.deleteIndex();
-        em.refreshIndex();
+        entityIndex.refresh();
     }
 
 
@@ -367,7 +376,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         // remove old delete_appinfos Entity
         EntityManager em = getEntityManager(CpNamingUtils.SYSTEM_APP_ID);
         Query q = Query.fromQL(String.format("select * where applicationUuid = '%s'", applicationId.toString()));
-        Results results = em.searchCollection( em.getApplicationRef(), "deleted_appinfos", q);
+        Results results = em.searchCollection(em.getApplicationRef(), "deleted_appinfos", q);
         Entity appToRestore = results.getEntity();
 
         if ( appToRestore == null ) {
@@ -382,13 +391,13 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         appProps.put("type", "appinfo");
         Entity restoredApp = em.create("appinfo", appToRestore.getProperties());
 
-        em.refreshIndex();
+        entityIndex.refresh();
 
         // rebuild the apps index
         this.rebuildApplicationIndexes(applicationId, new ProgressObserver() {
             @Override
             public void onProgress(EntityRef entity) {
-                logger.info( "Restored entity {}:{}", entity.getType(), entity.getUuid() );
+                logger.info("Restored entity {}:{}", entity.getType(), entity.getUuid());
             }
 
         });
@@ -413,7 +422,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     @Override
     public Map<String, UUID> getApplications() throws Exception {
-        return getApplications( false );
+        return getApplications(false);
     }
 
 
@@ -451,7 +460,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                 fromEntityId, edgeType, Long.MAX_VALUE,
                 SearchByEdgeType.Order.DESCENDING, null ));
 
-        Iterator<Edge> iter = edges.toBlockingObservable().getIterator();
+        //TODO This is wrong, and will result in OOM if there are too many applications.  This needs to stream properly with a buffer
+        Iterator<Edge> iter = edges.toBlocking().getIterator();
         while ( iter.hasNext() ) {
 
             Edge edge = iter.next();
@@ -469,7 +479,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
             org.apache.usergrid.persistence.model.entity.Entity e =
                     managerCache.getEntityCollectionManager( collScope ).load( targetId )
-                        .toBlockingObservable().lastOrDefault(null);
+                        .toBlocking().lastOrDefault(null);
 
             if ( e == null ) {
                 logger.warn("Applicaion {} in index but not found in collections", targetId );
@@ -624,7 +634,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     public long performEntityCount() {
         //TODO, this really needs to be a task that writes this data somewhere since this will get
         //progressively slower as the system expands
-        return (Long) getAllEntitiesObservable().longCount().toBlocking().last();
+        return (Long) getAllEntitiesObservable().countLong().toBlocking().last();
     }
 
 
@@ -663,10 +673,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         // refresh special indexes without calling EntityManager refresh because stack overflow
         maybeCreateIndexes();
         // system app
-
-        for ( EntityIndex index : getManagementIndexes() ) {
-            index.refresh();
-        }
+        entityIndex.refresh();
     }
 
 
@@ -676,13 +683,11 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             return;
         }
 
-        for ( EntityIndex index : getManagementIndexes() ) {
-            index.initializeIndex();
-        }
+//        entityIndex.initializeIndex();
     }
 
 
-    private List<EntityIndex> getManagementIndexes() {
+    private List<ApplicationEntityIndex> getManagementIndexes() {
 
         return Arrays.asList( managerCache.getEntityIndex(
                 new ApplicationScopeImpl( new SimpleId( CpNamingUtils.SYSTEM_APP_ID, "application" ) ) ),
@@ -725,9 +730,10 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     public void rebuildApplicationIndexes( UUID appId, ProgressObserver po ) throws Exception {
 
         EntityManager em = getEntityManager( appId );
-
+        ApplicationScope applicationScope = new ApplicationScopeImpl( new SimpleId( CpNamingUtils.SYSTEM_APP_ID, "application" ));
         //explicitly invoke create index, we don't know if it exists or not in ES during a rebuild.
-        em.createIndex();
+        ApplicationEntityIndex applicationEntityIndex = entityIndexFactory.createApplicationEntityIndex(applicationScope);
+        applicationEntityIndex.initializeIndex();
         em.reindex(po);
 
         em.reindex( po );
@@ -753,7 +759,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         EntityManager em = getEntityManager( appId );
 
         //explicitly invoke create index, we don't know if it exists or not in ES during a rebuild.
-        em.createIndex();
         Application app = em.getApplication();
 
         em.reindexCollection( po, collectionName, reverse );
@@ -764,7 +769,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     @Override
     public void addIndex(final UUID applicationId,final String indexSuffix,final int shards,final int replicas, final String writeConsistency){
-        EntityIndex entityIndex = managerCache.getEntityIndex(CpNamingUtils.getApplicationScope(applicationId));
         entityIndex.addIndex(indexSuffix, shards, replicas,writeConsistency);
     }
 

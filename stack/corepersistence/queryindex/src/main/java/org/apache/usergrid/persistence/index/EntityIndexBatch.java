@@ -68,4 +68,9 @@ public interface EntityIndexBatch {
      */
     public BetterFuture execute();
 
+    /**
+     * Get the number of operations in the batch
+     * @return
+     */
+    public int size();
 }

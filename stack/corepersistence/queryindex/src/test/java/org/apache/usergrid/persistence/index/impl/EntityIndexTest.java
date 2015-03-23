@@ -20,16 +20,16 @@ package org.apache.usergrid.persistence.index.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.index.*;
-import org.apache.usergrid.persistence.model.field.ArrayField;
-import org.apache.usergrid.persistence.model.field.EntityObjectField;
-import org.apache.usergrid.persistence.model.field.UUIDField;
-import org.apache.usergrid.persistence.model.field.value.EntityObject;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.commons.lang3.time.StopWatch;
 
-import org.apache.usergrid.persistence.collection.util.EntityUtils;
+import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.test.UseModules;
@@ -51,7 +51,12 @@ import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.model.field.ArrayField;
+import org.apache.usergrid.persistence.model.field.EntityObjectField;
 import org.apache.usergrid.persistence.model.field.StringField;
+import org.apache.usergrid.persistence.model.field.UUIDField;
+import org.apache.usergrid.persistence.model.field.value.EntityObject;
+import org.apache.usergrid.persistence.model.util.EntityUtils;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -59,7 +64,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 
 @RunWith(EsRunner.class)
@@ -70,6 +79,8 @@ public class EntityIndexTest extends BaseIT {
 
     @Inject
     public EntityIndexFactory eif;
+    @Inject
+    public EntityIndex ei;
 
     //TODO T.N. Remove this when we move the cursor mapping back to core
     @Inject
@@ -79,23 +90,21 @@ public class EntityIndexTest extends BaseIT {
 
     @Test
     public void testIndex() throws IOException, InterruptedException {
-        Id appId = new SimpleId( "application" );
+        Id appId = new SimpleId("application");
 
-        ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
-
-        EntityIndex entityIndex = eif.createEntityIndex( applicationScope );
+        ApplicationScope applicationScope = new ApplicationScopeImpl(appId);
+        ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex(applicationScope);
         entityIndex.initializeIndex();
 
         final String entityType = "thing";
-        IndexScope indexScope = new IndexScopeImpl( appId, "things" );
-        final SearchTypes searchTypes = SearchTypes.fromTypes( entityType );
+        IndexScope indexScope = new IndexScopeImpl(appId, "things");
+        final SearchTypes searchTypes = SearchTypes.fromTypes(entityType);
 
-        insertJsonBlob(entityIndex, entityType, indexScope, "/sample-large.json",101,0);
+        insertJsonBlob(entityIndex, entityType, indexScope, "/sample-large.json", 101, 0);
 
-        entityIndex.refresh();
+        ei.refresh();
 
-
-        testQueries( indexScope, searchTypes, entityIndex );
+        testQueries(indexScope, searchTypes, entityIndex);
     }
 
     @Test
@@ -105,8 +114,7 @@ public class EntityIndexTest extends BaseIT {
 
         ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
 
-        EntityIndex entityIndex = eif.createEntityIndex( applicationScope );
-        entityIndex.initializeIndex();
+        ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex(applicationScope);
 
         final String entityType = "thing";
         IndexScope indexScope = new IndexScopeImpl( appId, "things" );
@@ -133,7 +141,7 @@ public class EntityIndexTest extends BaseIT {
         batch.index(indexScope, entity);
         batch.execute().get();
 
-        entityIndex.refresh();
+        ei.refresh();
 
         testQueries( indexScope, searchTypes,  entityIndex );
     }
@@ -147,7 +155,7 @@ public class EntityIndexTest extends BaseIT {
         long now = System.currentTimeMillis();
         final int threads = 20;
         final int size = 30;
-        final EntityIndex entityIndex = eif.createEntityIndex( applicationScope );
+        final ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex(applicationScope);
         final IndexScope indexScope = new IndexScopeImpl(appId, "things");
         final String entityType = "thing";
         entityIndex.initializeIndex();
@@ -192,7 +200,7 @@ public class EntityIndexTest extends BaseIT {
 
         ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
 
-        EntityIndex entityIndex = eif.createEntityIndex( applicationScope );
+        ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex(applicationScope);
         entityIndex.initializeIndex();
         for(int i=0;i<10;i++) {
             entityIndex.initializeIndex();
@@ -206,7 +214,7 @@ public class EntityIndexTest extends BaseIT {
 
         ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
 
-        AliasedEntityIndex entityIndex =(AliasedEntityIndex) eif.createEntityIndex( applicationScope );
+        ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex(applicationScope);
         entityIndex.initializeIndex();
 
         final String entityType = "thing";
@@ -215,15 +223,15 @@ public class EntityIndexTest extends BaseIT {
 
         insertJsonBlob(entityIndex, entityType, indexScope, "/sample-large.json",101,0);
 
-        entityIndex.refresh();
+       ei.refresh();
 
         testQueries( indexScope, searchTypes,  entityIndex );
 
-        entityIndex.addIndex("v2", 1,0,"one");
+        ei.addIndex("v2", 1,0,"one");
 
         insertJsonBlob(entityIndex, entityType, indexScope, "/sample-large.json",101,100);
 
-        entityIndex.refresh();
+       ei.refresh();
 
         //Hilda Youn
         testQuery(indexScope, searchTypes, entityIndex, "name = 'Hilda Young'", 1 );
@@ -237,9 +245,8 @@ public class EntityIndexTest extends BaseIT {
 
         ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
 
-        AliasedEntityIndex entityIndex =(AliasedEntityIndex) eif.createEntityIndex( applicationScope );
+        ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex( applicationScope );
 
-        entityIndex.initializeIndex();
 
         final String entityType = "thing";
         IndexScope indexScope = new IndexScopeImpl( appId, "things" );
@@ -247,33 +254,33 @@ public class EntityIndexTest extends BaseIT {
 
         insertJsonBlob(entityIndex, entityType, indexScope, "/sample-large.json",1,0);
 
-        entityIndex.refresh();
+        ei.refresh();
 
-        entityIndex.addIndex("v2", 1, 0, "one");
+        ei.addIndex("v2", 1, 0, "one");
 
         insertJsonBlob(entityIndex, entityType, indexScope, "/sample-large.json", 1, 0);
 
-        entityIndex.refresh();
+        ei.refresh();
         CandidateResults crs = testQuery(indexScope, searchTypes, entityIndex, "name = 'Bowers Oneil'", 2);
 
         EntityIndexBatch entityIndexBatch = entityIndex.createBatch();
         entityIndexBatch.deindex(indexScope, crs.get(0));
         entityIndexBatch.deindex(indexScope, crs.get(1));
         entityIndexBatch.execute().get();
-        entityIndex.refresh();
+        ei.refresh();
 
         //Hilda Youn
         testQuery(indexScope, searchTypes, entityIndex, "name = 'Bowers Oneil'", 0);
 
     }
-    private void insertJsonBlob(EntityIndex entityIndex, String entityType, IndexScope indexScope, String filePath,final int max,final int startIndex) throws IOException {
+    private void insertJsonBlob(ApplicationEntityIndex entityIndex, String entityType, IndexScope indexScope, String filePath,final int max,final int startIndex) throws IOException {
         InputStream is = this.getClass().getResourceAsStream( filePath );
         ObjectMapper mapper = new ObjectMapper();
         List<Object> sampleJson = mapper.readValue( is, new TypeReference<List<Object>>() {} );
         EntityIndexBatch batch = entityIndex.createBatch();
-        insertJsonBlob(sampleJson,batch, entityType, indexScope, max,startIndex);
+        insertJsonBlob(sampleJson,batch, entityType, indexScope, max, startIndex);
         batch.execute().get();
-        entityIndex.refresh();
+        ei.refresh();
     }
 
     private void insertJsonBlob(List<Object> sampleJson, EntityIndexBatch batch, String entityType, IndexScope indexScope,final int max,final int startIndex) throws IOException {
@@ -297,10 +304,9 @@ public class EntityIndexTest extends BaseIT {
             EntityUtils.setVersion(entity, UUIDGenerator.newTimeUUID());
             entity.setField(new UUIDField(IndexingUtils.ENTITYID_ID_FIELDNAME, UUID.randomUUID()));
             batch.index(indexScope, entity);
+            batch.execute().get();
 
-            if(count %1000 == 0){
-                batch.execute().get();
-            }
+
             if ( ++count > max ) {
                 break;
             }
@@ -321,7 +327,7 @@ public class EntityIndexTest extends BaseIT {
 
         IndexScope indexScope = new IndexScopeImpl( appId, "fastcars" );
 
-        EntityIndex entityIndex = eif.createEntityIndex( applicationScope );
+        ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex(applicationScope);
         entityIndex.initializeIndex();
 
         Map entityMap = new HashMap() {{
@@ -337,7 +343,7 @@ public class EntityIndexTest extends BaseIT {
         entity.setField(new UUIDField(IndexingUtils.ENTITYID_ID_FIELDNAME, UUID.randomUUID()));
 
         entityIndex.createBatch().index(indexScope , entity ).execute().get();
-        entityIndex.refresh();
+        ei.refresh();
 
         CandidateResults candidateResults = entityIndex.search( indexScope,
             SearchTypes.fromTypes( entity.getId().getType() ), Query.fromQL( "name contains 'Ferrari*'" ) );
@@ -346,14 +352,14 @@ public class EntityIndexTest extends BaseIT {
         EntityIndexBatch batch = entityIndex.createBatch();
         batch.deindex(indexScope, entity).execute().get();
         batch.execute().get();
-        entityIndex.refresh();
+        ei.refresh();
 
         candidateResults = entityIndex.search( indexScope, SearchTypes.fromTypes(entity.getId().getType()), Query.fromQL( "name contains 'Ferrari*'" ) );
         assertEquals( 0, candidateResults.size() );
     }
 
 
-    private CandidateResults testQuery(final IndexScope scope, final SearchTypes searchTypes, final EntityIndex entityIndex, final String queryString, final int num ) {
+    private CandidateResults testQuery(final IndexScope scope, final SearchTypes searchTypes, final ApplicationEntityIndex entityIndex, final String queryString, final int num ) {
 
         StopWatch timer = new StopWatch();
         timer.start();
@@ -368,8 +374,7 @@ public class EntityIndexTest extends BaseIT {
     }
 
 
-    private void testQueries(final IndexScope scope, SearchTypes searchTypes, final EntityIndex entityIndex ) {
-
+    private void testQueries(final IndexScope scope, SearchTypes searchTypes, final ApplicationEntityIndex entityIndex ) {
 
         testQuery(scope, searchTypes, entityIndex, "name = 'Morgan Pierce'", 1 );
 
@@ -443,63 +448,6 @@ public class EntityIndexTest extends BaseIT {
         }
     }
 
-
-    @Test
-    public void getEntityVersions() throws Exception {
-
-        Id appId = new SimpleId( "application" );
-        Id ownerId = new SimpleId( "owner" );
-
-        ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
-
-        IndexScope indexScope = new IndexScopeImpl( ownerId, "users" );
-
-
-
-        EntityIndex entityIndex = eif.createEntityIndex( applicationScope );
-        entityIndex.initializeIndex();
-
-        final String middleName = "middleName" + UUIDUtils.newTimeUUID();
-        Map<String, Object> properties = new LinkedHashMap<String, Object>();
-        properties.put( "username", "edanuff" );
-        properties.put( "email", "ed@anuff.com" );
-        properties.put( "middlename", middleName );
-
-        Map entityMap = new HashMap() {{
-            put( "username", "edanuff" );
-            put( "email", "ed@anuff.com" );
-            put( "middlename", middleName );
-        }};
-
-        final Id userId = new SimpleId("user");
-
-        Entity user = EntityIndexMapUtils.fromMap( entityMap );
-        EntityUtils.setId( user, userId);
-        EntityUtils.setVersion( user, UUIDGenerator.newTimeUUID() );
-
-
-        final EntityIndexBatch batch = entityIndex.createBatch();
-        user.setField(new UUIDField(IndexingUtils.ENTITYID_ID_FIELDNAME, UUID.randomUUID()));
-
-        batch.index( indexScope, user );
-
-        user.setField( new StringField( "address1", "1782 address st" ) );
-        batch.index( indexScope, user );
-        user.setField( new StringField( "address2", "apt 508" ) );
-        batch.index( indexScope,  user );
-        user.setField( new StringField( "address3", "apt 508" ) );
-        batch.index( indexScope,  user);
-        batch.execute().get();
-        entityIndex.refresh();
-
-        CandidateResults results = entityIndex.getEntityVersions(indexScope,  user.getId() );
-
-        assertEquals(1,  results.size());
-        assertEquals( results.get( 0 ).getId(), user.getId() );
-        assertEquals( results.get(0).getVersion(), user.getVersion());
-    }
-
-
     @Test
     public void deleteVerification() throws Throwable {
 
@@ -510,8 +458,8 @@ public class EntityIndexTest extends BaseIT {
 
         IndexScope appScope = new IndexScopeImpl( ownerId, "user" );
 
-        EntityIndex ei = eif.createEntityIndex( applicationScope );
-        ei.initializeIndex();
+        ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex(applicationScope);
+        entityIndex.initializeIndex();
 
         final String middleName = "middleName" + UUIDUtils.newTimeUUID();
 
@@ -526,7 +474,7 @@ public class EntityIndexTest extends BaseIT {
         EntityUtils.setVersion( user, UUIDGenerator.newTimeUUID() );
 
 
-        EntityIndexBatch batch = ei.createBatch();
+        EntityIndexBatch batch = entityIndex.createBatch();
 
         batch.index( appScope, user);
         batch.execute().get();
@@ -534,7 +482,7 @@ public class EntityIndexTest extends BaseIT {
 
         Query query = new Query();
         query.addEqualityFilter( "username", "edanuff" );
-        CandidateResults r = ei.search( appScope, SearchTypes.fromTypes( "edanuff" ), query );
+        CandidateResults r = entityIndex.search( appScope, SearchTypes.fromTypes( "edanuff" ), query );
         assertEquals( user.getId(), r.get( 0 ).getId() );
 
         batch.deindex(appScope, user.getId(), user.getVersion() );
@@ -545,7 +493,7 @@ public class EntityIndexTest extends BaseIT {
         query = new Query();
         query.addEqualityFilter( "username", "edanuff" );
 
-        r = ei.search(appScope,SearchTypes.fromTypes( "edanuff" ),  query );
+        r = entityIndex.search(appScope,SearchTypes.fromTypes( "edanuff" ),  query );
 
         assertFalse( r.iterator().hasNext() );
     }
@@ -559,9 +507,9 @@ public class EntityIndexTest extends BaseIT {
 
         IndexScope appScope = new IndexScopeImpl( ownerId, "user" );
 
-        EntityIndex ei = eif.createEntityIndex( applicationScope );
-        ei.initializeIndex();
-        ei.createBatch();
+        ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex(applicationScope);
+        entityIndex.initializeIndex();
+        entityIndex.createBatch();
 
         // Bill has favorites as string, age as string and retirement goal as number
         Map billMap = new HashMap() {{
@@ -575,7 +523,7 @@ public class EntityIndexTest extends BaseIT {
         EntityUtils.setId( bill, new SimpleId( UUIDGenerator.newTimeUUID(), "user"  ) );
         EntityUtils.setVersion( bill, UUIDGenerator.newTimeUUID() );
 
-        EntityIndexBatch batch = ei.createBatch();
+        EntityIndexBatch batch = entityIndex.createBatch();
 
         batch.index( appScope,  bill );
 
@@ -606,38 +554,35 @@ public class EntityIndexTest extends BaseIT {
 
         Query query = new Query();
         query.addEqualityFilter( "username", "bill" );
-        CandidateResults r = ei.search( appScope, searchTypes,  query );
+        CandidateResults r = entityIndex.search( appScope, searchTypes,  query );
         assertEquals( bill.getId(), r.get( 0 ).getId() );
 
         query = new Query();
         query.addEqualityFilter( "username", "fred" );
-        r = ei.search( appScope, searchTypes,  query );
+        r = entityIndex.search( appScope, searchTypes,  query );
         assertEquals( fred.getId(), r.get( 0 ).getId() );
 
         query = new Query();
         query.addEqualityFilter( "age", 41 );
-        r = ei.search( appScope, searchTypes,  query );
+        r = entityIndex.search( appScope, searchTypes,  query );
         assertEquals( fred.getId(), r.get( 0 ).getId() );
 
         query = new Query();
         query.addEqualityFilter( "age", "thirtysomething" );
-        r = ei.search(  appScope, searchTypes, query );
+        r = entityIndex.search(  appScope, searchTypes, query );
         assertEquals( bill.getId(), r.get( 0 ).getId() );
     }
 
 
     @Test
     public void healthTest() {
-
-        Id appId = new SimpleId( "application" );
+        Id appId = new SimpleId( "entityindextest" );
+        Id ownerId = new SimpleId( "multivaluedtype" );
         ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
-
-        EntityIndex ei = eif.createEntityIndex( applicationScope );
-
         assertNotEquals( "cluster should be ok", Health.RED, ei.getClusterHealth() );
-        assertEquals( "index not be ready yet", Health.RED, ei.getIndexHealth() );
-
-        ei.initializeIndex();
+        assertEquals( "index should be ready", Health.GREEN, ei.getIndexHealth() );
+        ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex(applicationScope);
+        entityIndex.initializeIndex();
         ei.refresh();
 
         assertNotEquals( "cluster should be fine", Health.RED, ei.getIndexHealth() );
@@ -656,7 +601,7 @@ public class EntityIndexTest extends BaseIT {
         IndexScope indexScope = new IndexScopeImpl( ownerId, "users" );
 
 
-        EntityIndex entityIndex = eif.createEntityIndex( applicationScope );
+        ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex(applicationScope);
         entityIndex.initializeIndex();
 
         final EntityIndexBatch batch = entityIndex.createBatch();
@@ -693,7 +638,7 @@ public class EntityIndexTest extends BaseIT {
 
 
         batch.execute().get();
-        entityIndex.refresh();
+       ei.refresh();
 
 
         final int limit = 1;

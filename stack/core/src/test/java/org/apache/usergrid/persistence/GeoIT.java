@@ -97,7 +97,7 @@ public class GeoIT extends AbstractCoreIT {
         }};
         Entity user = em.create("user", properties);
         assertNotNull(user);
-        em.refreshIndex();
+        app.refreshIndex();
 
         //2. Query with a globally large distance to verify location
         Query query = Query.fromQL("select * where location within " + Integer.MAX_VALUE + " of 0, 0");
@@ -107,7 +107,7 @@ public class GeoIT extends AbstractCoreIT {
         //3. Remove the entity's location
         properties.remove("location");
         em.updateProperties(user, properties);
-        em.refreshIndex();
+        app.refreshIndex();
 
         //4. Repeat the query, expecting no results
         listResults = em.searchCollection(em.getApplicationRef(), "users", query);
@@ -141,7 +141,7 @@ public class GeoIT extends AbstractCoreIT {
         }};
         Entity user = em.create("user", properties);
         assertNotNull(user);
-        em.refreshIndex();
+        app.refreshIndex();
 
         Point center = new Point(37.776753, -122.407846);
         //2. Query from a point near the entity's location
@@ -177,7 +177,7 @@ public class GeoIT extends AbstractCoreIT {
         Map<String, Object> restaurantProps = new LinkedHashMap<String, Object>();
         restaurantProps.put("name", "Brickhouse");
         restaurantProps.put("address", "426 Brannan Street");
-        restaurantProps.put("location", getLocation(37.776753, -122.407846));
+        restaurantProps.put("location", getLocation(37.779632, -122.395131));
 
         Entity restaurant = em.create("restaurant", restaurantProps);
         assertNotNull(restaurant);
@@ -193,12 +193,12 @@ public class GeoIT extends AbstractCoreIT {
 
         Entity user = em.create("user", userProperties);
         assertNotNull(user);
-        em.refreshIndex();
+        app.refreshIndex();
 
         //3. Create a connection between the user and the entity
         em.createConnection(user, "likes", restaurant);
 
-        em.refreshIndex();
+        app.refreshIndex();
         //4. Test that the user is within 2000m of the entity
         Results emSearchResults = em.searchConnectedEntities(user,
             Query.fromQL("location within 5000 of "
@@ -235,7 +235,7 @@ public class GeoIT extends AbstractCoreIT {
             assertNotNull(entity);
             LOG.debug("Entity {} created", entity.getProperty("name"));
         }
-        em.refreshIndex();
+        app.refreshIndex();
         //2. validate the size of the result
         Query query = new Query();
         Results listResults = em.searchCollection(em.getApplicationRef(), "stores", query);
@@ -392,7 +392,7 @@ public class GeoIT extends AbstractCoreIT {
             em.create("store", data);
         }
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         Query query = new Query();
         // earth's circumference is 40,075 kilometers. Up it to 50,000kilometers
@@ -439,7 +439,7 @@ public class GeoIT extends AbstractCoreIT {
             em.create("store", data);
         }
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         Query query = new Query();
         // earth's circumference is 40,075 kilometers. Up it to 50,000kilometers
@@ -500,7 +500,7 @@ public class GeoIT extends AbstractCoreIT {
             em.create("store", data);
         }
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         Query query = new Query();
         // earth's circumference is 40,075 kilometers. Up it to 50,000kilometers
@@ -550,7 +550,7 @@ public class GeoIT extends AbstractCoreIT {
             created.add(e);
         }
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         int startDelta = size - min;
 
@@ -615,7 +615,7 @@ public class GeoIT extends AbstractCoreIT {
             em.create("store", data);
         }
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         //do a direct geo iterator test.  We need to make sure that we short circuit on the correct tile.
 
@@ -679,7 +679,7 @@ public class GeoIT extends AbstractCoreIT {
             assertNotNull(entity);
         }
         //3. refresh the index
-        em.refreshIndex();
+        app.refreshIndex();
         //4. return the entity manager
         return em;
     }
@@ -698,7 +698,7 @@ public class GeoIT extends AbstractCoreIT {
         latlong.put("longitude", longitude);
 
         em.setProperty(entity, "location", latlong);
-        em.refreshIndex();
+        app.refreshIndex();
     }
 
 

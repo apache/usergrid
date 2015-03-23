@@ -119,7 +119,7 @@ public abstract class AbstractMvccEntityDataMigrationV1ToV3ImplTest implements D
         assertEquals( "Same entity", entity2, returned2 );
 
         final Observable<EntityIdScope> entityIdScope =
-            Observable.from( new EntityIdScope( scope, entity1.getId() ), new EntityIdScope( scope, entity2.getId() ) );
+            Observable.just( new EntityIdScope( scope, entity1.getId() ), new EntityIdScope( scope, entity2.getId() ) );
 
 
         final MigrationDataProvider<EntityIdScope> migrationProvider = new MigrationDataProvider<EntityIdScope>() {

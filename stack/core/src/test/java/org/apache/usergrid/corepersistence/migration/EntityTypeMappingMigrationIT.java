@@ -77,7 +77,7 @@ public class EntityTypeMappingMigrationIT  {
         final MapScope mapScope2 = new MapScopeImpl(applicationId, CpNamingUtils.TYPES_BY_UUID_MAP );
 
 
-        final Observable<EntityIdScope> scopes = Observable.from(idScope1, idScope2);
+        final Observable<EntityIdScope> scopes = Observable.just(idScope1, idScope2);
 
         final TestMigrationDataProvider<EntityIdScope> migrationDataProvider = new TestMigrationDataProvider<>();
 
