@@ -107,6 +107,7 @@ public class Query {
     private List<CounterFilterPredicate> counterFilters;
     private String collection;
     private String ql;
+    private QueryVisitor visitor;
 
     private static ObjectMapper mapper = new ObjectMapper();
 
@@ -150,27 +151,7 @@ public class Query {
     public QueryBuilder createQueryBuilder( final String context ) {
 
 
-        QueryBuilder queryBuilder = null;
-
-
-        //we have a root operand.  Translate our AST into an ES search
-        if ( getRootOperand() != null ) {
-            // In the case of geo only queries, this will return null into the query builder.
-            // Once we start using tiles, we won't need this check any longer, since a geo query
-            // will return a tile query + post filter
-            QueryVisitor v = new EsQueryVistor();
-
-            try {
-                getRootOperand().visit( v );
-            }
-            catch ( IndexException ex ) {
-                throw new RuntimeException( "Error building ElasticSearch query", ex );
-            }
-
-
-            queryBuilder = v.getQueryBuilder();
-        }
-
+        QueryBuilder queryBuilder = getQueryVisitor().getQueryBuilder();
 
          // Add our filter for context to our query for fast execution.
          // Fast because it utilizes bitsets internally. See this post for more detail.
@@ -192,23 +173,20 @@ public class Query {
     }
 
 
-	public FilterBuilder createFilterBuilder() {
-	    FilterBuilder filterBuilder = null;
+    public QueryVisitor getQueryVisitor() {
+
+        QueryVisitor v = new EsQueryVistor();
 
         if ( getRootOperand() != null ) {
-            QueryVisitor v = new EsQueryVistor();
             try {
                 getRootOperand().visit( v );
 
             } catch ( IndexException ex ) {
                 throw new RuntimeException( "Error building ElasticSearch query", ex );
             }
-            filterBuilder = v.getFilterBuilder();
         }
-
-        return filterBuilder;
-	}
-
+        return v;
+    }
 
     /**
      * Create a query instance from the QL.  If the string is null, return an empty query

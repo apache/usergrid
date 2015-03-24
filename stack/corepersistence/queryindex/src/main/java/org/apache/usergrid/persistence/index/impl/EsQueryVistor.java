@@ -30,6 +30,8 @@ import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.FilterBuilders;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.sort.GeoDistanceSortBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,7 +64,7 @@ public class EsQueryVistor implements QueryVisitor {
 
     Stack<QueryBuilder> stack = new Stack<QueryBuilder>();
     List<FilterBuilder> filterBuilders = new ArrayList<FilterBuilder>();
-
+    GeoDistanceSortBuilder geoSortBuilder = null;
 
     @Override
     public void visit( AndOperand op ) throws IndexException {
@@ -182,6 +184,8 @@ public class EsQueryVistor implements QueryVisitor {
         FilterBuilder fb = FilterBuilders.geoDistanceFilter( name )
            .lat( lat ).lon( lon ).distance( distance, DistanceUnit.METERS );
         filterBuilders.add( fb );
+        geoSortBuilder = SortBuilders.geoDistanceSort( GEO_PREFIX+"location" ).point( lat,lon );
+
     }
 
 
@@ -324,7 +328,6 @@ public class EsQueryVistor implements QueryVisitor {
         return STRING_PREFIX + name;
     }
 
-
     private String addDoublePrefix( String name ) {
         if ( name.startsWith( DOUBLE_PREFIX ) ) {
             return name;
@@ -376,4 +379,9 @@ public class EsQueryVistor implements QueryVisitor {
 		}
 		return null;
 	}
+
+    @Override
+    public GeoDistanceSortBuilder getGeoDistanceSortBuilder(){
+        return geoSortBuilder;
+    }
 }

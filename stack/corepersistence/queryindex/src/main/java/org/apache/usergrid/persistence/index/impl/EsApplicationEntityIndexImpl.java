@@ -34,6 +34,7 @@ import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.persistence.index.query.CandidateResult;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
 import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.index.query.tree.QueryVisitor;
 import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapManagerFactory;
 import org.apache.usergrid.persistence.map.MapScope;
@@ -49,7 +50,10 @@ import org.elasticsearch.action.deletebyquery.IndexDeleteByQueryResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequestBuilder;
+import org.elasticsearch.common.geo.GeoDistance;
+import org.elasticsearch.common.unit.DistanceUnit;
 import org.elasticsearch.index.query.FilterBuilder;
+import org.elasticsearch.index.query.GeoDistanceFilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.TermQueryBuilder;
@@ -149,8 +153,10 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex{
                                    final Query query ) {
 
         final String context = IndexingUtils.createContextName(applicationScope,indexScope);
-        final String[] entityTypes = searchTypes.getTypeNames(applicationScope);
-        QueryBuilder qb = query.createQueryBuilder(context);
+        final String[] entityTypes = searchTypes.getTypeNames( applicationScope );
+        QueryBuilder qb = query.createQueryBuilder( context );
+        final QueryVisitor queryVisitor = query.getQueryVisitor();
+
         SearchResponse searchResponse;
 
         if ( query.getCursor() == null ) {
@@ -159,7 +165,8 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex{
                 .setScroll(cursorTimeout + "m")
                 .setQuery(qb);
 
-            final FilterBuilder fb = query.createFilterBuilder();
+            final FilterBuilder fb = queryVisitor.getFilterBuilder();
+
 
             //we have post filters, apply them
             if ( fb != null ) {
@@ -184,33 +191,35 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex{
                 // type prefix to use. So, here we add an order by clause for every possible type
                 // that you can order by: string, number and boolean and we ask ElasticSearch
                 // to ignore any fields that are not present.
+                if ( fb instanceof GeoDistanceFilterBuilder ) {
+                    srb.addSort( queryVisitor.getGeoDistanceSortBuilder().order( SortOrder.ASC ).unit( DistanceUnit.KILOMETERS )
+                                             .geoDistance( GeoDistance.SLOPPY_ARC ) );
+                    logger.info( "  Geo Sort: {} order by {}", sp.getPropertyName(), order.toString() );
+                }
+                else {
+                    final String stringFieldName = STRING_PREFIX + sp.getPropertyName();
+                    final FieldSortBuilder stringSort = SortBuilders.fieldSort( stringFieldName ).order( order ).ignoreUnmapped( true );
+                    srb.addSort( stringSort );
 
-                final String stringFieldName = STRING_PREFIX + sp.getPropertyName();
-                final FieldSortBuilder stringSort = SortBuilders.fieldSort(stringFieldName)
-                    .order( order ).ignoreUnmapped( true );
-                srb.addSort( stringSort );
+                    logger.debug( "   Sort: {} order by {}", stringFieldName, order.toString() );
 
-                logger.debug( "   Sort: {} order by {}", stringFieldName, order.toString() );
-
-                final String longFieldName = LONG_PREFIX + sp.getPropertyName();
-                final FieldSortBuilder longSort = SortBuilders.fieldSort( longFieldName )
-                    .order( order ).ignoreUnmapped( true );
-                srb.addSort( longSort );
-                logger.debug( "   Sort: {} order by {}", longFieldName, order.toString() );
-
-
-                final String doubleFieldName = DOUBLE_PREFIX + sp.getPropertyName();
-                final FieldSortBuilder doubleSort = SortBuilders.fieldSort( doubleFieldName )
-                    .order( order ).ignoreUnmapped( true );
-                srb.addSort( doubleSort );
-                logger.debug( "   Sort: {} order by {}", doubleFieldName, order.toString() );
+                    final String longFieldName = LONG_PREFIX + sp.getPropertyName();
+                    final FieldSortBuilder longSort = SortBuilders.fieldSort( longFieldName ).order( order ).ignoreUnmapped( true );
+                    srb.addSort( longSort );
+                    logger.debug( "   Sort: {} order by {}", longFieldName, order.toString() );
 
 
-                final String booleanFieldName = BOOLEAN_PREFIX + sp.getPropertyName();
-                final FieldSortBuilder booleanSort = SortBuilders.fieldSort( booleanFieldName )
-                    .order( order ).ignoreUnmapped( true );
-                srb.addSort( booleanSort );
-                logger.debug( "   Sort: {} order by {}", booleanFieldName, order.toString() );
+                    final String doubleFieldName = DOUBLE_PREFIX + sp.getPropertyName();
+                    final FieldSortBuilder doubleSort = SortBuilders.fieldSort( doubleFieldName ).order( order ).ignoreUnmapped( true );
+                    srb.addSort( doubleSort );
+                    logger.debug( "   Sort: {} order by {}", doubleFieldName, order.toString() );
+
+
+                    final String booleanFieldName = BOOLEAN_PREFIX + sp.getPropertyName();
+                    final FieldSortBuilder booleanSort = SortBuilders.fieldSort( booleanFieldName ).order( order ).ignoreUnmapped( true );
+                    srb.addSort( booleanSort );
+                    logger.debug( "   Sort: {} order by {}", booleanFieldName, order.toString() );
+                }
             }
 
 
