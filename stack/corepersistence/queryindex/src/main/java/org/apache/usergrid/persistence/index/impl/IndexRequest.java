@@ -22,11 +22,19 @@ package org.apache.usergrid.persistence.index.impl;
 
 import java.util.Map;
 
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.index.IndexScope;
+import org.apache.usergrid.persistence.index.SearchType;
+import org.apache.usergrid.persistence.model.entity.Entity;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.client.Client;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.APPLICATION_ID_FIELDNAME;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createContextName;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.idString;
 
 
 /**
@@ -42,11 +50,14 @@ public class IndexRequest implements BatchRequest {
     public Map<String, Object> data;
 
 
-    public IndexRequest( final String writeAlias, final String entityType, final String documentId,
-                         final Map<String, Object> data ) {
+    public IndexRequest( final String writeAlias, final ApplicationScope applicationScope, IndexScope indexScope, Entity entity) {
+        String context = createContextName(applicationScope,indexScope);
+        SearchType searchType = SearchType.fromId(entity.getId());
+        final Map<String, Object> data = EntityToMapConverter.convert(entity,context);
+        data.put(APPLICATION_ID_FIELDNAME, idString(applicationScope.getApplication()));
         this.writeAlias = writeAlias;
-        this.entityType = entityType;
-        this.documentId = documentId;
+        this.entityType = searchType.getTypeName(applicationScope);
+        this.documentId = IndexingUtils.createIndexDocId(entity,context);
         this.data = data;
     }
 
