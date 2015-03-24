@@ -127,11 +127,8 @@ public class PingIdentityProvider extends AbstractProvider {
                               .queryParam( "grant_type", "urn:pingidentity.com:oauth2:grant_type:validate_bearer" )
                               .queryParam( "client_secret", clientSecret ).queryParam( "client_id", clientId )
                               .queryParam( "token", externalToken ).type( MediaType.APPLICATION_FORM_URLENCODED_TYPE )
+                              .header("Content-Length", "0")
                               .post( JsonNode.class );
-
-        // {"token_type":"urn:pingidentity.com:oauth2:validated_token","expires_in":5383,
-        // "client_id":"dev.app.appservices","access_token":{"subject":"svccastiron@burberry.com",
-        // "client_id":"dev.app.appservices"}}
 
         String rawEmail = node.get( "access_token" ).get( "subject" ).asText();
 
