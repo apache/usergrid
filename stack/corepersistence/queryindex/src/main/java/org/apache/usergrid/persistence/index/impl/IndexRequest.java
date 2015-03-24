@@ -55,16 +55,14 @@ public class IndexRequest implements BatchRequest {
     }
 
     public IndexRequest( final String writeAlias, final ApplicationScope applicationScope, String context , Entity entity) {
-        this(writeAlias, applicationScope, SearchType.fromId(entity.getId()),IndexingUtils.createIndexDocId(entity,context), EntityToMapConverter.convert(entity, context));
+        this(writeAlias, applicationScope, SearchType.fromId(entity.getId()),IndexingUtils.createIndexDocId(entity,context), EntityToMapConverter.convert(applicationScope,entity, context));
     }
 
     public IndexRequest( final String writeAlias, final ApplicationScope applicationScope,SearchType searchType, String documentId,  Map<String, Object> data) {
-        data.put(APPLICATION_ID_FIELDNAME, idString(applicationScope.getApplication()));
         this.writeAlias = writeAlias;
         this.entityType = searchType.getTypeName(applicationScope);
         this.data = data;
         this.documentId = documentId;
-
     }
 
     /**

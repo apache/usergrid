@@ -145,10 +145,11 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex{
         SearchResponse searchResponse;
 
         if ( query.getCursor() == null ) {
+            String[] contexts = new String[]{createContextName(applicationScope, indexScope),createLegacyContextName(applicationScope,indexScope)};
             SearchRequestBuilder srb = esProvider.getClient().prepareSearch( alias.getReadAlias() )
                 .setTypes(searchTypes.getTypeNames(applicationScope))
                 .setScroll(cursorTimeout + "m")
-                .setQuery(query.createQueryBuilder(createContextName(applicationScope, indexScope)));
+                .setQuery(query.createQueryBuilder(contexts));
 
             final FilterBuilder fb = query.createFilterBuilder();
 

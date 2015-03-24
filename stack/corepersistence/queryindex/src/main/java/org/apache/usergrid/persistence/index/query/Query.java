@@ -60,6 +60,7 @@ import org.apache.usergrid.persistence.index.utils.ClassUtils;
 import org.apache.usergrid.persistence.index.utils.ConversionUtils;
 import org.apache.usergrid.persistence.index.utils.ListUtils;
 import org.apache.usergrid.persistence.index.utils.MapUtils;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -147,7 +148,7 @@ public class Query {
     }
 
 
-    public QueryBuilder createQueryBuilder( final String context ) {
+    public QueryBuilder createQueryBuilder( final String[] contexts ) {
 
 
         QueryBuilder queryBuilder = null;
@@ -178,14 +179,18 @@ public class Query {
 
         // TODO evaluate performance when it's an all query.
         // Do we need to put the context term first for performance?
+        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+        for(String context : contexts){
+            boolQueryBuilder = boolQueryBuilder.should(QueryBuilders.termQuery( IndexingUtils.ENTITY_CONTEXT_FIELDNAME, context ));
+        }
+        boolQueryBuilder = boolQueryBuilder.minimumNumberShouldMatch(1);
         if ( queryBuilder != null ) {
-            queryBuilder = QueryBuilders.boolQuery().must( queryBuilder ).must( QueryBuilders
-                    .termQuery( IndexingUtils.ENTITY_CONTEXT_FIELDNAME, context ) );
+            queryBuilder =  boolQueryBuilder.must( queryBuilder );
         }
 
         //nothing was specified ensure we specify the context in the search
         else {
-            queryBuilder = QueryBuilders.termQuery( IndexingUtils.ENTITY_CONTEXT_FIELDNAME, context );
+            queryBuilder = boolQueryBuilder;
         }
 
         return queryBuilder;

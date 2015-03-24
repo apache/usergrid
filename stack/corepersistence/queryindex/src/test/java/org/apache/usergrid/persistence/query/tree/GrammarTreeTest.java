@@ -411,7 +411,7 @@ public class GrammarTreeTest {
     @Test
     public void selectGeoWithAnd() throws RecognitionException {
         String queryString = "select * where location within 20000 of 37,-75 "
-                + "and created > 1407776999925 and created < 1407777000266"; 
+                + "and created > 1407776999925 and created < 1407777000266";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
         CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
@@ -429,7 +429,7 @@ public class GrammarTreeTest {
         assertEquals( 37f, withinOperand.getLatitude().getFloatValue(), 0 );
         assertEquals( -75f, withinOperand.getLongitude().getFloatValue(), 0 );
 
-        QueryBuilder qb = query.createQueryBuilder("testcontext");
+        QueryBuilder qb = query.createQueryBuilder(new String[]{"testcontext"});
     }
 
 

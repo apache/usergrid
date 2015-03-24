@@ -16,6 +16,7 @@
  */
 package org.apache.usergrid.persistence.index.impl;
 
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.field.*;
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
@@ -35,7 +36,7 @@ public class EntityToMapConverter {
      * @param entity The entity
      * @param context The context this entity appears in
      */
-    public static Map convert( final Entity entity, final String context ) {
+    public static Map convert(ApplicationScope applicationScope, final Entity entity, final String context ) {
         final Map entityMap = entityToMap( entity );
 
         //add the context for filtering later
@@ -43,7 +44,10 @@ public class EntityToMapConverter {
 
         //but the fieldname we have to prefix because we use query equality to seek this later.
         // TODO see if we can make this more declarative
-        entityMap.put( ENTITYID_ID_FIELDNAME, IndexingUtils.idString(entity.getId()).toLowerCase());
+        entityMap.put( ENTITYID_ID_FIELDNAME, IndexingUtils.idString(entity.getId()).toLowerCase() );
+
+        entityMap.put( APPLICATION_ID_FIELDNAME, idString(applicationScope.getApplication()) );
+
 
         return entityMap;
     }
