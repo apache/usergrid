@@ -25,6 +25,7 @@ import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource2point0.model.Token;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -36,14 +37,11 @@ public class SystemResourceIT extends AbstractRestIT {
 
     @Test
     public void testSystemDatabaseAlreadyRun() {
-        //try {
         QueryParameters queryParameters = new QueryParameters();
         queryParameters.addParam( "access_token",clientSetup.getSuperuserToken().getAccessToken() );
+
         Entity result = clientSetup.getRestClient().system().database().setup().get(queryParameters);
-//        }catch(UniformInterfaceException uie) {
-//            asser
-//        }
-//
+
         assertNotNull(result);
         assertNotNull( "ok" ,(String)result.get( "status" ) );
 
@@ -51,8 +49,6 @@ public class SystemResourceIT extends AbstractRestIT {
 
         assertNotNull( result );
         assertNotNull( "ok" ,(String)result.get( "status" ) );
-
-
 
 
     }

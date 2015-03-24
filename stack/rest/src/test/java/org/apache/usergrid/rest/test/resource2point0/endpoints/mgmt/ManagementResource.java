@@ -33,6 +33,10 @@ public class ManagementResource extends NamedResource {
         return new TokenResource( context, this );
     }
 
+    public MeResource me(){
+        return new MeResource( context, this );
+    }
+
     public AuthorizeResource authorize(){
         return new AuthorizeResource( context, this );
     }
