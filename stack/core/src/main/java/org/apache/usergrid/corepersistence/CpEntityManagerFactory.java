@@ -307,7 +307,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         // find application_info for application to delete
 
-        EntityManager em = getEntityManager(getManagementAppId());
+        final EntityManager em = getEntityManager(getManagementAppId());
 
         final Results results = em.searchCollection(em.getApplicationRef(), CpNamingUtils.APPLICATION_INFOS,
             Query.fromQL("select * where " + PROPERTY_APPLICATION_ID + " = " + applicationId.toString()));
@@ -344,6 +344,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         final ApplicationEntityIndex entityIndex = managerCache.getEntityIndex(
             new ApplicationScopeImpl(new SimpleId(applicationId, TYPE_APPLICATION)));
+        entityIndex.deleteApplication();
 
         applicationIdCache.evictAppId(appInfoToDelete.getName());
     }
@@ -425,23 +426,29 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     public Map<String, UUID> getApplications(boolean deleted) throws Exception {
 
-        Map<String, UUID> appMap = new HashMap<String, UUID>();
+        Map<String, UUID> appMap = new HashMap<>();
 
-        ApplicationScope appScope = CpNamingUtils.getApplicationScope(getManagementAppId());
-        GraphManager gm = managerCache.getGraphManager(appScope);
+        ApplicationScope mgmtAppScope = CpNamingUtils.getApplicationScope(getManagementAppId());
+        GraphManager gm = managerCache.getGraphManager(mgmtAppScope);
 
         EntityManager em = getEntityManager(getManagementAppId());
-        Application app = em.getApplication();
-        Id fromEntityId = new SimpleId( app.getUuid(), app.getType() );
+        Application mgmtApp = em.getApplication();
+        Id fromEntityId = new SimpleId( mgmtApp.getUuid(), mgmtApp.getType() );
 
         final String scopeName;
         final String edgeType;
+
         if ( deleted ) {
-            edgeType = CpNamingUtils.getEdgeTypeFromCollectionName(CpNamingUtils.DELETED_APPLICATION_INFOS);
-            scopeName = CpNamingUtils.getCollectionScopeNameFromCollectionName(CpNamingUtils.DELETED_APPLICATION_INFOS);
+            edgeType = CpNamingUtils.getEdgeTypeFromCollectionName(
+                CpNamingUtils.DELETED_APPLICATION_INFOS);
+            scopeName = CpNamingUtils.getCollectionScopeNameFromCollectionName(
+                CpNamingUtils.DELETED_APPLICATION_INFOS);
+
         } else {
-            edgeType = CpNamingUtils.getEdgeTypeFromCollectionName(CpNamingUtils.APPLICATION_INFOS );
-            scopeName = CpNamingUtils.getCollectionScopeNameFromCollectionName(CpNamingUtils.APPLICATION_INFOS);
+            edgeType = CpNamingUtils.getEdgeTypeFromCollectionName(
+                CpNamingUtils.APPLICATION_INFOS );
+            scopeName = CpNamingUtils.getCollectionScopeNameFromCollectionName(
+                CpNamingUtils.APPLICATION_INFOS);
         }
 
         logger.debug("getApplications(): Loading edges of edgeType {} from {}:{}",
@@ -451,7 +458,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                 fromEntityId, edgeType, Long.MAX_VALUE,
                 SearchByEdgeType.Order.DESCENDING, null ));
 
-        //TODO This is wrong, and will result in OOM if there are too many applications.  This needs to stream properly with a buffer
+        // TODO This is wrong, and will result in OOM if there are too many applications.
+        // This needs to stream properly with a buffer
+
         Iterator<Edge> iter = edges.toBlocking().getIterator();
         while ( iter.hasNext() ) {
 
@@ -464,8 +473,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             });
 
             CollectionScope collScope = new CollectionScopeImpl(
-                appScope.getApplication(),
-                appScope.getApplication(),
+                mgmtAppScope.getApplication(),
+                mgmtAppScope.getApplication(),
                 scopeName);
 
             org.apache.usergrid.persistence.model.entity.Entity appInfo =
