@@ -38,6 +38,7 @@ import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -52,26 +53,6 @@ public class ExportResourceIT extends AbstractRestIT {
 
     public ExportResourceIT() throws Exception {
 
-    }
-
-    @Test
-    public void exportCallSuccessful() throws Exception {
-        ClientResponse.Status responseStatus = ClientResponse.Status.OK;
-        JsonNode node = null;
-
-        HashMap<String, Object> payload = payloadBuilder();
-
-
-        try {
-            management().orgs().organization( clientSetup.getOrganizationName() )
-                        .app().addToPath( clientSetup.getAppUuid()).addToPath( "collection" )
-                        .addToPath( "users" ).addToPath( "export" ).postWithToken(ApiResponse.class,payload  );
-        }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
-        }
-
-        assertEquals( ClientResponse.Status.OK, responseStatus );
     }
 
 //
@@ -120,190 +101,170 @@ public class ExportResourceIT extends AbstractRestIT {
 //    }
 //
 //
-//    @Test
-//    public void exportApplicationUUIDRetTest() throws Exception {
-//        ClientResponse.Status responseStatus = ClientResponse.Status.ACCEPTED;
-//        String uuid;
-//        UUID jobUUID = null;
-//        JsonNode node = null;
-//
-//        HashMap<String, Object> payload = payloadBuilder();
-//
-//        String orgName = context.getOrgName();
-//        String appName = context.getAppName();
-//        String token = context.getActiveUser().getToken();
-//
-//        try {
-//            node = mapper.readTree( resource().path( "/management/orgs/" + orgName + "/apps/" + appName + "/export" )
-//                                              .queryParam( "access_token", token ).accept( MediaType.APPLICATION_JSON )
-//                                              .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ) );
-//        }
-//        catch ( UniformInterfaceException uie ) {
-//            responseStatus = uie.getResponse().getClientResponseStatus();
-//        }
-//
-//        assertEquals( ClientResponse.Status.ACCEPTED, responseStatus );
-//        assertNotNull( node.get( "Export Entity" ) );
-//    }
-//
-//
-//    //
-//    @Test
-//    public void exportCollectionUUIDRetTest() throws Exception {
-//        ClientResponse.Status responseStatus = ClientResponse.Status.ACCEPTED;
-//        String uuid;
-//        UUID jobUUID = null;
-//        JsonNode node = null;
-//
-//        String orgName = context.getOrgName();
-//        String appName = context.getAppName();
-//        String token = context.getActiveUser().getToken();
-//
-//        HashMap<String, Object> payload = payloadBuilder();
-//
-//        try {
-//            node = mapper.readTree(
-//                    resource().path( "/management/orgs/"+orgName+"/apps/" + appName + "/collection/users/export" )
-//                              .queryParam( "access_token", token ).accept( MediaType.APPLICATION_JSON )
-//                              .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ) );
-//        }
-//        catch ( UniformInterfaceException uie ) {
-//            responseStatus = uie.getResponse().getClientResponseStatus();
-//        }
-//
-//        assertEquals( ClientResponse.Status.ACCEPTED, responseStatus );
-//        assertNotNull( node.get( "Export Entity" ) );
-//    }
-//
-//
-//    @Test
-//    public void exportGetOrganizationJobStatTest() throws Exception {
-//        JsonNode node = null;
-//        ClientResponse.Status responseStatus = ClientResponse.Status.OK;
-//
-//        HashMap<String, Object> payload = payloadBuilder();
-//
-//        String orgName = context.getOrgName();
-//        String appName = context.getAppName();
-//        String token = context.getActiveUser().getToken();
-//
-//        try {
-//            node = mapper.readTree(
-//                    resource().path( "/management/orgs/" + orgName + "/export" ).queryParam( "access_token", token )
-//                              .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-//                              .post( String.class, payload ) );
-//        }
-//        catch ( UniformInterfaceException uie ) {
-//            responseStatus = uie.getResponse().getClientResponseStatus();
-//        }
-//        assertEquals( ClientResponse.Status.OK, responseStatus );
-//
-//        String uuid = String.valueOf( node.get( "Export Entity" ) );
-//        uuid = uuid.replaceAll( "\"", "" );
-//
-//        try {
-//            node = mapper.readTree( resource().path( "/management/orgs/" + orgName + "/export/" + uuid )
-//                                              .queryParam( "access_token", token ).accept( MediaType.APPLICATION_JSON )
-//                                              .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ) );
-//        }
-//        catch ( UniformInterfaceException uie ) {
-//            responseStatus = uie.getResponse().getClientResponseStatus();
-//        }
+    @Test
+    public void exportApplicationUUIDRetTest() throws Exception {
+
+        try {
+            management().orgs().organization( clientSetup.getOrganizationName() )
+                        .app().addToPath( clientSetup.getAppUuid() ).addToPath( "export" );
+        }
+        catch ( UniformInterfaceException uie ) {
+            fail("We got back " + uie.getResponse().getClientResponseStatus() + " instead of having a successful call" );
+        }
+
+    }
+
+
+    //
+    @Test
+    public void exportCollectionUUIDRetTest() throws Exception {
+
+        HashMap<String, Object> payload = payloadBuilder();
+        ApiResponse exportEntity = null;
+
+        try {
+
+
+            exportEntity = management().orgs().organization( clientSetup.getOrganizationName() )
+                        .app().addToPath( clientSetup.getAppUuid()).addToPath( "collection" )
+                        .addToPath( "users" ).addToPath( "export" ).postWithToken(ApiResponse.class,payloadBuilder() );
+        }
+        catch ( UniformInterfaceException uie ) {
+            fail( "We got back "+uie.getResponse().getClientResponseStatus()+" instead of having a successful call" );
+        }
+
+        assertNotNull( exportEntity );
+        assertNotNull( exportEntity.getProperties().get( "Export Entity" ));
+    }
+
+
+    /**
+     * Check that you can get the org export uuid returned and that you can check the status of the job using that uuid.
+     * @throws Exception
+     */
+    @Test
+    public void exportGetOrganizationJobStatTest() throws Exception {
+
+        ApiResponse exportEntity = null;
+
+
+        try {
+            exportEntity = management().orgs().organization( clientSetup.getOrganizationName() )
+                                       .addToPath( "export" ).postWithToken( ApiResponse.class, payloadBuilder() );
+        }
+        catch ( UniformInterfaceException uie ) {
+            fail( "We got back "+uie.getResponse().getClientResponseStatus()+" instead of having a successful call" );
+        }
+
+        assertNotNull( exportEntity );
+        String uuid = ( String ) exportEntity.getProperties().get( "Export Entity" );
+        assertNotNull( uuid );
+
+        exportEntity = null;
+        try {
+
+            exportEntity = management().orgs().organization( clientSetup.getOrganizationName() )
+                                       .addToPath( "export" ).addToPath( uuid ).get( ApiResponse.class );
+        }
+        catch ( UniformInterfaceException uie ) {
+            fail( "We got back "+uie.getResponse().getClientResponseStatus()+" instead of having a successful call" );
+        }
+
+        assertNotNull( exportEntity );
+        String state = (String) exportEntity.getProperties().get( "state" );
+        assertEquals( "SCHEDULED", state);
+    }
 //
 //
-//        assertEquals( ClientResponse.Status.OK, responseStatus );
-//        assertEquals( "SCHEDULED", node.get( "state" ).textValue() );//TODO: do tests for other states in service tier
-//    }
-//
-//
-//    //all tests should be moved to OrganizationResourceIT ( *not* Organizations there is a difference)
-//    @Test
-//    public void exportGetApplicationJobStatTest() throws Exception {
-//        JsonNode node = null;
-//        ClientResponse.Status responseStatus = ClientResponse.Status.OK;
-//
-//        HashMap<String, Object> payload = payloadBuilder();
-//
-//        String orgName = context.getOrgName();
-//        String appName = context.getAppName();
-//        String token = context.getActiveUser().getToken();
-//
-//        node = mapper.readTree( resource().path( "/management/orgs/" + orgName + "/apps/" + appName + "/export" )
-//                                          .queryParam( "access_token", token ).accept( MediaType.APPLICATION_JSON )
-//                                          .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ) );
-//        String uuid = String.valueOf( node.get( "Export Entity" ) );
-//        uuid = uuid.replaceAll( "\"", "" );
-//
-//        try {
-//            node = mapper.readTree( resource().path( "/management/orgs/" + orgName + "/export/" + uuid )
-//                                              .queryParam( "access_token", token ).accept( MediaType.APPLICATION_JSON )
-//                                              .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ) );
-//        }
-//        catch ( UniformInterfaceException uie ) {
-//            responseStatus = uie.getResponse().getClientResponseStatus();
-//        }
-//
-//
-//        assertEquals( ClientResponse.Status.OK, responseStatus );
-//        assertEquals( "SCHEDULED", node.get( "state" ).textValue() );//TODO: do tests for other states in service tier
-//    }
-//
-//
-//    @Test
-//    public void exportGetCollectionJobStatTest() throws Exception {
-//        JsonNode node = null;
-//        ClientResponse.Status responseStatus = ClientResponse.Status.OK;
-//
-//        HashMap<String, Object> payload = payloadBuilder();
-//
-//        String orgName = context.getOrgName();
-//        String appName = context.getAppName();
-//        String token = context.getActiveUser().getToken();
-//
-//        node = mapper.readTree(
-//                resource().path( "/management/orgs/" + orgName + "/apps/" + appName + "/collection/users/export" )
-//                          .queryParam( "access_token", token ).accept( MediaType.APPLICATION_JSON )
-//                          .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ) );
-//        String uuid = String.valueOf( node.get( "Export Entity" ) );
-//        uuid = uuid.replaceAll( "\"", "" );
-//
-//        try {
-//            node = mapper.readTree( resource().path( "/management/orgs/" + orgName + "/export/" + uuid )
-//                                              .queryParam( "access_token", token ).accept( MediaType.APPLICATION_JSON )
-//                                              .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ) );
-//        }
-//        catch ( UniformInterfaceException uie ) {
-//            responseStatus = uie.getResponse().getClientResponseStatus();
-//        }
-//
-//
-//        assertEquals( ClientResponse.Status.OK, responseStatus );
-//        assertEquals( "SCHEDULED", node.get( "state" ).textValue() );//TODO: do tests for other states in service tier
-//    }
+
+
+    /**
+     * Check that you can get the app export uuid returned and that you can check the status of the job using that uuid.
+     * @throws Exception
+     */
+
+    @Test
+    public void exportGetApplicationJobStatTest() throws Exception {
+
+        ApiResponse exportEntity = null;
+
+
+        try {
+            exportEntity = management().orgs().organization( clientSetup.getOrganizationName() )
+                                       .app().addToPath( clientSetup.getAppUuid() )
+                                       .addToPath( "export" ).postWithToken( ApiResponse.class, payloadBuilder() );
+        }
+        catch ( UniformInterfaceException uie ) {
+            fail( "We got back "+uie.getResponse().getClientResponseStatus()+" instead of having a successful call" );
+        }
+
+        assertNotNull( exportEntity );
+        String uuid = ( String ) exportEntity.getProperties().get( "Export Entity" );
+        assertNotNull( uuid );
+
+        exportEntity = null;
+        refreshIndex();
+        try {
+
+            exportEntity = management().orgs().organization( clientSetup.getOrganizationName() )
+                                       .addToPath( "export" ).addToPath( uuid ).get( ApiResponse.class );
+        }
+        catch ( UniformInterfaceException uie ) {
+            fail( "We got back "+uie.getResponse().getClientResponseStatus()+" instead of having a successful call" );
+        }
+
+        assertNotNull( exportEntity );
+        String state = (String) exportEntity.getProperties().get( "state" );
+        assertEquals( "SCHEDULED", state);
+    }
+
+
+    @Test
+    public void exportGetCollectionJobStatTest() throws Exception {
+
+        ApiResponse exportEntity = null;
+
+        exportEntity = management().orgs().organization( clientSetup.getOrganizationName() )
+                                   .app().addToPath( clientSetup.getAppUuid()).addToPath( "collection" )
+                                   .addToPath( "users" ).addToPath( "export" )
+                                   .postWithToken( ApiResponse.class, payloadBuilder() );
+
+        assertNotNull( exportEntity );
+        String uuid = ( String ) exportEntity.getProperties().get( "Export Entity" );
+        assertNotNull( uuid );
+
+        exportEntity = null;
+        try {
+            exportEntity = management().orgs().organization( clientSetup.getOrganizationName() )
+                                       .addToPath( "export" ).addToPath( uuid ).get( ApiResponse.class );
+        }
+        catch ( UniformInterfaceException uie ) {
+            fail( "We got back "+uie.getResponse().getClientResponseStatus()+" instead of having a successful call" );
+        }
+
+
+        assertNotNull( exportEntity );
+        String state = (String) exportEntity.getProperties().get( "state" );
+        assertEquals( "SCHEDULED", state);
+    }
 //
 //
 //    //    //do an unauthorized test for both post and get
-//    @Test
-//    public void exportGetWrongUUID() throws Exception {
-//        JsonNode node = null;
-//
-//        String orgName = context.getOrgName();
-//        String appName = context.getAppName();
-//        String token = context.getActiveUser().getToken();
-//
-//        ClientResponse.Status responseStatus = ClientResponse.Status.OK;
-//        UUID fake = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
-//        try {
-//            node = mapper.readTree( resource().path( "/management/orgs/" + orgName + "/export/" + fake )
-//                                              .queryParam( "access_token", token ).accept( MediaType.APPLICATION_JSON )
-//                                              .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ) );
-//        }
-//        catch ( UniformInterfaceException uie ) {
-//            responseStatus = uie.getResponse().getClientResponseStatus();
-//        }
-//        assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
-//    }
-//
+    @Test
+    public void exportGetWrongUUID() throws Exception {
+        ApiResponse exportEntity = null;
+        UUID fake = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
+        try {
+            exportEntity = management().orgs().organization( clientSetup.getOrganizationName() )
+                                       .addToPath( "export" ).addToPath( fake.toString() ).get( ApiResponse.class );
+            fail( "Should not have been able to get fake uuid" );
+        }
+        catch ( UniformInterfaceException uie ) {
+            assertEquals( ClientResponse.Status.BAD_REQUEST, uie.getResponse().getClientResponseStatus() );
+
+        }
+    }
+
 //
 //    //
 //    @Test
