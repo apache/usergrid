@@ -20,6 +20,7 @@ package org.apache.usergrid.rest.management.organizations;
 import com.sun.jersey.api.json.JSONWithPadding;
 import com.sun.jersey.api.view.Viewable;
 import org.apache.amber.oauth2.common.exception.OAuthSystemException;
+import org.apache.commons.lang.NullArgumentException;
 
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.management.ActivationState;
@@ -292,40 +293,45 @@ public class OrganizationResource extends AbstractContextResource {
 
         try {
             if((properties = ( Map<String, Object> )  json.get( "properties" )) == null){
-                throw new NullPointerException("Could not find 'properties'");
+                throw new NullArgumentException("Could not find 'properties'");
             }
             storage_info = ( Map<String, Object> ) properties.get( "storage_info" );
             String storage_provider = ( String ) properties.get( "storage_provider" );
             if(storage_provider == null) {
-                throw new NullPointerException( "Could not find field 'storage_provider'" );
+                throw new NullArgumentException( "Could not find field 'storage_provider'" );
             }
             if(storage_info == null) {
-                throw new NullPointerException( "Could not find field 'storage_info'" );
+                throw new NullArgumentException( "Could not find field 'storage_info'" );
             }
-
 
             String bucketName = ( String ) storage_info.get( "bucket_location" );
-            uac.getAWSAccessKeyIdJson( storage_info );
-            uac.getAWSSecretKeyJson( storage_info );
+            String accessId = ( String ) storage_info.get( "s3_access_id" );
+            String secretKey = ( String ) storage_info.get( "s3_key" );
 
-            if(bucketName == null) {
-                throw new NullPointerException( "Could not find field 'bucketName'" );
+            if ( bucketName == null ) {
+                throw new NullArgumentException( "Could not find field 'bucketName'" );
             }
+            if ( accessId == null ) {
+                throw new NullArgumentException( "Could not find field 's3_access_id'" );
+            }
+            if ( secretKey == null ) {
 
+                throw new NullArgumentException( "Could not find field 's3_key'" );
+            }
 
             json.put( "organizationId",organization.getUuid());
 
             jobUUID = exportService.schedule( json );
             uuidRet.put( "Export Entity", jobUUID.toString() );
         }
-        catch ( NullPointerException e ) {
+        catch ( NullArgumentException e ) {
             return Response.status( SC_BAD_REQUEST ).type( JSONPUtils.jsonMediaType( callback ) )
                            .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) ).build();
         }
         catch ( Exception e ) {
             //TODO:throw descriptive error message and or include on in the response
             //TODO:fix below, it doesn't work if there is an exception. Make it look like the OauthResponse.
-            return Response.status( SC_INTERNAL_SERVER_ERROR ).type( JSONPUtils.jsonMediaType( callback ) )
+            return Response.status(  SC_INTERNAL_SERVER_ERROR ).type( JSONPUtils.jsonMediaType( callback ) )
                            .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) ).build();
         }
         return Response.status( SC_ACCEPTED ).entity( uuidRet ).build();

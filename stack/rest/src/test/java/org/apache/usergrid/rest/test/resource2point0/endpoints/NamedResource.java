@@ -193,8 +193,16 @@ public abstract class NamedResource implements UrlResource {
     public <T> T get(Class<T> type) {
         GenericType<T> gt = new GenericType<>((Class) type);
         return getResource( true ).type(MediaType.APPLICATION_JSON_TYPE)
-                            .accept( MediaType.APPLICATION_JSON )
-                            .get( gt.getRawClass() );
+                                  .accept( MediaType.APPLICATION_JSON )
+                                  .get( gt.getRawClass() );
+
+    }
+
+    public <T> T getWithoutToken(Class<T> type) {
+        GenericType<T> gt = new GenericType<>((Class) type);
+        return getResource().type(MediaType.APPLICATION_JSON_TYPE)
+                                  .accept( MediaType.APPLICATION_JSON )
+                                  .get( gt.getRawClass() );
 
     }
 

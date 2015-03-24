@@ -113,10 +113,6 @@ public class ImportsResource extends AbstractContextResource {
 
         Map<String, Object> properties;
         Map<String, Object> storage_info;
-        // UsergridAwsCredentialsProvider uacp = new UsergridAwsCredentialsProvider();
-
-        //             try {
-        //checkJsonExportProperties(json);
 
 
             if ( ( properties = ( Map<String, Object> ) json.get( "properties" ) ) == null ) {
