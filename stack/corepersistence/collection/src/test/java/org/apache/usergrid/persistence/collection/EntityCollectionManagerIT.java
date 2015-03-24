@@ -23,7 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
 import org.apache.usergrid.persistence.core.guice.ProxyImpl;
@@ -68,9 +68,9 @@ import static org.junit.Assert.fail;
 @RunWith( ITRunner.class )
 @UseModules( TestCollectionModule.class )
 public class EntityCollectionManagerIT {
+
     @Inject
     private EntityCollectionManagerFactory factory;
-
 
     @Inject
     @Rule
@@ -327,98 +327,6 @@ public class EntityCollectionManagerIT {
     }
 
 
-    @Test
-    public void partialUpdate() {
-        StringField testField1 = new StringField( "testField", "value" );
-        StringField addedField = new StringField( "testFud", "NEWPARTIALUPDATEZOMG" );
-
-        CollectionScope context =
-                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "testUpdate" ), "testUpdate" );
-
-        Entity oldEntity = new Entity( new SimpleId( "testUpdate" ) );
-        oldEntity.setField( new StringField( "testField", "value" ) );
-
-        EntityCollectionManager manager = factory.createCollectionManager( context );
-
-        Observable<Entity> observable = manager.write( oldEntity );
-
-        Entity returned = observable.toBlocking().lastOrDefault( null );
-
-        assertNotNull( "Returned has a uuid", returned.getId() );
-
-        final UUID writeVersion = returned.getVersion();
-
-        assertNotNull( "Write version was set", writeVersion );
-
-        /**
-         * Modify the oldEntity
-         */
-        oldEntity.getFields().remove( testField1 );
-        oldEntity.setField( addedField );
-
-        observable = manager.update( oldEntity );
-
-        Entity updateReturned = observable.toBlocking().lastOrDefault( null );
-
-        assertNotNull( "Returned has a uuid", returned.getId() );
-        assertEquals( oldEntity.getField( "testFud" ), returned.getField( "testFud" ) );
-
-        final UUID updatedVersion = updateReturned.getVersion();
-
-        assertNotNull( "Updated version returned", updatedVersion );
-
-        assertTrue( "Updated version higher", UUIDComparator.staticCompare( updatedVersion, writeVersion ) > 0 );
-
-        Observable<Entity> newEntityObs = manager.load( updateReturned.getId() );
-        Entity newEntity = newEntityObs.toBlocking().last();
-
-        final UUID returnedVersion = newEntity.getVersion();
-
-        assertEquals( "Loaded version matches updated version", updatedVersion, returnedVersion );
-
-        assertNotNull( "Returned has a uuid", returned.getId() );
-        assertEquals( addedField, newEntity.getField( "testFud" ) );
-    }
-
-
-    @Test
-    public void partialUpdateDelete() {
-        StringField testField = new StringField( "testField", "value" );
-        StringField addedField = new StringField( "testFud", "NEWPARTIALUPDATEZOMG" );
-
-        CollectionScope context =
-                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "testUpdate" ), "testUpdate" );
-
-        Entity oldEntity = new Entity( new SimpleId( "testUpdate" ) );
-        oldEntity.setField( new StringField( "testField", "value" ) );
-
-        EntityCollectionManager manager = factory.createCollectionManager( context );
-
-        Observable<Entity> observable = manager.write( oldEntity );
-
-        Entity returned = observable.toBlocking().lastOrDefault( null );
-
-        assertNotNull( "Returned has a uuid", returned.getId() );
-
-        oldEntity.getFields().remove( testField );
-        oldEntity.setField( addedField );
-
-        //Entity is deleted then updated right afterwards.
-        manager.delete( oldEntity.getId() );
-
-        observable = manager.update( oldEntity );
-
-        returned = observable.toBlocking().lastOrDefault( null );
-
-        assertNotNull( "Returned has a uuid", returned.getId() );
-        assertEquals( oldEntity.getField( "testFud" ), returned.getField( "testFud" ) );
-
-        Observable<Entity> newEntityObs = manager.load( oldEntity.getId() );
-        Entity newEntity = newEntityObs.toBlocking().last();
-
-        assertNotNull( "Returned has a uuid", returned.getId() );
-        assertEquals( addedField, newEntity.getField( addedField.getName() ) );
-    }
 
 
     @Test
@@ -442,7 +350,7 @@ public class EntityCollectionManagerIT {
         // partial update entity but we don't have version number
         Entity updateEntity = new Entity( origEntity.getId() );
         updateEntity.setField( new StringField( "addedField", "other value" ) );
-        manager.update( origEntity ).toBlocking().lastOrDefault( null );
+        manager.write( updateEntity ).toBlocking().lastOrDefault( null );
 
         // get entity now, it must have a new version
         returned = manager.load( origEntity.getId() ).toBlocking().lastOrDefault( null );
@@ -519,7 +427,7 @@ public class EntityCollectionManagerIT {
 
             written.setField( new BooleanField( "updated", true ) );
 
-            final Entity updated = manager.update( written ).toBlocking().last();
+            final Entity updated = manager.write( written ).toBlocking().last();
 
             writtenEntities.add( updated );
             entityIds.add( updated.getId() );
@@ -670,7 +578,7 @@ public class EntityCollectionManagerIT {
 
         final Entity newEntity = new Entity( new SimpleId( "test" ) );
 
-        final Entity v1Created = manager.update( newEntity ).toBlocking().lastOrDefault( null );
+        final Entity v1Created = manager.write( newEntity ).toBlocking().lastOrDefault( null );
 
         assertNotNull( "Id was assigned", v1Created.getId() );
         assertNotNull( "Version was assigned", v1Created.getVersion() );
@@ -687,7 +595,7 @@ public class EntityCollectionManagerIT {
         assertEquals( MvccLogEntry.State.COMPLETE, version1Log.getState() );
         assertEquals( Stage.COMMITTED, version1Log.getStage() );
 
-        final Entity v2Created = manager.update( v1Created ).toBlocking().last();
+        final Entity v2Created = manager.write( v1Created ).toBlocking().last();
 
         final UUID v2Version = v2Created.getVersion();
 

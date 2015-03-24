@@ -54,6 +54,7 @@ import rx.Observable;
 import rx.Observer;
 import rx.functions.Action1;
 import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -83,7 +84,12 @@ public class MultiRowColumnIteratorTest {
         final CassandraConfig cassandraConfig = new CassandraConfig() {
             @Override
             public ConsistencyLevel getReadCL() {
-                return ConsistencyLevel.CL_QUORUM;
+                return ConsistencyLevel.CL_LOCAL_ONE;
+            }
+
+            @Override
+            public ConsistencyLevel getConsistentReadCL() {
+                return ConsistencyLevel.CL_LOCAL_QUORUM;
             }
 
 
@@ -368,38 +374,29 @@ public class MultiRowColumnIteratorTest {
         /**
          * Write to both rows in parallel
          */
-        Observable.just( rowKey1 ).parallel( new Func1<Observable<String>, Observable<String>>() {
-            @Override
-            public Observable<String> call( final Observable<String> stringObservable ) {
-                return stringObservable.doOnNext( new Action1<String>() {
-                    @Override
-                    public void call( final String key ) {
+        Observable.just( rowKey1 ).flatMap( rowKey -> Observable.just( rowKey ).doOnNext( key -> {
+            final MutationBatch batch = keyspace.prepareMutationBatch();
 
-                        final MutationBatch batch = keyspace.prepareMutationBatch();
+            for ( long i = 0; i < maxValue; i++ ) {
+                batch.withRow( COLUMN_FAMILY, key ).putColumn( i, TRUE );
 
-                        for ( long i = 0; i < maxValue; i++ ) {
-                            batch.withRow( COLUMN_FAMILY, key ).putColumn( i, TRUE );
-
-                            if ( i % 1000 == 0 ) {
-                                try {
-                                    batch.execute();
-                                }
-                                catch ( ConnectionException e ) {
-                                    throw new RuntimeException( e );
-                                }
-                            }
-                        }
-
-                        try {
-                            batch.execute();
-                        }
-                        catch ( ConnectionException e ) {
-                            throw new RuntimeException( e );
-                        }
+                if ( i % 1000 == 0 ) {
+                    try {
+                        batch.execute();
                     }
-                } );
+                    catch ( ConnectionException e ) {
+                        throw new RuntimeException( e );
+                    }
+                }
             }
-        } ).toBlocking().last();
+
+            try {
+                batch.execute();
+            }
+            catch ( ConnectionException e ) {
+                throw new RuntimeException( e );
+            }
+        } ).subscribeOn( Schedulers.io() ) ).toBlocking().last();
 
 
         //create 3 iterators

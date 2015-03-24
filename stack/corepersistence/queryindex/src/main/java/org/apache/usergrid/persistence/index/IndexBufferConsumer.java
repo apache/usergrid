@@ -23,4 +23,15 @@ package org.apache.usergrid.persistence.index;
  * Classy class class.
  */
 public interface IndexBufferConsumer {
+
+
+    /**
+     * Start the consumer
+     */
+    public void start();
+
+    /**
+     * Stop the consumers
+     */
+    public void stop();
 }

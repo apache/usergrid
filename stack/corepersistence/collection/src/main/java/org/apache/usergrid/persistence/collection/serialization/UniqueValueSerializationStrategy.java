@@ -19,11 +19,14 @@ package org.apache.usergrid.persistence.collection.serialization;
 
 
 import java.util.Collection;
+import java.util.Iterator;
 
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import com.netflix.astyanax.model.ConsistencyLevel;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.core.migration.schema.Migration;
+import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
 
 
@@ -32,38 +35,66 @@ import org.apache.usergrid.persistence.model.field.Field;
  */
 public interface UniqueValueSerializationStrategy extends Migration {
 
-    /**
-     * Write the specified UniqueValue to Cassandra with optional timeToLive in milliseconds.
-     * 
-     * @param uniqueValue Object to be written
-     * @return MutatationBatch that encapsulates operation, caller may or may not execute.
-     */
-    public MutationBatch write( CollectionScope scope,  UniqueValue uniqueValue );
 
     /**
      * Write the specified UniqueValue to Cassandra with optional timeToLive in milliseconds.
-     * 
+     *
      * @param uniqueValue Object to be written
-     * @param timeToLive How long object should live in seconds 
      * @return MutatationBatch that encapsulates operation, caller may or may not execute.
      */
-    public MutationBatch write( CollectionScope scope,  UniqueValue uniqueValue, Integer timeToLive );
+    public MutationBatch write( CollectionScope collectionScope,  UniqueValue uniqueValue );
+
+    /**
+     * Write the specified UniqueValue to Cassandra with optional timeToLive in milliseconds.
+     *
+     * @param uniqueValue Object to be written
+     * @param timeToLive How long object should live in seconds.  -1 implies store forever
+     * @return MutatationBatch that encapsulates operation, caller may or may not execute.
+     */
+    public MutationBatch write( CollectionScope collectionScope,  UniqueValue uniqueValue, int timeToLive );
 
     /**
      * Load UniqueValue that matches field from collection or null if that value does not exist.
-     * 
-     * @param colScope Collection scope in which to look for field name/value
+     *
+     * @param collectionScope scope in which to look for field name/value
      * @param fields Field name/value to search for
+     *
      * @return UniqueValueSet containing fields from the collection that exist in cassandra
+     *
      * @throws ConnectionException on error connecting to Cassandra
      */
-    public UniqueValueSet load( CollectionScope colScope, Collection<Field> fields ) throws ConnectionException;
+    public UniqueValueSet load( CollectionScope collectionScope, Collection<Field> fields ) throws ConnectionException;
+
+    /**
+    * Load UniqueValue that matches field from collection or null if that value does not exist.
+    *
+    * @param colScope Collection scope in which to look for field name/value
+    * @param consistencyLevel Consistency level of query
+    * @param fields Field name/value to search for
+    * @return UniqueValueSet containing fields from the collection that exist in cassandra
+    * @throws ConnectionException on error connecting to Cassandra
+    */
+    public UniqueValueSet load( CollectionScope colScope, ConsistencyLevel consistencyLevel, Collection<Field> fields ) throws ConnectionException;
+
+
+    /**
+     * Loads the currently persisted history of every unique value the entity has held.  This will
+     * start from the max version and return values in descending version order.  Note that for entities
+     * with more than one unique field, sequential fields can be returned with the same version.
+     * @param collectionScope The scope the entity is stored in
+     * @param entityId
+     * @return
+     */
+    public Iterator<UniqueValue> getAllUniqueFields(CollectionScope collectionScope, Id entityId);
+
 
     /**
      * Delete the specified Unique Value from Cassandra.
-     * 
+     *
      * @param uniqueValue Object to be deleted.
      * @return MutatationBatch that encapsulates operation, caller may or may not execute.
      */
     public MutationBatch delete( CollectionScope scope,  UniqueValue uniqueValue );
+
+
 }

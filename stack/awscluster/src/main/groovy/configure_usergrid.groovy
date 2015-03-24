@@ -44,20 +44,22 @@ def testAdminUserEmail = System.getenv().get("TEST_ADMIN_USER_EMAIL")
 
 def numEsNodes = Integer.parseInt(System.getenv().get("ES_NUM_SERVERS"))
 //Override number of shards.  Set it to 2x the cluster size
-def esShards = numEsNodes;
+def esShards = numEsNodes*2;
 
 
 //This gives us 3 copies, which means we'll have a quorum with primary + 1 replica
 def esReplicas = 1;
 
 def tomcatThreads = System.getenv().get("TOMCAT_THREADS")
+
+def workerCount = System.getenv().get("INDEX_WORKER_COUNT")
+
 //temporarily set to equal since we now have a sane tomcat thread calculation
 def hystrixThreads = tomcatThreads
 
 //if we end in -1, we remove it
 def ec2Region = System.getenv().get("EC2_REGION")
 def cassEc2Region = ec2Region.replace("-1", "")
-
 
 NodeRegistry registry = new NodeRegistry();
 
@@ -108,7 +110,7 @@ usergrid.write.cl=${writeConsistencyLevel}
 
 
 elasticsearch.cluster_name=${clusterName}
-elasticsearch.index_prefix=usergrid
+elasticsearch.index_prefix=${stackName}
 elasticsearch.hosts=${esnodes}
 elasticsearch.port=9300
 elasticsearch.number_shards=${esShards}
@@ -194,6 +196,10 @@ usergrid.queue.region=${ec2Region}
 # Enable scheduler for import/export jobs
 usergrid.scheduler.enabled=true
 usergrid.scheduler.job.workers=1
+
+
+#Set our ingest rate
+elasticsearch.worker_count=${workerCount}
 
 """
 

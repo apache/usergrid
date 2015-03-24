@@ -30,7 +30,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.consistency.TimeService;
-import org.apache.usergrid.persistence.core.hystrix.HystrixCassandra;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEdgeMeta;
@@ -39,6 +38,7 @@ import org.apache.usergrid.persistence.graph.serialization.impl.shard.Shard;
 
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.hystrix.HystrixCommand;
+import com.netflix.hystrix.HystrixCommandGroupKey;
 
 import rx.functions.Action0;
 import rx.schedulers.Schedulers;
@@ -229,7 +229,7 @@ public class NodeShardApproximationImpl implements NodeShardApproximation {
                 /**
                  * Execute the command in hystrix to avoid slamming cassandra
                  */
-                new HystrixCommand( HystrixCassandra.ASYNC_GROUP ) {
+                new HystrixCommand( HystrixCommandGroupKey.Factory.asKey("BatchCounterRollup") ) {
 
                     @Override
                     protected Void run() throws Exception {

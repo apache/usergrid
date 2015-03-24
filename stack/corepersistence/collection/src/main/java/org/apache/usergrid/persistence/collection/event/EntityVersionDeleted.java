@@ -21,6 +21,7 @@ package org.apache.usergrid.persistence.collection.event;
 import java.util.List;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.MvccEntity;
+import org.apache.usergrid.persistence.collection.MvccLogEntry;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 
@@ -40,6 +41,6 @@ public interface EntityVersionDeleted {
      * @param entityVersions The versions that are to be removed
      */
     public void versionDeleted(final CollectionScope scope, final Id entityId, 
-            final List<MvccEntity> entityVersions);
+            final List<MvccLogEntry> entityVersions);
 
 }

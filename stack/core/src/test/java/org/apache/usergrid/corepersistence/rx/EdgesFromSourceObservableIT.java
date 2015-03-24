@@ -23,6 +23,7 @@ package org.apache.usergrid.corepersistence.rx;
 import java.util.HashMap;
 import java.util.Set;
 
+import org.apache.usergrid.persistence.graph.serialization.EdgesObservable;
 import org.junit.Test;
 
 import org.apache.usergrid.AbstractCoreIT;
@@ -59,24 +60,19 @@ public class EdgesFromSourceObservableIT extends AbstractCoreIT {
     @Test
     public void testEntities() throws Exception {
 
+        EdgesObservable edgesToTargetObservable = SpringResource.getInstance().getBean(Injector.class).getInstance(EdgesObservable.class);
         final EntityManager em = app.getEntityManager();
         final Application createdApplication = em.getApplication();
-
-
 
         final String type1 = "targetthings";
         final String type2 = "sourcethings";
         final int size = 10;
-
-
 
         final Set<Id> sourceIdentities = EntityWriteHelper.createTypes( em, type2, size );
 
 
         final Entity entity = em.create( type1, new HashMap<String, Object>(){{put("property", "value");}} );
                   final Id target = new SimpleId( entity.getUuid(), entity.getType() );
-
-
 
 
         for ( Id source : sourceIdentities ) {
@@ -95,7 +91,7 @@ public class EdgesFromSourceObservableIT extends AbstractCoreIT {
 
         final GraphManager gm = managerCache.getGraphManager( scope );
 
-        EdgesToTargetObservable.getEdgesToTarget( gm, target ).doOnNext( new Action1<Edge>() {
+        edgesToTargetObservable.edgesToTarget( gm, target ).doOnNext( new Action1<Edge>() {
             @Override
             public void call( final Edge edge ) {
                 final String edgeType = edge.getType();

@@ -52,11 +52,7 @@ import org.apache.usergrid.persistence.index.query.tree.WithinOperand;
 
 import com.google.common.base.Joiner;
 
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ANALYZED_STRING_PREFIX;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.BOOLEAN_PREFIX;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.GEO_PREFIX;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.NUMBER_PREFIX;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.STRING_PREFIX;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.*;
 
 
 /**
@@ -69,7 +65,6 @@ public class EsQueryVistor implements QueryVisitor {
     Stack<QueryBuilder> stack = new Stack<QueryBuilder>();
     List<FilterBuilder> filterBuilders = new ArrayList<FilterBuilder>();
     GeoDistanceSortBuilder geoSortBuilder = null;
-
 
     @Override
     public void visit( AndOperand op ) throws IndexException {
@@ -190,6 +185,7 @@ public class EsQueryVistor implements QueryVisitor {
            .lat( lat ).lon( lon ).distance( distance, DistanceUnit.METERS );
         filterBuilders.add( fb );
         geoSortBuilder = SortBuilders.geoDistanceSort( GEO_PREFIX+"location" ).point( lat,lon );
+
     }
 
 
@@ -287,14 +283,23 @@ public class EsQueryVistor implements QueryVisitor {
         } else if ( value instanceof String ) {
             name = addStringPrefix( name );
 
-        } else if ( value instanceof Number ) {
-            name = addNumberPrefix( name );
+        }else if ( value instanceof Integer ) {
+            name = addLongPrefix(name);
+
+        }else if ( value instanceof Long ) {
+            name = addLongPrefix(name);
+
+        } else if ( value instanceof Float ) {
+            name = addDoublePrefix(name);
+
+        }else if ( value instanceof Float ) {
+            name = addDoublePrefix(name);
 
         } else if ( value instanceof Boolean ) {
-            name = addBooleanPrefix( name );
+            name = addBooleanPrefix(name);
 
         } else if ( value instanceof UUID ) {
-            name = addStringPrefix( name );
+            name = addStringPrefix(name);
         }
 
         // re-create nested property name
@@ -323,12 +328,18 @@ public class EsQueryVistor implements QueryVisitor {
         return STRING_PREFIX + name;
     }
 
-
-    private String addNumberPrefix( String name ) {
-        if ( name.startsWith( NUMBER_PREFIX ) ) {
+    private String addDoublePrefix( String name ) {
+        if ( name.startsWith( DOUBLE_PREFIX ) ) {
             return name;
         }
-        return NUMBER_PREFIX + name;
+        return DOUBLE_PREFIX + name;
+    }
+
+    private String addLongPrefix( String name ) {
+        if ( name.startsWith( LONG_PREFIX ) ) {
+            return name;
+        }
+        return LONG_PREFIX + name;
     }
 
 

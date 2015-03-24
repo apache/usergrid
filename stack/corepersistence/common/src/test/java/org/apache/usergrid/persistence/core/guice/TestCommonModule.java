@@ -31,4 +31,5 @@ public class TestCommonModule extends TestModule {
     protected void configure() {
         install(new CommonModule());
     }
+
 }

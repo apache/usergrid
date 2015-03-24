@@ -29,13 +29,7 @@ import java.util.Iterator;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.Nullable;
 
@@ -43,7 +37,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.consistency.TimeService;
-import org.apache.usergrid.persistence.core.hystrix.HystrixCassandra;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.task.Task;
 import org.apache.usergrid.persistence.core.task.TaskExecutor;
@@ -74,6 +67,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 
 /**
@@ -207,8 +201,8 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
                 if ( edgeCount % maxWorkSize == 0 ) {
 
                     try {
-                        HystrixCassandra.async( newRowBatch );
-                        HystrixCassandra.async( deleteRowBatch );
+                        newRowBatch.execute();
+                        deleteRowBatch.execute();
                     }
                     catch ( Throwable t ) {
                         LOG.error( "Unable to move edges from shard {} to shard {}", sourceShard, targetShard );
@@ -219,8 +213,8 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
 
 
         try {
-            HystrixCassandra.async( newRowBatch );
-            HystrixCassandra.async( deleteRowBatch );
+            newRowBatch.execute();
+            deleteRowBatch.execute();
         }
         catch ( Throwable t ) {
             LOG.error( "Unable to move edges to target shard {}", targetShard );
@@ -260,7 +254,12 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
             }
 
 
-            HystrixCassandra.async( shardRemovalRollup );
+            try {
+                shardRemovalRollup.execute();
+            }
+            catch ( ConnectionException e ) {
+                throw new RuntimeException( "Unable to connect to casandra", e );
+            }
 
 
             LOG.info( "Shard has been fully compacted.  Marking shard {} as compacted in Cassandra", targetShard );
@@ -268,7 +267,12 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
             //Overwrite our shard index with a newly created one that has been marked as compacted
             Shard compactedShard = new Shard( targetShard.getShardIndex(), timeService.getCurrentTime(), true );
             final MutationBatch updateMark = edgeShardSerialization.writeShardMeta( scope, compactedShard, edgeMeta );
-            HystrixCassandra.async( updateMark );
+            try {
+                updateMark.execute();
+            }
+            catch ( ConnectionException e ) {
+                throw new RuntimeException( "Unable to connect to casandra", e );
+            }
 
             resultBuilder.withCompactedShard( compactedShard );
         }
@@ -530,40 +534,6 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
     }
 
 
-    /**
-     * Create a thread pool that will reject work if our audit tasks become overwhelmed
-     */
-    private final class MaxSizeThreadPool extends ThreadPoolExecutor {
-
-        public MaxSizeThreadPool( final int workerSize, final int queueLength ) {
-            super( 1, workerSize, 30, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>( queueLength ),
-                    new CompactionThreadFactory(), new RejectionLogger() );
-        }
-    }
-
-
-    private final class CompactionThreadFactory implements ThreadFactory {
-
-        private final AtomicLong threadCounter = new AtomicLong();
-
-
-        @Override
-        public Thread newThread( final Runnable r ) {
-            final long newValue = threadCounter.incrementAndGet();
-
-            return new Thread( r, "Graph-Shard-Compaction-" + newValue );
-        }
-    }
-
-
-    private final class RejectionLogger implements RejectedExecutionHandler {
-
-
-        @Override
-        public void rejectedExecution( final Runnable r, final ThreadPoolExecutor executor ) {
-            LOG.warn( "Audit queue full, rejecting audit task {}", r );
-        }
-    }
 
 
     public static final class CompactionResult {

@@ -20,7 +20,6 @@ package org.apache.usergrid.persistence;
 import java.util.Map;
 import java.util.UUID;
 
-import com.yammer.metrics.annotation.Metered;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.springframework.context.ApplicationContext;
@@ -97,7 +96,6 @@ public interface EntityManagerFactory {
      *
      * @throws Exception the exception
      */
-    @Metered(group = "core", name = "EntityManagerFactory_getApplication")
     public abstract Map<String, UUID> getApplications() throws Exception;
 
     public Map<String, UUID> getDeletedApplications() throws Exception;
@@ -119,34 +117,12 @@ public interface EntityManagerFactory {
 
     public UUID getDefaultAppId();
 
-    public void refreshIndex();
-
     public void rebuildAllIndexes( ProgressObserver po ) throws Exception;
 
     public void rebuildInternalIndexes( ProgressObserver po ) throws Exception;
 
     public void rebuildApplicationIndexes( UUID appId, ProgressObserver po ) throws Exception;
 
-    /**
-     * Perform any data migrations necessary in the system
-     * @throws Exception
-     */
-    public void migrateData() throws Exception;
-
-    /**
-     * Return the migration status message
-     */
-    public String getMigrateDataStatus();
-
-    /**
-     * Return the current migration version of the system
-     */
-    public int getMigrateDataVersion();
-
-    /**
-     * Force the migration version to the specified version
-     */
-    public void setMigrationVersion(int version);
 
     /**
      * Perform a realtime count of every entity in the system.  This can be slow as it traverses the entire system graph

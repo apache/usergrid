@@ -30,6 +30,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,7 +83,7 @@ public class FilteringLoader implements ResultsLoader {
         this.applicationScope = applicationScope;
         this.indexScope = indexScope;
 
-        final EntityIndex index = managerCache.getEntityIndex( applicationScope );
+        final ApplicationEntityIndex index = managerCache.getEntityIndex( applicationScope );
 
         indexBatch = index.createBatch();
     }
@@ -143,30 +144,44 @@ public class FilteringLoader implements ResultsLoader {
 
             final UUID currentVersion = currentCandidate.getVersion();
 
-            //this is a newer version, we know we already have a stale entity, add it to be cleaned up
-            if ( UUIDComparator.staticCompare( currentVersion, previousMaxVersion ) > 0 ) {
 
-                //de-index it
-                logger.warn( "Stale version of Entity uuid:{} type:{}, stale v:{}, latest v:{}",
-                    new Object[] {
-                        entityId.getUuid(),
-                        entityId.getType(),
-                        previousMaxVersion,
-                        currentVersion } );
+            final CandidateResult toRemove;
+            final CandidateResult toKeep;
 
-                //deindex this document, and remove the previous maxVersion
-                //we have to deindex this from our ownerId, since this is what gave us the reference
-                indexBatch.deindex( indexScope, previousMax );
-                groupedByScopes.remove( collectionType, previousMax );
-
-
-                //TODO, fire the entity repair cleanup task here instead of de-indexing
-
-                //replace the value with a more current version
-                maxCandidateMapping.put( entityId, currentCandidate );
-                orderIndex.put( entityId, i );
-                groupedByScopes.put( collectionType, currentCandidate );
+            //current is newer than previous.  Remove previous and keep current
+            if(UUIDComparator.staticCompare( currentVersion, previousMaxVersion ) > 0 ){
+                toRemove = previousMax;
+                toKeep = currentCandidate;
             }
+            //previously seen value is newer than current.  Remove the current and keep the previously seen value
+            else{
+                toRemove = currentCandidate;
+                toKeep = previousMax;
+            }
+
+            //this is a newer version, we know we already have a stale entity, add it to be cleaned up
+
+
+            //de-index it
+            logger.warn( "Stale version of Entity uuid:{} type:{}, stale v:{}, latest v:{}",
+                new Object[] {
+                    entityId.getUuid(),
+                    entityId.getType(),
+                    toRemove.getVersion(),
+                    toKeep.getVersion() } );
+
+            //deindex this document, and remove the previous maxVersion
+            //we have to deindex this from our ownerId, since this is what gave us the reference
+            indexBatch.deindex( indexScope, toRemove );
+            groupedByScopes.remove( collectionType, toRemove );
+
+
+            //TODO, fire the entity repair cleanup task here instead of de-indexing
+
+            //replace the value with a more current version
+            maxCandidateMapping.put( entityId, toKeep );
+            orderIndex.put( entityId, i );
+            groupedByScopes.put( collectionType, toKeep );
         }
 
 
@@ -233,7 +248,7 @@ public class FilteringLoader implements ResultsLoader {
 
     @Override
     public void postProcess() {
-        this.indexBatch.execute().get();
+        this.indexBatch.execute();
     }
 
 

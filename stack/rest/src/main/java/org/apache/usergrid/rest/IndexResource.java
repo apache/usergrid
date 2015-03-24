@@ -20,6 +20,7 @@
 
 package org.apache.usergrid.rest;
 
+import com.google.common.base.Preconditions;
 import com.sun.jersey.api.json.JSONWithPadding;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.EntityRef;
@@ -259,6 +260,8 @@ public class IndexResource extends AbstractContextResource {
             Map<String, Object> config,
             @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback)  throws Exception{
 
+        Preconditions.checkNotNull(config,"Payload for config is null, please pass {replicas:int, shards:int} in body");
+
         ApiResponse response = createApiResponse();
         final UUID appId = UUIDUtils.tryExtractUUID(applicationIdStr);
 
@@ -297,7 +300,7 @@ public class IndexResource extends AbstractContextResource {
         logger.info( "Reindexing for app id: {} and collection {}", applicationId, collectionName );
 
         emf.rebuildCollectionIndex(applicationId, collectionName, reverse, po);
-        emf.refreshIndex();
+        getEntityIndex().refresh();
     }
 
 }

@@ -19,18 +19,22 @@
 package org.apache.usergrid.persistence.collection.impl;
 
 
-import java.util.*;
-
-import com.netflix.astyanax.MutationBatch;
-import org.apache.usergrid.persistence.collection.*;
-import org.apache.usergrid.persistence.collection.serialization.impl.MutableFieldSet;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.collection.guice.Write;
-import org.apache.usergrid.persistence.collection.guice.WriteUpdate;
-import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
+import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.EntitySet;
+import org.apache.usergrid.persistence.collection.FieldSet;
+import org.apache.usergrid.persistence.collection.MvccEntity;
+import org.apache.usergrid.persistence.collection.VersionSet;
+import org.apache.usergrid.persistence.collection.guice.CollectionTaskExecutor;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccValidationUtils;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
@@ -41,10 +45,15 @@ import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteCommit;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteOptimisticVerify;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteStart;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteUniqueVerify;
+import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
+import org.apache.usergrid.persistence.collection.serialization.impl.MutableFieldSet;
 import org.apache.usergrid.persistence.core.guice.ProxyImpl;
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
+import org.apache.usergrid.persistence.core.task.Task;
+import org.apache.usergrid.persistence.core.task.TaskExecutor;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -52,21 +61,23 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.Timer;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.netflix.astyanax.Keyspace;
+import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.OperationResult;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.model.ColumnFamily;
 import com.netflix.astyanax.model.CqlResult;
 import com.netflix.astyanax.serializers.StringSerializer;
-import org.apache.usergrid.persistence.collection.guice.CollectionTaskExecutor;
-import org.apache.usergrid.persistence.core.task.Task;
-import org.apache.usergrid.persistence.core.task.TaskExecutor;
 
+import rx.Notification;
 import rx.Observable;
 import rx.Subscriber;
+import rx.functions.Action0;
 import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
@@ -85,7 +96,6 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
     //start stages
     private final WriteStart writeStart;
-    private final WriteStart writeUpdate;
     private final WriteUniqueVerify writeVerifyUnique;
     private final WriteOptimisticVerify writeOptimisticVerify;
     private final WriteCommit writeCommit;
@@ -100,18 +110,25 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     private final MvccEntitySerializationStrategy entitySerializationStrategy;
     private final UniqueValueSerializationStrategy uniqueValueSerializationStrategy;
 
-    private final EntityVersionCleanupFactory entityVersionCleanupFactory;
-    private final EntityVersionCreatedFactory entityVersionCreatedFactory;
-    private final EntityDeletedFactory entityDeletedFactory;
+    private final EntityVersionTaskFactory entityVersionTaskFactory;
     private final TaskExecutor taskExecutor;
 
     private final Keyspace keyspace;
+    private final Timer writeTimer;
+    private final Meter writeMeter;
+    private final Timer deleteTimer;
+    private final Timer updateTimer;
+    private final Timer loadTimer;
+    private final Timer getLatestTimer;
+    private final Meter deleteMeter;
+    private final Meter getLatestMeter;
+    private final Meter loadMeter;
+    private final Meter updateMeter;
 
 
     @Inject
     public EntityCollectionManagerImpl(
-        @Write final WriteStart                    writeStart,
-        @WriteUpdate final WriteStart              writeUpdate,
+        final WriteStart                    writeStart,
         final WriteUniqueVerify                    writeVerifyUnique,
         final WriteOptimisticVerify                writeOptimisticVerify,
         final WriteCommit                          writeCommit,
@@ -122,11 +139,11 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         final UniqueValueSerializationStrategy     uniqueValueSerializationStrategy,
         final MvccLogEntrySerializationStrategy    mvccLogEntrySerializationStrategy,
         final Keyspace                             keyspace,
-        final EntityVersionCleanupFactory          entityVersionCleanupFactory,
-        final EntityVersionCreatedFactory          entityVersionCreatedFactory,
-        final EntityDeletedFactory                 entityDeletedFactory,
+        final EntityVersionTaskFactory entityVersionTaskFactory,
         @CollectionTaskExecutor final TaskExecutor taskExecutor,
-        @Assisted final CollectionScope            collectionScope
+        @Assisted final CollectionScope            collectionScope,
+        final MetricsFactory metricsFactory
+
     ) {
         this.uniqueValueSerializationStrategy = uniqueValueSerializationStrategy;
         this.entitySerializationStrategy = entitySerializationStrategy;
@@ -134,7 +151,6 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         MvccValidationUtils.validateCollectionScope( collectionScope );
 
         this.writeStart = writeStart;
-        this.writeUpdate = writeUpdate;
         this.writeVerifyUnique = writeVerifyUnique;
         this.writeOptimisticVerify = writeOptimisticVerify;
         this.writeCommit = writeCommit;
@@ -146,13 +162,21 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
         this.keyspace = keyspace;
 
-        this.entityVersionCleanupFactory = entityVersionCleanupFactory;
-        this.entityVersionCreatedFactory = entityVersionCreatedFactory;
-        this.entityDeletedFactory = entityDeletedFactory;
+        this.entityVersionTaskFactory = entityVersionTaskFactory;
         this.taskExecutor = taskExecutor;
 
         this.collectionScope = collectionScope;
         this.mvccLogEntrySerializationStrategy = mvccLogEntrySerializationStrategy;
+        this.writeTimer = metricsFactory.getTimer(EntityCollectionManagerImpl.class,"write.timer");
+        this.writeMeter = metricsFactory.getMeter(EntityCollectionManagerImpl.class, "write.meter");
+        this.deleteTimer = metricsFactory.getTimer(EntityCollectionManagerImpl.class, "delete.timer");
+        this.deleteMeter= metricsFactory.getMeter(EntityCollectionManagerImpl.class, "delete.meter");
+        this.updateTimer = metricsFactory.getTimer(EntityCollectionManagerImpl.class, "update.timer");
+        this.updateMeter = metricsFactory.getMeter(EntityCollectionManagerImpl.class, "update.meter");
+        this.loadTimer = metricsFactory.getTimer(EntityCollectionManagerImpl.class,"load.timer");
+        this.loadMeter = metricsFactory.getMeter(EntityCollectionManagerImpl.class, "load.meter");
+        this.getLatestTimer = metricsFactory.getTimer(EntityCollectionManagerImpl.class,"latest.timer");
+        this.getLatestMeter = metricsFactory.getMeter(EntityCollectionManagerImpl.class, "latest.meter");
     }
 
 
@@ -177,15 +201,29 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         // observable = Concurrent.concurrent( observable, Schedulers.io(), new WaitZip(),
         //                  writeVerifyUnique, writeOptimisticVerify );
 
+        final Timer.Context timer = writeTimer.time();
         return observable.map(writeCommit).doOnNext(new Action1<Entity>() {
             @Override
             public void call(final Entity entity) {
                 //TODO fire the created task first then the entityVersioncleanup
-                taskExecutor.submit(entityVersionCreatedFactory.getTask(collectionScope,entity));
-                taskExecutor.submit(entityVersionCleanupFactory.getTask(collectionScope, entityId,entity.getVersion()));
+                taskExecutor.submit( entityVersionTaskFactory.getCreatedTask( collectionScope, entity ));
+                taskExecutor.submit( entityVersionTaskFactory.getCleanupTask( collectionScope, entityId,
+                    entity.getVersion(), false ));
                 //post-processing to come later. leave it empty for now.
             }
-        }).doOnError(rollback);
+        }).doOnError( rollback )
+            .doOnEach( new Action1<Notification<? super Entity>>() {
+                @Override
+                public void call( Notification<? super Entity> notification ) {
+                    writeMeter.mark();
+                }
+            } )
+            .doOnCompleted( new Action0() {
+                @Override
+                public void call() {
+                    timer.stop();
+                }
+            } );
     }
 
 
@@ -196,21 +234,34 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getUuid(), "Entity id is required in this stage" );
         Preconditions.checkNotNull( entityId.getType(), "Entity type is required in this stage" );
 
-        Observable<Id> o = Observable.from(new CollectionIoEvent<Id>(collectionScope, entityId))
-            .map( markStart)
-            .doOnNext( markCommit)
-            .map( new Func1<CollectionIoEvent<MvccEntity>, Id>() {
+        final Timer.Context timer = deleteTimer.time();
+        Observable<Id> o = Observable.just( new CollectionIoEvent<Id>( collectionScope, entityId ) )
+            .map(markStart)
+            .doOnNext( markCommit )
+            .map(new Func1<CollectionIoEvent<MvccEntity>, Id>() {
 
+                     @Override
+                     public Id call(final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent) {
+                         MvccEntity entity = mvccEntityCollectionIoEvent.getEvent();
+                         Task<Void> task = entityVersionTaskFactory
+                             .getDeleteTask( collectionScope, entity.getId(), entity.getVersion() );
+                         taskExecutor.submit(task);
+                         return entity.getId();
+                     }
+                 }
+            )
+            .doOnNext(new Action1<Id>() {
                 @Override
-                public Id call(final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent) {
-                    MvccEntity entity = mvccEntityCollectionIoEvent.getEvent();
-                    Task<Void> task = entityDeletedFactory
-                        .getTask( collectionScope, entity.getId(), entity.getVersion());
-                    taskExecutor.submit(task);
-                    return entity.getId();
+                public void call(Id id) {
+                    deleteMeter.mark();
                 }
-            }
-        );
+            })
+            .doOnCompleted( new Action0() {
+                @Override
+                public void call() {
+                    timer.stop();
+                }
+            } );
 
         return o;
     }
@@ -223,18 +274,31 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getUuid(), "Entity id uuid required in load stage" );
         Preconditions.checkNotNull( entityId.getType(), "Entity id type required in load stage" );
 
-        return load( Collections.singleton( entityId ) ).flatMap( new Func1<EntitySet, Observable<Entity>>() {
+        final Timer.Context timer = loadTimer.time();
+        return load( Collections.singleton( entityId ) ).flatMap(new Func1<EntitySet, Observable<Entity>>() {
             @Override
-            public Observable<Entity> call( final EntitySet entitySet ) {
-                final MvccEntity entity = entitySet.getEntity( entityId );
+            public Observable<Entity> call(final EntitySet entitySet) {
+                final MvccEntity entity = entitySet.getEntity(entityId);
 
-                if ( entity == null || !entity.getEntity().isPresent() ) {
+                if (entity == null || !entity.getEntity().isPresent()) {
                     return Observable.empty();
                 }
 
-                return Observable.from( entity.getEntity().get() );
+                return Observable.just( entity.getEntity().get() );
             }
-        } );
+        })
+            .doOnNext( new Action1<Entity>() {
+                @Override
+                public void call( Entity entity ) {
+                    loadMeter.mark();
+                }
+            } )
+            .doOnCompleted( new Action0() {
+                @Override
+                public void call() {
+                    timer.stop();
+                }
+            } );
     }
 
 
@@ -246,6 +310,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
         Preconditions.checkNotNull( entityIds, "entityIds cannot be null" );
 
+        final Timer.Context timer = loadTimer.time();
 
         return Observable.create( new Observable.OnSubscribe<EntitySet>() {
 
@@ -262,7 +327,19 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                     subscriber.onError( e );
                 }
             }
-        } );
+        } )
+            .doOnNext(new Action1<EntitySet>() {
+                @Override
+                public void call(EntitySet entitySet) {
+                    loadMeter.mark();
+                }
+            })
+            .doOnCompleted( new Action0() {
+                @Override
+                public void call() {
+                    timer.stop();
+                }
+            } );
     }
 
 
@@ -273,10 +350,9 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
             @Override
             public Id call( Field field ) {
                 try {
-                    UniqueValueSet set = uniqueValueSerializationStrategy.load( collectionScope, fields );
-                    UniqueValue value = set.getValue( field.getName() );
-                    Id id = value == null ? null : value.getEntityId();
-                    return id;
+                    final UniqueValueSet set = uniqueValueSerializationStrategy.load( collectionScope, fields );
+                    final UniqueValue value = set.getValue( field.getName() );
+                    return value == null ? null : value.getEntityId();
                 }
                 catch ( ConnectionException e ) {
                     logger.error( "Failed to getIdField", e );
@@ -368,61 +444,24 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
 
 
-    @Override
-    public Observable<Entity> update( final Entity entity ) {
-
-        logger.debug( "Starting update process" );
-
-        //do our input validation
-        Preconditions.checkNotNull( entity, "Entity is required in the new stage of the mvcc write" );
-
-        final Id entityId = entity.getId();
-
-
-        ValidationUtils.verifyIdentity( entityId );
-
-        // create our observable and start the write
-        CollectionIoEvent<Entity> writeData = new CollectionIoEvent<Entity>( collectionScope, entity );
-
-
-        Observable<CollectionIoEvent<MvccEntity>> observable = stageRunner( writeData, writeUpdate );
-
-
-        return observable.map( writeCommit ).doOnNext( new Action1<Entity>() {
-            @Override
-            public void call( final Entity entity ) {
-                logger.debug( "sending entity to the queue" );
-
-                //we an update, signal the fix
-                taskExecutor.submit(entityVersionCreatedFactory.getTask(collectionScope,entity));
-
-                //TODO T.N Change this to fire a task
-                //                Observable.from( new CollectionIoEvent<Id>(collectionScope,
-                // entityId ) ).map( load ).subscribeOn( Schedulers.io() ).subscribe();
-
-
-            }
-        } ).doOnError( rollback );
-    }
-
 
     // fire the stages
     public Observable<CollectionIoEvent<MvccEntity>> stageRunner( CollectionIoEvent<Entity> writeData,
                                                                   WriteStart writeState ) {
 
-        return Observable.from( writeData ).map( writeState ).doOnNext( new Action1<CollectionIoEvent<MvccEntity>>() {
+        return Observable.just( writeData ).map( writeState ).doOnNext( new Action1<CollectionIoEvent<MvccEntity>>() {
 
                     @Override
                     public void call( final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent ) {
 
                         Observable<CollectionIoEvent<MvccEntity>> unique =
-                                Observable.from( mvccEntityCollectionIoEvent ).subscribeOn( Schedulers.io() )
+                                Observable.just( mvccEntityCollectionIoEvent ).subscribeOn( Schedulers.io() )
                                           .doOnNext( writeVerifyUnique );
 
 
                         // optimistic verification
                         Observable<CollectionIoEvent<MvccEntity>> optimistic =
-                                Observable.from( mvccEntityCollectionIoEvent ).subscribeOn( Schedulers.io() )
+                                Observable.just( mvccEntityCollectionIoEvent ).subscribeOn( Schedulers.io() )
                                           .doOnNext( writeOptimisticVerify );
 
 
@@ -436,6 +475,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     @Override
     public Observable<VersionSet> getLatestVersion( final Collection<Id> entityIds ) {
 
+        final Timer.Context timer = getLatestTimer.time();
         return Observable.create( new Observable.OnSubscribe<VersionSet>() {
 
             @Override
@@ -451,7 +491,13 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                     subscriber.onError( e );
                 }
             }
-        } );
+        } )
+            .doOnCompleted( new Action0() {
+                @Override
+                public void call() {
+                    timer.stop();
+                }
+            } );
     }
 
 

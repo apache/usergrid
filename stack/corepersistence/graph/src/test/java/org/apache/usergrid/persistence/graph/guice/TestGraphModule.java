@@ -20,8 +20,12 @@ package org.apache.usergrid.persistence.graph.guice;
 
 
 import org.apache.usergrid.persistence.core.guice.CommonModule;
-import org.apache.usergrid.persistence.core.guice.MaxMigrationModule;
 import org.apache.usergrid.persistence.core.guice.TestModule;
+import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
+import org.apache.usergrid.persistence.core.migration.data.TestMigrationDataProvider;
+import org.apache.usergrid.persistence.graph.serialization.impl.migration.GraphNode;
+
+import com.google.inject.TypeLiteral;
 
 
 /**
@@ -34,14 +38,17 @@ public class TestGraphModule extends TestModule {
         /**
          * Runtime modules
          */
-        install( new CommonModule());
-        install( new GraphModule() );
+        install( new CommonModule() );
+        install( new GraphModule() {
 
+            @Override
+            public void configureMigrationProvider() {
+                //configure our migration data provider
 
-        /**
-         * Test modules
-         */
-        install(new MaxMigrationModule());
-
+                TestMigrationDataProvider<GraphNode> migrationDataProvider = new TestMigrationDataProvider<>();
+                bind( new TypeLiteral<MigrationDataProvider<GraphNode>>() {} )
+                        .toInstance( migrationDataProvider );
+            }
+        } );
     }
 }

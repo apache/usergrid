@@ -40,7 +40,6 @@ import org.apache.commons.lang.StringUtils;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.yammer.metrics.annotation.Metered;
 
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.ColumnSlice;
@@ -274,7 +273,6 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
 
 
     @Override
-    @Metered(group = "core", name = "EntityManagerFactory_lookupApplication_byName")
     public UUID lookupApplication( String name ) throws Exception {
         name = name.toLowerCase();
         HColumn<String, ByteBuffer> column =
@@ -295,7 +293,6 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
      *
      * @throws Exception the exception
      */
-    @Metered(group = "core", name = "EntityManagerFactory_getApplication")
     public Application getApplication( String name ) throws Exception {
         name = name.toLowerCase();
         HColumn<String, ByteBuffer> column =
@@ -412,11 +409,6 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
     }
 
     @Override
-    public void refreshIndex() {
-        // no op
-    }
-
-    @Override
     public void flushEntityManagerCaches() {
         // no-op
     }
@@ -441,29 +433,6 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
         throw new UnsupportedOperationException("Not supported.");
     }
 
-
-    @Override
-    public void migrateData() throws Exception {
-
-    }
-
-
-    @Override
-    public String getMigrateDataStatus() {
-        throw new UnsupportedOperationException("Not supported in v1");
-    }
-
-
-    @Override
-    public int getMigrateDataVersion() {
-        throw new UnsupportedOperationException("Not supported in v1");
-    }
-
-
-    @Override
-    public void setMigrationVersion( final int version ) {
-        throw new UnsupportedOperationException("Not supported in v1");
-    }
 
     @Override
     public void addIndex(UUID appId, String suffix,final int shards,final int replicas,final String consistency) {

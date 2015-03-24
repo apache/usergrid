@@ -17,86 +17,84 @@
  */
 package org.apache.usergrid.corepersistence.events;
 
-import com.google.inject.Inject;
+
 import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.corepersistence.CpEntityManagerFactory;
-import static org.apache.usergrid.corepersistence.CoreModule.EVENTS_DISABLED;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.MvccEntity;
+import org.apache.usergrid.persistence.collection.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
+import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.impl.IndexScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import rx.functions.Func1;
-import rx.schedulers.Schedulers;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
+import rx.Observable;
+
+import static org.apache.usergrid.corepersistence.CoreModule.EVENTS_DISABLED;
 
 
 /**
- * Remove Entity index when specific version of Entity is deleted.
- * TODO: do we need this? Don't our version-created and entity-deleted handlers take care of this?
- * If we do need it then it should be wired in via GuiceModule in the corepersistence package.
+ * Remove Entity index when specific version of Entity is deleted. TODO: do we need this? Don't our version-created and
+ * entity-deleted handlers take care of this? If we do need it then it should be wired in via GuiceModule in the
+ * corepersistence package.
  */
+@Singleton
 public class EntityVersionDeletedHandler implements EntityVersionDeleted {
-    private static final Logger logger = LoggerFactory.getLogger(EntityVersionDeletedHandler.class );
+    private static final Logger logger = LoggerFactory.getLogger( EntityVersionDeletedHandler.class );
+
+
+    private final EntityManagerFactory emf;
+
 
     @Inject
-    private SerializationFig serializationFig;
-
-    @Inject
-    private EntityManagerFactory emf;
+    public EntityVersionDeletedHandler( final EntityManagerFactory emf ) {this.emf = emf;}
 
 
     @Override
-    public void versionDeleted(
-            final CollectionScope scope, final Id entityId, final List<MvccEntity> entityVersions) {
+    public void versionDeleted( final CollectionScope scope, final Id entityId,
+                                final List<MvccLogEntry> entityVersions ) {
+
 
         // This check is for testing purposes and for a test that to be able to dynamically turn
         // off and on delete previous versions so that it can test clean-up on read.
-        if ( System.getProperty( EVENTS_DISABLED, "false" ).equals( "true" )) {
+        if ( System.getProperty( EVENTS_DISABLED, "false" ).equals( "true" ) ) {
             return;
         }
 
-        logger.debug("Handling versionDeleted count={} event for entity {}:{} v {} "
-                + "scope\n   name: {}\n   owner: {}\n   app: {}",
-            new Object[] {
-                entityVersions.size(),
-                entityId.getType(),
-                entityId.getUuid(),
-                scope.getName(),
-                scope.getOwner(),
-                scope.getApplication()});
+        if ( logger.isDebugEnabled() ) {
+            logger.debug( "Handling versionDeleted count={} event for entity {}:{} v {} "
+                    + "scope\n   name: {}\n   owner: {}\n   app: {}", new Object[] {
+                    entityVersions.size(), entityId.getType(), entityId.getUuid(), scope.getName(), scope.getOwner(),
+                    scope.getApplication()
+                } );
+        }
 
-        CpEntityManagerFactory cpemf = (CpEntityManagerFactory)emf;
+        CpEntityManagerFactory cpemf = ( CpEntityManagerFactory ) emf;
 
-        final EntityIndex ei = cpemf.getManagerCache().getEntityIndex(scope);
+        final ApplicationEntityIndex ei = cpemf.getManagerCache().getEntityIndex( scope );
 
-        final EntityIndexBatch eibatch = ei.createBatch();
+        final IndexScope indexScope =
+            new IndexScopeImpl( new SimpleId( scope.getOwner().getUuid(), scope.getOwner().getType() ),
+                scope.getName() );
 
-        final IndexScope indexScope = new IndexScopeImpl(
-                new SimpleId(scope.getOwner().getUuid(), scope.getOwner().getType()),
-                scope.getName()
-        );
-
-        rx.Observable.from(entityVersions)
-            .subscribeOn(Schedulers.io())
-            .buffer(serializationFig.getBufferSize())
-            .map(new Func1<List<MvccEntity>, List<MvccEntity>>() {
-                @Override
-                public List<MvccEntity> call(List<MvccEntity> entityList) {
-                    for (MvccEntity entity : entityList) {
-                        eibatch.deindex(indexScope, entityId, entity.getVersion());
-                    }
-                    eibatch.execute();
-                    return entityList;
-                }
-            }).toBlocking().last();
+        //create our batch, and then collect all of them into a single batch
+        Observable.from( entityVersions ).collect( () -> ei.createBatch(), ( entityIndexBatch, mvccLogEntry ) -> {
+            entityIndexBatch.deindex( indexScope, mvccLogEntry.getEntityId(), mvccLogEntry.getVersion() );
+        } )
+            //after our batch is collected, execute it
+            .doOnNext( entityIndexBatch -> {
+                entityIndexBatch.execute();
+            } ).toBlocking().last();
     }
-
 }

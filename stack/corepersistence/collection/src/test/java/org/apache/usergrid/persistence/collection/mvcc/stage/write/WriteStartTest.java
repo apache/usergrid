@@ -68,7 +68,7 @@ public class WriteStartTest extends AbstractEntityStageTest {
         final Entity entity = TestEntityGenerator.generateEntity();
 
         //run the stage
-        WriteStart newStage = new WriteStart( logStrategy, MvccEntity.Status.COMPLETE);
+        WriteStart newStage = new WriteStart( logStrategy);
 
 
         //verify the observable is correct
@@ -113,7 +113,7 @@ public class WriteStartTest extends AbstractEntityStageTest {
         //set up the mock to return the entity from the start phase
         final Entity entity = TestEntityGenerator.generateEntity(new SimpleId(UUID.randomUUID(),"test"),null);
         //run the stage
-        WriteStart newStage = new WriteStart( logStrategy, MvccEntity.Status.COMPLETE);
+        WriteStart newStage = new WriteStart( logStrategy );
 
         //verify the observable is correct
         CollectionIoEvent<MvccEntity> result = newStage.call( new CollectionIoEvent<Entity>( context, entity ) );
@@ -140,7 +140,7 @@ public class WriteStartTest extends AbstractEntityStageTest {
     protected void validateStage( final CollectionIoEvent<Entity> event ) {
         final MvccLogEntrySerializationStrategy logStrategy = mock( MvccLogEntrySerializationStrategy.class );
 
-        new WriteStart( logStrategy, MvccEntity.Status.COMPLETE ).call( event );
+        new WriteStart( logStrategy ).call( event );
     }
 }
 

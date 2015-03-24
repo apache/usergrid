@@ -19,6 +19,7 @@ package org.apache.usergrid;
 
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.index.EntityIndex;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
@@ -37,8 +38,9 @@ import org.apache.usergrid.utils.JsonUtils;
 import com.google.inject.Injector;
 
 
-public class CoreITSetupImpl implements CoreITSetup {
+public class CoreITSetupImpl implements CoreITSetup, TestEntityIndex {
     private static final Logger LOG = LoggerFactory.getLogger( CoreITSetupImpl.class );
+    private final Injector injector;
 
     protected EntityManagerFactory emf;
     protected QueueManagerFactory qmf;
@@ -55,6 +57,8 @@ public class CoreITSetupImpl implements CoreITSetup {
         emf = springResource.getBean( EntityManagerFactory.class );
         qmf = springResource.getBean( QueueManagerFactory.class );
         indexBucketLocator = springResource.getBean( IndexBucketLocator.class );
+        injector = springResource.getBean(Injector.class);
+
 
     }
 
@@ -130,6 +134,7 @@ public class CoreITSetupImpl implements CoreITSetup {
     @Override
     public UUID createApplication( String organizationName, String applicationName ) throws Exception {
 
+        emf.setup();
         if ( USE_DEFAULT_APPLICATION ) {
             return emf.getDefaultAppId();
         }
@@ -143,5 +148,25 @@ public class CoreITSetupImpl implements CoreITSetup {
         if ( obj != null && LOG.isInfoEnabled() ) {
             LOG.info( name + ":\n" + JsonUtils.mapToFormattedJsonString( obj ) );
         }
+    }
+
+    @Override
+    public Injector getInjector() {
+        return injector;
+    }
+
+    @Override
+    public TestEntityIndex getEntityIndex(){
+        return this;
+    }
+
+    @Override
+    public void refresh(){
+        try{
+            Thread.sleep(50);
+        }catch (InterruptedException ie){
+
+        }
+        getEntityIndex().refresh();
     }
 }

@@ -31,7 +31,6 @@ import org.apache.usergrid.persistence.IndexBucketLocator.IndexType;
 import org.apache.usergrid.persistence.cassandra.ApplicationCF;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 
-import com.yammer.metrics.annotation.Metered;
 
 import me.prettyprint.hector.api.beans.HColumn;
 
@@ -209,7 +208,6 @@ public class IndexBucketScanner implements IndexScanner {
      * @see java.util.Iterator#next()
      */
     @Override
-    @Metered(group = "core", name = "IndexBucketScanner_load")
     public NavigableSet<HColumn<ByteBuffer, ByteBuffer>> next() {
         NavigableSet<HColumn<ByteBuffer, ByteBuffer>> returnVal = lastResults;
 

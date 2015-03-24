@@ -37,4 +37,6 @@ public interface GraphManagerFactory
      * @param collectionScope The context to use when creating the graph manager
      */
     public GraphManager createEdgeManager( ApplicationScope collectionScope );
+
+    void invalidate();
 }

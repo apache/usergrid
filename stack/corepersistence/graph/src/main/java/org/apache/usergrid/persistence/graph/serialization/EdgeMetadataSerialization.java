@@ -22,6 +22,7 @@ package org.apache.usergrid.persistence.graph.serialization;
 
 import java.util.Iterator;
 
+import org.apache.usergrid.persistence.core.migration.data.VersionedData;
 import org.apache.usergrid.persistence.core.migration.schema.Migration;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
@@ -35,7 +36,7 @@ import com.netflix.astyanax.MutationBatch;
 /**
  * Simple interface for serializing an edge meta data
  */
-public interface EdgeMetadataSerialization extends Migration {
+public interface EdgeMetadataSerialization extends Migration, VersionedData {
 
 
     /**

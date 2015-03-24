@@ -22,6 +22,7 @@ package org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt;
 
 import javax.ws.rs.core.MediaType;
 
+import org.apache.usergrid.rest.test.resource2point0.endpoints.CollectionEndpoint;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.NamedResource;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.UrlResource;
 import org.apache.usergrid.rest.test.resource2point0.model.Application;
@@ -46,16 +47,17 @@ public class ApplicationResource extends NamedResource {
     }
 
 
-    public void post(Application application) {
-        getResource(true).type(MediaType.APPLICATION_JSON_TYPE)
-            .accept(MediaType.APPLICATION_JSON).post(application);
+    public ApiResponse post(Application application) {
+        ApiResponse apiResponse =getResource(true).type(MediaType.APPLICATION_JSON_TYPE)
+            .accept(MediaType.APPLICATION_JSON).post(ApiResponse.class,application);
+        return apiResponse;
     }
 
-    public Entity post(Entity payload){
-        ApiResponse response = getResource(true).type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
-            .post(ApiResponse.class, payload);
-        return new Entity(response);
-    }
+//    public Entity post(Entity payload){
+//        ApiResponse response = getResource(true).type( MediaType.APPLICATION_JSON_TYPE ).accept(MediaType.APPLICATION_JSON)
+//            .post(ApiResponse.class, payload);
+//        return new Entity(response);
+//    }
 
 
     public Entity get() {
