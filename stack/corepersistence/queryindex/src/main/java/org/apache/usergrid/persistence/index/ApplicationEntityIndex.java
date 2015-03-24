@@ -19,10 +19,8 @@
  */
 package org.apache.usergrid.persistence.index;
 
-import com.google.common.util.concurrent.ListenableFuture;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
 import org.apache.usergrid.persistence.index.query.Query;
-import org.elasticsearch.action.ListenableActionFuture;
 import rx.Observable;
 
 /**

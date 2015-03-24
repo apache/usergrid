@@ -26,6 +26,7 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.SearchType;
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.client.Client;
@@ -49,18 +50,22 @@ public class IndexRequest implements BatchRequest {
 
     public Map<String, Object> data;
 
-
     public IndexRequest( final String writeAlias, final ApplicationScope applicationScope, IndexScope indexScope, Entity entity) {
-        String context = createContextName(applicationScope,indexScope);
-        SearchType searchType = SearchType.fromId(entity.getId());
-        final Map<String, Object> data = EntityToMapConverter.convert(entity,context);
+        this(writeAlias, applicationScope, createContextName(applicationScope, indexScope), entity);
+    }
+
+    public IndexRequest( final String writeAlias, final ApplicationScope applicationScope, String context , Entity entity) {
+        this(writeAlias, applicationScope, SearchType.fromId(entity.getId()),IndexingUtils.createIndexDocId(entity,context), EntityToMapConverter.convert(entity, context));
+    }
+
+    public IndexRequest( final String writeAlias, final ApplicationScope applicationScope,SearchType searchType, String documentId,  Map<String, Object> data) {
         data.put(APPLICATION_ID_FIELDNAME, idString(applicationScope.getApplication()));
         this.writeAlias = writeAlias;
         this.entityType = searchType.getTypeName(applicationScope);
-        this.documentId = IndexingUtils.createIndexDocId(entity,context);
         this.data = data;
-    }
+        this.documentId = documentId;
 
+    }
 
     /**
      * DO NOT DELETE!  Required for Jackson

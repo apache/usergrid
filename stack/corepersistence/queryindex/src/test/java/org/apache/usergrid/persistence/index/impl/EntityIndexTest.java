@@ -651,7 +651,7 @@ public class EntityIndexTest extends BaseIT {
 
         for ( int i = 0; i < expectedPages; i++ ) {
             //**
-            final Query query = Query.fromQL( "select * order by created" );
+            Query query = Query.fromQL( "select * order by created" );
             query.setLimit( limit );
 
             if ( cursor != null ) {
