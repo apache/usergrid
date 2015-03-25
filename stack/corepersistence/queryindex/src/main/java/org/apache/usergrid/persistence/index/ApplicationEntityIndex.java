@@ -39,11 +39,22 @@ public interface ApplicationEntityIndex {
      */
     public EntityIndexBatch createBatch();
 
+    /**
+     * Execute query in Usergrid syntax.
+     */
+    public CandidateResults search(final IndexScope indexScope, final SearchTypes searchTypes, final Query query);
 
     /**
      * Execute query in Usergrid syntax.
      */
-    public CandidateResults search(final IndexScope indexScope, final SearchTypes searchType, Query query );
+    public CandidateResults search(final IndexScope indexScope, final SearchTypes searchType, final Query query, final int limit );
+
+    /**
+     * get next page of results
+     * @param cursor
+     * @return
+     */
+    public CandidateResults getNextPage(final String cursor);
 
     /**
      * delete all application records

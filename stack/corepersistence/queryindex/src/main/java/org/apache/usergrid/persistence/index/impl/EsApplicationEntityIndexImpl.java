@@ -46,15 +46,9 @@ import org.elasticsearch.action.deletebyquery.IndexDeleteByQueryResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequestBuilder;
-import org.elasticsearch.index.query.FilterBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.TermQueryBuilder;
+import org.elasticsearch.index.query.*;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
-import org.elasticsearch.search.sort.FieldSortBuilder;
-import org.elasticsearch.search.sort.SortBuilders;
-import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
@@ -85,6 +79,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex{
     private final IndexIdentifier.IndexAlias alias;
     private final Timer deleteApplicationTimer;
     private final Meter deleteApplicationMeter;
+    private final SearchRequestBuilderStrategy searchRequest;
     private FailureMonitor failureMonitor;
     private final int cursorTimeout;
     @Inject
@@ -117,6 +112,8 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex{
 
         this.alias = indexIdentifier.getAlias();
 
+        this.searchRequest = new SearchRequestBuilderStrategy(esProvider,appScope,alias,cursorTimeout);
+
     }
 
     @Override
@@ -139,132 +136,78 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex{
     }
 
     @Override
-    public CandidateResults search(final IndexScope indexScope, final SearchTypes searchTypes,
-                                   final Query query ) {
+    public CandidateResults search(final IndexScope indexScope, final SearchTypes searchTypes, final Query query){
+        return search(indexScope,searchTypes,query,10);
+    }
+
+    @Override
+    public CandidateResults search(final IndexScope indexScope, final SearchTypes searchTypes, final Query query, final int limit) {
 
         SearchResponse searchResponse;
 
-        if ( query.getCursor() == null ) {
-            String[] contexts = new String[]{createContextName(applicationScope, indexScope),createLegacyContextName(applicationScope,indexScope)};
-            SearchRequestBuilder srb = esProvider.getClient().prepareSearch( alias.getReadAlias() )
-                .setTypes(searchTypes.getTypeNames(applicationScope))
-                .setScroll(cursorTimeout + "m")
-                .setQuery(query.createQueryBuilder(contexts));
+        SearchRequestBuilder srb = searchRequest.getBuilder(indexScope, searchTypes, query, limit);
 
-            final FilterBuilder fb = query.createFilterBuilder();
-
-            //we have post filters, apply them
-            if ( fb != null ) {
-                logger.debug( "   Filter: {} ", fb.toString() );
-                srb = srb.setPostFilter( fb );
-            }
-
-
-            srb = srb.setFrom( 0 ).setSize( query.getLimit() );
-
-            for ( Query.SortPredicate sp : query.getSortPredicates() ) {
-
-                final SortOrder order;
-                if ( sp.getDirection().equals( Query.SortDirection.ASCENDING ) ) {
-                    order = SortOrder.ASC;
-                }
-                else {
-                    order = SortOrder.DESC;
-                }
-
-                // we do not know the type of the "order by" property and so we do not know what
-                // type prefix to use. So, here we add an order by clause for every possible type
-                // that you can order by: string, number and boolean and we ask ElasticSearch
-                // to ignore any fields that are not present.
-
-                final String stringFieldName = STRING_PREFIX + sp.getPropertyName();
-                final FieldSortBuilder stringSort = SortBuilders.fieldSort(stringFieldName)
-                    .order( order ).ignoreUnmapped( true );
-                srb.addSort( stringSort );
-
-                logger.debug( "   Sort: {} order by {}", stringFieldName, order.toString() );
-
-                final String longFieldName = LONG_PREFIX + sp.getPropertyName();
-                final FieldSortBuilder longSort = SortBuilders.fieldSort( longFieldName )
-                    .order( order ).ignoreUnmapped( true );
-                srb.addSort( longSort );
-                logger.debug( "   Sort: {} order by {}", longFieldName, order.toString() );
-
-
-                final String doubleFieldName = DOUBLE_PREFIX + sp.getPropertyName();
-                final FieldSortBuilder doubleSort = SortBuilders.fieldSort( doubleFieldName )
-                    .order( order ).ignoreUnmapped( true );
-                srb.addSort( doubleSort );
-                logger.debug( "   Sort: {} order by {}", doubleFieldName, order.toString() );
-
-
-                final String booleanFieldName = BOOLEAN_PREFIX + sp.getPropertyName();
-                final FieldSortBuilder booleanSort = SortBuilders.fieldSort( booleanFieldName )
-                    .order( order ).ignoreUnmapped( true );
-                srb.addSort( booleanSort );
-                logger.debug( "   Sort: {} order by {}", booleanFieldName, order.toString() );
-            }
-
-
-            if ( logger.isDebugEnabled() ) {
-                logger.debug( "Searching index (read alias): {}\n  scope: {} \n type: {}\n   query: {} ",
-                    this.alias.getReadAlias(), indexScope.getOwner(), searchTypes.getTypeNames(applicationScope), srb );
-            }
-
-            try {
-                //Added For Graphite Metrics
-                Timer.Context timeSearch = searchTimer.time();
-                searchResponse = srb.execute().actionGet();
-                timeSearch.stop();
-            }
-            catch ( Throwable t ) {
-                logger.error( "Unable to communicate with Elasticsearch", t );
-                failureMonitor.fail( "Unable to execute batch", t );
-                throw t;
-            }
-
-
-            failureMonitor.success();
-        }
-        else {
-            String userCursorString = query.getCursor();
-            if ( userCursorString.startsWith( "\"" ) ) {
-                userCursorString = userCursorString.substring( 1 );
-            }
-            if ( userCursorString.endsWith( "\"" ) ) {
-                userCursorString = userCursorString.substring( 0, userCursorString.length() - 1 );
-            }
-
-            //now get the cursor from the map  and validate
-            final String esScrollCursor  = mapManager.getString( userCursorString );
-
-            Preconditions.checkArgument(esScrollCursor != null, "Could not find a cursor for the value '{}' ", esScrollCursor);
-
-
-
-            logger.debug( "Executing query with cursor: {} ", esScrollCursor );
-
-
-            SearchScrollRequestBuilder ssrb = esProvider.getClient()
-                .prepareSearchScroll(esScrollCursor).setScroll( cursorTimeout + "m" );
-
-            try {
-                //Added For Graphite Metrics
-                Timer.Context timeSearchCursor = cursorTimer.time();
-                searchResponse = ssrb.execute().actionGet();
-                timeSearchCursor.stop();
-            }
-            catch ( Throwable t ) {
-                logger.error( "Unable to communicate with elasticsearch", t );
-                failureMonitor.fail( "Unable to execute batch", t );
-                throw t;
-            }
-
-
-            failureMonitor.success();
+        if (logger.isDebugEnabled()) {
+            logger.debug("Searching index (read alias): {}\n  scope: {} \n type: {}\n   query: {} ",
+                this.alias.getReadAlias(), indexScope.getOwner(), searchTypes.getTypeNames(applicationScope), srb);
         }
 
-        return parseResults(searchResponse, query);
+        try {
+            //Added For Graphite Metrics
+            Timer.Context timeSearch = searchTimer.time();
+            searchResponse = srb.execute().actionGet();
+            timeSearch.stop();
+        } catch (Throwable t) {
+            logger.error("Unable to communicate with Elasticsearch", t);
+            failureMonitor.fail("Unable to execute batch", t);
+            throw t;
+
+        }
+        failureMonitor.success();
+
+        return parseResults(searchResponse);
+    }
+
+
+    public CandidateResults getNextPage(final String cursor){
+        SearchResponse searchResponse;
+
+        String userCursorString = cursor;
+        if ( userCursorString.startsWith( "\"" ) ) {
+            userCursorString = userCursorString.substring( 1 );
+        }
+        if ( userCursorString.endsWith( "\"" ) ) {
+            userCursorString = userCursorString.substring( 0, userCursorString.length() - 1 );
+        }
+
+        //now get the cursor from the map  and validate
+        final String esScrollCursor  = mapManager.getString(userCursorString);
+
+        Preconditions.checkArgument(esScrollCursor != null, "Could not find a cursor for the value '{}' ", esScrollCursor);
+
+
+
+        logger.debug( "Executing query with cursor: {} ", esScrollCursor );
+
+
+        SearchScrollRequestBuilder ssrb = esProvider.getClient()
+            .prepareSearchScroll(esScrollCursor).setScroll(cursorTimeout + "m");
+
+        try {
+            //Added For Graphite Metrics
+            Timer.Context timeSearchCursor = cursorTimer.time();
+            searchResponse = ssrb.execute().actionGet();
+            timeSearchCursor.stop();
+        }
+        catch ( Throwable t ) {
+            logger.error( "Unable to communicate with elasticsearch", t );
+            failureMonitor.fail( "Unable to execute batch", t );
+            throw t;
+        }
+
+
+        failureMonitor.success();
+        return parseResults(searchResponse);
     }
 
     /**
@@ -327,7 +270,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex{
 
 
 
-    private CandidateResults parseResults( final SearchResponse searchResponse, final Query query ) {
+    private CandidateResults parseResults( final SearchResponse searchResponse) {
 
         final SearchHits searchHits = searchResponse.getHits();
         final SearchHit[] hits = searchHits.getHits();
@@ -335,41 +278,39 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex{
 
         logger.debug("   Hit count: {} Total hits: {}", length, searchHits.getTotalHits());
 
-        List<CandidateResult> candidates = new ArrayList<>( length );
+        List<CandidateResult> candidates = new ArrayList<>(length);
 
-        for ( SearchHit hit : hits ) {
+        for (SearchHit hit : hits) {
 
-            String[] idparts = hit.getId().split( SPLITTER );
+            String[] idparts = hit.getId().split(SPLITTER);
             String id = idparts[0];
             String type = idparts[1];
             String version = idparts[2];
 
-            Id entityId = new SimpleId( UUID.fromString(id), type );
+            Id entityId = new SimpleId(UUID.fromString(id), type);
 
-            candidates.add( new CandidateResult( entityId, UUID.fromString( version ) ) );
+            candidates.add(new CandidateResult(entityId, UUID.fromString(version)));
         }
 
-        CandidateResults candidateResults = new CandidateResults( query, candidates );
-
-        if ( candidates.size() >= query.getLimit() ) {
-            //USERGRID-461 our cursor is getting too large, map it to a new time UUID
-            //TODO T.N., this shouldn't live here. This should live at the UG core tier.  However the RM/EM are an absolute mess, so until they're refactored, this is it's home
-
-            final String userCursorString = org.apache.usergrid.persistence.index.utils.StringUtils.sanitizeUUID( UUIDGenerator.newTimeUUID() );
+        CandidateResults candidateResults = new CandidateResults(candidates);
+        if(candidateResults.hasCursor()) {
+            candidateResults.initializeCursor();
 
             final String esScrollCursor = searchResponse.getScrollId();
-
             //now set this into our map module
             final int minutes = indexFig.getQueryCursorTimeout();
 
             //just truncate it, we'll never hit a long value anyway
-            mapManager.putString( userCursorString, esScrollCursor, ( int ) TimeUnit.MINUTES.toSeconds( minutes ) );
+            mapManager.putString(candidateResults.getCursor(), esScrollCursor, (int) TimeUnit.MINUTES.toSeconds(minutes));
 
-            candidateResults.setCursor( userCursorString );
-            logger.debug(" User cursor = {},  Cursor = {} ", userCursorString, esScrollCursor);
+            logger.debug(" User cursor = {},  Cursor = {} ", candidateResults.getCursor(), esScrollCursor);
         }
 
         return candidateResults;
     }
+
+
+
+
 
 }

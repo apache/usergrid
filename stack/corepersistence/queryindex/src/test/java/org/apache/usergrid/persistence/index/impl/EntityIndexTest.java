@@ -118,7 +118,7 @@ public class EntityIndexTest extends BaseIT {
 
         final String entityType = "thing";
         IndexScope indexScope = new IndexScopeImpl( appId, "things" );
-        final SearchTypes searchTypes = SearchTypes.fromTypes( entityType );
+        final SearchTypes searchTypes = SearchTypes.fromTypes(entityType);
         EntityIndexBatch batch = entityIndex.createBatch();
         Entity entity = new Entity( entityType );
         EntityUtils.setVersion(entity, UUIDGenerator.newTimeUUID());
@@ -143,7 +143,7 @@ public class EntityIndexTest extends BaseIT {
 
         ei.refresh();
 
-        testQueries( indexScope, searchTypes,  entityIndex );
+        testQueries(indexScope, searchTypes, entityIndex);
     }
 
     @Test
@@ -219,17 +219,17 @@ public class EntityIndexTest extends BaseIT {
 
         final String entityType = "thing";
         IndexScope indexScope = new IndexScopeImpl( appId, "things" );
-        final SearchTypes searchTypes = SearchTypes.fromTypes( entityType );
+        final SearchTypes searchTypes = SearchTypes.fromTypes(entityType);
 
         insertJsonBlob(entityIndex, entityType, indexScope, "/sample-large.json",101,0);
 
        ei.refresh();
 
-        testQueries( indexScope, searchTypes,  entityIndex );
+        testQueries(indexScope, searchTypes, entityIndex);
 
-        ei.addIndex("v2", 1,0,"one");
+        ei.addIndex("v2", 1, 0, "one");
 
-        insertJsonBlob(entityIndex, entityType, indexScope, "/sample-large.json",101,100);
+        insertJsonBlob(entityIndex, entityType, indexScope, "/sample-large.json", 101, 100);
 
        ei.refresh();
 
@@ -364,11 +364,12 @@ public class EntityIndexTest extends BaseIT {
         StopWatch timer = new StopWatch();
         timer.start();
         Query query = Query.fromQL( queryString );
-        query.setLimit( 1000 );
-        CandidateResults candidateResults = entityIndex.search( scope, searchTypes, query );
+        CandidateResults candidateResults = null;
+        candidateResults = entityIndex.search( scope, searchTypes, query,num+1 );
+
         timer.stop();
 
-        assertEquals( num, candidateResults.size() );
+        assertEquals( num,candidateResults.size() );
         log.debug( "Query time {}ms", timer.getTime() );
         return candidateResults;
     }
@@ -652,21 +653,14 @@ public class EntityIndexTest extends BaseIT {
         for ( int i = 0; i < expectedPages; i++ ) {
             //**
             Query query = Query.fromQL( "select * order by created" );
-            query.setLimit( limit );
 
-            if ( cursor != null ) {
-                query.setCursor( cursor );
-            }
-
-            final CandidateResults results = entityIndex.search( indexScope, SearchTypes.allTypes(), query );
+            final CandidateResults results = cursor == null ?  entityIndex.search( indexScope, SearchTypes.allTypes(), query , limit) : entityIndex.getNextPage(cursor);
 
             assertTrue( results.hasCursor() );
 
             cursor = results.getCursor();
 
             assertEquals("Should be 16 bytes as hex", 32, cursor.length());
-
-
 
 
             assertEquals( 1, results.size() );

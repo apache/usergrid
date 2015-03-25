@@ -19,12 +19,14 @@ package org.apache.usergrid.persistence.index.query;
 
 import java.util.Iterator;
 import java.util.List;
+
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
 /**
- * Internal results class, should not be returned as results to a user.  
+ * Internal results class, should not be returned as results to a user.
  * Only returns candidate entity results
  */
 public class CandidateResults implements Iterable<CandidateResult> {
@@ -33,14 +35,23 @@ public class CandidateResults implements Iterable<CandidateResult> {
 
     private String cursor = null;
 
-    private final Query query;
 
     private final List<CandidateResult> candidates;
 
 
-    public CandidateResults( Query query, List<CandidateResult> candidates ) {
-        this.query = query;
+    public CandidateResults( List<CandidateResult> candidates ) {
         this.candidates = candidates;
+    }
+
+    public void add( List<CandidateResult> candidates ) {
+        this.candidates.addAll( candidates);
+    }
+
+    public void initializeCursor(){
+        //USERGRID-461 our cursor is getting too large, map it to a new time UUID
+        //TODO T.N., this shouldn't live here. This should live at the UG core tier.  However the RM/EM are an absolute mess, so until they're refactored, this is it's home
+
+        cursor = org.apache.usergrid.persistence.index.utils.StringUtils.sanitizeUUID(UUIDGenerator.newTimeUUID());
     }
 
 
@@ -59,11 +70,8 @@ public class CandidateResults implements Iterable<CandidateResult> {
     }
 
 
-    public Query getQuery() {
-        return query;
-    }
 
-    
+
     public int size() {
         return candidates.size();
     }
