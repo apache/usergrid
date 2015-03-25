@@ -702,13 +702,12 @@ public class CpRelationManager implements RelationManager {
         //            headEntityScope.getOwner().toString(),
         //            headEntityScope.getName()});
 
-        //TODO T.N.  This should even be neccessary any longer, graph maintains 2 edges.  .
-//        if ( connectBack && collection != null && collection.getLinkedCollection() != null ) {
-//            getRelationManager( itemEntity ).addToCollection(
-//                    collection.getLinkedCollection(), headEntity, cpHeadEntity, false );
-//            getRelationManager( itemEntity ).addToCollection(
-//                    collection.getLinkedCollection(), headEntity, false );
-//        }
+        if ( connectBack && collection != null && collection.getLinkedCollection() != null ) {
+            getRelationManager( itemEntity ).addToCollection(
+                    collection.getLinkedCollection(), headEntity, cpHeadEntity, false );
+            getRelationManager( itemEntity ).addToCollection(
+                    collection.getLinkedCollection(), headEntity, false );
+        }
 
         return itemEntity;
     }
