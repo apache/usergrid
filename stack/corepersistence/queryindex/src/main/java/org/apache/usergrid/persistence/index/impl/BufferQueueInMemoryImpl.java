@@ -36,18 +36,26 @@ import com.google.inject.Singleton;
 @Singleton
 public class BufferQueueInMemoryImpl implements BufferQueue {
 
+
+    private final IndexFig fig;
     private final ArrayBlockingQueue<IndexOperationMessage> messages;
 
 
     @Inject
     public BufferQueueInMemoryImpl( final IndexFig fig ) {
+        this.fig = fig;
         messages = new ArrayBlockingQueue<>( fig.getIndexQueueSize() );
     }
 
 
     @Override
     public void offer( final IndexOperationMessage operation ) {
-        messages.offer( operation );
+        try {
+            messages.offer( operation, fig.getQueueOfferTimeout(), TimeUnit.MILLISECONDS );
+        }
+        catch ( InterruptedException e ) {
+            throw new RuntimeException("Unable to offer message to queue", e);
+        }
     }
 
 

@@ -963,16 +963,19 @@ public abstract class GraphManagerIT {
         Id targetId2 = new SimpleId( "target2" );
 
 
-        Edge edge1 = createEdge( sourceId, "test", targetId1, System.currentTimeMillis() );
+        final long edge1Time = System.currentTimeMillis();
+        final long edge2Time = edge1Time+1;
+
+        Edge edge1 = createEdge( sourceId, "test", targetId1, edge1Time );
 
         gm.writeEdge( edge1 ).toBlocking().singleOrDefault( null );
 
-        Edge edge2 = createEdge( sourceId, "test", targetId2, System.currentTimeMillis() );
+        Edge edge2 = createEdge( sourceId, "test", targetId2, edge2Time );
 
         gm.writeEdge( edge2 ).toBlocking().singleOrDefault( null );
 
 
-        final long maxVersion = System.currentTimeMillis();
+        final long maxVersion = edge2Time+1;
 
 
         assertTrue( Long.compare( maxVersion, edge2.getTimestamp() ) > 0 );

@@ -30,6 +30,7 @@ import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.apache.usergrid.corepersistence.results.QueryExecutor;
 import org.apache.usergrid.persistence.cassandra.QueryProcessor;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Query.Level;
@@ -81,9 +82,7 @@ public class Results implements Iterable<Entity> {
     Query query;
     Object data;
     String dataName;
-
-    private QueryProcessor queryProcessor;
-    private SearchVisitor searchVisitor;
+    private QueryExecutor queryExecutor;
 
 
     public Results() {
@@ -1268,31 +1267,18 @@ public class Results implements Iterable<Entity> {
     }
 
 
-    protected QueryProcessor getQueryProcessor() {
-        return queryProcessor;
-    }
-
-
-    public void setQueryProcessor( QueryProcessor queryProcessor ) {
-        this.queryProcessor = queryProcessor;
-    }
-
-
-    public void setSearchVisitor( SearchVisitor searchVisitor ) {
-        this.searchVisitor = searchVisitor;
+    public void setQueryExecutor(final QueryExecutor queryExecutor){
+        this.queryExecutor = queryExecutor;
     }
 
 
     /** uses cursor to get next batch of Results (returns null if no cursor) */
     public Results getNextPageResults() throws Exception {
-        if ( !hasCursor() ) {
+        if ( queryExecutor == null || !queryExecutor.hasNext() ) {
             return null;
         }
 
-        Query q = new Query( query );
-        q.setCursor( getCursor() );
-        queryProcessor.setQuery( q );
 
-        return queryProcessor.getResults( searchVisitor );
+        return queryExecutor.next();
     }
 }

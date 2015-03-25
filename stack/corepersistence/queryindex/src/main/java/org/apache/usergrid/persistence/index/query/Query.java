@@ -113,33 +113,41 @@ public class Query {
     }
 
 
+    /**
+     * Creates a deep copy of a query from another query
+     * @param q
+     */
     public Query( Query q ) {
-        if ( q != null ) {
-            type = q.type;
-            sortPredicates = q.sortPredicates != null
-                    ? new ArrayList<SortPredicate>( q.sortPredicates ) : null;
-            startResult = q.startResult;
-            cursor = q.cursor;
-            limit = q.limit;
-            selectAssignments = q.selectAssignments != null
-                    ? new LinkedHashMap<String, String>( q.selectAssignments ) : null;
-            mergeSelectResults = q.mergeSelectResults;
-            //level = q.level;
-            connectionType = q.connectionType;
-            permissions = q.permissions != null ? new ArrayList<String>( q.permissions ) : null;
-            reversed = q.reversed;
-            reversedSet = q.reversedSet;
-            startTime = q.startTime;
-            finishTime = q.finishTime;
-            resolution = q.resolution;
-            pad = q.pad;
-            rootOperand = q.rootOperand;
-            identifiers = q.identifiers != null
-                    ? new ArrayList<Identifier>( q.identifiers ) : null;
-            counterFilters = q.counterFilters != null
-                    ? new ArrayList<CounterFilterPredicate>( q.counterFilters ) : null;
-            collection = q.collection;
+        if ( q == null ) {
+            return;
         }
+
+        type = q.type;
+        sortPredicates = q.sortPredicates != null
+                ? new ArrayList<>( q.sortPredicates ) : null;
+        startResult = q.startResult;
+        cursor = q.cursor;
+        limit = q.limit;
+        selectAssignments = q.selectAssignments != null
+                ? new LinkedHashMap<>( q.selectAssignments ) : null;
+        mergeSelectResults = q.mergeSelectResults;
+        //level = q.level;
+        connectionType = q.connectionType;
+        permissions = q.permissions != null ? new ArrayList<>( q.permissions ) : null;
+        reversed = q.reversed;
+        reversedSet = q.reversedSet;
+        startTime = q.startTime;
+        finishTime = q.finishTime;
+        resolution = q.resolution;
+        pad = q.pad;
+        rootOperand = q.rootOperand;
+        identifiers = q.identifiers != null
+                ? new ArrayList<>( q.identifiers ) : null;
+        counterFilters = q.counterFilters != null
+                ? new ArrayList<>( q.counterFilters ) : null;
+        collection = q.collection;
+        level = q.level;
+
     }
 
 

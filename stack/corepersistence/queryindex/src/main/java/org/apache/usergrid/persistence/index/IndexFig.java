@@ -24,8 +24,6 @@ import org.safehaus.guicyfig.FigSingleton;
 import org.safehaus.guicyfig.GuicyFig;
 import org.safehaus.guicyfig.Key;
 
-import org.apache.usergrid.persistence.index.guice.QueueProvider;
-
 
 @FigSingleton
 public interface IndexFig extends GuicyFig {
@@ -93,6 +91,13 @@ public interface IndexFig extends GuicyFig {
      */
     public static final String ELASTICSEARCH_QUEUE_IMPL = "elasticsearch.queue_impl";
 
+
+    /**
+     * The queue implementation to use.  Values come from <class>QueueProvider.Implementations</class>
+     */
+    public static final String ELASTICSEARCH_QUEUE_OFFER_TIMEOUT = "elasticsearch.queue.offer_timeout";
+
+
     public static final String QUERY_LIMIT_DEFAULT = "index.query.limit.default";
 
     @Default( "127.0.0.1" )
@@ -115,7 +120,7 @@ public interface IndexFig extends GuicyFig {
     @Key( ELASTICSEARCH_ALIAS_POSTFIX )
     String getAliasPostfix();
 
-    @Default( "1" ) // TODO: does this timeout get extended on each query?
+    @Default( "5" ) // TODO: does this timeout get extended on each query?
     @Key( QUERY_CURSOR_TIMEOUT_MINUTES )
     int getQueryCursorTimeout();
 
@@ -193,7 +198,7 @@ public interface IndexFig extends GuicyFig {
     @Key( INDEX_QUEUE_READ_TIMEOUT )
     int getIndexQueueTimeout();
 
-    @Default("2")
+    @Default( "2" )
     @Key( ELASTICSEARCH_WORKER_COUNT )
     int getWorkerCount();
 
@@ -201,4 +206,7 @@ public interface IndexFig extends GuicyFig {
     @Key( ELASTICSEARCH_QUEUE_IMPL )
     String getQueueImplementation();
 
+    @Default( "1000" )
+    @Key( ELASTICSEARCH_QUEUE_OFFER_TIMEOUT )
+    long getQueueOfferTimeout();
 }

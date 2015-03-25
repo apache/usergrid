@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -16,27 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.usergrid.corepersistence.results;
 
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.Iterator;
 
-import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.SimpleEntityRef;
-import org.apache.usergrid.persistence.model.entity.Id;
 
 
-public class RefsVerifier extends VersionVerifier {
+/**
+ * A strategy interface for executing queries.  Each item in the iterator is a single collection of results
+ * Each implementation should always return 1 element of Results, even if the results are empty.
+ *
+ * QueryExecutor.next() should always return a non-null Results object
+ */
+public interface QueryExecutor extends Iterable<Results>, Iterator<Results> {
 
-    @Override
-    public Results getResults( final Collection<Id> ids ) {
-        List<EntityRef> refs = new ArrayList<EntityRef>();
-        for ( Id id : ids ) {
-            refs.add( new SimpleEntityRef( id.getType(), id.getUuid() ) );
-        }
-        return Results.fromRefList( refs );
-    }
+
 }
