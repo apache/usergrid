@@ -40,7 +40,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
     private final ApplicationScope applicationScope;
 
-    private final IndexIdentifier.IndexAlias alias;
+    private final IndexAlias alias;
     private final IndexIdentifier indexIdentifier;
 
     private final IndexBufferProducer indexBatchBufferProducer;

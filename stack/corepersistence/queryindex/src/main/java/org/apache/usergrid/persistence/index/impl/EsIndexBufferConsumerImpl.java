@@ -19,18 +19,12 @@
  */
 package org.apache.usergrid.persistence.index.impl;
 
-import com.codahale.metrics.Counter;
-import com.codahale.metrics.Gauge;
-import com.codahale.metrics.Meter;
-import com.codahale.metrics.Timer;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
-import org.apache.usergrid.persistence.core.future.BetterFuture;
-import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
-import org.apache.usergrid.persistence.index.IndexBufferConsumer;
-import org.apache.usergrid.persistence.index.IndexFig;
-import org.apache.usergrid.persistence.index.IndexOperationMessage;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.elasticsearch.action.WriteConsistencyLevel;
 import org.elasticsearch.action.bulk.BulkItemResponse;
@@ -39,6 +33,19 @@ import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.client.Client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
+import org.apache.usergrid.persistence.index.IndexBufferConsumer;
+import org.apache.usergrid.persistence.index.IndexFig;
+import org.apache.usergrid.persistence.index.IndexOperationMessage;
+
+import com.codahale.metrics.Counter;
+import com.codahale.metrics.Gauge;
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.Timer;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
 import rx.Observable;
 import rx.Subscriber;
 import rx.Subscription;
@@ -46,11 +53,6 @@ import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.functions.Func2;
 import rx.schedulers.Schedulers;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicLong;
 
 
 /**
@@ -189,7 +191,7 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
                         }
                         while ( true );
                     }
-                } ).subscribeOn( Schedulers.newThread() ).doOnNext( new Action1<List<IndexOperationMessage>>() {
+                } ).doOnNext( new Action1<List<IndexOperationMessage>>() {
                 @Override
                 public void call( List<IndexOperationMessage> containerList ) {
                     if ( containerList.size() == 0 ) {
@@ -203,7 +205,6 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
                     execute( containerList );
 
                     time.stop();
-
                 }
             } )
                 //ack after we process
@@ -214,15 +215,29 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
                         //release  so we know we've done processing
                         inFlight.addAndGet( -1 * indexOperationMessages.size() );
                     }
-                } ).doOnError( new Action1<Throwable>() {
+                } )
+                //catch an unexpected error, then emit an empty list to ensure our subscriber doesn't die
+                .onErrorReturn( new Func1<Throwable, List<IndexOperationMessage>>() {
                     @Override
-                    public void call( final Throwable throwable ) {
+                    public List<IndexOperationMessage> call( final Throwable throwable ) {
+                        final long sleepTime = config.getFailureRetryTime();
 
-                        log.error( "An exception occurred when trying to deque and write to elasticsearch.  Ignoring",
-                            throwable );
+                        log.error( "Failed to dequeue.  Sleeping for {} milliseconds", sleepTime, throwable );
+
+                        try {
+                            Thread.sleep( sleepTime );
+                        }
+                        catch ( InterruptedException ie ) {
+                            //swallow
+                        }
+
                         indexErrorCounter.inc();
+
+                        return Collections.EMPTY_LIST;
                     }
-                } );
+                } )
+
+                .subscribeOn( Schedulers.newThread() );
 
             //start in the background
 

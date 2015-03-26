@@ -74,7 +74,7 @@ public abstract class GraphManagerIT {
 
     @Before
     public void mockApp() {
-        this.scope = new ApplicationScopeImpl( IdGenerator.createId( "application" )  );
+        this.scope = new ApplicationScopeImpl(createId("application")  );
     }
 
 

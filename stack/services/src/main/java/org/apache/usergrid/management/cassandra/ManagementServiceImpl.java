@@ -1477,21 +1477,25 @@ public class ManagementServiceImpl implements ManagementService {
 
         BiMap<UUID, String> organizations = HashBiMap.create();
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-        Results results = em.getCollection( new SimpleEntityRef( User.ENTITY_TYPE, userId ), "groups", null, 10000,
+        Results results = em.getCollection( new SimpleEntityRef( User.ENTITY_TYPE, userId ), "groups", null, 1000,
                 Level.ALL_PROPERTIES, false );
 
         String path = null;
 
-        for ( Entity entity : results.getEntities() ) {
+        do {
+            for ( Entity entity : results.getEntities() ) {
 
-            path = ( String ) entity.getProperty( PROPERTY_PATH );
+                path = ( String ) entity.getProperty( PROPERTY_PATH );
 
-            if ( path != null ) {
-                path = path.toLowerCase();
+                if ( path != null ) {
+                    path = path.toLowerCase();
+                }
+
+                organizations.put( entity.getUuid(), path );
             }
 
-            organizations.put( entity.getUuid(), path );
-        }
+            results = results.getNextPageResults();
+        }while(results != null);
 
         return organizations;
     }
