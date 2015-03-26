@@ -153,12 +153,16 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
                         //name our thread so it's easy to see
                         Thread.currentThread().setName( "QueueConsumer_" + counter.incrementAndGet() );
 
-                        List<IndexOperationMessage> drainList;
+
+                        List<IndexOperationMessage> drainList = null;
+
                         do {
+
+                            Timer.Context timer = produceTimer.time();
+
+
                             try {
 
-
-                                Timer.Context timer = produceTimer.time();
 
                                 drainList = bufferQueue
                                     .take( config.getIndexBufferSize(), config.getIndexBufferTimeout(),
@@ -174,10 +178,15 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
                                 timer.stop();
                             }
 
-                            catch ( Exception e ) {
+                            catch ( Throwable t ) {
                                 final long sleepTime = config.getFailureRetryTime();
 
-                                log.error( "Failed to dequeue.  Sleeping for {} milliseconds", sleepTime, e );
+                                log.error( "Failed to dequeue.  Sleeping for {} milliseconds", sleepTime, t );
+
+                                if ( drainList != null ) {
+                                    inFlight.addAndGet( -1 * drainList.size() );
+                                }
+
 
                                 try {
                                     Thread.sleep( sleepTime );
@@ -214,26 +223,6 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
                         bufferQueue.ack( indexOperationMessages );
                         //release  so we know we've done processing
                         inFlight.addAndGet( -1 * indexOperationMessages.size() );
-                    }
-                } )
-                //catch an unexpected error, then emit an empty list to ensure our subscriber doesn't die
-                .onErrorReturn( new Func1<Throwable, List<IndexOperationMessage>>() {
-                    @Override
-                    public List<IndexOperationMessage> call( final Throwable throwable ) {
-                        final long sleepTime = config.getFailureRetryTime();
-
-                        log.error( "Failed to dequeue.  Sleeping for {} milliseconds", sleepTime, throwable );
-
-                        try {
-                            Thread.sleep( sleepTime );
-                        }
-                        catch ( InterruptedException ie ) {
-                            //swallow
-                        }
-
-                        indexErrorCounter.inc();
-
-                        return Collections.EMPTY_LIST;
                     }
                 } )
 
