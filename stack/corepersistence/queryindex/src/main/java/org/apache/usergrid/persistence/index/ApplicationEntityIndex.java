@@ -43,11 +43,9 @@ public interface ApplicationEntityIndex {
      * Execute query in Usergrid syntax.
      */
     public CandidateResults search(final IndexScope indexScope, final SearchTypes searchTypes, final Query query);
+    public CandidateResults search(final IndexScope indexScope, final SearchTypes searchTypes, final Query query, final int limit);
 
-    /**
-     * Execute query in Usergrid syntax.
-     */
-    public CandidateResults search(final IndexScope indexScope, final SearchTypes searchType, final Query query, final int limit );
+
 
     /**
      * get next page of results

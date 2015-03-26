@@ -136,16 +136,15 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex{
     }
 
     @Override
-    public CandidateResults search(final IndexScope indexScope, final SearchTypes searchTypes, final Query query){
-        return search(indexScope,searchTypes,query,10);
+    public CandidateResults search(final IndexScope indexScope, final SearchTypes searchTypes, final Query query) {
+        return search(indexScope,searchTypes,query,query.getLimit());
     }
-
     @Override
-    public CandidateResults search(final IndexScope indexScope, final SearchTypes searchTypes, final Query query, final int limit) {
+    public CandidateResults search(final IndexScope indexScope, final SearchTypes searchTypes, final Query query, final int limit){
 
         SearchResponse searchResponse;
 
-        SearchRequestBuilder srb = searchRequest.getBuilder(indexScope, searchTypes, query, limit);
+        SearchRequestBuilder srb = searchRequest.getBuilder(indexScope, searchTypes, query,limit);
 
         if (logger.isDebugEnabled()) {
             logger.debug("Searching index (read alias): {}\n  scope: {} \n type: {}\n   query: {} ",

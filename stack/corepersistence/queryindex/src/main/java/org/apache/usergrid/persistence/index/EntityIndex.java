@@ -39,6 +39,8 @@ import java.util.concurrent.Future;
 public interface EntityIndex extends CPManager {
 
 
+    public static final int MAX_LIMIT = 1000;
+
     /**
      * Create an index and add to alias, will create alias and remove any old index from write alias if alias already exists
      * @param indexSuffix index name

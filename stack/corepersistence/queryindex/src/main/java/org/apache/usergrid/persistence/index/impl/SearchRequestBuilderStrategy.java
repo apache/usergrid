@@ -22,10 +22,7 @@ package org.apache.usergrid.persistence.index.impl;
 import com.google.common.base.Preconditions;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
-import org.apache.usergrid.persistence.index.IndexAlias;
-import org.apache.usergrid.persistence.index.IndexIdentifier;
-import org.apache.usergrid.persistence.index.IndexScope;
-import org.apache.usergrid.persistence.index.SearchTypes;
+import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.persistence.index.exceptions.IndexException;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.tree.QueryVisitor;
@@ -56,7 +53,6 @@ public class SearchRequestBuilderStrategy {
     private final ApplicationScope applicationScope;
     private final IndexAlias alias;
     private final int cursorTimeout;
-    public static final int MAX_LIMIT = 1000;
 
     public SearchRequestBuilderStrategy(final EsProvider esProvider, final ApplicationScope applicationScope, final IndexAlias alias, int cursorTimeout){
 
@@ -66,8 +62,9 @@ public class SearchRequestBuilderStrategy {
         this.cursorTimeout = cursorTimeout;
     }
 
-    public SearchRequestBuilder getBuilder(final IndexScope indexScope, final SearchTypes searchTypes, final Query query, final int limit) {
-        Preconditions.checkArgument(limit <= MAX_LIMIT, "limit is greater than max "+ MAX_LIMIT);
+    public SearchRequestBuilder getBuilder(final IndexScope indexScope, final SearchTypes searchTypes, final Query query,  final int limit) {
+
+        Preconditions.checkArgument(limit <= EntityIndex.MAX_LIMIT, "limit is greater than max "+ EntityIndex.MAX_LIMIT);
 
         SearchRequestBuilder srb = esProvider.getClient().prepareSearch(alias.getReadAlias())
             .setTypes(searchTypes.getTypeNames(applicationScope))
