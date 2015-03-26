@@ -19,10 +19,18 @@
 package org.apache.usergrid.persistence.index.guice;
 
 
+import com.google.inject.TypeLiteral;
+import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.safehaus.guicyfig.GuicyFigModule;
 
 import org.apache.usergrid.persistence.core.guice.CommonModule;
 import org.apache.usergrid.persistence.core.guice.TestModule;
+import rx.Observable;
+
+import java.util.UUID;
 
 
 public class TestIndexModule extends TestModule {
@@ -37,8 +45,22 @@ public class TestIndexModule extends TestModule {
             @Override
             public  void configureMigrationProvider(){
 
+                bind( new TypeLiteral<MigrationDataProvider<ApplicationScope>>() {} ).to(
+                    TestAllApplicationsObservable.class );
             }
         });
         install( new GuicyFigModule(IndexTestFig.class) );
     }
+    public static class TestAllApplicationsObservable implements MigrationDataProvider<ApplicationScope>{
+
+
+        @Override
+        public Observable<ApplicationScope> getData() {
+            ApplicationScope[] scopes = new ApplicationScope[]{
+                new ApplicationScopeImpl(new SimpleId(UUID.randomUUID(),"application"))
+            };
+            return Observable.from(scopes);
+        }
+    }
+
 }

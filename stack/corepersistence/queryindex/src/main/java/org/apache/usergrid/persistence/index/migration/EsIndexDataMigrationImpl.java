@@ -80,7 +80,7 @@ public class EsIndexDataMigrationImpl implements DataMigration<ApplicationScope>
         .doOnError(error -> log.error("failed to migrate index",error))
         .toBlocking().last();
 
-        return integer.get();
+        return dataVersion.getImplementationVersion();
     }
 
     @Override

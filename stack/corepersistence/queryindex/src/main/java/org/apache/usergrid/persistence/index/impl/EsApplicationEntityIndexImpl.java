@@ -142,6 +142,10 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex{
     @Override
     public CandidateResults search(final IndexScope indexScope, final SearchTypes searchTypes, final Query query, final int limit){
 
+        if(query.getCursor()!=null){
+            return getNextPage(query.getCursor());
+        }
+
         SearchResponse searchResponse;
 
         SearchRequestBuilder srb = searchRequest.getBuilder(indexScope, searchTypes, query,limit);
@@ -291,11 +295,12 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex{
             candidates.add(new CandidateResult(entityId, UUID.fromString(version)));
         }
 
-        CandidateResults candidateResults = new CandidateResults(candidates);
-        if(candidateResults.hasCursor()) {
+        final CandidateResults candidateResults = new CandidateResults(candidates);
+        final String esScrollCursor = searchResponse.getScrollId();
+
+        if(esScrollCursor != null) {
             candidateResults.initializeCursor();
 
-            final String esScrollCursor = searchResponse.getScrollId();
             //now set this into our map module
             final int minutes = indexFig.getQueryCursorTimeout();
 
