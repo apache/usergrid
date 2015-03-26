@@ -50,7 +50,7 @@ import com.google.inject.Singleton;
  * Cache for Es index operations
  */
 @Singleton
-public class EsIndexCacheImpl implements EsIndexCache {
+public class EsIndexCacheImpl implements IndexCache {
 
     private static final Logger logger = LoggerFactory.getLogger( EsEntityIndexImpl.class );
     private final ListeningScheduledExecutorService refreshExecutors;

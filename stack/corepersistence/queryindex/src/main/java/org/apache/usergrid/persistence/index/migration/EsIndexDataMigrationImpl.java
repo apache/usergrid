@@ -23,21 +23,15 @@ import org.apache.usergrid.persistence.core.migration.data.ProgressObserver;
 import org.apache.usergrid.persistence.core.migration.data.VersionedData;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.AliasedEntityIndex;
-import org.apache.usergrid.persistence.index.IndexAlias;
 import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.index.IndexIdentifier;
-import org.apache.usergrid.persistence.index.EsIndexCache;
+import org.apache.usergrid.persistence.index.IndexCache;
 import org.apache.usergrid.persistence.index.impl.EsProvider;
-import org.apache.usergrid.persistence.index.impl.IndexingUtils;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
 import org.elasticsearch.client.AdminClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Classy class class.
@@ -48,12 +42,12 @@ public class EsIndexDataMigrationImpl implements DataMigration<ApplicationScope>
     private final EsProvider provider;
     private final IndexFig indexFig;
     private final IndexIdentifier indexIdentifier;
-    private final EsIndexCache indexCache;
+    private final IndexCache indexCache;
     private final VersionedData dataVersion;
     private static final Logger log = LoggerFactory.getLogger(EsIndexDataMigrationImpl.class);
 
     @Inject
-    public EsIndexDataMigrationImpl(AliasedEntityIndex entityIndex, EsProvider provider, IndexFig indexFig, IndexIdentifier indexIdentifier, EsIndexCache indexCache){
+    public EsIndexDataMigrationImpl(AliasedEntityIndex entityIndex, EsProvider provider, IndexFig indexFig, IndexIdentifier indexIdentifier, IndexCache indexCache){
         this.entityIndex = entityIndex;
         this.provider = provider;
         this.indexFig = indexFig;
@@ -65,7 +59,9 @@ public class EsIndexDataMigrationImpl implements DataMigration<ApplicationScope>
     @Override
     public int migrate(int currentVersion, MigrationDataProvider<ApplicationScope> migrationDataProvider, ProgressObserver observer) {
         final AdminClient adminClient = provider.getClient().admin();
+        final int latestVersion = dataVersion.getImplementationVersion();
 
+        observer.start();
         migrationDataProvider.getData().flatMap(applicationScope -> {
             LegacyIndexIdentifier legacyIndexIdentifier = new LegacyIndexIdentifier(indexFig, applicationScope);
             String[] indexes = indexCache.getIndexes(legacyIndexIdentifier.getAlias(), AliasedEntityIndex.AliasType.Read);
@@ -76,11 +72,16 @@ public class EsIndexDataMigrationImpl implements DataMigration<ApplicationScope>
                 aliasesRequestBuilder = adminClient.indices().prepareAliases();
                 // add read alias
                 aliasesRequestBuilder.addAlias(index, indexIdentifier.getAlias().getReadAlias());
+                observer.update(latestVersion,"EsIndexDataMigrationImpl: fixed index: " + index );
             })
-            .doOnError(error -> log.error("failed to migrate index", error))
+            .doOnError(error -> {
+                log.error("failed to migrate index", error);
+                observer.failed(latestVersion,"EsIndexDataMigrationImpl: failed to migrate",error);
+            })
+            .doOnCompleted(() -> observer.complete())
             .toBlocking().lastOrDefault(null);
 
-        return dataVersion.getImplementationVersion();
+        return latestVersion;
     }
 
     @Override

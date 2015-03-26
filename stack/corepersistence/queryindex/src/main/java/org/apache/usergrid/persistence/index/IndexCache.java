@@ -22,7 +22,7 @@ package org.apache.usergrid.persistence.index;
 /**
  * Classy class class.
  */
-public interface EsIndexCache {
+public interface IndexCache {
     String[] getIndexes(IndexAlias alias, AliasedEntityIndex.AliasType aliasType);
 
     void invalidate(IndexAlias alias);

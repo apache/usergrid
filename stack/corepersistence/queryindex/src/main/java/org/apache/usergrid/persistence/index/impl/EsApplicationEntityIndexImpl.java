@@ -37,7 +37,6 @@ import org.apache.usergrid.persistence.map.MapScope;
 import org.apache.usergrid.persistence.map.impl.MapScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
-import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.ShardOperationFailedException;
@@ -73,7 +72,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex{
     private final MapManager mapManager;
     private final AliasedEntityIndex entityIndex;
     private final IndexBufferProducer indexBatchBufferProducer;
-    private final EsIndexCache indexCache;
+    private final IndexCache indexCache;
     private final IndexFig indexFig;
     private final EsProvider esProvider;
     private final IndexAlias alias;
@@ -85,7 +84,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex{
     @Inject
     public EsApplicationEntityIndexImpl(@Assisted ApplicationScope appScope, final AliasedEntityIndex entityIndex,  final IndexFig config,
                                         final IndexBufferProducer indexBatchBufferProducer, final EsProvider provider,
-                                        final EsIndexCache indexCache, final MetricsFactory metricsFactory,
+                                        final IndexCache indexCache, final MetricsFactory metricsFactory,
                                         final MapManagerFactory mapManagerFactory, final IndexFig indexFig, final IndexIdentifier indexIdentifier){
         this.entityIndex = entityIndex;
         this.indexBatchBufferProducer = indexBatchBufferProducer;

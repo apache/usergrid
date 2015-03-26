@@ -19,7 +19,6 @@
 package org.apache.usergrid.persistence.index.guice;
 
 
-import com.amazonaws.services.opsworks.model.App;
 import com.google.inject.Inject;
 import com.google.inject.TypeLiteral;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
@@ -29,11 +28,9 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.IndexBufferProducer;
 import org.apache.usergrid.persistence.index.IndexFig;
-import org.apache.usergrid.persistence.index.IndexIdentifier;
 import org.apache.usergrid.persistence.index.impl.EsEntityIndexImpl;
-import org.apache.usergrid.persistence.index.EsIndexCache;
+import org.apache.usergrid.persistence.index.IndexCache;
 import org.apache.usergrid.persistence.index.impl.EsProvider;
-import org.apache.usergrid.persistence.index.migration.EsIndexDataMigrationImpl;
 import org.apache.usergrid.persistence.index.migration.LegacyIndexIdentifier;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.safehaus.guicyfig.GuicyFigModule;
@@ -63,17 +60,18 @@ public class TestIndexModule extends TestModule {
         });
         install( new GuicyFigModule(IndexTestFig.class) );
     }
+
     public static class TestAllApplicationsObservable implements MigrationDataProvider<ApplicationScope>{
 
         final ApplicationScope appScope =  new ApplicationScopeImpl(new SimpleId(UUID.randomUUID(),"application"));
 
         @Inject
-        public TestAllApplicationsObservable(final IndexFig config,
+        public TestAllApplicationsObservable(
                                              final IndexBufferProducer indexBatchBufferProducer, final EsProvider provider,
-                                             final EsIndexCache indexCache, final MetricsFactory metricsFactory,
+                                             final IndexCache indexCache, final MetricsFactory metricsFactory,
                                              final IndexFig indexFig){
             LegacyIndexIdentifier legacyIndexIdentifier = new  LegacyIndexIdentifier(indexFig,appScope);
-            EntityIndex entityIndex = new EsEntityIndexImpl(config,indexBatchBufferProducer,provider,indexCache,metricsFactory,indexFig,legacyIndexIdentifier);
+            EntityIndex entityIndex = new EsEntityIndexImpl(indexBatchBufferProducer,provider,indexCache,metricsFactory,indexFig,legacyIndexIdentifier);
             entityIndex.addIndex(null, 1, 0, indexFig.getWriteConsistencyLevel());
         }
 
