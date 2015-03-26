@@ -33,6 +33,7 @@ import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder
 import org.elasticsearch.client.AdminClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rx.Observable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,21 +65,22 @@ public class EsIndexDataMigrationImpl implements DataMigration<ApplicationScope>
     @Override
     public int migrate(int currentVersion, MigrationDataProvider<ApplicationScope> migrationDataProvider, ProgressObserver observer) {
         final AtomicInteger integer = new AtomicInteger();
-        migrationDataProvider.getData().doOnNext(applicationScope -> {
-            LegacyIndexIdentifier legacyIndexIdentifier = new LegacyIndexIdentifier(indexFig,applicationScope);
-            String[] indexes = indexCache.getIndexes(legacyIndexIdentifier.getAlias(), AliasedEntityIndex.AliasType.Read);
-            AdminClient adminClient = provider.getClient().admin();
+        final AdminClient adminClient = provider.getClient().admin();
 
-            for (String index : indexes) {
+        migrationDataProvider.getData().flatMap(applicationScope -> {
+            LegacyIndexIdentifier legacyIndexIdentifier = new LegacyIndexIdentifier(indexFig, applicationScope);
+            String[] indexes = indexCache.getIndexes(legacyIndexIdentifier.getAlias(), AliasedEntityIndex.AliasType.Read);
+            return Observable.from(indexes);
+        })
+            .doOnNext(index -> {
                 IndicesAliasesRequestBuilder aliasesRequestBuilder = adminClient.indices().prepareAliases();
                 aliasesRequestBuilder = adminClient.indices().prepareAliases();
                 // add read alias
                 aliasesRequestBuilder.addAlias(index, indexIdentifier.getAlias().getReadAlias());
                 integer.incrementAndGet();
-            }
-        })
-        .doOnError(error -> log.error("failed to migrate index",error))
-        .toBlocking().last();
+            })
+            .doOnError(error -> log.error("failed to migrate index", error))
+            .toBlocking().lastOrDefault(null);
 
         return dataVersion.getImplementationVersion();
     }
