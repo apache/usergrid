@@ -22,6 +22,7 @@ package org.apache.usergrid.persistence.index.impl;
 import com.google.common.base.Preconditions;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
+import org.apache.usergrid.persistence.index.IndexAlias;
 import org.apache.usergrid.persistence.index.IndexIdentifier;
 import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.SearchTypes;
@@ -53,11 +54,11 @@ public class SearchRequestBuilderStrategy {
 
     private final EsProvider esProvider;
     private final ApplicationScope applicationScope;
-    private final IndexIdentifier.IndexAlias alias;
+    private final IndexAlias alias;
     private final int cursorTimeout;
     public static final int MAX_LIMIT = 1000;
 
-    public SearchRequestBuilderStrategy(final EsProvider esProvider, final ApplicationScope applicationScope, final IndexIdentifier.IndexAlias alias, int cursorTimeout){
+    public SearchRequestBuilderStrategy(final EsProvider esProvider, final ApplicationScope applicationScope, final IndexAlias alias, int cursorTimeout){
 
         this.esProvider = esProvider;
         this.applicationScope = applicationScope;

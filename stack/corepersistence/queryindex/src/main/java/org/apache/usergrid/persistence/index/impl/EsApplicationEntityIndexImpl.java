@@ -76,7 +76,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex{
     private final EsIndexCache indexCache;
     private final IndexFig indexFig;
     private final EsProvider esProvider;
-    private final IndexIdentifier.IndexAlias alias;
+    private final IndexAlias alias;
     private final Timer deleteApplicationTimer;
     private final Meter deleteApplicationMeter;
     private final SearchRequestBuilderStrategy searchRequest;

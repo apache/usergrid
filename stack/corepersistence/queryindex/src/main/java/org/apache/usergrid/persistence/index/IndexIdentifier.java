@@ -55,24 +55,6 @@ public class IndexIdentifier{
     }
 
 
-    public class IndexAlias{
-        private final String readAlias;
-        private final String writeAlias;
-
-        public IndexAlias(IndexFig indexFig,String indexBase) {
-            this.writeAlias = indexBase + "_write_" + indexFig.getAliasPostfix();
-            this.readAlias = indexBase + "_read_" + indexFig.getAliasPostfix();
-        }
-
-        public String getReadAlias() {
-            return readAlias;
-        }
-
-        public String getWriteAlias() {
-            return writeAlias;
-        }
-    }
-
     public String toString() {
         return "index id"+config.getIndexPrefix();
     }

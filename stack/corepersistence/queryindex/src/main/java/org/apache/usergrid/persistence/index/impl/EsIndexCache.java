@@ -27,6 +27,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.usergrid.persistence.index.IndexAlias;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.client.AdminClient;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
@@ -98,7 +99,7 @@ public class EsIndexCache {
     /**
      * Get indexes for an alias
      */
-    public String[] getIndexes( IndexIdentifier.IndexAlias alias, AliasedEntityIndex.AliasType aliasType ) {
+    public String[] getIndexes( IndexAlias alias, AliasedEntityIndex.AliasType aliasType ) {
         String[] indexes;
         try {
             indexes = aliasIndexCache.get( getAliasName( alias, aliasType ) );
@@ -127,7 +128,7 @@ public class EsIndexCache {
      * @param aliasType
      * @return
      */
-    private String getAliasName( IndexIdentifier.IndexAlias alias, AliasedEntityIndex.AliasType aliasType ) {
+    private String getAliasName( IndexAlias alias, AliasedEntityIndex.AliasType aliasType ) {
         return aliasType == AliasedEntityIndex.AliasType.Read ? alias.getReadAlias() : alias.getWriteAlias();
     }
 
@@ -135,7 +136,7 @@ public class EsIndexCache {
     /**
      * clean up cache
      */
-    public void invalidate( IndexIdentifier.IndexAlias alias ) {
+    public void invalidate( IndexAlias alias ) {
         aliasIndexCache.invalidate( alias.getWriteAlias() );
         aliasIndexCache.invalidate( alias.getReadAlias() );
     }

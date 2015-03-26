@@ -77,7 +77,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
     public static final String DEFAULT_TYPE = "_default_";
 
-    private final IndexIdentifier.IndexAlias alias;
+    private final IndexAlias alias;
     private final IndexBufferProducer indexBatchBufferProducer;
     private final IndexFig indexFig;
     private final Timer addTimer;
