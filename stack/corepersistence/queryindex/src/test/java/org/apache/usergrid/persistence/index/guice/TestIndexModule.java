@@ -19,10 +19,22 @@
 package org.apache.usergrid.persistence.index.guice;
 
 
+import com.amazonaws.services.opsworks.model.App;
+import com.google.inject.Inject;
 import com.google.inject.TypeLiteral;
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
+import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.index.IndexBufferProducer;
+import org.apache.usergrid.persistence.index.IndexFig;
+import org.apache.usergrid.persistence.index.IndexIdentifier;
+import org.apache.usergrid.persistence.index.impl.EsEntityIndexImpl;
+import org.apache.usergrid.persistence.index.impl.EsIndexCache;
+import org.apache.usergrid.persistence.index.impl.EsProvider;
+import org.apache.usergrid.persistence.index.migration.EsIndexDataMigrationImpl;
+import org.apache.usergrid.persistence.index.migration.LegacyIndexIdentifier;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.safehaus.guicyfig.GuicyFigModule;
 
@@ -53,11 +65,23 @@ public class TestIndexModule extends TestModule {
     }
     public static class TestAllApplicationsObservable implements MigrationDataProvider<ApplicationScope>{
 
+        final ApplicationScope appScope =  new ApplicationScopeImpl(new SimpleId(UUID.randomUUID(),"application"));
+
+        @Inject
+        public TestAllApplicationsObservable(final IndexFig config,
+                                             final IndexBufferProducer indexBatchBufferProducer, final EsProvider provider,
+                                             final EsIndexCache indexCache, final MetricsFactory metricsFactory,
+                                             final IndexFig indexFig){
+            LegacyIndexIdentifier legacyIndexIdentifier = new  LegacyIndexIdentifier(indexFig,appScope);
+            EntityIndex entityIndex = new EsEntityIndexImpl(config,indexBatchBufferProducer,provider,indexCache,metricsFactory,indexFig,legacyIndexIdentifier);
+            entityIndex.addIndex(null, 1, 0, indexFig.getWriteConsistencyLevel());
+        }
+
 
         @Override
         public Observable<ApplicationScope> getData() {
             ApplicationScope[] scopes = new ApplicationScope[]{
-                new ApplicationScopeImpl(new SimpleId(UUID.randomUUID(),"application"))
+               appScope
             };
             return Observable.from(scopes);
         }

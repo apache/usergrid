@@ -17,15 +17,49 @@
  *  * directory of this distribution.
  *
  */
+
 package org.apache.usergrid.persistence.index;
 
+import com.google.inject.Inject;
+
 /**
- * Classy class class.
+ * Class is used to generate an index name and alias name
  */
-public interface IndexIdentifier {
-    IndexAlias getAlias();
+public class IndexIdentifierImpl implements IndexIdentifier {
+    private final IndexFig config;
 
-    String getIndex(String suffix);
+    @Inject
+    public IndexIdentifierImpl(IndexFig config) {
+        this.config = config;
+    }
 
-    String toString();
+    /**
+     * Get the alias name
+     * @return
+     */
+    @Override
+    public IndexAlias getAlias() {
+        return new IndexAlias(config,config.getIndexPrefix());
+    }
+
+    /**
+     * Get index name, send in additional parameter to add incremental indexes
+     * @param suffix
+     * @return
+     */
+    @Override
+    public String getIndex(String suffix) {
+        if (suffix != null) {
+            return config.getIndexPrefix() + "_" + suffix;
+        } else {
+            return config.getIndexPrefix();
+        }
+    }
+
+
+    @Override
+    public String toString() {
+        return "index id"+config.getIndexPrefix();
+    }
+
 }

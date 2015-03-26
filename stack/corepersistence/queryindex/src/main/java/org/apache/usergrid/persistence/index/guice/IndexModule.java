@@ -56,7 +56,7 @@ public abstract class IndexModule extends AbstractModule {
         bind(EntityIndexFactory.class).to( EsEntityIndexFactoryImpl.class );
         bind(AliasedEntityIndex.class).to(EsEntityIndexImpl.class);
         bind(EntityIndex.class).to(EsEntityIndexImpl.class);
-        bind(IndexIdentifier.class);
+        bind(IndexIdentifier.class).to(IndexIdentifierImpl.class);
 
 
         bind(IndexBufferProducer.class).to(EsIndexBufferProducerImpl.class);

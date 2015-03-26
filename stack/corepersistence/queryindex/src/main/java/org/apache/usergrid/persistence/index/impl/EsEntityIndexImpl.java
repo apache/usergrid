@@ -141,8 +141,6 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
 
     }
 
-
-
     @Override
     public void addIndex(final String indexSuffix,final int numberOfShards, final int numberOfReplicas, final String writeConsistency) {
         try {
