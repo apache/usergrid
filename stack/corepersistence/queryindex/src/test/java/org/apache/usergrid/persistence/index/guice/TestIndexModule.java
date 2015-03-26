@@ -33,7 +33,12 @@ public class TestIndexModule extends TestModule {
         install( new CommonModule());
 
         // configure collections and our core astyanax framework
-        install( new IndexModule()  );
+        install( new IndexModule(){
+            @Override
+            public  void configureMigrationProvider(){
+
+            }
+        });
         install( new GuicyFigModule(IndexTestFig.class) );
     }
 }

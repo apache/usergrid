@@ -27,10 +27,12 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.usergrid.persistence.core.future.BetterFuture;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
+import org.apache.usergrid.persistence.core.migration.data.VersionedData;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.persistence.index.exceptions.IndexException;
 
+import org.apache.usergrid.persistence.index.migration.IndexDataVersions;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import org.elasticsearch.action.ActionFuture;
@@ -71,7 +73,7 @@ import java.util.*;
  * Implements index using ElasticSearch Java API.
  */
 @Singleton
-public class EsEntityIndexImpl implements AliasedEntityIndex {
+public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
 
     private static final Logger logger = LoggerFactory.getLogger( EsEntityIndexImpl.class );
 
@@ -440,6 +442,11 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
         // this is bad, red alert!
         return Health.RED;
+    }
+
+    @Override
+    public int getImplementationVersion() {
+        return IndexDataVersions.SINGLE_INDEX.getVersion();
     }
 
 

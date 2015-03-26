@@ -20,6 +20,7 @@ import com.google.inject.Inject;
 import org.apache.usergrid.persistence.core.migration.data.DataMigration;
 import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
 import org.apache.usergrid.persistence.core.migration.data.ProgressObserver;
+import org.apache.usergrid.persistence.core.migration.data.VersionedData;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.AliasedEntityIndex;
 import org.apache.usergrid.persistence.index.IndexAlias;
@@ -30,9 +31,12 @@ import org.apache.usergrid.persistence.index.impl.EsProvider;
 import org.apache.usergrid.persistence.index.impl.IndexingUtils;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
 import org.elasticsearch.client.AdminClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Classy class class.
@@ -44,6 +48,8 @@ public class EsIndexDataMigrationImpl implements DataMigration<ApplicationScope>
     private final IndexFig indexFig;
     private final IndexIdentifier indexIdentifier;
     private final EsIndexCache indexCache;
+    private final VersionedData dataVersion;
+    private static final Logger log = LoggerFactory.getLogger(EsIndexDataMigrationImpl.class);
 
     @Inject
     public EsIndexDataMigrationImpl(AliasedEntityIndex entityIndex, EsProvider provider, IndexFig indexFig, IndexIdentifier indexIdentifier, EsIndexCache indexCache){
@@ -52,10 +58,12 @@ public class EsIndexDataMigrationImpl implements DataMigration<ApplicationScope>
         this.indexFig = indexFig;
         this.indexIdentifier = indexIdentifier;
         this.indexCache = indexCache;
+        this.dataVersion = (VersionedData) entityIndex;
     }
 
     @Override
     public int migrate(int currentVersion, MigrationDataProvider<ApplicationScope> migrationDataProvider, ProgressObserver observer) {
+        final AtomicInteger integer = new AtomicInteger();
         migrationDataProvider.getData().doOnNext(applicationScope -> {
             LegacyIndexIdentifier legacyIndexIdentifier = new LegacyIndexIdentifier(indexFig,applicationScope);
             String[] indexes = indexCache.getIndexes(legacyIndexIdentifier.getAlias(), AliasedEntityIndex.AliasType.Read);
@@ -66,19 +74,23 @@ public class EsIndexDataMigrationImpl implements DataMigration<ApplicationScope>
                 aliasesRequestBuilder = adminClient.indices().prepareAliases();
                 // add read alias
                 aliasesRequestBuilder.addAlias(index, indexIdentifier.getAlias().getReadAlias());
+                integer.incrementAndGet();
             }
-        });
-        return 0;
+        })
+        .doOnError(error -> log.error("failed to migrate index",error))
+        .toBlocking().last();
+
+        return integer.get();
     }
 
     @Override
     public boolean supports(int currentVersion) {
-        return false;
+        return currentVersion < dataVersion.getImplementationVersion();
     }
 
     @Override
     public int getMaxVersion() {
-        return 0;
+        return dataVersion.getImplementationVersion();
     }
     /**
      * Class is used to generate an index name and alias name the old way via app name

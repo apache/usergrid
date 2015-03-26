@@ -138,5 +138,8 @@ public class AllApplicationsObservableImpl implements AllApplicationsObservable 
     }
 
 
-
+    @Override
+    public Observable<ApplicationScope> getData() {
+        return getAllApplications();
+    }
 }

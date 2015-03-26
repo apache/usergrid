@@ -42,7 +42,7 @@ import org.apache.usergrid.persistence.queue.guice.QueueModule;
 import org.safehaus.guicyfig.GuicyFigModule;
 
 
-public class IndexModule extends AbstractModule {
+public abstract class IndexModule extends AbstractModule {
 
     @Override
     protected void configure() {
@@ -75,8 +75,17 @@ public class IndexModule extends AbstractModule {
 
         //wire up the collection migration plugin
         Multibinder.newSetBinder( binder(), MigrationPlugin.class ).addBinding().to(EsIndexMigrationPlugin.class);
+
+
+        //invoke the migration plugin config
+        configureMigrationProvider();
     }
 
-
+    /**
+     * Gives callers the ability to to configure an instance of
+     *
+     * MigrationDataProvider<ApplicationScope> for providing data migrations
+     */
+    public abstract void configureMigrationProvider();
 
 }

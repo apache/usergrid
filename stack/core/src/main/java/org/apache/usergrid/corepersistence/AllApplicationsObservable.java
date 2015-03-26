@@ -20,6 +20,7 @@
 package org.apache.usergrid.corepersistence;
 
 
+import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.entities.Application;
 
@@ -29,7 +30,7 @@ import rx.Observable;
 /**
  * Interface for generating an observable of all ApplicationScope
  */
-public interface AllApplicationsObservable {
+public interface AllApplicationsObservable extends MigrationDataProvider<ApplicationScope>{
 
     /**
      * Return all applications in our system
