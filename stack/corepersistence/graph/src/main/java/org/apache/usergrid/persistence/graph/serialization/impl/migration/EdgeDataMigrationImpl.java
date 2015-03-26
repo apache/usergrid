@@ -88,6 +88,8 @@ public class EdgeDataMigrationImpl implements DataMigration<GraphNode> {
         final Observable<List<Edge>> observable = migrationDataProvider.getData().flatMap( graphNode -> {
             final GraphManager gm = graphManagerFactory.createEdgeManager( graphNode.applicationScope );
 
+            //TODO: maybe move to retreive all indexes : https://github.com/elastic/elasticsearch/blob/master/src/main/java/org/elasticsearch/rest/action/cat/RestIndicesAction.java
+            //https://www.google.com/webhp?sourceid=chrome-instant&ion=1&espv=2&ie=UTF-8#q=get%20all%20indexes%20elasticsearch
             //get edges from the source
             return edgesFromSourceObservable.edgesFromSource( gm, graphNode.entryNode ).buffer( 1000 )
                                             .doOnNext( edges -> {

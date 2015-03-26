@@ -60,9 +60,6 @@ public class IndexMigrationTest extends BaseIT{
     public EsProvider provider;
 
     @Inject
-    public MigrationDataProvider<ApplicationScope> applicationScopeMigrationDataProvider;
-
-    @Inject
     public AliasedEntityIndex ei;
     @Inject
     public IndexBufferProducer indexBatchBufferProducer;
@@ -98,12 +95,9 @@ public class IndexMigrationTest extends BaseIT{
 
             }
         };
-        final ApplicationScope appScope =  new ApplicationScopeImpl(new SimpleId(UUID.randomUUID(),"application"));
-
-        LegacyIndexIdentifier legacyIndexIdentifier = new  LegacyIndexIdentifier(fig,appScope);
 
         TestIndexModule.TestAllApplicationsObservable obs = new TestIndexModule.TestAllApplicationsObservable(indexBatchBufferProducer,provider,indexCache,metricsFactory,fig);
-        int version = indexDataMigration.migrate(0, applicationScopeMigrationDataProvider, po );
+        int version = indexDataMigration.migrate(0, obs, po );
         assertEquals(version, IndexDataVersions.SINGLE_INDEX.getVersion());
     }
 }
