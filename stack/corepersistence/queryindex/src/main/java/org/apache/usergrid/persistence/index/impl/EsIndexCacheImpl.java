@@ -27,17 +27,13 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.usergrid.persistence.index.IndexAlias;
+import org.apache.usergrid.persistence.index.*;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.client.AdminClient;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.usergrid.persistence.index.AliasedEntityIndex;
-import org.apache.usergrid.persistence.index.IndexFig;
-import org.apache.usergrid.persistence.index.IndexIdentifier;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -54,7 +50,7 @@ import com.google.inject.Singleton;
  * Cache for Es index operations
  */
 @Singleton
-public class EsIndexCache {
+public class EsIndexCacheImpl implements EsIndexCache {
 
     private static final Logger logger = LoggerFactory.getLogger( EsEntityIndexImpl.class );
     private final ListeningScheduledExecutorService refreshExecutors;
@@ -64,7 +60,7 @@ public class EsIndexCache {
 
 
     @Inject
-    public EsIndexCache( final EsProvider provider, final IndexFig indexFig ) {
+    public EsIndexCacheImpl( final EsProvider provider, final IndexFig indexFig ) {
 
         this.refreshExecutors =
             MoreExecutors.listeningDecorator( Executors.newScheduledThreadPool( indexFig.getIndexCacheMaxWorkers() ) );
@@ -99,7 +95,8 @@ public class EsIndexCache {
     /**
      * Get indexes for an alias
      */
-    public String[] getIndexes( IndexAlias alias, AliasedEntityIndex.AliasType aliasType ) {
+    @Override
+    public String[] getIndexes(IndexAlias alias, AliasedEntityIndex.AliasType aliasType) {
         String[] indexes;
         try {
             indexes = aliasIndexCache.get( getAliasName( alias, aliasType ) );
@@ -136,7 +133,8 @@ public class EsIndexCache {
     /**
      * clean up cache
      */
-    public void invalidate( IndexAlias alias ) {
+    @Override
+    public void invalidate(IndexAlias alias) {
         aliasIndexCache.invalidate( alias.getWriteAlias() );
         aliasIndexCache.invalidate( alias.getReadAlias() );
     }

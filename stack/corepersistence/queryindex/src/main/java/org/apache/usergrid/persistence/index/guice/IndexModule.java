@@ -48,9 +48,11 @@ public abstract class IndexModule extends AbstractModule {
         install(new MapModule());
         install(new QueueModule());
 
-        bind(EntityIndexFactory.class).to( EsEntityIndexFactoryImpl.class );
+        bind(EntityIndexFactory.class).to(EsEntityIndexFactoryImpl.class);
         bind(AliasedEntityIndex.class).to(EsEntityIndexImpl.class);
         bind(EntityIndex.class).to(EsEntityIndexImpl.class);
+        bind(EsIndexCache.class).to(EsIndexCacheImpl.class);
+
         bind(IndexIdentifier.class).to(IndexIdentifierImpl.class);
 
 

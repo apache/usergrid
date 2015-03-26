@@ -31,7 +31,7 @@ import org.apache.usergrid.persistence.index.IndexBufferProducer;
 import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.index.IndexIdentifier;
 import org.apache.usergrid.persistence.index.impl.EsEntityIndexImpl;
-import org.apache.usergrid.persistence.index.impl.EsIndexCache;
+import org.apache.usergrid.persistence.index.EsIndexCache;
 import org.apache.usergrid.persistence.index.impl.EsProvider;
 import org.apache.usergrid.persistence.index.migration.EsIndexDataMigrationImpl;
 import org.apache.usergrid.persistence.index.migration.LegacyIndexIdentifier;
