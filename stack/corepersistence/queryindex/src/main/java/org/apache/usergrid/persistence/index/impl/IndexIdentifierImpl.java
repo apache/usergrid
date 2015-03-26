@@ -18,9 +18,12 @@
  *
  */
 
-package org.apache.usergrid.persistence.index;
+package org.apache.usergrid.persistence.index.impl;
 
 import com.google.inject.Inject;
+import org.apache.usergrid.persistence.index.IndexAlias;
+import org.apache.usergrid.persistence.index.IndexFig;
+import org.apache.usergrid.persistence.index.IndexIdentifier;
 
 /**
  * Class is used to generate an index name and alias name

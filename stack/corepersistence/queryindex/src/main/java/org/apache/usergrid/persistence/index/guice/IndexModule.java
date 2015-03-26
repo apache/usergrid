@@ -26,13 +26,8 @@ import org.apache.usergrid.persistence.core.migration.data.MigrationPlugin;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.*;
 import com.google.inject.AbstractModule;
-import com.google.inject.assistedinject.FactoryModuleBuilder;
 
-import org.apache.usergrid.persistence.index.impl.BufferQueue;
-import org.apache.usergrid.persistence.index.impl.EsEntityIndexFactoryImpl;
-import org.apache.usergrid.persistence.index.impl.EsEntityIndexImpl;
-import org.apache.usergrid.persistence.index.impl.EsIndexBufferConsumerImpl;
-import org.apache.usergrid.persistence.index.impl.EsIndexBufferProducerImpl;
+import org.apache.usergrid.persistence.index.impl.*;
 import org.apache.usergrid.persistence.index.migration.EsIndexDataMigrationImpl;
 import org.apache.usergrid.persistence.index.migration.EsIndexMigrationPlugin;
 import org.apache.usergrid.persistence.index.migration.IndexMigration;
