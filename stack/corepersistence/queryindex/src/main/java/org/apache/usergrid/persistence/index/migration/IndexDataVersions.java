@@ -21,7 +21,7 @@
 package org.apache.usergrid.persistence.index.migration;
 
 /**
- * Classy class class.
+ * Index data migration
  */
 public enum IndexDataVersions {
     MANY_INDEXES(0),
