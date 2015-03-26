@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.exception.WriteOptimisticVerifyException;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
-import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
@@ -83,12 +83,12 @@ public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
         final MvccEntity mvccEntity = fromEntity( entity );
 
         List<MvccLogEntry> logEntries = new ArrayList<MvccLogEntry>();
-        logEntries.add( new MvccLogEntryImpl( 
+        logEntries.add( new MvccLogEntryImpl(
             entity.getId(), UUIDGenerator.newTimeUUID(), Stage.ACTIVE, MvccLogEntry.State.COMPLETE ));
-        logEntries.add( new MvccLogEntryImpl( 
+        logEntries.add( new MvccLogEntryImpl(
             entity.getId(), UUIDGenerator.newTimeUUID(), Stage.COMMITTED, MvccLogEntry.State.COMPLETE ));
 
-        MvccLogEntrySerializationStrategy noConflictLog = 
+        MvccLogEntrySerializationStrategy noConflictLog =
             mock( MvccLogEntrySerializationStrategy.class );
 
         when( noConflictLog.load( collectionScope, entity.getId(), entity.getVersion(), 2) )
@@ -121,15 +121,15 @@ public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
 
         // log that one operation is active on entity
         List<MvccLogEntry> logEntries = new ArrayList<MvccLogEntry>();
-        logEntries.add( new MvccLogEntryImpl( 
+        logEntries.add( new MvccLogEntryImpl(
             entity.getId(), UUIDGenerator.newTimeUUID(), Stage.ACTIVE, MvccLogEntry.State.COMPLETE ));
 
         // log another operation as active on entity
-        logEntries.add( new MvccLogEntryImpl( 
+        logEntries.add( new MvccLogEntryImpl(
             entity.getId(), UUIDGenerator.newTimeUUID(), Stage.ACTIVE, MvccLogEntry.State.COMPLETE ));
 
         // mock up the log
-        MvccLogEntrySerializationStrategy mvccLog = 
+        MvccLogEntrySerializationStrategy mvccLog =
             mock( MvccLogEntrySerializationStrategy.class );
         when( mvccLog.load( scope, entity.getId(), entity.getVersion(), 2) )
             .thenReturn( logEntries );

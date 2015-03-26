@@ -26,13 +26,14 @@ import java.util.List;
 import java.util.UUID;
 
 import com.netflix.astyanax.model.ConsistencyLevel;
+
+import org.apache.usergrid.persistence.collection.serialization.impl.util.LegacyScopeUtils;
 import org.apache.usergrid.persistence.core.astyanax.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.cassandra.db.marshal.BytesType;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
@@ -44,6 +45,7 @@ import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
@@ -113,7 +115,7 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
     }
 
 
-    public MutationBatch write( final CollectionScope collectionScope, UniqueValue value ) {
+    public MutationBatch write( final ApplicationScope collectionScope, UniqueValue value ) {
 
 
         Preconditions.checkNotNull( value, "value is required" );
@@ -126,9 +128,6 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
         ValidationUtils.verifyIdentity( entityId );
         ValidationUtils.verifyVersion( entityVersion );
 
-        log.debug( "Writing unique value collectionScope={} id={} version={} name={} value={} ttl={} ", new Object[] {
-            collectionScope.getName(), entityId, entityVersion, value.getField().getName(), value.getField().getValue()
-        } );
 
         final EntityVersion ev = new EntityVersion( entityId, entityVersion );
         final UniqueFieldEntry uniqueFieldEntry = new UniqueFieldEntry( entityVersion, field );
@@ -150,7 +149,7 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
 
 
     @Override
-    public MutationBatch write( final CollectionScope collectionScope, final UniqueValue value, final int timeToLive ) {
+    public MutationBatch write( final ApplicationScope collectionScope, final UniqueValue value, final int timeToLive ) {
 
         Preconditions.checkNotNull( value, "value is required" );
         Preconditions.checkArgument( timeToLive > 0, "timeToLive must be greater than 0 is required" );
@@ -184,7 +183,7 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
 
 
     @Override
-    public MutationBatch delete( final CollectionScope scope, UniqueValue value ) {
+    public MutationBatch delete( final ApplicationScope scope, UniqueValue value ) {
 
         Preconditions.checkNotNull( value, "value is required" );
 
@@ -219,27 +218,42 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
     /**
      * Do the column update or delete for the given column and row key
      *
-     * @param collectionScope We need to use this when getting the keyspace
+     * @param applicationScope We need to use this when getting the keyspace
+     * @param uniqueValue The unique value to write
+     * @param op The operation to write
      */
-    private MutationBatch doWrite( CollectionScope collectionScope, UniqueValue uniqueValue, RowOp op ) {
+    private MutationBatch doWrite( ApplicationScope applicationScope, UniqueValue uniqueValue, RowOp op ) {
         final MutationBatch batch = keyspace.prepareMutationBatch();
+
+        final Id applicationId = applicationScope.getApplication();
+        final Id uniqueValueId = uniqueValue.getEntityId();
+
+        final String collectionName = LegacyScopeUtils.getCollectionScopeNameFromEntityType( uniqueValueId.getType() );
+
         final CollectionPrefixedKey<Field> uniquePrefixedKey =
-            new CollectionPrefixedKey<>( collectionScope.getName(), collectionScope.getOwner(), uniqueValue.getField() );
+            new CollectionPrefixedKey<>( collectionName, applicationId, uniqueValue.getField() );
 
 
         op.doLookup( batch
-            .withRow( CF_UNIQUE_VALUES, ScopedRowKey.fromKey( collectionScope.getApplication(), uniquePrefixedKey ) ) );
+            .withRow( CF_UNIQUE_VALUES, ScopedRowKey.fromKey( applicationId, uniquePrefixedKey ) ) );
 
 
-        final Id ownerId = collectionScope.getOwner();
-        final String collectionName = collectionScope.getName();
+        final Id ownerId = applicationId;
 
         final CollectionPrefixedKey<Id> collectionPrefixedEntityKey =
             new CollectionPrefixedKey<>( collectionName, ownerId, uniqueValue.getEntityId() );
 
 
         op.doLog( batch.withRow( CF_ENTITY_UNIQUE_VALUES,
-            ScopedRowKey.fromKey( collectionScope.getApplication(), collectionPrefixedEntityKey ) ) );
+            ScopedRowKey.fromKey( applicationId, collectionPrefixedEntityKey ) ) );
+
+
+        if(log.isDebugEnabled()) {
+            log.debug( "Writing unique value collectionScope={} id={} version={} name={} value={} ttl={} ", new
+                Object[] {
+                    collectionName, uniqueValueId, uniqueValue.getEntityVersion(), uniqueValue.getField().getName(), uniqueValue.getField().getValue()
+                } );
+        }
 
 
         return batch;
@@ -248,11 +262,12 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
 
 
     @Override
-    public UniqueValueSet load(final CollectionScope colScope, final Collection<Field> fields ) throws ConnectionException{
-        return load(colScope,ConsistencyLevel.valueOf(cassandraFig.getReadCL()), fields);
+    public UniqueValueSet load(final ApplicationScope colScope, final String type, final Collection<Field> fields ) throws ConnectionException{
+        return load(colScope,ConsistencyLevel.valueOf(cassandraFig.getReadCL()), type, fields);
     }
+
     @Override
-    public UniqueValueSet load(final CollectionScope colScope, final ConsistencyLevel consistencyLevel, final Collection<Field> fields )
+    public UniqueValueSet load(final ApplicationScope appScope, final ConsistencyLevel consistencyLevel,  final String type,  final Collection<Field> fields )
             throws ConnectionException {
 
         Preconditions.checkNotNull( fields, "fields are required" );
@@ -261,9 +276,9 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
 
         final List<ScopedRowKey<CollectionPrefixedKey<Field>>> keys = new ArrayList<>( fields.size() );
 
-        final Id applicationId = colScope.getApplication();
-        final Id ownerId = colScope.getOwner();
-        final String collectionName = colScope.getName();
+        final Id applicationId = appScope.getApplication();
+        final Id ownerId = appScope.getApplication();
+        final String collectionName = LegacyScopeUtils.getCollectionScopeNameFromEntityType( type );
 
         for ( Field field : fields ) {
 
@@ -312,7 +327,7 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
 
 
     @Override
-    public Iterator<UniqueValue> getAllUniqueFields( final CollectionScope collectionScope, final Id entityId ) {
+    public Iterator<UniqueValue> getAllUniqueFields( final ApplicationScope collectionScope, final Id entityId ) {
 
 
         Preconditions.checkNotNull( collectionScope, "collectionScope is required" );
@@ -320,8 +335,8 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
 
 
         final Id applicationId = collectionScope.getApplication();
-        final Id ownerId = collectionScope.getOwner();
-        final String collectionName = collectionScope.getName();
+        final Id ownerId = applicationId;
+        final String collectionName = LegacyScopeUtils.getCollectionScopeNameFromEntityType( entityId.getType() );
 
         final CollectionPrefixedKey<Id> collectionPrefixedKey =
                 new CollectionPrefixedKey<>( collectionName, ownerId, entityId );

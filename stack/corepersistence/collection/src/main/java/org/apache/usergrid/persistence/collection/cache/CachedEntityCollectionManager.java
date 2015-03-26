@@ -70,8 +70,8 @@ public class CachedEntityCollectionManager implements EntityCollectionManager {
     }
 
     @Override
-    public Observable<FieldSet> getEntitiesFromFields( final Collection<Field> fields ) {
-        return targetEntityCollectionManager.getEntitiesFromFields( fields );
+    public Observable<FieldSet> getEntitiesFromFields(  final String entityType, final Collection<Field> fields) {
+        return targetEntityCollectionManager.getEntitiesFromFields( entityType, fields );
     }
 
     @Override
@@ -110,9 +110,10 @@ public class CachedEntityCollectionManager implements EntityCollectionManager {
     }
 
 
+
     @Override
-    public Observable<Id> getIdField( final Field field ) {
-        return targetEntityCollectionManager.getIdField( field );
+    public Observable<Id> getIdField( final String entityType,  final Field field ) {
+        return targetEntityCollectionManager.getIdField( entityType, field );
     }
 
 

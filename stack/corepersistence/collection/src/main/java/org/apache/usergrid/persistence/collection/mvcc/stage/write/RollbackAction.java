@@ -23,11 +23,12 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
-import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.impl.UniqueValueImpl;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.field.Field;
 
@@ -70,7 +71,7 @@ public class RollbackAction implements Action1<Throwable> {
 
             CollectionRuntimeException cre = ( CollectionRuntimeException ) t;
             final MvccEntity mvccEntity = cre.getEntity();
-            final CollectionScope scope = cre.getCollectionScope();
+            final ApplicationScope scope = cre.getApplicationScope();
 
             // one batch to handle rollback
             MutationBatch rollbackMb = null;

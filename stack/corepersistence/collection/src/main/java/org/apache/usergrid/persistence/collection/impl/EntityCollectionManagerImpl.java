@@ -28,15 +28,13 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntitySet;
 import org.apache.usergrid.persistence.collection.FieldSet;
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.VersionSet;
 import org.apache.usergrid.persistence.collection.guice.CollectionTaskExecutor;
-import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccValidationUtils;
+import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkCommit;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkStart;
@@ -52,6 +50,7 @@ import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
 import org.apache.usergrid.persistence.collection.serialization.impl.MutableFieldSet;
 import org.apache.usergrid.persistence.core.guice.ProxyImpl;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.task.Task;
 import org.apache.usergrid.persistence.core.task.TaskExecutor;
 import org.apache.usergrid.persistence.core.util.Health;
@@ -91,8 +90,6 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
     private static final Logger logger = LoggerFactory.getLogger( EntityCollectionManagerImpl.class );
 
-    private final CollectionScope collectionScope;
-
 
     //start stages
     private final WriteStart writeStart;
@@ -125,6 +122,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     private final Meter loadMeter;
     private final Meter updateMeter;
 
+    private final ApplicationScope applicationScope;
+
 
     @Inject
     public EntityCollectionManagerImpl(
@@ -141,14 +140,14 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         final Keyspace                             keyspace,
         final EntityVersionTaskFactory entityVersionTaskFactory,
         @CollectionTaskExecutor final TaskExecutor taskExecutor,
-        @Assisted final CollectionScope            collectionScope,
+        @Assisted final ApplicationScope applicationScope,
         final MetricsFactory metricsFactory
 
     ) {
         this.uniqueValueSerializationStrategy = uniqueValueSerializationStrategy;
         this.entitySerializationStrategy = entitySerializationStrategy;
 
-        MvccValidationUtils.validateCollectionScope( collectionScope );
+        ValidationUtils.validateApplicationScope( applicationScope );
 
         this.writeStart = writeStart;
         this.writeVerifyUnique = writeVerifyUnique;
@@ -165,7 +164,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         this.entityVersionTaskFactory = entityVersionTaskFactory;
         this.taskExecutor = taskExecutor;
 
-        this.collectionScope = collectionScope;
+        this.applicationScope = applicationScope;
         this.mvccLogEntrySerializationStrategy = mvccLogEntrySerializationStrategy;
         this.writeTimer = metricsFactory.getTimer(EntityCollectionManagerImpl.class,"write.timer");
         this.writeMeter = metricsFactory.getMeter(EntityCollectionManagerImpl.class, "write.meter");
@@ -192,7 +191,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
 
         // create our observable and start the write
-        final CollectionIoEvent<Entity> writeData = new CollectionIoEvent<Entity>( collectionScope, entity );
+        final CollectionIoEvent<Entity> writeData = new CollectionIoEvent<Entity>( applicationScope, entity );
 
         Observable<CollectionIoEvent<MvccEntity>> observable = stageRunner( writeData, writeStart );
 
@@ -206,8 +205,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
             @Override
             public void call(final Entity entity) {
                 //TODO fire the created task first then the entityVersioncleanup
-                taskExecutor.submit( entityVersionTaskFactory.getCreatedTask( collectionScope, entity ));
-                taskExecutor.submit( entityVersionTaskFactory.getCleanupTask( collectionScope, entityId,
+                taskExecutor.submit( entityVersionTaskFactory.getCreatedTask( applicationScope, entity ));
+                taskExecutor.submit( entityVersionTaskFactory.getCleanupTask( applicationScope, entityId,
                     entity.getVersion(), false ));
                 //post-processing to come later. leave it empty for now.
             }
@@ -235,7 +234,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getType(), "Entity type is required in this stage" );
 
         final Timer.Context timer = deleteTimer.time();
-        Observable<Id> o = Observable.just( new CollectionIoEvent<Id>( collectionScope, entityId ) )
+        Observable<Id> o = Observable.just( new CollectionIoEvent<Id>( applicationScope, entityId ) )
             .map(markStart)
             .doOnNext( markCommit )
             .map(new Func1<CollectionIoEvent<MvccEntity>, Id>() {
@@ -244,7 +243,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                      public Id call(final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent) {
                          MvccEntity entity = mvccEntityCollectionIoEvent.getEvent();
                          Task<Void> task = entityVersionTaskFactory
-                             .getDeleteTask( collectionScope, entity.getId(), entity.getVersion() );
+                             .getDeleteTask( applicationScope, entity.getId(), entity.getVersion() );
                          taskExecutor.submit(task);
                          return entity.getId();
                      }
@@ -318,7 +317,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
             public void call( final Subscriber<? super EntitySet> subscriber ) {
                 try {
                     final EntitySet results =
-                            entitySerializationStrategy.load( collectionScope, entityIds, UUIDGenerator.newTimeUUID() );
+                            entitySerializationStrategy.load( applicationScope, entityIds, UUIDGenerator.newTimeUUID() );
 
                     subscriber.onNext( results );
                     subscriber.onCompleted();
@@ -344,13 +343,13 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
 
     @Override
-    public Observable<Id> getIdField( final Field field ) {
+    public Observable<Id> getIdField(final String type,  final Field field ) {
         final List<Field> fields = Collections.singletonList( field );
         return rx.Observable.from( fields ).map( new Func1<Field, Id>() {
             @Override
             public Id call( Field field ) {
                 try {
-                    final UniqueValueSet set = uniqueValueSerializationStrategy.load( collectionScope, fields );
+                    final UniqueValueSet set = uniqueValueSerializationStrategy.load( applicationScope, type, fields );
                     final UniqueValue value = set.getValue( field.getName() );
                     return value == null ? null : value.getEntityId();
                 }
@@ -369,7 +368,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
      * @return
      */
     @Override
-    public Observable<FieldSet> getEntitiesFromFields( final Collection<Field> fields ) {
+    public Observable<FieldSet> getEntitiesFromFields(final String type, final Collection<Field> fields ) {
         return rx.Observable.just(fields).map( new Func1<Collection<Field>, FieldSet>() {
             @Override
             public FieldSet call( Collection<Field> fields ) {
@@ -378,7 +377,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                     final UUID startTime = UUIDGenerator.newTimeUUID();
 
                     //Get back set of unique values that correspond to collection of fields
-                    UniqueValueSet set = uniqueValueSerializationStrategy.load( collectionScope, fields );
+                    UniqueValueSet set = uniqueValueSerializationStrategy.load( applicationScope,type,  fields );
 
                     //Short circut if we don't have any uniqueValues from the given fields.
                     if(!set.iterator().hasNext()){
@@ -403,7 +402,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                     }
 
                     //Load a entity for each entityId we retrieved.
-                    final EntitySet entitySet = entitySerializationStrategy.load(collectionScope, entityIds, startTime);
+                    final EntitySet entitySet = entitySerializationStrategy.load(applicationScope, entityIds, startTime);
 
                     //now loop through and ensure the entities are there.
                     final MutationBatch deleteBatch = keyspace.prepareMutationBatch();
@@ -415,7 +414,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
                         //bad unique value, delete this, it's inconsistent
                         if(entity == null || !entity.getEntity().isPresent()){
-                            final MutationBatch valueDelete = uniqueValueSerializationStrategy.delete(collectionScope, expectedUnique);
+                            final MutationBatch valueDelete = uniqueValueSerializationStrategy.delete(applicationScope, expectedUnique);
                             deleteBatch.mergeShallow(valueDelete);
                             continue;
                         }
@@ -482,7 +481,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
             public void call( final Subscriber<? super VersionSet> subscriber ) {
                 try {
                     final VersionSet logEntries = mvccLogEntrySerializationStrategy
-                            .load( collectionScope, entityIds, UUIDGenerator.newTimeUUID() );
+                            .load( applicationScope, entityIds, UUIDGenerator.newTimeUUID() );
 
                     subscriber.onNext( logEntries );
                     subscriber.onCompleted();
