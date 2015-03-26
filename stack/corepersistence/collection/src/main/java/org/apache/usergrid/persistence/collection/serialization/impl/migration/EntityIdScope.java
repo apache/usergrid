@@ -19,9 +19,7 @@
  */
 package org.apache.usergrid.persistence.collection.serialization.impl.migration;
 
-import java.util.Collection;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -30,11 +28,11 @@ import org.apache.usergrid.persistence.model.entity.Id;
  */
 public class EntityIdScope{
     private final Id id;
-    private final CollectionScope collectionScope;
+    private final ApplicationScope applicationScope;
 
-    public EntityIdScope(CollectionScope collectionScope, Id id){
+    public EntityIdScope(ApplicationScope applicationScope, Id id){
         this.id = id;
-        this.collectionScope = collectionScope;
+        this.applicationScope = applicationScope;
     }
 
 
@@ -43,7 +41,7 @@ public class EntityIdScope{
     }
 
 
-    public CollectionScope getCollectionScope() {
-        return collectionScope;
+    public ApplicationScope getApplicationScope() {
+        return applicationScope;
     }
 }

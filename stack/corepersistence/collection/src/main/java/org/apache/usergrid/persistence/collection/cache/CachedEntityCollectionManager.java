@@ -23,7 +23,10 @@ package org.apache.usergrid.persistence.collection.cache;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.usergrid.persistence.collection.*;
+import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.EntitySet;
+import org.apache.usergrid.persistence.collection.FieldSet;
+import org.apache.usergrid.persistence.collection.VersionSet;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;

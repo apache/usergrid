@@ -18,16 +18,11 @@
 package org.apache.usergrid.persistence.collection.impl;
 
 
+import java.util.UUID;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.impl.EntityDeletedTask;
-import org.apache.usergrid.persistence.collection.impl.EntityVersionCleanupTask;
-import org.apache.usergrid.persistence.collection.impl.EntityVersionCreatedTask;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
-
-import java.util.UUID;
 
 
 public interface EntityVersionTaskFactory {

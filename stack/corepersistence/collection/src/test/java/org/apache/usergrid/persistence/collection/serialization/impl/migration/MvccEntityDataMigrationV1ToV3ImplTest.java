@@ -38,12 +38,6 @@ import com.google.inject.Inject;
 
 import net.jcip.annotations.NotThreadSafe;
 
-import static org.apache.usergrid.persistence.core.util.IdGenerator.createId;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-
 
 @NotThreadSafe
 @RunWith( ITRunner.class )

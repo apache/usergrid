@@ -20,12 +20,6 @@
 package org.apache.usergrid.persistence.collection.serialization.impl.util;
 
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.model.entity.Id;
-
-
 /**
  * This class is a helper to keep our legacy CollectionScope for older serialization apis.  This will generate
  * the scope in the same way previous scopes were generated in the core module.    This only exists to migrate

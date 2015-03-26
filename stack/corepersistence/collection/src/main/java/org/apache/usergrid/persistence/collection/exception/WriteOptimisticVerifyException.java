@@ -17,8 +17,9 @@
  */
 package org.apache.usergrid.persistence.collection.exception;
 
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+
 import org.apache.usergrid.persistence.collection.MvccEntity;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 
 
 public class WriteOptimisticVerifyException extends CollectionRuntimeException {

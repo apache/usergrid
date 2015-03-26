@@ -18,8 +18,8 @@
 package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
-import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.CollectionMigration;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.CollectionMigrationPlugin;

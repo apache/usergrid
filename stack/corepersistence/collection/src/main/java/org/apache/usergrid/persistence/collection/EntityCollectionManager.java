@@ -20,10 +20,12 @@ package org.apache.usergrid.persistence.collection;
 
 
 import java.util.Collection;
+
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
+
 import rx.Observable;
 
 

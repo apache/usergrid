@@ -30,7 +30,6 @@ import java.util.concurrent.Semaphore;
 import org.junit.AfterClass;
 import org.junit.Test;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
 import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
@@ -40,6 +39,8 @@ import org.apache.usergrid.persistence.collection.serialization.UniqueValueSeria
 import org.apache.usergrid.persistence.collection.util.LogEntryMock;
 import org.apache.usergrid.persistence.collection.util.UniqueValueEntryMock;
 import org.apache.usergrid.persistence.collection.util.VersionGenerator;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.task.NamedTaskExecutorImpl;
 import org.apache.usergrid.persistence.core.task.TaskExecutor;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -50,7 +51,6 @@ import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
-import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
@@ -99,7 +99,7 @@ public class EntityVersionCleanupTaskTest {
 
         final Id applicationId = new SimpleId( "application" );
 
-        final CollectionScope appScope = new CollectionScopeImpl( applicationId, applicationId, "users" );
+        final ApplicationScope appScope = new ApplicationScopeImpl( applicationId );
 
         final Id entityId = new SimpleId( "user" );
 
@@ -180,7 +180,7 @@ public class EntityVersionCleanupTaskTest {
 
         final Id applicationId = new SimpleId( "application" );
 
-        final CollectionScope appScope = new CollectionScopeImpl( applicationId, applicationId, "users" );
+        final ApplicationScope appScope = new ApplicationScopeImpl( applicationId );
 
         final Id entityId = new SimpleId( "user" );
 
@@ -216,10 +216,10 @@ public class EntityVersionCleanupTaskTest {
 
 
         //verify delete was never invoked
-        verify( uvss, never() ).delete( any( CollectionScope.class ), any( UniqueValue.class ) );
+        verify( uvss, never() ).delete( any( ApplicationScope.class ), any( UniqueValue.class ) );
 
         //verify the delete was never invoked
-        verify( less, never() ).delete( any( CollectionScope.class ), any( Id.class ), any( UUID.class ) );
+        verify( less, never() ).delete( any( ApplicationScope.class ), any( Id.class ), any( UUID.class ) );
     }
 
 
@@ -258,7 +258,7 @@ public class EntityVersionCleanupTaskTest {
 
         final Id applicationId = new SimpleId( "application" );
 
-        final CollectionScope appScope = new CollectionScopeImpl( applicationId, applicationId, "users" );
+        final ApplicationScope appScope = new ApplicationScopeImpl( applicationId );
 
         final Id entityId = new SimpleId( "user" );
 
@@ -359,7 +359,7 @@ public class EntityVersionCleanupTaskTest {
 
         final Id applicationId = new SimpleId( "application" );
 
-        final CollectionScope appScope = new CollectionScopeImpl( applicationId, applicationId, "users" );
+        final ApplicationScope appScope = new ApplicationScopeImpl( applicationId );
 
         final Id entityId = new SimpleId( "user" );
 
@@ -485,7 +485,7 @@ public class EntityVersionCleanupTaskTest {
 
         final Id applicationId = new SimpleId( "application" );
 
-        final CollectionScope appScope = new CollectionScopeImpl( applicationId, applicationId, "users" );
+        final ApplicationScope appScope = new ApplicationScopeImpl( applicationId );
 
         final Id entityId = new SimpleId( "user" );
 
@@ -613,7 +613,7 @@ public class EntityVersionCleanupTaskTest {
 
         final Id applicationId = new SimpleId( "application" );
 
-        final CollectionScope appScope = new CollectionScopeImpl( applicationId, applicationId, "users" );
+        final ApplicationScope appScope = new ApplicationScopeImpl( applicationId );
 
         final Id entityId = new SimpleId( "user" );
 
@@ -681,7 +681,7 @@ public class EntityVersionCleanupTaskTest {
 
 
         @Override
-        public void versionDeleted( final CollectionScope scope, final Id entityId,
+        public void versionDeleted( final ApplicationScope scope, final Id entityId,
                                     final List<MvccLogEntry> entityVersion ) {
             invocationLatch.countDown();
         }
@@ -699,7 +699,7 @@ public class EntityVersionCleanupTaskTest {
 
 
         @Override
-        public void versionDeleted( final CollectionScope scope, final Id entityId,
+        public void versionDeleted( final ApplicationScope scope, final Id entityId,
                                     final List<MvccLogEntry> entityVersion ) {
 
             //wait for unblock to happen before counting down invocation latches

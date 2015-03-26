@@ -21,14 +21,14 @@ package org.apache.usergrid.persistence.collection.serialization;
 import java.util.Collection;
 import java.util.Iterator;
 
-import com.netflix.astyanax.MutationBatch;
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
-import com.netflix.astyanax.model.ConsistencyLevel;
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.core.migration.schema.Migration;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
+
+import com.netflix.astyanax.MutationBatch;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import com.netflix.astyanax.model.ConsistencyLevel;
 
 
 /**

@@ -21,8 +21,8 @@ package org.apache.usergrid.persistence.collection.mvcc.entity.impl;
 
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.MvccEntity;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 
 
 /**
@@ -30,9 +30,9 @@ import org.apache.usergrid.persistence.collection.MvccEntity;
  */
 public class MvccEntityDeleteEvent extends MvccEntityEvent {
 
-    public MvccEntityDeleteEvent( 
-            final CollectionScope collectionScope, final UUID version, final MvccEntity entity ) {
+    public MvccEntityDeleteEvent(
+            final ApplicationScope applicationScope, final UUID version, final MvccEntity entity ) {
 
-        super( collectionScope, version, entity );
+        super( applicationScope, version, entity );
     }
 }

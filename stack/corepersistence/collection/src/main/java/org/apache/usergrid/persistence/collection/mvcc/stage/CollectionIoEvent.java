@@ -18,9 +18,9 @@
  */
 package org.apache.usergrid.persistence.collection.mvcc.stage;
 
+
 import java.io.Serializable;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 
 

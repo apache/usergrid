@@ -22,6 +22,8 @@ package org.apache.usergrid.persistence.core.scope;
 
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.google.common.base.Preconditions;
+
 
 /**
  *
@@ -33,6 +35,7 @@ public class ApplicationScopeImpl implements ApplicationScope {
 
 
     public ApplicationScopeImpl( final Id application ) {
+        Preconditions.checkNotNull(application, "application id is required");
         this.application = application;
     }
 

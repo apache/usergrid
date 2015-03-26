@@ -6,10 +6,10 @@ import java.util.UUID;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
-import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -38,12 +38,10 @@ public class MvccEntitySerializationStrategyV3ImplTest extends MvccEntitySeriali
 
     @Test( expected = UnsupportedOperationException.class )
     public void loadAscendingHistory() throws ConnectionException {
-        final Id organizationId = new SimpleId( "organization" );
         final Id applicationId = new SimpleId( "application" );
-
         final String name = "test";
 
-        CollectionScope context = new CollectionScopeImpl( organizationId, applicationId, name );
+        ApplicationScope context = new ApplicationScopeImpl( applicationId );
 
 
         final Id entityId = new SimpleId( UUIDGenerator.newTimeUUID(), name );
@@ -55,20 +53,18 @@ public class MvccEntitySerializationStrategyV3ImplTest extends MvccEntitySeriali
 
     @Test( expected = UnsupportedOperationException.class )
     public void loadDescendingHistory() throws ConnectionException {
-        final Id organizationId = new SimpleId( "organization" );
-        final Id applicationId = new SimpleId( "application" );
+
 
         final String name = "test";
 
-        CollectionScope context = new CollectionScopeImpl( organizationId, applicationId, name );
+        final Id applicationId = new SimpleId( "application" );
 
+        ApplicationScope context = new ApplicationScopeImpl( applicationId );
 
         final Id entityId = new SimpleId( UUIDGenerator.newTimeUUID(), name );
         final UUID version1 = UUIDGenerator.newTimeUUID();
 
         serializationStrategy.loadDescendingHistory( context, entityId, version1, 20 );
     }
-
-
 }
 

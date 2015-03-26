@@ -17,18 +17,21 @@
  */
 package org.apache.usergrid.persistence.collection.impl;
 
+
 import java.util.Set;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.persistence.collection.CollectionScope;
+
 import org.apache.usergrid.persistence.collection.event.EntityVersionCreated;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.task.Task;
 import org.apache.usergrid.persistence.model.entity.Entity;
+
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+
 import rx.Observable;
-import rx.functions.Action1;
-import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 
@@ -39,12 +42,12 @@ public class EntityVersionCreatedTask implements Task<Void> {
     private static final Logger logger = LoggerFactory.getLogger( EntityVersionCreatedTask.class );
 
     private Set<EntityVersionCreated> listeners;
-    private final CollectionScope collectionScope;
+    private final ApplicationScope collectionScope;
     private final Entity entity;
 
 
     @Inject
-    public EntityVersionCreatedTask( @Assisted final CollectionScope collectionScope,
+    public EntityVersionCreatedTask( @Assisted final ApplicationScope collectionScope,
                                      final Set<EntityVersionCreated> listeners,
                                      @Assisted final Entity entity ) {
 
