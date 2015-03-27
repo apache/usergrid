@@ -29,16 +29,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.core.future.BetterFuture;
-import org.apache.usergrid.persistence.index.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
+import org.apache.usergrid.corepersistence.results.CollectionResultsLoaderFactoryImpl;
 import org.apache.usergrid.corepersistence.results.ConnectionResultsLoaderFactoryImpl;
 import org.apache.usergrid.corepersistence.results.ElasticSearchQueryExecutor;
 import org.apache.usergrid.corepersistence.results.QueryExecutor;
-import org.apache.usergrid.corepersistence.results.CollectionResultsLoaderFactoryImpl;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.ConnectedEntityRef;
@@ -62,7 +60,6 @@ import org.apache.usergrid.persistence.cassandra.index.ConnectedIndexScanner;
 import org.apache.usergrid.persistence.cassandra.index.IndexBucketScanner;
 import org.apache.usergrid.persistence.cassandra.index.IndexScanner;
 import org.apache.usergrid.persistence.cassandra.index.NoOpIndexScanner;
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.core.future.BetterFuture;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -80,6 +77,8 @@ import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexBatch;
+import org.apache.usergrid.persistence.index.IndexScope;
+import org.apache.usergrid.persistence.index.SearchTypes;
 import org.apache.usergrid.persistence.index.impl.IndexScopeImpl;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.index.query.Query;
@@ -114,13 +113,11 @@ import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.mutation.Mutator;
 import rx.Observable;
 import rx.functions.Action1;
-import rx.functions.Action2;
 import rx.functions.Func1;
 
 import static java.util.Arrays.asList;
 
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
-import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getCollectionScopeNameFromEntityType;
 import static org.apache.usergrid.persistence.Schema.COLLECTION_ROLES;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTED_ENTITIES;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTED_TYPES;
@@ -180,7 +177,6 @@ public class CpRelationManager implements RelationManager {
     private org.apache.usergrid.persistence.model.entity.Entity cpHeadEntity;
 
     private ApplicationScope applicationScope;
-    private CollectionScope headEntityScope;
 
     private CassandraService cass;
 
@@ -228,19 +224,16 @@ public class CpRelationManager implements RelationManager {
             .getTimer( CpRelationManager.class, "relation.manager.es.create.connection.timer" );
         this.cassConnectionDelete = metricsFactory
             .getTimer( CpRelationManager.class, "relation.manager.cassandra.delete.connection.batch.timer" );
-        this.esDeleteConnectionTimer = metricsFactory.getTimer(CpRelationManager.class, "relation.manager.es.delete.connection.batch.timer" );
-        // load the Core Persistence version of the head entity as well
-        this.headEntityScope = getCollectionScopeNameFromEntityType(
-                applicationScope.getApplication(), headEntity.getType());
+        this.esDeleteConnectionTimer = metricsFactory.getTimer( CpRelationManager.class,
+            "relation.manager.es.delete.connection.batch.timer" );
+
 
         if ( logger.isDebugEnabled() ) {
-            logger.debug( "Loading head entity {}:{} from scope\n   app {}\n   owner {}\n   name {}",
+            logger.debug( "Loading head entity {}:{} from app {}",
                 new Object[] {
                     headEntity.getType(),
                     headEntity.getUuid(),
-                    headEntityScope.getApplication(),
-                    headEntityScope.getOwner(),
-                    headEntityScope.getName()
+                    applicationScope
                 } );
         }
 
@@ -250,7 +243,7 @@ public class CpRelationManager implements RelationManager {
 //            cpHeadEntity = entityToCpEntity( (Entity)headEntity, headEntity.getUuid() );
 //        }else {
             this.cpHeadEntity =
-                ( ( CpEntityManager ) em ).load( new CpEntityManager.EntityScope( headEntityScope, entityId ) );
+                ( ( CpEntityManager ) em ).load( entityId );
 //        }
 
         // commented out because it is possible that CP entity has not been created yet
@@ -609,12 +602,9 @@ public class CpRelationManager implements RelationManager {
     public Entity addToCollection( String collName, EntityRef itemRef, boolean connectBack )
             throws Exception {
 
-        CollectionScope memberScope = getCollectionScopeNameFromEntityType(
-                applicationScope.getApplication(), itemRef.getType());
-
         Id entityId = new SimpleId( itemRef.getUuid(), itemRef.getType() );
         org.apache.usergrid.persistence.model.entity.Entity memberEntity =
-            ((CpEntityManager)em).load( new CpEntityManager.EntityScope( memberScope, entityId));
+            ((CpEntityManager)em).load( entityId );
 
         return addToCollection(collName, itemRef, memberEntity, connectBack);
     }
@@ -642,9 +632,7 @@ public class CpRelationManager implements RelationManager {
             return null;
         }
 
-        // load the new member entity to be added to the collection from its default scope
-        CollectionScope memberScope = getCollectionScopeNameFromEntityType(
-                applicationScope.getApplication(), itemRef.getType());
+
 
         if ( memberEntity == null ) {
             throw new RuntimeException(
@@ -652,14 +640,11 @@ public class CpRelationManager implements RelationManager {
         }
 
         if ( logger.isDebugEnabled() ) {
-            logger.debug( "Loaded member entity {}:{} from scope\n   app {}\n   "
-                + "owner {}\n   name {} data {}",
+            logger.debug( "Loaded member entity {}:{} from   app {}\n   "
+                + " data {}",
                 new Object[] {
                     itemRef.getType(),
-                    itemRef.getUuid(),
-                    memberScope.getApplication(),
-                    memberScope.getOwner(),
-                    memberScope.getName(),
+                    itemRef.getUuid(),applicationScope,
                     CpEntityMapUtils.toMap( memberEntity )
                 } );
         }
@@ -791,24 +776,21 @@ public class CpRelationManager implements RelationManager {
         }
 
         // load the entity to be removed to the collection
-        CollectionScope memberScope = getCollectionScopeNameFromEntityType(
-                applicationScope.getApplication(), itemRef.getType());
+
 
         if ( logger.isDebugEnabled() ) {
             logger.debug( "Loading entity to remove from collection "
-                + "{}:{} from scope\n   app {}\n   owner {}\n   name {}",
+                + "{}:{} from app {}\n",
                 new Object[] {
                     itemRef.getType(),
                     itemRef.getUuid(),
-                    memberScope.getApplication(),
-                    memberScope.getOwner(),
-                    memberScope.getName()
+                    applicationScope
                });
         }
 
         Id entityId = new SimpleId( itemRef.getUuid(), itemRef.getType() );
         org.apache.usergrid.persistence.model.entity.Entity memberEntity =
-            ((CpEntityManager)em).load( new CpEntityManager.EntityScope( memberScope, entityId));
+            ((CpEntityManager)em).load( entityId );
 
         final ApplicationEntityIndex ei = managerCache.getEntityIndex( applicationScope );
         final EntityIndexBatch batch = ei.createBatch();
@@ -964,28 +946,24 @@ public class CpRelationManager implements RelationManager {
 
         ConnectionRefImpl connection = new ConnectionRefImpl( headEntity, connectionType, connectedEntityRef );
 
-        CollectionScope targetScope = getCollectionScopeNameFromEntityType(
-                applicationScope.getApplication(), connectedEntityRef.getType());
 
         if ( logger.isDebugEnabled() ) {
             logger.debug("createConnection(): "
                 + "Indexing connection type '{}'\n   from source {}:{}]\n"
-                + "   to target {}:{}\n   from scope\n   app {}\n   owner {}\n   name {}",
+                + "   to target {}:{}\n   app {}",
                 new Object[] {
                     connectionType,
                     headEntity.getType(),
                     headEntity.getUuid(),
                     connectedEntityRef.getType(),
                     connectedEntityRef.getUuid(),
-                    targetScope.getApplication(),
-                    targetScope.getOwner(),
-                    targetScope.getName()
+                    applicationScope
             });
         }
 
         Id entityId = new SimpleId( connectedEntityRef.getUuid(), connectedEntityRef.getType());
         org.apache.usergrid.persistence.model.entity.Entity targetEntity =
-            ((CpEntityManager)em).load( new CpEntityManager.EntityScope( targetScope, entityId));
+            ((CpEntityManager)em).load( entityId );
 
         String edgeType = CpNamingUtils.getEdgeTypeFromConnectionType( connectionType );
 
@@ -1199,8 +1177,6 @@ public class CpRelationManager implements RelationManager {
 
         String connectionType = connectionRef.getConnectedEntity().getConnectionType();
 
-        CollectionScope targetScope = getCollectionScopeNameFromEntityType( applicationScope.getApplication(),
-                connectedEntityRef.getType() );
 
         if ( logger.isDebugEnabled() ) {
             logger.debug( "Deleting connection '{}' from source {}:{} \n   to target {}:{}",
@@ -1215,7 +1191,7 @@ public class CpRelationManager implements RelationManager {
 
         Id entityId = new SimpleId( connectedEntityRef.getUuid(), connectedEntityRef.getType() );
         org.apache.usergrid.persistence.model.entity.Entity targetEntity =
-            ((CpEntityManager)em).load( new CpEntityManager.EntityScope( targetScope, entityId));
+            ((CpEntityManager)em).load( entityId );
 
         // Delete graph edge connection from head entity to member entity
         Edge edge = new SimpleEdge(

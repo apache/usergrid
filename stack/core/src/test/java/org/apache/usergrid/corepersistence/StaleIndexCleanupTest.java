@@ -24,7 +24,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.apache.usergrid.persistence.index.*;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -42,11 +41,14 @@ import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
+import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndexFactory;
+import org.apache.usergrid.persistence.index.IndexScope;
+import org.apache.usergrid.persistence.index.SearchTypes;
 import org.apache.usergrid.persistence.index.impl.IndexScopeImpl;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
 import org.apache.usergrid.persistence.index.query.Query;
@@ -58,7 +60,6 @@ import com.google.inject.Injector;
 import net.jcip.annotations.NotThreadSafe;
 
 import static org.apache.usergrid.corepersistence.CoreModule.EVENTS_DISABLED;
-import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getCollectionScopeNameFromEntityType;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -462,13 +463,11 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
         EntityManager em = app.getEntityManager();
 
-        CollectionScope cs = getCollectionScopeNameFromEntityType(
-                new SimpleId( em.getApplicationId(), TYPE_APPLICATION ), eref.getType() );
 
         EntityCollectionManagerFactory ecmf =
             SpringResource.getInstance().getBean( Injector.class ).getInstance( EntityCollectionManagerFactory.class );
 
-        EntityCollectionManager ecm = ecmf.createCollectionManager( cs );
+        EntityCollectionManager ecm = ecmf.createCollectionManager( new ApplicationScopeImpl( new SimpleId(em.getApplicationId(),  "application" ) ) );
 
         return ecm.load( new SimpleId( eref.getUuid(), eref.getType() ) )
                 .toBlocking().lastOrDefault( null );

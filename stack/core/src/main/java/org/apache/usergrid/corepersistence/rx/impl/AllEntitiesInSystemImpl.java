@@ -21,8 +21,6 @@ package org.apache.usergrid.corepersistence.rx.impl;
 
 
 import org.apache.usergrid.corepersistence.AllApplicationsObservable;
-import org.apache.usergrid.corepersistence.util.CpNamingUtils;
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
@@ -34,9 +32,8 @@ import com.google.inject.Singleton;
 
 
 /**
- * An observable that will emit every entity Id stored in our entire system across all apps.
- * Note that this only walks each application applicationId graph, and emits edges from the applicationId and it's edges as the s
- * source node
+ * An observable that will emit every entity Id stored in our entire system across all apps. Note that this only walks
+ * each application applicationId graph, and emits edges from the applicationId and it's edges as the s source node
  */
 @Singleton
 public class AllEntitiesInSystemImpl extends AbstractGraphVisitorImpl<EntityIdScope> {
@@ -52,11 +49,9 @@ public class AllEntitiesInSystemImpl extends AbstractGraphVisitorImpl<EntityIdSc
 
     @Override
     protected EntityIdScope generateData( final ApplicationScope applicationScope, final Id nodeId ) {
-        CollectionScope scope =
-                               CpNamingUtils.getCollectionScopeNameFromEntityType( applicationScope.getApplication(), nodeId.getType() );
 
-                           final EntityIdScope idScope = new EntityIdScope( scope, nodeId );
+        final EntityIdScope idScope = new EntityIdScope( applicationScope, nodeId );
 
-                           return idScope;
+        return idScope;
     }
 }

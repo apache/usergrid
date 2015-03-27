@@ -30,18 +30,15 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.corepersistence.ManagerCache;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
-import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.query.CandidateResult;
@@ -211,10 +208,10 @@ public class FilteringLoader implements ResultsLoader {
             // Get the collection scope and batch load all the versions.  We put all entities in
             // app/app for easy retrieval/ unless persistence changes, we never want to read from
             // any scope other than the app, app, scope name scope
-            final CollectionScope collScope = new CollectionScopeImpl(
-                applicationScope.getApplication(), applicationScope.getApplication(), scopeName);
+//            final CollectionScope collScope = new CollectionScopeImpl(
+//                applicationScope.getApplication(), applicationScope.getApplication(), scopeName);
 
-            final EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collScope);
+            final EntityCollectionManager ecm = managerCache.getEntityCollectionManager( applicationScope);
 
 
             //load the results into the loader for this scope for validation

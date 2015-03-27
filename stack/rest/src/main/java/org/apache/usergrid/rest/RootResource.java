@@ -186,8 +186,8 @@ public class RootResource extends AbstractContextResource implements MetricProce
                 throw new RuntimeException("Error connecting to datastore");
             }
 
-            EntityManager em = emf.getEntityManager( emf.getManagementAppId() );
-            if ( em.getIndexHealth().equals( Health.RED) ) {
+
+            if ( emf.getIndexHealth().equals( Health.RED) ) {
                 throw new RuntimeException("Management app index is status RED");
             }
         }
@@ -205,7 +205,7 @@ public class RootResource extends AbstractContextResource implements MetricProce
 
         // Core Persistence Query Index module status for Management App Index
         EntityManager em = emf.getEntityManager( emf.getManagementAppId() );
-        node.put( "managementAppIndexStatus", em.getIndexHealth().toString() );
+        node.put( "managementAppIndexStatus", emf.getIndexHealth().toString() );
 
         dumpMetrics( node );
         response.setProperty( "status", node );

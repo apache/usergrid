@@ -685,7 +685,7 @@ public interface EntityManager {
     /** @return the cass */
     CassandraService getCass();
 
-    public void init( EntityManagerFactory emf, EntityIndex entityIndex, UUID applicationId);
+    public void init( EntityManagerFactory emf,  UUID applicationId);
 
     /** For testing purposes */
     public void flushManagerCaches();
@@ -695,10 +695,6 @@ public interface EntityManager {
 
     public void reindex( final EntityManagerFactory.ProgressObserver po ) throws Exception;
 
-    /**
-     * Get health status of application's index.
-     */
-    public Health getIndexHealth();
 
     public Entity getUniqueEntityFromAlias( String aliasType, String aliasValue );
 }

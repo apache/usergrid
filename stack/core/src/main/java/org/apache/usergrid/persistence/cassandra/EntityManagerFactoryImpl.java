@@ -444,6 +444,13 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
         throw new UnsupportedOperationException("Not supported in v1.");
     }
 
+
+    @Override
+    public Health getIndexHealth() {
+        return null;
+    }
+
+
     @Override
     public void restoreApplication(UUID applicationId) throws Exception {
         throw new UnsupportedOperationException("Not supported in v1");

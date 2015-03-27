@@ -24,22 +24,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.corepersistence.CpEntityManagerFactory;
+import org.apache.usergrid.exception.NotImplementedException;
 import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
-import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
-import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.IndexScope;
-import org.apache.usergrid.persistence.index.impl.IndexScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
-import org.apache.usergrid.persistence.model.entity.SimpleId;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
-import rx.Observable;
 
 import static org.apache.usergrid.corepersistence.CoreModule.EVENTS_DISABLED;
 
@@ -62,7 +56,7 @@ public class EntityVersionDeletedHandler implements EntityVersionDeleted {
 
 
     @Override
-    public void versionDeleted( final CollectionScope scope, final Id entityId,
+    public void versionDeleted( final ApplicationScope scope, final Id entityId,
                                 final List<MvccLogEntry> entityVersions ) {
 
 
@@ -74,8 +68,8 @@ public class EntityVersionDeletedHandler implements EntityVersionDeleted {
 
         if ( logger.isDebugEnabled() ) {
             logger.debug( "Handling versionDeleted count={} event for entity {}:{} v {} "
-                    + "scope\n   name: {}\n   owner: {}\n   app: {}", new Object[] {
-                    entityVersions.size(), entityId.getType(), entityId.getUuid(), scope.getName(), scope.getOwner(),
+                    + "  app: {}", new Object[] {
+                    entityVersions.size(), entityId.getType(), entityId.getUuid(),
                     scope.getApplication()
                 } );
         }
@@ -84,17 +78,21 @@ public class EntityVersionDeletedHandler implements EntityVersionDeleted {
 
         final ApplicationEntityIndex ei = cpemf.getManagerCache().getEntityIndex( scope );
 
-        final IndexScope indexScope =
-            new IndexScopeImpl( new SimpleId( scope.getOwner().getUuid(), scope.getOwner().getType() ),
-                scope.getName() );
 
-        //create our batch, and then collect all of them into a single batch
-        Observable.from( entityVersions ).collect( () -> ei.createBatch(), ( entityIndexBatch, mvccLogEntry ) -> {
-            entityIndexBatch.deindex( indexScope, mvccLogEntry.getEntityId(), mvccLogEntry.getVersion() );
-        } )
-            //after our batch is collected, execute it
-            .doOnNext( entityIndexBatch -> {
-                entityIndexBatch.execute();
-            } ).toBlocking().last();
+        throw new NotImplementedException( "Fix this" );
+
+
+//        final IndexScope indexScope =
+//            new IndexScopeImpl( new SimpleId( scope.getOwner().getUuid(), scope.getOwner().getType() ),
+//                scope.getName() );
+//
+//        //create our batch, and then collect all of them into a single batch
+//        Observable.from( entityVersions ).collect( () -> ei.createBatch(), ( entityIndexBatch, mvccLogEntry ) -> {
+//            entityIndexBatch.deindex( indexScope, mvccLogEntry.getEntityId(), mvccLogEntry.getVersion() );
+//        } )
+//            //after our batch is collected, execute it
+//            .doOnNext( entityIndexBatch -> {
+//                entityIndexBatch.execute();
+//            } ).toBlocking().last();
     }
 }

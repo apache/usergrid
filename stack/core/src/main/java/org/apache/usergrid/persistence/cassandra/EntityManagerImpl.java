@@ -215,7 +215,7 @@ public class EntityManagerImpl implements EntityManager {
 
 
     @Override
-    public void init(EntityManagerFactory emf, EntityIndex entityIndex, UUID applicationId) {
+    public void init(EntityManagerFactory emf, UUID applicationId) {
         init( (EntityManagerFactoryImpl)emf, null, null, applicationId, false);
     }
 
@@ -2908,10 +2908,6 @@ public class EntityManagerImpl implements EntityManager {
         throw new UnsupportedOperationException("Not supported.");
     }
 
-    @Override
-    public Health getIndexHealth() {
-        return Health.GREEN; // no good way to assess index status using old-school entity manager
-    }
 
 
     @Override

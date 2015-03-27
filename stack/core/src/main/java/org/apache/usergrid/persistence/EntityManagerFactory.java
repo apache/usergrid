@@ -147,11 +147,13 @@ public interface EntityManagerFactory {
 
     public Health getEntityStoreHealth();
 
+    public Health getIndexHealth();
+
     void restoreApplication(UUID applicationId) throws Exception;
 
     public interface ProgressObserver {
 
-        public void onProgress( EntityRef entity);
+     public void onProgress( EntityRef entity);
 
     }
 }

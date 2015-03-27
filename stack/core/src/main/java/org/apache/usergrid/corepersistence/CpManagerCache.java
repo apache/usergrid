@@ -16,25 +16,17 @@
 package org.apache.usergrid.corepersistence;
 
 
-import java.util.concurrent.ExecutionException;
-
-import com.amazonaws.services.cloudfront.model.InvalidArgumentException;
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
-import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapManagerFactory;
 import org.apache.usergrid.persistence.map.MapScope;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 
 
@@ -62,7 +54,7 @@ public class CpManagerCache implements ManagerCache {
 
 
     @Override
-    public EntityCollectionManager getEntityCollectionManager( CollectionScope scope ) {
+    public EntityCollectionManager getEntityCollectionManager( ApplicationScope scope ) {
         //cache is now in the colletion manager level
         return ecmf.createCollectionManager( scope );
     }
