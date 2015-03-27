@@ -218,6 +218,6 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
      */
     public static final HystrixCommand.Setter
         REPLAY_GROUP = HystrixCommand.Setter.withGroupKey(
-            HystrixCommandGroupKey.Factory.asKey( "user" ) ).andThreadPoolPropertiesDefaults(
-                HystrixThreadPoolProperties.Setter().withCoreSize( 1000 ) );
+            HystrixCommandGroupKey.Factory.asKey( "uniqueVerify" ) ).andThreadPoolPropertiesDefaults(
+                HystrixThreadPoolProperties.Setter().withCoreSize( 100 ) );
 }
