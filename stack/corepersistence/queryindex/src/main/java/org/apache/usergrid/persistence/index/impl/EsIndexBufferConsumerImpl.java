@@ -177,7 +177,8 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
 
                                 timer.stop();
                             }
-
+                            //DO NOT add any doOnError* functions to this subscription.  We want the producer
+                            //to receive these exceptions and sleep before a retry
                             catch ( Throwable t ) {
                                 final long sleepTime = config.getFailureRetryTime();
 
@@ -186,7 +187,6 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
                                 if ( drainList != null ) {
                                     inFlight.addAndGet( -1 * drainList.size() );
                                 }
-
 
                                 try {
                                     Thread.sleep( sleepTime );
