@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -54,14 +55,27 @@ import static org.mockito.Mockito.mock;
 /** @author tnine */
 @RunWith( ITRunner.class )
 @UseModules( TestCollectionModule.class )
-public class MvccLogEntrySerializationStrategyImplTest {
+public abstract class MvccLogEntrySerializationStrategyImplTest {
 
-    @Inject
-    private MvccLogEntrySerializationStrategy logEntryStrategy;
 
     @Inject
     @Rule
     public MigrationManagerRule migrationManagerRule;
+
+
+    private MvccLogEntrySerializationStrategy logEntryStrategy;
+
+    @Before
+    public void wireLogEntryStrategy(){
+        logEntryStrategy = getLogEntryStrategy();
+    }
+
+
+    /**
+     * Get the log entry strategy from
+     * @return
+     */
+    protected abstract MvccLogEntrySerializationStrategy getLogEntryStrategy();
 
 
     @Test

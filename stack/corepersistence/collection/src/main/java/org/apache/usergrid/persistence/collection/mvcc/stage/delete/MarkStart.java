@@ -67,7 +67,7 @@ public class MarkStart implements Func1<CollectionIoEvent<Id>, CollectionIoEvent
      * Create a new stage with the current context
      */
     @Inject
-    public MarkStart( final MvccLogEntrySerializationStrategy logStrategy, final UUIDService uuidService ) {
+    public MarkStart(final MvccLogEntrySerializationStrategy logStrategy, final UUIDService uuidService ) {
 
         Preconditions.checkNotNull( logStrategy, "logStrategy is required" );
         Preconditions.checkNotNull( uuidService, "uuidService is required" );

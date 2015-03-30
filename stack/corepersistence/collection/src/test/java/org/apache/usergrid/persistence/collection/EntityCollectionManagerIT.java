@@ -36,7 +36,6 @@ import org.apache.usergrid.persistence.collection.serialization.UniqueValueSeria
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
 import org.apache.usergrid.persistence.collection.util.EntityHelper;
 import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
-import org.apache.usergrid.persistence.core.guice.ProxyImpl;
 import org.apache.usergrid.persistence.core.guicyfig.SetConfigTestBypass;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
@@ -85,7 +84,6 @@ public class EntityCollectionManagerIT {
     private UniqueValueSerializationStrategy uniqueValueSerializationStrategy;
 
     @Inject
-    @ProxyImpl
     private MvccEntitySerializationStrategy entitySerializationStrategy;
 
 

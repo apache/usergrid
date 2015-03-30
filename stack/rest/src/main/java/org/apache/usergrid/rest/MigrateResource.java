@@ -163,6 +163,8 @@ public class MigrateResource extends AbstractContextResource {
             node.put( pluginName, dataMigrationManager.getCurrentVersion( pluginName ) );
         }
 
+        response.setData( node );
+
         response.setSuccess();
 
         return new JSONWithPadding( response, callback );

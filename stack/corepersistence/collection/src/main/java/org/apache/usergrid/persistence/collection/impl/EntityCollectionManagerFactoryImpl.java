@@ -38,7 +38,6 @@ import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteUniqueVe
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
-import org.apache.usergrid.persistence.core.guice.ProxyImpl;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.task.TaskExecutor;
@@ -100,7 +99,7 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
                                                final WriteUniqueVerify writeVerifyUnique,
                                                final WriteOptimisticVerify writeOptimisticVerify,
                                                final WriteCommit writeCommit, final RollbackAction rollback,
-                                               final MarkStart markStart, final MarkCommit markCommit, @ProxyImpl
+                                               final MarkStart markStart, final MarkCommit markCommit,
                                                final MvccEntitySerializationStrategy entitySerializationStrategy,
                                                final UniqueValueSerializationStrategy uniqueValueSerializationStrategy,
                                                final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy,

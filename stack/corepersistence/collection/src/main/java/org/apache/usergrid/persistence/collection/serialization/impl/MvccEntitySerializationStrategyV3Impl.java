@@ -34,6 +34,7 @@ import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
+import org.apache.usergrid.persistence.core.astyanax.ScopedRowKeySerializer;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.EntityMap;
@@ -67,12 +68,10 @@ import rx.schedulers.Schedulers;
 public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializationStrategy {
     private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
 
-
-    private static final CollectionScopedRowKeySerializer<Id> ROW_KEY_SER =
-            new CollectionScopedRowKeySerializer<>( ID_SER );
+    private static final ScopedRowKeySerializer<Id> ROW_KEY_SER =  new ScopedRowKeySerializer<>( ID_SER );
 
 
-    private static final MultiTennantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, Boolean> CF_ENTITY_DATA =
+    private static final MultiTennantColumnFamily<ScopedRowKey<Id>, Boolean> CF_ENTITY_DATA =
             new MultiTennantColumnFamily<>( "Entity_Version_Data_V3", ROW_KEY_SER, BooleanSerializer.get() );
 
     private static final FieldBufferSerializer FIELD_BUFFER_SERIALIZER = FieldBufferSerializer.get();
@@ -139,19 +138,13 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
         final Id ownerId = applicationId;
 
 
-        final List<ScopedRowKey<CollectionPrefixedKey<Id>>> rowKeys = new ArrayList<>( entityIds.size() );
+        final List<ScopedRowKey<Id>> rowKeys = new ArrayList<>( entityIds.size() );
 
 
         for ( final Id entityId : entityIds ) {
 
-            final String collectionName = LegacyScopeUtils.getCollectionScopeNameFromEntityType( entityId.getType() );
-
-            final CollectionPrefixedKey<Id> collectionPrefixedKey =
-                    new CollectionPrefixedKey<>( collectionName, ownerId, entityId );
-
-
-            final ScopedRowKey<CollectionPrefixedKey<Id>> rowKey =
-                    ScopedRowKey.fromKey( applicationId, collectionPrefixedKey );
+            final ScopedRowKey<Id> rowKey =
+                    ScopedRowKey.fromKey( applicationId, entityId );
 
 
             rowKeys.add( rowKey );
@@ -206,11 +199,11 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
             }, 10 )
 
             .reduce( new EntitySetImpl( entityIds.size() ), ( entitySet, rows ) -> {
-                final Iterator<Row<ScopedRowKey<CollectionPrefixedKey<Id>>, Boolean>> latestEntityColumns =
+                final Iterator<Row<ScopedRowKey<Id>, Boolean>> latestEntityColumns =
                     rows.iterator();
 
                 while ( latestEntityColumns.hasNext() ) {
-                    final Row<ScopedRowKey<CollectionPrefixedKey<Id>>, Boolean> row = latestEntityColumns.next();
+                    final Row<ScopedRowKey<Id>, Boolean> row = latestEntityColumns.next();
 
                     final ColumnList<Boolean> columns = row.getColumns();
 
@@ -218,7 +211,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
                         continue;
                     }
 
-                    final Id entityId = row.getKey().getKey().getSubKey();
+                    final Id entityId = row.getKey().getKey();
 
                     final Column<Boolean> column = columns.getColumnByIndex( 0 );
 
@@ -330,15 +323,9 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
         final Id applicationId = applicationScope.getApplication();
-        final Id ownerId = applicationId;
-        final String collectionName = LegacyScopeUtils.getCollectionScopeNameFromEntityType( entityId.getType() );
 
-        final CollectionPrefixedKey<Id> collectionPrefixedKey =
-                new CollectionPrefixedKey<>( collectionName, ownerId, entityId );
-
-
-        final ScopedRowKey<CollectionPrefixedKey<Id>> rowKey =
-                ScopedRowKey.fromKey( applicationId, collectionPrefixedKey );
+        final ScopedRowKey<Id> rowKey =
+                ScopedRowKey.fromKey( applicationId, entityId );
 
         final long timestamp = version.timestamp();
 

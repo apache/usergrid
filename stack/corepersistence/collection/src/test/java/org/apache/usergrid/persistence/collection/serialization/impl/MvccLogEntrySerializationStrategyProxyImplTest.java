@@ -25,7 +25,7 @@ import org.junit.Before;
 import org.junit.runner.RunWith;
 
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
-import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.CollectionMigrationPlugin;
 import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerialization;
 import org.apache.usergrid.persistence.core.test.ITRunner;
@@ -39,25 +39,32 @@ import net.jcip.annotations.NotThreadSafe;
 @RunWith( ITRunner.class )
 @UseModules( TestCollectionModule.class )
 @NotThreadSafe//anything that changes the system version state is not safe to be run concurrently
-public class MvccEntitySerializationStrategyProxyV2_3Test extends MvccEntitySerializationStrategyV2Test {
+public class MvccLogEntrySerializationStrategyProxyImplTest extends MvccLogEntrySerializationStrategyImplTest  {
+
 
     @Inject
-    private MvccEntitySerializationStrategy serializationStrategy;
+    private MvccLogEntrySerializationStrategy logEntryStrategy;
+
+
 
     @Inject
-    private MvccEntitySerializationStrategyV2Impl v2Impl;
-
-
-    @Override
-    protected MvccEntitySerializationStrategy getMvccEntitySerializationStrategy() {
-        return serializationStrategy;
-    }
+    private MvccLogEntrySerializationStrategyV1Impl v1Impl;
 
 
     @Inject
     protected MigrationInfoSerialization migrationInfoSerialization;
 
     private int existingVersion;
+
+
+
+    @Override
+    protected MvccLogEntrySerializationStrategy getLogEntryStrategy() {
+        return logEntryStrategy;
+    }
+
+
+
 
 
     /**
@@ -68,8 +75,8 @@ public class MvccEntitySerializationStrategyProxyV2_3Test extends MvccEntitySeri
     public void setMigrationVersion() {
         existingVersion = migrationInfoSerialization.getVersion( CollectionMigrationPlugin.PLUGIN_NAME);
 
-        //set our new version, so that is will run through the new code
-        migrationInfoSerialization.setVersion( CollectionMigrationPlugin.PLUGIN_NAME, v2Impl.getImplementationVersion() );
+        //set our migration version to be v1
+        migrationInfoSerialization.setVersion( CollectionMigrationPlugin.PLUGIN_NAME, v1Impl.getImplementationVersion() );
     }
 
 
@@ -79,4 +86,5 @@ public class MvccEntitySerializationStrategyProxyV2_3Test extends MvccEntitySeri
     public void reSetMigrationVersion() {
         migrationInfoSerialization.setVersion(CollectionMigrationPlugin.PLUGIN_NAME,  existingVersion );
     }
+
 }

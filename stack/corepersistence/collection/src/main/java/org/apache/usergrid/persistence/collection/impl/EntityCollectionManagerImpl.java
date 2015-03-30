@@ -48,7 +48,6 @@ import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
 import org.apache.usergrid.persistence.collection.serialization.impl.MutableFieldSet;
-import org.apache.usergrid.persistence.core.guice.ProxyImpl;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.task.Task;
@@ -134,7 +133,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         final RollbackAction                       rollback,
         final MarkStart                            markStart,
         final MarkCommit                           markCommit,
-        @ProxyImpl final MvccEntitySerializationStrategy entitySerializationStrategy,
+        final MvccEntitySerializationStrategy entitySerializationStrategy,
         final UniqueValueSerializationStrategy     uniqueValueSerializationStrategy,
         final MvccLogEntrySerializationStrategy    mvccLogEntrySerializationStrategy,
         final Keyspace                             keyspace,

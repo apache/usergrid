@@ -34,7 +34,6 @@ import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerial
 import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
-import org.apache.usergrid.persistence.core.guice.ProxyImpl;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -65,7 +64,7 @@ public class MarkCommit implements Action1<CollectionIoEvent<MvccEntity>> {
 
     @Inject
     public MarkCommit( final MvccLogEntrySerializationStrategy logStrat,
-                       @ProxyImpl final MvccEntitySerializationStrategy entityStrat,
+                       final MvccEntitySerializationStrategy entityStrat,
                        final UniqueValueSerializationStrategy uniqueValueStrat, final SerializationFig serializationFig,
                        final Keyspace keyspace ) {
 

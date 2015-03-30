@@ -35,7 +35,7 @@ public enum CollectionDataVersions{
     private final int version;
 
 
-    private CollectionDataVersions( final int version ) {this.version = version;}
+    CollectionDataVersions( final int version ) {this.version = version;}
 
 
     public int getVersion() {

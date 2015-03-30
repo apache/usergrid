@@ -55,7 +55,7 @@ public class RollbackAction implements Action1<Throwable> {
 
 
     @Inject
-    public RollbackAction( MvccLogEntrySerializationStrategy logEntryStrat,
+    public RollbackAction(MvccLogEntrySerializationStrategy logEntryStrat,
                            UniqueValueSerializationStrategy uniqueValueStrat ) {
 
         scheduler = Schedulers.io();

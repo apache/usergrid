@@ -25,6 +25,7 @@ import java.util.UUID;
 
 import org.apache.usergrid.persistence.collection.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.VersionSet;
+import org.apache.usergrid.persistence.core.migration.data.VersionedData;
 import org.apache.usergrid.persistence.core.migration.schema.Migration;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -35,7 +36,7 @@ import com.netflix.astyanax.MutationBatch;
 /**
  * The interface that allows us to serialize a log entry to disk
  */
-public interface MvccLogEntrySerializationStrategy extends Migration {
+public interface MvccLogEntrySerializationStrategy extends Migration, VersionedData {
 
     /**
      * Serialize the entity to the data store with the given collection context

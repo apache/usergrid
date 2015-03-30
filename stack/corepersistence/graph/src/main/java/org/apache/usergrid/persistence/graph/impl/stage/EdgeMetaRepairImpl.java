@@ -27,7 +27,6 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.core.guice.ProxyImpl;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
@@ -71,7 +70,7 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
 
 
     @Inject
-    public EdgeMetaRepairImpl( @ProxyImpl final EdgeMetadataSerialization edgeMetadataSerialization, final Keyspace keyspace,
+    public EdgeMetaRepairImpl( final EdgeMetadataSerialization edgeMetadataSerialization, final Keyspace keyspace,
                                final GraphFig graphFig, final EdgeSerialization storageEdgeSerialization ) {
 
 
