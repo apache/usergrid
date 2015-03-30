@@ -37,7 +37,6 @@ import com.codahale.metrics.Meter;
 import org.apache.usergrid.persistence.collection.FieldSet;
 import org.apache.usergrid.persistence.core.future.BetterFuture;
 import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
-import org.elasticsearch.action.ListenableActionFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
