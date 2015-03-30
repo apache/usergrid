@@ -39,6 +39,8 @@ import java.util.concurrent.Future;
 public interface EntityIndex extends CPManager {
 
 
+    public static final int MAX_LIMIT = 1000;
+
     /**
      * Create an index and add to alias, will create alias and remove any old index from write alias if alias already exists
      * @param indexSuffix index name
@@ -46,28 +48,28 @@ public interface EntityIndex extends CPManager {
      * @param replicas
      * @param writeConsistency
      */
-    public void addIndex(final String indexSuffix, final int shards, final int replicas, final String writeConsistency);
+     void addIndex(final String indexSuffix, final int shards, final int replicas, final String writeConsistency);
 
 
     /**
      * Refresh the index.
      */
-    public void refresh();
+     void refresh();
 
 
 
     /**
      * Check health of cluster.
      */
-    public Health getClusterHealth();
+     Health getClusterHealth();
 
     /**
      * Check health of this specific index.
      */
-    public Health getIndexHealth();
+     Health getIndexHealth();
 
 
-
+    void initialize();
 }
 
 

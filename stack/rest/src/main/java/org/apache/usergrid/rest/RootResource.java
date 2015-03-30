@@ -114,7 +114,7 @@ public class RootResource extends AbstractContextResource implements MetricProce
         @QueryParam("deleted") @DefaultValue("false") Boolean deleted,
         @QueryParam("callback") @DefaultValue("callback") String callback ) throws URISyntaxException {
 
-        logger.info( "RootResource.getAllApplications" );
+        logger.info( "RootResource.getData" );
 
         ApiResponse response = createApiResponse();
         response.setAction( "get applications" );

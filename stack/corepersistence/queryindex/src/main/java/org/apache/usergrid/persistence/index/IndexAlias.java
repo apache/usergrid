@@ -14,30 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence.core.metrics;
-
-import com.codahale.metrics.*;
+package org.apache.usergrid.persistence.index;
 
 /**
- * Get metrics .
+ * Abstraction for Index alias names
  */
-public interface MetricsFactory {
-    MetricRegistry getRegistry();
+public class IndexAlias{
+    private final String readAlias;
+    private final String writeAlias;
 
-    Timer getTimer(Class<?> klass, String name);
+    public IndexAlias(IndexFig indexFig,String indexBase) {
+        this.writeAlias = indexBase + "_write_" + indexFig.getAliasPostfix();
+        this.readAlias = indexBase + "_read_" + indexFig.getAliasPostfix();
+    }
 
-    Histogram getHistogram(Class<?> klass, String name);
+    public String getReadAlias() {
+        return readAlias;
+    }
 
-    Counter getCounter(Class<?> klass, String name);
-
-    Meter getMeter(Class<?> klass, String name);
-
-    /**
-     * Get a gauge and create it
-     * @param clazz
-     * @param name
-     * @param gauge
-     * @return
-     */
-    void addGauge( Class<?> clazz, String name, Gauge<?> gauge );
+    public String getWriteAlias() {
+        return writeAlias;
+    }
 }

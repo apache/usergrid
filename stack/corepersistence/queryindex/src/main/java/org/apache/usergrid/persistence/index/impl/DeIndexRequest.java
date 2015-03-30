@@ -21,7 +21,13 @@ package org.apache.usergrid.persistence.index.impl;
 
 
 import java.util.Arrays;
+import java.util.UUID;
 
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.index.IndexScope;
+import org.apache.usergrid.persistence.index.SearchType;
+import org.apache.usergrid.persistence.index.SearchTypes;
+import org.apache.usergrid.persistence.model.entity.Id;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.delete.DeleteRequestBuilder;
 import org.elasticsearch.client.Client;
@@ -30,6 +36,9 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createContextName;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createIndexDocId;
+
 
 /**
  * Represent the properties required to build an index request
@@ -37,19 +46,21 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 @JsonTypeInfo(use=JsonTypeInfo.Id.CLASS, include=JsonTypeInfo.As.PROPERTY, property="@class")
 public class DeIndexRequest implements BatchRequest {
 
-    public String[] indexes;
-    public String entityType;
-    public String documentId;
+    private String[] entityTypes;
+    private String[] indexes;
+    private String documentId;
 
 
-    public DeIndexRequest( final String[] indexes, final String entityType, final String documentId) {
-        this.indexes = indexes;
-        this.entityType = entityType;
-        this.documentId = documentId;
+    public DeIndexRequest( ) {
+
     }
 
 
-    public DeIndexRequest() {
+    public DeIndexRequest(String[] indexes, ApplicationScope applicationScope, IndexScope indexScope, Id id, UUID version) {
+        String context = createContextName(applicationScope,indexScope);
+        this.indexes = indexes;
+        this.entityTypes = SearchType.fromId(id).getTypeNames(applicationScope);
+        this.documentId =  createIndexDocId(id, version,context);
     }
 
 
@@ -58,9 +69,10 @@ public class DeIndexRequest implements BatchRequest {
 
 
         for(final String index: indexes) {
-            final DeleteRequestBuilder builder = client.prepareDelete( index, entityType, documentId);
-
-            bulkRequest.add( builder );
+            for(String entityType : entityTypes) {
+                final DeleteRequestBuilder builder = client.prepareDelete(index, entityType, documentId);
+                bulkRequest.add(builder);
+            }
         }
     }
 
@@ -70,8 +82,8 @@ public class DeIndexRequest implements BatchRequest {
     }
 
 
-    public String getEntityType() {
-        return entityType;
+    public String[] getEntityTypes() {
+        return entityTypes;
     }
 
 
@@ -94,7 +106,7 @@ public class DeIndexRequest implements BatchRequest {
         if ( !documentId.equals( that.documentId ) ) {
             return false;
         }
-        if ( !entityType.equals( that.entityType ) ) {
+        if ( !entityTypes.equals( that.entityTypes ) ) {
             return false;
         }
         if ( !Arrays.equals( indexes, that.indexes ) ) {
@@ -108,7 +120,7 @@ public class DeIndexRequest implements BatchRequest {
     @Override
     public int hashCode() {
         int result = Arrays.hashCode( indexes );
-        result = 31 * result + entityType.hashCode();
+        result = 31 * result + entityTypes.hashCode();
         result = 31 * result + documentId.hashCode();
         return result;
     }

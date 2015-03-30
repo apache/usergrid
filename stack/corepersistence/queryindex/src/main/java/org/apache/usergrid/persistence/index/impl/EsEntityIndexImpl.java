@@ -26,9 +26,11 @@ import com.google.inject.Singleton;
 import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.persistence.core.future.BetterFuture;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
+import org.apache.usergrid.persistence.core.migration.data.VersionedData;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.persistence.index.exceptions.IndexException;
+import org.apache.usergrid.persistence.index.migration.IndexDataVersions;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.ShardOperationFailedException;
@@ -62,13 +64,13 @@ import java.util.Set;
  * Implements index using ElasticSearch Java API.
  */
 @Singleton
-public class EsEntityIndexImpl implements AliasedEntityIndex {
+public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
 
     private static final Logger logger = LoggerFactory.getLogger( EsEntityIndexImpl.class );
 
     public static final String DEFAULT_TYPE = "_default_";
 
-    private final IndexIdentifier.IndexAlias alias;
+    private final IndexAlias alias;
     private final IndexBufferProducer indexBatchBufferProducer;
     private final IndexFig indexFig;
     private final Timer addTimer;
@@ -81,7 +83,6 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
 
     private final EsProvider esProvider;
-    private final IndexFig config;
 
     //number of times to wait for the index to refresh properly.
     private static final int MAX_WAITS = 10;
@@ -96,7 +97,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
     private static final MatchAllQueryBuilder MATCH_ALL_QUERY_BUILDER = QueryBuilders.matchAllQuery();
     private final IndexIdentifier indexIdentifier;
 
-    private EsIndexCache aliasCache;
+    private IndexCache aliasCache;
     private Timer mappingTimer;
     private Timer refreshTimer;
     private Meter refreshIndexMeter;
@@ -106,16 +107,15 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
 
     @Inject
-    public EsEntityIndexImpl( final IndexFig config,
+    public EsEntityIndexImpl(
                               final IndexBufferProducer indexBatchBufferProducer, final EsProvider provider,
-                              final EsIndexCache indexCache, final MetricsFactory metricsFactory,
+                              final IndexCache indexCache, final MetricsFactory metricsFactory,
                               final IndexFig indexFig, final IndexIdentifier indexIdentifier ) {
         this.indexBatchBufferProducer = indexBatchBufferProducer;
         this.indexFig = indexFig;
         this.indexIdentifier = indexIdentifier;
 
         this.esProvider = provider;
-        this.config = config;
         this.alias = indexIdentifier.getAlias();
         this.aliasCache = indexCache;
         this.addTimer = metricsFactory
@@ -130,7 +130,18 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
     }
 
+    @Override
+    public void initialize(){
+        final int numberOfShards = indexFig.getNumberOfShards();
+        final int numberOfReplicas = indexFig.getNumberOfReplicas();
+        aliasCache.invalidate(alias);
+        String[] reads = getIndexes(AliasedEntityIndex.AliasType.Read);
+        String[] writes = getIndexes(AliasedEntityIndex.AliasType.Write);
 
+        if(reads.length==0  || writes.length==0) {
+            addIndex(null, numberOfShards, numberOfReplicas, indexFig.getWriteConsistencyLevel());
+        }
+    }
 
     @Override
     public void addIndex(final String indexSuffix,final int numberOfShards, final int numberOfReplicas, final String writeConsistency) {
@@ -450,6 +461,11 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
         // this is bad, red alert!
         return Health.RED;
+    }
+
+    @Override
+    public int getImplementationVersion() {
+        return IndexDataVersions.SINGLE_INDEX.getVersion();
     }
 
 

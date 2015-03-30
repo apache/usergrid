@@ -20,12 +20,15 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
+import org.apache.usergrid.persistence.index.IndexScope;
+import org.apache.usergrid.persistence.index.SearchType;
+import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -90,22 +93,23 @@ public class BufferQueueSQSImplTest {
     @Test
     public void testMessageIndexing(){
 
+        ApplicationScope applicationScope = new ApplicationScopeImpl(new SimpleId(UUID.randomUUID(),"application"));
         final UsergridAwsCredentialsProvider ugProvider = new UsergridAwsCredentialsProvider();
         assumeTrue( ugProvider.getCredentials().getAWSAccessKeyId() != null );
         assumeTrue( ugProvider.getCredentials().getAWSSecretKey() != null );
 
         final Map<String, Object> request1Data  = new HashMap<String, Object>() {{put("test", "testval1");}};
-        final IndexRequest indexRequest1 =  new IndexRequest( "testAlias1", "testType1", "testDoc1",request1Data );
+        final IndexRequest indexRequest1 =  new IndexRequest( "testAlias1", applicationScope, SearchType.fromType("testType1"), "testDoc1",request1Data );
 
 
         final Map<String, Object> request2Data  = new HashMap<String, Object>() {{put("test", "testval2");}};
-        final IndexRequest indexRequest2 =  new IndexRequest( "testAlias2", "testType2", "testDoc2",request2Data );
+        final IndexRequest indexRequest2 =  new IndexRequest( "testAlias2", applicationScope, SearchType.fromType( "testType2"), "testDoc2",request2Data );
 
 
         //de-index request
-        final DeIndexRequest deIndexRequest1 = new DeIndexRequest( new String[]{"index1.1, index1.2"}, "testType3", "testId3" );
+        final DeIndexRequest deIndexRequest1 = new DeIndexRequest( new String[]{"index1.1, index1.2"}, applicationScope, new IndexScopeImpl(new SimpleId("testId3"),"name3"),  new SimpleId("id3"), UUID.randomUUID() );
 
-        final DeIndexRequest deIndexRequest2 = new DeIndexRequest( new String[]{"index2.1", "index2.1"}, "testType4", "testId4" );
+        final DeIndexRequest deIndexRequest2 = new DeIndexRequest( new String[]{"index2.1", "index2.1"}, applicationScope,  new IndexScopeImpl(new SimpleId("testId4"),"name4"),  new SimpleId("id4"), UUID.randomUUID()  );
 
 
 

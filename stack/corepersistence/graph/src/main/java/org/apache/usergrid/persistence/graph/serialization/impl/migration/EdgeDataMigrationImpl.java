@@ -87,7 +87,7 @@ public class EdgeDataMigrationImpl implements DataMigration<GraphNode> {
 
         final Observable<List<Edge>> observable = migrationDataProvider.getData().flatMap( graphNode -> {
             final GraphManager gm = graphManagerFactory.createEdgeManager( graphNode.applicationScope );
-
+            
             //get edges from the source
             return edgesFromSourceObservable.edgesFromSource( gm, graphNode.entryNode ).buffer( 1000 )
                                             .doOnNext( edges -> {

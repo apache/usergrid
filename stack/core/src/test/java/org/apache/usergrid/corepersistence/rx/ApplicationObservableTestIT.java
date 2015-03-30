@@ -65,7 +65,7 @@ public class ApplicationObservableTestIT extends AbstractCoreIT {
         //clean up our wiring
         ManagerCache managerCache = SpringResource.getInstance().getBean( Injector.class ).getInstance( ManagerCache.class );
 
-        Observable<ApplicationScope> appObservable = applicationObservable.getAllApplications();
+        Observable<ApplicationScope> appObservable = applicationObservable.getData();
 
         appObservable.doOnNext( new Action1<ApplicationScope>() {
             @Override

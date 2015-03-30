@@ -40,6 +40,8 @@ public class IndexingUtils {
 
     public static final String BOOLEAN_PREFIX = "bu_";
     public static final String ARRAY_PREFIX = "ar_";
+    public static final String SET_PREFIX = "set_";
+    public static final String EO_PREFIX = "eo_";
 
     public static final String SPLITTER = "\\__";
 
@@ -74,7 +76,13 @@ public class IndexingUtils {
          sb.append( scope.getName() );
          return sb.toString();
      }
-
+    public static String createLegacyContextName(ApplicationScope applicationScope, IndexScope scope ) {
+        StringBuilder sb = new StringBuilder();
+        idString(sb, scope.getOwner());
+        sb.append( SEPARATOR );
+        sb.append( scope.getName() );
+        return sb.toString();
+    }
 
     /**
      * Append the id to the string
