@@ -38,7 +38,6 @@ public class WriteStart implements Func1<CollectionIoEvent<Entity>, CollectionIo
 
     private final MvccLogEntrySerializationStrategy logStrategy;
 
-    MvccEntity.Status status;
 
 
     /**
@@ -46,9 +45,8 @@ public class WriteStart implements Func1<CollectionIoEvent<Entity>, CollectionIo
      */
 
     @Inject
-    public WriteStart ( final MvccLogEntrySerializationStrategy logStrategy, MvccEntity.Status status) {
+    public WriteStart ( final MvccLogEntrySerializationStrategy logStrategy) {
         this.logStrategy = logStrategy;
-        this.status = status;
 
     }
 
@@ -69,7 +67,7 @@ public class WriteStart implements Func1<CollectionIoEvent<Entity>, CollectionIo
 
             MutationBatch write = logStrategy.write( collectionScope, startEntry );
 
-            final MvccEntityImpl nextStage = new MvccEntityImpl( entityId, newVersion, status, entity );
+            final MvccEntityImpl nextStage = new MvccEntityImpl( entityId, newVersion, MvccEntity.Status.COMPLETE, entity );
             if(ioEvent.getEvent().hasVersion()) {
                 try {
                     write.execute();

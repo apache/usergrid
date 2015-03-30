@@ -29,6 +29,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.core.future.BetterFuture;
+import org.apache.usergrid.persistence.index.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
@@ -76,10 +78,8 @@ import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
-import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexBatch;
-import org.apache.usergrid.persistence.index.IndexScope;
-import org.apache.usergrid.persistence.index.SearchTypes;
 import org.apache.usergrid.persistence.index.impl.IndexScopeImpl;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.index.query.Query;
@@ -277,7 +277,7 @@ public class CpRelationManager implements RelationManager {
         Observable<String> types= gm.getEdgeTypesFromSource(
             new SimpleSearchEdgeType( cpHeadEntity.getId(), edgeTypePrefix, null ) );
 
-        Iterator<String> iter = types.toBlockingObservable().getIterator();
+        Iterator<String> iter = types.toBlocking().getIterator();
         while ( iter.hasNext() ) {
             indexes.add( iter.next() );
         }
@@ -320,8 +320,6 @@ public class CpRelationManager implements RelationManager {
      */
     Map<EntityRef, Set<String>> getContainers( final int limit, final String edgeType, final String fromEntityType ) {
 
-        Map<EntityRef, Set<String>> results = new LinkedHashMap<EntityRef, Set<String>>();
-
         final GraphManager gm = managerCache.getGraphManager( applicationScope );
 
         Observable<Edge> edges =
@@ -342,9 +340,7 @@ public class CpRelationManager implements RelationManager {
         }
 
 
-        return edges.collect( results, new Action2<Map<EntityRef, Set<String>>, Edge>() {
-            @Override
-            public void call( final Map<EntityRef, Set<String>> entityRefSetMap, final Edge edge ) {
+        return edges.collect( () -> new LinkedHashMap<EntityRef, Set<String>>(), ( entityRefSetMap, edge) -> {
                 if ( fromEntityType != null && !fromEntityType.equals( edge.getSourceNode().getType() ) ) {
                     logger.debug( "Ignoring edge from entity type {}", edge.getSourceNode().getType() );
                     return;
@@ -362,7 +358,7 @@ public class CpRelationManager implements RelationManager {
                 }
                 addMapSet( entityRefSetMap, eref, name );
             }
-        } ).toBlocking().last();
+         ).toBlocking().last();
     }
 
 
@@ -373,7 +369,7 @@ public class CpRelationManager implements RelationManager {
         final GraphManager gm = managerCache.getGraphManager( applicationScope );
 
         Iterator<String> edgeTypesToTarget = gm.getEdgeTypesToTarget( new SimpleSearchEdgeType(
-            cpHeadEntity.getId(), null, null) ).toBlockingObservable().getIterator();
+            cpHeadEntity.getId(), null, null) ).toBlocking().getIterator();
 
         logger.debug("updateContainingCollectionsAndCollections(): "
                 + "Searched for edges to target {}:{}\n   in scope {}\n   found: {}",
@@ -387,7 +383,7 @@ public class CpRelationManager implements RelationManager {
         // loop through all types of edge to target
 
 
-        final EntityIndex ei = managerCache.getEntityIndex( applicationScope );
+        final ApplicationEntityIndex ei = managerCache.getEntityIndex(applicationScope);
 
         final EntityIndexBatch entityIndexBatch = ei.createBatch();
 
@@ -474,7 +470,7 @@ public class CpRelationManager implements RelationManager {
             SearchByEdgeType.Order.DESCENDING,
             null ) );
 
-        return edges.toBlockingObservable().firstOrDefault( null ) != null;
+        return edges.toBlocking().firstOrDefault( null ) != null;
     }
 
 
@@ -501,7 +497,7 @@ public class CpRelationManager implements RelationManager {
             SearchByEdgeType.Order.DESCENDING,
             null ) );
 
-        return edges.toBlockingObservable().firstOrDefault( null ) != null;
+        return edges.toBlocking().firstOrDefault( null ) != null;
     }
 
 
@@ -518,7 +514,7 @@ public class CpRelationManager implements RelationManager {
             SearchByEdgeType.Order.DESCENDING,
             null ) ); // last
 
-        Iterator<Edge> iterator = edgesToTarget.toBlockingObservable().getIterator();
+        Iterator<Edge> iterator = edgesToTarget.toBlocking().getIterator();
         int count = 0;
         while ( iterator.hasNext() ) {
             iterator.next();
@@ -559,7 +555,7 @@ public class CpRelationManager implements RelationManager {
         Observable<String> str = gm.getEdgeTypesFromSource(
                 new SimpleSearchEdgeType( cpHeadEntity.getId(), null, null ) );
 
-        Iterator<String> iter = str.toBlockingObservable().getIterator();
+        Iterator<String> iter = str.toBlocking().getIterator();
         while ( iter.hasNext() ) {
             String edgeType = iter.next();
             indexes.add( CpNamingUtils.getCollectionName( edgeType ) );
@@ -679,7 +675,7 @@ public class CpRelationManager implements RelationManager {
         // create graph edge connection from head entity to member entity
         Edge edge = new SimpleEdge( cpHeadEntity.getId(), edgeType, memberEntity.getId(), uuidHash );
         GraphManager gm = managerCache.getGraphManager( applicationScope );
-        gm.writeEdge( edge ).toBlockingObservable().last();
+        gm.writeEdge( edge ).toBlocking().last();
 
 
         if(logger.isDebugEnabled()) {
@@ -814,7 +810,7 @@ public class CpRelationManager implements RelationManager {
         org.apache.usergrid.persistence.model.entity.Entity memberEntity =
             ((CpEntityManager)em).load( new CpEntityManager.EntityScope( memberScope, entityId));
 
-        final EntityIndex ei = managerCache.getEntityIndex( applicationScope );
+        final ApplicationEntityIndex ei = managerCache.getEntityIndex( applicationScope );
         final EntityIndexBatch batch = ei.createBatch();
 
         // remove item from collection index
@@ -841,7 +837,7 @@ public class CpRelationManager implements RelationManager {
                 cpHeadEntity.getId(),
                 CpNamingUtils.getEdgeTypeFromCollectionName( collName ),
                 memberEntity.getId(), UUIDUtils.getUUIDLong( memberEntity.getId().getUuid() ) );
-        gm.deleteEdge( collectionToItemEdge ).toBlockingObservable().last();
+        gm.deleteEdge( collectionToItemEdge ).toBlocking().last();
 
         // remove edge from item to collection
         Edge itemToCollectionEdge = new SimpleEdge(
@@ -851,7 +847,7 @@ public class CpRelationManager implements RelationManager {
                 cpHeadEntity.getId(),
                 UUIDUtils.getUUIDLong( cpHeadEntity.getId().getUuid() ) );
 
-        gm.deleteEdge( itemToCollectionEdge ).toBlockingObservable().last();
+        gm.deleteEdge( itemToCollectionEdge ).toBlocking().last();
 
         // special handling for roles collection of a group
         if ( headEntity.getType().equals( Group.ENTITY_TYPE ) ) {
@@ -931,7 +927,7 @@ public class CpRelationManager implements RelationManager {
             cpHeadEntity.getId(),
             CpNamingUtils.getCollectionScopeNameFromCollectionName( collName ) );
 
-        final EntityIndex ei = managerCache.getEntityIndex( applicationScope );
+        final ApplicationEntityIndex ei = managerCache.getEntityIndex( applicationScope );
 
         final SearchTypes types = SearchTypes.fromTypes( collection.getType() );
 
@@ -998,9 +994,9 @@ public class CpRelationManager implements RelationManager {
                 cpHeadEntity.getId(), edgeType, targetEntity.getId(), System.currentTimeMillis() );
 
         GraphManager gm = managerCache.getGraphManager( applicationScope );
-        gm.writeEdge( edge ).toBlockingObservable().last();
+        gm.writeEdge( edge ).toBlocking().last();
 
-        EntityIndex ei = managerCache.getEntityIndex( applicationScope );
+        ApplicationEntityIndex ei = managerCache.getEntityIndex( applicationScope );
         EntityIndexBatch batch = ei.createBatch();
 
         // Index the new connection in app|source|type context
@@ -1230,9 +1226,9 @@ public class CpRelationManager implements RelationManager {
                 System.currentTimeMillis() );
 
         GraphManager gm = managerCache.getGraphManager( applicationScope );
-        gm.deleteEdge( edge ).toBlockingObservable().last();
+        gm.deleteEdge( edge ).toBlocking().last();
 
-        final EntityIndex ei = managerCache.getEntityIndex( applicationScope );
+        final ApplicationEntityIndex ei = managerCache.getEntityIndex( applicationScope );
         final EntityIndexBatch batch = ei.createBatch();
 
         // Deindex the connection in app|source|type context
@@ -1367,7 +1363,7 @@ public class CpRelationManager implements RelationManager {
 
         final SearchTypes searchTypes = SearchTypes.fromNullableTypes( query.getEntityType() );
 
-        EntityIndex ei = managerCache.getEntityIndex( applicationScope );
+        ApplicationEntityIndex ei = managerCache.getEntityIndex( applicationScope );
 
         logger.debug( "Searching connections from the scope {}:{} with types {}", new Object[] {
                         indexScope.getOwner().toString(), indexScope.getName(), searchTypes

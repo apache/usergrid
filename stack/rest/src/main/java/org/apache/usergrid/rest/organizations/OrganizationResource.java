@@ -20,6 +20,7 @@ package org.apache.usergrid.rest.organizations;
 import com.google.common.collect.BiMap;
 import com.sun.jersey.api.json.JSONWithPadding;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.Path;
@@ -32,6 +33,7 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.usergrid.exception.NotImplementedException;
 import org.apache.usergrid.management.OrganizationInfo;
+import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.RootResource;
 import org.apache.usergrid.rest.applications.ApplicationResource;
@@ -40,6 +42,7 @@ import org.apache.usergrid.rest.exceptions.OrganizationApplicationNotFoundExcept
 import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
 import org.apache.usergrid.rest.utils.PathingUtils;
 import org.apache.usergrid.security.shiro.utils.SubjectUtils;
+import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -100,9 +103,14 @@ public class OrganizationResource extends AbstractContextResource {
         if (organizationId == null) {
             return null;
         }
-        BiMap<UUID, String> apps = management.getApplicationsForOrganization( organizationId );
-        if ( apps.get( applicationId ) == null ) {
-            return null;
+
+        // don't look up app if request is a PUT because a PUT can be used to restore a deleted app
+        if ( !hc.getRequest().getMethod().equalsIgnoreCase("PUT") ) {
+
+            BiMap<UUID, String> apps = management.getApplicationsForOrganization(organizationId);
+            if (apps.get(applicationId) == null) {
+                return null;
+            }
         }
 
         return appResourceFor( applicationId );
@@ -135,8 +143,15 @@ public class OrganizationResource extends AbstractContextResource {
 
         String orgAppName = PathingUtils.assembleAppName( organizationName, applicationName );
         UUID applicationId = emf.lookupApplication( orgAppName );
+
         if ( applicationId == null ) {
-            throw new OrganizationApplicationNotFoundException( orgAppName, uriInfo, properties );
+
+            // TODO: fix this hacky work-around for apparent Jersey issue
+            applicationId = UUIDUtils.tryExtractUUID( applicationName );
+
+            if ( applicationId == null ) {
+                throw new OrganizationApplicationNotFoundException( orgAppName, uriInfo, properties );
+            }
         }
 
         return appResourceFor( applicationId );

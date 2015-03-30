@@ -17,33 +17,18 @@
 package org.apache.usergrid.rest.applications.collection.users;
 
 
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
-import javax.ws.rs.core.MediaType;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.model.*;
-import org.elasticsearch.common.collect.HppcMaps;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
-import org.apache.usergrid.java.client.entities.Group;
-import org.apache.usergrid.management.ApplicationInfo;
-import org.apache.usergrid.management.OrganizationOwnerInfo;
-import org.apache.usergrid.utils.UUIDUtils;
-
-import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.ClientResponse.Status;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import java.io.IOException;
 
-import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.*;
 
 

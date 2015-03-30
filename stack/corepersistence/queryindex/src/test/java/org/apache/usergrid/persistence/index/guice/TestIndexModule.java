@@ -19,22 +19,21 @@
 package org.apache.usergrid.persistence.index.guice;
 
 
-import org.apache.usergrid.persistence.collection.guice.CollectionModule;
-import org.apache.usergrid.persistence.core.guice.TestModule;
+import org.safehaus.guicyfig.GuicyFigModule;
+
 import org.apache.usergrid.persistence.core.guice.CommonModule;
-import org.apache.usergrid.persistence.index.impl.BufferQueue;
-import org.apache.usergrid.persistence.index.impl.BufferQueueInMemoryImpl;
-import org.apache.usergrid.persistence.index.impl.BufferQueueSQSImpl;
+import org.apache.usergrid.persistence.core.guice.TestModule;
 
 
 public class TestIndexModule extends TestModule {
 
     @Override
     protected void configure() {
+
         install( new CommonModule());
 
         // configure collections and our core astyanax framework
-        install( new CollectionModule() );
         install( new IndexModule()  );
+        install( new GuicyFigModule(IndexTestFig.class) );
     }
 }

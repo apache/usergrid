@@ -19,22 +19,18 @@ package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import com.netflix.astyanax.model.ConsistencyLevel;
-import com.netflix.hystrix.Hystrix;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixThreadPoolProperties;
-import com.netflix.hystrix.strategy.concurrency.HystrixRequestVariableLifecycle;
 
-import org.apache.usergrid.persistence.collection.util.EntityUtils;
+import org.apache.usergrid.persistence.model.util.EntityUtils;
 import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
-import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

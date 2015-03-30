@@ -256,7 +256,7 @@ public class UniqueIndexCleanup extends ToolBase {
                                             " on entity {} in collection {}. " + " Forcing reindex",
                                             new Object[] { propValue, prop, id, collectionName } );
 
-                                        addDeleteToMutator( 
+                                        addDeleteToMutator(
                                             m, ENTITY_INDEX, rowKey, index.getName().duplicate(), timestamp );
 
                                         reIndex = true;
@@ -265,7 +265,7 @@ public class UniqueIndexCleanup extends ToolBase {
                                     if ( entries.size() > 1 ) {
                                         logger.info(
                                             "Found more than 1 entity referencing unique index "
-                                          + "for property '{}' with value " + "'{}'", 
+                                          + "for property '{}' with value " + "'{}'",
                                             prop, propValue );
                                         reIndex = true;
                                     }
@@ -278,7 +278,7 @@ public class UniqueIndexCleanup extends ToolBase {
 
                                 //entity may not exist, but we should have deleted rows from the index
                                 if ( entity == null ) {
-                                    logger.warn( "Entity with id {} did not exist in app {}", 
+                                    logger.warn( "Entity with id {} did not exist in app {}",
                                             id, applicationId );
                                     //now execute the cleanup. In this case the entity is gone,
                                     // so we'll want to remove references from

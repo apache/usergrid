@@ -36,7 +36,7 @@ import org.springframework.stereotype.Component;
 import org.apache.usergrid.rest.AbstractContextResource;
 
 
-/** 
+/**
  * Refresh index of an application, FOR TESTING PURPOSES ONLY. Only works with usergrid.test=true.
  */
 @Component
@@ -49,9 +49,9 @@ public class RefreshIndexResource extends AbstractContextResource {
     public RefreshIndexResource() {}
 
     @POST
-    public Response refresh( 
-            @QueryParam("org_name") String orgName, 
-            @QueryParam("app_name") String appName, 
+    public Response refresh(
+            @QueryParam("org_name") String orgName,
+            @QueryParam("app_name") String appName,
             @QueryParam("app_id") String appIdString ) throws IOException, Exception {
 
         try {
@@ -64,7 +64,7 @@ public class RefreshIndexResource extends AbstractContextResource {
             }
 
             // refresh the system apps or app lookup below may fail
-            emf.refreshIndex();
+            getEntityIndex().refresh();
 
             UUID appId;
             if ( orgName != null && appName != null ) {
@@ -72,12 +72,13 @@ public class RefreshIndexResource extends AbstractContextResource {
             } else {
                 appId = UUID.fromString(appIdString);
             }
-            
+
             if ( appId != null ) {
                 // found an app, then refresh it!
                 EntityManager em = emf.getEntityManager( appId );
-                em.refreshIndex();
-            } 
+                getEntityIndex().refresh();
+
+            }
 
         } catch (Exception e) {
             logger.error("Error in refresh", e);

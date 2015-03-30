@@ -25,14 +25,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import com.codahale.metrics.Meter;
-import com.codahale.metrics.Timer;
-import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.guice.ProxyImpl;
-import org.apache.usergrid.persistence.core.hystrix.HystrixCassandra;
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
@@ -54,10 +51,12 @@ import org.apache.usergrid.persistence.graph.serialization.util.GraphValidation;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.Timer;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
-import com.google.inject.assistedinject.Assisted;
 import com.netflix.astyanax.MutationBatch;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import rx.Notification;
 import rx.Observable;
@@ -126,7 +125,7 @@ public class GraphManagerImpl implements GraphManager {
                              final GraphFig graphFig,
                              final EdgeDeleteListener edgeDeleteListener,
                              final NodeDeleteListener nodeDeleteListener,
-                             @Assisted final ApplicationScope scope,
+                             final ApplicationScope scope,
                              MetricsFactory metricsFactory) {
 
 
@@ -189,7 +188,7 @@ public class GraphManagerImpl implements GraphManager {
         final Timer.Context timer = writeEdgeTimer.time();
         final Meter meter = writeEdgeMeter;
 
-        return Observable.from( markedEdge ).map( new Func1<MarkedEdge, Edge>() {
+        return Observable.just( markedEdge ).map( new Func1<MarkedEdge, Edge>() {
             @Override
             public Edge call( final MarkedEdge edge ) {
 
@@ -202,7 +201,12 @@ public class GraphManagerImpl implements GraphManager {
 
                 mutation.mergeShallow( edgeMutation );
 
-                HystrixCassandra.user( mutation );
+                try {
+                    mutation.execute();
+                }
+                catch ( ConnectionException e ) {
+                    throw new RuntimeException( "Unable to execute mutation", e );
+                }
 
                 return edge;
             }
@@ -230,7 +234,7 @@ public class GraphManagerImpl implements GraphManager {
 
         final Timer.Context timer = deleteEdgeTimer.time();
         final Meter meter = deleteEdgeMeter;
-        return Observable.from(markedEdge).map(new Func1<MarkedEdge, Edge>() {
+        return Observable.just(markedEdge).map(new Func1<MarkedEdge, Edge>() {
             @Override
             public Edge call(final MarkedEdge edge) {
 
@@ -241,7 +245,12 @@ public class GraphManagerImpl implements GraphManager {
 
 
                 LOG.debug("Marking edge {} as deleted to commit log", edge);
-                HystrixCassandra.user(edgeMutation);
+                try {
+                    edgeMutation.execute();
+                }
+                catch ( ConnectionException e ) {
+                    throw new RuntimeException( "Unable to execute mutation", e );
+                }
 
 
                 //HystrixCassandra.async( edgeDeleteListener.receive( scope, markedEdge,
@@ -272,7 +281,7 @@ public class GraphManagerImpl implements GraphManager {
     public Observable<Id> deleteNode( final Id node, final long timestamp ) {
         final Timer.Context timer = deleteNodeTimer.time();
         final Meter meter = deleteNodeMeter;
-        return Observable.from( node ).map( new Func1<Id, Id>() {
+        return Observable.just( node ).map( new Func1<Id, Id>() {
             @Override
             public Id call( final Id id ) {
 
@@ -285,7 +294,12 @@ public class GraphManagerImpl implements GraphManager {
 
 
                 LOG.debug( "Marking node {} as deleted to node mark", node );
-                HystrixCassandra.user( nodeMutation );
+                try {
+                    nodeMutation.execute();
+                }
+                catch ( ConnectionException e ) {
+                    throw new RuntimeException( "Unable to execute mutation", e );
+                }
 
 
                 //HystrixCassandra.async(nodeDeleteListener.receive(scope, id, eventTimestamp  )).subscribeOn(

@@ -40,8 +40,6 @@ import com.netflix.astyanax.serializers.UUIDSerializer;
  */
 public class EntityVersionSerializer extends AbstractSerializer<EntityVersion> {
 
-    private static final Logger LOG = LoggerFactory.getLogger( EntityVersionSerializer.class );
-
     @Override
     public ByteBuffer toByteBuffer(final EntityVersion ev) {
 

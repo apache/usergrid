@@ -22,16 +22,13 @@ import org.safehaus.guicyfig.GuicyFigModule;
 
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.impl.EntityVersionTaskFactory;
-import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.cache.EntityCacheFig;
 import org.apache.usergrid.persistence.collection.event.EntityDeleted;
 import org.apache.usergrid.persistence.collection.event.EntityVersionCreated;
 import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerFactoryImpl;
-import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.changelog.ChangeLogGenerator;
 import org.apache.usergrid.persistence.collection.mvcc.changelog.ChangeLogGeneratorImpl;
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteStart;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.impl.SerializationModule;
@@ -53,7 +50,7 @@ import com.google.inject.multibindings.Multibinder;
  *
  * @author tnine
  */
-public class CollectionModule extends AbstractModule {
+public abstract class CollectionModule extends AbstractModule {
 
 
     @Override
@@ -73,35 +70,27 @@ public class CollectionModule extends AbstractModule {
         Multibinder.newSetBinder( binder(), EntityVersionCreated.class );
         Multibinder.newSetBinder( binder(), EntityDeleted.class );
 
+        // create a guice factor for getting our collection manager
+         bind(EntityCollectionManagerFactory.class).to(EntityCollectionManagerFactoryImpl.class);
 
         //bind this to our factory
-        bind( EntityCollectionManagerFactory.class).to( EntityCollectionManagerFactoryImpl.class );
         install( new GuicyFigModule( EntityCacheFig.class ) );
 
         bind( UniqueValueSerializationStrategy.class ).to( UniqueValueSerializationStrategyImpl.class );
         bind( ChangeLogGenerator.class).to( ChangeLogGeneratorImpl.class);
 
+        configureMigrationProvider();
+
     }
-
-    @Provides
-    @Singleton
-    @Inject
-    @Write
-    public WriteStart write (final MvccLogEntrySerializationStrategy logStrategy) {
-        final WriteStart writeStart = new WriteStart( logStrategy, MvccEntity.Status.COMPLETE);
-
-        return writeStart;
-    }
-
-    @Provides
-    @Singleton
-    @Inject
-    @WriteUpdate
-    public WriteStart writeUpdate (final MvccLogEntrySerializationStrategy logStrategy) {
-        final WriteStart writeStart = new WriteStart( logStrategy, MvccEntity.Status.PARTIAL );
-
-        return writeStart;
-    }
+//
+//    @Provides
+//    @Singleton
+//    @Inject
+//    public WriteStart write (final MvccLogEntrySerializationStrategy logStrategy) {
+//        final WriteStart writeStart = new WriteStart( logStrategy, MvccEntity.Status.COMPLETE);
+//
+//        return writeStart;
+//    }
 
     @Inject
     @Singleton
@@ -111,6 +100,14 @@ public class CollectionModule extends AbstractModule {
         return new NamedTaskExecutorImpl( "collectiontasks",
                 serializationFig.getTaskPoolThreadSize(), serializationFig.getTaskPoolQueueSize() );
     }
+
+
+    /**
+     * Gives callers the ability to to configure an instance of
+     *
+     * MigrationDataProvider<EntityIdScope> for providing data migrations
+     */
+    public abstract void configureMigrationProvider();
 
 
 

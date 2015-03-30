@@ -109,7 +109,7 @@
       <jersey-version>1.18.1</jersey-version>
       <junit-version>4.12</junit-version>
       <log4j-version>1.2.16</log4j-version>
-      <org.springframework.version>3.1.2.RELEASE</org.springframework.version>
+      <org.springframework.version>3.2.13.RELEASE</org.springframework.version>
       <shiro-version>1.2.3</shiro-version>
       <slf4j-version>1.6.1</slf4j-version>
       <snakeyaml-version>1.8</snakeyaml-version>
@@ -121,11 +121,12 @@
       <!-- only use half the cores on the machine for testing -->
       <usergrid.it.parallel>methods</usergrid.it.parallel>
       <usergrid.it.reuseForks>true</usergrid.it.reuseForks>
+
       <usergrid.it.forkCount>1</usergrid.it.forkCount>
       <usergrid.it.threads>8</usergrid.it.threads>
 
       <metrics.version>3.0.0</metrics.version>
-      <rx.version>0.19.6</rx.version>
+      <rx.version>1.0.8</rx.version>
         <surefire.plugin.artifactName>surefire-junit47</surefire.plugin.artifactName>
       <surefire.plugin.version>2.18.1</surefire.plugin.version>
       <powermock.version>1.6.1</powermock.version>
@@ -1461,6 +1462,8 @@
                           <forkCount>${usergrid.it.forkCount}</forkCount>
                           <reuseForks>${usergrid.it.reuseForks}</reuseForks>
                           <threadCount>${usergrid.it.forkCount}</threadCount>
+                          <!-- see this page for documentation on classloading issues http://maven.apache.org/surefire/maven-surefire-plugin/examples/class-loading.html -->
+                          <useSystemClassLoader>false</useSystemClassLoader>
                           <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin}  -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}</argLine>
                           <testFailureIgnore>false</testFailureIgnore>
                       </configuration>
@@ -1471,7 +1474,7 @@
                       <dependencies>
                           <dependency>
                               <groupId>org.apache.maven.surefire</groupId>
-                              <artifactId>surefire-junit47</artifactId>
+                              <artifactId>${surefire.plugin.artifactName}</artifactId>
                               <version>${surefire.plugin.version}</version>
 
                               <!--<exclusions>-->
@@ -1560,8 +1563,8 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
-          <source>1.7</source>
-          <target>1.7</target>
+          <source>1.8</source>
+          <target>1.8</target>
           <optimize>true</optimize>
           <showDeprecation>true</showDeprecation>
           <debug>true</debug>
@@ -1583,7 +1586,7 @@
             <configuration>
               <rules>
                 <requireJavaVersion>
-                  <version>1.7.0</version>
+                  <version>1.8.0</version>
                 </requireJavaVersion>
                 <requireMavenVersion>
                   <version>[3.0,)</version>

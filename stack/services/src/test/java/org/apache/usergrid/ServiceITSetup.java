@@ -17,6 +17,7 @@
 package org.apache.usergrid;
 
 
+import org.apache.usergrid.corepersistence.migration.AppInfoMigrationPlugin;
 import org.apache.usergrid.management.ApplicationCreator;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.management.export.ExportService;
@@ -63,4 +64,6 @@ public interface ServiceITSetup extends CoreITSetup {
     String get( String key );
 
     SignInProviderFactory getProviderFactory();
+
+    AppInfoMigrationPlugin getAppInfoMigrationPlugin();
 }

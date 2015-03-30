@@ -41,6 +41,7 @@ import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.ManagementResource;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource2point0.model.Credentials;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource2point0.model.Token;
@@ -58,6 +59,7 @@ import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_TES
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_TEST_ACCOUNT_ADMIN_USER_PASSWORD;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -93,16 +95,17 @@ public class AdminUsersIT extends AbstractRestIT {
         passwordPayload.put( "oldpassword", password );
 
         // change the password as admin. The old password isn't required
-        management.users().user( username ).password().post(passwordPayload);
+        management.users().user( username ).password().post(Entity.class,passwordPayload);
 
         this.refreshIndex();
 
         //Get the token using the new password
-        management.token().post( new Token( username, "testPassword" ) );
+        Token adminToken = management.token().post( Token.class, new Token( username, "testPassword" )  );
+        management.token().setToken( adminToken );
 
         //Check that we cannot get the token using the old password
         try {
-            management.token().post( new Token( username, password ) );
+            management.token().post( Token.class, new Token( username, password ));
             fail( "We shouldn't be able to get a token using the old password" );
         }catch(UniformInterfaceException uie) {
             errorParse( 400,"invalid_grant",uie );
@@ -125,18 +128,20 @@ public class AdminUsersIT extends AbstractRestIT {
         passwordPayload.put( "oldpassword", password );
 
         // change the password as admin. The old password isn't required
-        management.users().user( username ).password().post( passwordPayload );
+        management.users().user( username ).password().post(Entity.class, passwordPayload );
 
         this.refreshIndex();
 
 
         //Get the token using the new password
-        management.token().post( new Token( username, "testPassword" ) );
+        Token adminToken = management.token().post( Token.class, new Token( username, "testPassword" )  );
+        management.token().setToken( adminToken );
+
 
 
         // Check that we can't change the password using the old password.
         try {
-            management.users().user( username ).password().post( passwordPayload );
+            management.users().user( username ).password().post( Entity.class ,passwordPayload );
             fail("We shouldn't be able to change the password with the same payload");
         }
         catch ( UniformInterfaceException uie ) {
@@ -164,11 +169,12 @@ public class AdminUsersIT extends AbstractRestIT {
 
         this.refreshIndex();
 
-        assertNotNull( management.token().post( new Token( username, "testPassword" ) ) );
+        assertNotNull(management.token().post( Token.class, new Token( username, "testPassword" )  ));
+
 
         //Check that we cannot get the token using the old password
         try {
-            management.token().post( new Token( username, password ) );
+            management.token().post( Token.class, new Token( username, password) );
             fail( "We shouldn't be able to get a token using the old password" );
         }catch(UniformInterfaceException uie) {
             errorParse( 400,"invalid_grant",uie );
@@ -182,7 +188,7 @@ public class AdminUsersIT extends AbstractRestIT {
      */
     @Test
     public void mgmtUserFeed() throws Exception {
-
+        //TODO: fix or establish what the user feed should do
         Entity mgmtUserFeedEntity = management.users().user( clientSetup.getUsername() ).feed().get();
         String correctValue= "<a href=mailto:"+clientSetup.getUsername();  //user_org.apache.usergrid.rest.management.AdminUsersIT.mgmtUserFeed4c3e53e0-acc7-11e4-b527-0b8af3c5813f@usergrid.com">user_org.apache.usergrid.rest.management.AdminUsersIT.mgmtUserFeed4c3e53e0-acc7-11e4-b527-0b8af3c5813f (user_org.apache.usergrid.rest.management.AdminUsersIT.mgmtUserFeed4c3e53e0-acc7-11e4-b527-0b8af3c5813f@usergrid.com)</a> created a new organization account named org_org.apache.usergrid.rest.management.AdminUsersIT.mgmtUserFeed4c3ec910-acc7-11e4-94c8-33f0d48a5559
 
@@ -190,6 +196,7 @@ public class AdminUsersIT extends AbstractRestIT {
 
         ArrayList<Map<String,Object>> feedEntityMap = ( ArrayList ) mgmtUserFeedEntity.get( "entities" );
         assertNotNull( feedEntityMap );
+        assertNotEquals( 0,feedEntityMap.size() );
         assertNotNull( feedEntityMap.get( 0 ).get( "title" )  );
         assertTrue("Needs to contain the feed of the specific management user",
             ((String)(feedEntityMap.get( 0 ).get( "title" ))).contains(clientSetup.getUsername() ));
@@ -306,8 +313,9 @@ public class AdminUsersIT extends AbstractRestIT {
             clientSetup.getRestClient().testPropertiesResource().post( testPropertiesPayload );
             refreshIndex();
 
-            Token superuserToken = management().token().post(
-                new Token( clientSetup.getSuperuserName(), clientSetup.getSuperuserPassword() ) );
+            Token superuserToken = management.token().post( Token.class,
+                new Token( clientSetup.getSuperuserName(), clientSetup.getSuperuserPassword() )  );
+
 
 
 
@@ -343,7 +351,7 @@ public class AdminUsersIT extends AbstractRestIT {
             clientSetup.getRestClient().testPropertiesResource().post( testPropertiesPayload );
             refreshIndex();
 
-            Token testToken = management().token().post(
+            Token testToken = management().token().post(Token.class,
                 new Token( originalTestProperties.getAsString( PROPERTIES_TEST_ACCOUNT_ADMIN_USER_EMAIL ),
                     originalTestProperties.getAsString(  PROPERTIES_TEST_ACCOUNT_ADMIN_USER_PASSWORD ) ));
 
@@ -414,7 +422,7 @@ public class AdminUsersIT extends AbstractRestIT {
     public void checkFormPasswordReset() throws Exception {
 
 
-        management().users().user( clientSetup.getUsername() ).resetpw().post(null);
+        management().users().user( clientSetup.getUsername() ).resetpw().post(new Form());
 
         //Create mocked inbox
         List<Message> inbox = Mailbox.get( clientSetup.getEmail() );
@@ -501,7 +509,7 @@ public class AdminUsersIT extends AbstractRestIT {
 
         //Makes sure we can't replace a password with itself ( as it is the only one in the history )
         try {
-            management().users().user( clientSetup.getUsername() ).password().post( payload );
+            management().users().user( clientSetup.getUsername() ).password().post(Entity.class ,payload );
 
             fail( "should fail with conflict" );
         }
@@ -511,7 +519,7 @@ public class AdminUsersIT extends AbstractRestIT {
 
         //Change the password
         payload.put( "newpassword", passwords[1] );
-        management().users().user( clientSetup.getUsername() ).password().post( payload );
+        management().users().user( clientSetup.getUsername() ).password().post( Entity.class,payload );
 
         refreshIndex();
 
@@ -520,7 +528,7 @@ public class AdminUsersIT extends AbstractRestIT {
 
         //Make sure that we can't change the password with itself using a different entry in the history.
         try {
-            management().users().user( clientSetup.getUsername() ).password().post( payload );
+            management().users().user( clientSetup.getUsername() ).password().post( Entity.class,payload );
 
             fail( "should fail with conflict" );
         }
@@ -597,20 +605,29 @@ public class AdminUsersIT extends AbstractRestIT {
 
         Entity adminUserPayload = new Entity();
         String username = "listOrgUsersByName"+UUIDUtils.newTimeUUID();
+        Credentials orgCredentials = clientSetup.getClientCredentials();
         adminUserPayload.put( "username", username );
         adminUserPayload.put( "name", username );
         adminUserPayload.put( "email", username+"@usergrid.com" );
         adminUserPayload.put( "password", username );
 
-        //post new admin user besides the default
-        management().orgs().organization( clientSetup.getOrganizationName() ).users().post( adminUserPayload );
+//        //If we comment this out it works, shouldn't using an organization Token for an endpoint
+        //with organization access work?
+        //TODO:investigate above comment
+//        Token organizationToken =
+//            management().token().post( Token.class,
+//                new Token( "client_credentials", orgCredentials.getClientId(), orgCredentials.getClientSecret() ) );
+//        management().token().setToken( organizationToken );
+
+        //Create admin user
+        management().orgs().organization( clientSetup.getOrganizationName() ).users().postWithToken(ApiResponse.class ,adminUserPayload );
 
         refreshIndex();
 
         //Retrieves the admin users
-        Entity adminUsers = management().orgs().organization( clientSetup.getOrganizationName() ).users().get();
+        ApiResponse adminUsers = management().orgs().organization( clientSetup.getOrganizationName() ).users().get(ApiResponse.class);
 
-        assertEquals("There need to be 2 admin users",2,( ( ArrayList ) adminUsers.getResponse().getData() ).size());
+        assertEquals("There need to be 2 admin users",2,( ( ArrayList ) adminUsers.getData() ).size());
 
     }
 
@@ -623,7 +640,8 @@ public class AdminUsersIT extends AbstractRestIT {
     @Test
     public void createOrgFromUserConnectionFail() throws Exception {
 
-        Token token = management().token().post( new Token( clientSetup.getUsername(),clientSetup.getPassword() ) );
+        Token token = management().token().post(Token.class ,new Token( clientSetup.getUsername(),clientSetup.getPassword() ) );
+        management().token().setToken( token );
         // try to create the same org again off the connection
         try {
             management().users().user( clientSetup.getUsername() ).organizations().post( clientSetup.getOrganization(),token );

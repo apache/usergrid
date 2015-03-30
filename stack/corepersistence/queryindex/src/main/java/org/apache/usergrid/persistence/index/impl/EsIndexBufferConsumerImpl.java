@@ -202,31 +202,30 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
                     }
                 } ).doOnNext( new Action1<List<IndexOperationMessage>>() {
                 @Override
-                public void call( List<IndexOperationMessage> containerList ) {
-                    if ( containerList.size() == 0 ) {
+                public void call(List<IndexOperationMessage> containerList) {
+                    if (containerList.size() == 0) {
                         return;
                     }
 
-                    flushMeter.mark( containerList.size() );
+                    flushMeter.mark(containerList.size());
                     Timer.Context time = flushTimer.time();
 
 
-                    execute( containerList );
+                    execute(containerList);
 
                     time.stop();
                 }
-            } )
+            })
                 //ack after we process
-                .doOnNext( new Action1<List<IndexOperationMessage>>() {
+                .doOnNext(new Action1<List<IndexOperationMessage>>() {
                     @Override
-                    public void call( final List<IndexOperationMessage> indexOperationMessages ) {
-                        bufferQueue.ack( indexOperationMessages );
+                    public void call(final List<IndexOperationMessage> indexOperationMessages) {
+                        bufferQueue.ack(indexOperationMessages);
                         //release  so we know we've done processing
-                        inFlight.addAndGet( -1 * indexOperationMessages.size() );
+                        inFlight.addAndGet(-1 * indexOperationMessages.size());
                     }
-                } )
 
-                .subscribeOn( Schedulers.newThread() );
+                } ).subscribeOn( Schedulers.newThread() );
 
             //start in the background
 
@@ -324,21 +323,26 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
 
         failureMonitor.success();
 
+        boolean error = false;
+
         for (BulkItemResponse response : responses) {
+
             if (response.isFailed()) {
+                // log error and continue processing
+                log.error("Unable to index id={}, type={}, index={}, failureMessage={} ",
+                    response.getId(),
+                    response.getType(),
+                    response.getIndex(),
+                    response.getFailureMessage()
+                );
 
-                final BulkItemResponse.Failure failure = response.getFailure();
-
-                final String message;
-
-                if(failure != null) {
-                    message =  "Unable to index documents.  Errors are :" + response.getFailure().getMessage();
-                }else{
-                    message =  "Unable to index documents.  Response is :" + response.getResponse();
-                }
-
-                throw new RuntimeException(message);
+                error = true;
             }
+        }
+
+        if ( error ) {
+            // TODO: throw error once onErrorResumeNext() implemented in startWorker()
+            //throw new RuntimeException("Error during processing of bulk index operations")
         }
     }
 }

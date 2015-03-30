@@ -46,8 +46,6 @@ public interface ManagementService {
     public void addAdminUserToOrganization( UserInfo user, OrganizationInfo organization, boolean email )
             throws Exception;
 
-    public UUID addApplicationToOrganization( UUID organizationId, UUID applicationId, Entity appInfo ) throws Exception;
-
     public AccessInfo authorizeClient( String clientId, String clientSecret, long ttl ) throws Exception;
 
     public ActivationState handleConfirmationTokenForAdminUser( UUID userId, String token ) throws Exception;
@@ -94,6 +92,8 @@ public interface ManagementService {
     public User deactivateUser( UUID applicationId, UUID userId ) throws Exception;
 
     public void deactivateOrganization( UUID organizationId ) throws Exception;
+
+    public UUID addApplicationToOrganization(UUID organizationId, Entity appInfo) throws Exception;
 
     public void deleteOrganizationApplication( UUID organizationId, UUID applicationId ) throws Exception;
 
@@ -147,6 +147,8 @@ public interface ManagementService {
     public ApplicationInfo getApplicationInfo( String applicationName ) throws Exception;
 
     public ApplicationInfo getApplicationInfo( UUID applicationId ) throws Exception;
+
+    ApplicationInfo getDeletedApplicationInfo(UUID applicationId) throws Exception;
 
     public ApplicationInfo getApplicationInfo( Identifier id ) throws Exception;
 
@@ -317,4 +319,8 @@ public interface ManagementService {
 
     /** For testing purposes only */
     public Properties getProperties();
+
+    public void deleteApplication(UUID applicationId) throws Exception;
+
+    public ApplicationInfo restoreApplication(UUID applicationId) throws Exception;
 }

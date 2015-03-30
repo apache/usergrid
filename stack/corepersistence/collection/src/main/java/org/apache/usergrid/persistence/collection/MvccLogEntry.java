@@ -65,6 +65,7 @@ public interface MvccLogEntry {
         /**
          * The logentry being written represents a partial entity
          */
+        @Deprecated//removed in v3
         PARTIAL(1),
 
         /**

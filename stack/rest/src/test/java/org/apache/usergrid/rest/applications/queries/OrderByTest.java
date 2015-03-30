@@ -353,7 +353,7 @@ public class OrderByTest extends QueryTestBase {
                     (activities[i]).get("uuid").toString());
             }
             //grab the next page of results
-            activitiesResponse = this.app().getNextPage(activitiesResponse, params, true);
+            activitiesResponse = this.app().collection("activities").getNextPage(activitiesResponse, params, true);
         }
         while (activitiesResponse.getCursor() != null);
     }

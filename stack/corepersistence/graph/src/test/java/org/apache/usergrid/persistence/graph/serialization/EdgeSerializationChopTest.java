@@ -31,6 +31,7 @@ import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
+import org.apache.usergrid.persistence.core.util.IdGenerator;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -40,7 +41,7 @@ import com.google.inject.Inject;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createEdge;
-import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createId;
+import static org.apache.usergrid.persistence.core.util.IdGenerator.createId;
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createSearchByEdge;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -100,8 +101,8 @@ public class EdgeSerializationChopTest {
     public void mixedEdgeTypes() throws ConnectionException {
 
 
-        final Id sourceId = createId( SOURCE_NODE_ID, "source" );
-        final Id targetId = createId( "target" );
+        final Id sourceId = IdGenerator.createId( SOURCE_NODE_ID, "source" );
+        final Id targetId = IdGenerator.createId( "target" );
 
 
         final MarkedEdge edge = createEdge( sourceId, "edge", targetId );

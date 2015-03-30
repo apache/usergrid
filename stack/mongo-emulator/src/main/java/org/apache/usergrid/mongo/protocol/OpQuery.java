@@ -211,7 +211,7 @@ public class OpQuery extends OpCrud {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.usergrid.mongo.protocol.OpCrud#doOp()
      */
     @Override
@@ -281,8 +281,8 @@ public class OpQuery extends OpCrud {
             return handleAuthFails( this );
         }
 
-        PrincipalCredentialsToken token = 
-                PrincipalCredentialsToken.getFromAdminUserInfoAndPassword( 
+        PrincipalCredentialsToken token =
+                PrincipalCredentialsToken.getFromAdminUserInfoAndPassword(
                         user, key, handler.getEmf().getManagementAppId() );
         Subject subject = SubjectUtils.getSubject();
 

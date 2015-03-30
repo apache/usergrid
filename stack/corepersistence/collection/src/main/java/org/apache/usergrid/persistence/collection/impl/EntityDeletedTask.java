@@ -23,7 +23,7 @@ import com.google.inject.assistedinject.Assisted;
 import com.netflix.astyanax.MutationBatch;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.event.EntityDeleted;
-import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.core.task.Task;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -36,6 +36,9 @@ import rx.schedulers.Schedulers;
 
 import java.util.Set;
 import java.util.UUID;
+
+import org.apache.commons.lang.NotImplementedException;
+
 import org.apache.usergrid.persistence.core.guice.ProxyImpl;
 
 
@@ -102,9 +105,10 @@ public class EntityDeletedTask implements Task<Void> {
         fireEvents();
         final MutationBatch entityDelete = entitySerializationStrategy.delete(collectionScope, entityId, version);
         final MutationBatch logDelete = logEntrySerializationStrategy.delete(collectionScope, entityId, version);
+
         entityDelete.execute();
         logDelete.execute();
-
+//
         return null;
     }
 
@@ -123,22 +127,10 @@ public class EntityDeletedTask implements Task<Void> {
 
         LOG.debug( "Started firing {} listeners", listenerSize );
 
-        //if we have more than 1, run them on the rx scheduler for a max of 8 operations at a time
-        Observable.from(listeners)
-                .parallel( new Func1<Observable<EntityDeleted>, Observable<EntityDeleted>>() {
-
-                    @Override
-                    public Observable<EntityDeleted> call(
-                            final Observable<EntityDeleted> entityVersionDeletedObservable ) {
-
-                        return entityVersionDeletedObservable.doOnNext( new Action1<EntityDeleted>() {
-                            @Override
-                            public void call( final EntityDeleted listener ) {
-                                listener.deleted(collectionScope, entityId, version);
-                            }
-                        } );
-                    }
-                }, Schedulers.io() ).toBlocking().last();
+        //if we have more than 1, run them on the rx scheduler for a max of 10 operations at a time
+        Observable.from(listeners).flatMap( currentListener -> Observable.just( currentListener ).doOnNext( listener -> {
+            listener.deleted( collectionScope, entityId, version );
+        } ).subscribeOn( Schedulers.io() ), 10 ).toBlocking().last();
 
         LOG.debug( "Finished firing {} listeners", listenerSize );
     }

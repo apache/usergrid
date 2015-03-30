@@ -221,6 +221,10 @@ GRAPHITE_SERVER="$(groovy get_first_instance.groovy graphite )"
 #First host run the migration and setup
 if [ "$FIRSTHOST"=="$PUBLIC_HOSTNAME" ]; then
 
+#Run the system database setup since migration is a no-op
+curl -X GET http://localhost:8080/system/database/setup -u superuser:test
+
+
 #Run the migration
 curl -X PUT http://localhost:8080/system/migrate/run  -u superuser:test
 
@@ -228,8 +232,6 @@ curl -X PUT http://localhost:8080/system/migrate/run  -u superuser:test
 #Running setup
 sleep 10
 
-#Run the system database setup since migration is a no-op
-curl -X GET http://localhost:8080/system/database/setup -u superuser:test
 
 cd /usr/share/usergrid/init_instance
 ./update_keyspaces.sh

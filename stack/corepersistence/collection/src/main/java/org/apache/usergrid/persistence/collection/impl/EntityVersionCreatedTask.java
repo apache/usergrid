@@ -64,7 +64,7 @@ public class EntityVersionCreatedTask implements Task<Void> {
     @Override
     public Void rejected() {
 
-        // Our task was rejected meaning our queue was full.  
+        // Our task was rejected meaning our queue was full.
         // We need this operation to run, so we'll run it in our current thread
         try {
             call();
@@ -76,7 +76,7 @@ public class EntityVersionCreatedTask implements Task<Void> {
         return null;
     }
 
-    
+
     @Override
     public Void call() throws Exception {
 
@@ -100,22 +100,12 @@ public class EntityVersionCreatedTask implements Task<Void> {
 
         logger.debug( "Started firing {} listeners", listenerSize );
 
-        //if we have more than 1, run them on the rx scheduler for a max of 8 operations at a time
-        Observable.from(listeners).parallel( 
-            new Func1<Observable<EntityVersionCreated>, Observable<EntityVersionCreated>>() {
 
-                @Override
-                public Observable<EntityVersionCreated> call(
-                    final Observable<EntityVersionCreated> entityVersionCreatedObservable ) {
+        Observable.from( listeners )
+                  .flatMap( currentListener -> Observable.just( currentListener ).doOnNext( listener -> {
+                      listener.versionCreated( collectionScope, entity );
+                  } ).subscribeOn( Schedulers.io() ), 10 ).toBlocking().last();
 
-                    return entityVersionCreatedObservable.doOnNext( new Action1<EntityVersionCreated>() {
-                        @Override
-                        public void call( final EntityVersionCreated listener ) {
-                            listener.versionCreated(collectionScope,entity);
-                        }
-                    } );
-                }
-            }, Schedulers.io() ).toBlocking().last();
 
         logger.debug( "Finished firing {} listeners", listenerSize );
     }

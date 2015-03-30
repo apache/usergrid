@@ -43,7 +43,7 @@ public class PrincipalCredentialsToken implements org.apache.shiro.authc.Authent
     private final PrincipalCredentials credential;
 
 
-    public PrincipalCredentialsToken( 
+    public PrincipalCredentialsToken(
             PrincipalIdentifier principal, PrincipalCredentials credential ) {
         this.principal = principal;
         this.credential = credential;
@@ -62,19 +62,19 @@ public class PrincipalCredentialsToken implements org.apache.shiro.authc.Authent
     }
 
 
-    public static PrincipalCredentialsToken getFromAdminUserInfoAndPassword( 
+    public static PrincipalCredentialsToken getFromAdminUserInfoAndPassword(
             UserInfo user, String password, UUID managementAppId ) {
 
         if ( user != null ) {
-            return new PrincipalCredentialsToken( 
-                    new AdminUserPrincipal( managementAppId, user ), 
+            return new PrincipalCredentialsToken(
+                    new AdminUserPrincipal( managementAppId, user ),
                     new AdminUserPassword( password ) );
         }
         return null;
     }
 
 
-    public static PrincipalCredentialsToken getFromOrganizationInfoAndAccessToken( 
+    public static PrincipalCredentialsToken getFromOrganizationInfoAndAccessToken(
             OrganizationInfo organization, String token ) {
 
         if ( organization != null ) {
@@ -87,7 +87,7 @@ public class PrincipalCredentialsToken implements org.apache.shiro.authc.Authent
     }
 
 
-    public static PrincipalCredentialsToken getFromApplicationInfoAndAccessToken( 
+    public static PrincipalCredentialsToken getFromApplicationInfoAndAccessToken(
             ApplicationInfo application, String token ) {
 
         if ( application != null ) {
@@ -100,7 +100,7 @@ public class PrincipalCredentialsToken implements org.apache.shiro.authc.Authent
     }
 
 
-    public static PrincipalCredentialsToken getGuestCredentialsFromApplicationInfo( 
+    public static PrincipalCredentialsToken getGuestCredentialsFromApplicationInfo(
             ApplicationInfo application ) {
 
         if ( application != null ) {
@@ -111,7 +111,7 @@ public class PrincipalCredentialsToken implements org.apache.shiro.authc.Authent
     }
 
 
-    public static PrincipalCredentialsToken getFromAdminUserInfoAndAccessToken( 
+    public static PrincipalCredentialsToken getFromAdminUserInfoAndAccessToken(
             UserInfo user, String token, UUID managementAppId ) {
 
         if ( user != null ) {
@@ -124,11 +124,11 @@ public class PrincipalCredentialsToken implements org.apache.shiro.authc.Authent
     }
 
 
-    public static PrincipalCredentialsToken getFromAppUserInfoAndAccessToken( 
+    public static PrincipalCredentialsToken getFromAppUserInfoAndAccessToken(
             UserInfo user, String token ) {
 
         if ( user != null ) {
-            ApplicationUserPrincipal principal = 
+            ApplicationUserPrincipal principal =
                     new ApplicationUserPrincipal( user.getApplicationId(), user );
             ApplicationUserAccessToken credentials = new ApplicationUserAccessToken( token );
             principal.setAccessTokenCredentials( credentials );

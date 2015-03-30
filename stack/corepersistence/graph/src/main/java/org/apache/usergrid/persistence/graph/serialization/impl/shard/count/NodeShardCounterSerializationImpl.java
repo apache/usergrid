@@ -33,9 +33,8 @@ import org.apache.usergrid.persistence.core.astyanax.CompositeFieldSerializer;
 import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
-import org.apache.usergrid.persistence.core.astyanax.ScopedRowKeySerializer;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
-import org.apache.usergrid.persistence.core.hystrix.HystrixCassandra;
+import org.apache.usergrid.persistence.core.astyanax.ScopedRowKeySerializer;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.graph.GraphFig;
@@ -50,6 +49,7 @@ import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.OperationResult;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.connectionpool.exceptions.NotFoundException;
 import com.netflix.astyanax.model.Column;
 import com.netflix.astyanax.model.CompositeBuilder;
@@ -117,24 +117,19 @@ public class NodeShardCounterSerializationImpl implements NodeShardCounterSerial
         final ScopedRowKey rowKey = ScopedRowKey.fromKey( key.scope.getApplication(), key );
 
 
+        OperationResult<Column<Boolean>> column = null;
         try {
-            OperationResult<Column<Boolean>> column = HystrixCassandra.user(
-                    keyspace.prepareQuery( EDGE_SHARD_COUNTS ).getKey( rowKey ).getColumn( true ) );
-
-            return column.getResult().getLongValue();
+            column = keyspace.prepareQuery( EDGE_SHARD_COUNTS ).getKey( rowKey ).getColumn( true ).execute();
         }
         //column not found, return 0
-        catch ( RuntimeException re ) {
-
-            final Throwable cause = re.getCause();
-
-            if(cause != null && cause.getCause() instanceof NotFoundException) {
-                return 0;
-            }
-
-            throw  re;
+        catch ( NotFoundException nfe ) {
+            return 0;
+        }
+        catch ( ConnectionException e ) {
+            throw new RuntimeException( "Unable to read from cassandra", e );
         }
 
+        return column.getResult().getLongValue();
     }
 
 

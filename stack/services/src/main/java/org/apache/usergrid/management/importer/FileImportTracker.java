@@ -105,7 +105,7 @@ public class FileImportTracker {
         failedImportEntity.setErrorMessage( message );
 
         try {
-            EntityManager entityManager = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+            EntityManager entityManager = emf.getEntityManager(emf.getManagementAppId());
             failedImportEntity = entityManager.create( failedImportEntity );
             entityManager.createConnection( fileImport, ERRORS_CONNECTION_NAME, failedImportEntity );
         }
@@ -136,7 +136,7 @@ public class FileImportTracker {
         failedImportConnection.setErrorMessage( message );
 
         try {
-            EntityManager entityManager = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+            EntityManager entityManager = emf.getEntityManager(emf.getManagementAppId());
             failedImportConnection = entityManager.create( failedImportConnection );
             entityManager.createConnection( fileImport, ERRORS_CONNECTION_NAME, failedImportConnection );
         }
@@ -309,7 +309,7 @@ public class FileImportTracker {
             fileImport.setState( state );
             fileImport.setErrorMessage( message );
 
-            EntityManager entityManager = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+            EntityManager entityManager = emf.getEntityManager(emf.getManagementAppId());
             entityManager.update( fileImport );
         }
         catch ( Exception e ) {

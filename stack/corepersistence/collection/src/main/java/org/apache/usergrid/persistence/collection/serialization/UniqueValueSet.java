@@ -18,6 +18,9 @@ package org.apache.usergrid.persistence.collection.serialization;/*
  */
 
 
+import java.util.Set;
+
+
 /**
  * A read only view of unique values
  */
@@ -29,4 +32,5 @@ public interface UniqueValueSet extends Iterable<UniqueValue> {
      * @return
      */
     public UniqueValue getValue(final String fieldName);
+
 }
