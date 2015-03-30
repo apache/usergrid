@@ -21,11 +21,7 @@ package org.apache.usergrid.persistence.index.impl;
 import java.util.*;
 
 import org.apache.usergrid.persistence.core.future.BetterFuture;
-import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.index.*;
-import org.elasticsearch.action.delete.DeleteRequestBuilder;
-import org.elasticsearch.action.index.IndexRequestBuilder;
-import org.elasticsearch.client.Client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,28 +31,7 @@ import org.apache.usergrid.persistence.index.query.CandidateResult;
 import org.apache.usergrid.persistence.index.utils.IndexValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
-import org.apache.usergrid.persistence.model.field.ArrayField;
-import org.apache.usergrid.persistence.model.field.BooleanField;
-import org.apache.usergrid.persistence.model.field.DoubleField;
-import org.apache.usergrid.persistence.model.field.EntityObjectField;
-import org.apache.usergrid.persistence.model.field.Field;
-import org.apache.usergrid.persistence.model.field.FloatField;
-import org.apache.usergrid.persistence.model.field.IntegerField;
-import org.apache.usergrid.persistence.model.field.ListField;
-import org.apache.usergrid.persistence.model.field.LocationField;
-import org.apache.usergrid.persistence.model.field.LongField;
-import org.apache.usergrid.persistence.model.field.SetField;
-import org.apache.usergrid.persistence.model.field.StringField;
-import org.apache.usergrid.persistence.model.field.UUIDField;
-import org.apache.usergrid.persistence.model.field.value.EntityObject;
 
-import com.codahale.metrics.*;
-import com.codahale.metrics.Timer;
-
-import rx.Observable;
-import rx.functions.Func1;
-
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.*;
 
 
 public class EsEntityIndexBatchImpl implements EntityIndexBatch {
@@ -65,7 +40,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
     private final ApplicationScope applicationScope;
 
-    private final IndexIdentifier.IndexAlias alias;
+    private final IndexAlias alias;
     private final IndexIdentifier indexIdentifier;
 
     private final IndexBufferProducer indexBatchBufferProducer;
@@ -95,33 +70,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         ValidationUtils.verifyEntityWrite( entity );
         ValidationUtils.verifyVersion( entity.getVersion() );
         //add app id for indexing
-
-        final String context = createContextName(applicationScope,indexScope);
-
-        if ( log.isDebugEnabled() ) {
-            log.debug( "Indexing entity {}:{}\n   alias: {}\n" +
-                       "   app: {}\n   scope owner: {}\n   scope name: {}\n   context: {}",
-                entity.getId().getType(), entity.getId().getUuid(), alias.getWriteAlias(),
-                    applicationScope.getApplication(), indexScope.getOwner(), indexScope.getName(), context );
-        }
-
-        ValidationUtils.verifyEntityWrite( entity );
-
-        Map<String, Object> entityAsMap = entityToMap( entity, context );
-        //add app id
-        entityAsMap.put(APPLICATION_ID_FIELDNAME, idString(applicationScope.getApplication()));
-        // need prefix here because we index UUIDs as strings
-
-        // let caller add these fields if needed
-        // entityAsMap.put("created", entity.getId().getUuid().timestamp();
-        // entityAsMap.put("updated", entity.getVersion().timestamp());
-
-        String indexId = createIndexDocId( entity, context );
-
-        log.debug( "Indexing entity documentId {} data {} ", indexId, entityAsMap );
-        final SearchType entityType =SearchType.fromId(entity.getId());
-        container.addIndexRequest(new IndexRequest(alias.getWriteAlias(), entityType.getTypeName(applicationScope), indexId, entityAsMap));
-
+        container.addIndexRequest(new IndexRequest(alias.getWriteAlias(), applicationScope,indexScope, entity));
         return this;
     }
 
@@ -133,35 +82,13 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         ValidationUtils.verifyIdentity(id);
         ValidationUtils.verifyVersion( version );
 
-        final String context = createContextName(applicationScope,indexScope);
-        final SearchType entityType =SearchType.fromId(id);
-
-        final String indexId = createIndexDocId( id, version, context );
-
-
-        if ( log.isDebugEnabled() ) {
-            log.debug( "De-indexing entity {}:{} in scope\n   app {}\n   owner {}\n   "
-                + "name {} context{}, type {},",
-                new Object[] {
-                    id.getType(),
-                    id.getUuid(),
-                    applicationScope.getApplication(),
-                    indexScope.getOwner(),
-                    indexScope.getName(),
-                    context,
-                    entityType
-                } );
-        }
-
-        String[] indexes = entityIndex.getIndexes(AliasedEntityIndex.AliasType.Read);
+        String[] indexes = entityIndex.getUniqueIndexes();
         //get the default index if no alias exists yet
         if(indexes == null ||indexes.length == 0){
             indexes = new String[]{indexIdentifier.getIndex(null)};
         }
 
-        container.addDeIndexRequest( new DeIndexRequest( indexes, entityType.getTypeName(applicationScope), indexId ) );
-
-        log.debug("Deindexed Entity with index id " + indexId);
+        container.addDeIndexRequest(new DeIndexRequest(indexes, applicationScope,indexScope,id,version));
 
         return this;
     }
@@ -202,142 +129,6 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
     }
 
 
-    /**
-     * Set the entity as a map with the context
-     *
-     * @param entity The entity
-     * @param context The context this entity appears in
-     */
-    private static Map entityToMap( final Entity entity, final String context ) {
-        final Map entityMap = entityToMap( entity );
 
-        //add the context for filtering later
-        entityMap.put( ENTITY_CONTEXT_FIELDNAME, context );
-
-        //but the fieldname we have to prefix because we use query equality to seek this later.
-        // TODO see if we can make this more declarative
-        entityMap.put( ENTITYID_ID_FIELDNAME, IndexingUtils.idString(entity.getId()).toLowerCase());
-
-        return entityMap;
-    }
-
-
-    /**
-     * Convert Entity to Map and Adding prefixes for types:
-     * <pre>
-     * su_ - String unanalyzed field
-     * sa_ - String analyzed field
-     * go_ - Location field nu_ - Number field
-     * bu_ - Boolean field
-     * </pre>
-     */
-    private static Map entityToMap( EntityObject entity ) {
-
-        Map<String, Object> entityMap = new HashMap<String, Object>();
-
-        for ( Object f : entity.getFields().toArray() ) {
-
-            Field field = ( Field ) f;
-
-
-            if ( f instanceof ArrayField ) {
-                List list = ( List ) field.getValue();
-                entityMap.put( field.getName().toLowerCase(),
-                        new ArrayList( processCollectionForMap( list ) ) );
-            }
-            else if ( f instanceof ListField ) {
-                           List list = ( List ) field.getValue();
-                           entityMap.put( field.getName().toLowerCase(),
-                                   new ArrayList( processCollectionForMap( list ) ) );
-
-                           if ( !list.isEmpty() ) {
-                               if ( list.get( 0 ) instanceof String ) {
-                                   entityMap.put( ANALYZED_STRING_PREFIX + field.getName().toLowerCase(),
-                                           new ArrayList( processCollectionForMap( list ) ) );
-                               }
-                           }
-                       }
-            else if ( f instanceof SetField ) {
-                Set set = ( Set ) field.getValue();
-                entityMap.put( field.getName().toLowerCase(),
-                        new ArrayList( processCollectionForMap( set ) ) );
-            }
-            else if ( f instanceof EntityObjectField ) {
-                EntityObject eo = ( EntityObject ) field.getValue();
-                entityMap.put( field.getName().toLowerCase(), entityToMap(eo) ); // recursion
-            }
-            else if ( f instanceof StringField ) {
-
-                // index in lower case because Usergrid queries are case insensitive
-                entityMap.put( ANALYZED_STRING_PREFIX + field.getName().toLowerCase(),
-                        ( ( String ) field.getValue() ).toLowerCase() );
-                entityMap.put( STRING_PREFIX + field.getName().toLowerCase(),
-                        ( ( String ) field.getValue() ).toLowerCase() );
-            }
-            else if ( f instanceof LocationField ) {
-                LocationField locField = ( LocationField ) f;
-                Map<String, Object> locMap = new HashMap<String, Object>();
-
-                // field names lat and lon trigger ElasticSearch geo location
-                locMap.put( "lat", locField.getValue().getLatitude() );
-                locMap.put( "lon", locField.getValue().getLongitude() );
-                entityMap.put( GEO_PREFIX + field.getName().toLowerCase(), locMap );
-            }
-            else if( f instanceof DoubleField || f instanceof  FloatField){
-                entityMap.put( DOUBLE_PREFIX + field.getName().toLowerCase(), field.getValue() );
-            }
-            else if( f instanceof LongField || f instanceof IntegerField){
-                entityMap.put( LONG_PREFIX + field.getName().toLowerCase(), field.getValue() );
-            }
-            else if ( f instanceof BooleanField ) {
-
-                entityMap.put( BOOLEAN_PREFIX + field.getName().toLowerCase(), field.getValue() );
-            }
-            else if ( f instanceof UUIDField ) {
-
-                entityMap.put( STRING_PREFIX + field.getName().toLowerCase(),
-                        field.getValue().toString().toLowerCase() );
-            }
-            else {
-                entityMap.put( field.getName().toLowerCase(), field.getValue() );
-            }
-        }
-
-        return entityMap;
-    }
-
-
-    private static Collection processCollectionForMap( final Collection c ) {
-        if ( c.isEmpty() ) {
-            return c;
-        }
-        List processed = new ArrayList();
-        Object sample = c.iterator().next();
-
-        if ( sample instanceof Entity ) {
-            for ( Object o : c.toArray() ) {
-                Entity e = ( Entity ) o;
-                processed.add( entityToMap( e ) );
-            }
-        }
-        else if ( sample instanceof List ) {
-            for ( Object o : c.toArray() ) {
-                List list = ( List ) o;
-                processed.add( processCollectionForMap( list ) ); // recursion;
-            }
-        }
-        else if ( sample instanceof Set ) {
-            for ( Object o : c.toArray() ) {
-                Set set = ( Set ) o;
-                processed.add( processCollectionForMap( set ) ); // recursion;
-            }
-        }
-        else {
-            for ( Object o : c.toArray() ) {
-                processed.add( o );
-            }
-        }
-        return processed;
-    }
 
 }

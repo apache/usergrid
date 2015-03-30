@@ -58,7 +58,7 @@ public abstract class AbstractGraphVisitorImpl<T> implements MigrationDataProvid
 
     @Override
     public Observable<T> getData() {
-        return applicationObservable.getAllApplications().flatMap( new Func1<ApplicationScope, Observable<T>>() {
+        return applicationObservable.getData().flatMap( new Func1<ApplicationScope, Observable<T>>() {
             @Override
             public Observable<T> call( final ApplicationScope applicationScope ) {
                 return getAllEntities( applicationScope );

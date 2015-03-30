@@ -39,7 +39,7 @@ public class EsEntityIndexFactoryImpl implements EntityIndexFactory{
 
     private final IndexFig config;
     private final EsProvider provider;
-    private final EsIndexCache indexCache;
+    private final IndexCache indexCache;
     private final IndexBufferProducer indexBatchBufferProducer;
     private final MetricsFactory metricsFactory;
     private final MapManagerFactory mapManagerFactory;
@@ -57,7 +57,7 @@ public class EsEntityIndexFactoryImpl implements EntityIndexFactory{
         } );
 
     @Inject
-    public EsEntityIndexFactoryImpl( final IndexFig config, final EsProvider provider, final EsIndexCache indexCache,
+    public EsEntityIndexFactoryImpl( final IndexFig config, final EsProvider provider, final IndexCache indexCache,
                                      final IndexBufferProducer indexBatchBufferProducer,
                                      final MetricsFactory metricsFactory, final MapManagerFactory mapManagerFactory,
                                      final IndexFig indexFig, final AliasedEntityIndex entityIndex, final IndexIdentifier indexIdentifier ){

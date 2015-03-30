@@ -19,33 +19,35 @@
  */
 package org.apache.usergrid.persistence.index;
 
-import com.google.common.util.concurrent.ListenableFuture;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
 import org.apache.usergrid.persistence.index.query.Query;
-import org.elasticsearch.action.ListenableActionFuture;
 import rx.Observable;
 
 /**
- * Classy class class.
+ * Entity Index for an Application.
  */
 public interface ApplicationEntityIndex {
 
-
-    /**
-     *
-     */
-    public void initializeIndex();
 
     /**
      * Create the index batch.
      */
     public EntityIndexBatch createBatch();
 
-
     /**
      * Execute query in Usergrid syntax.
      */
-    public CandidateResults search(final IndexScope indexScope, final SearchTypes searchType, Query query );
+    public CandidateResults search(final IndexScope indexScope, final SearchTypes searchTypes, final Query query);
+    public CandidateResults search(final IndexScope indexScope, final SearchTypes searchTypes, final Query query, final int limit);
+
+
+
+    /**
+     * get next page of results
+     * @param cursor
+     * @return
+     */
+    public CandidateResults getNextPage(final String cursor);
 
     /**
      * delete all application records

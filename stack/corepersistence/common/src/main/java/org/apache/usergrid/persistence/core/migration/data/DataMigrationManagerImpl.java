@@ -98,13 +98,10 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
         /**
          * Invoke each plugin to attempt a migration
          */
-        for(final MigrationPlugin plugin: executionOrder){
+        executionOrder.forEach(plugin -> {
             final ProgressObserver observer = new CassandraProgressObserver(plugin.getName());
-
-            plugin.run( observer );
-        }
-
-
+            plugin.run(observer);
+        });
     }
 
 

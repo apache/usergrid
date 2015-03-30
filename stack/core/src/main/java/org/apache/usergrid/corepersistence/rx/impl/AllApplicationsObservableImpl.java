@@ -67,7 +67,7 @@ public class AllApplicationsObservableImpl implements AllApplicationsObservable 
 
 
     @Override
-    public Observable<ApplicationScope> getAllApplications() {
+    public Observable<ApplicationScope> getData() {
 
         //emit our 3 hard coded applications that are used the manage the system first.
         //this way consumers can perform whatever work they need to on the root system first

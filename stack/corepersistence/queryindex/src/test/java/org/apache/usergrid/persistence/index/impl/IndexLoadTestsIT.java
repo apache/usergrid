@@ -135,10 +135,6 @@ public class IndexLoadTestsIT extends BaseIT {
 
         final IndexScope indexScope = new IndexScopeImpl( applicationId, "test" );
 
-        final ApplicationEntityIndex appEntityIndex = entityIndexFactory.createApplicationEntityIndex( scope );
-
-        appEntityIndex.initializeIndex();
-
         batchWriteTPS = metricsFactory.getMeter( IndexLoadTestsIT.class, "write.tps" );
 
         batchWriteTimer = metricsFactory.getTimer( IndexLoadTestsIT.class, "write.timer" );

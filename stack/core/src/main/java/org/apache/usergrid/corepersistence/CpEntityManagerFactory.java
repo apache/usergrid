@@ -161,9 +161,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                 em.getApplication();
             }
 
-            ApplicationScope appScope = new ApplicationScopeImpl(new SimpleId( CpNamingUtils.SYSTEM_APP_ID, "application" ) );
-            ApplicationEntityIndex applicationEntityIndex = entityIndexFactory.createApplicationEntityIndex(appScope);
-            applicationEntityIndex.initializeIndex();
+            entityIndex.initialize();
             entityIndex.refresh();
 
 
@@ -261,10 +259,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         if ( lookupApplication( appName ) != null ) {
             throw new ApplicationAlreadyExistsException( appName );
         }
-
-        ApplicationScope applicationScope = new ApplicationScopeImpl(new SimpleId( applicationId,"application"));
-        ApplicationEntityIndex applicationEntityIndex = entityIndexFactory.createApplicationEntityIndex(applicationScope);
-        applicationEntityIndex.initializeIndex();
 
         getSetup().setupApplicationKeyspace( applicationId, appName );
 
@@ -724,12 +718,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     public void rebuildApplicationIndexes( UUID appId, ProgressObserver po ) throws Exception {
 
         EntityManager em = getEntityManager( appId );
-        ApplicationScope applicationScope = new ApplicationScopeImpl( new SimpleId( CpNamingUtils.SYSTEM_APP_ID, "application" ));
-        //explicitly invoke create index, we don't know if it exists or not in ES during a rebuild.
-        ApplicationEntityIndex applicationEntityIndex = entityIndexFactory.createApplicationEntityIndex(applicationScope);
-        applicationEntityIndex.initializeIndex();
-        em.reindex(po);
-
         em.reindex( po );
 
         logger.info("\n\nRebuilt index for applicationId {} \n", appId );

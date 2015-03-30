@@ -14,30 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence.core.metrics;
+package org.apache.usergrid.persistence.index.migration;
 
-import com.codahale.metrics.*;
+import com.google.inject.BindingAnnotation;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Get metrics .
+ * Index migration annotation
  */
-public interface MetricsFactory {
-    MetricRegistry getRegistry();
 
-    Timer getTimer(Class<?> klass, String name);
-
-    Histogram getHistogram(Class<?> klass, String name);
-
-    Counter getCounter(Class<?> klass, String name);
-
-    Meter getMeter(Class<?> klass, String name);
-
-    /**
-     * Get a gauge and create it
-     * @param clazz
-     * @param name
-     * @param gauge
-     * @return
-     */
-    void addGauge( Class<?> clazz, String name, Gauge<?> gauge );
-}
+@BindingAnnotation
+@Target({ FIELD, PARAMETER, METHOD }) @Retention(RUNTIME)
+public @interface IndexMigration {}

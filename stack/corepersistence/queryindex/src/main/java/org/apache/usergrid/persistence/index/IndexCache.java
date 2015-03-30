@@ -19,33 +19,21 @@
  */
 package org.apache.usergrid.persistence.index;
 
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.index.impl.IndexingUtils;
-import org.apache.usergrid.persistence.model.entity.Id;
-
 /**
- * Get search type
+ * Cache for index lookups
  */
-public class SearchType{
-    private final String type;
+public interface IndexCache {
+    /**
+     * get index based on alias name
+     * @param alias
+     * @param aliasType
+     * @return
+     */
+    String[] getIndexes(IndexAlias alias, AliasedEntityIndex.AliasType aliasType);
 
-    private SearchType( final String type ) {this.type = type;}
-
-    public static SearchType fromType( final String type ) {
-        return new SearchType( type );
-    }
-
-
-    public static SearchType fromId( final Id id ) {
-        return new SearchType( id.getType() );
-    }
-
-    public String getTypeName(ApplicationScope applicationScope) {
-            return  IndexingUtils.getType(applicationScope, type);
-    }
-
-    public String[] getTypeNames(ApplicationScope applicationScope) {
-        final String[] typeNames =   new String[]{type , IndexingUtils.getType(applicationScope, type)};
-        return typeNames;
-    }
+    /**
+     * invalidate cache
+     * @param alias
+     */
+    void invalidate(IndexAlias alias);
 }

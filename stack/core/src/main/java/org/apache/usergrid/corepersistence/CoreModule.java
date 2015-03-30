@@ -16,6 +16,7 @@
 package org.apache.usergrid.corepersistence;
 
 
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.springframework.context.ApplicationContext;
 
 import org.apache.usergrid.corepersistence.events.EntityDeletedHandler;
@@ -96,7 +97,13 @@ public class CoreModule  extends AbstractModule {
                     AllNodesInGraphImpl.class );
             }
         } );
-        install(new IndexModule());
+        install(new IndexModule(){
+            @Override
+            public void configureMigrationProvider() {
+                bind( new TypeLiteral<MigrationDataProvider<ApplicationScope>>() {} ).to(
+                    AllApplicationsObservable.class );
+            }
+        });
        //        install(new MapModule());   TODO, re-enable when index module doesn't depend on queue
        //        install(new QueueModule());
 
