@@ -24,7 +24,7 @@ import org.apache.usergrid.persistence.index.query.Query;
 import rx.Observable;
 
 /**
- * Classy class class.
+ * Entity Index for an Application.
  */
 public interface ApplicationEntityIndex {
 

@@ -29,6 +29,7 @@ import org.apache.usergrid.persistence.index.IndexCache;
 import org.apache.usergrid.persistence.index.impl.EsProvider;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
 import org.elasticsearch.client.AdminClient;
+import org.elasticsearch.indices.InvalidAliasNameException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
@@ -62,24 +63,29 @@ public class EsIndexDataMigrationImpl implements DataMigration<ApplicationScope>
         final int latestVersion = dataVersion.getImplementationVersion();
 
         observer.start();
-        migrationDataProvider.getData().flatMap(applicationScope -> {
-            LegacyIndexIdentifier legacyIndexIdentifier = new LegacyIndexIdentifier(indexFig, applicationScope);
-            String[] indexes = indexCache.getIndexes(legacyIndexIdentifier.getAlias(), AliasedEntityIndex.AliasType.Read);
-            return Observable.from(indexes);
-        })
-            .doOnNext(index -> {
-                IndicesAliasesRequestBuilder aliasesRequestBuilder = adminClient.indices().prepareAliases();
-                aliasesRequestBuilder = adminClient.indices().prepareAliases();
-                // add read alias
-                aliasesRequestBuilder.addAlias(index, indexIdentifier.getAlias().getReadAlias());
-                observer.update(latestVersion,"EsIndexDataMigrationImpl: fixed index: " + index );
+        try {
+            migrationDataProvider.getData().flatMap(applicationScope -> {
+                LegacyIndexIdentifier legacyIndexIdentifier = new LegacyIndexIdentifier(indexFig, applicationScope);
+                String[] indexes = indexCache.getIndexes(legacyIndexIdentifier.getAlias(), AliasedEntityIndex.AliasType.Read);
+                return Observable.from(indexes);
             })
-            .doOnError(error -> {
-                log.error("failed to migrate index", error);
-                observer.failed(latestVersion,"EsIndexDataMigrationImpl: failed to migrate",error);
-            })
-            .doOnCompleted(() -> observer.complete())
-            .toBlocking().lastOrDefault(null);
+                .doOnNext(index -> {
+                    IndicesAliasesRequestBuilder aliasesRequestBuilder = adminClient.indices().prepareAliases();
+                    aliasesRequestBuilder = adminClient.indices().prepareAliases();
+                    // add read alias
+                    try {
+                        aliasesRequestBuilder.addAlias(index, indexIdentifier.getAlias().getReadAlias());
+                    } catch (InvalidAliasNameException e) {
+                        log.debug("Failed to add alias due to name conflict",e);
+                    }
+                    observer.update(latestVersion, "EsIndexDataMigrationImpl: fixed index: " + index);
+                })
+                .doOnCompleted(() -> observer.complete())
+                .toBlocking().lastOrDefault(null);
+        }catch (Exception e){
+            log.error("Failed to migrate index", e);
+            throw e;
+        }
 
         return latestVersion;
     }

@@ -24,7 +24,7 @@ import org.apache.usergrid.persistence.index.impl.IndexingUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 /**
- * Classy class class.
+ * Get search type
  */
 public class SearchType{
     private final String type;

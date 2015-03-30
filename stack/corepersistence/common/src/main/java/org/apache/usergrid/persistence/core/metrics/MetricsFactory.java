@@ -19,7 +19,7 @@ package org.apache.usergrid.persistence.core.metrics;
 import com.codahale.metrics.*;
 
 /**
- * Classy class class.
+ * Get metrics .
  */
 public interface MetricsFactory {
     MetricRegistry getRegistry();

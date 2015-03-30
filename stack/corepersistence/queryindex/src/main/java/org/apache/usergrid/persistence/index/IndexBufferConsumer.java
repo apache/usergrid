@@ -20,7 +20,7 @@
 package org.apache.usergrid.persistence.index;
 
 /**
- * Classy class class.
+ *  Buffer index requests
  */
 public interface IndexBufferConsumer {
 
