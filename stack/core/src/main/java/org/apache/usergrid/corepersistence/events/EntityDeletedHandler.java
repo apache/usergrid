@@ -65,21 +65,22 @@ public class EntityDeletedHandler implements EntityDeleted {
             return;
         }
 
+//        This is a NO-OP now, it's handled by the EntityVersionDeletedHandler
 
+//
+//        if(logger.isDebugEnabled()) {
+//            logger.debug(
+//                "Handling deleted event for entity {}:{} v {} " + " app: {}",
+//                new Object[] {
+//                    entityId.getType(), entityId.getUuid(), version,
+//                    scope.getApplication()
+//                } );
+//        }
+//
+//        CpEntityManagerFactory cpemf = ( CpEntityManagerFactory ) emf;
+//        final ApplicationEntityIndex ei = cpemf.getManagerCache().getEntityIndex( scope );
 
-        if(logger.isDebugEnabled()) {
-            logger.debug(
-                "Handling deleted event for entity {}:{} v {} " + " app: {}",
-                new Object[] {
-                    entityId.getType(), entityId.getUuid(), version,
-                    scope.getApplication()
-                } );
-        }
-
-        CpEntityManagerFactory cpemf = ( CpEntityManagerFactory ) emf;
-        final ApplicationEntityIndex ei = cpemf.getManagerCache().getEntityIndex( scope );
-
-        throw new NotImplementedException( "Fix this" );
+//        throw new NotImplementedException( "Fix this" );
 
         //read all edges to this node and de-index them
 

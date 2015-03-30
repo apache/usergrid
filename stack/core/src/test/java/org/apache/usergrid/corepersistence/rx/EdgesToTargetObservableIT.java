@@ -38,6 +38,7 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.utils.EdgeTestUtils;
 
 import com.google.inject.Injector;
 
@@ -92,29 +93,26 @@ public class EdgesToTargetObservableIT extends AbstractCoreIT {
 
         final GraphManager gm = managerCache.getGraphManager( scope );
 
-        edgesFromSourceObservable.edgesFromSource( gm, applicationId ).doOnNext( new Action1<Edge>() {
-            @Override
-            public void call( final Edge edge ) {
-                final String edgeType = edge.getType();
-                final Id target = edge.getTargetNode();
+        edgesFromSourceObservable.edgesFromSource( gm, applicationId ).doOnNext( edge -> {
+            final String edgeType = edge.getType();
+            final Id target = edge.getTargetNode();
 
-                //test if we're a collection, if so remove ourselves fro the types
-                if ( !CpNamingUtils.isCollectionEdgeType( edgeType ) ) {
-                    fail( "Connections should be the only type encountered" );
-                }
-
-
-                final String collectionType = CpNamingUtils.getCollectionName( edgeType );
-
-                if ( collectionType.equals( type1 ) ) {
-                    assertTrue( "Element should be present on removal", type1Identities.remove( target ) );
-                }
-                else if ( collectionType.equals( type2 ) ) {
-                    assertTrue( "Element should be present on removal", type2Identities.remove( target ) );
-                }
-
-
+            //test if we're a collection, if so remove ourselves fro the types
+            if ( !EdgeTestUtils.isCollectionEdgeType( edgeType ) ) {
+                fail( "Connections should be the only type encountered" );
             }
+
+
+            final String collectionType = EdgeTestUtils.getNameForEdge( edgeType );
+
+            if ( collectionType.equals( type1 ) ) {
+                assertTrue( "Element should be present on removal", type1Identities.remove( target ) );
+            }
+            else if ( collectionType.equals( type2 ) ) {
+                assertTrue( "Element should be present on removal", type2Identities.remove( target ) );
+            }
+
+
         } ).toBlocking().lastOrDefault( null );
 
 
@@ -124,23 +122,20 @@ public class EdgesToTargetObservableIT extends AbstractCoreIT {
 
         //test connections
 
-        edgesFromSourceObservable.edgesFromSource( gm, source).doOnNext( new Action1<Edge>() {
-            @Override
-            public void call( final Edge edge ) {
-                final String edgeType = edge.getType();
-                final Id target = edge.getTargetNode();
+        edgesFromSourceObservable.edgesFromSource( gm, source).doOnNext( edge -> {
+            final String edgeType = edge.getType();
+            final Id target = edge.getTargetNode();
 
-                if ( !CpNamingUtils.isConnectionEdgeType( edgeType ) ) {
-                    fail( "Only connection edges should be encountered" );
-                }
-
-                final String connectionType = CpNamingUtils.getConnectionType( edgeType );
-
-                assertEquals( "Same connection type expected", "likes", connectionType );
-
-
-                assertTrue( "Element should be present on removal", connections.remove( target ) );
+            if ( !EdgeTestUtils.isConnectionEdgeType( edgeType ) ) {
+                fail( "Only connection edges should be encountered" );
             }
+
+            final String connectionType = EdgeTestUtils.getNameForEdge( edgeType );
+
+            assertEquals( "Same connection type expected", "likes", connectionType );
+
+
+            assertTrue( "Element should be present on removal", connections.remove( target ) );
         } ).toBlocking().lastOrDefault( null );
 
         assertEquals( "Every connection should have been encountered", 0, connections.size() );

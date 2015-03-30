@@ -52,6 +52,7 @@ import org.apache.usergrid.persistence.index.SearchTypes;
 import org.apache.usergrid.persistence.index.impl.IndexScopeImpl;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
 import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 
 import com.fasterxml.uuid.UUIDComparator;
@@ -60,7 +61,9 @@ import com.google.inject.Injector;
 import net.jcip.annotations.NotThreadSafe;
 
 import static org.apache.usergrid.corepersistence.CoreModule.EVENTS_DISABLED;
+import static org.apache.usergrid.corepersistence.util.CpNamingUtils.generateScopeFromCollection;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
+import static org.apache.usergrid.persistence.core.util.IdGenerator.createId;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -483,14 +486,15 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
         EntityManager em = app.getEntityManager();
 
-        EntityIndexFactory eif =  SpringResource.getInstance().getBean( Injector.class ).getInstance( EntityIndexFactory.class );
+        EntityIndexFactory eif =  SpringResource.getInstance().getBean( Injector.class ).getInstance(
+            EntityIndexFactory.class );
 
         ApplicationScope as = new ApplicationScopeImpl(
             new SimpleId( em.getApplicationId(), TYPE_APPLICATION ) );
         ApplicationEntityIndex ei = eif.createApplicationEntityIndex(as);
 
-        IndexScope is = new IndexScopeImpl( new SimpleId( em.getApplicationId(), TYPE_APPLICATION ),
-                CpNamingUtils.getCollectionScopeNameFromCollectionName( collName ) );
+        final Id rootId = createId(em.getApplicationId(), TYPE_APPLICATION);
+        IndexScope is = generateScopeFromCollection(rootId, collName );
         Query rcq = Query.fromQL( query );
 
         // TODO: why does this have no effect; max we ever get is 1000 entities

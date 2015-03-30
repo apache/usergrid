@@ -55,7 +55,7 @@ public class EntityVersionCreatedHandler implements EntityVersionCreated {
 
     @Override
     public void versionCreated( final ApplicationScope scope, final Entity entity ) {
-        //not op, we're not migrating properly to this.  Make this an event
+        //not op, we're not migrating properly to this.  Make this an event At the moment this is happening on write
 
 //        // This check is for testing purposes and for a test that to be able to dynamically turn
 //        // off and on delete previous versions so that it can test clean-up on read.

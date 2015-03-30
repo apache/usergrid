@@ -24,18 +24,30 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.corepersistence.CpEntityManagerFactory;
-import org.apache.usergrid.exception.NotImplementedException;
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.collection.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
+import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.graph.GraphManager;
+import org.apache.usergrid.persistence.graph.serialization.EdgesObservable;
 import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndexBatch;
+import org.apache.usergrid.persistence.index.IndexBatchBuffer;
+import org.apache.usergrid.persistence.index.IndexScope;
+import org.apache.usergrid.persistence.index.impl.IndexScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import rx.Observable;
+
 import static org.apache.usergrid.corepersistence.CoreModule.EVENTS_DISABLED;
+import static org.apache.usergrid.corepersistence.util.CpNamingUtils.generateScopeFromSource;
+import static org.apache.usergrid.corepersistence.util.CpNamingUtils.generateScopeToTarget;
 
 
 /**
@@ -49,10 +61,17 @@ public class EntityVersionDeletedHandler implements EntityVersionDeleted {
 
 
     private final EntityManagerFactory emf;
+    private final EdgesObservable edgesObservable;
+    private final SerializationFig serializationFig;
 
 
     @Inject
-    public EntityVersionDeletedHandler( final EntityManagerFactory emf ) {this.emf = emf;}
+    public EntityVersionDeletedHandler( final EntityManagerFactory emf, final EdgesObservable edgesObservable,
+                                        final SerializationFig serializationFig ) {
+        this.emf = emf;
+        this.edgesObservable = edgesObservable;
+        this.serializationFig = serializationFig;
+    }
 
 
     @Override
@@ -67,32 +86,60 @@ public class EntityVersionDeletedHandler implements EntityVersionDeleted {
         }
 
         if ( logger.isDebugEnabled() ) {
-            logger.debug( "Handling versionDeleted count={} event for entity {}:{} v {} "
-                    + "  app: {}", new Object[] {
-                    entityVersions.size(), entityId.getType(), entityId.getUuid(),
-                    scope.getApplication()
-                } );
+            logger.debug( "Handling versionDeleted count={} event for entity {}:{} v {} " + "  app: {}", new Object[] {
+                entityVersions.size(), entityId.getType(), entityId.getUuid(), scope.getApplication()
+            } );
         }
 
         CpEntityManagerFactory cpemf = ( CpEntityManagerFactory ) emf;
 
         final ApplicationEntityIndex ei = cpemf.getManagerCache().getEntityIndex( scope );
+        final GraphManager gm = cpemf.getManagerCache().getGraphManager( scope );
 
 
-        throw new NotImplementedException( "Fix this" );
+        //create an observable of all scopes to deIndex
+        //remove all indexes pointing to this
+        final Observable<IndexScope> targetScopes =  edgesObservable.edgesToTarget( gm, entityId ).map(
+            edge -> generateScopeFromSource( edge) );
 
 
-//        final IndexScope indexScope =
-//            new IndexScopeImpl( new SimpleId( scope.getOwner().getUuid(), scope.getOwner().getType() ),
-//                scope.getName() );
-//
-//        //create our batch, and then collect all of them into a single batch
-//        Observable.from( entityVersions ).collect( () -> ei.createBatch(), ( entityIndexBatch, mvccLogEntry ) -> {
-//            entityIndexBatch.deindex( indexScope, mvccLogEntry.getEntityId(), mvccLogEntry.getVersion() );
-//        } )
-//            //after our batch is collected, execute it
-//            .doOnNext( entityIndexBatch -> {
-//                entityIndexBatch.execute();
-//            } ).toBlocking().last();
+        //Remove all double indexes
+        final Observable<IndexScope> sourceScopes = edgesObservable.edgesFromSource( gm, entityId ).map(
+                    edge -> generateScopeToTarget( edge ) );
+
+
+        //create a stream of scopes
+        final Observable<IndexScopeVersion> versions = Observable.merge( targetScopes, sourceScopes ).flatMap(
+            indexScope -> Observable.from( entityVersions )
+                                    .map( version -> new IndexScopeVersion( indexScope, version ) ) );
+
+        //create a set of batches
+        final Observable<EntityIndexBatch> batches = versions.buffer( serializationFig.getBufferSize() ).flatMap(
+            bufferedVersions -> Observable.from( bufferedVersions ).collect( () -> ei.createBatch(),
+                ( EntityIndexBatch batch, IndexScopeVersion version ) -> {
+                    //deindex in this batch
+                    batch.deindex( version.scope, version.version.getEntityId(), version.version.getVersion() );
+                } ) );
+
+
+
+        //execute the batches
+        batches.doOnNext( batch -> batch.execute() ).toBlocking().last();
+
+    }
+
+
+
+
+
+    private static final class IndexScopeVersion{
+        private final IndexScope scope;
+        private final MvccLogEntry version;
+
+
+        private IndexScopeVersion( final IndexScope scope, final MvccLogEntry version ) {
+            this.scope = scope;
+            this.version = version;
+        }
     }
 }
