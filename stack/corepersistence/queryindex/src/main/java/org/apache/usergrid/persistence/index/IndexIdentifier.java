@@ -20,12 +20,26 @@
 package org.apache.usergrid.persistence.index;
 
 /**
- * Classy class class.
+ * Identifier for where an index is in underlying server
  */
 public interface IndexIdentifier {
+
+    /**
+     * get the alias name
+     * @return
+     */
     IndexAlias getAlias();
 
+    /**
+     * get index name from suffix
+     * @param suffix
+     * @return
+     */
     String getIndex(String suffix);
 
+    /**
+     * return unique string
+     * @return
+     */
     String toString();
 }

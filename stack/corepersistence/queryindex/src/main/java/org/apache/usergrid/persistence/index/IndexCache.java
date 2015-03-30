@@ -20,10 +20,20 @@
 package org.apache.usergrid.persistence.index;
 
 /**
- * Classy class class.
+ * Cache for index lookups
  */
 public interface IndexCache {
+    /**
+     * get index based on alias name
+     * @param alias
+     * @param aliasType
+     * @return
+     */
     String[] getIndexes(IndexAlias alias, AliasedEntityIndex.AliasType aliasType);
 
+    /**
+     * invalidate cache
+     * @param alias
+     */
     void invalidate(IndexAlias alias);
 }
