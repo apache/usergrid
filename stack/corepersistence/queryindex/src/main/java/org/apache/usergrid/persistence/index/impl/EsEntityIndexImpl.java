@@ -50,6 +50,7 @@ import org.elasticsearch.index.query.MatchAllQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.elasticsearch.indices.IndexMissingException;
+import org.elasticsearch.indices.InvalidAliasNameException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -207,36 +208,46 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
 
             int count = 0;
             IndicesAliasesRequestBuilder aliasesRequestBuilder = adminClient.indices().prepareAliases();
-            for ( String currentIndex : indexNames ) {
-                aliasesRequestBuilder.removeAlias( currentIndex, alias.getWriteAlias() );
+            for (String currentIndex : indexNames) {
+                aliasesRequestBuilder.removeAlias(currentIndex, alias.getWriteAlias());
                 count++;
             }
-            if(count>0) {
+            if (count > 0) {
                 isAck = aliasesRequestBuilder.execute().actionGet().isAcknowledged();
                 logger.info("Removed Index Name from Alias=[{}] ACK=[{}]", alias, isAck);
             }
-            aliasesRequestBuilder = adminClient.indices().prepareAliases();
+            String[] reads = getIndexes(AliasedEntityIndex.AliasType.Read);
+            String[] writes = getIndexes(AliasedEntityIndex.AliasType.Write);
 
-            //Added For Graphite Metrics
-            // add read alias
-            aliasesRequestBuilder.addAlias(
-                indexName, alias.getReadAlias());
+            try {
+                aliasesRequestBuilder = adminClient.indices().prepareAliases();
+                //Added For Graphite Metrics
+                // add read alias
+                aliasesRequestBuilder.addAlias(indexName, alias.getReadAlias());
+                isAck = aliasesRequestBuilder.execute().actionGet().isAcknowledged();
+                logger.info("Created new read aliases ACK=[{}]", isAck);
+            } catch (InvalidAliasNameException ie) {
+                logger.debug("error creating read", ie);
+            }
+            try {
+                aliasesRequestBuilder = adminClient.indices().prepareAliases();
 
-            //Added For Graphite Metrics
-            //add write alias
-            aliasesRequestBuilder.addAlias(
-                indexName, alias.getWriteAlias());
+                //Added For Graphite Metrics
+                //add write alias
+                aliasesRequestBuilder.addAlias(indexName, alias.getWriteAlias());
+                isAck = aliasesRequestBuilder.execute().actionGet().isAcknowledged();
+                logger.info("Created new write aliases ACK=[{}]", isAck);
 
-            isAck = aliasesRequestBuilder.execute().actionGet().isAcknowledged();
+            } catch (InvalidAliasNameException ie) {
+                logger.debug("error creating write", ie);
+            }
 
-            logger.info("Created new aliases ACK=[{}]",  isAck);
 
             aliasCache.invalidate(alias);
 
         } catch (Exception e) {
             logger.warn("Failed to create alias ", e);
-        }
-        finally {
+        } finally {
             timer.stop();
         }
     }
