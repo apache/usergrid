@@ -16,27 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.usergrid.corepersistence.results;
 
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.index.IndexScope;
-import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.SimpleEntityRef;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 
-/**
- * Factory for creating results
- */
-public interface ResultsLoaderFactory {
+public class CollectionRefsVerifier extends VersionVerifier {
 
-    /**
-     * Get the loader for results
-     * @param applicationScope The application scope used to load results
-     * @param indexScope The index scope used in the search
-     * @param
-     */
-    ResultsLoader getLoader( final ApplicationScope applicationScope, final IndexScope indexScope,
-                             final Query.Level resultsLevel );
+
+
+    @Override
+    public Results getResults( final Collection<Id> ids ) {
+        List<EntityRef> refs = new ArrayList<EntityRef>(ids.size());
+        for ( Id id : ids ) {
+            refs.add( new SimpleEntityRef( id.getType(), id.getUuid() ) );
+        }
+        return Results.fromRefList( refs );
+    }
 }

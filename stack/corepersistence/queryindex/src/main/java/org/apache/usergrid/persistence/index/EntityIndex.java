@@ -38,11 +38,7 @@ import java.util.concurrent.Future;
  */
 public interface EntityIndex extends CPManager {
 
-    /**
-     * This should ONLY ever be called once on application create.
-     * Otherwise we're introducing slowness into our system
-     */
-    public void initializeIndex();
+
     /**
      * Create an index and add to alias, will create alias and remove any old index from write alias if alias already exists
      * @param indexSuffix index name

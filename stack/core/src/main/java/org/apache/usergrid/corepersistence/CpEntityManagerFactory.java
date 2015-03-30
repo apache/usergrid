@@ -31,7 +31,9 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.hazelcast.core.IdGenerator;
 import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -89,6 +91,7 @@ import static org.apache.usergrid.persistence.Schema.*;
 public class CpEntityManagerFactory implements EntityManagerFactory, ApplicationContextAware {
 
     private static final Logger logger = LoggerFactory.getLogger( CpEntityManagerFactory.class );
+    private final EntityIndexFactory entityIndexFactory;
 
     private ApplicationContext applicationContext;
 
@@ -122,6 +125,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.counterUtils = counterUtils;
         this.injector = injector;
         this.entityIndex = injector.getInstance(EntityIndex.class);
+        this.entityIndexFactory = injector.getInstance(EntityIndexFactory.class);
         this.managerCache = injector.getInstance( ManagerCache.class );
         this.metricsFactory = injector.getInstance( MetricsFactory.class );
         this.applicationIdCache = new ApplicationIdCacheImpl( this );
@@ -152,7 +156,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                 em.getApplication();
             }
 
-            entityIndex.initializeIndex();
+            ApplicationScope appScope = new ApplicationScopeImpl(new SimpleId( CpNamingUtils.SYSTEM_APP_ID, "application" ) );
+            ApplicationEntityIndex applicationEntityIndex = entityIndexFactory.createApplicationEntityIndex(appScope);
+            applicationEntityIndex.initializeIndex();
             entityIndex.refresh();
 
         } catch (Exception ex) {
@@ -240,7 +246,10 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     public Entity initializeApplicationV2( String organizationName, final UUID applicationId, String name,
                                        Map<String, Object> properties ) throws Exception {
 
-        EntityManager em = getEntityManager(getManagementAppId());
+        // Ensure our management system exists before creating our application
+        init();
+
+        EntityManager em = getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
 
         final String appName = buildAppName( organizationName, name );
 
@@ -250,15 +259,11 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             throw new ApplicationAlreadyExistsException( appName );
         }
 
-        // create application info entity
+        ApplicationScope applicationScope = new ApplicationScopeImpl(new SimpleId( applicationId,"application"));
+        ApplicationEntityIndex applicationEntityIndex = entityIndexFactory.createApplicationEntityIndex(applicationScope);
+        applicationEntityIndex.initializeIndex();
 
-        try {
-            em.create( CpNamingUtils.APPLICATION_INFO, properties );
-        }
-        catch ( DuplicateUniquePropertyExistsException e ) {
-            throw new ApplicationAlreadyExistsException( appName );
-        }
-        entityIndex.refresh();
+        getSetup().setupApplicationKeyspace( applicationId, appName );
 
         if ( properties == null ) {
             properties = new TreeMap<>( CASE_INSENSITIVE_ORDER );
@@ -717,9 +722,10 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     public void rebuildApplicationIndexes( UUID appId, ProgressObserver po ) throws Exception {
 
         EntityManager em = getEntityManager( appId );
-
+        ApplicationScope applicationScope = new ApplicationScopeImpl( new SimpleId( CpNamingUtils.SYSTEM_APP_ID, "application" ));
         //explicitly invoke create index, we don't know if it exists or not in ES during a rebuild.
-        entityIndex.initializeIndex();
+        ApplicationEntityIndex applicationEntityIndex = entityIndexFactory.createApplicationEntityIndex(applicationScope);
+        applicationEntityIndex.initializeIndex();
         em.reindex(po);
 
         em.reindex( po );

@@ -20,7 +20,13 @@ package org.apache.usergrid.corepersistence;
 import java.util.UUID;
 
 import com.google.inject.Binding;
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
+import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndexFactory;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,6 +73,7 @@ public class CpSetup implements Setup {
 
     private final EntityManagerFactory emf;
     private final EntityIndex entityIndex;
+    private final EntityIndexFactory entityIndexFactory;
 
 
     /**
@@ -79,6 +86,8 @@ public class CpSetup implements Setup {
         this.cass = cassandraService;
         this.injector = injector;
         this.entityIndex = injector.getInstance(EntityIndex.class);
+        this.entityIndexFactory = injector.getInstance(EntityIndexFactory.class);
+
     }
 
 
@@ -98,10 +107,7 @@ public class CpSetup implements Setup {
 
         setupStaticKeyspace();
 
-        //force the EMF creation of indexes before creating the default applications
-        entityIndex.initializeIndex();
-
-        logger.info( "Setting up management app" );
+        injector.getInstance( DataMigrationManager.class ).migrate();
 
         try {
             emf.initializeApplicationV2( DEFAULT_ORGANIZATION, emf.getManagementAppId(), MANAGEMENT_APPLICATION, null );

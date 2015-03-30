@@ -25,19 +25,16 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.query.Query;
 
-import com.google.inject.Inject;
-
 
 /**
  * Factory for creating results
  */
-public class ResultsLoaderFactoryImpl implements ResultsLoaderFactory {
+public class CollectionResultsLoaderFactoryImpl implements ResultsLoaderFactory {
 
     private final ManagerCache managerCache;
 
 
-    @Inject
-    public ResultsLoaderFactoryImpl( final ManagerCache managerCache ) {
+    public CollectionResultsLoaderFactoryImpl( final ManagerCache managerCache ) {
         this.managerCache = managerCache;
     }
 
@@ -48,10 +45,11 @@ public class ResultsLoaderFactoryImpl implements ResultsLoaderFactory {
         ResultsVerifier verifier;
 
         if ( resultsLevel == Query.Level.REFS ) {
-            verifier = new RefsVerifier();
+            verifier = new CollectionRefsVerifier();
         }
         else if ( resultsLevel == Query.Level.IDS ) {
-            verifier = new RefsVerifier();
+//            verifier = new RefsVerifier();
+            verifier = new IdsVerifier();
         }
         else {
             verifier = new EntityVerifier(Query.MAX_LIMIT);

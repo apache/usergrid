@@ -24,7 +24,7 @@ import org.apache.usergrid.persistence.index.query.Query.Level;
 
 
 /**
- * For each in a set of source refs executes a sub-query and provides a unified iterator over 
+ * For each in a set of source refs executes a sub-query and provides a unified iterator over
  * the union of all results. Honors page sizes for the Query to ensure memory isn't blown out.
  */
 public class MultiQueryIterator implements ResultsIterator {
@@ -36,10 +36,6 @@ public class MultiQueryIterator implements ResultsIterator {
     private Iterator currentIterator;
 
 
-    public MultiQueryIterator( Results results, Query query ) {
-        this( results.getQueryProcessor().getEntityManager(), 
-                new PagingResultsIterator( results, Level.IDS ), query );
-    }
 
 
     public MultiQueryIterator( EntityManager entityManager, Iterator<EntityRef> source, Query query ) {

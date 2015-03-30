@@ -32,6 +32,11 @@ public interface ApplicationEntityIndex {
 
 
     /**
+     *
+     */
+    public void initializeIndex();
+
+    /**
      * Create the index batch.
      */
     public EntityIndexBatch createBatch();

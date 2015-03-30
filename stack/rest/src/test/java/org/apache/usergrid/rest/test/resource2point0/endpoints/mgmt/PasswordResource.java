@@ -42,20 +42,4 @@ public class PasswordResource extends NamedResource {
         super( "password", context, parent );
     }
 
-    public Entity post(Token token, Map<String,Object> payload){
-        WebResource resource;
-
-        if(token != null) {
-            resource = getResource( true, token );
-        }
-        else
-            resource = getResource( true );
-
-        return resource.type( MediaType.APPLICATION_JSON_TYPE )
-                       .accept( MediaType.APPLICATION_JSON ).post( Entity.class, payload );
-    }
-
-    public Entity post(Map<String, Object> payload){
-        return post( null, payload );
-    }
 }

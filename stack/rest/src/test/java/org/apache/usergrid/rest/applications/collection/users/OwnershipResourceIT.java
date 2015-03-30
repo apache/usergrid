@@ -238,7 +238,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
         refreshIndex();
 
         //Create a restaurant and link it to user1/me
-        data = usersResource.entity("me")
+        Entity fourPeaksData = usersResource.entity("me")
                 .connection("likes").collection( "restaurants" ).entity( "4peaks" ).post();
 
         refreshIndex();
@@ -268,7 +268,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
                        .collection( "restaurants" );
 
         //Check that we can get the 4peaks restaurant by using its uuid
-        String peaksId = data.getUuid().toString();
+        String peaksId = fourPeaksData.getUuid().toString();
         data = likeRestaurants.entity(peaksId).get();
         assertNotNull( data );
         assertEquals("4peaks", data.get("name").toString());

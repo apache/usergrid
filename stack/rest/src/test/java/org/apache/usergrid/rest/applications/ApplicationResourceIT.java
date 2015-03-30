@@ -575,8 +575,8 @@ public class ApplicationResourceIT extends AbstractRestIT {
         String clientId = orgCredentials.getClientId();
         String clientSecret = orgCredentials.getClientSecret();
 
-        Token token = clientSetup.getRestClient().management().token().post(
-            new Token("client_credentials", clientId, clientSecret));
+        Token token = clientSetup.getRestClient().management().token()
+            .post(Token.class,new Token("client_credentials", clientId, clientSecret));
 
         //GET the token endpoint, adding authorization header
         Token apiResponse = this.app().token().getResource(false)

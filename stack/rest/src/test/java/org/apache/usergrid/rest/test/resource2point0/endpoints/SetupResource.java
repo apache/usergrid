@@ -25,6 +25,7 @@ import org.apache.usergrid.rest.test.resource2point0.model.Token;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 
 
 /**
@@ -37,8 +38,13 @@ public class SetupResource extends NamedResource {
     }
 
     public Entity get(QueryParameters queryParameters){
+
         WebResource resource = getResource();
         resource = addParametersToResource( resource, queryParameters );
+
+        //added httpBasicauth filter to all setup calls because they all do verification this way.
+        HTTPBasicAuthFilter httpBasicAuthFilter = new HTTPBasicAuthFilter( "superuser","superpassword" );
+        resource.addFilter( httpBasicAuthFilter );
 
         return resource.type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
                                 .get( Entity.class );

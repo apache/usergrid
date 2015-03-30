@@ -91,10 +91,10 @@ public class EntityIndexTest extends BaseIT {
     @Test
     public void testIndex() throws IOException, InterruptedException {
         Id appId = new SimpleId("application");
-        ei.initializeIndex();
 
         ApplicationScope applicationScope = new ApplicationScopeImpl(appId);
         ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex(applicationScope);
+        entityIndex.initializeIndex();
 
         final String entityType = "thing";
         IndexScope indexScope = new IndexScopeImpl(appId, "things");
@@ -158,7 +158,7 @@ public class EntityIndexTest extends BaseIT {
         final ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex(applicationScope);
         final IndexScope indexScope = new IndexScopeImpl(appId, "things");
         final String entityType = "thing";
-        ei.initializeIndex();
+        entityIndex.initializeIndex();
         final CountDownLatch latch = new CountDownLatch(threads);
         final AtomicLong failTime=new AtomicLong(0);
         InputStream is = this.getClass().getResourceAsStream(  "/sample-large.json" );
@@ -201,9 +201,9 @@ public class EntityIndexTest extends BaseIT {
         ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
 
         ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex(applicationScope);
-        ei.initializeIndex();
+        entityIndex.initializeIndex();
         for(int i=0;i<10;i++) {
-            ei.initializeIndex();
+            entityIndex.initializeIndex();
         }
 
     }
@@ -215,7 +215,7 @@ public class EntityIndexTest extends BaseIT {
         ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
 
         ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex(applicationScope);
-        ei.initializeIndex();
+        entityIndex.initializeIndex();
 
         final String entityType = "thing";
         IndexScope indexScope = new IndexScopeImpl( appId, "things" );
@@ -328,7 +328,7 @@ public class EntityIndexTest extends BaseIT {
         IndexScope indexScope = new IndexScopeImpl( appId, "fastcars" );
 
         ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex(applicationScope);
-        ei.initializeIndex();
+        entityIndex.initializeIndex();
 
         Map entityMap = new HashMap() {{
             put( "name", "Ferrari 212 Inter" );
@@ -459,7 +459,7 @@ public class EntityIndexTest extends BaseIT {
         IndexScope appScope = new IndexScopeImpl( ownerId, "user" );
 
         ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex(applicationScope);
-        ei.initializeIndex();
+        entityIndex.initializeIndex();
 
         final String middleName = "middleName" + UUIDUtils.newTimeUUID();
 
@@ -508,7 +508,7 @@ public class EntityIndexTest extends BaseIT {
         IndexScope appScope = new IndexScopeImpl( ownerId, "user" );
 
         ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex(applicationScope);
-        ei.initializeIndex();
+        entityIndex.initializeIndex();
         entityIndex.createBatch();
 
         // Bill has favorites as string, age as string and retirement goal as number
@@ -576,11 +576,13 @@ public class EntityIndexTest extends BaseIT {
 
     @Test
     public void healthTest() {
-
+        Id appId = new SimpleId( "entityindextest" );
+        Id ownerId = new SimpleId( "multivaluedtype" );
+        ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
         assertNotEquals( "cluster should be ok", Health.RED, ei.getClusterHealth() );
         assertEquals( "index should be ready", Health.GREEN, ei.getIndexHealth() );
-
-        ei.initializeIndex();
+        ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex(applicationScope);
+        entityIndex.initializeIndex();
         ei.refresh();
 
         assertNotEquals( "cluster should be fine", Health.RED, ei.getIndexHealth() );
@@ -600,7 +602,7 @@ public class EntityIndexTest extends BaseIT {
 
 
         ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex(applicationScope);
-        ei.initializeIndex();
+        entityIndex.initializeIndex();
 
         final EntityIndexBatch batch = entityIndex.createBatch();
 

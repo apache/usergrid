@@ -120,8 +120,24 @@ public class IndexLoadTestsIT extends BaseIT {
 
     @Before
     public void setupIndexAndMeters() {
+        final String userAppId = indexTestFig.getApplicationId();
 
-        entityIndex.initializeIndex();
+
+        //if it's unset, generate one
+        final String uniqueIdentifier = UUIDGenerator.newTimeUUID().toString();
+
+        //use the appId supplied, or generate one
+        final UUID applicationUUID = UUID.fromString( userAppId );
+
+        final Id applicationId = new SimpleId( applicationUUID, "application" );
+        final ApplicationScope scope = new ApplicationScopeImpl( applicationId );
+
+
+        final IndexScope indexScope = new IndexScopeImpl( applicationId, "test" );
+
+        final ApplicationEntityIndex appEntityIndex = entityIndexFactory.createApplicationEntityIndex( scope );
+
+        appEntityIndex.initializeIndex();
 
         batchWriteTPS = metricsFactory.getMeter( IndexLoadTestsIT.class, "write.tps" );
 

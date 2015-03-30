@@ -107,19 +107,20 @@ public class ImportsResource extends AbstractContextResource {
         Map<String, Object> properties;
         Map<String, Object> storage_info;
 
-        if ((properties = (Map<String, Object>) json.get("properties")) == null) {
-            throw new NullArgumentException("Could not find 'properties'");
+        if ( ( properties = ( Map<String, Object> ) json.get( "properties" ) ) == null ) {
+            throw new NullArgumentException( "Could not find 'properties'" );
         }
-        storage_info = (Map<String, Object>) properties.get("storage_info");
-        String storage_provider = (String) properties.get("storage_provider");
-        if (storage_provider == null) {
-            throw new NullArgumentException("Could not find field 'storage_provider'");
+        storage_info = ( Map<String, Object> ) properties.get( "storage_info" );
+        String storage_provider = ( String ) properties.get( "storage_provider" );
+        if ( storage_provider == null ) {
+            throw new NullArgumentException( "Could not find field 'storage_provider'" );
         }
-        if (storage_info == null) {
-            throw new NullArgumentException("Could not find field 'storage_info'");
+        if ( storage_info == null ) {
+            throw new NullArgumentException( "Could not find field 'storage_info'" );
         }
 
-        String bucketName = (String) storage_info.get("bucket_location");
+        String bucketName = ( String ) storage_info.get( "bucket_location" );
+
         String accessId = (String) storage_info.get("s3_access_id");
         String secretKey = (String) storage_info.get("s3_key");
 

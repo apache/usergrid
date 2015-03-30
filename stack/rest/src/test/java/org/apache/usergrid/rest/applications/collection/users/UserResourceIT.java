@@ -871,7 +871,7 @@ public class UserResourceIT extends AbstractRestIT {
         assertNotNull(entity1);
 
         assertNotNull(entity2);
-        Token adminToken = this.clientSetup.getRestClient().management().token().post(new Token(clientSetup.getUsername(), clientSetup.getUsername()));
+        Token adminToken = this.clientSetup.getRestClient().management().token().post(Token.class,new Token(clientSetup.getUsername(), clientSetup.getUsername()));
         // now revoke the tokens
         this.app().token().setToken(adminToken);
 
@@ -919,7 +919,7 @@ public class UserResourceIT extends AbstractRestIT {
         assertNotNull(entity2);
 
         // now revoke the token3
-        adminToken = this.clientSetup.getRestClient().management().token().post(new Token(clientSetup.getUsername(), clientSetup.getUsername()));
+        adminToken = this.clientSetup.getRestClient().management().token().post(Token.class,new Token(clientSetup.getUsername(), clientSetup.getUsername()));
         // now revoke the tokens
         this.app().token().setToken(adminToken);
         usersResource.entity("edanuff").connection("revoketokens").post();
