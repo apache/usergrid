@@ -359,7 +359,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         final Results results = em.searchCollection(
             em.getApplicationRef(), CpNamingUtils.DELETED_APPLICATION_INFOS,
-            Query.fromQL("select * where " + PROPERTY_APPLICATION_ID + " = " + applicationId.toString()));
+            Query.fromQL("select * where " + PROPERTY_APPLICATION_ID + " = '" + applicationId.toString() + "'"));
         Entity deletedAppInfo = results.getEntity();
 
         if ( deletedAppInfo == null ) {
