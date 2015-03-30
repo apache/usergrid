@@ -77,12 +77,9 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
     private final Timer addTimer;
     private final Timer updateAliasTimer;
 
-
     /**
      * We purposefully make this per instance. Some indexes may work, while others may fail
      */
-
-
     private final EsProvider esProvider;
 
     //number of times to wait for the index to refresh properly.
@@ -102,7 +99,6 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
     private Timer mappingTimer;
     private Timer refreshTimer;
     private Meter refreshIndexMeter;
-
 
 //    private final Timer indexTimer;
 
@@ -128,20 +124,27 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
         this.refreshTimer = metricsFactory
             .getTimer(EsEntityIndexImpl.class, "refresh.timer");
         this.refreshIndexMeter = metricsFactory.getMeter(EsEntityIndexImpl.class,"refresh.meter");
+        if(shouldInitialize()){
+            initialize();
+        }
 
     }
 
     @Override
-    public void initialize(){
+    public void initialize() {
         final int numberOfShards = indexFig.getNumberOfShards();
         final int numberOfReplicas = indexFig.getNumberOfReplicas();
         aliasCache.invalidate(alias);
-        String[] reads = getIndexes(AliasedEntityIndex.AliasType.Read);
-        String[] writes = getIndexes(AliasedEntityIndex.AliasType.Write);
-
-        if(reads.length==0  || writes.length==0) {
+        if (shouldInitialize()) {
             addIndex(null, numberOfShards, numberOfReplicas, indexFig.getWriteConsistencyLevel());
         }
+    }
+
+    @Override
+    public boolean shouldInitialize() {
+        String[] reads = getIndexes(AliasedEntityIndex.AliasType.Read);
+        String[] writes = getIndexes(AliasedEntityIndex.AliasType.Write);
+        return reads.length==0  || writes.length==0;
     }
 
     @Override
@@ -216,33 +219,15 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
                 isAck = aliasesRequestBuilder.execute().actionGet().isAcknowledged();
                 logger.info("Removed Index Name from Alias=[{}] ACK=[{}]", alias, isAck);
             }
-            String[] reads = getIndexes(AliasedEntityIndex.AliasType.Read);
-            String[] writes = getIndexes(AliasedEntityIndex.AliasType.Write);
-
-            try {
-                aliasesRequestBuilder = adminClient.indices().prepareAliases();
-                //Added For Graphite Metrics
-                // add read alias
-                aliasesRequestBuilder.addAlias(indexName, alias.getReadAlias());
-                isAck = aliasesRequestBuilder.execute().actionGet().isAcknowledged();
-                logger.info("Created new read aliases ACK=[{}]", isAck);
-            } catch (InvalidAliasNameException ie) {
-                logger.debug("error creating read", ie);
-            }
-            try {
-                aliasesRequestBuilder = adminClient.indices().prepareAliases();
-
-                //Added For Graphite Metrics
-                //add write alias
-                aliasesRequestBuilder.addAlias(indexName, alias.getWriteAlias());
-                isAck = aliasesRequestBuilder.execute().actionGet().isAcknowledged();
-                logger.info("Created new write aliases ACK=[{}]", isAck);
-
-            } catch (InvalidAliasNameException ie) {
-                logger.debug("error creating write", ie);
-            }
-
-
+            aliasesRequestBuilder = adminClient.indices().prepareAliases();
+            //Added For Graphite Metrics
+            // add read alias
+            aliasesRequestBuilder.addAlias(indexName, alias.getReadAlias());
+            //Added For Graphite Metrics
+            //add write alias
+            aliasesRequestBuilder.addAlias(indexName, alias.getWriteAlias());
+            isAck = aliasesRequestBuilder.execute().actionGet().isAcknowledged();
+            logger.info("Created new read and write aliases ACK=[{}]", isAck);
             aliasCache.invalidate(alias);
 
         } catch (Exception e) {

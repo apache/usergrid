@@ -41,6 +41,6 @@ public class EsIndexMigrationPlugin  extends AbstractMigrationPlugin<Application
 
     @Override
     public PluginPhase getPhase() {
-        return PluginPhase.MIGRATE;
+        return PluginPhase.BOOTSTRAP;
     }
 }
