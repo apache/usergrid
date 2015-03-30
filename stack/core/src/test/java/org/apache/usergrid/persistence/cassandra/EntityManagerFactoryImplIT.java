@@ -166,7 +166,15 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
         // attempt to get entities in application's collections in various ways should all fail
 
-        assertNull( setup.getEmf().lookupApplication( orgName + "/" + appName ));
+        for ( int i=0; i<maxRetries; i++ ) {
+            found = ( setup.getEmf().lookupApplication( orgName + "/" + appName ) != null );
+            if ( found ) {
+                Thread.sleep( 500 );
+            } else {
+                break;
+            }
+        }
+        assertFalse( "Lookup of deleted app must fail", found );
 
         // app must not be found in apps collection
 
@@ -181,6 +189,8 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
         assertFalse( "Deleted app must not be found in apps collection", found );
 
         // restore the app
+
+        emf.refreshIndex();
 
         emf.restoreApplication( deletedAppId );
 
