@@ -32,9 +32,4 @@ import rx.Observable;
  */
 public interface AllApplicationsObservable extends MigrationDataProvider<ApplicationScope>{
 
-    /**
-     * Return all applications in our system
-     * @return
-     */
-    public Observable<ApplicationScope> getAllApplications();
 }
