@@ -62,6 +62,8 @@ public class EsIndexDataMigrationImpl implements DataMigration<ApplicationScope>
         final AdminClient adminClient = provider.getClient().admin();
         final int latestVersion = dataVersion.getImplementationVersion();
 
+        entityIndex.initialize();
+
         observer.start();
         try {
             migrationDataProvider.getData().flatMap(applicationScope -> {
@@ -74,7 +76,7 @@ public class EsIndexDataMigrationImpl implements DataMigration<ApplicationScope>
                     aliasesRequestBuilder = adminClient.indices().prepareAliases();
                     // add read alias
                     try {
-                        aliasesRequestBuilder.addAlias(index, indexIdentifier.getAlias().getReadAlias());
+                        aliasesRequestBuilder.addAlias(index, indexIdentifier.getAlias().getReadAlias()).get();
                     } catch (InvalidAliasNameException e) {
                         log.debug("Failed to add alias due to name conflict",e);
                     }

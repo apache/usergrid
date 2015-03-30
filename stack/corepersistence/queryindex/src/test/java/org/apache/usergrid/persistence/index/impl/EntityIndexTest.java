@@ -30,9 +30,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.usergrid.persistence.index.*;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,6 +85,10 @@ public class EntityIndexTest extends BaseIT {
     @Rule
     public MigrationManagerRule migrationManagerRule;
 
+    @Before
+    public  void setup(){
+        ei.initialize();
+    }
 
     @Test
     public void testIndex() throws IOException, InterruptedException {
@@ -94,7 +96,7 @@ public class EntityIndexTest extends BaseIT {
 
         ApplicationScope applicationScope = new ApplicationScopeImpl(appId);
         ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex(applicationScope);
-        entityIndex.initializeIndex();
+
 
         final String entityType = "thing";
         IndexScope indexScope = new IndexScopeImpl(appId, "things");
@@ -158,7 +160,7 @@ public class EntityIndexTest extends BaseIT {
         final ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex(applicationScope);
         final IndexScope indexScope = new IndexScopeImpl(appId, "things");
         final String entityType = "thing";
-        entityIndex.initializeIndex();
+
         final CountDownLatch latch = new CountDownLatch(threads);
         final AtomicLong failTime=new AtomicLong(0);
         InputStream is = this.getClass().getResourceAsStream(  "/sample-large.json" );
@@ -201,9 +203,9 @@ public class EntityIndexTest extends BaseIT {
         ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
 
         ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex(applicationScope);
-        entityIndex.initializeIndex();
+
         for(int i=0;i<10;i++) {
-            entityIndex.initializeIndex();
+
         }
 
     }
@@ -215,7 +217,7 @@ public class EntityIndexTest extends BaseIT {
         ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
 
         ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex(applicationScope);
-        entityIndex.initializeIndex();
+
 
         final String entityType = "thing";
         IndexScope indexScope = new IndexScopeImpl( appId, "things" );
@@ -328,7 +330,7 @@ public class EntityIndexTest extends BaseIT {
         IndexScope indexScope = new IndexScopeImpl( appId, "fastcars" );
 
         ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex(applicationScope);
-        entityIndex.initializeIndex();
+
 
         Map entityMap = new HashMap() {{
             put( "name", "Ferrari 212 Inter" );
@@ -460,7 +462,7 @@ public class EntityIndexTest extends BaseIT {
         IndexScope appScope = new IndexScopeImpl( ownerId, "user" );
 
         ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex(applicationScope);
-        entityIndex.initializeIndex();
+
 
         final String middleName = "middleName" + UUIDUtils.newTimeUUID();
 
@@ -509,7 +511,7 @@ public class EntityIndexTest extends BaseIT {
         IndexScope appScope = new IndexScopeImpl( ownerId, "user" );
 
         ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex(applicationScope);
-        entityIndex.initializeIndex();
+
         entityIndex.createBatch();
 
         // Bill has favorites as string, age as string and retirement goal as number
@@ -581,9 +583,9 @@ public class EntityIndexTest extends BaseIT {
         Id ownerId = new SimpleId( "multivaluedtype" );
         ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
         assertNotEquals( "cluster should be ok", Health.RED, ei.getClusterHealth() );
-        assertEquals( "index should be ready", Health.GREEN, ei.getIndexHealth() );
+        assertEquals("index should be ready", Health.GREEN, ei.getIndexHealth());
         ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex(applicationScope);
-        entityIndex.initializeIndex();
+
         ei.refresh();
 
         assertNotEquals( "cluster should be fine", Health.RED, ei.getIndexHealth() );
@@ -603,7 +605,7 @@ public class EntityIndexTest extends BaseIT {
 
 
         ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex(applicationScope);
-        entityIndex.initializeIndex();
+
 
         final EntityIndexBatch batch = entityIndex.createBatch();
 

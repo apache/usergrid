@@ -116,18 +116,6 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex{
     }
 
     @Override
-    public void initializeIndex() {
-        final int numberOfShards = indexFig.getNumberOfShards();
-        final int numberOfReplicas = indexFig.getNumberOfReplicas();
-        indexCache.invalidate(alias);
-        String[] indexes = entityIndex.getUniqueIndexes();
-        if(indexes == null || indexes.length==0) {
-            entityIndex.addIndex(null, numberOfShards, numberOfReplicas, indexFig.getWriteConsistencyLevel());
-        }
-
-    }
-
-    @Override
     public EntityIndexBatch createBatch() {
         EntityIndexBatch batch = new EsEntityIndexBatchImpl(
             applicationScope, indexBatchBufferProducer, entityIndex, indexIdentifier );

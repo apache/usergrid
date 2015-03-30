@@ -131,6 +131,19 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
     }
 
     @Override
+    public void initialize(){
+        final int numberOfShards = indexFig.getNumberOfShards();
+        final int numberOfReplicas = indexFig.getNumberOfReplicas();
+        aliasCache.invalidate(alias);
+        String[] reads = getIndexes(AliasedEntityIndex.AliasType.Read);
+        String[] writes = getIndexes(AliasedEntityIndex.AliasType.Write);
+
+        if(reads.length==0  || writes.length==0) {
+            addIndex(null, numberOfShards, numberOfReplicas, indexFig.getWriteConsistencyLevel());
+        }
+    }
+
+    @Override
     public void addIndex(final String indexSuffix,final int numberOfShards, final int numberOfReplicas, final String writeConsistency) {
         try {
             //get index name with suffix attached
