@@ -39,7 +39,6 @@ import org.apache.usergrid.persistence.model.field.ByteArrayField;
 import org.apache.usergrid.persistence.model.field.DoubleField;
 import org.apache.usergrid.persistence.model.field.EntityObjectField;
 import org.apache.usergrid.persistence.model.field.Field;
-import org.apache.usergrid.persistence.model.field.FloatField;
 import org.apache.usergrid.persistence.model.field.IntegerField;
 import org.apache.usergrid.persistence.model.field.ListField;
 import org.apache.usergrid.persistence.model.field.LocationField;
@@ -113,23 +112,20 @@ public class CpEntityMapUtils {
             } else if ( value instanceof Integer ) {
                 entity.setField( new IntegerField( fieldName, (Integer)value, unique && topLevel ));
 
-            } else if ( value instanceof Double ) {
+            } else if ( value instanceof Double || value instanceof Float ) {
                 entity.setField( new DoubleField( fieldName, (Double)value, unique && topLevel ));
 
-		    } else if ( value instanceof Float ) {
-                entity.setField( new FloatField( fieldName, (Float)value, unique && topLevel ));
-
-            } else if ( value instanceof Long ) {
+		    } else if ( value instanceof Long ) {
                 entity.setField( new LongField( fieldName, (Long)value, unique && topLevel ));
 
             } else if ( value instanceof List) {
                 entity.setField( listToListField( fieldName, (List)value, entityType ));
 
             } else if ( value instanceof UUID) {
-                entity.setField( new UUIDField( fieldName, (UUID)value, unique && topLevel ));
+                entity.setField(new UUIDField(fieldName, (UUID) value, unique && topLevel));
 
             } else if ( value instanceof Map ) {
-                processMapValue( value, fieldName, entity, entityType);
+                processMapValue(value, fieldName, entity, entityType);
 
             } else if ( value instanceof Enum ) {
                 entity.setField( new StringField( fieldName, value.toString(), unique && topLevel ));

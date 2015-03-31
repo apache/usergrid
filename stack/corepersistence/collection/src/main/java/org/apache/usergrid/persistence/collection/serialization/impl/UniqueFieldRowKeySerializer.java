@@ -25,7 +25,6 @@ import org.apache.usergrid.persistence.model.field.BooleanField;
 import org.apache.usergrid.persistence.model.field.DoubleField;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.model.field.FieldTypeName;
-import org.apache.usergrid.persistence.model.field.FloatField;
 import org.apache.usergrid.persistence.model.field.IntegerField;
 import org.apache.usergrid.persistence.model.field.LongField;
 import org.apache.usergrid.persistence.model.field.StringField;
@@ -98,7 +97,7 @@ public class UniqueFieldRowKeySerializer implements CompositeFieldSerializer<Fie
             case DOUBLE:
                 return new DoubleField( name, Double.parseDouble( value ) );
             case FLOAT:
-                return new FloatField( name, Float.parseFloat( value ) );
+                return new DoubleField( name, Double.parseDouble( value ) );
             case INTEGER:
                 return new IntegerField( name, Integer.parseInt( value ) );
             case LONG:

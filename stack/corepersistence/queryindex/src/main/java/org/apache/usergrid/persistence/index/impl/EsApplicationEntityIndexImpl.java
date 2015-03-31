@@ -264,11 +264,10 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex{
 
         final SearchHits searchHits = searchResponse.getHits();
         final SearchHit[] hits = searchHits.getHits();
-        final int length = hits.length;
 
-        logger.debug("   Hit count: {} Total hits: {}", length, searchHits.getTotalHits());
+        logger.debug("   Hit count: {} Total hits: {}", hits.length, searchHits.getTotalHits());
 
-        List<CandidateResult> candidates = new ArrayList<>(length);
+        List<CandidateResult> candidates = new ArrayList<>(hits.length);
 
         for (SearchHit hit : hits) {
 
@@ -285,7 +284,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex{
         final CandidateResults candidateResults = new CandidateResults(candidates);
         final String esScrollCursor = searchResponse.getScrollId();
 
-        if(esScrollCursor != null) {
+        if(esScrollCursor != null && hits.length>0) {
             candidateResults.initializeCursor();
 
             //now set this into our map module

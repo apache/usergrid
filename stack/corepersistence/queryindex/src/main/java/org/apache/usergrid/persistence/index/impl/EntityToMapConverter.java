@@ -95,7 +95,7 @@ public class EntityToMapConverter {
                 locMap.put( "lon", locField.getValue().getLongitude() );
                 entityMap.put( GEO_PREFIX + field.getName().toLowerCase(), locMap );
             }
-            else if( f instanceof DoubleField || f instanceof  FloatField){
+            else if( f instanceof DoubleField ){
                 entityMap.put( DOUBLE_PREFIX + field.getName().toLowerCase(), field.getValue() );
             }
             else if( f instanceof LongField || f instanceof IntegerField){
