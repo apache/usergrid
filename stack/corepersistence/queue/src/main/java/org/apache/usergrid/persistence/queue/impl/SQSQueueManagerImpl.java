@@ -118,7 +118,7 @@ public class SQSQueueManagerImpl implements QueueManager {
 
     public Queue getQueue() {
         try {
-            Queue queue = urlMap.get(new SqsLoader(getName(), sqs));
+            Queue queue = urlMap.get(getName());
             return queue;
         } catch (ExecutionException ee) {
             throw new RuntimeException(ee);
