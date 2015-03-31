@@ -273,18 +273,8 @@ public abstract class MvccLogEntrySerializationStrategyImpl<K> implements MvccLo
         LOG.debug( "Writing version with timestamp '{}'", timestamp );
 
         final Id applicationId = collectionScope.getApplication();
-        final Id ownerId = applicationId;
-        final String collectionName = LegacyScopeUtils.getCollectionScopeNameFromEntityType( entityId.getType() );
 
         final ScopedRowKey<K> key = createKey( applicationId, entityId );
-//
-//        final CollectionPrefixedKey<Id> collectionPrefixedKey =
-//                new CollectionPrefixedKey<>( collectionName, ownerId, entityId );
-//
-//
-//        final ScopedRowKey<CollectionPrefixedKey<Id>> rowKey =
-//                ScopedRowKey.fromKey( applicationId, collectionPrefixedKey );
-
 
         op.doOp( batch.withRow( CF_ENTITY_LOG, key ) );
 

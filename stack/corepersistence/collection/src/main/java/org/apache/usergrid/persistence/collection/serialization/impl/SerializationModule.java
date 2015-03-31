@@ -67,21 +67,28 @@ public class SerializationModule extends AbstractModule {
         bind( MvccLogEntrySerializationStrategyV2Impl.class );
 
 
-        bind( MvccLogEntrySerializationStrategy.class )
-                                                       .to( MvccLogEntrySerializationProxyImpl.class );
+        bind( MvccLogEntrySerializationStrategy.class ).to( MvccLogEntrySerializationProxyImpl.class );
 
 
-        bind( UniqueValueSerializationStrategy.class ).to( UniqueValueSerializationStrategyImpl.class );
+        bind( UniqueValueSerializationStrategyV1Impl.class );
+        bind(UniqueValueSerializationStrategyV2Impl.class);
+
+        bind( UniqueValueSerializationStrategy.class ).to( UniqueValueSerializationStrategyProxyImpl.class );
 
         //do multibindings for migrations
         Multibinder<Migration> migrationBinder = Multibinder.newSetBinder( binder(), Migration.class );
+        //entity serialization versions
         migrationBinder.addBinding().to( Key.get( MvccEntitySerializationStrategyV1Impl.class ) );
         migrationBinder.addBinding().to( Key.get( MvccEntitySerializationStrategyV2Impl.class ) );
         migrationBinder.addBinding().to( Key.get( MvccEntitySerializationStrategyV3Impl.class ) );
+
+        //log serialization versions
         migrationBinder.addBinding().to( Key.get( MvccLogEntrySerializationStrategyV1Impl.class ) );
         migrationBinder.addBinding().to( Key.get( MvccLogEntrySerializationStrategyV2Impl.class ) );
 
-        migrationBinder.addBinding().to( Key.get( UniqueValueSerializationStrategy.class ) );
+        //unique value serialization versions
+        migrationBinder.addBinding().to( Key.get( UniqueValueSerializationStrategyV1Impl.class ) );
+        migrationBinder.addBinding().to( Key.get( UniqueValueSerializationStrategyV2Impl.class ) );
 
 
         //bind our settings as an eager singleton so it's checked on startup
@@ -123,7 +130,7 @@ public class SerializationModule extends AbstractModule {
         //note that we MUST migrate to v3 before our next migration, if v4 and v5 is implemented we will need a
         // v3->v5 and a v4->v5 set
         MigrationRelationship<MvccEntitySerializationStrategy> current =
-            new MigrationRelationship<MvccEntitySerializationStrategy>( v3, v3 );
+            new MigrationRelationship<>( v3, v3 );
 
 
         //now create our set of versions
@@ -151,11 +158,40 @@ public class SerializationModule extends AbstractModule {
         //note that we MUST migrate to v3 before our next migration, if v4 and v5 is implemented we will need a
         // v3->v5 and a v4->v5 set
         MigrationRelationship<MvccLogEntrySerializationStrategy> current =
-            new MigrationRelationship<MvccLogEntrySerializationStrategy>( v2, v2 );
+            new MigrationRelationship<>( v2, v2 );
 
 
         //now create our set of versions
         VersionedMigrationSet<MvccLogEntrySerializationStrategy> set =
+            new VersionedMigrationSet<>( v1Tov2, current );
+
+        return set;
+    }
+
+
+
+    /**
+     * Configure via explicit declaration the migration path we can follow
+     */
+    @Singleton
+    @Inject
+    @Provides
+    public VersionedMigrationSet<UniqueValueSerializationStrategy> getVersions(
+        final UniqueValueSerializationStrategyV1Impl v1, final UniqueValueSerializationStrategyV2Impl v2) {
+
+
+        //we must perform a migration from v1 to v3 in order to maintain consistency
+        MigrationRelationship<UniqueValueSerializationStrategy> v1Tov2 = new MigrationRelationship<>( v1, v2 );
+
+
+        //note that we MUST migrate to v3 before our next migration, if v4 and v5 is implemented we will need a
+        // v3->v5 and a v4->v5 set
+        MigrationRelationship<UniqueValueSerializationStrategy> current =
+            new MigrationRelationship<>( v2, v2 );
+
+
+        //now create our set of versions
+        VersionedMigrationSet<UniqueValueSerializationStrategy> set =
             new VersionedMigrationSet<>( v1Tov2, current );
 
         return set;

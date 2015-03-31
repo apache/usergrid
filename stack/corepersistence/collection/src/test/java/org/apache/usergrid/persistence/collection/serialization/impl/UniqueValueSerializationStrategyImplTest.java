@@ -15,7 +15,7 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-package org.apache.usergrid.persistence.collection.mvcc.stage.write;
+package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
 import java.util.Arrays;
@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.UUID;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -56,15 +57,28 @@ import static org.junit.Assert.assertTrue;
 
 @RunWith(ITRunner.class)
 @UseModules(TestCollectionModule.class)
-public class UniqueValueSerializationStrategyImplTest {
+public abstract class UniqueValueSerializationStrategyImplTest {
 
 
     @Inject
     @Rule
     public MigrationManagerRule migrationManagerRule;
 
-    @Inject
-    UniqueValueSerializationStrategy strategy;
+
+    private UniqueValueSerializationStrategy strategy;
+
+
+    @Before
+    public void wireUniqueSerializationStrategy(){
+        strategy = getUniqueSerializationStrategy();
+    }
+
+
+    /**
+     * Get the unique value serialization
+     * @return
+     */
+    protected abstract UniqueValueSerializationStrategy getUniqueSerializationStrategy();
 
 
     @Test

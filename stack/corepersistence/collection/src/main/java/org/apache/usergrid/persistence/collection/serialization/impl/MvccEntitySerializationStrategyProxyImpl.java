@@ -35,6 +35,7 @@ import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 
@@ -44,6 +45,7 @@ import com.netflix.astyanax.MutationBatch;
  * migration data goes to both sources and is read from the old source. After the upgrade completes,
  * it will be available from the new source
  */
+@Singleton
 public class MvccEntitySerializationStrategyProxyImpl implements MvccEntitySerializationStrategy {
 
 

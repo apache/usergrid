@@ -37,6 +37,7 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 
@@ -44,6 +45,7 @@ import com.netflix.astyanax.MutationBatch;
 /**
  * The proxy for performing log entry serialization
  */
+@Singleton
 public class MvccLogEntrySerializationProxyImpl implements MvccLogEntrySerializationStrategy {
 
     protected final Keyspace keyspace;

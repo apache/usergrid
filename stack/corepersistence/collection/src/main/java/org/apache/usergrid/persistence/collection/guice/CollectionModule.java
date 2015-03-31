@@ -76,7 +76,6 @@ public abstract class CollectionModule extends AbstractModule {
         //bind this to our factory
         install( new GuicyFigModule( EntityCacheFig.class ) );
 
-        bind( UniqueValueSerializationStrategy.class ).to( UniqueValueSerializationStrategyImpl.class );
         bind( ChangeLogGenerator.class).to( ChangeLogGeneratorImpl.class);
 
         configureMigrationProvider();

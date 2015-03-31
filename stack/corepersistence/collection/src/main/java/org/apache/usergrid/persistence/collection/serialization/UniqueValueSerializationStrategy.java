@@ -21,6 +21,7 @@ package org.apache.usergrid.persistence.collection.serialization;
 import java.util.Collection;
 import java.util.Iterator;
 
+import org.apache.usergrid.persistence.core.migration.data.VersionedData;
 import org.apache.usergrid.persistence.core.migration.schema.Migration;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -34,7 +35,7 @@ import com.netflix.astyanax.model.ConsistencyLevel;
 /**
  * Reads and writes to UniqueValues column family.
  */
-public interface UniqueValueSerializationStrategy extends Migration {
+public interface UniqueValueSerializationStrategy extends Migration, VersionedData {
 
 
     /**
@@ -73,14 +74,14 @@ public interface UniqueValueSerializationStrategy extends Migration {
     /**
     * Load UniqueValue that matches field from collection or null if that value does not exist.
     *
-    * @param colScope Collection scope in which to look for field name/value
+    * @param applicationScope Collection scope in which to look for field name/value
     * @param consistencyLevel Consistency level of query
     * @param type The type the unique value exists within
     * @param fields Field name/value to search for
     * @return UniqueValueSet containing fields from the collection that exist in cassandra
     * @throws ConnectionException on error connecting to Cassandra
     */
-    UniqueValueSet load( ApplicationScope colScope, ConsistencyLevel consistencyLevel, String type,
+    UniqueValueSet load( ApplicationScope applicationScope, ConsistencyLevel consistencyLevel, String type,
                          Collection<Field> fields ) throws ConnectionException;
 
 
@@ -98,10 +99,11 @@ public interface UniqueValueSerializationStrategy extends Migration {
     /**
      * Delete the specified Unique Value from Cassandra.
      *
+     * @param applicationScope The scope of the application
      * @param uniqueValue Object to be deleted.
      * @return MutatationBatch that encapsulates operation, caller may or may not execute.
      */
-    MutationBatch delete( ApplicationScope scope, UniqueValue uniqueValue );
+    MutationBatch delete( ApplicationScope applicationScope, UniqueValue uniqueValue );
 
 
 }
