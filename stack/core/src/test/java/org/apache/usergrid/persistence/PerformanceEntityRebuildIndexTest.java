@@ -174,8 +174,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
         // ----------------- delete the system and application indexes
 
-        logger.debug("Deleting app index index");
-        //deleteIndex( CpNamingUtils.SYSTEM_APP_ID );
+        logger.debug("Deleting apps");
         deleteIndex( em.getApplicationId() );
 
         // ----------------- test that we can read them, should fail
@@ -311,16 +310,17 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
         // ----------------- delete the system and application indexes
 
-        logger.debug("Deleting app index and system app index");
+        logger.debug("Deleting app index");
 
         deleteIndex( em.getApplicationId() );
-//
-//        // deleting sytem app index will interfere with other concurrently running tests
+
+        // ----------------- test that we can read them, should fail
+
+        // deleting sytem app index will interfere with other concurrently running tests
         //deleteIndex( CpNamingUtils.SYSTEM_APP_ID );
-//
-//
-//        // ----------------- test that we can read them, should fail
-//
+
+        // ----------------- test that we can read them, should fail
+
         logger.debug("Reading data, should fail this time ");
         try {
             readData( em, "testTypes", entityCount, 3 );
@@ -376,14 +376,14 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
     }
 
     /**
-     * Delete index for all applications, just need the one to get started.
+     * Delete app index
      */
     private void deleteIndex( UUID appUuid ) {
 
         Injector injector = SpringResource.getInstance().getBean( Injector.class );
         EntityIndexFactory eif = injector.getInstance( EntityIndexFactory.class );
 
-        Id appId = new SimpleId( appUuid, "application");
+        Id appId = new SimpleId( appUuid, Schema.TYPE_APPLICATION );
         ApplicationScope scope = new ApplicationScopeImpl( appId );
         ApplicationEntityIndex ei = eif.createApplicationEntityIndex(scope);
 
@@ -430,7 +430,8 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
         }
 
         if ( expectedEntities != -1 && expectedEntities != count ) {
-            throw new RuntimeException("Did not get expected " + expectedEntities + " entities, instead got " + count );
+            throw new RuntimeException("Did not get expected "
+                + expectedEntities + " entities, instead got " + count );
         }
         return count;
     }

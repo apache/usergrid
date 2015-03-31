@@ -69,6 +69,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         IndexValidationUtils.validateIndexScope( indexScope );
         ValidationUtils.verifyEntityWrite( entity );
         ValidationUtils.verifyVersion( entity.getVersion() );
+
         //add app id for indexing
         container.addIndexRequest(new IndexRequest(alias.getWriteAlias(), applicationScope,indexScope, entity));
         return this;

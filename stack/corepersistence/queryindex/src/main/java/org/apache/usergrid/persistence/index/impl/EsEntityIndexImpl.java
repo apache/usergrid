@@ -30,34 +30,35 @@ import org.apache.usergrid.persistence.core.migration.data.VersionedData;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.persistence.index.exceptions.IndexException;
-
 import org.apache.usergrid.persistence.index.migration.IndexDataVersions;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-
 import org.elasticsearch.action.ActionFuture;
-
 import org.elasticsearch.action.ShardOperationFailedException;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
-
 import org.elasticsearch.action.admin.indices.refresh.RefreshResponse;
 import org.elasticsearch.client.AdminClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
-import org.elasticsearch.index.query.*;
+import org.elasticsearch.index.query.MatchAllQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.elasticsearch.indices.IndexMissingException;
-
+import org.elasticsearch.indices.InvalidAliasNameException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 
 /**
@@ -76,12 +77,9 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
     private final Timer addTimer;
     private final Timer updateAliasTimer;
 
-
     /**
      * We purposefully make this per instance. Some indexes may work, while others may fail
      */
-
-
     private final EsProvider esProvider;
 
     //number of times to wait for the index to refresh properly.
@@ -101,7 +99,6 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
     private Timer mappingTimer;
     private Timer refreshTimer;
     private Meter refreshIndexMeter;
-
 
 //    private final Timer indexTimer;
 
@@ -127,20 +124,27 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
         this.refreshTimer = metricsFactory
             .getTimer(EsEntityIndexImpl.class, "refresh.timer");
         this.refreshIndexMeter = metricsFactory.getMeter(EsEntityIndexImpl.class,"refresh.meter");
+        if(shouldInitialize()){
+            initialize();
+        }
 
     }
 
     @Override
-    public void initialize(){
+    public void initialize() {
         final int numberOfShards = indexFig.getNumberOfShards();
         final int numberOfReplicas = indexFig.getNumberOfReplicas();
         aliasCache.invalidate(alias);
-        String[] reads = getIndexes(AliasedEntityIndex.AliasType.Read);
-        String[] writes = getIndexes(AliasedEntityIndex.AliasType.Write);
-
-        if(reads.length==0  || writes.length==0) {
+        if (shouldInitialize()) {
             addIndex(null, numberOfShards, numberOfReplicas, indexFig.getWriteConsistencyLevel());
         }
+    }
+
+    @Override
+    public boolean shouldInitialize() {
+        String[] reads = getIndexes(AliasedEntityIndex.AliasType.Read);
+        String[] writes = getIndexes(AliasedEntityIndex.AliasType.Write);
+        return reads.length==0  || writes.length==0;
     }
 
     @Override
@@ -207,36 +211,28 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
 
             int count = 0;
             IndicesAliasesRequestBuilder aliasesRequestBuilder = adminClient.indices().prepareAliases();
-            for ( String currentIndex : indexNames ) {
-                aliasesRequestBuilder.removeAlias( currentIndex, alias.getWriteAlias() );
+            for (String currentIndex : indexNames) {
+                aliasesRequestBuilder.removeAlias(currentIndex, alias.getWriteAlias());
                 count++;
             }
-            if(count>0) {
+            if (count > 0) {
                 isAck = aliasesRequestBuilder.execute().actionGet().isAcknowledged();
                 logger.info("Removed Index Name from Alias=[{}] ACK=[{}]", alias, isAck);
             }
             aliasesRequestBuilder = adminClient.indices().prepareAliases();
-
             //Added For Graphite Metrics
             // add read alias
-            aliasesRequestBuilder.addAlias(
-                indexName, alias.getReadAlias());
-
+            aliasesRequestBuilder.addAlias(indexName, alias.getReadAlias());
             //Added For Graphite Metrics
             //add write alias
-            aliasesRequestBuilder.addAlias(
-                indexName, alias.getWriteAlias());
-
+            aliasesRequestBuilder.addAlias(indexName, alias.getWriteAlias());
             isAck = aliasesRequestBuilder.execute().actionGet().isAcknowledged();
-
-            logger.info("Created new aliases ACK=[{}]",  isAck);
-
+            logger.info("Created new read and write aliases ACK=[{}]", isAck);
             aliasCache.invalidate(alias);
 
         } catch (Exception e) {
             logger.warn("Failed to create alias ", e);
-        }
-        finally {
+        } finally {
             timer.stop();
         }
     }
@@ -365,6 +361,25 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
 
         doInRetry(retryOperation);
     }
+
+    /**
+     * Completely delete an index.
+     */
+    public void deleteIndex() {
+        AdminClient adminClient = esProvider.getClient().admin();
+
+        DeleteIndexResponse response = adminClient.indices()
+            .prepareDelete(indexIdentifier.getIndex(null)).get();
+
+        if (response.isAcknowledged()) {
+            logger.info("Deleted index: read {} write {}", alias.getReadAlias(), alias.getWriteAlias());
+            //invalidate the alias
+            aliasCache.invalidate(alias);
+        } else {
+            logger.info("Failed to delete index: read {} write {}", alias.getReadAlias(), alias.getWriteAlias());
+        }
+    }
+
 
     public String[] getUniqueIndexes() {
         Set<String> indexSet = new HashSet<>();

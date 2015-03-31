@@ -23,6 +23,8 @@ package org.apache.usergrid.corepersistence.rx.impl;
 import java.util.Arrays;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.Schema;
+import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,25 +71,21 @@ public class AllApplicationsObservableImpl implements AllApplicationsObservable 
     @Override
     public Observable<ApplicationScope> getData() {
 
-        //emit our 3 hard coded applications that are used the manage the system first.
+        //emit our hard coded applications that are used the manage the system first.
         //this way consumers can perform whatever work they need to on the root system first
-        final Observable<ApplicationScope> systemIds = Observable.from( Arrays
-            .asList( getApplicationScope( CpNamingUtils.DEFAULT_APPLICATION_ID ),
+        final Observable<ApplicationScope> systemIds = Observable.from(
+            Arrays.asList(
                 getApplicationScope( CpNamingUtils.MANAGEMENT_APPLICATION_ID ),
-                getApplicationScope( CpNamingUtils.SYSTEM_APP_ID ) ) );
+                getApplicationScope( CpNamingUtils.SYSTEM_APP_ID ))); // still need deprecated system app here
 
-
-        final ApplicationScope appScope = getApplicationScope( CpNamingUtils.SYSTEM_APP_ID );
-
+        final ApplicationScope appScope = getApplicationScope( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
 
         final EntityCollectionManager collectionManager =
                 entityCollectionManagerFactory.createCollectionManager(  appScope );
 
-
         final GraphManager gm = graphManagerFactory.createEdgeManager(appScope);
 
-
-        String edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( CpNamingUtils.APPINFOS );
+        String edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( CpNamingUtils.APPLICATION_INFOS );
 
         Id rootAppId = appScope.getApplication();
 
@@ -98,6 +96,7 @@ public class AllApplicationsObservableImpl implements AllApplicationsObservable 
                         null ) ).flatMap( new Func1<Edge, Observable<ApplicationScope>>() {
             @Override
             public Observable<ApplicationScope> call( final Edge edge ) {
+
                 //get the app info and load it
                 final Id appInfo = edge.getTargetNode();
 
@@ -117,12 +116,10 @@ public class AllApplicationsObservableImpl implements AllApplicationsObservable 
                         //get the id from the entity
                     .map( new Func1<Entity, ApplicationScope>() {
 
-
                         @Override
                         public ApplicationScope call( final Entity entity ) {
-
-                            final UUID uuid = ( UUID ) entity.getField( "applicationUuid" ).getValue();
-
+                            final UUID uuid = UUIDUtils.tryExtractUUID(
+                                entity.getField( Schema.PROPERTY_APPLICATION_ID ).getValue().toString());
                             return getApplicationScope( uuid );
                         }
                     } );

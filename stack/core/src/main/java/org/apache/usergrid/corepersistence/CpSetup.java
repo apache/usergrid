@@ -109,20 +109,8 @@ public class CpSetup implements Setup {
 
         injector.getInstance( DataMigrationManager.class ).migrate();
 
-        logger.info( "Setting up default applications" );
-
         try {
-            emf.initializeApplication( DEFAULT_ORGANIZATION, emf.getDefaultAppId(), DEFAULT_APPLICATION, null );
-        }
-        catch ( ApplicationAlreadyExistsException ex ) {
-            logger.warn( "Application {}/{} already exists", DEFAULT_ORGANIZATION, DEFAULT_APPLICATION );
-        }
-        catch ( OrganizationAlreadyExistsException oaee ) {
-            logger.warn( "Organization {} already exists", DEFAULT_ORGANIZATION );
-        }
-
-        try {
-            emf.initializeApplication( DEFAULT_ORGANIZATION, emf.getManagementAppId(), MANAGEMENT_APPLICATION, null );
+            emf.initializeApplicationV2( DEFAULT_ORGANIZATION, emf.getManagementAppId(), MANAGEMENT_APPLICATION, null );
         }
         catch ( ApplicationAlreadyExistsException ex ) {
             logger.warn( "Application {}/{} already exists", DEFAULT_ORGANIZATION, MANAGEMENT_APPLICATION );
@@ -130,6 +118,8 @@ public class CpSetup implements Setup {
         catch ( OrganizationAlreadyExistsException oaee ) {
             logger.warn( "Organization {} already exists", DEFAULT_ORGANIZATION );
         }
+
+        injector.getInstance( DataMigrationManager.class ).migrate();
     }
 
 

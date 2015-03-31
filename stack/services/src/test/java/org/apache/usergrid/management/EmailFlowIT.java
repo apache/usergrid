@@ -41,14 +41,12 @@ import org.apache.commons.lang.text.StrSubstitutor;
 
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
-import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
 import org.apache.usergrid.management.cassandra.ManagementServiceImpl;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.User;
-import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 
 import net.jcip.annotations.NotThreadSafe;
 

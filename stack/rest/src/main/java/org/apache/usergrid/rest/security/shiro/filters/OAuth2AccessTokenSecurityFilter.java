@@ -138,7 +138,7 @@ public class OAuth2AccessTokenSecurityFilter extends SecurityFilter {
                         throw mappableSecurityException( BAD_ACCESS_TOKEN_ERROR );
                     }
 
-                    token = PrincipalCredentialsToken.getFromAdminUserInfoAndAccessToken( 
+                    token = PrincipalCredentialsToken.getFromAdminUserInfoAndAccessToken(
                             user, accessToken, emf.getManagementAppId() );
                 }
                 else if ( AuthPrincipalType.APPLICATION_USER.equals( principal.getType() ) ) {

@@ -24,11 +24,13 @@ package org.apache.usergrid.corepersistence.migration;
  * Versions of data as they exist across our system
  */
 public enum CoreDataVersions {
-     //even though this didn't really come first in time, we need to run this first in order to bring our system
-    //up to date so that our new migration module can proceed.
+
+    // even though this didn't really come first in time, we need to run this first
+    // in order to bring our system up to date so that our new migration module can proceed.
 
     INITIAL(0),
-    ID_MAP_FIX(1);
+    ID_MAP_FIX(1),
+    APPINFO_FIX(2);
 
 
     private final int version;

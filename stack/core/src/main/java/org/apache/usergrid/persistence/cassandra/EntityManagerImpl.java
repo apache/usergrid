@@ -37,7 +37,6 @@ import java.util.UUID;
 import javax.annotation.Resource;
 
 import org.apache.usergrid.persistence.index.EntityIndex;
-import org.elasticsearch.action.ListenableActionFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;

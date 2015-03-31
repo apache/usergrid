@@ -70,6 +70,8 @@ public interface EntityIndex extends CPManager {
 
 
     void initialize();
+
+    boolean shouldInitialize();
 }
 
 

@@ -18,6 +18,7 @@ package org.apache.usergrid.rest.test.resource2point0.endpoints;
 
 
 import java.util.Map;
+import java.util.UUID;
 
 import javax.ws.rs.core.MediaType;
 
@@ -38,10 +39,9 @@ public class OrganizationResource extends NamedResource {
         super( name, context, parent );
     }
 
-    public ApplicationsResource app(final String app){
-        return new ApplicationsResource( app, context ,this );
+    public ApplicationsResource app(final String name){
+        return new ApplicationsResource( name, context ,this );
     }
-
 
     public void post(Map<String,String> organization) {
 

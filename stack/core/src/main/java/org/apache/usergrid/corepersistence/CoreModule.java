@@ -16,6 +16,7 @@
 package org.apache.usergrid.corepersistence;
 
 
+import org.apache.usergrid.corepersistence.migration.*;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.springframework.context.ApplicationContext;
 
@@ -124,7 +125,6 @@ public class CoreModule  extends AbstractModule {
 
         /**
          * Create our migrations for within our core plugin
-         *
          */
         Multibinder<DataMigration<EntityIdScope>> dataMigrationMultibinder =
                     Multibinder.newSetBinder( binder(), new TypeLiteral<DataMigration<EntityIdScope>>() {}, CoreMigration.class );
@@ -136,13 +136,10 @@ public class CoreModule  extends AbstractModule {
         //wire up the collection migration plugin
         final Multibinder<MigrationPlugin> plugins = Multibinder.newSetBinder( binder(), MigrationPlugin.class );
         plugins.addBinding().to( CoreMigrationPlugin.class );
-        plugins.addBinding().to(MigrationModuleVersionPlugin.class );
+        plugins.addBinding().to( AppInfoMigrationPlugin.class );
+        plugins.addBinding().to( MigrationModuleVersionPlugin.class );
 
         bind( AllApplicationsObservable.class).to(AllApplicationsObservableImpl.class);
-
-
-
-
     }
 
 

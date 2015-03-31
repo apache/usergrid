@@ -52,22 +52,23 @@ import com.sun.jersey.api.json.JSONWithPadding;
 @Component
 @Scope( "singleton" )
 @Produces( {
-    MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
-    "application/ecmascript", "text/jscript"
+    MediaType.APPLICATION_JSON,
+    "application/javascript",
+    "application/x-javascript",
+    "text/ecmascript",
+    "application/ecmascript",
+    "text/jscript"
 } )
 public class MigrateResource extends AbstractContextResource {
 
     private static final Logger logger = LoggerFactory.getLogger( MigrateResource.class );
 
-
     public MigrateResource() {
         logger.info( "SystemResource initialized" );
     }
 
-
     @Autowired
     private Injector guiceInjector;
-
 
     @RequireSystemAccess
     @PUT
@@ -85,10 +86,20 @@ public class MigrateResource extends AbstractContextResource {
 
             @Override
             public void run() {
-                logger.info( "Migrating Data " );
+
+                logger.info( "Migrating Schema" );
 
                 try {
                     getMigrationManager().migrate();
+                }
+                catch ( Exception e ) {
+                    logger.error( "Unable to migrate data", e );
+                }
+
+                logger.info( "Migrating Data" );
+
+                try {
+                    getDataMigrationManager().migrate();
                 }
                 catch ( Exception e ) {
                     logger.error( "Unable to migrate data", e );
@@ -100,7 +111,6 @@ public class MigrateResource extends AbstractContextResource {
         migrate.setDaemon( true );
         migrate.start();
 
-
         response.setSuccess();
 
         return new JSONWithPadding( response, callback );
@@ -110,15 +120,14 @@ public class MigrateResource extends AbstractContextResource {
     @RequireSystemAccess
     @PUT
     @Path( "set" )
-    public JSONWithPadding setMigrationVersion( @Context UriInfo ui, Map<String, Object> json,
-                                                @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
+    public JSONWithPadding setMigrationVersion(
+        @Context UriInfo ui, Map<String, Object> json,
+        @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
         throws Exception {
 
-        logger.debug( "newOrganization" );
+        logger.debug( "setMigrationVersion" );
 
         Preconditions.checkNotNull( json, "You must provide a json body" );
-
-
         Preconditions.checkArgument( json.keySet().size() > 0, "You must specify at least one module and version" );
 
         /**
@@ -144,8 +153,9 @@ public class MigrateResource extends AbstractContextResource {
     @RequireSystemAccess
     @GET
     @Path( "status" )
-    public JSONWithPadding migrateStatus( @Context UriInfo ui,
-                                          @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+    public JSONWithPadding migrateStatus(
+        @Context UriInfo ui,
+        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
         throws Exception {
 
         ApiResponse response = createApiResponse();
@@ -174,8 +184,9 @@ public class MigrateResource extends AbstractContextResource {
     @RequireSystemAccess
     @GET
     @Path( "count" )
-    public JSONWithPadding migrateCount( @Context UriInfo ui,
-                                         @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+    public JSONWithPadding migrateCount(
+        @Context UriInfo ui,
+        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
         throws Exception {
 
         ApiResponse response = createApiResponse();
@@ -190,18 +201,17 @@ public class MigrateResource extends AbstractContextResource {
 
 
     /**
-     * Get the Data migraiton manager
-     */
-    private DataMigrationManager getDataMigrationManager() {
-        return guiceInjector.getInstance( DataMigrationManager.class );
-    }
-
-
-    /**
-     * Get the Data migraiton manager
+     * Get the schema migration manager
      */
     private MigrationManager getMigrationManager() {
         return guiceInjector.getInstance( MigrationManager.class );
+    }
+
+    /**
+     * Get the Data migration manager
+     */
+    private DataMigrationManager getDataMigrationManager() {
+        return guiceInjector.getInstance( DataMigrationManager.class );
     }
 }
 

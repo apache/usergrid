@@ -55,11 +55,15 @@ public class AllEntitiesInSystemObservableIT extends AbstractCoreIT {
 
     @Test
     public void testEntities() throws Exception {
+
         Injector injector =  SpringResource.getInstance().getBean(Injector.class);
-        AllEntitiesInSystemImpl allEntitiesInSystemObservableImpl =injector.getInstance(AllEntitiesInSystemImpl.class);
+        AllEntitiesInSystemImpl allEntitiesInSystemObservableImpl =
+            injector.getInstance(AllEntitiesInSystemImpl.class);
         TargetIdObservable targetIdObservable = injector.getInstance(TargetIdObservable.class);
 
         final EntityManager em = app.getEntityManager();
+
+        // create two types of entities
 
         final String type1 = "type1thing";
         final String type2 = "type2thing";
@@ -68,9 +72,9 @@ public class AllEntitiesInSystemObservableIT extends AbstractCoreIT {
         final Set<Id> type1Identities = EntityWriteHelper.createTypes( em, type1, size );
         final Set<Id> type2Identities = EntityWriteHelper.createTypes( em, type2, size );
 
-        //create a connection and put that in our connection types
-        final Id source = type1Identities.iterator().next();
+        // connect the first type1 entity to all type2 entities
 
+        final Id source = type1Identities.iterator().next();
 
         final Set<Id> allEntities = new HashSet<>();
         allEntities.addAll( type1Identities );
@@ -79,20 +83,17 @@ public class AllEntitiesInSystemObservableIT extends AbstractCoreIT {
         final Set<Id> connections = new HashSet<>();
 
         for ( Id target : type2Identities ) {
-            em.createConnection( SimpleEntityRef.fromId( source ), "likes", SimpleEntityRef.fromId( target ) );
+            em.createConnection( SimpleEntityRef.fromId( source ),
+                "likes", SimpleEntityRef.fromId( target ) );
             connections.add( target );
         }
 
+        // use the all-entities-in-system observable to delete all type1 and type2 entities
 
-        //this is hacky, but our context integration b/t guice and spring is a mess.  We need to clean this up when we
-        //clean up our wiring
-        //
-        ManagerCache managerCache =  SpringResource.getInstance().getBean( Injector.class ).getInstance( ManagerCache.class );
-
-
+        // TODO: clean this up when we clean up our Guice and Spring wiring
+        ManagerCache managerCache =  SpringResource.getInstance()
+            .getBean( Injector.class ).getInstance( ManagerCache.class );
         final ApplicationScope scope = CpNamingUtils.getApplicationScope( app.getId() );
-
-
         final GraphManager gm = managerCache.getGraphManager( scope );
 
         allEntitiesInSystemObservableImpl.getData().doOnNext( new Action1<EntityIdScope>() {
@@ -102,21 +103,22 @@ public class AllEntitiesInSystemObservableIT extends AbstractCoreIT {
                 assertNotNull(entityIdScope.getApplicationScope());
                 assertNotNull(entityIdScope.getId());
 
-                    //we should only emit each node once
-                    if ( entityIdScope.getId().getType().equals( type1 ) ) {
-                        assertTrue( "Element should be present on removal", type1Identities.remove(entityIdScope.getId() ) );
-                    }
-                    else if ( entityIdScope.getId().getType().equals( type2 ) ) {
-                        assertTrue( "Element should be present on removal", type2Identities.remove(entityIdScope.getId() ) );
-                    }
-
+                // we should only emit each node once
+                if ( entityIdScope.getId().getType().equals( type1 ) ) {
+                    assertTrue( "Element should be present on removal",
+                        type1Identities.remove(entityIdScope.getId() ) );
+                }
+                else if ( entityIdScope.getId().getType().equals( type2 ) ) {
+                    assertTrue( "Element should be present on removal",
+                        type2Identities.remove(entityIdScope.getId() ) );
+                }
             }
         } ).toBlocking().lastOrDefault( null );
 
+        // there should now be no type1 or type2 entities
 
         assertEquals( "Every element should have been encountered", 0, type1Identities.size() );
         assertEquals( "Every element should have been encountered", 0, type2Identities.size() );
-
 
         //test connections
 

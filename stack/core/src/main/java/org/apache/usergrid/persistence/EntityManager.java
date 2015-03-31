@@ -35,7 +35,6 @@ import org.apache.usergrid.persistence.entities.Role;
 import org.apache.usergrid.persistence.index.query.CounterResolution;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.index.query.Query.Level;
-import org.elasticsearch.action.ListenableActionFuture;
 
 
 /**

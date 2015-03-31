@@ -17,25 +17,24 @@
 package org.apache.usergrid;
 
 
-import java.util.UUID;
-
-import org.apache.usergrid.persistence.index.EntityIndex;
+import com.google.inject.Injector;
+import org.apache.usergrid.cassandra.SpringResource;
+import org.apache.usergrid.mq.QueueManagerFactory;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.apache.usergrid.persistence.IndexBucketLocator;
+import org.apache.usergrid.persistence.cassandra.CassandraService;
+import org.apache.usergrid.setup.ConcurrentProcessSingleton;
+import org.apache.usergrid.utils.JsonUtils;
+import org.apache.usergrid.utils.UUIDUtils;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.cassandra.SpringResource;
-import org.apache.usergrid.mq.QueueManagerFactory;
-import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.IndexBucketLocator;
-import org.apache.usergrid.persistence.cassandra.CassandraService;
-import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
-import org.apache.usergrid.persistence.core.migration.schema.MigrationException;
-import org.apache.usergrid.setup.ConcurrentProcessSingleton;
-import org.apache.usergrid.utils.JsonUtils;
+import java.util.UUID;
 
-import com.google.inject.Injector;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_APPLICATION_ID;
 
 
 public class CoreITSetupImpl implements CoreITSetup, TestEntityIndex {
@@ -133,15 +132,11 @@ public class CoreITSetupImpl implements CoreITSetup, TestEntityIndex {
 
     @Override
     public UUID createApplication( String organizationName, String applicationName ) throws Exception {
-
-        emf.setup();
-        if ( USE_DEFAULT_APPLICATION ) {
-            return emf.getDefaultAppId();
-        }
-
-        return emf.createApplication( organizationName, applicationName );
+        Entity appInfo = emf.createApplicationV2(organizationName, applicationName);
+        UUID applicationId = UUIDUtils.tryExtractUUID(
+            appInfo.getProperty(PROPERTY_APPLICATION_ID).toString());
+        return applicationId;
     }
-
 
     @Override
     public void dump( String name, Object obj ) {
@@ -162,9 +157,9 @@ public class CoreITSetupImpl implements CoreITSetup, TestEntityIndex {
 
     @Override
     public void refresh(){
-        try{
+        try {
             Thread.sleep(50);
-        }catch (InterruptedException ie){
+        } catch (InterruptedException ie){
 
         }
         getEntityIndex().refresh();

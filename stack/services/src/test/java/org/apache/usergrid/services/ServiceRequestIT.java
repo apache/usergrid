@@ -41,7 +41,7 @@ import static org.apache.usergrid.services.ServiceParameter.parameters;
 
 
 
-public class ServiceRequestIT {
+public class ServiceRequestIT extends AbstractServiceIT {
 
     private static final Logger logger = LoggerFactory.getLogger( ServiceRequestIT.class );
 
@@ -49,16 +49,11 @@ public class ServiceRequestIT {
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
-    @Rule
-    public ServiceITSetup setup = new ServiceITSetupImpl( );
-
-
     @Test
     public void testPaths() throws Exception {
 
-        UUID applicationId = setup.getEmf().getDefaultAppId();
 
-        ServiceManager services = setup.getSmf().getServiceManager( applicationId );
+        ServiceManager services = setup.getSmf().getServiceManager( app.getId() );
 
         ServiceRequest path = services.newRequest( ServiceAction.GET, parameters( "users", "bob" ), null );
         // path = path.addSegment("users", "bob");

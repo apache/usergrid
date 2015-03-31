@@ -108,6 +108,7 @@ public class Schema {
     public static final String TYPE_MEMBER = "member";
 
     public static final String PROPERTY_ACTIVATED = "activated";
+    public static final String PROPERTY_APPLICATION_ID = "applicationId";
     public static final String PROPERTY_COLLECTION_NAME = "collectionName";
     public static final String PROPERTY_CREATED = "created";
     public static final String PROPERTY_CONFIRMED = "confirmed";
@@ -1420,10 +1421,10 @@ public class Schema {
     /*
      * public Entity toEntity(Reader reader) { Entity entity =
      * mapper.convertValue(reader, Entity.class); return entity; }
-     * 
+     *
      * public Entity toEntity(InputStream input) { Entity entity =
      * mapper.convertValue(input, Entity.class); return entity; }
-     * 
+     *
      * public Entity toEntity(String string) { Entity entity =
      * mapper.convertValue(string, Entity.class); return entity; }
      */

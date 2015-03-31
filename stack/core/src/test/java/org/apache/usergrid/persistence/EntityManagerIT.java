@@ -26,6 +26,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -41,6 +42,7 @@ import org.apache.usergrid.persistence.index.query.Query.Level;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.utils.UUIDUtils;
 
+import static org.apache.usergrid.persistence.Schema.PROPERTY_APPLICATION_ID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -388,15 +390,17 @@ public class EntityManagerIT extends AbstractCoreIT {
         organizationEntity.setProperty( "name", "testCounterOrg" );
         organizationEntity = em.create( organizationEntity );
 
-        UUID applicationId = setup.getEmf().createApplication(
+        Entity appInfo = setup.getEmf().createApplicationV2(
                 "testCounterOrg", "testEntityCounters" + UUIDGenerator.newTimeUUID()  );
+        UUID applicationId = UUIDUtils.tryExtractUUID(
+            appInfo.getProperty(PROPERTY_APPLICATION_ID).toString());
 
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
         properties.put( "name", "testEntityCounters" );
-        Entity applicationEntity = em.create( applicationId, "application_info", properties );
+        Entity applicationEntity = em.create( applicationId, CpNamingUtils.APPLICATION_INFO, properties );
 
         em.createConnection( new SimpleEntityRef( "group", organizationEntity.getUuid() ), "owns",
-                new SimpleEntityRef( "application_info", applicationId ) );
+                new SimpleEntityRef( CpNamingUtils.APPLICATION_INFO, applicationId ) );
 
         em = setup.getEmf().getEntityManager( applicationId );
         properties = new LinkedHashMap<String, Object>();

@@ -31,8 +31,6 @@ import org.apache.usergrid.persistence.cassandra.CassandraService;
 
 public interface CoreITSetup extends TestRule {
 
-    boolean USE_DEFAULT_APPLICATION = false;
-
     EntityManagerFactory getEmf();
 
     QueueManagerFactory getQmf();

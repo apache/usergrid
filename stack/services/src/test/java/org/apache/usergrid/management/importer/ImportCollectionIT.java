@@ -375,7 +375,6 @@ public class ImportCollectionIT {
 
         // export and upload a bad JSON file to the S3 bucket
 
-        File cwd = new File(".");
         String basePath = System.getProperty("target.directory")
             + File.separator + "test-classes" + File.separator;
 

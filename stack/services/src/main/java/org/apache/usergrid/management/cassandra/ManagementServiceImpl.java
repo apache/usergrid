@@ -28,6 +28,11 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.exception.ConflictException;
+import org.apache.usergrid.management.exceptions.*;
+import org.apache.usergrid.persistence.*;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,25 +48,8 @@ import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.OrganizationOwnerInfo;
 import org.apache.usergrid.management.UserInfo;
-import org.apache.usergrid.management.exceptions.DisabledAdminUserException;
-import org.apache.usergrid.management.exceptions.DisabledAppUserException;
-import org.apache.usergrid.management.exceptions.IncorrectPasswordException;
-import org.apache.usergrid.management.exceptions.ManagementException;
-import org.apache.usergrid.management.exceptions.RecentlyUsedPasswordException;
-import org.apache.usergrid.management.exceptions.UnableToLeaveOrganizationException;
-import org.apache.usergrid.management.exceptions.UnactivatedAdminUserException;
-import org.apache.usergrid.management.exceptions.UnactivatedAppUserException;
-import org.apache.usergrid.management.exceptions.UnconfirmedAdminUserException;
-import org.apache.usergrid.persistence.CredentialsInfo;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.exceptions.ApplicationAlreadyExistsException;
 import org.apache.usergrid.persistence.index.query.Identifier;
-import org.apache.usergrid.persistence.PagingResultsIterator;
-import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.entities.User;
@@ -200,11 +188,6 @@ public class ManagementServiceImpl implements ManagementService {
 
     private static final String TOKEN_TYPE_CONFIRM = "confirm";
 
-    public static final String MANAGEMENT_APPLICATION = "management";
-
-    public static final String APPLICATION_INFO = "application_info";
-
-
     public static final String OAUTH_SECRET_SALT = "super secret oauth value";
 
     private static final String ORGANIZATION_PROPERTIES_DICTIONARY = "orgProperties";
@@ -253,8 +236,7 @@ public class ManagementServiceImpl implements ManagementService {
         return properties.properties;
     }
 
-
-    @Autowired
+   @Autowired
     public void setTokenService( TokenService tokens ) {
         this.tokens = tokens;
     }
@@ -404,7 +386,7 @@ public class ManagementServiceImpl implements ManagementService {
             }
         } );
 
-        sm.newRequest( ServiceAction.POST, parameters( "groups", organizationId, "activities" ), payload( properties ) )
+        sm.newRequest( ServiceAction.POST, parameters( Schema.COLLECTION_GROUPS, organizationId, "activities" ), payload( properties ) )
           .execute().getEntity();
     }
 
@@ -412,7 +394,7 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public ServiceResults getOrganizationActivity( OrganizationInfo organization ) throws Exception {
         ServiceManager sm = smf.getServiceManager( smf.getManagementAppId() );
-        return sm.newRequest( ServiceAction.GET, parameters( "groups", organization.getUuid(), "feed" ) ).execute();
+        return sm.newRequest( ServiceAction.GET, parameters( Schema.COLLECTION_GROUPS, organization.getUuid(), "feed" ) ).execute();
     }
 
 
@@ -421,7 +403,7 @@ public class ManagementServiceImpl implements ManagementService {
             throws Exception {
         ServiceManager sm = smf.getServiceManager( smf.getManagementAppId() );
         return sm.newRequest( ServiceAction.GET,
-                parameters( "groups", organization.getUuid(), "users", user.getUuid(), "feed" ) ).execute();
+                parameters( Schema.COLLECTION_GROUPS, organization.getUuid(), "users", user.getUuid(), "feed" ) ).execute();
     }
 
 
@@ -470,7 +452,7 @@ public class ManagementServiceImpl implements ManagementService {
          * node is trying to set the property do a different value
          */
         Lock groupLock =
-                getUniqueUpdateLock( lockManager, smf.getManagementAppId(), organizationName, "groups", PROPERTY_PATH );
+                getUniqueUpdateLock( lockManager, smf.getManagementAppId(), organizationName, Schema.COLLECTION_GROUPS, PROPERTY_PATH );
 
         Lock userLock = getUniqueUpdateLock( lockManager, smf.getManagementAppId(), username, "users", "username" );
 
@@ -485,8 +467,8 @@ public class ManagementServiceImpl implements ManagementService {
             userLock.lock();
             emailLock.lock();
             EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-            if ( !em.isPropertyValueUniqueForEntity( "group", PROPERTY_PATH, organizationName ) ) {
-                throw new DuplicateUniquePropertyExistsException( "group", PROPERTY_PATH, organizationName );
+            if ( !em.isPropertyValueUniqueForEntity( Group.ENTITY_TYPE, PROPERTY_PATH, organizationName ) ) {
+                throw new DuplicateUniquePropertyExistsException( Group.ENTITY_TYPE, PROPERTY_PATH, organizationName );
             }
             if ( !validateAdminInfo( username, name, email, password ) ) {
                 return null;
@@ -575,11 +557,12 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
 
-        Lock groupLock =
-                getUniqueUpdateLock( lockManager, smf.getManagementAppId(), organizationName, "groups", PROPERTY_PATH );
-        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-        if ( !em.isPropertyValueUniqueForEntity( "group", PROPERTY_PATH, organizationName ) ) {
-            throw new DuplicateUniquePropertyExistsException( "group", PROPERTY_PATH, organizationName );
+        Lock groupLock = getUniqueUpdateLock(
+            lockManager, smf.getManagementAppId(), organizationName, Schema.COLLECTION_GROUPS, PROPERTY_PATH );
+
+        EntityManager em = emf.getEntityManager(smf.getManagementAppId());
+        if ( !em.isPropertyValueUniqueForEntity( Group.ENTITY_TYPE, PROPERTY_PATH, organizationName ) ) {
+            throw new DuplicateUniquePropertyExistsException( Group.ENTITY_TYPE, PROPERTY_PATH, organizationName );
         }
         try {
             groupLock.lock();
@@ -616,8 +599,8 @@ public class ManagementServiceImpl implements ManagementService {
                                                 Map<String, Object> properties ) throws Exception {
 
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-        if ( !em.isPropertyValueUniqueForEntity( "group", PROPERTY_PATH, organizationInfo.getName() ) ) {
-            throw new DuplicateUniquePropertyExistsException( "group", PROPERTY_PATH, organizationInfo.getName() );
+        if ( !em.isPropertyValueUniqueForEntity( Group.ENTITY_TYPE, PROPERTY_PATH, organizationInfo.getName() ) ) {
+            throw new DuplicateUniquePropertyExistsException( Group.ENTITY_TYPE, PROPERTY_PATH, organizationInfo.getName() );
         }
         if ( properties == null ) {
             properties = new HashMap<String, Object>();
@@ -659,23 +642,8 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     @Override
-    public UUID importApplication( UUID organizationId, Application application ) throws Exception {
-        // TODO organizationName
-        OrganizationInfo organization = getOrganizationByUuid( organizationId );
-        UUID applicationId =
-                emf.importApplication( organization.getName(), application.getUuid(), application.getName(),
-                        application.getProperties() );
-
-        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-        properties.setProperty( "name", buildAppName( application.getName(), organization ) );
-        properties.setProperty( PROPERTY_PATH, organization.getName() );
-        Entity appInfo = em.create( applicationId, APPLICATION_INFO, application.getProperties() );
-
-        writeUserToken( smf.getManagementAppId(), appInfo, encryptionService
-                .plainTextCredentials( generateOAuthSecretKey( AuthPrincipalType.APPLICATION ), null, applicationId ) );
-
-        addApplicationToOrganization( organizationId, applicationId, appInfo );
-        return applicationId;
+    public UUID importApplication( UUID organizationId, final Application application ) throws Exception {
+        throw new UnsupportedOperationException("Import application not supported");
     }
 
 
@@ -692,9 +660,9 @@ public class ManagementServiceImpl implements ManagementService {
     public List<OrganizationInfo> getOrganizations( UUID startResult, int count ) throws Exception {
         // still need the bimap to search for existing
         BiMap<UUID, String> organizations = HashBiMap.create();
-        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
+        EntityManager em = emf.getEntityManager(smf.getManagementAppId());
         Results results =
-                em.getCollection( em.getApplicationRef(), "groups", startResult, count, Level.ALL_PROPERTIES, false );
+                em.getCollection(em.getApplicationRef(), Schema.COLLECTION_GROUPS, startResult, count, Level.ALL_PROPERTIES, false);
         List<OrganizationInfo> orgs = new ArrayList<OrganizationInfo>( results.size() );
         OrganizationInfo orgInfo;
         for ( Entity entity : results.getEntities() ) {
@@ -747,7 +715,7 @@ public class ManagementServiceImpl implements ManagementService {
         }
 
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-        EntityRef ref = em.getAlias( "group", organizationName );
+        EntityRef ref = em.getAlias( Group.ENTITY_TYPE, organizationName );
         if ( ref == null ) {
             return null;
         }
@@ -1237,7 +1205,7 @@ public class ManagementServiceImpl implements ManagementService {
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
 
         Results orgResults = em.getCollection( new SimpleEntityRef( User.ENTITY_TYPE, userId ),
-                "groups", null, 10000, Level.REFS, false );
+                Schema.COLLECTION_GROUPS, null, 10000, Level.REFS, false );
 
         logger.debug( "    orgResults.size() = " +  orgResults.size() );
 
@@ -1477,8 +1445,8 @@ public class ManagementServiceImpl implements ManagementService {
 
         BiMap<UUID, String> organizations = HashBiMap.create();
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-        Results results = em.getCollection( new SimpleEntityRef( User.ENTITY_TYPE, userId ), "groups", null, 1000,
-                Level.ALL_PROPERTIES, false );
+        Results results = em.getCollection(  new SimpleEntityRef( User.ENTITY_TYPE, userId ),
+            Schema.COLLECTION_GROUPS, null, 1000, Level.ALL_PROPERTIES, false );
 
         String path = null;
 
@@ -1565,14 +1533,14 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public Map<String, Object> getOrganizationData( OrganizationInfo organization ) throws Exception {
 
-        Map<String, Object> jsonOrganization = new HashMap<String, Object>();
+        Map<String, Object> jsonOrganization = new HashMap<>();
         jsonOrganization.putAll( JsonUtils.toJsonMap( organization ) );
 
         BiMap<UUID, String> applications = getApplicationsForOrganization( organization.getUuid() );
         jsonOrganization.put( "applications", applications.inverse() );
 
         List<UserInfo> users = getAdminUsersForOrganization( organization.getUuid() );
-        Map<String, Object> jsonUsers = new HashMap<String, Object>();
+        Map<String, Object> jsonUsers = new HashMap<>();
         for ( UserInfo u : users ) {
             jsonUsers.put( u.getUsername(), u );
         }
@@ -1640,37 +1608,94 @@ public class ManagementServiceImpl implements ManagementService {
         }
 
         if ( properties == null ) {
-            properties = new HashMap<String, Object>();
+            properties = new HashMap<>();
         }
 
-        OrganizationInfo organizationInfo = getOrganizationByUuid( organizationId );
-
-        UUID applicationId = emf.createApplication( organizationInfo.getName(), applicationName, properties );
-
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-        properties.put( "name", buildAppName( applicationName, organizationInfo ) );
-        properties.put( "appUuid", applicationId );
-        Entity appInfo = em.create( applicationId, APPLICATION_INFO, properties );
 
+        OrganizationInfo organizationInfo = getOrganizationByUuid( organizationId );
+        Entity appInfo = emf.createApplicationV2(
+            organizationInfo.getName(), applicationName, properties);
 
+        writeUserToken( smf.getManagementAppId(), appInfo,
+            encryptionService.plainTextCredentials(
+                generateOAuthSecretKey( AuthPrincipalType.APPLICATION ),
+                null,
+                smf.getManagementAppId() ) );
 
-        writeUserToken( smf.getManagementAppId(), appInfo, encryptionService
-                .plainTextCredentials( generateOAuthSecretKey( AuthPrincipalType.APPLICATION ), null,
-                        smf.getManagementAppId() ) );
-        addApplicationToOrganization( organizationId, applicationId, appInfo );
+        UUID applicationId = addApplicationToOrganization( organizationId, appInfo );
 
         UserInfo user = null;
-        // if we call this method before the full stack is initialized
-        // we'll get an exception
         try {
             user = SubjectUtils.getUser();
         }
         catch ( UnavailableSecurityManagerException e ) {
+            // occurs in the rare case that this is called before the full stack is initialized
+            logger.warn("Error getting user, application created activity will not be created", e);
         }
         if ( ( user != null ) && user.isAdminUser() ) {
             postOrganizationActivity( organizationId, user, "create", appInfo, "Application", applicationName,
-                    "<a href=\"mailto:" + user.getEmail() + "\">" + user.getName() + " (" + user.getEmail()
-                            + ")</a> created a new application named " + applicationName, null );
+                "<a href=\"mailto:" + user.getEmail() + "\">" + user.getName() + " (" + user.getEmail()
+                    + ")</a> created a new application named " + applicationName, null );
+        }
+
+
+
+        return new ApplicationInfo( applicationId, appInfo.getName() );
+    }
+
+
+    @Override
+    public void deleteApplication(UUID applicationId) throws Exception {
+        emf.deleteApplication( applicationId );
+    }
+
+
+    @Override
+    public ApplicationInfo restoreApplication(UUID applicationId) throws Exception {
+
+        ApplicationInfo app = getDeletedApplicationInfo( applicationId );
+        if ( app == null ) {
+            throw new EntityNotFoundException("Deleted application ID " + applicationId + " not found");
+        }
+
+        if ( emf.lookupApplication( app.getName() ) != null ) {
+            throw new ConflictException("Cannot restore application, one with that name already exists.");
+        }
+
+        // restore application_info entity
+
+        EntityManager em = emf.getEntityManager( emf.getManagementAppId() );
+        Entity appInfo = emf.restoreApplication(applicationId);
+
+        // restore token
+
+        writeUserToken( smf.getManagementAppId(), appInfo,
+            encryptionService.plainTextCredentials(
+                generateOAuthSecretKey( AuthPrincipalType.APPLICATION ),
+                null,
+                smf.getManagementAppId() ) );
+
+        String orgName = appInfo.getName().split("/")[0];
+        EntityRef alias = em.getAlias( Group.ENTITY_TYPE, orgName );
+        Entity orgEntity = em.get( alias );
+
+        addApplicationToOrganization( orgEntity.getUuid(), appInfo );
+
+        // create activity
+
+        UserInfo user = null;
+        try {
+            user = SubjectUtils.getUser();
+        }
+        catch ( UnavailableSecurityManagerException e ) {
+            // occurs in the rare case that this is called before the full stack is initialized
+            logger.warn("Error getting user, application restored created activity will not be created", e);
+        }
+        if ( ( user != null ) && user.isAdminUser() ) {
+            postOrganizationActivity( orgEntity.getUuid(), user, "restore", appInfo, "Application", appInfo.getName(),
+                "<a href=\"mailto:" + user.getEmail() + "\">" + user.getName() + " (" + user.getEmail()
+                    + ")</a> restored an application named " + appInfo.getName(), null );
         }
 
 
@@ -1689,8 +1714,8 @@ public class ManagementServiceImpl implements ManagementService {
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
 
         Results r = em.getConnectingEntities(
-                new SimpleEntityRef(APPLICATION_INFO, applicationInfoId),
-                "owns", "group", Level.ALL_PROPERTIES );
+                new SimpleEntityRef(CpNamingUtils.APPLICATION_INFO, applicationInfoId),
+                "owns", Group.ENTITY_TYPE, Level.ALL_PROPERTIES );
 
         Entity entity = r.getEntity();
         if ( entity != null ) {
@@ -1710,9 +1735,10 @@ public class ManagementServiceImpl implements ManagementService {
         final BiMap<UUID, String> applications = HashBiMap.create();
         final EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
 
+        // query for application_info entities
         final Results results = em.getConnectedEntities(
                 new SimpleEntityRef(Group.ENTITY_TYPE, organizationGroupId),
-                "owns", APPLICATION_INFO, Level.ALL_PROPERTIES );
+                "owns", CpNamingUtils.APPLICATION_INFO, Level.ALL_PROPERTIES );
 
         final PagingResultsIterator itr = new PagingResultsIterator( results );
 
@@ -1728,7 +1754,11 @@ public class ManagementServiceImpl implements ManagementService {
                 entityName = entityName.toLowerCase();
             }
 
-            applications.put( entity.getUuid(), entityName );
+            // make sure we return applicationId and not the application_info UUID
+            UUID applicationId = UUIDUtils.tryExtractUUID(
+                entity.getProperty( PROPERTY_APPLICATION_ID ).toString() );
+
+            applications.put( applicationId, entityName );
         }
 
 
@@ -1750,8 +1780,14 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
 
+    /**
+     * @return UUID of the application itself (NOT the application_info entity).
+     */
     @Override
-    public UUID addApplicationToOrganization( UUID organizationId, UUID applicationId, Entity appInfo ) throws Exception {
+    public UUID addApplicationToOrganization(UUID organizationId, Entity appInfo) throws Exception {
+
+        UUID applicationId = UUIDUtils.tryExtractUUID(
+            appInfo.getProperty(PROPERTY_APPLICATION_ID).toString());
 
         if ( ( organizationId == null ) || ( applicationId == null ) ) {
             return null;
@@ -1797,7 +1833,32 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-        Entity entity = em.get( new SimpleEntityRef( APPLICATION_INFO, applicationId ));
+        EntityRef mgmtAppRef = new SimpleEntityRef( Schema.TYPE_APPLICATION, smf.getManagementAppId() );
+
+        final Results results = em.searchCollection(mgmtAppRef, CpNamingUtils.APPLICATION_INFOS,
+            Query.fromQL("select * where " + PROPERTY_APPLICATION_ID + " = " + applicationId.toString()));
+
+        Entity entity = results.getEntity();
+
+        if ( entity != null ) {
+            return new ApplicationInfo( applicationId, entity.getName() );
+        }
+        return null;
+    }
+
+
+    @Override
+    public ApplicationInfo getDeletedApplicationInfo(UUID applicationId) throws Exception {
+        if ( applicationId == null ) {
+            return null;
+        }
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
+        EntityRef mgmtAppRef = new SimpleEntityRef( Schema.TYPE_APPLICATION, smf.getManagementAppId() );
+
+        final Results results = em.searchCollection(mgmtAppRef, CpNamingUtils.DELETED_APPLICATION_INFOS,
+            Query.fromQL("select * where " + PROPERTY_APPLICATION_ID + " = " + applicationId.toString()));
+
+        Entity entity = results.getEntity();
 
         if ( entity != null ) {
             return new ApplicationInfo( applicationId, entity.getName() );
@@ -2982,4 +3043,5 @@ public class ManagementServiceImpl implements ManagementService {
         else
             return Boolean.parseBoolean(obj);
     }
+
 }

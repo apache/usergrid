@@ -56,9 +56,7 @@ public class ApplicationObservableTestIT extends AbstractCoreIT {
 
         //now our get all apps we expect.  There may be more, but we don't care about those.
         final Set<UUID> applicationIds = new HashSet<UUID>() {{
-            add( CpNamingUtils.DEFAULT_APPLICATION_ID );
             add( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
-            add( CpNamingUtils.SYSTEM_APP_ID );
             add( createdApplication.getUuid() );
         }};
 

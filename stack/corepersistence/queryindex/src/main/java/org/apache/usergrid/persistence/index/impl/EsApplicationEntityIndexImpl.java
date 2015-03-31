@@ -118,7 +118,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex{
     @Override
     public EntityIndexBatch createBatch() {
         EntityIndexBatch batch = new EsEntityIndexBatchImpl(
-            applicationScope, indexBatchBufferProducer, entityIndex, indexIdentifier );
+            applicationScope, indexBatchBufferProducer, entityIndex, indexIdentifier);
         return batch;
     }
 
