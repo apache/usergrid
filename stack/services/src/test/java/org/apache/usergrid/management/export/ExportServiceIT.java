@@ -28,6 +28,7 @@ import com.google.common.util.concurrent.Service;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.usergrid.batch.service.JobSchedulerService;
+import org.apache.usergrid.utils.UUIDUtils;
 import org.jclouds.ContextBuilder;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.BlobStoreContext;
@@ -61,6 +62,7 @@ import com.google.inject.Module;
 import static org.apache.usergrid.TestHelper.newUUIDString;
 import static org.apache.usergrid.TestHelper.uniqueApp;
 import static org.apache.usergrid.TestHelper.uniqueOrg;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_APPLICATION_ID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -116,7 +118,7 @@ public class ExportServiceIT {
         organization = newOrgAppAdminRule.getOrganizationInfo();
         applicationId = newOrgAppAdminRule.getApplicationInfo().getId();
 
-        setup.getEmf().refreshIndex();
+        setup.getEntityIndex().refresh();
     }
 
 
@@ -270,7 +272,7 @@ public class ExportServiceIT {
 
             entity[i] = em.create( "users", userProperties );
         }
-        em.refreshIndex();
+        setup.getEntityIndex().refresh();
         //creates connections
         em.createConnection( em.get( new SimpleEntityRef( "user", entity[0].getUuid() ) ), "Vibrations",
             em.get( new SimpleEntityRef( "user", entity[1].getUuid() ) ) );
@@ -404,10 +406,12 @@ public class ExportServiceIT {
         f.deleteOnExit();
 
 
-        UUID appId = setup.getEmf().createApplication( orgName, appName );
+        Entity appInfo = setup.getEmf().createApplicationV2(orgName, appName);
+        UUID applicationId = UUIDUtils.tryExtractUUID(
+            appInfo.getProperty(PROPERTY_APPLICATION_ID).toString());
 
 
-        EntityManager em = setup.getEmf().getEntityManager( appId );
+        EntityManager em = setup.getEmf().getEntityManager( applicationId );
         //intialize user object to be posted
         Map<String, Object> userProperties = null;
         Entity[] entity;
@@ -502,7 +506,7 @@ public class ExportServiceIT {
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
 
-       em.refreshIndex();
+       setup.getEntityIndex().refresh();
 
         exportService.doExport( jobExecution );
 
@@ -573,7 +577,7 @@ public class ExportServiceIT {
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
 
-        em.refreshIndex();
+        setup.getEntityIndex().refresh();
 
         exportService.doExport( jobExecution );
 
@@ -608,7 +612,7 @@ public class ExportServiceIT {
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
         em.createApplicationCollection( "baconators" );
-        em.refreshIndex();
+        setup.getEntityIndex().refresh();
 
         //initialize user object to be posted
         Map<String, Object> userProperties = null;
@@ -641,7 +645,7 @@ public class ExportServiceIT {
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
 
-        em.refreshIndex();
+        setup.getEntityIndex().refresh();
 
         exportService.doExport( jobExecution );
 

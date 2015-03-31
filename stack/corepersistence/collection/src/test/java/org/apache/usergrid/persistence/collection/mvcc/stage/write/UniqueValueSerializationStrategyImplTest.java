@@ -18,9 +18,12 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.collection.serialization.impl.UniqueFieldEntry;
 import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.test.UseModules;
 import org.junit.Assert;
@@ -46,15 +49,18 @@ import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.google.inject.Inject;
+import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 
 @RunWith(ITRunner.class)
 @UseModules(TestCollectionModule.class)
 public class UniqueValueSerializationStrategyImplTest {
-    private static final Logger LOG = LoggerFactory.getLogger( UniqueValueSerializationStrategyImplTest.class );
+
 
     @Inject
     @Rule
@@ -81,6 +87,20 @@ public class UniqueValueSerializationStrategyImplTest {
         UniqueValue retrieved = fields.getValue( field.getName() );
         Assert.assertNotNull( retrieved );
         assertEquals( stored, retrieved );
+
+        Iterator<UniqueValue> allFieldsWritten = strategy.getAllUniqueFields( scope, entityId );
+
+        assertTrue(allFieldsWritten.hasNext());
+
+        //test this interface. In most cases, we won't know the field name, so we want them all
+        UniqueValue allFieldsValue = allFieldsWritten.next();
+        Assert.assertNotNull( allFieldsValue );
+
+        assertEquals( field, allFieldsValue.getField() );
+        assertEquals(version, allFieldsValue.getEntityVersion());
+
+        assertFalse(allFieldsWritten.hasNext());
+
     }
 
 
@@ -114,6 +134,25 @@ public class UniqueValueSerializationStrategyImplTest {
 
         UniqueValue nullExpected = fields.getValue( field.getName() );
         Assert.assertNull( nullExpected );
+
+
+        //we still want to retain the log entry, even if we don't retain the unique value.  Deleting something
+        //that doesn't exist is a tombstone, but so is the timeout.
+        Iterator<UniqueValue> allFieldsWritten = strategy.getAllUniqueFields( scope, entityId );
+
+        assertTrue( allFieldsWritten.hasNext() );
+
+        //test this interface. In most cases, we won't know the field name, so we want them all
+        UniqueValue writtenFieldEntry = allFieldsWritten.next();
+        Assert.assertNotNull( writtenFieldEntry );
+
+        assertEquals( field, writtenFieldEntry.getField() );
+        assertEquals( version, writtenFieldEntry.getEntityVersion() );
+
+        assertFalse(allFieldsWritten.hasNext());
+
+
+
     }
 
 
@@ -137,11 +176,16 @@ public class UniqueValueSerializationStrategyImplTest {
 
 
         Assert.assertNull( nullExpected );
+
+
+        Iterator<UniqueValue> allFieldsWritten = strategy.getAllUniqueFields( scope, entityId );
+
+        assertFalse("No entries left",  allFieldsWritten.hasNext() );
     }
 
 
     @Test
-    public void testCaptializationFixes() throws ConnectionException {
+    public void testCapitalizationFixes() throws ConnectionException {
         CollectionScope scope =
                 new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" );
 
@@ -181,5 +225,106 @@ public class UniqueValueSerializationStrategyImplTest {
         assertEquals( field.getName(), value.getField().getName() );
 
         assertEquals( entityId, value.getEntityId() );
+
+
+        Iterator<UniqueValue> allFieldsWritten = strategy.getAllUniqueFields( scope, entityId );
+
+        assertTrue( allFieldsWritten.hasNext() );
+
+        //test this interface. In most cases, we won't know the field name, so we want them all
+        UniqueValue writtenFieldEntry = allFieldsWritten.next();
+        Assert.assertNotNull( writtenFieldEntry );
+
+        assertEquals( field.getName(), writtenFieldEntry.getField().getName() );
+        assertEquals( field.getValue().toLowerCase(), writtenFieldEntry.getField().getValue() );
+        assertEquals( version, writtenFieldEntry.getEntityVersion() );
+
+        assertFalse(allFieldsWritten.hasNext());
     }
+
+
+
+    @Test
+    public void twoFieldsPerVersion() throws ConnectionException, InterruptedException {
+
+        CollectionScope scope =
+                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" );
+
+
+
+        Id entityId = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
+        final UUID version1 = UUIDGenerator.newTimeUUID();
+
+
+        //write V1 of everything
+        IntegerField version1Field1 = new IntegerField( "count", 1 );
+        StringField version1Field2 = new StringField("field", "v1value");
+
+
+        UniqueValue version1Field1Value = new UniqueValueImpl( version1Field1, entityId, version1 );
+        UniqueValue version1Field2Value = new UniqueValueImpl( version1Field2, entityId, version1 );
+
+        final MutationBatch batch = strategy.write( scope, version1Field1Value );
+        batch.mergeShallow( strategy.write( scope, version1Field2Value ) );
+
+
+        //write V2 of everything
+        final UUID version2 = UUIDGenerator.newTimeUUID();
+
+        IntegerField version2Field1 = new IntegerField( "count", 2 );
+        StringField version2Field2 = new StringField( "field", "v2value" );
+
+
+        UniqueValue version2Field1Value = new UniqueValueImpl( version2Field1, entityId, version2 );
+        UniqueValue version2Field2Value = new UniqueValueImpl( version2Field2, entityId, version2 );
+
+        batch.mergeShallow( strategy.write( scope, version2Field1Value ) );
+        batch.mergeShallow( strategy.write( scope, version2Field2Value ) );
+
+        batch.execute();
+
+
+        UniqueValueSet fields = strategy.load( scope, Arrays.<Field>asList( version1Field1, version1Field2 ) );
+
+        UniqueValue retrieved = fields.getValue( version1Field1.getName() );
+
+        assertEquals( version1Field1Value, retrieved );
+
+
+        retrieved = fields.getValue( version1Field2.getName() );
+        assertEquals( version1Field2Value, retrieved );
+
+
+        Iterator<UniqueValue> allFieldsWritten = strategy.getAllUniqueFields( scope, entityId );
+
+        assertTrue(allFieldsWritten.hasNext());
+
+        //test this interface. In most cases, we won't know the field name, so we want them all
+        UniqueValue allFieldsValue = allFieldsWritten.next();
+
+        //version 2 fields should come first, ordered by field name
+        assertEquals( version2Field1, allFieldsValue.getField() );
+        assertEquals( version2, allFieldsValue.getEntityVersion() );
+
+        allFieldsValue = allFieldsWritten.next();
+
+        assertEquals( version2Field2, allFieldsValue.getField() );
+        assertEquals( version2, allFieldsValue.getEntityVersion() );
+
+
+        //version 1 should come next ordered by field name
+        allFieldsValue = allFieldsWritten.next();
+
+        assertEquals( version1Field1, allFieldsValue.getField() );
+        assertEquals( version1, allFieldsValue.getEntityVersion() );
+
+        allFieldsValue = allFieldsWritten.next();
+
+        assertEquals( version1Field2, allFieldsValue.getField() );
+        assertEquals( version1, allFieldsValue.getEntityVersion() );
+
+        assertFalse(allFieldsWritten.hasNext());
+
+    }
+
 }

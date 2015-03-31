@@ -25,6 +25,8 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.google.inject.Injector;
+import org.apache.usergrid.corepersistence.CpSetup;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,8 +48,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningScheduledExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-import com.yammer.metrics.annotation.ExceptionMetered;
-import com.yammer.metrics.annotation.Timed;
 
 
 /**
@@ -75,16 +75,23 @@ public class JobSchedulerService extends AbstractScheduledService {
     private Counter successCounter;
     private Counter failCounter;
 
+    private Injector injector;
+
     //TODO Add meters for throughput of start and stop
 
 
     public JobSchedulerService() { }
 
 
-    @Timed( name = "BulkJobScheduledService_runOneIteration", group = "scheduler", durationUnit = TimeUnit.MILLISECONDS,
-            rateUnit = TimeUnit.MINUTES )
     @Override
     protected void runOneIteration() throws Exception {
+
+        MetricsFactory metricsFactory = injector.getInstance( MetricsFactory.class );
+
+        jobTimer = metricsFactory.getTimer( JobSchedulerService.class, "job_execution_timer" );
+        runCounter = metricsFactory.getCounter( JobSchedulerService.class, "running_workers" );
+        successCounter = metricsFactory.getCounter( JobSchedulerService.class, "successful_jobs" );
+        failCounter = metricsFactory.getCounter( JobSchedulerService.class, "failed_jobs" );
 
         try {
             LOG.info( "Running one check iteration ..." );
@@ -143,7 +150,6 @@ public class JobSchedulerService extends AbstractScheduledService {
     /**
      * Use the provided BulkJobFactory to build and submit BulkJob items as ListenableFuture objects
      */
-    @ExceptionMetered( name = "BulkJobScheduledService_submitWork_exceptions", group = "scheduler" )
     private void submitWork( final JobDescriptor jobDescriptor ) {
         final Job job;
 
@@ -338,12 +344,13 @@ public class JobSchedulerService extends AbstractScheduledService {
     /**
      * Set the metrics factory
      */
-    public void setMetricsFactory( MetricsFactory metricsFactory ) {
-        jobTimer = metricsFactory.getTimer( JobSchedulerService.class, "job_execution_timer" );
-        runCounter = metricsFactory.getCounter( JobSchedulerService.class, "running_workers" );
-        successCounter = metricsFactory.getCounter( JobSchedulerService.class, "successful_jobs" );
-        failCounter = metricsFactory.getCounter( JobSchedulerService.class, "failed_jobs" );
-    }
+//    public void setMetricsFactory( MetricsFactory metricsFactory ) {
+//
+//        jobTimer = metricsFactory.getTimer( JobSchedulerService.class, "job_execution_timer" );
+//        runCounter = metricsFactory.getCounter( JobSchedulerService.class, "running_workers" );
+//        successCounter = metricsFactory.getCounter( JobSchedulerService.class, "successful_jobs" );
+//        failCounter = metricsFactory.getCounter( JobSchedulerService.class, "failed_jobs" );
+//    }
 
 
     /*
@@ -402,6 +409,10 @@ public class JobSchedulerService extends AbstractScheduledService {
      */
     public JobListener getJobListener() {
         return jobListener;
+    }
+
+    public void setInjector(Injector injector) {
+        this.injector = injector;
     }
 
 

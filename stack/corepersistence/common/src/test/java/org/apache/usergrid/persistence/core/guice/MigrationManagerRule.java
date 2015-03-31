@@ -27,6 +27,13 @@ public class MigrationManagerRule extends ExternalResource {
     @Inject
     public void setMigrationManager( final MigrationManager migrationManager )  {
         this.migrationManager = migrationManager;
+
+        try {
+                   this.migrationManager.migrate();
+               }
+               catch ( MigrationException e ) {
+                   throw new RuntimeException(e);
+               }
     }
 
     @Inject

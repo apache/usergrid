@@ -46,12 +46,8 @@ public class AbstractCollectionService extends AbstractService {
 
 
     public AbstractCollectionService() {
-        // addSet("indexes");
         declareMetadataType( "indexes" );
     }
-
-    // cname/id/
-
 
     @Override
     public Entity getEntity( ServiceRequest request, UUID uuid ) throws Exception {
@@ -76,11 +72,7 @@ public class AbstractCollectionService extends AbstractService {
             nameProperty = "name";
         }
 
-        EntityRef entityRef = em.getAlias( getEntityType(), name );
-        if ( entityRef == null ) {
-            return null;
-        }
-        Entity entity = em.get( entityRef );
+        Entity entity = em.getUniqueEntityFromAlias( getEntityType(), name );
         if ( entity != null ) {
             entity = importEntity( request, entity );
         }
@@ -152,7 +144,7 @@ public class AbstractCollectionService extends AbstractService {
             nameProperty = "name";
         }
 
-        EntityRef entity = em.getAlias( getEntityType(), name );
+        Entity entity = em.getUniqueEntityFromAlias( getEntityType(), name );
 
         if ( entity == null ) {
             logger.info( "miss on entityType: {} with name: {}", getEntityType(), name );
@@ -169,8 +161,7 @@ public class AbstractCollectionService extends AbstractService {
         }
 
         if ( !context.moreParameters() ) {
-            entity = em.get( entity );
-            entity = importEntity( context, ( Entity ) entity );
+            entity = importEntity( context, entity );
         }
 
         checkPermissionsForEntity( context, entity );
@@ -178,7 +169,7 @@ public class AbstractCollectionService extends AbstractService {
     /*
      * Level level = Level.REFS; if (isEmpty(parameters)) {
      * level = Level.ALL_PROPERTIES; }
-     * 
+     *
      * Results results = em.searchCollectionForProperty(owner,
      * getCollectionName(), null, nameProperty, name, null, null, 1, level);
      * EntityRef entity = results.getRef();
@@ -248,9 +239,9 @@ public class AbstractCollectionService extends AbstractService {
         }
 
         logger.debug("Limiting collection to " + Query.DEFAULT_LIMIT);
-        int count = Query.DEFAULT_LIMIT; 
+        int count = Query.DEFAULT_LIMIT;
 
-        Results r = em.getCollection( context.getOwner(), context.getCollectionName(), 
+        Results r = em.getCollection( context.getOwner(), context.getCollectionName(),
             null, count, Level.ALL_PROPERTIES, isCollectionReversed( context ) );
 
         importEntities( context, r );
@@ -295,9 +286,9 @@ public class AbstractCollectionService extends AbstractService {
             return getItemByName( context, name );
         }
 
-        EntityRef ref = em.getAlias( getEntityType(), name );
-        Entity entity;
-        if ( ref == null ) {
+       // EntityRef ref = em.getAlias( getEntityType(), name );
+        Entity entity = em.getUniqueEntityFromAlias( getEntityType(), name );
+        if ( entity == null ) {
             // null entity ref means we tried to put a non-existing entity
             // before we create a new entity for it, we should check for permission
             checkPermissionsForCollection(context);
@@ -309,7 +300,6 @@ public class AbstractCollectionService extends AbstractService {
             entity = em.create( getEntityType(), properties );
         }
         else {
-            entity = em.get( ref );
             entity = importEntity( context, entity );
             checkPermissionsForEntity( context, entity );
             updateEntity( context, entity );
@@ -441,12 +431,12 @@ public class AbstractCollectionService extends AbstractService {
             return super.postItemByName( context, name );
         }
 
-        EntityRef ref = em.getAlias( getEntityType(), name );
-        if ( ref == null ) {
+        Entity entity = em.getUniqueEntityFromAlias( getEntityType(), name );
+        if ( entity == null ) {
             throw new ServiceResourceNotFoundException( context );
         }
 
-        return postItemById( context, ref.getUuid() );
+        return postItemById( context, entity.getUuid() );
     }
 
 
@@ -495,11 +485,7 @@ public class AbstractCollectionService extends AbstractService {
             return getItemByName( context, name );
         }
 
-        EntityRef ref = em.getAlias( getEntityType(), name );
-        if ( ref == null ) {
-            throw new ServiceResourceNotFoundException( context );
-        }
-        Entity entity = em.get( ref );
+        Entity entity = em.getUniqueEntityFromAlias( getEntityType(), name );
         if ( entity == null ) {
             throw new ServiceResourceNotFoundException( context );
         }

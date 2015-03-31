@@ -22,9 +22,8 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.netflix.astyanax.MutationBatch;
 import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.EntityVersionCleanupFactory;
 import org.apache.usergrid.persistence.collection.event.EntityDeleted;
-import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.core.task.Task;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -37,6 +36,9 @@ import rx.schedulers.Schedulers;
 
 import java.util.Set;
 import java.util.UUID;
+
+import org.apache.commons.lang.NotImplementedException;
+
 import org.apache.usergrid.persistence.core.guice.ProxyImpl;
 
 
@@ -46,7 +48,7 @@ import org.apache.usergrid.persistence.core.guice.ProxyImpl;
 public class EntityDeletedTask implements Task<Void> {
     private static final Logger LOG =  LoggerFactory.getLogger(EntityDeletedTask.class);
 
-    private final EntityVersionCleanupFactory entityVersionCleanupFactory;
+    private final EntityVersionTaskFactory entityVersionTaskFactory;
     private final MvccLogEntrySerializationStrategy logEntrySerializationStrategy;
     private final MvccEntitySerializationStrategy entitySerializationStrategy;
     private final Set<EntityDeleted> listeners;
@@ -56,16 +58,16 @@ public class EntityDeletedTask implements Task<Void> {
 
 
     @Inject
-    public EntityDeletedTask( 
-        EntityVersionCleanupFactory             entityVersionCleanupFactory,
+    public EntityDeletedTask(
+        EntityVersionTaskFactory entityVersionTaskFactory,
         final MvccLogEntrySerializationStrategy logEntrySerializationStrategy,
         @ProxyImpl final MvccEntitySerializationStrategy entitySerializationStrategy,
         final Set<EntityDeleted>                listeners, // MUST be a set or Guice will not inject
-        @Assisted final CollectionScope         collectionScope, 
-        @Assisted final Id                      entityId, 
+        @Assisted final CollectionScope         collectionScope,
+        @Assisted final Id                      entityId,
         @Assisted final UUID                    version) {
 
-        this.entityVersionCleanupFactory = entityVersionCleanupFactory;
+        this.entityVersionTaskFactory = entityVersionTaskFactory;
         this.logEntrySerializationStrategy = logEntrySerializationStrategy;
         this.entitySerializationStrategy = entitySerializationStrategy;
         this.listeners = listeners;
@@ -81,7 +83,7 @@ public class EntityDeletedTask implements Task<Void> {
                 new Object[] { collectionScope, entityId, version }, throwable );
     }
 
-    
+
     @Override
     public Void rejected() {
         try {
@@ -94,18 +96,19 @@ public class EntityDeletedTask implements Task<Void> {
         return null;
     }
 
-    
-    @Override
-    public Void call() throws Exception { 
 
-        entityVersionCleanupFactory.getTask( collectionScope, entityId, version ).call();
+    @Override
+    public Void call() throws Exception {
+
+        entityVersionTaskFactory.getCleanupTask( collectionScope, entityId, version, true ).call();
 
         fireEvents();
         final MutationBatch entityDelete = entitySerializationStrategy.delete(collectionScope, entityId, version);
         final MutationBatch logDelete = logEntrySerializationStrategy.delete(collectionScope, entityId, version);
+
         entityDelete.execute();
         logDelete.execute();
-
+//
         return null;
     }
 
@@ -124,22 +127,10 @@ public class EntityDeletedTask implements Task<Void> {
 
         LOG.debug( "Started firing {} listeners", listenerSize );
 
-        //if we have more than 1, run them on the rx scheduler for a max of 8 operations at a time
-        Observable.from(listeners)
-                .parallel( new Func1<Observable<EntityDeleted>, Observable<EntityDeleted>>() {
-
-                    @Override
-                    public Observable<EntityDeleted> call(
-                            final Observable<EntityDeleted> entityVersionDeletedObservable ) {
-
-                        return entityVersionDeletedObservable.doOnNext( new Action1<EntityDeleted>() {
-                            @Override
-                            public void call( final EntityDeleted listener ) {
-                                listener.deleted(collectionScope, entityId, version);
-                            }
-                        } );
-                    }
-                }, Schedulers.io() ).toBlocking().last();
+        //if we have more than 1, run them on the rx scheduler for a max of 10 operations at a time
+        Observable.from(listeners).flatMap( currentListener -> Observable.just( currentListener ).doOnNext( listener -> {
+            listener.deleted( collectionScope, entityId, version );
+        } ).subscribeOn( Schedulers.io() ), 10 ).toBlocking().last();
 
         LOG.debug( "Finished firing {} listeners", listenerSize );
     }

@@ -39,7 +39,6 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
             <version>${commons.lang.version}</version>
-            <scope>test</scope>
         </dependency>
 
       <!-- the core, which includes Streaming API, shared low-level abstractions (but NOT data-binding) -->

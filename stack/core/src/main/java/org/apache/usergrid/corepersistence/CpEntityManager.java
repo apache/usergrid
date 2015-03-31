@@ -33,7 +33,10 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
 
+import com.codahale.metrics.Meter;
+import org.apache.usergrid.persistence.collection.FieldSet;
 import org.apache.usergrid.persistence.core.future.BetterFuture;
+import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
@@ -107,7 +110,6 @@ import org.apache.usergrid.utils.UUIDUtils;
 import com.codahale.metrics.Timer;
 import com.google.common.base.Preconditions;
 import com.netflix.hystrix.exception.HystrixRuntimeException;
-import com.yammer.metrics.annotation.Metered;
 
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.ColumnSlice;
@@ -206,6 +208,10 @@ public class CpEntityManager implements EntityManager {
     private Timer entGetEntityCountersTimer;
     private Timer esIndexEntityCollectionTimer;
     private Timer entRevokeRolePermissionsTimer;
+    private Timer entGetRepairedEntityTimer;
+    private Timer updateEntityTimer;
+    private Meter updateEntityMeter;
+    private EntityIndex ei;
 
     //    /** Short-term cache to keep us from reloading same Entity during single request. */
 //    private LoadingCache<EntityScope, org.apache.usergrid.persistence.model.entity.Entity> entityCache;
@@ -216,7 +222,8 @@ public class CpEntityManager implements EntityManager {
     }
 
     @Override
-    public void init( EntityManagerFactory emf, UUID applicationId ) {
+    public void init( EntityManagerFactory emf, EntityIndex ei, UUID applicationId ) {
+        this.ei = ei;
 
         Preconditions.checkNotNull( emf, "emf must not be null" );
         Preconditions.checkNotNull( applicationId, "applicationId must not be null" );
@@ -266,6 +273,11 @@ public class CpEntityManager implements EntityManager {
             .getTimer( CpEntityManager.class, "cp.entity.es.index.entity.to.collection.timer" );
         this.entRevokeRolePermissionsTimer =
             this.metricsFactory.getTimer( CpEntityManager.class, "cp.entity.revoke.role.permissions.timer");
+        this.entGetRepairedEntityTimer = this.metricsFactory
+            .getTimer( CpEntityManager.class, "get.repaired.entity.timer" );
+
+        this.updateEntityMeter =this.metricsFactory.getMeter(CpEntityManager.class,"cp.entity.update.meter");
+        this.updateEntityTimer =this.metricsFactory.getTimer(CpEntityManager.class, "cp.entity.update.timer");
 
         // set to false for now
         this.skipAggregateCounters = false;
@@ -276,7 +288,6 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public Health getIndexHealth() {
-        EntityIndex ei = managerCache.getEntityIndex( applicationScope );
         return ei.getIndexHealth();
     }
 
@@ -382,7 +393,6 @@ public class CpEntityManager implements EntityManager {
      *
      * @throws Exception the exception
      */
-    @Metered( group = "core", name = "EntityManager_create" )
     @TraceParticipant
     public <A extends Entity> A create( String entityType, Class<A> entityClass,
             Map<String, Object> properties, UUID importId ) throws Exception {
@@ -403,6 +413,17 @@ public class CpEntityManager implements EntityManager {
         return entity;
     }
 
+    public Entity convertMvccEntityToEntity( org.apache.usergrid.persistence.model.entity.Entity entity){
+        if(entity == null) {
+            return null;
+        }
+        Class clazz = Schema.getDefaultSchema().getEntityClass( entity.getId().getType() );
+
+        Entity oldFormatEntity = EntityFactory.newEntity(entity.getId().getUuid(),entity.getId().getType(),clazz);
+        oldFormatEntity.setProperties( CpEntityMapUtils.toMap( entity ) );
+
+        return oldFormatEntity;
+    }
 
     @Override
     public Entity get( EntityRef entityRef ) throws Exception {
@@ -562,9 +583,11 @@ public class CpEntityManager implements EntityManager {
         Preconditions.checkNotNull(appId,"app scope should never be null");
         // first, update entity index in its own collection scope
 
+        updateEntityMeter.mark();
+        Timer.Context timer = updateEntityTimer.time();
+
         CollectionScope collectionScope = getCollectionScopeNameFromEntityType(appId, type );
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
-
         Id entityId = new SimpleId( entity.getUuid(), entity.getType() );
 
         if ( logger.isDebugEnabled() ) {
@@ -613,11 +636,14 @@ public class CpEntityManager implements EntityManager {
                 WriteUniqueVerifyException wuve = ( WriteUniqueVerifyException ) hre.getCause();
                 handleWriteUniqueVerifyException( entity, wuve );
             }
+
+            throw hre;
         }
 
         // update in all containing collections and connection indexes
         CpRelationManager rm = ( CpRelationManager ) getRelationManager( entity );
         rm.updateContainingCollectionAndCollectionIndexes( cpEntity );
+        timer.stop();
     }
 
 
@@ -726,14 +752,14 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public void updateApplication( Application app ) throws Exception {
-        update( app );
+        update(app);
         this.application = app;
     }
 
 
     @Override
     public void updateApplication( Map<String, Object> properties ) throws Exception {
-        this.updateProperties( new SimpleEntityRef( Application.ENTITY_TYPE, applicationId ), properties );
+        this.updateProperties(new SimpleEntityRef(Application.ENTITY_TYPE, applicationId), properties);
         this.application = get( applicationId, Application.class );
     }
 
@@ -794,11 +820,43 @@ public class CpEntityManager implements EntityManager {
         create( entityType, null );
     }
 
+    @Override
+    public Entity getUniqueEntityFromAlias( String collectionType, String aliasType ){
+        String collName = Schema.defaultCollectionName( collectionType );
+
+        CollectionScope collectionScope = getCollectionScopeNameFromEntityType(
+            getApplicationScope().getApplication(), collName);
+
+        String propertyName = Schema.getDefaultSchema().aliasProperty( collName );
+
+        Timer.Context repairedEntityGet = entGetRepairedEntityTimer.time();
+
+        final EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
+        //TODO: can't we just sub in the getEntityRepair method here so for every read of a uniqueEntityField we can verify it is correct?
+
+        StringField uniqueLookupRepairField =  new StringField( propertyName, aliasType.toString());
+
+        Observable<FieldSet> fieldSetObservable = ecm.getEntitiesFromFields(
+            Arrays.<Field>asList( uniqueLookupRepairField ) );
+
+        if(fieldSetObservable == null){
+            logger.debug( "Couldn't return the observable based on unique entities." );
+            return null;
+        }
+        FieldSet fieldSet = fieldSetObservable.toBlocking().last();
+
+        repairedEntityGet.stop();
+        if(fieldSet.isEmpty()) {
+            return null;
+        }
+
+        return convertMvccEntityToEntity( fieldSet.getEntity( uniqueLookupRepairField ).getEntity().get() );
+    }
 
     @Override
     public EntityRef getAlias( String aliasType, String alias ) throws Exception {
 
-        return getAlias( new SimpleEntityRef( Application.ENTITY_TYPE, applicationId ), aliasType, alias );
+        return getAlias(new SimpleEntityRef(Application.ENTITY_TYPE, applicationId), aliasType, alias);
     }
 
 
@@ -827,7 +885,7 @@ public class CpEntityManager implements EntityManager {
                     new Object[] { ownerRef, collectionType, aliasValue } );
         }
 
-        return results.get( aliasValue );
+        return results.get(aliasValue);
     }
 
 
@@ -877,7 +935,7 @@ public class CpEntityManager implements EntityManager {
         }
 
 
-        return Collections.<EntityRef>singleton( new SimpleEntityRef( id.getType(), id.getUuid() ) );
+        return Collections.<EntityRef>singleton(new SimpleEntityRef(id.getType(), id.getUuid()));
     }
 
 
@@ -944,7 +1002,7 @@ public class CpEntityManager implements EntityManager {
     public void setProperty(
             EntityRef entityRef, String propertyName, Object propertyValue ) throws Exception {
 
-        setProperty( entityRef, propertyName, propertyValue, false );
+        setProperty(entityRef, propertyName, propertyValue, false);
     }
 
 
@@ -962,7 +1020,7 @@ public class CpEntityManager implements EntityManager {
                 entity.getType(), propertyName, propertyValue );
 
         entity.setProperty( propertyName, propertyValue );
-        entity.setProperty( PROPERTY_MODIFIED, UUIDUtils.getTimestampInMillis( UUIDUtils.newTimeUUID() ) );
+        entity.setProperty(PROPERTY_MODIFIED, UUIDUtils.getTimestampInMillis(UUIDUtils.newTimeUUID()));
 
         update( entity );
     }
@@ -1022,7 +1080,7 @@ public class CpEntityManager implements EntityManager {
                 getCollectionScopeNameFromEntityType( entityRef.getType() ) );
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
-        EntityIndex ei = managerCache.getEntityIndex( getApplicationScope() );
+        ApplicationEntityIndex aei = managerCache.getEntityIndex( getApplicationScope() );
 
         Id entityId = new SimpleId( entityRef.getUuid(), entityRef.getType() );
 
@@ -1041,7 +1099,7 @@ public class CpEntityManager implements EntityManager {
         } );
 
         //TODO: does this call and others like it need a graphite reporter?
-        cpEntity = ecm.write( cpEntity ).toBlockingObservable().last();
+        cpEntity = ecm.write( cpEntity ).toBlocking().last();
 
         logger.debug( "Wrote {}:{} version {}", new Object[] {
                 cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion()
@@ -1049,7 +1107,7 @@ public class CpEntityManager implements EntityManager {
 
         //Adding graphite metrics
         Timer.Context timeESBatch = esDeletePropertyTimer.time();
-        BetterFuture future = ei.createBatch().index( defaultIndexScope, cpEntity ).execute();
+        BetterFuture future = aei.createBatch().index( defaultIndexScope, cpEntity ).execute();
         timeESBatch.stop();
         // update in all containing collections and connection indexes
         CpRelationManager rm = ( CpRelationManager ) getRelationManager( entityRef );
@@ -1068,7 +1126,7 @@ public class CpEntityManager implements EntityManager {
     public void addToDictionary( EntityRef entityRef, String dictionaryName,
             Object elementValue ) throws Exception {
 
-        addToDictionary( entityRef, dictionaryName, elementValue, null );
+        addToDictionary(entityRef, dictionaryName, elementValue, null);
     }
 
 
@@ -1129,7 +1187,7 @@ public class CpEntityManager implements EntityManager {
         EntityRef entity = get( entityRef );
 
         UUID timestampUuid = UUIDUtils.newTimeUUID();
-        Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
+        Mutator<ByteBuffer> batch = createMutator(cass.getApplicationKeyspace(applicationId), be);
 
         for ( Map.Entry<?, ?> elementValue : elementValues.entrySet() ) {
             batch = batchUpdateDictionary( batch, entity, dictionaryName, elementValue.getKey(),
@@ -1166,8 +1224,8 @@ public class CpEntityManager implements EntityManager {
         boolean coTypeIsBasic = ClassUtils.isBasicType( setCoType );
 
         List<HColumn<ByteBuffer, ByteBuffer>> results =
-                cass.getAllColumns( cass.getApplicationKeyspace( applicationId ), dictionaryCf,
-                        CassandraPersistenceUtils.key( entity.getUuid(), dictionaryName ), be, be );
+                cass.getAllColumns(cass.getApplicationKeyspace(applicationId), dictionaryCf,
+                    CassandraPersistenceUtils.key(entity.getUuid(), dictionaryName), be, be);
         for ( HColumn<ByteBuffer, ByteBuffer> result : results ) {
             Object name = null;
             if ( entityHasDictionary ) {
@@ -1216,7 +1274,7 @@ public class CpEntityManager implements EntityManager {
 
         ApplicationCF dictionaryCf = null;
 
-        boolean entityHasDictionary = Schema.getDefaultSchema().hasDictionary( entity.getType(), dictionaryName );
+        boolean entityHasDictionary = Schema.getDefaultSchema().hasDictionary(entity.getType(), dictionaryName);
 
         if ( entityHasDictionary ) {
             dictionaryCf = ENTITY_DICTIONARIES;
@@ -1226,14 +1284,14 @@ public class CpEntityManager implements EntityManager {
         }
 
         Class<?> dictionaryCoType =
-                Schema.getDefaultSchema().getDictionaryValueType( entity.getType(), dictionaryName );
+                Schema.getDefaultSchema().getDictionaryValueType(entity.getType(), dictionaryName);
         boolean coTypeIsBasic = ClassUtils.isBasicType( dictionaryCoType );
 
         HColumn<ByteBuffer, ByteBuffer> result =
-                cass.getColumn( cass.getApplicationKeyspace( applicationId ), dictionaryCf,
-                        CassandraPersistenceUtils.key( entity.getUuid(), dictionaryName ),
-                        entityHasDictionary ? bytebuffer( elementName ) : DynamicComposite.toByteBuffer( elementName ),
-                        be, be );
+                cass.getColumn(cass.getApplicationKeyspace(applicationId), dictionaryCf,
+                    CassandraPersistenceUtils.key(entity.getUuid(), dictionaryName),
+                    entityHasDictionary ? bytebuffer(elementName) : DynamicComposite.toByteBuffer(elementName),
+                    be, be);
 
         if ( result != null ) {
             if ( entityHasDictionary && coTypeIsBasic ) {
@@ -1244,14 +1302,13 @@ public class CpEntityManager implements EntityManager {
             }
         }
         else {
-            logger.info( "Results of CpEntityManagerImpl.getDictionaryElementValue is null" );
+            logger.info("Results of CpEntityManagerImpl.getDictionaryElementValue is null");
         }
 
         return value;
     }
 
 
-    @Metered( group = "core", name = "EntityManager_getDictionaryElementValues" )
     public Map<String, Object> getDictionaryElementValues( EntityRef entity, String dictionaryName,
                                                            String... elementNames ) throws Exception {
 
@@ -1269,8 +1326,8 @@ public class CpEntityManager implements EntityManager {
         }
 
         Class<?> dictionaryCoType =
-                Schema.getDefaultSchema().getDictionaryValueType( entity.getType(), dictionaryName );
-        boolean coTypeIsBasic = ClassUtils.isBasicType( dictionaryCoType );
+                Schema.getDefaultSchema().getDictionaryValueType(entity.getType(), dictionaryName);
+        boolean coTypeIsBasic = ClassUtils.isBasicType(dictionaryCoType);
 
         ByteBuffer[] columnNames = new ByteBuffer[elementNames.length];
         for ( int i = 0; i < elementNames.length; i++ ) {
@@ -1279,8 +1336,8 @@ public class CpEntityManager implements EntityManager {
         }
 
         ColumnSlice<ByteBuffer, ByteBuffer> results =
-                cass.getColumns( cass.getApplicationKeyspace( applicationId ), dictionaryCf,
-                        CassandraPersistenceUtils.key( entity.getUuid(), dictionaryName ), columnNames, be, be );
+                cass.getColumns(cass.getApplicationKeyspace(applicationId), dictionaryCf,
+                    CassandraPersistenceUtils.key(entity.getUuid(), dictionaryName), columnNames, be, be);
         if ( results != null ) {
             values = new HashMap<String, Object>();
             for ( HColumn<ByteBuffer, ByteBuffer> result : results.getColumns() ) {
@@ -1326,7 +1383,7 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public Set<String> getDictionaries( EntityRef entity ) throws Exception {
-        return getDictionaryNames( entity );
+        return getDictionaryNames(entity);
     }
 
 
@@ -1340,14 +1397,14 @@ public class CpEntityManager implements EntityManager {
     @Override
     public boolean isCollectionMember( EntityRef owner, String collectionName, EntityRef entity ) throws Exception {
 
-        return getRelationManager( owner ).isCollectionMember( collectionName, entity );
+        return getRelationManager( owner ).isCollectionMember(collectionName, entity);
     }
 
 
     @Override
     public boolean isConnectionMember( EntityRef owner, String connectionName, EntityRef entity ) throws Exception {
 
-        return getRelationManager( owner ).isConnectionMember( connectionName, entity );
+        return getRelationManager( owner ).isConnectionMember(connectionName, entity);
     }
 
 
@@ -1372,7 +1429,7 @@ public class CpEntityManager implements EntityManager {
             throws Exception {
 
         return getRelationManager( get( entityId ))
-                .getCollection ( collectionName, query, resultsLevel );
+                .getCollection(collectionName, query, resultsLevel);
     }
 
 
@@ -1437,8 +1494,8 @@ public class CpEntityManager implements EntityManager {
     @Override
     public ConnectionRef createConnection( ConnectionRef connection ) throws Exception {
 
-        return createConnection( connection.getConnectingEntity(), connection.getConnectionType(),
-                connection.getConnectedEntity() );
+        return createConnection(connection.getConnectingEntity(), connection.getConnectionType(),
+            connection.getConnectedEntity());
     }
 
 
@@ -1446,7 +1503,7 @@ public class CpEntityManager implements EntityManager {
     public ConnectionRef createConnection( EntityRef connectingEntity, String connectionType,
                                            EntityRef connectedEntityRef ) throws Exception {
 
-        return getRelationManager( connectingEntity ).createConnection( connectionType, connectedEntityRef );
+        return getRelationManager( connectingEntity ).createConnection(connectionType, connectedEntityRef);
     }
 
 
@@ -1456,7 +1513,7 @@ public class CpEntityManager implements EntityManager {
             throws Exception {
 
         return getRelationManager( connectingEntity )
-                .createConnection( pairedConnectionType, pairedEntity, connectionType, connectedEntityRef );
+                .createConnection(pairedConnectionType, pairedEntity, connectionType, connectedEntityRef);
     }
 
 
@@ -1482,7 +1539,7 @@ public class CpEntityManager implements EntityManager {
             EntityRef pairedEntity, String connectionType, EntityRef connectedEntityRef ) throws Exception {
 
         return getRelationManager( connectingEntity )
-                .connectionRef( pairedConnectionType, pairedEntity, connectionType, connectedEntityRef );
+                .connectionRef(pairedConnectionType, pairedEntity, connectionType, connectedEntityRef);
     }
 
 
@@ -1514,7 +1571,7 @@ public class CpEntityManager implements EntityManager {
             String connectedEntityType, Level resultsLevel ) throws Exception {
 
         return getRelationManager( entityRef )
-                .getConnectedEntities( connectionType, connectedEntityType, resultsLevel );
+                .getConnectedEntities(connectionType, connectedEntityType, resultsLevel);
     }
 
 
@@ -1523,7 +1580,7 @@ public class CpEntityManager implements EntityManager {
             String connectedEntityType, Level resultsLevel ) throws Exception {
 
         return getRelationManager( entityRef )
-                .getConnectingEntities( connectionType, connectedEntityType, resultsLevel );
+                .getConnectingEntities(connectionType, connectedEntityType, resultsLevel);
     }
 
 
@@ -1531,21 +1588,21 @@ public class CpEntityManager implements EntityManager {
     public Results getConnectingEntities( EntityRef entityRef, String connectionType,
             String entityType, Level level, int count ) throws Exception {
 
-        return getRelationManager( entityRef ).getConnectingEntities( connectionType, entityType, level, count );
+        return getRelationManager( entityRef ).getConnectingEntities(connectionType, entityType, level, count);
     }
 
 
     @Override
     public Results searchConnectedEntities( EntityRef connectingEntity, Query query ) throws Exception {
 
-        return getRelationManager( connectingEntity ).searchConnectedEntities( query );
+        return getRelationManager( connectingEntity ).searchConnectedEntities(query);
     }
 
 
     @Override
     public Set<String> getConnectionIndexes( EntityRef entity, String connectionType ) throws Exception {
 
-        return getRelationManager( entity ).getConnectionIndexes( connectionType );
+        return getRelationManager( entity ).getConnectionIndexes(connectionType);
     }
 
 
@@ -1771,14 +1828,14 @@ public class CpEntityManager implements EntityManager {
         String roleTitle = batchRoleName;
         String propertyName = groupId + ":" + batchRoleName;
         Map<String, Object> properties = new TreeMap<String, Object>( CASE_INSENSITIVE_ORDER );
-        properties.put( "group", groupId );
+        properties.put("group", groupId);
 
-        Entity entity = batchCreateRole( roleName, roleTitle, inactivity, propertyName, groupId, properties );
+        Entity entity = batchCreateRole(roleName, roleTitle, inactivity, propertyName, groupId, properties);
         getRelationManager( new SimpleEntityRef( Group.ENTITY_TYPE, groupId ) )
-                .addToCollection( COLLECTION_ROLES, entity );
+                .addToCollection(COLLECTION_ROLES, entity);
 
-        logger.info( "Created role {} with id {} in group {}",
-                new String[] { roleName, entity.getUuid().toString(), groupId.toString() } );
+        logger.info("Created role {} with id {} in group {}",
+            new String[]{roleName, entity.getUuid().toString(), groupId.toString()});
 
         return entity;
     }
@@ -1790,8 +1847,8 @@ public class CpEntityManager implements EntityManager {
         permission = permission.toLowerCase();
         long timestamp = cass.createTimestamp();
         Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
-        CassandraPersistenceUtils.addInsertToMutator( batch, ApplicationCF.ENTITY_DICTIONARIES,
-            getRolePermissionsKey( groupId, roleName ), permission, ByteBuffer.allocate( 0 ), timestamp );
+        CassandraPersistenceUtils.addInsertToMutator(batch, ApplicationCF.ENTITY_DICTIONARIES,
+            getRolePermissionsKey(groupId, roleName), permission, ByteBuffer.allocate(0), timestamp);
 
         //Adding graphite metrics
         Timer.Context timeGroupRolePermission = entGrantGroupPermissionTimer.time();
@@ -1869,7 +1926,7 @@ public class CpEntityManager implements EntityManager {
     @Override
     public void grantUserPermission( UUID userId, String permission ) throws Exception {
         permission = permission.toLowerCase();
-        addToDictionary( userRef( userId ), DICTIONARY_PERMISSIONS, permission );
+        addToDictionary(userRef(userId), DICTIONARY_PERMISSIONS, permission);
     }
 
 
@@ -1893,9 +1950,9 @@ public class CpEntityManager implements EntityManager {
         roleName = roleName.toLowerCase();
         EntityRef userRef = userRef( userId );
         EntityRef roleRef = getRoleRef( roleName );
-        addToDictionary( userRef, DICTIONARY_ROLENAMES, roleName, roleName );
-        addToCollection( userRef, COLLECTION_ROLES, roleRef );
-        addToCollection( roleRef, COLLECTION_USERS, userRef );
+        addToDictionary(userRef, DICTIONARY_ROLENAMES, roleName, roleName);
+        addToCollection(userRef, COLLECTION_ROLES, roleRef);
+        addToCollection(roleRef, COLLECTION_USERS, userRef);
     }
 
 
@@ -1930,8 +1987,8 @@ public class CpEntityManager implements EntityManager {
 
 
     private EntityRef getRoleRef( String roleName ) throws Exception {
-        Results results = this.searchCollection( new SimpleEntityRef( Application.ENTITY_TYPE, applicationId ),
-                Schema.defaultCollectionName( Role.ENTITY_TYPE ), Query.findForProperty( "roleName", roleName ) );
+        Results results = this.searchCollection(new SimpleEntityRef(Application.ENTITY_TYPE, applicationId),
+            Schema.defaultCollectionName(Role.ENTITY_TYPE), Query.findForProperty("roleName", roleName));
         Iterator<Entity> iterator = results.iterator();
         EntityRef roleRef = null;
         while ( iterator.hasNext() ) {
@@ -2177,8 +2234,8 @@ public class CpEntityManager implements EntityManager {
     @Override
     public Set<String> getCounterNames() throws Exception {
         Set<String> names = new TreeSet<String>( CASE_INSENSITIVE_ORDER );
-        Set<String> nameSet = cast( getDictionaryAsSet( getApplicationRef(), Schema.DICTIONARY_COUNTERS ) );
-        names.addAll( nameSet );
+        Set<String> nameSet = cast(getDictionaryAsSet(getApplicationRef(), Schema.DICTIONARY_COUNTERS));
+        names.addAll(nameSet);
         return names;
     }
 
@@ -2242,12 +2299,11 @@ public class CpEntityManager implements EntityManager {
         CollectionScope collectionScope = getCollectionScopeNameFromEntityType(
             getApplicationScope().getApplication(), collectionName);
 
-        final EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
+        final EntityCollectionManager ecm = managerCache.getEntityCollectionManager(collectionScope);
 
         //convert to a string, that's what we store
         final Id results = ecm.getIdField( new StringField(
                 propertyName, propertyValue.toString() ) ).toBlocking() .lastOrDefault( null );
-
         return results;
     }
 
@@ -2256,7 +2312,7 @@ public class CpEntityManager implements EntityManager {
     public Entity get( UUID uuid ) throws Exception {
 
         MapManager mm = getMapManagerForTypes();
-        String entityType = mm.getString( uuid.toString() );
+        String entityType = mm.getString(uuid.toString());
 
         final Entity entity;
 
@@ -2278,9 +2334,9 @@ public class CpEntityManager implements EntityManager {
     private MapManager getMapManagerForTypes() {
         Id mapOwner = new SimpleId( applicationId, TYPE_APPLICATION );
 
-        final MapScope ms = CpNamingUtils.getEntityTypeMapScope( mapOwner );
+        final MapScope ms = CpNamingUtils.getEntityTypeMapScope(mapOwner);
 
-        MapManager mm = managerCache.getMapManager( ms );
+        MapManager mm = managerCache.getMapManager(ms);
 
         return mm;
     }
@@ -2383,7 +2439,7 @@ public class CpEntityManager implements EntityManager {
     @Override
     public Map<String, Role> getUserRolesWithTitles( UUID userId ) throws Exception {
         return getRolesWithTitles(
-                ( Set<String> ) cast( getDictionaryAsSet( userRef( userId ), DICTIONARY_ROLENAMES ) ) );
+                ( Set<String> ) cast( getDictionaryAsSet( userRef(userId), DICTIONARY_ROLENAMES ) ) );
     }
 
 
@@ -2398,8 +2454,8 @@ public class CpEntityManager implements EntityManager {
     @Override
     public void addGroupToRole( UUID groupId, String roleName ) throws Exception {
         roleName = roleName.toLowerCase();
-        addToDictionary( groupRef( groupId ), DICTIONARY_ROLENAMES, roleName, roleName );
-        addToCollection( groupRef( groupId ), COLLECTION_ROLES, getRoleRef( roleName ) );
+        addToDictionary(groupRef(groupId), DICTIONARY_ROLENAMES, roleName, roleName);
+        addToCollection(groupRef(groupId), COLLECTION_ROLES, getRoleRef(roleName));
     }
 
 
@@ -2420,7 +2476,7 @@ public class CpEntityManager implements EntityManager {
     @Override
     public void grantGroupPermission( UUID groupId, String permission ) throws Exception {
         permission = permission.toLowerCase();
-        addToDictionary( groupRef( groupId ), DICTIONARY_PERMISSIONS, permission );
+        addToDictionary(groupRef(groupId), DICTIONARY_PERMISSIONS, permission);
     }
 
 
@@ -2606,8 +2662,8 @@ public class CpEntityManager implements EntityManager {
         catch ( HystrixRuntimeException hre ) {
 
             if ( hre.getCause() instanceof WriteUniqueVerifyException ) {
-                WriteUniqueVerifyException wuve = ( WriteUniqueVerifyException ) hre.getCause();
-                handleWriteUniqueVerifyException( entity, wuve );
+                WriteUniqueVerifyException wuve = (WriteUniqueVerifyException) hre.getCause();
+                handleWriteUniqueVerifyException(entity, wuve);
             }
         }
 
@@ -2827,32 +2883,6 @@ public class CpEntityManager implements EntityManager {
     }
 
 
-    @Override
-    public void refreshIndex() {
-
-        // refresh factory indexes
-        emf.refreshIndex();
-
-        // refresh this Entity Manager's application's index
-        EntityIndex ei = managerCache.getEntityIndex( getApplicationScope() );
-        ei.refresh();
-    }
-
-
-    @Override
-    public void createIndex() {
-        EntityIndex ei = managerCache.getEntityIndex( applicationScope );
-        ei.initializeIndex();
-    }
-
-    public void deleteIndex(){
-        EntityIndex ei = managerCache.getEntityIndex( applicationScope );
-        ei.deleteIndex();
-    }
-
-
-
-
 
     @Override
     public void flushManagerCaches() {
@@ -2926,8 +2956,8 @@ public class CpEntityManager implements EntityManager {
                                     org.apache.usergrid.persistence.model.entity.Entity memberEntity,
                                     String collName ) {
 
-        final EntityIndex ei = getManagerCache().getEntityIndex( getApplicationScope() );
-        final EntityIndexBatch batch = ei.createBatch();
+        final ApplicationEntityIndex aie = getManagerCache().getEntityIndex( getApplicationScope() );
+        final EntityIndexBatch batch = aie.createBatch();
 
         // index member into entity collection | type scope
         IndexScope collectionIndexScope = new IndexScopeImpl( collectionEntity.getId(),

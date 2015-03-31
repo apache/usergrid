@@ -20,7 +20,6 @@ package org.apache.usergrid.persistence.graph.serialization.impl.shard.count;
 
 
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,6 +30,7 @@ import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
+import org.apache.usergrid.persistence.core.util.IdGenerator;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
@@ -43,7 +43,7 @@ import com.google.inject.Inject;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
-import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createId;
+import static org.apache.usergrid.persistence.core.util.IdGenerator.createId;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -92,7 +92,7 @@ public class NodeShardCounterSerializationTest {
     public void testWritesRead() throws ConnectionException {
 
 
-        final Id id = createId( "test" );
+        final Id id = IdGenerator.createId( "test" );
 
         ShardKey key1 = new ShardKey( scope, new Shard( 0, 0, false ), DirectedEdgeMeta.fromSourceNode( id, "type1" ) );
 

@@ -239,8 +239,8 @@ public class ImportCollectionIT {
             for ( Entity importedThing : importedThings ) {
                 emApp1.delete( importedThing );
             }
-            emApp1.refreshIndex();
-            emApp2.refreshIndex();
+            setup.getEntityIndex().refresh();
+
 
             importedThings = emApp2.getCollection(
                 appId2, "things", null, Level.ALL_PROPERTIES).getEntities();
@@ -375,7 +375,6 @@ public class ImportCollectionIT {
 
         // export and upload a bad JSON file to the S3 bucket
 
-        File cwd = new File(".");
         String basePath = System.getProperty("target.directory")
             + File.separator + "test-classes" + File.separator;
 
@@ -533,7 +532,8 @@ public class ImportCollectionIT {
         if ( retries >= maxRetries ) {
             throw new RuntimeException("Max retries reached");
         }
-        em.refreshIndex();
+        setup.getEntityIndex().refresh();
+
 
         return importEntity.getUuid();
     }
@@ -547,8 +547,8 @@ public class ImportCollectionIT {
 
         logger.debug("\n\nExporting {} collection from application {}\n",
             collectionName, em.getApplication().getName() );
+        setup.getEntityIndex().refresh();
 
-        em.refreshIndex();
 
         ExportService exportService = setup.getExportService();
         UUID exportUUID = exportService.schedule( new HashMap<String, Object>() {{
@@ -591,7 +591,8 @@ public class ImportCollectionIT {
         logger.debug("\n\nCreating new {} collection in application {}\n",
             type, em.getApplication().getName());
 
-        em.refreshIndex();
+        setup.getEntityIndex().refresh();
+
 
         List<Entity> created = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
@@ -612,7 +613,8 @@ public class ImportCollectionIT {
         em.createConnection(new SimpleEntityRef(type, created.get(1).getUuid()),
             "related", new SimpleEntityRef(type, created.get(0).getUuid()));
 
-        em.refreshIndex();
+        setup.getEntityIndex().refresh();
+
     }
 
 

@@ -33,12 +33,13 @@ import org.apache.usergrid.persistence.core.consistency.TimeService;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.task.TaskExecutor;
+import org.apache.usergrid.persistence.core.util.IdGenerator;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.ShardGroupCompactionImpl;
 
 import com.netflix.astyanax.Keyspace;
 
-import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createId;
+import static org.apache.usergrid.persistence.core.util.IdGenerator.createId;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
@@ -59,7 +60,7 @@ public class ShardGroupCompactionTest {
 
         when( graphFig.getShardAuditWorkerQueueSize() ).thenReturn( 1000 );
 
-        this.scope = new ApplicationScopeImpl( createId( "application" ) );
+        this.scope = new ApplicationScopeImpl( IdGenerator.createId( "application" ) );
     }
 
 
@@ -99,7 +100,7 @@ public class ShardGroupCompactionTest {
                         edgeColumnFamilies, keyspace, edgeShardSerialization, taskExecutor );
 
 
-        DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromSourceNode( createId( "source" ), "test" );
+        DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromSourceNode( IdGenerator.createId( "source" ), "test" );
 
         try {
             compaction.compact( this.scope, directedEdgeMeta, group );

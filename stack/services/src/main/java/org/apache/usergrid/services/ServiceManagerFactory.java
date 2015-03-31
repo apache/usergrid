@@ -134,8 +134,4 @@ public class ServiceManagerFactory implements ApplicationContextAware {
         return emf.getManagementAppId();
     }
 
-    public UUID getDefaultAppId() {
-        return emf.getDefaultAppId();
-    }
-
 }

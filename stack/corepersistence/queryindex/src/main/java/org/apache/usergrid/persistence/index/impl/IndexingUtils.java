@@ -35,8 +35,13 @@ public class IndexingUtils {
     public static final String STRING_PREFIX = "su_";
     public static final String ANALYZED_STRING_PREFIX = "sa_";
     public static final String GEO_PREFIX = "go_";
-    public static final String NUMBER_PREFIX = "nu_";
+    public static final String LONG_PREFIX = "long_";
+    public static final String DOUBLE_PREFIX = "long_";
+
     public static final String BOOLEAN_PREFIX = "bu_";
+    public static final String ARRAY_PREFIX = "ar_";
+    public static final String SET_PREFIX = "set_";
+    public static final String EO_PREFIX = "eo_";
 
     public static final String SPLITTER = "\\__";
 
@@ -47,6 +52,7 @@ public class IndexingUtils {
     //
     // Reserved UG fields.
     //
+    public static final String APPLICATION_ID_FIELDNAME = "ug_applicationId";
 
     public static final String ENTITY_CONTEXT_FIELDNAME = "ug_context";
 
@@ -54,20 +60,29 @@ public class IndexingUtils {
 
     public static final String ENTITY_VERSION_FIELDNAME = "ug_entityVersion";
 
+    public static final String DOC_VALUES_KEY = "doc_values";
 
     /**
       * Create our sub scope.  This is the ownerUUID + type
       * @param scope
       * @return
       */
-     public static String createContextName( IndexScope scope ) {
+     public static String createContextName(ApplicationScope applicationScope, IndexScope scope ) {
          StringBuilder sb = new StringBuilder();
+         idString(sb,applicationScope.getApplication());
+         sb.append(SEPARATOR);
          idString(sb, scope.getOwner());
          sb.append( SEPARATOR );
          sb.append( scope.getName() );
          return sb.toString();
      }
-
+    public static String createLegacyContextName(ApplicationScope applicationScope, IndexScope scope ) {
+        StringBuilder sb = new StringBuilder();
+        idString(sb, scope.getOwner());
+        sb.append( SEPARATOR );
+        sb.append( scope.getName() );
+        return sb.toString();
+    }
 
     /**
      * Append the id to the string
@@ -90,21 +105,6 @@ public class IndexingUtils {
         idString(sb, id);
         return sb.toString();
     }
-
-
-    /**
-     * Create the facilities to retrieve an index name and alias name
-     * @param fig
-     * @param applicationScope
-     * @return
-     */
-    public static IndexIdentifier createIndexIdentifier(IndexFig fig, ApplicationScope applicationScope) {
-        return new IndexIdentifier(fig,applicationScope);
-    }
-
-
-
-
 
     /**
      * Create the index doc from the given entity
@@ -151,83 +151,109 @@ public class IndexingUtils {
 
             .startObject()
 
-                    /**  add routing  "_routing":{ "required":false,  "path":"ug_entityId" **/
-                     .startObject("_routing").field("required",true).field("path",ENTITYID_ID_FIELDNAME).endObject()
-                     .startArray("dynamic_templates")
+                    /**  add routing  "_routing":{ "required":true,  "path":"ug_entityId" **/
+                    .startObject("_routing")
+                        .field("required", true)
+                        .field("path", ENTITYID_ID_FIELDNAME)
+                    .endObject()
+                    .startArray("dynamic_templates")
                         // we need most specific mappings first since it's a stop on match algorithm
-
-                        .startObject()
-
-                            .startObject( "entity_id_template" )
-                                .field( "match", IndexingUtils.ENTITYID_ID_FIELDNAME )
-                                    .field( "match_mapping_type", "string" )
-                                            .startObject( "mapping" ).field( "type", "string" )
-                                                .field( "index", "not_analyzed" )
-                                            .endObject()
-                                    .endObject()
-                                .endObject()
-
                             .startObject()
-                            .startObject( "entity_context_template" )
-                                .field( "match", IndexingUtils.ENTITY_CONTEXT_FIELDNAME )
-                                .field( "match_mapping_type", "string" )
-                                    .startObject( "mapping" )
-                                        .field( "type", "string" )
-                                        .field( "index", "not_analyzed" ).endObject()
-                                    .endObject()
+                                .startObject("application_id_template")
+                                    .field("match", APPLICATION_ID_FIELDNAME)
+                                    .field("match_mapping_type", "string")
+                                    .startObject("mapping").field("type", "string").field("index", "not_analyzed").field(DOC_VALUES_KEY, true).endObject()
+                                .endObject()
+                            .endObject()
+                            .startObject()
+                                .startObject("entity_id_template")
+                                    .field("match", IndexingUtils.ENTITYID_ID_FIELDNAME)
+                                    .field("match_mapping_type", "string")
+                                    .startObject("mapping").field("type", "string").field("index", "not_analyzed").field(DOC_VALUES_KEY, true).endObject()
+                                .endObject()
                             .endObject()
 
                             .startObject()
-                            .startObject( "entity_version_template" )
-                                .field( "match", IndexingUtils.ENTITY_VERSION_FIELDNAME )
-                                        .field( "match_mapping_type", "string" )
-                                            .startObject( "mapping" ).field( "type", "long" )
-                                            .endObject()
+                                .startObject("entity_context_template")
+                                    .field("match", IndexingUtils.ENTITY_CONTEXT_FIELDNAME)
+                                    .field("match_mapping_type", "string")
+                                        .startObject("mapping")
+                                            .field("type", "string").field("index", "not_analyzed").field(DOC_VALUES_KEY, true)
                                         .endObject()
+                                .endObject()
+                            .endObject()
+
+                            .startObject()
+                                .startObject("entity_version_template")
+                                    .field("match", IndexingUtils.ENTITY_VERSION_FIELDNAME)
+                                    .field("match_mapping_type", "string")
+                                    .startObject("mapping").field("type", "long").field("index", "not_analyzed").field(DOC_VALUES_KEY, true)
                                     .endObject()
+                                .endObject()
+                            .endObject()
 
                             // any string with field name that starts with sa_ gets analyzed
                             .startObject()
-                                .startObject( "template_1" )
-                                    .field( "match", ANALYZED_STRING_PREFIX + "*" )
-                                    .field( "match_mapping_type", "string" ).startObject( "mapping" )
-                                    .field( "type", "string" )
-                                    .field( "index", "analyzed" )
+                                .startObject("template_string_analyzed")
+                                    .field("match", ANALYZED_STRING_PREFIX + "*")
+                                    .field("match_mapping_type", "string")
+                                    .startObject("mapping")
+                                        .field("type", "string")
+                                        .field("index", "analyzed")
+                                    .endObject()
                                 .endObject()
                             .endObject()
 
-                        .endObject()
-
                         // all other strings are not analyzed
                         .startObject()
-                            .startObject( "template_2" )
+                            .startObject("template_string_not_analyzed")
                                 //todo, should be string prefix, remove 2 field mapping
-                                .field( "match", "*" )
-                                .field( "match_mapping_type", "string" )
-                                .startObject( "mapping" )
-                                    .field( "type", "string" )
-                                        .field( "index", "not_analyzed" )
+                                .field("match", "*")
+                                .field("match_mapping_type", "string")
+                                .startObject("mapping")
+                                    .field("type", "string")
+                                    .field("index", "not_analyzed")
                                 .endObject()
                             .endObject()
                         .endObject()
 
                         // fields names starting with go_ get geo-indexed
                         .startObject()
-                            .startObject( "template_3" )
-                                .field( "match", GEO_PREFIX + "location" )
-                                    .startObject( "mapping" )
-            .field( "type", "geo_point" )
+                            .startObject("template_geo")
+                                .field("match", GEO_PREFIX + "location")
+                                    .startObject("mapping").field("type", "geo_point")
                                     .endObject()
+                            .endObject()
+                        .endObject()
+                            // all other strings are not analyzed
+                        .startObject()
+                            .startObject("template__long")
+                                .field("match", LONG_PREFIX + "*")
+                                .field("match_mapping_type", "long")
+                                .startObject("mapping").field("type", "long").field("index", "not_analyzed").field(DOC_VALUES_KEY, true).endObject()
+                            .endObject()
+                        .endObject()
+
+                        .startObject()
+                            .startObject("template__double")
+                                .field("match", DOUBLE_PREFIX + "*")
+                                .field("match_mapping_type", "double")
+                                .startObject("mapping").field("type", "double").field("index", "not_analyzed").field(DOC_VALUES_KEY, true).endObject()
                             .endObject()
                         .endObject()
 
                     .endArray()
-
             .endObject();
 
         return builder;
     }
 
 
+    public static String getType(ApplicationScope applicationScope, Id entityId) {
+        return getType(applicationScope,entityId.getType());
+    }
 
+    public static String getType(ApplicationScope applicationScope, String type) {
+        return idString(applicationScope.getApplication()) + SEPARATOR + type;
+    }
 }

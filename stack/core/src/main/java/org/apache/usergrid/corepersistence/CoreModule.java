@@ -15,30 +15,39 @@
  */
 package org.apache.usergrid.corepersistence;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Provider;
-import com.google.inject.multibindings.Multibinder;
 
-import org.apache.usergrid.corepersistence.migration.EntityDataMigration;
-import org.apache.usergrid.corepersistence.migration.EntityTypeMappingMigration;
-import org.apache.usergrid.corepersistence.migration.GraphShardVersionMigration;
+import org.apache.usergrid.corepersistence.migration.*;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.springframework.context.ApplicationContext;
+
 import org.apache.usergrid.corepersistence.events.EntityDeletedHandler;
 import org.apache.usergrid.corepersistence.events.EntityVersionCreatedHandler;
 import org.apache.usergrid.corepersistence.events.EntityVersionDeletedHandler;
+import org.apache.usergrid.corepersistence.migration.CoreMigration;
+import org.apache.usergrid.corepersistence.migration.CoreMigrationPlugin;
+import org.apache.usergrid.corepersistence.migration.EntityTypeMappingMigration;
+import org.apache.usergrid.corepersistence.migration.MigrationModuleVersionPlugin;
+import org.apache.usergrid.corepersistence.rx.impl.AllApplicationsObservableImpl;
+import org.apache.usergrid.corepersistence.rx.impl.AllEntitiesInSystemImpl;
+import org.apache.usergrid.corepersistence.rx.impl.AllNodesInGraphImpl;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.collection.event.EntityDeleted;
 import org.apache.usergrid.persistence.collection.event.EntityVersionCreated;
 import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
 import org.apache.usergrid.persistence.collection.guice.CollectionModule;
+import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.guice.CommonModule;
 import org.apache.usergrid.persistence.core.migration.data.DataMigration;
+import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
+import org.apache.usergrid.persistence.core.migration.data.MigrationPlugin;
 import org.apache.usergrid.persistence.graph.guice.GraphModule;
+import org.apache.usergrid.persistence.graph.serialization.impl.migration.GraphNode;
 import org.apache.usergrid.persistence.index.guice.IndexModule;
-import org.apache.usergrid.persistence.map.guice.MapModule;
-import org.apache.usergrid.persistence.queue.guice.QueueModule;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationContext;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Provider;
+import com.google.inject.TypeLiteral;
+import com.google.inject.multibindings.Multibinder;
 
 
 /**
@@ -67,19 +76,39 @@ public class CoreModule  extends AbstractModule {
         bind(EntityManagerFactory.class).toProvider( lazyEntityManagerFactoryProvider );
 
         install( new CommonModule());
-        install(new CollectionModule());
-        install(new GraphModule());
-        install(new IndexModule());
-        install(new MapModule());
-        install(new QueueModule());
+        install( new CollectionModule() {
+            /**
+             * configure our migration data provider for all entities in the system
+             */
+            @Override
+           public void configureMigrationProvider() {
+
+                bind(new TypeLiteral<MigrationDataProvider<EntityIdScope>>(){}).to(
+                    AllEntitiesInSystemImpl.class );
+           }
+        } );
+        install( new GraphModule() {
+
+            /**
+             * Override the observable that needs to be used for migration
+             */
+            @Override
+            public void configureMigrationProvider() {
+                bind( new TypeLiteral<MigrationDataProvider<GraphNode>>() {} ).to(
+                    AllNodesInGraphImpl.class );
+            }
+        } );
+        install(new IndexModule(){
+            @Override
+            public void configureMigrationProvider() {
+                bind( new TypeLiteral<MigrationDataProvider<ApplicationScope>>() {} ).to(
+                    AllApplicationsObservable.class );
+            }
+        });
+       //        install(new MapModule());   TODO, re-enable when index module doesn't depend on queue
+       //        install(new QueueModule());
 
         bind(ManagerCache.class).to( CpManagerCache.class );
-
-        Multibinder<DataMigration> dataMigrationMultibinder =
-                Multibinder.newSetBinder( binder(), DataMigration.class );
-        dataMigrationMultibinder.addBinding().to( EntityTypeMappingMigration.class );
-        dataMigrationMultibinder.addBinding().to( GraphShardVersionMigration.class );
-        dataMigrationMultibinder.addBinding().to( EntityDataMigration.class );
 
         Multibinder<EntityDeleted> entityBinder =
             Multibinder.newSetBinder(binder(), EntityDeleted.class);
@@ -94,6 +123,23 @@ public class CoreModule  extends AbstractModule {
         versionCreatedMultibinder.addBinding().to(EntityVersionCreatedHandler.class);
 
 
+        /**
+         * Create our migrations for within our core plugin
+         */
+        Multibinder<DataMigration<EntityIdScope>> dataMigrationMultibinder =
+                    Multibinder.newSetBinder( binder(), new TypeLiteral<DataMigration<EntityIdScope>>() {}, CoreMigration.class );
+
+
+        dataMigrationMultibinder.addBinding().to( EntityTypeMappingMigration.class );
+
+
+        //wire up the collection migration plugin
+        final Multibinder<MigrationPlugin> plugins = Multibinder.newSetBinder( binder(), MigrationPlugin.class );
+        plugins.addBinding().to( CoreMigrationPlugin.class );
+        plugins.addBinding().to( AppInfoMigrationPlugin.class );
+        plugins.addBinding().to( MigrationModuleVersionPlugin.class );
+
+        bind( AllApplicationsObservable.class).to(AllApplicationsObservableImpl.class);
     }
 
 

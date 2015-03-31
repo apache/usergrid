@@ -19,13 +19,19 @@
 package org.apache.usergrid.persistence.model.entity;
 
 
-import java.util.UUID;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.*;
 
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.usergrid.persistence.model.field.*;
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
 
 import com.fasterxml.jackson.annotation.*;
 import com.google.common.base.Preconditions;
+import org.apache.usergrid.persistence.model.field.value.Location;
 
 
 
@@ -36,6 +42,8 @@ import com.google.common.base.Preconditions;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo( use=JsonTypeInfo.Id.CLASS, include=JsonTypeInfo.As.PROPERTY, property="@class" )
 public class Entity extends EntityObject {
+
+    private static MapToEntityConverter mapToEntityConverter = new MapToEntityConverter();
 
     /**
      * The id.  We should never serialize this
@@ -61,6 +69,11 @@ public class Entity extends EntityObject {
         this.id = id;
     }
 
+    protected Entity(Id id, UUID version){
+        this(id);
+        this.version = version;
+    }
+
 
     /**
      * Generate a new entity with the given type and a new id
@@ -70,7 +83,6 @@ public class Entity extends EntityObject {
         this(new SimpleId( type ));
     }
 
-
     /**
      * Do not use!  This is only for serialization.
      */
@@ -78,6 +90,13 @@ public class Entity extends EntityObject {
 
     }
 
+    /**
+     * Generate an entity based on the map
+     * @param map
+     */
+    public static Entity fromMap(EntityMap map){
+        return mapToEntityConverter.fromMap(map,true);
+    }
 
     @JsonIgnore
     public Id getId() {

@@ -92,6 +92,7 @@
                 <forkCount>${usergrid.it.forkCount}</forkCount>
                 <threadCount>${usergrid.it.threads}</threadCount>
                 <reuseForks>${usergrid.it.reuseForks}</reuseForks>
+                <useSystemClassLoader>false</useSystemClassLoader>
                 <argLine>-Dtest.barrier.timestamp=${maven.build.timestamp} -Dtest.clean.storage=true -Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}
                 </argLine>
                 <includes>
@@ -132,6 +133,7 @@
       <version>${project.version}</version>
       <scope>runtime</scope>
     </dependency>
+
 
     <dependency>
       <groupId>org.apache.usergrid</groupId>
@@ -290,7 +292,15 @@
       <classifier>tests</classifier>
     </dependency>
 
-    <dependency>
+      <dependency>
+          <groupId>${project.parent.groupId}</groupId>
+          <artifactId>queue</artifactId>
+          <version>${project.version}</version>
+          <type>test-jar</type>
+          <scope>test</scope>
+      </dependency>
+
+      <dependency>
       <groupId>org.apache.usergrid</groupId>
       <artifactId>usergrid-config</artifactId>
       <version>${project.version}</version>
@@ -310,6 +320,8 @@
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
+
+
 
     <dependency>
       <groupId>org.springframework</groupId>

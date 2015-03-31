@@ -292,7 +292,7 @@ public class QueryProcessorImpl implements QueryProcessor {
             }
         }
         if (logger.isDebugEnabled()) {
-        	logger.debug("Getting result for query: [{}],  returning entityIds size: {}", 
+        	logger.debug("Getting result for query: [{}],  returning entityIds size: {}",
                     getQuery(), entityIds.size());
         }
 
@@ -307,8 +307,8 @@ public class QueryProcessorImpl implements QueryProcessor {
         results.setCursor( resultsCursor.asString() );
 
         results.setQuery( query );
-        results.setQueryProcessor( this );
-        results.setSearchVisitor( visitor );
+//        results.setQueryProcessor( this );
+//        results.setSearchVisitor( visitor );
 
         return results;
     }
@@ -621,12 +621,12 @@ public class QueryProcessorImpl implements QueryProcessor {
 
         @Override
         public QueryBuilder getQueryBuilder() {
-            throw new UnsupportedOperationException("Not supported by this vistor implementation."); 
+            throw new UnsupportedOperationException("Not supported by this vistor implementation.");
         }
 
         @Override
         public FilterBuilder getFilterBuilder() {
-            throw new UnsupportedOperationException("Not supported by this vistor implementation."); 
+            throw new UnsupportedOperationException("Not supported by this vistor implementation.");
         }
     }
 

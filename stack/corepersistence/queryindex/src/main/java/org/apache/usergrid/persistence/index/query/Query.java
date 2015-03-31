@@ -67,7 +67,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-
+/**
+ * TODO, this is a copy from 1.0 and a mess.  Clean this up to be clearer as we iterate on our refactor of EM/RM
+ * Query should only be used for term querying, not identity of name lookup, that should
+ * come directly from cassandra
+ */
 public class Query {
     private static final Logger logger = LoggerFactory.getLogger( Query.class );
 
@@ -113,33 +117,41 @@ public class Query {
     }
 
 
+    /**
+     * Creates a deep copy of a query from another query
+     * @param q
+     */
     public Query( Query q ) {
-        if ( q != null ) {
-            type = q.type;
-            sortPredicates = q.sortPredicates != null
-                    ? new ArrayList<SortPredicate>( q.sortPredicates ) : null;
-            startResult = q.startResult;
-            cursor = q.cursor;
-            limit = q.limit;
-            selectAssignments = q.selectAssignments != null
-                    ? new LinkedHashMap<String, String>( q.selectAssignments ) : null;
-            mergeSelectResults = q.mergeSelectResults;
-            //level = q.level;
-            connectionType = q.connectionType;
-            permissions = q.permissions != null ? new ArrayList<String>( q.permissions ) : null;
-            reversed = q.reversed;
-            reversedSet = q.reversedSet;
-            startTime = q.startTime;
-            finishTime = q.finishTime;
-            resolution = q.resolution;
-            pad = q.pad;
-            rootOperand = q.rootOperand;
-            identifiers = q.identifiers != null
-                    ? new ArrayList<Identifier>( q.identifiers ) : null;
-            counterFilters = q.counterFilters != null
-                    ? new ArrayList<CounterFilterPredicate>( q.counterFilters ) : null;
-            collection = q.collection;
+        if ( q == null ) {
+            return;
         }
+
+        type = q.type;
+        sortPredicates = q.sortPredicates != null
+            ? new ArrayList<>( q.sortPredicates ) : null;
+        startResult = q.startResult;
+        cursor = q.cursor;
+        limit = q.limit;
+        selectAssignments = q.selectAssignments != null
+            ? new LinkedHashMap<>( q.selectAssignments ) : null;
+        mergeSelectResults = q.mergeSelectResults;
+        //level = q.level;
+        connectionType = q.connectionType;
+        permissions = q.permissions != null ? new ArrayList<>( q.permissions ) : null;
+        reversed = q.reversed;
+        reversedSet = q.reversedSet;
+        startTime = q.startTime;
+        finishTime = q.finishTime;
+        resolution = q.resolution;
+        pad = q.pad;
+        rootOperand = q.rootOperand;
+        identifiers = q.identifiers != null
+            ? new ArrayList<>( q.identifiers ) : null;
+        counterFilters = q.counterFilters != null
+            ? new ArrayList<>( q.counterFilters ) : null;
+        collection = q.collection;
+        level = q.level;
+
     }
 
 
@@ -168,15 +180,15 @@ public class Query {
         }
 
 
-         // Add our filter for context to our query for fast execution.
-         // Fast because it utilizes bitsets internally. See this post for more detail.
-         // http://www.elasticsearch.org/blog/all-about-elasticsearch-filter-bitsets/
+        // Add our filter for context to our query for fast execution.
+        // Fast because it utilizes bitsets internally. See this post for more detail.
+        // http://www.elasticsearch.org/blog/all-about-elasticsearch-filter-bitsets/
 
         // TODO evaluate performance when it's an all query.
         // Do we need to put the context term first for performance?
         if ( queryBuilder != null ) {
             queryBuilder = QueryBuilders.boolQuery().must( queryBuilder ).must( QueryBuilders
-                    .termQuery( IndexingUtils.ENTITY_CONTEXT_FIELDNAME, context ) );
+                .termQuery( IndexingUtils.ENTITY_CONTEXT_FIELDNAME, context ) );
         }
 
         //nothing was specified ensure we specify the context in the search
@@ -188,8 +200,8 @@ public class Query {
     }
 
 
-	public FilterBuilder createFilterBuilder() {
-	    FilterBuilder filterBuilder = null;
+    public FilterBuilder createFilterBuilder() {
+        FilterBuilder filterBuilder = null;
 
         if ( getRootOperand() != null ) {
             QueryVisitor v = new EsQueryVistor();
@@ -203,7 +215,7 @@ public class Query {
         }
 
         return filterBuilder;
-	}
+    }
 
 
     /**
@@ -231,8 +243,8 @@ public class Query {
 
         String qlt = ql.toLowerCase();
         if (       !qlt.startsWith( "select" )
-                && !qlt.startsWith( "insert" )
-                && !qlt.startsWith( "update" ) && !qlt.startsWith( "delete" ) ) {
+            && !qlt.startsWith( "insert" )
+            && !qlt.startsWith( "update" ) && !qlt.startsWith( "delete" ) ) {
 
             if ( qlt.startsWith( "order by" ) ) {
                 ql = "select * " + ql;
@@ -286,7 +298,7 @@ public class Query {
 
         if ( o instanceof Map ) {
             @SuppressWarnings({ "unchecked", "rawtypes" }) Map<String, List<String>> params =
-                    ClassUtils.cast( MapUtils.toMapList( ( Map ) o ) );
+                ClassUtils.cast( MapUtils.toMapList( ( Map ) o ) );
             return fromQueryParams( params );
         }
         return null;
@@ -294,7 +306,7 @@ public class Query {
 
 
     public static Query fromQueryParams( Map<String, List<String>> params )
-            throws QueryParseException {
+        throws QueryParseException {
         Query q = null;
         CounterResolution resolution = null;
         List<Identifier> identifiers = null;
@@ -702,8 +714,8 @@ public class Query {
         for ( SortPredicate s : sortPredicates ) {
             if ( s.getPropertyName().equals( propertyName ) ) {
                 logger.error(
-                        "Attempted to set sort order for " + s.getPropertyName()
-                                + " more than once, discarding..." );
+                    "Attempted to set sort order for " + s.getPropertyName()
+                        + " more than once, discarding..." );
                 return this;
             }
         }
@@ -1126,7 +1138,7 @@ public class Query {
 
 
         public SortPredicate(@JsonProperty("propertyName")  String propertyName,
-                @JsonProperty("direction")  Query.SortDirection direction ) {
+                             @JsonProperty("direction")  Query.SortDirection direction ) {
 
             if ( propertyName == null ) {
                 throw new NullPointerException( "Property name was null" );

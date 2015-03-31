@@ -42,7 +42,6 @@ import org.apache.commons.cli.Options;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import org.apache.usergrid.management.ApplicationInfo;
 
 
 /**

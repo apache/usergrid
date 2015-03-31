@@ -29,6 +29,7 @@ import org.junit.Test;
 import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
+import org.apache.usergrid.persistence.core.util.IdGenerator;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchIdType;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -40,7 +41,7 @@ import rx.Observable;
 
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createEdge;
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createGetByEdge;
-import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createId;
+import static org.apache.usergrid.persistence.core.util.IdGenerator.createId;
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createSearchByEdge;
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createSearchByEdgeAndId;
 import static org.junit.Assert.assertEquals;
@@ -361,18 +362,18 @@ public abstract class GraphManagerIT {
     public void testWriteReadEdgeTypePagingSource() throws TimeoutException, InterruptedException {
 
         GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
-        final Id sourceId = createId( "source" );
+        final Id sourceId = IdGenerator.createId( "source" );
 
 
-        Edge edge1 = createEdge( sourceId, "test", createId( "target" ) );
+        Edge edge1 = createEdge( sourceId, "test", IdGenerator.createId( "target" ) );
 
         gm.writeEdge( edge1 ).toBlocking().last();
 
-        Edge edge2 = createEdge( sourceId, "test", createId( "target" ) );
+        Edge edge2 = createEdge( sourceId, "test", IdGenerator.createId( "target" ) );
 
         gm.writeEdge( edge2 ).toBlocking().last();
 
-        Edge edge3 = createEdge( sourceId, "test", createId( "target" ) );
+        Edge edge3 = createEdge( sourceId, "test", IdGenerator.createId( "target" ) );
 
         gm.writeEdge( edge3 ).toBlocking().last();
 
@@ -418,17 +419,17 @@ public abstract class GraphManagerIT {
         GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
 
 
-        final Id targetId = createId( "target" );
+        final Id targetId = IdGenerator.createId( "target" );
 
-        Edge edge1 = createEdge( createId( "source" ), "test", targetId );
+        Edge edge1 = createEdge( IdGenerator.createId( "source" ), "test", targetId );
 
         gm.writeEdge( edge1 ).toBlocking().last();
 
-        Edge edge2 = createEdge( createId( "source" ), "test", targetId );
+        Edge edge2 = createEdge( IdGenerator.createId( "source" ), "test", targetId );
 
         gm.writeEdge( edge2 ).toBlocking().last();
 
-        Edge edge3 = createEdge( createId( "source" ), "test", targetId );
+        Edge edge3 = createEdge( IdGenerator.createId( "source" ), "test", targetId );
 
         gm.writeEdge( edge3 ).toBlocking().last();
 
@@ -963,20 +964,25 @@ public abstract class GraphManagerIT {
         Id targetId2 = new SimpleId( "target2" );
 
 
-        Edge edge1 = createEdge( sourceId, "test", targetId1, System.currentTimeMillis() );
+        long startTime = System.currentTimeMillis();
+
+        long edge1Time = startTime;
+        long edge2Time = edge1Time+1;
+
+        final long maxVersion= edge2Time;
+
+        Edge edge1 = createEdge( sourceId, "test", targetId1, edge1Time);
 
         gm.writeEdge( edge1 ).toBlocking().singleOrDefault( null );
 
-        Edge edge2 = createEdge( sourceId, "test", targetId2, System.currentTimeMillis() );
+        Edge edge2 = createEdge( sourceId, "test", targetId2, edge2Time );
 
         gm.writeEdge( edge2 ).toBlocking().singleOrDefault( null );
 
 
-        final long maxVersion = System.currentTimeMillis();
 
-
-        assertTrue( Long.compare( maxVersion, edge2.getTimestamp() ) > 0 );
-        assertTrue( Long.compare( maxVersion, edge1.getTimestamp() ) > 0 );
+        assertTrue( Long.compare( maxVersion, edge2.getTimestamp() ) >= 0 );
+        assertTrue( Long.compare( maxVersion, edge1.getTimestamp() ) >= 0 );
 
 
         //get our 2 edges

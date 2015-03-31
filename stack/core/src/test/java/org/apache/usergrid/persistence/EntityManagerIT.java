@@ -26,6 +26,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -41,9 +42,11 @@ import org.apache.usergrid.persistence.index.query.Query.Level;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.utils.UUIDUtils;
 
+import static org.apache.usergrid.persistence.Schema.PROPERTY_APPLICATION_ID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 
@@ -78,7 +81,7 @@ public class EntityManagerIT extends AbstractCoreIT {
         assertEquals( "user.username not expected value", "edanuff", user.getProperty( "username"));
         assertEquals( "user.email not expected value", "ed@anuff.com", user.getProperty( "email" ));
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         EntityRef userRef = em.getAlias(
             new SimpleEntityRef("application", applicationId), "users", "edanuff" );
@@ -280,7 +283,7 @@ public class EntityManagerIT extends AbstractCoreIT {
         em.delete( thing );
         LOG.info( "Entity deleted" );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         // now search by username, no results should be returned
 
@@ -307,13 +310,13 @@ public class EntityManagerIT extends AbstractCoreIT {
         Entity user = em.create( "user", properties );
         LOG.info( "Entity created" );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         LOG.info( "Starting entity delete" );
         em.delete( user );
         LOG.info( "Entity deleted" );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         // now search by username, no results should be returned
 
@@ -332,7 +335,7 @@ public class EntityManagerIT extends AbstractCoreIT {
         user = em.create( "user", properties );
         LOG.info( "Entity created" );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         r = em.searchCollection( em.getApplicationRef(), "users",
                 new Query().addEqualityFilter( "username", name ) );
@@ -387,15 +390,17 @@ public class EntityManagerIT extends AbstractCoreIT {
         organizationEntity.setProperty( "name", "testCounterOrg" );
         organizationEntity = em.create( organizationEntity );
 
-        UUID applicationId = setup.getEmf().createApplication(
+        Entity appInfo = setup.getEmf().createApplicationV2(
                 "testCounterOrg", "testEntityCounters" + UUIDGenerator.newTimeUUID()  );
+        UUID applicationId = UUIDUtils.tryExtractUUID(
+            appInfo.getProperty(PROPERTY_APPLICATION_ID).toString());
 
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
         properties.put( "name", "testEntityCounters" );
-        Entity applicationEntity = em.create( applicationId, "application_info", properties );
+        Entity applicationEntity = em.create( applicationId, CpNamingUtils.APPLICATION_INFO, properties );
 
         em.createConnection( new SimpleEntityRef( "group", organizationEntity.getUuid() ), "owns",
-                new SimpleEntityRef( "application_info", applicationId ) );
+                new SimpleEntityRef( CpNamingUtils.APPLICATION_INFO, applicationId ) );
 
         em = setup.getEmf().getEntityManager( applicationId );
         properties = new LinkedHashMap<String, Object>();
@@ -450,7 +455,7 @@ public class EntityManagerIT extends AbstractCoreIT {
 
         EntityRef appRef = em.get( new SimpleEntityRef("application", app.getId() ) );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         Results r = em.getCollection( appRef, "things", null, 10, Level.ALL_PROPERTIES, false );
 
@@ -542,7 +547,7 @@ public class EntityManagerIT extends AbstractCoreIT {
 
         Entity createdDevice = em.createItemInCollection( createdUser, "devices", "device", device );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         Entity returnedDevice = em.get( new SimpleEntityRef("device", createdDevice.getUuid()));
 
@@ -574,7 +579,7 @@ public class EntityManagerIT extends AbstractCoreIT {
         Entity user = em.create( "robot", properties );
         assertNotNull( user );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         assertNotNull( em.get( user.getUuid() ));
     }

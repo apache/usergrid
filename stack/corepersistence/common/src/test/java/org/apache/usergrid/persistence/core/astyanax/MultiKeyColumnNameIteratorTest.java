@@ -52,6 +52,7 @@ import com.netflix.astyanax.util.RangeBuilder;
 import rx.Observable;
 import rx.functions.Action1;
 import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 import static org.junit.Assert.assertEquals;
 
@@ -80,7 +81,12 @@ public class MultiKeyColumnNameIteratorTest {
         final CassandraConfig cassandraConfig = new CassandraConfig() {
             @Override
             public ConsistencyLevel getReadCL() {
-                return ConsistencyLevel.CL_QUORUM;
+                return ConsistencyLevel.CL_LOCAL_ONE;
+            }
+
+            @Override
+            public ConsistencyLevel getConsistentReadCL() {
+                return ConsistencyLevel.CL_LOCAL_QUORUM;
             }
 
 
@@ -120,100 +126,95 @@ public class MultiKeyColumnNameIteratorTest {
 
         final long maxValue = 10000;
 
+
         /**
          * Write to both rows in parallel
          */
         Observable.from( new String[] { rowKey1, rowKey2, rowKey3 } )
-                  .parallel( new Func1<Observable<String>, Observable<String>>() {
-                      @Override
-                      public Observable<String> call( final Observable<String> stringObservable ) {
-                          return stringObservable.doOnNext( new Action1<String>() {
-                              @Override
-                              public void call( final String key ) {
+            //perform a flatmap
+                  .flatMap( stringObservable -> Observable.just( stringObservable ).doOnNext( key -> {
+                      final MutationBatch batch = keyspace.prepareMutationBatch();
 
-                                  final MutationBatch batch = keyspace.prepareMutationBatch();
+                      for ( long i = 0; i < maxValue; i++ ) {
+                          batch.withRow( COLUMN_FAMILY, key ).putColumn( i, TRUE );
 
-                                  for ( long i = 0; i < maxValue; i++ ) {
-                                      batch.withRow( COLUMN_FAMILY, key ).putColumn( i, TRUE );
-
-                                      if ( i % 1000 == 0 ) {
-                                          try {
-                                              batch.execute();
-                                          }
-                                          catch ( ConnectionException e ) {
-                                              throw new RuntimeException( e );
-                                          }
-                                      }
-                                  }
-
-                                  try {
-                                      batch.execute();
-                                  }
-                                  catch ( ConnectionException e ) {
-                                      throw new RuntimeException( e );
-                                  }
+                          if ( i % 1000 == 0 ) {
+                              try {
+                                  batch.execute();
                               }
-                          } );
+                              catch ( ConnectionException e ) {
+                                  throw new RuntimeException( e );
+                              }
+                          }
                       }
-                  } ).toBlocking().last();
+
+                      try {
+                          batch.execute();
+                      }
+                      catch ( ConnectionException e ) {
+                          throw new RuntimeException( e );
+                      }
+                  } ).subscribeOn( Schedulers.io() ) ).toBlocking().last();
 
 
-        //create 3 iterators
 
-        ColumnNameIterator<Long, Long> row1Iterator = createIterator( rowKey1, false );
-        ColumnNameIterator<Long, Long> row2Iterator = createIterator( rowKey2, false );
-        ColumnNameIterator<Long, Long> row3Iterator = createIterator( rowKey3, false );
 
-        final Comparator<Long> ascendingComparator = new Comparator<Long>() {
+            //create 3 iterators
 
-            @Override
-            public int compare( final Long o1, final Long o2 ) {
-                return Long.compare( o1, o2 );
-            }
-        };
+            ColumnNameIterator<Long, Long> row1Iterator = createIterator( rowKey1, false );
+            ColumnNameIterator<Long, Long> row2Iterator = createIterator( rowKey2, false );
+            ColumnNameIterator<Long, Long> row3Iterator = createIterator( rowKey3, false );
 
-        /**
-         * Again, arbitrary buffer size to attempt we buffer at some point
-         */
-        final MultiKeyColumnNameIterator<Long, Long> ascendingItr =
+            final Comparator<Long> ascendingComparator = new Comparator<Long>() {
+
+                @Override
+                public int compare( final Long o1, final Long o2 ) {
+                    return Long.compare( o1, o2 );
+                }
+            };
+
+            /**
+             * Again, arbitrary buffer size to attempt we buffer at some point
+             */
+            final MultiKeyColumnNameIterator<Long, Long> ascendingItr =
                 new MultiKeyColumnNameIterator<>( Arrays.asList( row1Iterator, row2Iterator, row3Iterator ),
-                        ascendingComparator, 900 );
+                    ascendingComparator, 900 );
 
 
-        //ensure we have to make several trips, purposefully set to a nonsensical value to ensure we make all the
-        // trips required
+            //ensure we have to make several trips, purposefully set to a nonsensical value to ensure we make all the
+            // trips required
 
 
-        for ( long i = 0; i < maxValue; i++ ) {
-            assertEquals( i, ascendingItr.next().longValue() );
-        }
-
-        //now test it in reverse
-
-        ColumnNameIterator<Long, Long> row1IteratorDesc = createIterator( rowKey1, true );
-        ColumnNameIterator<Long, Long> row2IteratorDesc = createIterator( rowKey2, true );
-        ColumnNameIterator<Long, Long> row3IteratorDesc = createIterator( rowKey3, true );
-
-        final Comparator<Long> descendingComparator = new Comparator<Long>() {
-
-            @Override
-            public int compare( final Long o1, final Long o2 ) {
-                return ascendingComparator.compare( o1, o2 ) * -1;
+            for ( long i = 0; i < maxValue; i++ ) {
+                assertEquals( i, ascendingItr.next().longValue() );
             }
-        };
 
-        /**
-         * Again, arbitrary buffer size to attempt we buffer at some point
-         */
-        final MultiKeyColumnNameIterator<Long, Long> descendingItr =
+            //now test it in reverse
+
+            ColumnNameIterator<Long, Long> row1IteratorDesc = createIterator( rowKey1, true );
+            ColumnNameIterator<Long, Long> row2IteratorDesc = createIterator( rowKey2, true );
+            ColumnNameIterator<Long, Long> row3IteratorDesc = createIterator( rowKey3, true );
+
+            final Comparator<Long> descendingComparator = new Comparator<Long>() {
+
+                @Override
+                public int compare( final Long o1, final Long o2 ) {
+                    return ascendingComparator.compare( o1, o2 ) * -1;
+                }
+            };
+
+            /**
+             * Again, arbitrary buffer size to attempt we buffer at some point
+             */
+            final MultiKeyColumnNameIterator<Long, Long> descendingItr =
                 new MultiKeyColumnNameIterator<>( Arrays.asList( row1IteratorDesc, row2IteratorDesc, row3IteratorDesc ),
-                        descendingComparator, 900 );
+                    descendingComparator, 900 );
 
 
-        for ( long i = maxValue - 1; i > -1; i-- ) {
-            assertEquals( i, descendingItr.next().longValue() );
+            for ( long i = maxValue - 1; i > -1; i-- ) {
+                assertEquals( i, descendingItr.next().longValue() );
+            }
         }
-    }
 
 
     @Test
@@ -228,39 +229,28 @@ public class MultiKeyColumnNameIteratorTest {
            /**
             * Write to both rows in parallel
             */
-           Observable.just( rowKey1  )
-                     .parallel( new Func1<Observable<String>, Observable<String>>() {
-                         @Override
-                         public Observable<String> call( final Observable<String> stringObservable ) {
-                             return stringObservable.doOnNext( new Action1<String>() {
-                                 @Override
-                                 public void call( final String key ) {
+           Observable.just( rowKey1  ).flatMap( rowKey -> Observable.just( rowKey ).doOnNext( key -> {
+               final MutationBatch batch = keyspace.prepareMutationBatch();
 
-                                     final MutationBatch batch = keyspace.prepareMutationBatch();
+               for ( long i = 0; i < maxValue; i++ ) {
+                   batch.withRow( COLUMN_FAMILY, key ).putColumn( i, TRUE );
 
-                                     for ( long i = 0; i < maxValue; i++ ) {
-                                         batch.withRow( COLUMN_FAMILY, key ).putColumn( i, TRUE );
+                   if ( i % 1000 == 0 ) {
+                       try {
+                           batch.execute();
+                       }
+                       catch ( ConnectionException e ) {
+                           throw new RuntimeException( e );
+                       }
+                   }
+               }
 
-                                         if ( i % 1000 == 0 ) {
-                                             try {
-                                                 batch.execute();
-                                             }
-                                             catch ( ConnectionException e ) {
-                                                 throw new RuntimeException( e );
-                                             }
-                                         }
-                                     }
-
-                                     try {
-                                         batch.execute();
-                                     }
-                                     catch ( ConnectionException e ) {
-                                         throw new RuntimeException( e );
-                                     }
-                                 }
-                             } );
-                         }
-                     } ).toBlocking().last();
+               try {
+                   batch.execute();
+               }
+               catch ( ConnectionException e ) {
+                   throw new RuntimeException( e );
+               }} ).subscribeOn( Schedulers.io() ) ).toBlocking().last();
 
 
            //create 3 iterators

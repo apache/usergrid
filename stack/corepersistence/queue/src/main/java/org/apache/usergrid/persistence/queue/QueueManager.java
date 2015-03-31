@@ -29,8 +29,8 @@ public interface QueueManager {
     /**
      * Read messages from queue
      * @param limit
-     * @param transactionTimeout timeout in ms
-     * @param waitTime wait time for next message in ms
+     * @param transactionTimeout timeout in seconds
+     * @param waitTime wait time for next message in milliseconds
      * @param klass class to cast the return from
      * @return List of Queue Messages
      */

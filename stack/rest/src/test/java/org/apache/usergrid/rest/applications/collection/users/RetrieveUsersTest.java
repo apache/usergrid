@@ -75,7 +75,7 @@ public class RetrieveUsersTest extends AbstractRestIT {
 
         Map<String,Object> metadata = (Map)entity.get( "metadata" );
         Map<String,Object> sets = (Map)metadata.get( "sets" );
-        Map<String,Object> rolenames =(Map) sets.get( "rolenames" );
-        Assert.assertTrue( "rolenames URL ends with /roles", rolenames.toString().endsWith( "/roles" ) );
+        String rolenames =(String) sets.get( "rolenames" );
+        Assert.assertTrue( "rolenames URL ends with /roles", rolenames.endsWith( "/roles" ) );
     }
 }

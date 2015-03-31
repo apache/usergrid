@@ -76,7 +76,7 @@ public class ConnectionHelper extends CollectionIoHelper {
     @Override
     public Results getResults( Query query ) throws Exception {
 
-        app.getEntityManager().refreshIndex();
+        app.refreshIndex();
         query.setConnectionType( CONNECTION );
         query.setEntityType( "test" );
 

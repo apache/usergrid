@@ -17,76 +17,29 @@
  *  * directory of this distribution.
  *
  */
-
 package org.apache.usergrid.persistence.index;
 
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.index.impl.IndexingUtils;
-
 /**
- * Class is used to generate an index name and alias name
+ * Identifier for where an index is in underlying server
  */
-public class IndexIdentifier{
-    private final IndexFig config;
-    private final ApplicationScope applicationScope;
-
-    public IndexIdentifier(IndexFig config, ApplicationScope applicationScope) {
-        this.config = config;
-        this.applicationScope = applicationScope;
-    }
+public interface IndexIdentifier {
 
     /**
-     * Get the alias name
+     * get the alias name
      * @return
      */
-    public IndexAlias getAlias() {
-        return new IndexAlias(config,getIndexBase());
-    }
+    IndexAlias getAlias();
 
     /**
-     * Get index name, send in additional parameter to add incremental indexes
+     * get index name from suffix
      * @param suffix
      * @return
      */
-    public String getIndex(String suffix) {
-        if (suffix != null) {
-            return getIndexBase() + "_" + suffix;
-        } else {
-            return getIndexBase();
-        }
-    }
+    String getIndex(String suffix);
 
     /**
-     * returns the base name for index which will be used to add an alias and index
+     * return unique string
      * @return
      */
-    private String getIndexBase() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(config.getIndexPrefix()).append(IndexingUtils.SEPARATOR);
-        IndexingUtils.idString(sb, applicationScope.getApplication());
-        return sb.toString();
-    }
-
-    public class IndexAlias{
-        private final String readAlias;
-        private final String writeAlias;
-
-        public IndexAlias(IndexFig indexFig,String indexBase) {
-            this.writeAlias = indexBase + "_write_" + indexFig.getAliasPostfix();
-            this.readAlias = indexBase + "_read_" + indexFig.getAliasPostfix();
-        }
-
-        public String getReadAlias() {
-            return readAlias;
-        }
-
-        public String getWriteAlias() {
-            return writeAlias;
-        }
-    }
-
-    public String toString() {
-        return "application: " + applicationScope.getApplication().getUuid();
-    }
-
+    String toString();
 }

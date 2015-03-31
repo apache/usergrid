@@ -25,6 +25,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang.RandomStringUtils;
+import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -81,7 +82,6 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
     @After
     public void printReport() {
-
         logger.debug("Printing metrics report");
         reporter.report();
         reporter.stop();
@@ -144,7 +144,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
                     shepardCount++;
                 }
 
-                em.refreshIndex();
+                app.refreshIndex();
 
 //                em.createConnection(entity, "herds", cat1);
 //                em.createConnection(entity, "herds", cat2);
@@ -164,7 +164,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
         }
 
         logger.info("Created {} entities", entityCount);
-        em.refreshIndex();
+        app.refreshIndex();
 
         // ----------------- test that we can read them, should work fine
 
@@ -174,8 +174,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
         // ----------------- delete the system and application indexes
 
-        logger.debug("Deleting app index index");
-        //deleteIndex( CpNamingUtils.SYSTEM_APP_ID );
+        logger.debug("Deleting apps");
         deleteIndex( em.getApplicationId() );
 
         // ----------------- test that we can read them, should fail
@@ -187,7 +186,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
         } catch (Exception expected) {}
 
-        // ----------------- rebuild index for catherders only
+//        ----------------- rebuild index for catherders only
 
         logger.debug("Preparing to rebuild all indexes");;
 
@@ -282,7 +281,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
                 entityMap.put("key", entityCount );
                 entity = em.create("testType", entityMap );
 
-                em.refreshIndex();
+                app.refreshIndex();
 
                 em.createConnection(entity, "herds", cat1);
                 em.createConnection(entity, "herds", cat2);
@@ -302,7 +301,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
         }
 
         logger.info("Created {} entities", entityCount);
-        em.refreshIndex();
+        app.refreshIndex();
 
         // ----------------- test that we can read them, should work fine
 
@@ -311,13 +310,14 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
         // ----------------- delete the system and application indexes
 
-        logger.debug("Deleting app index and system app index");
+        logger.debug("Deleting app index");
 
         deleteIndex( em.getApplicationId() );
 
+        // ----------------- test that we can read them, should fail
+
         // deleting sytem app index will interfere with other concurrently running tests
         //deleteIndex( CpNamingUtils.SYSTEM_APP_ID );
-
 
         // ----------------- test that we can read them, should fail
 
@@ -362,6 +362,8 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
             registry.remove( meterName );
             logger.info("Rebuilt index");
 
+            app.refreshIndex();
+
         } catch (Exception ex) {
             logger.error("Error rebuilding index", ex);
             fail();
@@ -369,30 +371,32 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
         // ----------------- test that we can read them
 
+        Thread.sleep(2000);
         readData( em, "testTypes", entityCount, 3 );
     }
 
     /**
-     * Delete index for all applications, just need the one to get started.
+     * Delete app index
      */
     private void deleteIndex( UUID appUuid ) {
 
         Injector injector = SpringResource.getInstance().getBean( Injector.class );
         EntityIndexFactory eif = injector.getInstance( EntityIndexFactory.class );
 
-        Id appId = new SimpleId( appUuid, "application");
+        Id appId = new SimpleId( appUuid, Schema.TYPE_APPLICATION );
         ApplicationScope scope = new ApplicationScopeImpl( appId );
-        EntityIndex ei = eif.createEntityIndex(scope);
-        EsEntityIndexImpl eeii = (EsEntityIndexImpl)ei;
+        ApplicationEntityIndex ei = eif.createApplicationEntityIndex(scope);
 
-        eeii.deleteIndex();
+        ei.deleteApplication().toBlocking().lastOrDefault(null);
+        app.refreshIndex();
+
     }
 
 
     private int readData( EntityManager em,
         String collectionName, int expectedEntities, int expectedConnections ) throws Exception {
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         Query q = Query.fromQL("select * where key1=1000");
         q.setLimit(40);
@@ -427,7 +431,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
         if ( expectedEntities != -1 && expectedEntities != count ) {
             throw new RuntimeException("Did not get expected "
-                    + expectedEntities + " entities, instead got " + count );
+                + expectedEntities + " entities, instead got " + count );
         }
         return count;
     }

@@ -36,6 +36,7 @@ import java.util.UUID;
 
 import javax.annotation.Resource;
 
+import org.apache.usergrid.persistence.index.EntityIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -90,7 +91,6 @@ import org.apache.usergrid.utils.UUIDUtils;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-import com.yammer.metrics.annotation.Metered;
 
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.ColumnSlice;
@@ -191,6 +191,7 @@ public class EntityManagerImpl implements EntityManager {
     public static final String APPLICATION_COLLECTION = "application.collection.";
     public static final String APPLICATION_ENTITIES = "application.entities";
     public static final long ONE_COUNT = 1L;
+
     @Resource
     private EntityManagerFactoryImpl emf;
     @Resource
@@ -213,7 +214,7 @@ public class EntityManagerImpl implements EntityManager {
 
 
     @Override
-    public void init(EntityManagerFactory emf, UUID applicationId) {
+    public void init(EntityManagerFactory emf, EntityIndex entityIndex, UUID applicationId) {
         init( (EntityManagerFactoryImpl)emf, null, null, applicationId, false);
     }
 
@@ -505,7 +506,6 @@ public class EntityManagerImpl implements EntityManager {
      *
      * @return True if this entity can safely "own" this property name and value unique combination
      */
-    @Metered( group = "core", name = "EntityManager_isPropertyValueUniqueForEntity" )
     public boolean isPropertyValueUniqueForEntity( UUID ownerEntityId, String entityType, String propertyName,
                                                    Object propertyValue ) throws Exception {
 
@@ -536,7 +536,7 @@ public class EntityManagerImpl implements EntityManager {
     /**
      * Return all UUIDs that have this unique value
      *
-     * @param ownerEntityId The entity id that owns this entity collection
+     * @param ownerEntityRef The entity id that owns this entity collection
      * @param collectionName The entity collection name
      * @param propertyName The name of the unique property
      * @param propertyValue The value of the unique property
@@ -623,7 +623,6 @@ public class EntityManagerImpl implements EntityManager {
 
 
     @Override
-    @Metered( group = "core", name = "EntityManager_getAlias_single" )
     public EntityRef getAlias( EntityRef ownerRef, String collectionType, String aliasValue )
             throws Exception {
 
@@ -658,7 +657,6 @@ public class EntityManagerImpl implements EntityManager {
 
 
     @Override
-    @Metered( group = "core", name = "EntityManager_getAlias_multi" )
     public Map<String, EntityRef> getAlias(
             EntityRef ownerRef, String collectionName, List<String> aliases ) throws Exception {
 
@@ -735,7 +733,6 @@ public class EntityManagerImpl implements EntityManager {
      *
      * @throws Exception the exception
      */
-    @Metered( group = "core", name = "EntityManager_create" )
     @TraceParticipant
     public <A extends Entity> A create(
             String entityType, Class<A> entityClass, Map<String, Object> properties,
@@ -754,7 +751,6 @@ public class EntityManagerImpl implements EntityManager {
 
 
     @SuppressWarnings( "unchecked" )
-    @Metered( group = "core", name = "EntityManager_batchCreate" )
     public <A extends Entity> A batchCreate(
             Mutator<ByteBuffer> m, String entityType, Class<A> entityClass,
             Map<String, Object> properties, UUID importId, UUID timestampUuid )
@@ -975,7 +971,6 @@ public class EntityManagerImpl implements EntityManager {
     }
 
 
-    @Metered( group = "core", name = "EntityManager_insertEntity" )
     public void insertEntity( EntityRef entityRef ) throws Exception {
 
         String type = entityRef.getType();
@@ -1021,7 +1016,6 @@ public class EntityManagerImpl implements EntityManager {
      *
      * @throws Exception the exception
      */
-    @Metered( group = "core", name = "EntityManager_getEntityType" )
     public String getEntityType( UUID entityId ) throws Exception {
 
         HColumn<String, String> column =
@@ -1044,7 +1038,6 @@ public class EntityManagerImpl implements EntityManager {
      *
      * @throws Exception the exception
      */
-    @Metered( group = "core", name = "EntityManager_loadPartialEntity" )
     public DynamicEntity loadPartialEntity( UUID entityId, String... propertyNames ) throws Exception {
 
         List<HColumn<String, ByteBuffer>> results = null;
@@ -1133,7 +1126,6 @@ public class EntityManagerImpl implements EntityManager {
      *
      * @throws Exception the exception
      */
-    @Metered( group = "core", name = "EntityManager_getEntities" )
     public <A extends Entity> List<A> getEntities(
             Collection<UUID> entityIds, Class<A> entityClass ) throws Exception {
 
@@ -1192,7 +1184,6 @@ public class EntityManagerImpl implements EntityManager {
     }
 
 
-    @Metered( group = "core", name = "EntityManager_getPropertyNames" )
     public Set<String> getPropertyNames( EntityRef entity ) throws Exception {
 
         Set<String> propertyNames = new TreeSet<String>( CASE_INSENSITIVE_ORDER );
@@ -1215,7 +1206,6 @@ public class EntityManagerImpl implements EntityManager {
     }
 
 
-    @Metered( group = "core", name = "EntityManager_getDictionaryNames" )
     public Set<String> getDictionaryNames( EntityRef entity ) throws Exception {
 
         Set<String> dictionaryNames = new TreeSet<String>( CASE_INSENSITIVE_ORDER );
@@ -1239,7 +1229,6 @@ public class EntityManagerImpl implements EntityManager {
 
 
     @Override
-    @Metered( group = "core", name = "EntityManager_getDictionaryElementValue" )
     public Object getDictionaryElementValue( EntityRef entity, String dictionaryName, String elementName )
             throws Exception {
 
@@ -1280,7 +1269,6 @@ public class EntityManagerImpl implements EntityManager {
     }
 
 
-    @Metered( group = "core", name = "EntityManager_getDictionaryElementValues" )
     public Map<String, Object> getDictionaryElementValues( EntityRef entity, String dictionaryName,
                                                            String... elementNames ) throws Exception {
 
@@ -1342,7 +1330,6 @@ public class EntityManagerImpl implements EntityManager {
      * @throws Exception the exception
      */
     @Override
-    @Metered( group = "core", name = "EntityManager_getDictionaryAsMap" )
     public Map<Object, Object> getDictionaryAsMap( EntityRef entity, String dictionaryName ) throws Exception {
 
         entity = validate( entity );
@@ -1405,7 +1392,6 @@ public class EntityManagerImpl implements EntityManager {
      *
      * @throws Exception the exception
      */
-    @Metered( group = "core", name = "EntityManager_updateProperties" )
     public void updateProperties(
             UUID entityId, String type, Map<String, Object> properties ) throws Exception {
 
@@ -1423,7 +1409,6 @@ public class EntityManagerImpl implements EntityManager {
     }
 
 
-    @Metered( group = "core", name = "EntityManager_deleteEntity" )
     public void deleteEntity( UUID entityId, String type ) throws Exception {
 
         logger.info( "deleteEntity {} of application {}", entityId, applicationId );
@@ -1608,7 +1593,6 @@ public class EntityManagerImpl implements EntityManager {
 
 
     @Override
-    @Metered( group = "core", name = "EntityManager_getAggregateCounters" )
     public Results getAggregateCounters( UUID userId, UUID groupId, UUID queueId, String category,
             String counterName, CounterResolution resolution, long start, long finish, boolean pad ) {
 
@@ -1647,7 +1631,6 @@ public class EntityManagerImpl implements EntityManager {
 
 
     @Override
-    @Metered( group = "core", name = "EntityManager_getAggregateCounters_fromQueryObj" )
     public Results getAggregateCounters( Query query ) throws Exception {
         CounterResolution resolution = query.getResolution();
         if ( resolution == null ) {
@@ -1732,7 +1715,6 @@ public class EntityManagerImpl implements EntityManager {
 
 
     @Override
-    @Metered( group = "core", name = "EntityManager_getEntityCounters" )
     public Map<String, Long> getEntityCounters( UUID entityId ) throws Exception {
 
         Map<String, Long> counters = new HashMap<String, Long>();
@@ -1755,7 +1737,6 @@ public class EntityManagerImpl implements EntityManager {
 
 
     @Override
-    @Metered( group = "core", name = "EntityManager_createApplicationCollection" )
     public void createApplicationCollection( String entityType ) throws Exception {
 
         Keyspace ko = cass.getApplicationKeyspace( applicationId );
@@ -1770,7 +1751,6 @@ public class EntityManagerImpl implements EntityManager {
 
         batchExecute( m, CassandraService.RETRY_COUNT );
     }
-
 
     @Override
     public EntityRef getAlias( String aliasType, String alias ) throws Exception {
@@ -2903,22 +2883,6 @@ public class EntityManagerImpl implements EntityManager {
         return Results.fromEntities( entities );
     }
 
-    @Override
-    public void refreshIndex() {
-        // no action necessary
-    }
-
-
-    @Override
-    public void createIndex() {
-        //no op
-    }
-
-
-    @Override
-    public void deleteIndex() {
-        //no op
-    }
 
 
     @Override
@@ -2946,5 +2910,11 @@ public class EntityManagerImpl implements EntityManager {
     @Override
     public Health getIndexHealth() {
         return Health.GREEN; // no good way to assess index status using old-school entity manager
+    }
+
+
+    @Override
+    public Entity getUniqueEntityFromAlias( final String aliasType, final String aliasValue ) {
+        throw new UnsupportedOperationException( "Not supported." );
     }
 }

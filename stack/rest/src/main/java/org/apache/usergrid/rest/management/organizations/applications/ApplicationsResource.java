@@ -107,8 +107,6 @@ public class ApplicationsResource extends AbstractContextResource {
 
         logger.debug("newApplicationForOrganizationFromForm");
 
-        try {
-
         Preconditions.checkArgument( !isEmpty( applicationName ),
                 "The 'name' parameter is required and cannot be empty: " + applicationName );
 
@@ -123,40 +121,36 @@ public class ApplicationsResource extends AbstractContextResource {
         response.setResults( management.getApplicationMetadata( applicationInfo.getId() ) );
         return new JSONWithPadding( response, callback );
 
-        } catch (Exception e) {
-            logger.debug("Error in newApplicationForOrganizationFromForm", e);
-            return null;
-        }
     }
 
 
     @RequireOrganizationAccess
     @Path(RootResource.APPLICATION_ID_PATH)
-    public ApplicationResource applicationFromOrganizationByApplicationId( @Context UriInfo ui,
-                                                                           @PathParam( "applicationId" )
-                                                                           String applicationIdStr ) throws Exception {
+    public ApplicationResource applicationFromOrganizationByApplicationId(
+        @Context UriInfo ui, @PathParam( "applicationId" ) String applicationIdStr ) throws Exception {
 
-        return getSubResource( ApplicationResource.class ).init( organization, UUID.fromString( applicationIdStr ) );
+        return getSubResource( ApplicationResource.class )
+            .init(organization, UUID.fromString(applicationIdStr));
     }
 
 
-//    @RequireOrganizationAccess
-//    @Path(RootResource.APPLICATION_ID_PATH)
-//    @PUT
-//    public ApplicationResource restoreApplicationFromOrganizationByApplicationId(
-//        @Context UriInfo ui,
-//        @PathParam( "applicationId" )
-//        String applicationIdStr ) throws Exception {
-//
-//        return getSubResource( ApplicationResource.class ).init( organization, UUID.fromString( applicationIdStr ) );
-//    }
+    @RequireOrganizationAccess
+    @Path(RootResource.APPLICATION_ID_PATH)
+    @PUT
+    public ApplicationResource restoreApplicationFromOrganizationByApplicationId(
+        @Context UriInfo ui,
+        @PathParam( "applicationId" )
+        String applicationIdStr ) throws Exception {
+
+        return getSubResource( ApplicationResource.class )
+            .init( organization, UUID.fromString( applicationIdStr ) );
+    }
 
 
     @RequireOrganizationAccess
     @Path( "{applicationName}" )
-    public ApplicationResource applicationFromOrganizationByApplicationName( @Context UriInfo ui,
-                                                                             @PathParam( "applicationName" )
-                                                                             String applicationName ) throws Exception {
+    public ApplicationResource applicationFromOrganizationByApplicationName(
+        @Context UriInfo ui, @PathParam( "applicationName" ) String applicationName ) throws Exception {
 
         String appName =
                 applicationName.contains( "/" ) ? applicationName : organization.getName() + "/" + applicationName;

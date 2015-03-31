@@ -19,7 +19,7 @@ package org.apache.usergrid.persistence.core.metrics;
 import com.codahale.metrics.*;
 
 /**
- * Classy class class.
+ * Get metrics .
  */
 public interface MetricsFactory {
     MetricRegistry getRegistry();
@@ -31,4 +31,13 @@ public interface MetricsFactory {
     Counter getCounter(Class<?> klass, String name);
 
     Meter getMeter(Class<?> klass, String name);
+
+    /**
+     * Get a gauge and create it
+     * @param clazz
+     * @param name
+     * @param gauge
+     * @return
+     */
+    void addGauge( Class<?> clazz, String name, Gauge<?> gauge );
 }

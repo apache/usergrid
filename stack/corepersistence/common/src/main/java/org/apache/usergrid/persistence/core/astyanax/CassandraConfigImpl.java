@@ -39,6 +39,7 @@ public class CassandraConfigImpl implements CassandraConfig {
     private ConsistencyLevel readCl;
     private ConsistencyLevel writeCl;
     private int[] shardSettings;
+    private ConsistencyLevel consistentCl;
 
 
     @Inject
@@ -50,7 +51,7 @@ public class CassandraConfigImpl implements CassandraConfig {
 
         this.shardSettings = parseShardSettings( cassandraFig.getShardValues() );
 
-
+        this.consistentCl = ConsistencyLevel.valueOf(cassandraFig.getConsistentReadCL());
 
         //add the listeners to update the values
         cassandraFig.addPropertyChangeListener( new PropertyChangeListener() {
@@ -78,7 +79,10 @@ public class CassandraConfigImpl implements CassandraConfig {
         return readCl;
     }
 
-
+    @Override
+    public ConsistencyLevel getConsistentReadCL() {
+        return consistentCl;
+    }
     @Override
     public ConsistencyLevel getWriteCL() {
         return writeCl;

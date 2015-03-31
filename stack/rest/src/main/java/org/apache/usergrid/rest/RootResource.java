@@ -55,8 +55,6 @@ import org.apache.shiro.authz.UnauthorizedException;
 import com.google.common.collect.BiMap;
 import com.sun.jersey.api.json.JSONWithPadding;
 import com.yammer.metrics.Metrics;
-import com.yammer.metrics.annotation.ExceptionMetered;
-import com.yammer.metrics.annotation.Timed;
 import com.yammer.metrics.core.Counter;
 import com.yammer.metrics.core.Gauge;
 import com.yammer.metrics.core.Histogram;
@@ -116,7 +114,7 @@ public class RootResource extends AbstractContextResource implements MetricProce
         @QueryParam("deleted") @DefaultValue("false") Boolean deleted,
         @QueryParam("callback") @DefaultValue("callback") String callback ) throws URISyntaxException {
 
-        logger.info( "RootResource.getAllApplications" );
+        logger.info( "RootResource.getData" );
 
         ApiResponse response = createApiResponse();
         response.setAction( "get applications" );
@@ -297,8 +295,6 @@ public class RootResource extends AbstractContextResource implements MetricProce
     public static final String ENTITY_ID_PATH = "{entityId: " + Identifier.UUID_REX + "}";
     public static final String EMAIL_PATH = "{email: " + Identifier.EMAIL_REX + "}";
 
-    @Timed(name = "getApplicationByUuids_timer", group = "rest_timers")
-    @ExceptionMetered(group = "rest_exceptions", name = "getApplicationByUuids_exceptions")
     @Path(ORGANIZATION_ID_PATH+"/"+APPLICATION_ID_PATH)
     public ApplicationResource getApplicationByUuids( @PathParam("organizationId") String organizationIdStr,
                                                       @PathParam("applicationId") String applicationIdStr )
@@ -324,8 +320,6 @@ public class RootResource extends AbstractContextResource implements MetricProce
     }
 
 
-    @Timed(name = "getOrganizationByName_timer", group = "rest_timers")
-    @ExceptionMetered(group = "rest_exceptions", name = "getOrganizationByName_exceptions")
     @Path("{organizationName}")
     public OrganizationResource getOrganizationByName( @PathParam("organizationName") String organizationName )
             throws Exception {
