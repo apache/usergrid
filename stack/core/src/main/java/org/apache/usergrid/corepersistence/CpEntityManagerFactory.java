@@ -431,15 +431,12 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         Application app = em.getApplication();
         Id fromEntityId = new SimpleId( app.getUuid(), app.getType() );
 
-//        final String scopeName;
         final String edgeType;
 
         if ( deleted ) {
-            edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( CpNamingUtils.DELETED_APPINFOS );
-//            scopeName = CpNamingUtils.getCollectionScopeNameFromCollectionName(CpNamingUtils.DELETED_APPINFOS);
+            edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( CpNamingUtils.DELETED_APPLICATION_INFO );
         } else {
-            edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( CpNamingUtils.APPINFOS );
-//            scopeName = CpNamingUtils.getCollectionScopeNameFromCollectionName(CpNamingUtils.APPINFOS);
+            edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( CpNamingUtils.APPLICATION_INFOS );
         }
 
         logger.debug("getApplications(): Loading edges of edgeType {} from {}:{}",
