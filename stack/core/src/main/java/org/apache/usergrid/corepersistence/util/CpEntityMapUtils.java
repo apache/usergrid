@@ -44,7 +44,6 @@ import org.apache.usergrid.persistence.model.field.IntegerField;
 import org.apache.usergrid.persistence.model.field.ListField;
 import org.apache.usergrid.persistence.model.field.LocationField;
 import org.apache.usergrid.persistence.model.field.LongField;
-import org.apache.usergrid.persistence.model.field.SetField;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.field.UUIDField;
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
@@ -289,12 +288,7 @@ public class CpEntityMapUtils {
                 entityMap.put(field.getName(),
                         new ArrayList( processCollectionForMap(list)));
 
-            } else if (f instanceof SetField) {
-                Set set = (Set) field.getValue();
-                entityMap.put(field.getName(),
-                        new ArrayList( processCollectionForMap(set)));
-
-            } else if (f instanceof EntityObjectField) {
+            }else if (f instanceof EntityObjectField) {
                 EntityObject eo = (EntityObject) field.getValue();
                 entityMap.put( field.getName(), toMap(eo)); // recursion
 

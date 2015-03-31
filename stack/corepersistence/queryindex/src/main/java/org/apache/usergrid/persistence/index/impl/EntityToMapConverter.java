@@ -37,7 +37,7 @@ public class EntityToMapConverter {
      * @param context The context this entity appears in
      */
     public static Map convert(ApplicationScope applicationScope, final Entity entity, final String context ) {
-        final Map entityMap = entityToMap( entity );
+        final Map entityMap = entityToMap( entity, true );
 
         //add the context for filtering later
         entityMap.put( ENTITY_CONTEXT_FIELDNAME, context );
@@ -62,7 +62,7 @@ public class EntityToMapConverter {
      * bu_ - Boolean field
      * </pre>
      */
-    private static Map entityToMap( EntityObject entity ) {
+    private static Map entityToMap( EntityObject entity, boolean rootLevel ) {
 
         Map<String, Object> entityMap = new HashMap<String, Object>();
 
@@ -71,31 +71,12 @@ public class EntityToMapConverter {
             Field field = ( Field ) f;
 
 
-            if ( f instanceof ArrayField) {
-                List list = ( List ) field.getValue();
-                entityMap.put(  field.getName().toLowerCase(),
-                        new ArrayList( processCollectionForMap( list ) ) );
-            }
-            else if ( f instanceof ListField) {
-                List list = ( List ) field.getValue();
-                entityMap.put(field.getName().toLowerCase(),
-                        new ArrayList( processCollectionForMap( list ) ) );
-
-                if ( !list.isEmpty() ) {
-                    if ( list.get( 0 ) instanceof String ) {
-                        entityMap.put( ANALYZED_STRING_PREFIX + field.getName().toLowerCase(),
-                                new ArrayList( processCollectionForMap( list ) ) );
-                    }
-                }
-            }
-            else if ( f instanceof SetField) {
-                Set set = ( Set ) field.getValue();
-                entityMap.put( field.getName().toLowerCase(),
-                        new ArrayList( processCollectionForMap( set ) ) );
+            if ( f instanceof ListField) {
+                putList(entityMap, field, ( List ) field.getValue(),rootLevel);
             }
             else if ( f instanceof EntityObjectField) {
                 EntityObject eo = ( EntityObject ) field.getValue();
-                entityMap.put(EO_PREFIX + field.getName().toLowerCase(), entityToMap(eo) ); // recursion
+                entityMap.put(EO_PREFIX + field.getName().toLowerCase(), entityToMap(eo,false) ); // recursion
             }
             else if ( f instanceof StringField ) {
 
@@ -137,6 +118,52 @@ public class EntityToMapConverter {
         return entityMap;
     }
 
+    private static void putList(Map<String, Object> entityMap, Field field, List list, boolean isRootLevel) {
+        if ( !list.isEmpty() ) {
+            if(isRootLevel) {
+                Object o = list.get(0);
+
+                if (o instanceof String) {
+                    entityMap.put(ANALYZED_STRING_PREFIX + field.getName().toLowerCase(),
+                        new ArrayList(processCollectionForMap(list)));
+                    return;
+                }
+                if (o instanceof Boolean) {
+                    entityMap.put(BOOLEAN_PREFIX + field.getName().toLowerCase(),
+                        new ArrayList(processCollectionForMap(list)));
+                    return;
+                }
+                if (o instanceof Long || o instanceof Integer) {
+                    entityMap.put(LONG_PREFIX + field.getName().toLowerCase(),
+                        new ArrayList(processCollectionForMap(list)));
+                    return;
+                }
+
+                if (o instanceof Double || o instanceof Float) {
+                    entityMap.put(DOUBLE_PREFIX + field.getName().toLowerCase(),
+                        new ArrayList(processCollectionForMap(list)));
+                    return;
+                }
+
+                if (o instanceof String) {
+                    entityMap.put(ANALYZED_STRING_PREFIX + field.getName().toLowerCase(),
+                        new ArrayList(processCollectionForMap(list)));
+                    return;
+                }
+
+                if (o instanceof Entity) {
+                    entityMap.put(field.getName().toLowerCase(),
+                        new ArrayList(processCollectionForMap(list)));
+                    return;
+                }
+            }
+            //else
+            entityMap.put(field.getName().toLowerCase(), new ArrayList(processCollectionForMap(list)));
+
+        }
+
+    }
+
 
     private static Collection processCollectionForMap( final Collection c ) {
         if ( c.isEmpty() ) {
@@ -148,7 +175,7 @@ public class EntityToMapConverter {
         if ( sample instanceof Entity ) {
             for ( Object o : c.toArray() ) {
                 Entity e = ( Entity ) o;
-                processed.add( entityToMap( e ) );
+                processed.add( entityToMap( e,false ) );
             }
         }
         else if ( sample instanceof List ) {
