@@ -19,18 +19,9 @@
 
 package org.apache.usergrid.persistence.index;
 
-import java.util.UUID;
 
 import org.apache.usergrid.persistence.core.CPManager;
 import org.apache.usergrid.persistence.core.util.Health;
-import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.index.query.CandidateResults;
-import org.apache.usergrid.persistence.model.entity.Id;
-import org.elasticsearch.action.ListenableActionFuture;
-import rx.Observable;
-
-import java.util.Map;
-import java.util.concurrent.Future;
 
 
 /**

@@ -45,7 +45,6 @@ import org.apache.usergrid.persistence.index.SearchTypes;
 import org.apache.usergrid.persistence.index.guice.IndexTestFig;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
-import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
@@ -208,10 +207,10 @@ public class IndexLoadTestsIT extends BaseIT {
 
                         //execute our search
                         final CandidateResults results = appEntityIndex
-                            .search( indexScope, SearchTypes.fromTypes( indexScope.getName() ), Query.fromQLNullSafe(
+                            .search( indexScope, SearchTypes.fromTypes( indexScope.getName() ),
                                 "select * where " + FIELD_WORKER_INDEX + "  = " + workerIndex + " AND " + FIELD_ORDINAL
                                     + " = " + ordinal + " AND " + FIELD_UNIQUE_IDENTIFIER + " = '" + uniqueIdentifier
-                                    + "'" ) );
+                                    + "'" , 100 );
 
                         queryTps.mark();
                         queryTimerContext.stop();

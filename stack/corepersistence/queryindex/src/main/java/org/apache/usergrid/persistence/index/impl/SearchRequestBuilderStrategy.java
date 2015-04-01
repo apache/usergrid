@@ -19,13 +19,7 @@
  */
 package org.apache.usergrid.persistence.index.impl;
 
-import com.google.common.base.Preconditions;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.core.util.ValidationUtils;
-import org.apache.usergrid.persistence.index.*;
-import org.apache.usergrid.persistence.index.exceptions.IndexException;
-import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.index.query.tree.QueryVisitor;
+
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.FilterBuilder;
@@ -37,7 +31,22 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.*;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.index.IndexAlias;
+import org.apache.usergrid.persistence.index.IndexScope;
+import org.apache.usergrid.persistence.index.SearchTypes;
+import org.apache.usergrid.persistence.index.exceptions.IndexException;
+import org.apache.usergrid.persistence.index.query.ParsedQuery;
+import org.apache.usergrid.persistence.index.query.SortPredicate;
+import org.apache.usergrid.persistence.index.query.tree.QueryVisitor;
+
+import com.google.common.base.Preconditions;
+
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.BOOLEAN_PREFIX;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.DOUBLE_PREFIX;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.LONG_PREFIX;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.STRING_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createContextName;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createLegacyContextName;
 
@@ -62,7 +71,7 @@ public class SearchRequestBuilderStrategy {
         this.cursorTimeout = cursorTimeout;
     }
 
-    public SearchRequestBuilder getBuilder(final IndexScope indexScope, final SearchTypes searchTypes, final Query query,  final int limit) {
+    public SearchRequestBuilder getBuilder(final IndexScope indexScope, final SearchTypes searchTypes, final ParsedQuery query,  final int limit) {
 
         Preconditions.checkArgument(limit <= EntityIndex.MAX_LIMIT, "limit is greater than max "+ EntityIndex.MAX_LIMIT);
 
@@ -82,10 +91,10 @@ public class SearchRequestBuilderStrategy {
 
         srb = srb.setFrom(0).setSize(limit);
 
-        for (Query.SortPredicate sp : query.getSortPredicates()) {
+        for (SortPredicate sp : query.getSortPredicates()) {
 
             final SortOrder order;
-            if (sp.getDirection().equals(Query.SortDirection.ASCENDING)) {
+            if (sp.getDirection().equals( SortPredicate.SortDirection.ASCENDING)) {
                 order = SortOrder.ASC;
             } else {
                 order = SortOrder.DESC;
@@ -127,7 +136,7 @@ public class SearchRequestBuilderStrategy {
     }
 
 
-    public QueryBuilder createQueryBuilder( IndexScope indexScope, Query query) {
+    public QueryBuilder createQueryBuilder( IndexScope indexScope, ParsedQuery query) {
         String[] contexts = new String[]{createContextName(applicationScope, indexScope),createLegacyContextName(applicationScope,indexScope)};
 
         QueryBuilder queryBuilder = null;
@@ -161,7 +170,7 @@ public class SearchRequestBuilderStrategy {
         for(String context : contexts){
             boolQueryBuilder = boolQueryBuilder.should(QueryBuilders.termQuery( IndexingUtils.ENTITY_CONTEXT_FIELDNAME, context ));
         }
-        boolQueryBuilder = boolQueryBuilder.minimumNumberShouldMatch(1);
+        boolQueryBuilder = boolQueryBuilder.minimumNumberShouldMatch( 1 );
         if ( queryBuilder != null ) {
             queryBuilder =  boolQueryBuilder.must( queryBuilder );
         }
@@ -175,7 +184,7 @@ public class SearchRequestBuilderStrategy {
     }
 
 
-    public FilterBuilder createFilterBuilder(Query query) {
+    public FilterBuilder createFilterBuilder(ParsedQuery query) {
         FilterBuilder filterBuilder = null;
 
         if ( query.getRootOperand() != null ) {

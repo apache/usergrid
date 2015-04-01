@@ -50,7 +50,7 @@ limitations under the License.
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
 
-        <antlr.version>3.4</antlr.version>
+        <antlr.version>3.5.2</antlr.version>
         <archaius.version>0.5.12</archaius.version>
         <astyanax.version>1.56.49-SNAPSHOT-UG-1</astyanax.version>
         <cassandra.version>1.2.18</cassandra.version>

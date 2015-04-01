@@ -19,8 +19,9 @@
  */
 package org.apache.usergrid.persistence.index;
 
+
 import org.apache.usergrid.persistence.index.query.CandidateResults;
-import org.apache.usergrid.persistence.index.query.Query;
+
 import rx.Observable;
 
 /**
@@ -34,11 +35,7 @@ public interface ApplicationEntityIndex {
      */
     public EntityIndexBatch createBatch();
 
-    /**
-     * Execute query in Usergrid syntax.
-     */
-    public CandidateResults search(final IndexScope indexScope, final SearchTypes searchTypes, final Query query);
-    public CandidateResults search(final IndexScope indexScope, final SearchTypes searchTypes, final Query query, final int limit);
+    public CandidateResults search(final IndexScope indexScope, final SearchTypes searchTypes, final String query, final int limit);
 
 
 
