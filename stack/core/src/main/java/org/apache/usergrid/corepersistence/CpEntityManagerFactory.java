@@ -156,7 +156,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                 em.getApplication();
             }
 
-            entityIndex.initialize();
             entityIndex.refresh();
 
         } catch (Exception ex) {

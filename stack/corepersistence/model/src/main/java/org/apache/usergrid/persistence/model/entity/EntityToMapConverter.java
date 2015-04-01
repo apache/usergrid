@@ -57,11 +57,6 @@ public class EntityToMapConverter{
                 entityMap.put(field.getName(),
                         new ArrayList( processCollectionForMap(list)));
 
-            } else if (f instanceof SetField) {
-                Set set = (Set) field.getValue();
-                entityMap.put(field.getName(),
-                        new ArrayList( processCollectionForMap(set)));
-
             } else if (f instanceof EntityObjectField) {
                 EntityObject eo = (EntityObject) field.getValue();
                 entityMap.put( field.getName(), toMap(eo)); // recursion

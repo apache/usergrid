@@ -32,7 +32,6 @@ import org.junit.Test;
 import org.apache.usergrid.persistence.model.field.BooleanField;
 import org.apache.usergrid.persistence.model.field.DoubleField;
 import org.apache.usergrid.persistence.model.field.Field;
-import org.apache.usergrid.persistence.model.field.FloatField;
 import org.apache.usergrid.persistence.model.field.IntegerField;
 import org.apache.usergrid.persistence.model.field.LongField;
 import org.apache.usergrid.persistence.model.field.StringField;
@@ -68,7 +67,7 @@ public class UniqueFieldEntrySerializerTest {
 
     @Test
     public void floatField() {
-        doTest( new FloatField( "test", .9f, true ) );
+        doTest( new DoubleField( "test",(double).9f, true ) );
     }
 
 

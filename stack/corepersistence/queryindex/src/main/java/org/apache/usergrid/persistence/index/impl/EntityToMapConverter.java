@@ -48,7 +48,6 @@ public class EntityToMapConverter {
 
         entityMap.put( APPLICATION_ID_FIELDNAME, idString(applicationScope.getApplication()) );
 
-
         return entityMap;
     }
 
@@ -62,79 +61,89 @@ public class EntityToMapConverter {
      * bu_ - Boolean field
      * </pre>
      */
-    private static Map entityToMap( EntityObject entity ) {
+    private static Map entityToMap( EntityObject entity) {
 
         Map<String, Object> entityMap = new HashMap<String, Object>();
 
         for ( Object f : entity.getFields().toArray() ) {
 
             Field field = ( Field ) f;
+            String fieldName = getFieldName(field);
 
-
-            if ( f instanceof ArrayField) {
-                List list = ( List ) field.getValue();
-                entityMap.put(  field.getName().toLowerCase(),
-                        new ArrayList( processCollectionForMap( list ) ) );
+            if ( f instanceof ListField ) {
+                processList(entityMap, fieldName, (List) field.getValue());
             }
-            else if ( f instanceof ListField) {
-                List list = ( List ) field.getValue();
-                entityMap.put(field.getName().toLowerCase(),
-                        new ArrayList( processCollectionForMap( list ) ) );
-
-                if ( !list.isEmpty() ) {
-                    if ( list.get( 0 ) instanceof String ) {
-                        entityMap.put( ANALYZED_STRING_PREFIX + field.getName().toLowerCase(),
-                                new ArrayList( processCollectionForMap( list ) ) );
-                    }
-                }
-            }
-            else if ( f instanceof SetField) {
-                Set set = ( Set ) field.getValue();
-                entityMap.put( field.getName().toLowerCase(),
-                        new ArrayList( processCollectionForMap( set ) ) );
-            }
-            else if ( f instanceof EntityObjectField) {
+            else if ( f instanceof EntityObjectField ) {
                 EntityObject eo = ( EntityObject ) field.getValue();
-                entityMap.put(EO_PREFIX + field.getName().toLowerCase(), entityToMap(eo) ); // recursion
+                entityMap.put(EO_PREFIX + fieldName, entityToMap(eo)); // recursion
             }
             else if ( f instanceof StringField ) {
-
                 // index in lower case because Usergrid queries are case insensitive
-                entityMap.put( ANALYZED_STRING_PREFIX + field.getName().toLowerCase(),
+                entityMap.put( ANALYZED_STRING_PREFIX + fieldName,
                         ( ( String ) field.getValue() ).toLowerCase() );
-                entityMap.put( STRING_PREFIX + field.getName().toLowerCase(),
+                entityMap.put( STRING_PREFIX + fieldName,
                         ( ( String ) field.getValue() ).toLowerCase() );
             }
-            else if ( f instanceof LocationField ) {
+            else if ( f instanceof LocationField) {
                 LocationField locField = ( LocationField ) f;
                 Map<String, Object> locMap = new HashMap<String, Object>();
 
                 // field names lat and lon trigger ElasticSearch geo location
                 locMap.put( "lat", locField.getValue().getLatitude() );
                 locMap.put( "lon", locField.getValue().getLongitude() );
-                entityMap.put( GEO_PREFIX + field.getName().toLowerCase(), locMap );
+                entityMap.put( GEO_PREFIX + fieldName, locMap );
             }
-            else if( f instanceof DoubleField || f instanceof  FloatField){
-                entityMap.put( DOUBLE_PREFIX + field.getName().toLowerCase(), field.getValue() );
+            else if( f instanceof DoubleField ){
+                entityMap.put( DOUBLE_PREFIX + fieldName, field.getValue() );
             }
-            else if( f instanceof LongField || f instanceof IntegerField){
-                entityMap.put( LONG_PREFIX + field.getName().toLowerCase(), field.getValue() );
+            else if( f instanceof LongField || f instanceof IntegerField ){
+                entityMap.put( LONG_PREFIX + fieldName, field.getValue() );
             }
             else if ( f instanceof BooleanField ) {
-
-                entityMap.put( BOOLEAN_PREFIX + field.getName().toLowerCase(), field.getValue() );
+                entityMap.put( BOOLEAN_PREFIX + fieldName, field.getValue() );
             }
             else if ( f instanceof UUIDField ) {
-
-                entityMap.put( STRING_PREFIX + field.getName().toLowerCase(),
+                entityMap.put( STRING_PREFIX + fieldName,
                         field.getValue().toString().toLowerCase() );
             }
             else {
-                entityMap.put( field.getName().toLowerCase(), field.getValue() );
+                entityMap.put( fieldName, field.getValue() );
             }
         }
 
         return entityMap;
+    }
+
+    private static String getFieldName(Field field) {
+        return field.getName().toLowerCase();
+    }
+
+    private static void processList(Map<String, Object> entityMap, String fieldName, List list) {
+        if (!list.isEmpty()) {
+            Object o = list.get(0);
+            List processedList = new ArrayList(processCollectionForMap(list));
+            if (o instanceof String) {
+                entityMap.put(ANALYZED_STRING_PREFIX + fieldName, processedList);
+                entityMap.put(STRING_PREFIX + fieldName, processedList);
+            }
+            else if (o instanceof Boolean) {
+                entityMap.put(BOOLEAN_PREFIX + fieldName, processedList);
+            }
+            else if (o instanceof Long || o instanceof Integer) {
+                entityMap.put(LONG_PREFIX + fieldName, processedList);
+            }
+
+            else if (o instanceof Double || o instanceof Float) {
+                entityMap.put(DOUBLE_PREFIX + fieldName, processedList);
+            }
+
+            else if (o instanceof Entity) {
+                entityMap.put(fieldName, processedList);
+            }
+            else {
+                entityMap.put(fieldName, processedList);
+            }
+        }
     }
 
 

@@ -37,12 +37,10 @@ import org.apache.usergrid.persistence.model.field.ByteArrayField;
 import org.apache.usergrid.persistence.model.field.DoubleField;
 import org.apache.usergrid.persistence.model.field.EntityObjectField;
 import org.apache.usergrid.persistence.model.field.Field;
-import org.apache.usergrid.persistence.model.field.FloatField;
 import org.apache.usergrid.persistence.model.field.IntegerField;
 import org.apache.usergrid.persistence.model.field.ListField;
 import org.apache.usergrid.persistence.model.field.LocationField;
 import org.apache.usergrid.persistence.model.field.LongField;
-import org.apache.usergrid.persistence.model.field.SetField;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.field.UUIDField;
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
@@ -82,13 +80,10 @@ class EntityIndexMapUtils {
             } else if ( value instanceof Integer ) {
                 entity.setField( new IntegerField( fieldName, (Integer)value ));
 
-            } else if ( value instanceof Double ) {
+            } else if ( value instanceof Double || value instanceof Float  ) {
                 entity.setField( new DoubleField( fieldName, (Double)value ));
 
-		    } else if ( value instanceof Float ) {
-                entity.setField( new FloatField( fieldName, (Float)value ));
-
-            } else if ( value instanceof Long ) {
+		    }  else if ( value instanceof Long ) {
                 entity.setField( new LongField( fieldName, (Long)value ));
 
             } else if ( value instanceof List) {
@@ -232,12 +227,7 @@ class EntityIndexMapUtils {
                 entityMap.put(field.getName(),
                         new ArrayList(processCollectionForMap(list)));
 
-            } else if (f instanceof SetField) {
-                Set set = (Set) field.getValue();
-                entityMap.put(field.getName(),
-                        new ArrayList(processCollectionForMap(set)));
-
-            } else if (f instanceof EntityObjectField) {
+            }  else if (f instanceof EntityObjectField) {
                 EntityObject eo = (EntityObject) field.getValue();
                 entityMap.put(field.getName(), toMap(eo)); // recursion
 

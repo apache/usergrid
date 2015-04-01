@@ -48,7 +48,7 @@ public class MapToEntityConverter{
                 entity.setField( new DoubleField( fieldName, (Double)value, topLevel ));
 
             } else if ( value instanceof Float ) {
-                entity.setField( new FloatField( fieldName, (Float)value, topLevel ));
+                entity.setField( new DoubleField( fieldName, (double)value, topLevel ));
 
             } else if ( value instanceof Long ) {
                 entity.setField( new LongField( fieldName, (Long)value, topLevel ));
