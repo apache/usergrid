@@ -21,17 +21,20 @@ package org.apache.usergrid.corepersistence.util;
 
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Schema;
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.entities.Application;
+import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.index.IndexScope;
+import org.apache.usergrid.persistence.index.impl.IndexScopeImpl;
 import org.apache.usergrid.persistence.map.MapScope;
 import org.apache.usergrid.persistence.map.impl.MapScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
-import rx.functions.Func1;
+
+import com.clearspring.analytics.util.Preconditions;
 
 
 /**
@@ -69,81 +72,156 @@ public class CpNamingUtils {
 
 
 
-    /**
-     * Generate a collection scope for a collection within the application's Id for the given type
-     * @param applicationId The applicationId that owns this entity
-     * @param type The type in the collection
-     * @return The collectionScope
-     */
-    public static CollectionScope getCollectionScopeNameFromEntityType(final Id applicationId, final String type){
-       return  new CollectionScopeImpl( applicationId, applicationId, getCollectionScopeNameFromEntityType( type ) );
-    }
 
     /**
      * Get the collection name from the entity/id type
      * @param type
      * @return
      */
-    public static String getCollectionScopeNameFromEntityType( String type ) {
+    private static String getCollectionScopeNameFromEntityType( String type ) {
         String csn = EDGE_COLL_SUFFIX + Schema.defaultCollectionName( type );
         return csn.toLowerCase();
     }
 
 
-    public static String getCollectionScopeNameFromCollectionName( String name ) {
+    private static String getCollectionScopeNameFromCollectionName( String name ) {
         String csn = EDGE_COLL_SUFFIX + name;
         return csn.toLowerCase();
     }
 
 
-    public static String getConnectionScopeName( String connectionType ) {
+    private static String getConnectionScopeName( String connectionType ) {
         String csn = EDGE_CONN_SUFFIX + connectionType ;
         return csn.toLowerCase();
     }
 
 
-    public static boolean isCollectionEdgeType( String type ) {
+    /**
+     * Get the index scope for the edge from the source
+     * @param edge
+     * @return
+     */
+    public static IndexScope generateScopeFromSource(final Edge edge ){
+
+
+        final Id nodeId = edge.getSourceNode();
+        final String scopeName = getNameFromEdgeType( edge.getType() );
+
+
+        return new IndexScopeImpl( nodeId, scopeName );
+
+    }
+
+
+
+
+
+    /**
+     * Get the index scope for the edge from the source
+     * @param edge
+     * @return
+     */
+    public static IndexScope generateScopeToTarget(final Edge edge ){
+
+
+
+        final Id nodeId = edge.getTargetNode();
+        final String scopeName = getNameFromEdgeType( edge.getType() );
+
+
+        return new IndexScopeImpl( nodeId, scopeName );
+
+    }
+
+
+    /**
+     * Generate either the collection name or connection name from the edgeName
+     * @param edgeName
+     * @return
+     */
+    public static String getNameFromEdgeType(final String edgeName){
+
+
+        if(isCollectionEdgeType( edgeName )){
+           return getCollectionScopeNameFromCollectionName(getCollectionName(edgeName) );
+        }
+
+        return getConnectionScopeName(getConnectionType( edgeName )  );
+
+    }
+
+
+    /**
+     * Get the index scope from the colleciton name
+     * @param nodeId The source or target node id
+     * @param collectionName The name of the collection.  Ex "users"
+     * @return
+     */
+    public static IndexScope generateScopeFromCollection( final Id nodeId, final String collectionName ){
+        return new IndexScopeImpl( nodeId, getCollectionScopeNameFromCollectionName( collectionName ) );
+    }
+
+
+    /**
+     * Get the scope from the connection
+     * @param nodeId
+     * @param connectionName
+     * @return
+     */
+    public static IndexScope generateScopeFromConnection( final Id nodeId, final String connectionName ){
+        return new IndexScopeImpl( nodeId, getConnectionScopeName( connectionName ) );
+    }
+
+
+    /**
+     * Create an Id object from the entity ref
+     * @param entityRef
+     * @return
+     */
+    public static Id createId(final EntityRef entityRef){
+      return new SimpleId( entityRef.getUuid(), entityRef.getType() );
+    }
+
+    private static boolean isCollectionEdgeType( String type ) {
         return type.startsWith( EDGE_COLL_SUFFIX );
     }
 
 
-    public static boolean isConnectionEdgeType( String type ) {
+    private static boolean isConnectionEdgeType( String type ) {
         return type.startsWith( EDGE_CONN_SUFFIX );
     }
 
 
-    static public String  getConnectionType( String edgeType ) {
+
+    private static  String  getConnectionType( String edgeType ) {
         String[] parts = edgeType.split( "\\|" );
         return parts[1];
     }
 
 
-    static public String getCollectionName( String edgeType ) {
+    private static String getCollectionName( String edgeType ) {
         String[] parts = edgeType.split( "\\|" );
         return parts[1];
     }
 
 
+    /**
+     * Generate a standard edge name for our graph using the connection name
+     * @param connectionType The type of connection made
+     * @return
+     */
     public static String getEdgeTypeFromConnectionType( String connectionType ) {
-
-        if ( connectionType != null ) {
-            String csn = EDGE_CONN_SUFFIX + "|" + connectionType;
-            return csn;
-        }
-
-        return null;
+        return  (EDGE_CONN_SUFFIX  + "|" + connectionType).toLowerCase();
     }
 
 
+    /**
+     * Generate a standard edges from for a collection
+     * @param collectionName
+     * @return
+     */
     public static String getEdgeTypeFromCollectionName( String collectionName ) {
-
-        if ( collectionName != null ) {
-            String csn = EDGE_COLL_SUFFIX + "|" + collectionName;
-            return csn;
-        }
-
-
-        return null;
+        return (EDGE_COLL_SUFFIX + "|" + collectionName).toLowerCase();
     }
 
 

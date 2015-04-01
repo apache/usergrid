@@ -21,10 +21,10 @@ package org.apache.usergrid.persistence.collection.mvcc.stage;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.collection.MvccEntity;
-import org.apache.usergrid.persistence.model.util.EntityUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.model.util.EntityUtils;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.google.common.base.Optional;

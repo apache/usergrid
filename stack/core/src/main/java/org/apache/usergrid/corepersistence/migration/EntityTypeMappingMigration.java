@@ -35,8 +35,6 @@ import org.apache.usergrid.persistence.map.MapScope;
 import com.google.inject.Inject;
 
 import rx.Observable;
-import rx.functions.Action1;
-import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 
@@ -68,7 +66,7 @@ public class EntityTypeMappingMigration implements DataMigration<EntityIdScope> 
         allEntitiesInSystemObservable.getData().flatMap( entityIdScope -> {
             return Observable.just( entityIdScope ).doOnNext( entityIdScopeObservable -> {
                 final MapScope ms = CpNamingUtils
-                                                 .getEntityTypeMapScope( entityIdScope.getCollectionScope().getApplication() );
+                                                 .getEntityTypeMapScope( entityIdScope.getApplicationScope().getApplication() );
 
                                              final MapManager mapManager = managerCache.getMapManager( ms );
 

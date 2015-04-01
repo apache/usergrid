@@ -23,22 +23,22 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
-import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
-import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
-import org.apache.usergrid.persistence.core.guice.ProxyImpl;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
-import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
+import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
 import org.apache.usergrid.persistence.collection.util.EntityHelper;
 import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.guicyfig.SetConfigTestBypass;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.core.util.Health;
@@ -84,15 +84,15 @@ public class EntityCollectionManagerIT {
     private UniqueValueSerializationStrategy uniqueValueSerializationStrategy;
 
     @Inject
-    @ProxyImpl
     private MvccEntitySerializationStrategy entitySerializationStrategy;
 
 
     @Test
     public void write() {
 
-        CollectionScope context =
-                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" );
+
+        ApplicationScope context =
+                new ApplicationScopeImpl( new SimpleId( "organization" ) );
 
 
         Entity newEntity = new Entity( new SimpleId( "test" ) );
@@ -112,8 +112,9 @@ public class EntityCollectionManagerIT {
     @Test
     public void writeWithUniqueValues() {
 
-        CollectionScope context =
-                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" );
+
+        ApplicationScope context =
+                new ApplicationScopeImpl( new SimpleId( "organization" ) );
 
         EntityCollectionManager manager = factory.createCollectionManager( context );
 
@@ -144,8 +145,9 @@ public class EntityCollectionManagerIT {
     @Test
     public void writeAndLoad() {
 
-        CollectionScope context =
-                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" );
+
+        ApplicationScope context =
+                new ApplicationScopeImpl( new SimpleId( "organization" ) );
 
         Entity newEntity = new Entity( new SimpleId( "test" ) );
 
@@ -171,8 +173,8 @@ public class EntityCollectionManagerIT {
     @Test
     public void writeLoadDelete() {
 
-        CollectionScope context =
-                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" );
+
+        ApplicationScope context =   new ApplicationScopeImpl( new SimpleId( "organization" ) );
         Entity newEntity = new Entity( new SimpleId( "test" ) );
 
         EntityCollectionManager manager = factory.createCollectionManager( context );
@@ -206,8 +208,7 @@ public class EntityCollectionManagerIT {
     @Test
     public void writeLoadUpdateLoad() {
 
-        CollectionScope context =
-                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" );
+        ApplicationScope context =  new ApplicationScopeImpl( new SimpleId( "organization" ) );
 
         Entity newEntity = new Entity( new SimpleId( "test" ) );
         newEntity.setField( new IntegerField( "counter", 1 ) );
@@ -253,8 +254,8 @@ public class EntityCollectionManagerIT {
     public void writeAndLoadScopeClosure() {
 
 
-        CollectionScope collectionScope1 =
-                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test1" ), "test1" );
+        ApplicationScope collectionScope1 = new ApplicationScopeImpl(new SimpleId("organization"));
+
 
         Entity newEntity = new Entity( new SimpleId( "test" ) );
 
@@ -276,10 +277,10 @@ public class EntityCollectionManagerIT {
         assertEquals( "Same value", createReturned, loadReturned );
 
 
+        ApplicationScope collectionScope2 = new ApplicationScopeImpl(new SimpleId("organization"));
+
         //now make sure we can't load it from another scope, using the same org
-        CollectionScope collectionScope2 =
-                new CollectionScopeImpl( collectionScope1.getApplication(), new SimpleId( "test2" ),
-                        collectionScope1.getName() );
+
 
         EntityCollectionManager manager2 = factory.createCollectionManager( collectionScope2 );
 
@@ -287,12 +288,7 @@ public class EntityCollectionManagerIT {
 
         assertNull( "CollectionScope works correctly", loaded );
 
-        //now try to load it from another org, with the same scope
 
-        CollectionScope collectionScope3 =
-                new CollectionScopeImpl( new SimpleId( "organization2" ), collectionScope1.getOwner(),
-                        collectionScope1.getName() );
-        assertNotNull( collectionScope3 );
     }
 
 
@@ -300,8 +296,7 @@ public class EntityCollectionManagerIT {
     public void writeAndGetField() {
 
 
-        CollectionScope collectionScope1 =
-                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test1" ), "test1" );
+        ApplicationScope collectionScope1 = new ApplicationScopeImpl(new SimpleId("organization"));
 
         Entity newEntity = new Entity( new SimpleId( "test" ) );
         Field field = new StringField( "testField", "unique", true );
@@ -317,12 +312,12 @@ public class EntityCollectionManagerIT {
         assertNotNull( "Id was assigned", createReturned.getId() );
         assertNotNull( "Version was assigned", createReturned.getVersion() );
 
-        Id id = manager.getIdField( field ).toBlocking().lastOrDefault( null );
+        Id id = manager.getIdField( newEntity.getId().getType(), field ).toBlocking().lastOrDefault( null );
         assertNotNull( id );
         assertEquals( newEntity.getId(), id );
 
         Field fieldNull = new StringField( "testFieldNotThere", "uniquely", true );
-        id = manager.getIdField( fieldNull ).toBlocking().lastOrDefault( null );
+        id = manager.getIdField(  newEntity.getId().getType(), fieldNull ).toBlocking().lastOrDefault( null );
         assertNull( id );
     }
 
@@ -336,8 +331,8 @@ public class EntityCollectionManagerIT {
         Entity origEntity = new Entity( new SimpleId( "testUpdate" ) );
         origEntity.setField( new StringField( "testField", "value" ) );
 
-        CollectionScope context =
-                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "testUpdate" ), "testUpdate" );
+        ApplicationScope context = new ApplicationScopeImpl(new SimpleId("organization"));
+
         EntityCollectionManager manager = factory.createCollectionManager( context );
         Entity returned = manager.write( origEntity ).toBlocking().lastOrDefault( null );
 
@@ -366,8 +361,7 @@ public class EntityCollectionManagerIT {
     @Test
     public void writeMultiget() {
 
-        final CollectionScope context =
-                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" );
+        final ApplicationScope context =  new ApplicationScopeImpl( new SimpleId( "organization" ) );
         final EntityCollectionManager manager = factory.createCollectionManager( context );
 
         final int multigetSize = serializationFig.getMaxLoadSize();
@@ -411,8 +405,7 @@ public class EntityCollectionManagerIT {
     @Test
     public void writeMultigetRepair() {
 
-        final CollectionScope context =
-                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" );
+        final ApplicationScope context =  new ApplicationScopeImpl( new SimpleId( "organization" ) );
         final EntityCollectionManager manager = factory.createCollectionManager( context );
 
         final int multigetSize = serializationFig.getMaxLoadSize();
@@ -459,8 +452,7 @@ public class EntityCollectionManagerIT {
     @Test( expected = IllegalArgumentException.class )
     public void readTooLarge() {
 
-        final CollectionScope context =
-                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" );
+        final ApplicationScope context =  new ApplicationScopeImpl( new SimpleId( "organization" ) );
         final EntityCollectionManager manager = factory.createCollectionManager( context );
 
         final int multigetSize = serializationFig.getMaxLoadSize() + 1;
@@ -482,8 +474,7 @@ public class EntityCollectionManagerIT {
     @Test
     public void testGetVersion() {
 
-        CollectionScope context =
-                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" );
+        ApplicationScope context =  new ApplicationScopeImpl( new SimpleId( "organization" ) );
 
 
         final EntityCollectionManager manager = factory.createCollectionManager( context );
@@ -524,8 +515,7 @@ public class EntityCollectionManagerIT {
     @Test
     public void testVersionLogWrite() {
 
-        CollectionScope context =
-                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" );
+        ApplicationScope context =  new ApplicationScopeImpl( new SimpleId( "organization" ) );
 
 
         final EntityCollectionManager manager = factory.createCollectionManager( context );
@@ -570,8 +560,7 @@ public class EntityCollectionManagerIT {
     @Test
     public void testVersionLogUpdate() {
 
-        CollectionScope context =
-                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" );
+        ApplicationScope context =  new ApplicationScopeImpl( new SimpleId( "organization" ) );
 
 
         final EntityCollectionManager manager = factory.createCollectionManager( context );
@@ -619,8 +608,7 @@ public class EntityCollectionManagerIT {
     @Test
     public void healthTest() {
 
-        CollectionScope context =
-                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" );
+        ApplicationScope context =  new ApplicationScopeImpl( new SimpleId( "organization" ) );
 
         final EntityCollectionManager manager = factory.createCollectionManager( context );
 
@@ -644,8 +632,7 @@ public class EntityCollectionManagerIT {
         final Entity entity = EntityHelper.generateEntity( setSize );
 
         //now we have one massive, entity, save it and retrieve it.
-        CollectionScope context =
-                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" );
+        ApplicationScope context =  new ApplicationScopeImpl( new SimpleId( "organization" ) );
 
         final EntityCollectionManager manager = factory.createCollectionManager( context );
 
@@ -669,8 +656,7 @@ public class EntityCollectionManagerIT {
     public void invalidNameRepair() throws ConnectionException {
 
         //write an entity with a unique field
-        CollectionScope context =
-                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" );
+        ApplicationScope context =  new ApplicationScopeImpl( new SimpleId( "organization" ) );
 
         Entity newEntity = new Entity( new SimpleId( "test" ) );
 
@@ -692,7 +678,7 @@ public class EntityCollectionManagerIT {
         assertNotNull( "Version was assigned", createReturned.getVersion() );
 
         FieldSet
-            fieldResults = manager.getEntitiesFromFields( Arrays.<Field>asList( expectedInteger ) ).toBlocking().last();
+            fieldResults = manager.getEntitiesFromFields( newEntity.getId().getType(), Arrays.<Field>asList( expectedInteger ) ).toBlocking().last();
 
         assertEquals(1,fieldResults.size());
 
@@ -707,7 +693,7 @@ public class EntityCollectionManagerIT {
 
         //try to load via the unique field, should have triggered repair
         final FieldSet
-            results = manager.getEntitiesFromFields( Arrays.<Field>asList( expectedInteger ) ).toBlocking().last();
+            results = manager.getEntitiesFromFields( newEntity.getId().getType(), Arrays.<Field>asList( expectedInteger ) ).toBlocking().last();
 
 
         //verify no entity returned
@@ -715,7 +701,7 @@ public class EntityCollectionManagerIT {
 
         //user the unique serialization to verify it's been deleted from cassandra
 
-        UniqueValueSet uniqueValues = uniqueValueSerializationStrategy.load( context, createReturned.getFields() );
+        UniqueValueSet uniqueValues = uniqueValueSerializationStrategy.load( context,  newEntity.getId().getType(), createReturned.getFields() );
         assertFalse( uniqueValues.iterator().hasNext() );
 
     }

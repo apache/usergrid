@@ -47,7 +47,7 @@ public interface ApplicationEntityIndex {
      * @param cursor
      * @return
      */
-    public CandidateResults getNextPage(final String cursor);
+    public CandidateResults getNextPage(final String cursor, final int limit);
 
     /**
      * delete all application records

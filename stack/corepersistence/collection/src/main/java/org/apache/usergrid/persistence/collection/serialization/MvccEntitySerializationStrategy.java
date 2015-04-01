@@ -23,11 +23,11 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntitySet;
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.core.migration.data.VersionedData;
 import org.apache.usergrid.persistence.core.migration.schema.Migration;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
@@ -45,7 +45,7 @@ public interface MvccEntitySerializationStrategy extends Migration, VersionedDat
      * @param entity The entity to persist
      * @return The MutationBatch operations for this update
      */
-    public MutationBatch write(CollectionScope context, MvccEntity entity);
+    MutationBatch write( ApplicationScope context, MvccEntity entity );
 
 
     /**
@@ -55,7 +55,7 @@ public interface MvccEntitySerializationStrategy extends Migration, VersionedDat
      * @param entityIds
      * @return
      */
-    public EntitySet load(CollectionScope scope, Collection<Id> entityIds, UUID maxVersion);
+    EntitySet load( ApplicationScope scope, Collection<Id> entityIds, UUID maxVersion );
 
     /**
      * Load a list, from highest to lowest of the entity with versions <= version up to maxSize elements
@@ -69,8 +69,7 @@ public interface MvccEntitySerializationStrategy extends Migration, VersionedDat
      */
     @Deprecated
     //this has been made obsolete in the latest version, only use the load methods
-    public Iterator<MvccEntity> loadDescendingHistory( CollectionScope context, Id entityId, UUID version,
-                                                       int fetchSize );
+    Iterator<MvccEntity> loadDescendingHistory( ApplicationScope context, Id entityId, UUID version, int fetchSize );
 
     /**
      * Load a historical list of entities, from lowest to highest entity with versions < version up to maxSize elements
@@ -85,8 +84,7 @@ public interface MvccEntitySerializationStrategy extends Migration, VersionedDat
      */
     @Deprecated
     //this has been made obsolete in the latest version, only use the load methods
-    public Iterator<MvccEntity> loadAscendingHistory( CollectionScope context, Id entityId, UUID version,
-                                                      int fetchSize );
+    Iterator<MvccEntity> loadAscendingHistory( ApplicationScope context, Id entityId, UUID version, int fetchSize );
 
 
     /**
@@ -96,7 +94,7 @@ public interface MvccEntitySerializationStrategy extends Migration, VersionedDat
      * @param entityId
      * @return The MvccEntity if it exists.  Null otherwise
      */
-    public Optional<MvccEntity> load(CollectionScope scope, Id entityId);
+    Optional<MvccEntity> load( ApplicationScope scope, Id entityId );
 
 
     /**
@@ -104,7 +102,7 @@ public interface MvccEntitySerializationStrategy extends Migration, VersionedDat
      * can be used in a mark+sweep system.  The entity with the given version will exist in the context, but no data
      * will be stored
      */
-    public MutationBatch mark(CollectionScope context, Id entityId, UUID version);
+    MutationBatch mark( ApplicationScope context, Id entityId, UUID version );
 
 
     /**
@@ -114,6 +112,6 @@ public interface MvccEntitySerializationStrategy extends Migration, VersionedDat
      * @param entityId The entity id to delete
      * @param version  The version to delete
      */
-    public MutationBatch delete(CollectionScope context, Id entityId, UUID version);
+    MutationBatch delete( ApplicationScope context, Id entityId, UUID version );
 
 }

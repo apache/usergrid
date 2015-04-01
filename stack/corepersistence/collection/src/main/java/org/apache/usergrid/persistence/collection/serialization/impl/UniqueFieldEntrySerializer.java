@@ -38,12 +38,9 @@ import org.apache.usergrid.persistence.model.field.LongField;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.field.UUIDField;
 
-import com.netflix.astyanax.model.CompositeBuilder;
 import com.netflix.astyanax.model.CompositeParser;
-import com.netflix.astyanax.model.Composites;
 import com.netflix.astyanax.model.DynamicComposite;
 import com.netflix.astyanax.serializers.AbstractSerializer;
-import com.netflix.astyanax.serializers.DynamicCompositeSerializer;
 import com.netflix.astyanax.serializers.StringSerializer;
 import com.netflix.astyanax.serializers.UUIDSerializer;
 

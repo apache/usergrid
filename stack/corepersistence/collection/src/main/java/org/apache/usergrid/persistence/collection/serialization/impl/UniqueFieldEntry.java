@@ -26,7 +26,6 @@ package org.apache.usergrid.persistence.collection.serialization.impl;
 
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
 
 

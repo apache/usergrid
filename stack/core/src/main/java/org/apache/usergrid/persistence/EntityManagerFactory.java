@@ -21,8 +21,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.core.util.Health;
-import org.apache.usergrid.persistence.index.EntityIndex;
-import org.springframework.context.ApplicationContext;
 
 
 /**
@@ -166,9 +164,11 @@ public interface EntityManagerFactory {
 
     public Health getEntityStoreHealth();
 
+    public Health getIndexHealth();
+
     public interface ProgressObserver {
 
-        public void onProgress( EntityRef entity);
+     public void onProgress( EntityRef entity);
 
     }
 }

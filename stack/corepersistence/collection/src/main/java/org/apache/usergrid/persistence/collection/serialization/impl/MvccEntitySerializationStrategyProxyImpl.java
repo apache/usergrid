@@ -22,7 +22,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntitySet;
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
@@ -31,10 +30,12 @@ import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDef
 import org.apache.usergrid.persistence.core.migration.data.MigrationInfoCache;
 import org.apache.usergrid.persistence.core.migration.data.MigrationRelationship;
 import org.apache.usergrid.persistence.core.migration.data.VersionedMigrationSet;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 
@@ -44,6 +45,7 @@ import com.netflix.astyanax.MutationBatch;
  * migration data goes to both sources and is read from the old source. After the upgrade completes,
  * it will be available from the new source
  */
+@Singleton
 public class MvccEntitySerializationStrategyProxyImpl implements MvccEntitySerializationStrategy {
 
 
@@ -64,7 +66,7 @@ public class MvccEntitySerializationStrategyProxyImpl implements MvccEntitySeria
 
 
     @Override
-    public MutationBatch write( final CollectionScope context, final MvccEntity entity ) {
+    public MutationBatch write( final ApplicationScope context, final MvccEntity entity ) {
 
         final MigrationRelationship<MvccEntitySerializationStrategy> migration = getMigrationRelationShip();
 
@@ -82,7 +84,7 @@ public class MvccEntitySerializationStrategyProxyImpl implements MvccEntitySeria
 
 
     @Override
-    public EntitySet load( final CollectionScope scope, final Collection<Id> entityIds, final UUID maxVersion ) {
+    public EntitySet load( final ApplicationScope scope, final Collection<Id> entityIds, final UUID maxVersion ) {
 
         final MigrationRelationship<MvccEntitySerializationStrategy> migration = getMigrationRelationShip();
 
@@ -96,7 +98,7 @@ public class MvccEntitySerializationStrategyProxyImpl implements MvccEntitySeria
 
 
     @Override
-    public Iterator<MvccEntity> loadDescendingHistory( final CollectionScope context, final Id entityId,
+    public Iterator<MvccEntity> loadDescendingHistory( final ApplicationScope context, final Id entityId,
                                                        final UUID version, final int fetchSize ) {
 
         final MigrationRelationship<MvccEntitySerializationStrategy> migration = getMigrationRelationShip();
@@ -110,7 +112,7 @@ public class MvccEntitySerializationStrategyProxyImpl implements MvccEntitySeria
 
 
     @Override
-    public Iterator<MvccEntity> loadAscendingHistory( final CollectionScope context, final Id entityId,
+    public Iterator<MvccEntity> loadAscendingHistory( final ApplicationScope context, final Id entityId,
                                                       final UUID version, final int fetchSize ) {
 
         final MigrationRelationship<MvccEntitySerializationStrategy> migration = getMigrationRelationShip();
@@ -123,7 +125,7 @@ public class MvccEntitySerializationStrategyProxyImpl implements MvccEntitySeria
     }
 
     @Override
-    public Optional<MvccEntity> load( final CollectionScope scope, final Id entityId ) {
+    public Optional<MvccEntity> load( final ApplicationScope scope, final Id entityId ) {
 
         final MigrationRelationship<MvccEntitySerializationStrategy> migration = getMigrationRelationShip();
 
@@ -136,7 +138,7 @@ public class MvccEntitySerializationStrategyProxyImpl implements MvccEntitySeria
 
 
     @Override
-    public MutationBatch mark( final CollectionScope context, final Id entityId, final UUID version ) {
+    public MutationBatch mark( final ApplicationScope context, final Id entityId, final UUID version ) {
 
         final MigrationRelationship<MvccEntitySerializationStrategy> migration = getMigrationRelationShip();
 
@@ -154,7 +156,7 @@ public class MvccEntitySerializationStrategyProxyImpl implements MvccEntitySeria
 
 
     @Override
-    public MutationBatch delete( final CollectionScope context, final Id entityId, final UUID version ) {
+    public MutationBatch delete( final ApplicationScope context, final Id entityId, final UUID version ) {
 
         final MigrationRelationship<MvccEntitySerializationStrategy> migration = getMigrationRelationShip();
 

@@ -130,7 +130,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex{
     public CandidateResults search(final IndexScope indexScope, final SearchTypes searchTypes, final Query query, final int limit){
 
         if(query.getCursor()!=null){
-            return getNextPage(query.getCursor());
+            return getNextPage(query.getCursor(), query.getLimit());
         }
 
         SearchResponse searchResponse;
@@ -159,7 +159,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex{
     }
 
 
-    public CandidateResults getNextPage(final String cursor){
+    public CandidateResults getNextPage(final String cursor, final int limit){
         SearchResponse searchResponse;
 
         String userCursorString = cursor;
@@ -197,7 +197,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex{
 
 
         failureMonitor.success();
-        return parseResults(searchResponse, 1);
+        return parseResults(searchResponse, limit);
     }
 
     /**
@@ -285,7 +285,9 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex{
         final CandidateResults candidateResults = new CandidateResults(candidates);
         final String esScrollCursor = searchResponse.getScrollId();
 
-        if(esScrollCursor != null && hits.length>=limit) {
+        // >= seems odd.  However if our user reduces expectedSize (limit) on subsequent requests, we can't do that
+        //therefor we need to account for the overflow
+        if(esScrollCursor != null && length >= limit) {
             candidateResults.initializeCursor();
 
             //now set this into our map module

@@ -21,7 +21,6 @@ package org.apache.usergrid.persistence.index.impl;
 
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -50,8 +49,6 @@ import rx.Observable;
 import rx.Subscriber;
 import rx.Subscription;
 import rx.functions.Action1;
-import rx.functions.Func1;
-import rx.functions.Func2;
 import rx.schedulers.Schedulers;
 
 
@@ -177,7 +174,8 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
 
                                 timer.stop();
                             }
-
+                            //DO NOT add any doOnError* functions to this subscription.  We want the producer
+                            //to receive these exceptions and sleep before a retry
                             catch ( Throwable t ) {
                                 final long sleepTime = config.getFailureRetryTime();
 
@@ -186,7 +184,6 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
                                 if ( drainList != null ) {
                                     inFlight.addAndGet( -1 * drainList.size() );
                                 }
-
 
                                 try {
                                     Thread.sleep( sleepTime );
@@ -200,10 +197,8 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
                         }
                         while ( true );
                     }
-                } ).doOnNext( new Action1<List<IndexOperationMessage>>() {
-                @Override
-                public void call(List<IndexOperationMessage> containerList) {
-                    if (containerList.size() == 0) {
+                } ).doOnNext( containerList -> {
+                    if ( containerList.size() == 0 ) {
                         return;
                     }
 
@@ -214,17 +209,12 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
                     execute(containerList);
 
                     time.stop();
-                }
-            })
+                } )
                 //ack after we process
-                .doOnNext(new Action1<List<IndexOperationMessage>>() {
-                    @Override
-                    public void call(final List<IndexOperationMessage> indexOperationMessages) {
-                        bufferQueue.ack(indexOperationMessages);
-                        //release  so we know we've done processing
-                        inFlight.addAndGet(-1 * indexOperationMessages.size());
-                    }
-
+                .doOnNext( indexOperationMessages -> {
+                    bufferQueue.ack( indexOperationMessages );
+                    //release  so we know we've done processing
+                    inFlight.addAndGet( -1 * indexOperationMessages.size() );
                 } ).subscribeOn( Schedulers.newThread() );
 
             //start in the background
@@ -239,54 +229,31 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
     /**
      * Execute the request, check for errors, then re-init the batch for future use
      */
-    private void execute(final List<IndexOperationMessage> operationMessages) {
+    private void execute( final List<IndexOperationMessage> operationMessages ) {
 
-        if (operationMessages == null || operationMessages.size() == 0) {
+        if ( operationMessages == null || operationMessages.size() == 0 ) {
             return;
         }
 
         //process and flatten all the messages to builder requests
         //batch shard operations into a bulk request
-        Observable.from( operationMessages ).flatMap( new Func1<IndexOperationMessage, Observable<BatchRequest>>() {
-            @Override
-            public Observable<BatchRequest> call( final IndexOperationMessage indexOperationMessage ) {
-                final Observable<IndexRequest> index = Observable.from( indexOperationMessage.getIndexRequests() );
-                final Observable<DeIndexRequest> deIndex =
-                    Observable.from( indexOperationMessage.getDeIndexRequests() );
+        Observable.from( operationMessages ).flatMap( indexOperationMessage -> {
+            final Observable<IndexRequest> index = Observable.from( indexOperationMessage.getIndexRequests() );
+            final Observable<DeIndexRequest> deIndex = Observable.from( indexOperationMessage.getDeIndexRequests() );
 
-                indexSizeCounter.dec( indexOperationMessage.getDeIndexRequests().size() );
-                indexSizeCounter.dec( indexOperationMessage.getIndexRequests().size() );
+            indexSizeCounter.dec( indexOperationMessage.getDeIndexRequests().size() );
+            indexSizeCounter.dec( indexOperationMessage.getIndexRequests().size() );
 
-                return Observable.merge( index, deIndex );
-            }
+            return Observable.merge( index, deIndex );
         } )
-      //collection all the operations into a single stream
-       .reduce( initRequest(), new Func2<BulkRequestBuilder, BatchRequest, BulkRequestBuilder>() {
-           @Override
-           public BulkRequestBuilder call( final BulkRequestBuilder bulkRequestBuilder,
-                                           final BatchRequest batchRequest ) {
-               batchRequest.doOperation( client, bulkRequestBuilder );
-
-               return bulkRequestBuilder;
-           }
-       } )
-        //send the request off to ES
-        .doOnNext( new Action1<BulkRequestBuilder>() {
-            @Override
-            public void call( final BulkRequestBuilder bulkRequestBuilder ) {
-                sendRequest( bulkRequestBuilder );
-            }
-        } ).toBlocking().lastOrDefault(null);
+            //collection all the operations into a single stream
+            .collect( () -> initRequest(), ( bulkRequestBuilder, batchRequest ) -> {
+                batchRequest.doOperation( client, bulkRequestBuilder );
+            } )  //send the request off to ES
+            .doOnNext( bulkRequestBuilder -> sendRequest( bulkRequestBuilder ) ).toBlocking().lastOrDefault( null );
 
         //call back all futures
-        Observable.from(operationMessages)
-            .doOnNext(new Action1<IndexOperationMessage>() {
-                @Override
-                public void call(IndexOperationMessage operationMessage) {
-                    operationMessage.getFuture().done();
-                }
-            })
-            .toBlocking().lastOrDefault(null);
+        Observable.from( operationMessages ).doOnNext( operationMessage -> operationMessage.getFuture().done() ).toBlocking().lastOrDefault( null );
     }
 
 

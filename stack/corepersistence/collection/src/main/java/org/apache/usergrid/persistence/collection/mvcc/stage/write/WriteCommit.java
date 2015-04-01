@@ -23,25 +23,24 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.exception.WriteCommitException;
-import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
-import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.MvccLogEntry;
+import org.apache.usergrid.persistence.collection.exception.WriteCommitException;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccValidationUtils;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
+import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
-import org.apache.usergrid.persistence.collection.serialization.impl.UniqueValueImpl;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
-import org.apache.usergrid.persistence.model.util.EntityUtils;
-import org.apache.usergrid.persistence.core.guice.ProxyImpl;
+import org.apache.usergrid.persistence.collection.serialization.impl.UniqueValueImpl;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
+import org.apache.usergrid.persistence.model.util.EntityUtils;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -71,7 +70,7 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Entity>
 
     @Inject
     public WriteCommit( final MvccLogEntrySerializationStrategy logStrat,
-                        @ProxyImpl final MvccEntitySerializationStrategy entryStrat,
+                        final MvccEntitySerializationStrategy entryStrat,
                         final UniqueValueSerializationStrategy uniqueValueStrat) {
 
         Preconditions.checkNotNull( logStrat, "MvccLogEntrySerializationStrategy is required" );
@@ -92,7 +91,7 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Entity>
 
         final Id entityId = mvccEntity.getId();
         final UUID version = mvccEntity.getVersion();
-        final CollectionScope collectionScope = ioEvent.getEntityCollection();
+        final ApplicationScope applicationScope = ioEvent.getEntityCollection();
 
         //set the version into the entity
         EntityUtils.setVersion( mvccEntity.getEntity().get(), version );
@@ -102,10 +101,10 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Entity>
 
         final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version, Stage.COMMITTED, MvccLogEntry.State.COMPLETE );
 
-        MutationBatch logMutation = logEntryStrat.write( collectionScope, startEntry );
+        MutationBatch logMutation = logEntryStrat.write( applicationScope, startEntry );
 
         // now get our actual insert into the entity data
-        MutationBatch entityMutation = entityStrat.write( collectionScope, mvccEntity );
+        MutationBatch entityMutation = entityStrat.write( applicationScope, mvccEntity );
 
         // merge the 2 into 1 mutation
         logMutation.mergeShallow( entityMutation );
@@ -116,7 +115,7 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Entity>
                 UniqueValue written  = new UniqueValueImpl( field,
                     entityId,version);
 
-                MutationBatch mb = uniqueValueStrat.write(collectionScope,  written );
+                MutationBatch mb = uniqueValueStrat.write(applicationScope,  written );
 
                 LOG.debug("Finalizing {} unqiue value {}", field.getName(), field.getValue().toString());
 
@@ -130,7 +129,7 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Entity>
         }
         catch ( ConnectionException e ) {
             LOG.error( "Failed to execute write asynchronously ", e );
-            throw new WriteCommitException( mvccEntity, collectionScope,
+            throw new WriteCommitException( mvccEntity, applicationScope,
                 "Failed to execute write asynchronously ", e );
         }
 

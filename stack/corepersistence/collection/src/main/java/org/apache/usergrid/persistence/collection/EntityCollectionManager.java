@@ -20,10 +20,12 @@ package org.apache.usergrid.persistence.collection;
 
 
 import java.util.Collection;
+
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
+
 import rx.Observable;
 
 
@@ -35,50 +37,69 @@ public interface EntityCollectionManager {
     /**
      * Write the entity in the entity collection.  This is an entire entity, it's contents will
      * completely overwrite the previous values, if it exists.
+     *
      * @param entity The entity to update
+     *
+     * @return the Observable with the updated entity in the body
      */
-    public Observable<Entity> write( Entity entity );
+    Observable<Entity> write( Entity entity );
 
 
     /**
-     * MarkCommit the entity and remove it's indexes with the given entity id
+     * @param entityId MarkCommit the entity as deleted
+     *
+     * @return The observable of the id after the operation has completed
      */
-    public Observable<Id> delete( Id entityId );
+    Observable<Id> delete( Id entityId );
 
     /**
+     * @param entityId The entity id to load.
+     *
+     * @return The observable with the entity
+     *
      * Load the entity with the given entity Id
      */
-    public Observable<Entity> load( Id entityId );
+    Observable<Entity> load( Id entityId );
 
     /**
+     * @param entityIds Returns a version set with the latest version for each of the entities
      * Return the latest versions of the specified entityIds
+     *
+     * @return A versionset that has all the latest versions for the specified Ids that could be found
      */
-    public Observable<VersionSet> getLatestVersion( Collection<Id> entityId );
+    Observable<VersionSet> getLatestVersion( Collection<Id> entityIds );
 
 
-    public Observable<FieldSet> getEntitiesFromFields( Collection<Field> fields );
+    /**
+     * Get a fieldset of all fields from the entities
+     * @param entityType The type of entity.  From the "type" field in the id.
+     * @param fields The collection of fields to search
+     * @return
+     */
+    Observable<FieldSet> getEntitiesFromFields( String entityType, Collection<Field> fields );
 
     /**
      * Gets the Id for a field
+     * @param entityType the type field from the Id object
+     * @param field The field to search for
+     *
      * @return most likely a single Id, watch for onerror events
      */
-    public Observable<Id> getIdField(final Field field);
+    Observable<Id> getIdField( String entityType, Field field );
+
 
     /**
-     * Audit a unique field, and remove any stale entries in the system
-     * @param field The field to audit within this collection scope.
-
-    public Observable<Integer> auditUniqueField(final Field field);
-     */
-    /**
+     * @param entityIds The entityIds for loading a collection
      * Load all the entityIds into the observable entity set
+     *
+     * @return An EntitySet with the latest data of every entity that could be located
      */
-    public Observable<EntitySet> load(Collection<Id> entityIds);
+    Observable<EntitySet> load( Collection<Id> entityIds );
 
 
     /**
      * Returns health of entity data store.
      */
-    public Health getHealth();
+    Health getHealth();
 
 }

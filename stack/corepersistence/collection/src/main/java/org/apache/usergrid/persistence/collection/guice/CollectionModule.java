@@ -21,12 +21,12 @@ package org.apache.usergrid.persistence.collection.guice;
 import org.safehaus.guicyfig.GuicyFigModule;
 
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
-import org.apache.usergrid.persistence.collection.impl.EntityVersionTaskFactory;
 import org.apache.usergrid.persistence.collection.cache.EntityCacheFig;
 import org.apache.usergrid.persistence.collection.event.EntityDeleted;
 import org.apache.usergrid.persistence.collection.event.EntityVersionCreated;
 import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerFactoryImpl;
+import org.apache.usergrid.persistence.collection.impl.EntityVersionTaskFactory;
 import org.apache.usergrid.persistence.collection.mvcc.changelog.ChangeLogGenerator;
 import org.apache.usergrid.persistence.collection.mvcc.changelog.ChangeLogGeneratorImpl;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
@@ -76,7 +76,6 @@ public abstract class CollectionModule extends AbstractModule {
         //bind this to our factory
         install( new GuicyFigModule( EntityCacheFig.class ) );
 
-        bind( UniqueValueSerializationStrategy.class ).to( UniqueValueSerializationStrategyImpl.class );
         bind( ChangeLogGenerator.class).to( ChangeLogGeneratorImpl.class);
 
         configureMigrationProvider();

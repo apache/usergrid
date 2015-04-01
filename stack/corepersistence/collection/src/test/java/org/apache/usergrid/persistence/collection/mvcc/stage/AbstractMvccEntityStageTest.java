@@ -25,14 +25,14 @@ import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.MvccEntity;
-import org.apache.usergrid.persistence.model.util.EntityUtils;
 import org.apache.usergrid.persistence.collection.util.InvalidEntityGenerator;
 import org.apache.usergrid.persistence.collection.util.InvalidIdGenerator;
 import org.apache.usergrid.persistence.collection.util.InvalidMvccEntityGenerator;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.util.EntityUtils;
 
 import com.google.common.base.Optional;
 
@@ -82,7 +82,7 @@ public abstract class AbstractMvccEntityStageTest {
             EntityUtils.setId( entity, id );
         }
 
-        final CollectionScope context = mock( CollectionScope.class );
+        final ApplicationScope context = mock( ApplicationScope.class );
 
         if ( mvccEntity != null ) {
             when( mvccEntity.getEntity() ).thenReturn( Optional.fromNullable( entity ) );

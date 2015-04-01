@@ -18,28 +18,26 @@
  */
 package org.apache.usergrid.persistence.collection.impl;
 
-import com.google.inject.Inject;
-import com.google.inject.assistedinject.Assisted;
-import com.netflix.astyanax.MutationBatch;
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.event.EntityDeleted;
-import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
-import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
-import org.apache.usergrid.persistence.core.task.Task;
-import org.apache.usergrid.persistence.model.entity.Id;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import rx.Observable;
-import rx.functions.Action1;
-import rx.functions.Func1;
-import rx.schedulers.Schedulers;
 
 import java.util.Set;
 import java.util.UUID;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.core.guice.ProxyImpl;
+import org.apache.usergrid.persistence.collection.event.EntityDeleted;
+import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.task.Task;
+import org.apache.usergrid.persistence.model.entity.Id;
+
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
+import com.netflix.astyanax.MutationBatch;
+
+import rx.Observable;
+import rx.schedulers.Schedulers;
 
 
 /**
@@ -52,7 +50,7 @@ public class EntityDeletedTask implements Task<Void> {
     private final MvccLogEntrySerializationStrategy logEntrySerializationStrategy;
     private final MvccEntitySerializationStrategy entitySerializationStrategy;
     private final Set<EntityDeleted> listeners;
-    private final CollectionScope collectionScope;
+    private final ApplicationScope collectionScope;
     private final Id entityId;
     private final UUID version;
 
@@ -61,9 +59,9 @@ public class EntityDeletedTask implements Task<Void> {
     public EntityDeletedTask(
         EntityVersionTaskFactory entityVersionTaskFactory,
         final MvccLogEntrySerializationStrategy logEntrySerializationStrategy,
-        @ProxyImpl final MvccEntitySerializationStrategy entitySerializationStrategy,
+        final MvccEntitySerializationStrategy entitySerializationStrategy,
         final Set<EntityDeleted>                listeners, // MUST be a set or Guice will not inject
-        @Assisted final CollectionScope         collectionScope,
+        @Assisted final ApplicationScope  collectionScope,
         @Assisted final Id                      entityId,
         @Assisted final UUID                    version) {
 

@@ -17,20 +17,18 @@
  */
 package org.apache.usergrid.corepersistence.events;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.corepersistence.CpEntityManagerFactory;
-import static org.apache.usergrid.corepersistence.CoreModule.EVENTS_DISABLED;
 import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.event.EntityVersionCreated;
-import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Entity;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 
 /**
@@ -56,8 +54,8 @@ public class EntityVersionCreatedHandler implements EntityVersionCreated {
 
 
     @Override
-    public void versionCreated( final CollectionScope scope, final Entity entity ) {
-        //not op, we're not migrating properly to this.  Make this an event
+    public void versionCreated( final ApplicationScope scope, final Entity entity ) {
+        //not op, we're not migrating properly to this.  Make this an event At the moment this is happening on write
 
 //        // This check is for testing purposes and for a test that to be able to dynamically turn
 //        // off and on delete previous versions so that it can test clean-up on read.

@@ -23,13 +23,11 @@ package org.apache.usergrid.persistence.collection.impl;
 
 import java.util.concurrent.ExecutionException;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.cache.CachedEntityCollectionManager;
 import org.apache.usergrid.persistence.collection.cache.EntityCacheFig;
 import org.apache.usergrid.persistence.collection.guice.CollectionTaskExecutor;
-import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkCommit;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkStart;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.RollbackAction;
@@ -38,10 +36,10 @@ import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteOptimist
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteStart;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteUniqueVerify;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
-import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
+import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
-import org.apache.usergrid.persistence.core.guice.ProxyImpl;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.task.TaskExecutor;
 
 import com.google.common.base.Preconditions;
@@ -50,7 +48,6 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.assistedinject.Assisted;
 import com.netflix.astyanax.Keyspace;
 
 
@@ -78,10 +75,10 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
     private final EntityCacheFig entityCacheFig;
     private final MetricsFactory metricsFactory;
 
-    private LoadingCache<CollectionScope, EntityCollectionManager> ecmCache =
+    private LoadingCache<ApplicationScope, EntityCollectionManager> ecmCache =
         CacheBuilder.newBuilder().maximumSize( 1000 )
-                    .build( new CacheLoader<CollectionScope, EntityCollectionManager>() {
-                        public EntityCollectionManager load( CollectionScope scope ) {
+                    .build( new CacheLoader<ApplicationScope, EntityCollectionManager>() {
+                        public EntityCollectionManager load( ApplicationScope scope ) {
                                   //create the target EM that will perform logic
                             final EntityCollectionManager target = new EntityCollectionManagerImpl(
                                 writeStart, writeVerifyUnique,
@@ -102,7 +99,7 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
                                                final WriteUniqueVerify writeVerifyUnique,
                                                final WriteOptimisticVerify writeOptimisticVerify,
                                                final WriteCommit writeCommit, final RollbackAction rollback,
-                                               final MarkStart markStart, final MarkCommit markCommit, @ProxyImpl
+                                               final MarkStart markStart, final MarkCommit markCommit,
                                                final MvccEntitySerializationStrategy entitySerializationStrategy,
                                                final UniqueValueSerializationStrategy uniqueValueSerializationStrategy,
                                                final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy,
@@ -129,10 +126,10 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
         this.metricsFactory = metricsFactory;
     }
     @Override
-    public EntityCollectionManager createCollectionManager(CollectionScope collectionScope) {
-        Preconditions.checkNotNull(collectionScope);
+    public EntityCollectionManager createCollectionManager(ApplicationScope applicationScope) {
+        Preconditions.checkNotNull(applicationScope);
         try{
-            return ecmCache.get(collectionScope);
+            return ecmCache.get(applicationScope);
         }catch (ExecutionException ee){
             throw new RuntimeException(ee);
         }

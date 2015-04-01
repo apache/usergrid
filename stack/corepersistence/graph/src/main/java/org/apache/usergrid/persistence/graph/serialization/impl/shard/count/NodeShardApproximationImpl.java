@@ -39,6 +39,7 @@ import org.apache.usergrid.persistence.graph.serialization.impl.shard.Shard;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
+import com.netflix.hystrix.HystrixThreadPoolProperties;
 
 import rx.functions.Action0;
 import rx.schedulers.Schedulers;
@@ -74,6 +75,14 @@ public class NodeShardApproximationImpl implements NodeShardApproximation {
     private final BlockingQueue<Counter> flushQueue;
 
     private final FlushWorker worker;
+
+    /**
+        * Command group used for realtime user commands
+        */
+       public static final HystrixCommand.Setter
+           COUNT_GROUP = HystrixCommand.Setter.withGroupKey(
+               HystrixCommandGroupKey.Factory.asKey( "BatchCounterRollup" ) ).andThreadPoolPropertiesDefaults(
+                   HystrixThreadPoolProperties.Setter().withCoreSize( 100 ) );
 
 
     /**
@@ -229,7 +238,7 @@ public class NodeShardApproximationImpl implements NodeShardApproximation {
                 /**
                  * Execute the command in hystrix to avoid slamming cassandra
                  */
-                new HystrixCommand( HystrixCommandGroupKey.Factory.asKey("BatchCounterRollup") ) {
+                new HystrixCommand( COUNT_GROUP ) {
 
                     @Override
                     protected Void run() throws Exception {

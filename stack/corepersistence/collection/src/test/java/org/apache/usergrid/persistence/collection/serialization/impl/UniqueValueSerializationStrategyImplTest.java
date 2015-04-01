@@ -15,7 +15,7 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-package org.apache.usergrid.persistence.collection.mvcc.stage.write;
+package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
 import java.util.Arrays;
@@ -23,24 +23,22 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.collection.serialization.impl.UniqueFieldEntry;
-import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
-import org.apache.usergrid.persistence.core.test.UseModules;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
-import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
 import org.apache.usergrid.persistence.collection.serialization.impl.UniqueValueImpl;
+import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.test.ITRunner;
+import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.Field;
@@ -59,22 +57,35 @@ import static org.junit.Assert.assertTrue;
 
 @RunWith(ITRunner.class)
 @UseModules(TestCollectionModule.class)
-public class UniqueValueSerializationStrategyImplTest {
+public abstract class UniqueValueSerializationStrategyImplTest {
 
 
     @Inject
     @Rule
     public MigrationManagerRule migrationManagerRule;
 
-    @Inject
-    UniqueValueSerializationStrategy strategy;
+
+    private UniqueValueSerializationStrategy strategy;
+
+
+    @Before
+    public void wireUniqueSerializationStrategy(){
+        strategy = getUniqueSerializationStrategy();
+    }
+
+
+    /**
+     * Get the unique value serialization
+     * @return
+     */
+    protected abstract UniqueValueSerializationStrategy getUniqueSerializationStrategy();
 
 
     @Test
     public void testBasicOperation() throws ConnectionException, InterruptedException {
 
-        CollectionScope scope =
-                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" );
+        ApplicationScope scope =
+                new ApplicationScopeImpl( new SimpleId( "organization" ) );
 
         IntegerField field = new IntegerField( "count", 5 );
         Id entityId = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
@@ -82,7 +93,7 @@ public class UniqueValueSerializationStrategyImplTest {
         UniqueValue stored = new UniqueValueImpl( field, entityId, version );
         strategy.write( scope, stored ).execute();
 
-        UniqueValueSet fields = strategy.load( scope, Collections.<Field>singleton( field ) );
+        UniqueValueSet fields = strategy.load( scope, entityId.getType(), Collections.<Field>singleton( field ) );
 
         UniqueValue retrieved = fields.getValue( field.getName() );
         Assert.assertNotNull( retrieved );
@@ -107,8 +118,9 @@ public class UniqueValueSerializationStrategyImplTest {
     @Test
     public void testWriteWithTTL() throws InterruptedException, ConnectionException {
 
-        CollectionScope scope =
-                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" );
+
+        ApplicationScope scope =
+                new ApplicationScopeImpl( new SimpleId( "organization" ) );
 
         // write object that lives 2 seconds
         IntegerField field = new IntegerField( "count", 5 );
@@ -120,7 +132,7 @@ public class UniqueValueSerializationStrategyImplTest {
         Thread.sleep( 1000 );
 
         // waited one sec, should be still here
-        UniqueValueSet fields = strategy.load( scope, Collections.<Field>singleton( field ) );
+        UniqueValueSet fields = strategy.load( scope, entityId.getType(), Collections.<Field>singleton( field ) );
 
         UniqueValue retrieved = fields.getValue( field.getName() );
 
@@ -130,7 +142,7 @@ public class UniqueValueSerializationStrategyImplTest {
         Thread.sleep( 1500 );
 
         // wait another second, should be gone now
-        fields = strategy.load( scope, Collections.<Field>singleton( field ) );
+        fields = strategy.load( scope, entityId.getType(), Collections.<Field>singleton( field ) );
 
         UniqueValue nullExpected = fields.getValue( field.getName() );
         Assert.assertNull( nullExpected );
@@ -159,8 +171,9 @@ public class UniqueValueSerializationStrategyImplTest {
     @Test
     public void testDelete() throws ConnectionException {
 
-        CollectionScope scope =
-                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" );
+
+        ApplicationScope scope =
+                new ApplicationScopeImpl( new SimpleId( "organization" ) );
 
         IntegerField field = new IntegerField( "count", 5 );
         Id entityId = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
@@ -170,7 +183,7 @@ public class UniqueValueSerializationStrategyImplTest {
 
         strategy.delete( scope, stored ).execute();
 
-        UniqueValueSet fields = strategy.load( scope, Collections.<Field>singleton( field ) );
+        UniqueValueSet fields = strategy.load( scope, entityId.getType(), Collections.<Field>singleton( field ) );
 
         UniqueValue nullExpected = fields.getValue( field.getName() );
 
@@ -186,8 +199,9 @@ public class UniqueValueSerializationStrategyImplTest {
 
     @Test
     public void testCapitalizationFixes() throws ConnectionException {
-        CollectionScope scope =
-                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" );
+
+        ApplicationScope scope =
+                new ApplicationScopeImpl( new SimpleId( "organization" ) );
 
         StringField field = new StringField( "count", "MiXeD CaSe" );
         Id entityId = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
@@ -196,7 +210,7 @@ public class UniqueValueSerializationStrategyImplTest {
         strategy.write( scope, stored ).execute();
 
 
-        UniqueValueSet fields = strategy.load( scope, Collections.<Field>singleton( field ) );
+        UniqueValueSet fields = strategy.load( scope, entityId.getType(), Collections.<Field>singleton( field ) );
 
         UniqueValue value = fields.getValue( field.getName() );
 
@@ -206,7 +220,7 @@ public class UniqueValueSerializationStrategyImplTest {
         assertEquals( entityId, value.getEntityId() );
 
         //now test will all upper and all lower, we should get it all the same
-        fields = strategy.load( scope,
+        fields = strategy.load( scope, entityId.getType(),
                 Collections.<Field>singleton( new StringField( field.getName(), "MIXED CASE" ) ) );
 
         value = fields.getValue( field.getName() );
@@ -216,7 +230,7 @@ public class UniqueValueSerializationStrategyImplTest {
 
         assertEquals( entityId, value.getEntityId() );
 
-        fields = strategy.load( scope,
+        fields = strategy.load( scope, entityId.getType(),
                 Collections.<Field>singleton( new StringField( field.getName(), "mixed case" ) ) );
 
         value = fields.getValue( field.getName() );
@@ -247,9 +261,9 @@ public class UniqueValueSerializationStrategyImplTest {
     @Test
     public void twoFieldsPerVersion() throws ConnectionException, InterruptedException {
 
-        CollectionScope scope =
-                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" );
 
+        ApplicationScope scope =
+                new ApplicationScopeImpl( new SimpleId( "organization" ) );
 
 
         Id entityId = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
@@ -284,7 +298,7 @@ public class UniqueValueSerializationStrategyImplTest {
         batch.execute();
 
 
-        UniqueValueSet fields = strategy.load( scope, Arrays.<Field>asList( version1Field1, version1Field2 ) );
+        UniqueValueSet fields = strategy.load( scope, entityId.getType(), Arrays.<Field>asList( version1Field1, version1Field2 ) );
 
         UniqueValue retrieved = fields.getValue( version1Field1.getName() );
 

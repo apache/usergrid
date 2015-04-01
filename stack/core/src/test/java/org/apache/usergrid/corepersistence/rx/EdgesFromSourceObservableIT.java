@@ -41,6 +41,7 @@ import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.utils.EdgeTestUtils;
 
 import com.google.inject.Injector;
 
@@ -98,8 +99,8 @@ public class EdgesFromSourceObservableIT extends AbstractCoreIT {
                 final Id source = edge.getSourceNode();
 
                 //test if we're a collection, if so
-                if ( CpNamingUtils.isCollectionEdgeType( edgeType ) ) {
-                    final String collectionName = CpNamingUtils.getCollectionName( edgeType );
+                if ( EdgeTestUtils.isCollectionEdgeType( edgeType ) ) {
+                    final String collectionName = EdgeTestUtils.getNameForEdge( edgeType );
 
                     assertEquals("application source returned", createdApplication.getUuid(), source.getUuid());
 
@@ -112,11 +113,11 @@ public class EdgesFromSourceObservableIT extends AbstractCoreIT {
 
 
 
-                if ( !CpNamingUtils.isConnectionEdgeType( edgeType ) ) {
+                if ( !EdgeTestUtils.isConnectionEdgeType( edgeType ) ) {
                     fail( "Only connection edges should be encountered" );
                 }
 
-                final String connectionType = CpNamingUtils.getConnectionType( edgeType );
+                final String connectionType = EdgeTestUtils.getNameForEdge( edgeType );
 
                 assertEquals( "Same connection type expected", "likes", connectionType );
 

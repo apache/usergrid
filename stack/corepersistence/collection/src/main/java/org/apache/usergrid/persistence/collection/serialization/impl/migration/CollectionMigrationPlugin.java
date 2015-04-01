@@ -26,10 +26,10 @@ package org.apache.usergrid.persistence.collection.serialization.impl.migration;
 
 import java.util.Set;
 
-import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerialization;
 import org.apache.usergrid.persistence.core.migration.data.AbstractMigrationPlugin;
 import org.apache.usergrid.persistence.core.migration.data.DataMigration;
 import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
+import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerialization;
 import org.apache.usergrid.persistence.core.migration.data.PluginPhase;
 
 import com.google.inject.Inject;

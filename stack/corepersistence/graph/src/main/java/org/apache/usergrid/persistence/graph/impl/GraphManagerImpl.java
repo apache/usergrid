@@ -28,7 +28,6 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.core.guice.ProxyImpl;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -119,7 +118,7 @@ public class GraphManagerImpl implements GraphManager {
 
 
     @Inject
-    public GraphManagerImpl( @ProxyImpl final EdgeMetadataSerialization edgeMetadataSerialization,
+    public GraphManagerImpl( final EdgeMetadataSerialization edgeMetadataSerialization,
                              final EdgeSerialization storageEdgeSerialization,
                              final NodeSerialization nodeSerialization,
                              final GraphFig graphFig,
