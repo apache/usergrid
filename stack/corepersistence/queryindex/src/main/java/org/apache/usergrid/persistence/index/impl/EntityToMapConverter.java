@@ -95,7 +95,7 @@ public class EntityToMapConverter {
             }
             else if ( f instanceof EntityObjectField) {
                 EntityObject eo = ( EntityObject ) field.getValue();
-                entityMap.put(EO_PREFIX + field.getName().toLowerCase(), entityToMap(eo) ); // recursion
+                entityMap.put(  field.getName().toLowerCase(), entityToMap(eo) ); // recursion
             }
             else if ( f instanceof StringField ) {
 

@@ -1529,7 +1529,7 @@ public class CollectionIT extends AbstractCoreIT {
                 .getProperty( "Recipient" ) ).get( "Username" );
 
         // selection results should be a list of lists
-//        List<Object> sr = query.getSelectionResults( r );
+//        List<Object> sr = query.getSelectionResults( r );(
 //        assertTrue( sr.size() == 1 );
 
         assertEquals( "fb_100000787138041", username );

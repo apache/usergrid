@@ -155,7 +155,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex{
         }
         failureMonitor.success();
 
-        return parseResults(searchResponse);
+        return parseResults(searchResponse, limit);
     }
 
 
@@ -197,7 +197,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex{
 
 
         failureMonitor.success();
-        return parseResults(searchResponse);
+        return parseResults(searchResponse, 1);
     }
 
     /**
@@ -260,7 +260,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex{
 
 
 
-    private CandidateResults parseResults( final SearchResponse searchResponse) {
+    private CandidateResults parseResults( final SearchResponse searchResponse,final int limit) {
 
         final SearchHits searchHits = searchResponse.getHits();
         final SearchHit[] hits = searchHits.getHits();
@@ -285,7 +285,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex{
         final CandidateResults candidateResults = new CandidateResults(candidates);
         final String esScrollCursor = searchResponse.getScrollId();
 
-        if(esScrollCursor != null) {
+        if(esScrollCursor != null && hits.length>=limit) {
             candidateResults.initializeCursor();
 
             //now set this into our map module
