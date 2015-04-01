@@ -387,9 +387,16 @@ public class ServiceResource extends AbstractContextResource {
 
         ServiceResults sr = executeServiceRequest( ui, response, ServiceAction.DELETE, null );
 
-        for ( Entity entity : sr.getEntities() ) {
-            if ( entity.getProperty( AssetUtils.FILE_METADATA ) != null ) {
-                binaryStore.delete( services.getApplicationId(), entity );
+        // if we deleted an entity (and not a connection or collection) then
+        // we may need to clean up binary asset data associated with that entity
+
+        if (    !sr.getResultsType().equals( ServiceResults.Type.CONNECTION )
+             && !sr.getResultsType().equals( ServiceResults.Type.COLLECTION )) {
+
+            for ( Entity entity : sr.getEntities() ) {
+                if ( entity.getProperty( AssetUtils.FILE_METADATA ) != null ) {
+                    binaryStore.delete( services.getApplicationId(), entity );
+                }
             }
         }
 
