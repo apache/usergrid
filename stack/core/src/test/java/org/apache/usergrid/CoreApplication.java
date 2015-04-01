@@ -215,14 +215,16 @@ public class CoreApplication implements Application, TestRule {
 
 
     @Override
-    public void refreshIndex() {
+    public synchronized void refreshIndex() {
         try{
             Thread.sleep(50);
-        }catch (InterruptedException ie){
-
-        }
+        }catch (InterruptedException ie){}
 
         entityIndex.refresh();
+
+        try{
+            Thread.sleep(50);
+        }catch (InterruptedException ie){}
     }
 
 
