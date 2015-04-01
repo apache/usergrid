@@ -417,7 +417,7 @@ public class EntityIndexTest extends BaseIT {
         testQuery(scope,  searchTypes,entityIndex, "not (friends.name = 'Jack the Ripper')", totalUsers );
 
         // one person has a friend named Shari Hahn
-        testQuery(scope, searchTypes, entityIndex, "friends.name = 'Wendy Moody'", 1 );
+        testQuery(scope, searchTypes, entityIndex, "eo_friends.name = 'Wendy Moody'", 1 );
 
         // everybody but 1 doesn't have a friend named Shari Hahh
         testQuery(scope, searchTypes, entityIndex, "not (friends.name = 'Shari Hahn')", totalUsers - 1);
