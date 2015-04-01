@@ -17,6 +17,7 @@
 package org.apache.usergrid.rest.applications.assets;
 
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.UUID;
@@ -40,6 +41,7 @@ import org.apache.commons.io.IOUtils;
 import com.sun.jersey.multipart.FormDataMultiPart;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 
@@ -272,5 +274,110 @@ public class AssetResourceIT extends AbstractRestIT {
         // delete
         node = resource().path( "/test-organization/test-app/foos/" + uuid ).queryParam( "access_token", access_token )
                 .accept( MediaType.APPLICATION_JSON_TYPE ).delete( JsonNode.class );
+    }
+
+
+    /**
+     * Deleting a connection to an asset should not delete the asset or the asset's data
+     */
+    @Test
+    public void deleteConnectionToAsset() throws IOException {
+
+        UserRepo.INSTANCE.load( resource(), access_token );
+
+        final String uuid;
+
+        // create the entity that will be the asset, an image
+
+        Map<String, String> payload = hashMap("name", "cassandra_eye.jpg");
+
+        JsonNode node = resource().path("/test-organization/test-app/foos")
+                .queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE)
+                .post(JsonNode.class, payload);
+        JsonNode idNode = node.get("entities").get(0).get("uuid");
+        uuid = idNode.getTextValue();
+
+        // post image data to the asset entity
+
+        byte[] data = IOUtils.toByteArray(this.getClass().getResourceAsStream("/cassandra_eye.jpg"));
+        resource().path("/test-organization/test-app/foos/" + uuid)
+                .queryParam("access_token", access_token)
+                .type(MediaType.APPLICATION_OCTET_STREAM_TYPE)
+                .put(data);
+
+        // create an imagegallery entity
+
+        Map<String, String> imageGalleryPayload = hashMap("name", "my image gallery");
+
+        JsonNode imageGalleryNode = resource().path("/test-organization/test-app/imagegalleries")
+                .queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE)
+                .post(JsonNode.class, imageGalleryPayload);
+
+        JsonNode imageGalleryIdNode = imageGalleryNode.get("entities").get(0).get("uuid");
+        String imageGalleryId = imageGalleryIdNode.getTextValue();
+
+        // connect imagegallery to asset
+
+        JsonNode connectNode = resource()
+                .path("/test-organization/test-app/imagegalleries/" + imageGalleryId + "/contains/" + uuid)
+                .queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE)
+                .post(JsonNode.class);
+
+        // verify connection from imagegallery to asset
+
+        JsonNode listConnectionsNode = resource()
+                .path("/test-organization/test-app/imagegalleries/" + imageGalleryId + "/contains/")
+                .queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE)
+                .get(JsonNode.class);
+        assertEquals(uuid, listConnectionsNode.get("entities").get(0).get("uuid").getTextValue());
+
+        // delete the connection
+
+        resource().path("/test-organization/test-app/imagegalleries/" + imageGalleryId + "/contains/" + uuid)
+                .queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE)
+                .delete();
+
+        // verify that connection is gone
+
+        listConnectionsNode = resource()
+                .path("/test-organization/test-app/imagegalleries/" + imageGalleryId + "/contains/")
+                .queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE)
+                .get(JsonNode.class);
+        assertFalse(listConnectionsNode.get("entities").getElements().hasNext());
+
+        // asset should still be there
+
+        JsonNode assetNode = resource().path("/test-organization/test-app/foos/" + uuid)
+                .queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON_TYPE)
+                .get(JsonNode.class);
+
+        logNode(assetNode);
+        Assert.assertEquals("image/jpeg", assetNode.findValue(AssetUtils.CONTENT_TYPE).getTextValue());
+        Assert.assertEquals(7979, assetNode.findValue("content-length").getIntValue());
+        JsonNode assetIdNode = assetNode.get("entities").get(0).get("uuid");
+        assertEquals(uuid, assetIdNode.getTextValue());
+
+        // asset data should still be there
+
+        InputStream assetIs = resource().path("/test-organization/test-app/foos/" + uuid)
+                .queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_OCTET_STREAM_TYPE)
+                .get(InputStream.class);
+
+        byte[] foundData = IOUtils.toByteArray(assetIs);
+        assertEquals(7979, foundData.length);
     }
 }
