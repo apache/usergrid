@@ -18,29 +18,30 @@
 
 package org.apache.usergrid.persistence.collection.mvcc.entity.impl;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.MvccEntity;
 
 import java.io.Serializable;
 import java.util.UUID;
+
+import org.apache.usergrid.persistence.collection.MvccEntity;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 
 /**
  * Entity Event for queues
  */
 public abstract class MvccEntityEvent implements Serializable {
 
-    private final CollectionScope collectionScope;
+    private final ApplicationScope collectionScope;
     private final MvccEntity entity;
     private final UUID version;
 
 
-    public MvccEntityEvent(final CollectionScope collectionScope, final UUID version, final MvccEntity entity) {
+    public MvccEntityEvent(final ApplicationScope collectionScope, final UUID version, final MvccEntity entity) {
         this.collectionScope = collectionScope;
         this.entity = entity;
         this.version = version;
     }
 
-    public CollectionScope getCollectionScope() {
+    public ApplicationScope getApplicationScope() {
         return collectionScope;
     }
 

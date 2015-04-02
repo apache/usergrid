@@ -33,6 +33,6 @@ public interface VersionedData {
      * Get the version of the implementation
      * @return
      */
-    public int getImplementationVersion();
+    int getImplementationVersion();
 
 }

@@ -18,12 +18,12 @@ package org.apache.usergrid.persistence.collection.serialization.impl;/*
  */
 
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.usergrid.persistence.collection.FieldSet;
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.model.field.Field;
-
-import java.util.HashMap;
-import java.util.Map;
 
 
 public class MutableFieldSet implements FieldSet {

@@ -26,20 +26,20 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
-import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.impl.CollectionDataVersions;
 import org.apache.usergrid.persistence.core.guice.DataMigrationResetRule;
 import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
-import org.apache.usergrid.persistence.core.migration.data.TestProgressObserver;
 import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
 import org.apache.usergrid.persistence.core.migration.data.MigrationRelationship;
+import org.apache.usergrid.persistence.core.migration.data.TestProgressObserver;
 import org.apache.usergrid.persistence.core.migration.data.VersionedMigrationSet;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -95,9 +95,8 @@ public abstract class AbstractMvccEntityDataMigrationV1ToV3ImplTest implements D
     public void testMigration() throws ConnectionException {
 
         final Id applicationId = createId( "application" );
-        final String collectionName = "things";
 
-        CollectionScope scope = new CollectionScopeImpl( applicationId, applicationId, collectionName );
+        ApplicationScope scope = new ApplicationScopeImpl( applicationId );
 
         final MvccEntity entity1 = getEntity( "thing" );
         final MvccEntity entity2 = getEntity( "thing" );

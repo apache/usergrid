@@ -658,7 +658,7 @@ public class EntityIndexTest extends BaseIT {
 
             final CandidateResults results = cursor == null
                 ?  entityIndex.search( indexScope, SearchTypes.allTypes(), query , limit)
-                : entityIndex.getNextPage(cursor, query.getLimit() );
+                : entityIndex.getNextPage(cursor, limit);
 
             assertTrue( results.hasCursor() );
 

@@ -23,7 +23,6 @@ import org.safehaus.guicyfig.GuicyFigModule;
 
 import org.apache.usergrid.persistence.core.consistency.TimeService;
 import org.apache.usergrid.persistence.core.consistency.TimeServiceImpl;
-import org.apache.usergrid.persistence.core.guice.ProxyImpl;
 import org.apache.usergrid.persistence.core.migration.data.DataMigration;
 import org.apache.usergrid.persistence.core.migration.data.MigrationPlugin;
 import org.apache.usergrid.persistence.core.migration.data.MigrationRelationship;
@@ -46,7 +45,6 @@ import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgesObservable;
 import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.TargetIdObservable;
-import org.apache.usergrid.persistence.graph.serialization.impl.migration.EdgeDataMigrationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeMetadataSerializationProxyImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeMetadataSerializationV1Impl;
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeMetadataSerializationV2Impl;
@@ -55,6 +53,7 @@ import org.apache.usergrid.persistence.graph.serialization.impl.EdgesObservableI
 import org.apache.usergrid.persistence.graph.serialization.impl.GraphManagerFactoryImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.NodeSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.TargetIdObservableImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.migration.EdgeDataMigrationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.migration.GraphMigration;
 import org.apache.usergrid.persistence.graph.serialization.impl.migration.GraphMigrationPlugin;
 import org.apache.usergrid.persistence.graph.serialization.impl.migration.GraphNode;
@@ -189,7 +188,7 @@ public abstract class GraphModule extends AbstractModule {
 
         bind( EdgeMetadataSerializationV1Impl.class );
         bind( EdgeMetadataSerializationV2Impl.class );
-        bind(EdgeMetadataSerialization.class).annotatedWith( ProxyImpl.class ).to( EdgeMetadataSerializationProxyImpl.class  );
+        bind( EdgeMetadataSerialization.class ).to( EdgeMetadataSerializationProxyImpl.class  );
 
         //invoke the migration plugin config
         configureMigrationProvider();

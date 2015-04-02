@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -16,19 +16,35 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.collection.mvcc.stage;
+
+package org.apache.usergrid.utils;
 
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+
+import static org.junit.Assert.assertEquals;
 
 
-/**
- * Simple event to signal entity update
- */
-public class EntityUpdateEvent extends CollectionIoEvent<Id> {
+public class EdgeTestUtils {
 
-    public EntityUpdateEvent( final CollectionScope context, final Id event ) {
-        super( context, event );
+    /**
+     * Get the name for an edge
+     */
+    public static String getNameForEdge( final String edgeName ) {
+        final String[] parts = edgeName.split( "\\|" );
+
+        assertEquals( "there should be 2 parts", parts.length, 2 );
+
+        return parts[1];
+    }
+
+
+    public static boolean isCollectionEdgeType( String type ) {
+        return type.startsWith( CpNamingUtils.EDGE_COLL_SUFFIX );
+    }
+
+
+    public static boolean isConnectionEdgeType( String type ) {
+        return type.startsWith( CpNamingUtils.EDGE_CONN_SUFFIX );
     }
 }

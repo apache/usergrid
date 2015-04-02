@@ -21,24 +21,24 @@ package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.usergrid.persistence.core.test.UseModules;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.exception.WriteOptimisticVerifyException;
-import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
-import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.MvccLogEntry;
+import org.apache.usergrid.persistence.collection.exception.WriteOptimisticVerifyException;
+import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.mvcc.stage.AbstractMvccEntityStageTest;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
+import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
-import org.apache.usergrid.persistence.collection.serialization.impl.UniqueValueImpl;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.impl.UniqueValueImpl;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.StringField;
@@ -48,7 +48,6 @@ import com.netflix.astyanax.MutationBatch;
 
 import static org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator.fromEntity;
 import static org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator.generateEntity;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -70,11 +69,10 @@ public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
     @Test
     public void testNoConflict() throws Exception {
 
-        final CollectionScope collectionScope = mock( CollectionScope.class );
+        final ApplicationScope collectionScope = mock( ApplicationScope.class );
         when( collectionScope.getApplication() )
             .thenReturn( new SimpleId( UUIDGenerator.newTimeUUID(), "organization" ) );
-        when( collectionScope.getOwner() )
-            .thenReturn( new SimpleId( UUIDGenerator.newTimeUUID(), "owner" ) );
+
 
         final Entity entity = generateEntity();
         entity.setField(new StringField("name", "FOO", true));
@@ -83,12 +81,12 @@ public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
         final MvccEntity mvccEntity = fromEntity( entity );
 
         List<MvccLogEntry> logEntries = new ArrayList<MvccLogEntry>();
-        logEntries.add( new MvccLogEntryImpl( 
+        logEntries.add( new MvccLogEntryImpl(
             entity.getId(), UUIDGenerator.newTimeUUID(), Stage.ACTIVE, MvccLogEntry.State.COMPLETE ));
-        logEntries.add( new MvccLogEntryImpl( 
+        logEntries.add( new MvccLogEntryImpl(
             entity.getId(), UUIDGenerator.newTimeUUID(), Stage.COMMITTED, MvccLogEntry.State.COMPLETE ));
 
-        MvccLogEntrySerializationStrategy noConflictLog = 
+        MvccLogEntrySerializationStrategy noConflictLog =
             mock( MvccLogEntrySerializationStrategy.class );
 
         when( noConflictLog.load( collectionScope, entity.getId(), entity.getVersion(), 2) )
@@ -108,11 +106,10 @@ public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
     @Test
     public void testConflict() throws Exception {
 
-        final CollectionScope scope = mock( CollectionScope.class );
+        final ApplicationScope scope = mock( ApplicationScope.class );
         when( scope.getApplication() )
             .thenReturn( new SimpleId( UUIDGenerator.newTimeUUID(), "organization" ) );
-        when( scope.getOwner() )
-            .thenReturn( new SimpleId( UUIDGenerator.newTimeUUID(), "owner" ) );
+
 
         // there is an entity
         final Entity entity = generateEntity();
@@ -121,15 +118,15 @@ public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
 
         // log that one operation is active on entity
         List<MvccLogEntry> logEntries = new ArrayList<MvccLogEntry>();
-        logEntries.add( new MvccLogEntryImpl( 
+        logEntries.add( new MvccLogEntryImpl(
             entity.getId(), UUIDGenerator.newTimeUUID(), Stage.ACTIVE, MvccLogEntry.State.COMPLETE ));
 
         // log another operation as active on entity
-        logEntries.add( new MvccLogEntryImpl( 
+        logEntries.add( new MvccLogEntryImpl(
             entity.getId(), UUIDGenerator.newTimeUUID(), Stage.ACTIVE, MvccLogEntry.State.COMPLETE ));
 
         // mock up the log
-        MvccLogEntrySerializationStrategy mvccLog = 
+        MvccLogEntrySerializationStrategy mvccLog =
             mock( MvccLogEntrySerializationStrategy.class );
         when( mvccLog.load( scope, entity.getId(), entity.getVersion(), 2) )
             .thenReturn( logEntries );

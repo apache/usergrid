@@ -70,13 +70,7 @@ public class EntityToMapConverter {
 
             Field field = ( Field ) f;
 
-
-            if ( f instanceof ArrayField) {
-                List list = ( List ) field.getValue();
-                entityMap.put(  field.getName().toLowerCase(),
-                        new ArrayList( processCollectionForMap( list ) ) );
-            }
-            else if ( f instanceof ListField) {
+            if ( f instanceof ListField) {
                 List list = ( List ) field.getValue();
                 entityMap.put(field.getName().toLowerCase(),
                         new ArrayList( processCollectionForMap( list ) ) );
@@ -95,7 +89,7 @@ public class EntityToMapConverter {
             }
             else if ( f instanceof EntityObjectField) {
                 EntityObject eo = ( EntityObject ) field.getValue();
-                entityMap.put(EO_PREFIX + field.getName().toLowerCase(), entityToMap(eo) ); // recursion
+                entityMap.put(  field.getName().toLowerCase(), entityToMap(eo) ); // recursion
             }
             else if ( f instanceof StringField ) {
 

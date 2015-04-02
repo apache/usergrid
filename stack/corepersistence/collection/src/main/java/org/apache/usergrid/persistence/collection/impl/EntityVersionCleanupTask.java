@@ -23,25 +23,23 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import com.google.inject.Inject;
-import com.google.inject.assistedinject.Assisted;
-
-import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
-import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
-import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.impl.LogEntryIterator;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.task.Task;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
@@ -69,7 +67,7 @@ public class EntityVersionCleanupTask implements Task<Void> {
 
     private final SerializationFig serializationFig;
 
-    private final CollectionScope scope;
+    private final ApplicationScope scope;
     private final Id entityId;
     private final UUID version;
     private final boolean includeVersion;
@@ -82,7 +80,7 @@ public class EntityVersionCleanupTask implements Task<Void> {
         final UniqueValueSerializationStrategy  uniqueValueSerializationStrategy,
         final Keyspace                          keyspace,
         final Set<EntityVersionDeleted>         listeners, // MUST be a set or Guice will not inject
-        @Assisted final CollectionScope         scope,
+        @Assisted final ApplicationScope scope,
         @Assisted final Id                      entityId,
         @Assisted final UUID                    version,
         @Assisted final boolean includeVersion) {

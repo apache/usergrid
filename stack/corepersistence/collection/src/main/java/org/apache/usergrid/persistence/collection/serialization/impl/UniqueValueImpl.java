@@ -20,7 +20,6 @@ package org.apache.usergrid.persistence.collection.serialization.impl;
 
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
@@ -63,7 +62,7 @@ public class UniqueValueImpl implements UniqueValue {
         return entityId;
     }
 
-    
+
     @Override
     public boolean equals( final Object o ) {
         if ( this == o ) {
@@ -110,5 +109,5 @@ public class UniqueValueImpl implements UniqueValue {
                 ", entityId =" + entityId +
                 '}';
     }
-    
+
 }

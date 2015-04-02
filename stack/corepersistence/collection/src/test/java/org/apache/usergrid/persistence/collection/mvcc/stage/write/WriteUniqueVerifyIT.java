@@ -18,28 +18,31 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
 
-import com.google.inject.Inject;
-import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
-import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
-import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
+import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.test.ITRunner;
+import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.IntegerField;
 import org.apache.usergrid.persistence.model.field.StringField;
-import org.apache.usergrid.persistence.core.test.UseModules;
+
+import com.google.inject.Inject;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
 
 
 /**
@@ -49,7 +52,7 @@ import org.junit.runner.RunWith;
 @UseModules( TestCollectionModule.class )
 public class WriteUniqueVerifyIT {
 
-    @Inject 
+    @Inject
     SerializationFig serializationFig;
 
     @Inject
@@ -62,10 +65,9 @@ public class WriteUniqueVerifyIT {
     @Test
     public void testConflict() {
 
-        final Id orgId = new SimpleId("WriteUniqueVerifyIT");
         final Id appId = new SimpleId("testConflict");
 
-        final CollectionScope scope = new CollectionScopeImpl( appId, orgId, "fastcars" );
+        final ApplicationScope scope = new ApplicationScopeImpl( appId );
         final EntityCollectionManager entityManager = cmf.createCollectionManager( scope );
 
         final Entity entity = TestEntityGenerator.generateEntity();
@@ -78,8 +80,8 @@ public class WriteUniqueVerifyIT {
         entityFetched.setField( new StringField("foo", "bar"));
 
         // wait for temporary unique value records to time out
-        try { 
-            Thread.sleep(serializationFig.getTimeout() * 1100); 
+        try {
+            Thread.sleep(serializationFig.getTimeout() * 1100);
         } catch (InterruptedException ignored) { }
 
         // another enity that tries to use two unique values already taken by first
@@ -107,10 +109,9 @@ public class WriteUniqueVerifyIT {
     @Test
     public void testNoConflict1() {
 
-        final Id orgId = new SimpleId("WriteUniqueVerifyIT");
         final Id appId = new SimpleId("testNoConflict");
 
-        final CollectionScope scope = new CollectionScopeImpl( appId, orgId, "fastcars" );
+        final ApplicationScope scope = new ApplicationScopeImpl( appId);
         final EntityCollectionManager entityManager = cmf.createCollectionManager( scope );
 
         final Entity entity = TestEntityGenerator.generateEntity();
@@ -127,10 +128,9 @@ public class WriteUniqueVerifyIT {
     @Test
     public void testNoConflict2() {
 
-        final Id orgId = new SimpleId("WriteUniqueVerifyIT");
         final Id appId = new SimpleId("testNoConflict");
 
-        final CollectionScope scope = new CollectionScopeImpl( appId, orgId, "fastcars" );
+        final ApplicationScope scope = new ApplicationScopeImpl( appId );
         final EntityCollectionManager entityManager = cmf.createCollectionManager( scope );
 
         final Entity entity = TestEntityGenerator.generateEntity();

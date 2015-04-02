@@ -28,7 +28,6 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.core.guice.ProxyImpl;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
@@ -75,7 +74,7 @@ public class NodeDeleteListenerImpl implements NodeDeleteListener {
      */
     @Inject
     public NodeDeleteListenerImpl( final NodeSerialization nodeSerialization,
-                                   @ProxyImpl final EdgeMetadataSerialization edgeMetadataSerialization,
+                                   final EdgeMetadataSerialization edgeMetadataSerialization,
                                    final EdgeMetaRepair edgeMetaRepair, final GraphFig graphFig,
                                    final EdgeSerialization storageSerialization,
                                    final Keyspace keyspace ) {

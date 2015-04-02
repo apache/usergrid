@@ -26,7 +26,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 
-import org.apache.usergrid.persistence.core.guice.ProxyImpl;
 import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerialization;
 import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
@@ -49,7 +48,6 @@ public class EdgeMetaDataSerializationProxyV2Test extends EdgeMetadataSerializat
 
 
     @Inject
-    @ProxyImpl
     protected EdgeMetadataSerialization serialization;
 
     @Inject

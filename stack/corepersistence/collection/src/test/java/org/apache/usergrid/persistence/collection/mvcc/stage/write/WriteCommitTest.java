@@ -21,16 +21,16 @@ package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
-import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.stage.AbstractMvccEntityStageTest;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator;
+import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Entity;
 
 import com.netflix.astyanax.MutationBatch;
@@ -51,7 +51,7 @@ public class WriteCommitTest extends AbstractMvccEntityStageTest {
     public void testStartStage() throws Exception {
 
 
-        final CollectionScope context = mock( CollectionScope.class );
+        final ApplicationScope context = mock( ApplicationScope.class );
 
 
         //mock returning a mock mutation when we do a log entry write
@@ -119,7 +119,7 @@ public class WriteCommitTest extends AbstractMvccEntityStageTest {
         final MvccLogEntrySerializationStrategy logStrategy = mock( MvccLogEntrySerializationStrategy.class );
         final MutationBatch logMutation = mock( MutationBatch.class );
 
-        when( logStrategy.write( any( CollectionScope.class ), any( MvccLogEntry.class ) ) ).thenReturn( logMutation );
+        when( logStrategy.write( any( ApplicationScope.class ), any( MvccLogEntry.class ) ) ).thenReturn( logMutation );
 
 
         final MvccEntitySerializationStrategy mvccEntityStrategy = mock( MvccEntitySerializationStrategy.class );
@@ -128,7 +128,7 @@ public class WriteCommitTest extends AbstractMvccEntityStageTest {
 
         final UniqueValueSerializationStrategy uniqueValueStrategy = mock( UniqueValueSerializationStrategy.class );
 
-        when( mvccEntityStrategy.write( any( CollectionScope.class ), any( MvccEntity.class ) ) )
+        when( mvccEntityStrategy.write( any( ApplicationScope.class ), any( MvccEntity.class ) ) )
                 .thenReturn( entityMutation );
 
         new WriteCommit( logStrategy, mvccEntityStrategy, uniqueValueStrategy ).call( event );

@@ -17,23 +17,26 @@
  */
 package org.apache.usergrid.persistence.collection.impl;
 
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
-import org.apache.usergrid.persistence.collection.CollectionScope;
+
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.Test;
+
 import org.apache.usergrid.persistence.collection.event.EntityVersionCreated;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.task.NamedTaskExecutorImpl;
 import org.apache.usergrid.persistence.core.task.TaskExecutor;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.Test;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -65,8 +68,7 @@ public class EntityVersionCreatedTaskTest {
 
         final Id applicationId = new SimpleId( "application" );
 
-        final CollectionScope appScope = new CollectionScopeImpl(
-                applicationId, applicationId, "users" );
+        final ApplicationScope appScope = new ApplicationScopeImpl(applicationId);
 
         final Id entityId = new SimpleId( "user" );
         final Entity entity = new Entity( entityId );
@@ -111,8 +113,7 @@ public class EntityVersionCreatedTaskTest {
 
         final Id applicationId = new SimpleId( "application" );
 
-        final CollectionScope appScope = new CollectionScopeImpl(
-                applicationId, applicationId, "users" );
+        final ApplicationScope appScope = new ApplicationScopeImpl(applicationId);
 
         final Id entityId = new SimpleId( "user" );
         final Entity entity = new Entity( entityId );
@@ -149,8 +150,7 @@ public class EntityVersionCreatedTaskTest {
 
         final Id applicationId = new SimpleId( "application" );
 
-        final CollectionScope appScope = new CollectionScopeImpl(
-                applicationId, applicationId, "users" );
+        final ApplicationScope appScope = new ApplicationScopeImpl(applicationId);
 
         final Id entityId = new SimpleId( "user" );
         final Entity entity = new Entity( entityId );
@@ -207,8 +207,7 @@ public class EntityVersionCreatedTaskTest {
 
         final Id applicationId = new SimpleId( "application" );
 
-        final CollectionScope appScope = new CollectionScopeImpl(
-                applicationId, applicationId, "users" );
+        final ApplicationScope appScope = new ApplicationScopeImpl(applicationId);
 
         final Id entityId = new SimpleId( "user" );
         final Entity entity = new Entity( entityId );
@@ -235,7 +234,7 @@ public class EntityVersionCreatedTaskTest {
         }
 
         @Override
-        public void versionCreated( final CollectionScope scope, final Entity entity ) {
+        public void versionCreated( final ApplicationScope scope, final Entity entity ) {
             invocationLatch.countDown();
         }
     }

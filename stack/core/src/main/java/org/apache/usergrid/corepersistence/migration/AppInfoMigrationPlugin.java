@@ -23,10 +23,8 @@ import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
-import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerialization;
 import org.apache.usergrid.persistence.core.migration.data.MigrationPlugin;
 import org.apache.usergrid.persistence.core.migration.data.PluginPhase;
@@ -219,12 +217,8 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
 
         final ApplicationScope appScope = getApplicationScope( emf.getManagementAppId() );
 
-        final CollectionScope appInfoCollectionScope =
-            new CollectionScopeImpl( appScope.getApplication(), appScope.getApplication(),
-                CpNamingUtils.getCollectionScopeNameFromCollectionName( CpNamingUtils.APPLICATION_INFOS ));
-
         final EntityCollectionManager collectionManager =
-            entityCollectionManagerFactory.createCollectionManager( appInfoCollectionScope );
+            entityCollectionManagerFactory.createCollectionManager( appScope );
 
         final GraphManager gm = graphManagerFactory.createEdgeManager(appScope);
 
@@ -299,12 +293,8 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
 
         final ApplicationScope appScope = getApplicationScope( CpNamingUtils.SYSTEM_APP_ID );
 
-        final CollectionScope appInfoCollectionScope =
-            new CollectionScopeImpl( appScope.getApplication(), appScope.getApplication(),
-                CpNamingUtils.getCollectionScopeNameFromCollectionName( "appinfos" ));
-
         final EntityCollectionManager collectionManager =
-            entityCollectionManagerFactory.createCollectionManager( appInfoCollectionScope );
+            entityCollectionManagerFactory.createCollectionManager( appScope );
 
         final GraphManager gm = graphManagerFactory.createEdgeManager(appScope);
 

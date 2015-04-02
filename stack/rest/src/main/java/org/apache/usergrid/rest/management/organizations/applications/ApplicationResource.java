@@ -375,7 +375,7 @@ public class ApplicationResource extends AbstractContextResource {
         Map<String, Object> statusMap = new HashMap<String, Object>();
 
         EntityManager em = emf.getEntityManager( applicationId );
-        if ( !em.getIndexHealth().equals( Health.RED ) ) {
+        if ( !emf.getIndexHealth().equals( Health.RED ) ) {
             statusMap.put("message", "Index Health Status RED for application " + applicationId );
             return Response.status( SC_INTERNAL_SERVER_ERROR ).entity( statusMap ).build();
         }

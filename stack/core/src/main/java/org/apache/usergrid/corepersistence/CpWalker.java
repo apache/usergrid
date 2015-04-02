@@ -36,6 +36,8 @@ import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
+import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getNameFromEdgeType;
+
 
 /**
  * Takes a visitor to all collections and entities.
@@ -128,7 +130,7 @@ public class CpWalker {
                 if ( entity == null ) {
                     return;
                 }
-                String collName = CpNamingUtils.getCollectionName( edgeValue.getType() );
+                String collName = getNameFromEdgeType( edgeValue.getType() );
                 visitor.visitCollectionEntry( em, collName, entity );
             } ).subscribeOn( Schedulers.io() );
         }, 100 );

@@ -16,17 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.collection.mvcc;
+package org.apache.usergrid.persistence.collection.serialization;
 
 
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.VersionSet;
+import org.apache.usergrid.persistence.core.migration.data.VersionedData;
 import org.apache.usergrid.persistence.core.migration.schema.Migration;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.netflix.astyanax.MutationBatch;
@@ -35,46 +36,47 @@ import com.netflix.astyanax.MutationBatch;
 /**
  * The interface that allows us to serialize a log entry to disk
  */
-public interface MvccLogEntrySerializationStrategy extends Migration {
+public interface MvccLogEntrySerializationStrategy extends Migration, VersionedData {
 
     /**
      * Serialize the entity to the data store with the given collection context
      *
+     * @param applicationScope The applicationscope of the entrye
      * @param entry the entry to write
      *
      * @return The mutation batch with the mutation operations for this write.
      */
-    public MutationBatch write( final CollectionScope context, MvccLogEntry entry );
+    MutationBatch write( final ApplicationScope applicationScope, MvccLogEntry entry );
 
     /**
      * Load and return the stage with the given id and a version that is <= the version provided
      *
-     * @param context The context to persist the entity into
+     * @param applicationScope The applicationScope to persist the entity into
      * @param entityIds The entity id to load
      * @param version The max version to load.  This will return the first version <= the given version
      *
      * @return The deserialized version of the log entry
      */
-    public VersionSet load( final CollectionScope context, final Collection<Id> entityIds, final UUID version );
+    VersionSet load( final ApplicationScope applicationScope, final Collection<Id> entityIds, final UUID version );
 
     /**
      * Load a list, from highest to lowest of the stage with versions <= version up to maxSize elements
      *
-     * @param context The context to load the entity from
+     * @param applicationScope The applicationScope to load the entity from
      * @param entityId The entity id to load
      * @param version The max version to seek from
      * @param maxSize The maximum size to return.  If you receive this size, there may be more versions to load.
      *
      * @return A list of entities up to max size ordered from max(UUID)=> min(UUID)
      */
-    public List<MvccLogEntry> load( CollectionScope context, Id entityId, UUID version, int maxSize );
+    List<MvccLogEntry> load( ApplicationScope applicationScope, Id entityId, UUID version, int maxSize );
 
     /**
-     * MarkCommit the stage from the context with the given entityId and version
+     * MarkCommit the stage from the applicationScope with the given entityId and version
      *
-     * @param context The context that contains the entity
+     * @param applicationScope The applicationScope that contains the entity
      * @param entityId The entity id to delete
      * @param version The version to delete
      */
-    public MutationBatch delete( CollectionScope context, Id entityId, UUID version );
+    MutationBatch delete( ApplicationScope applicationScope, Id entityId, UUID version );
 }

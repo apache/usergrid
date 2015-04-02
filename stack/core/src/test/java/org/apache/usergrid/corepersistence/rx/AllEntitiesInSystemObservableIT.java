@@ -100,7 +100,7 @@ public class AllEntitiesInSystemObservableIT extends AbstractCoreIT {
             @Override
             public void call( final EntityIdScope entityIdScope ) {
                 assertNotNull(entityIdScope);
-                assertNotNull(entityIdScope.getCollectionScope());
+                assertNotNull(entityIdScope.getApplicationScope());
                 assertNotNull(entityIdScope.getId());
 
                 // we should only emit each node once

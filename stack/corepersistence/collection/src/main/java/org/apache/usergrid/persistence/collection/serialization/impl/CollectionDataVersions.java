@@ -28,14 +28,24 @@ package org.apache.usergrid.persistence.collection.serialization.impl;
  * Versions of data as they exist across our system
  */
 public enum CollectionDataVersions{
+    /**
+     * The initial released version
+     */
     INITIAL(0),
+    /**
+     * The version where serialization was changed from using a short in the composite to an integer
+     */
     BUFFER_SHORT_FIX(1),
+
+    /**
+     * The change where we move unique field versions to their own  CF, and then only store our latest object version
+     */
     LOG_REMOVAL(2);
 
     private final int version;
 
 
-    private CollectionDataVersions( final int version ) {this.version = version;}
+    CollectionDataVersions( final int version ) {this.version = version;}
 
 
     public int getVersion() {

@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import org.apache.cassandra.db.marshal.BooleanType;
 import org.apache.cassandra.db.marshal.BytesType;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntitySet;
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
@@ -24,7 +23,7 @@ import org.apache.usergrid.persistence.collection.exception.EntityTooLargeExcept
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
-import org.apache.usergrid.persistence.model.util.EntityUtils;
+import org.apache.usergrid.persistence.collection.serialization.impl.util.LegacyScopeUtils;
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.core.astyanax.ColumnParser;
 import org.apache.usergrid.persistence.core.astyanax.FieldBuffer;
@@ -35,9 +34,12 @@ import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
+import org.apache.usergrid.persistence.core.astyanax.ScopedRowKeySerializer;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.EntityMap;
 import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.util.EntityUtils;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -52,14 +54,11 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.model.Column;
 import com.netflix.astyanax.model.ColumnList;
 import com.netflix.astyanax.model.Row;
-import com.netflix.astyanax.model.Rows;
 import com.netflix.astyanax.serializers.AbstractSerializer;
 import com.netflix.astyanax.serializers.BooleanSerializer;
 
 import rx.Observable;
 import rx.Scheduler;
-import rx.functions.Func1;
-import rx.functions.Func2;
 import rx.schedulers.Schedulers;
 
 
@@ -69,12 +68,10 @@ import rx.schedulers.Schedulers;
 public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializationStrategy {
     private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
 
-
-    private static final CollectionScopedRowKeySerializer<Id> ROW_KEY_SER =
-            new CollectionScopedRowKeySerializer<>( ID_SER );
+    private static final ScopedRowKeySerializer<Id> ROW_KEY_SER =  new ScopedRowKeySerializer<>( ID_SER );
 
 
-    private static final MultiTennantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, Boolean> CF_ENTITY_DATA =
+    private static final MultiTennantColumnFamily<ScopedRowKey<Id>, Boolean> CF_ENTITY_DATA =
             new MultiTennantColumnFamily<>( "Entity_Version_Data_V3", ROW_KEY_SER, BooleanSerializer.get() );
 
     private static final FieldBufferSerializer FIELD_BUFFER_SERIALIZER = FieldBufferSerializer.get();
@@ -103,14 +100,14 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
 
     @Override
-    public MutationBatch write( final CollectionScope collectionScope, final MvccEntity entity ) {
-        Preconditions.checkNotNull( collectionScope, "collectionScope is required" );
+    public MutationBatch write( final ApplicationScope applicationScope, final MvccEntity entity ) {
+        Preconditions.checkNotNull( applicationScope, "applicationScope is required" );
         Preconditions.checkNotNull( entity, "entity is required" );
 
         final Id entityId = entity.getId();
         final UUID version = entity.getVersion();
 
-        return doWrite( collectionScope, entityId, version, new RowOp() {
+        return doWrite( applicationScope, entityId, version, new RowOp() {
             @Override
             public void doOp( final ColumnListMutation<Boolean> colMutation ) {
                 colMutation.putColumn( COL_VALUE,
@@ -121,11 +118,11 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
 
     @Override
-    public EntitySet load( final CollectionScope collectionScope, final Collection<Id> entityIds,
+    public EntitySet load( final ApplicationScope applicationScope, final Collection<Id> entityIds,
                            final UUID maxVersion ) {
 
 
-        Preconditions.checkNotNull( collectionScope, "collectionScope is required" );
+        Preconditions.checkNotNull( applicationScope, "applicationScope is required" );
         Preconditions.checkNotNull( entityIds, "entityIds is required" );
         Preconditions.checkArgument( entityIds.size() > 0, "entityIds is required" );
         Preconditions.checkNotNull( maxVersion, "version is required" );
@@ -137,21 +134,17 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
         }
 
 
-        final Id applicationId = collectionScope.getApplication();
-        final Id ownerId = collectionScope.getOwner();
-        final String collectionName = collectionScope.getName();
+        final Id applicationId = applicationScope.getApplication();
+        final Id ownerId = applicationId;
 
 
-        final List<ScopedRowKey<CollectionPrefixedKey<Id>>> rowKeys = new ArrayList<>( entityIds.size() );
+        final List<ScopedRowKey<Id>> rowKeys = new ArrayList<>( entityIds.size() );
 
 
         for ( final Id entityId : entityIds ) {
-            final CollectionPrefixedKey<Id> collectionPrefixedKey =
-                    new CollectionPrefixedKey<>( collectionName, ownerId, entityId );
 
-
-            final ScopedRowKey<CollectionPrefixedKey<Id>> rowKey =
-                    ScopedRowKey.fromKey( applicationId, collectionPrefixedKey );
+            final ScopedRowKey<Id> rowKey =
+                    ScopedRowKey.fromKey( applicationId, entityId );
 
 
             rowKeys.add( rowKey );
@@ -199,18 +192,18 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
                                        .withColumnSlice( COL_VALUE ).execute().getResult();
                     }
                     catch ( ConnectionException e ) {
-                        throw new CollectionRuntimeException( null, collectionScope,
+                        throw new CollectionRuntimeException( null, applicationScope,
                             "An error occurred connecting to cassandra", e );
                     }
                 } ).subscribeOn( scheduler );
             }, 10 )
 
             .reduce( new EntitySetImpl( entityIds.size() ), ( entitySet, rows ) -> {
-                final Iterator<Row<ScopedRowKey<CollectionPrefixedKey<Id>>, Boolean>> latestEntityColumns =
+                final Iterator<Row<ScopedRowKey<Id>, Boolean>> latestEntityColumns =
                     rows.iterator();
 
                 while ( latestEntityColumns.hasNext() ) {
-                    final Row<ScopedRowKey<CollectionPrefixedKey<Id>>, Boolean> row = latestEntityColumns.next();
+                    final Row<ScopedRowKey<Id>, Boolean> row = latestEntityColumns.next();
 
                     final ColumnList<Boolean> columns = row.getColumns();
 
@@ -218,7 +211,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
                         continue;
                     }
 
-                    final Id entityId = row.getKey().getKey().getSubKey();
+                    final Id entityId = row.getKey().getKey();
 
                     final Column<Boolean> column = columns.getColumnByIndex( 0 );
 
@@ -240,10 +233,10 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
 
     @Override
-    public Iterator<MvccEntity> loadDescendingHistory( final CollectionScope collectionScope, final Id entityId,
+    public Iterator<MvccEntity> loadDescendingHistory( final ApplicationScope applicationScope, final Id entityId,
                                                        final UUID version, final int fetchSize ) {
 
-        Preconditions.checkNotNull( collectionScope, "collectionScope is required" );
+        Preconditions.checkNotNull( applicationScope, "applicationScope is required" );
         Preconditions.checkNotNull( entityId, "entity id is required" );
         Preconditions.checkNotNull( version, "version is required" );
         Preconditions.checkArgument( fetchSize > 0, "max Size must be greater than 0" );
@@ -255,10 +248,10 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
 
     @Override
-    public Iterator<MvccEntity> loadAscendingHistory( final CollectionScope collectionScope, final Id entityId,
+    public Iterator<MvccEntity> loadAscendingHistory( final ApplicationScope applicationScope, final Id entityId,
                                                       final UUID version, final int fetchSize ) {
 
-        Preconditions.checkNotNull( collectionScope, "collectionScope is required" );
+        Preconditions.checkNotNull( applicationScope, "applicationScope is required" );
         Preconditions.checkNotNull( entityId, "entity id is required" );
         Preconditions.checkNotNull( version, "version is required" );
         Preconditions.checkArgument( fetchSize > 0, "max Size must be greater than 0" );
@@ -268,7 +261,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
 
     @Override
-    public Optional<MvccEntity> load( final CollectionScope scope, final Id entityId ) {
+    public Optional<MvccEntity> load( final ApplicationScope scope, final Id entityId ) {
         final EntitySet results = load( scope, Collections.singleton( entityId ), UUIDGenerator.newTimeUUID() );
 
         return Optional.fromNullable( results.getEntity( entityId ));
@@ -276,13 +269,13 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
 
     @Override
-    public MutationBatch mark( final CollectionScope collectionScope, final Id entityId, final UUID version ) {
-        Preconditions.checkNotNull( collectionScope, "collectionScope is required" );
+    public MutationBatch mark( final ApplicationScope applicationScope, final Id entityId, final UUID version ) {
+        Preconditions.checkNotNull( applicationScope, "applicationScope is required" );
         Preconditions.checkNotNull( entityId, "entity id is required" );
         Preconditions.checkNotNull( version, "version is required" );
 
 
-        return doWrite( collectionScope, entityId, version, new RowOp() {
+        return doWrite( applicationScope, entityId, version, new RowOp() {
             @Override
             public void doOp( final ColumnListMutation<Boolean> colMutation ) {
                 colMutation.putColumn( COL_VALUE, entitySerializer.toByteBuffer(
@@ -293,13 +286,13 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
 
     @Override
-    public MutationBatch delete( final CollectionScope collectionScope, final Id entityId, final UUID version ) {
-        Preconditions.checkNotNull( collectionScope, "collectionScope is required" );
+    public MutationBatch delete( final ApplicationScope applicationScope, final Id entityId, final UUID version ) {
+        Preconditions.checkNotNull( applicationScope, "applicationScope is required" );
         Preconditions.checkNotNull( entityId, "entity id is required" );
         Preconditions.checkNotNull( version, "version is required" );
 
 
-        return doWrite( collectionScope, entityId, version, new RowOp() {
+        return doWrite( applicationScope, entityId, version, new RowOp() {
             @Override
             public void doOp( final ColumnListMutation<Boolean> colMutation ) {
                 colMutation.deleteColumn( Boolean.TRUE );
@@ -326,19 +319,13 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
     /**
      * Do the write on the correct row for the entity id with the operation
      */
-    private MutationBatch doWrite( final CollectionScope collectionScope, final Id entityId, final UUID version, final RowOp op ) {
+    private MutationBatch doWrite( final ApplicationScope applicationScope, final Id entityId, final UUID version, final RowOp op ) {
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
-        final Id applicationId = collectionScope.getApplication();
-        final Id ownerId = collectionScope.getOwner();
-        final String collectionName = collectionScope.getName();
+        final Id applicationId = applicationScope.getApplication();
 
-        final CollectionPrefixedKey<Id> collectionPrefixedKey =
-                new CollectionPrefixedKey<>( collectionName, ownerId, entityId );
-
-
-        final ScopedRowKey<CollectionPrefixedKey<Id>> rowKey =
-                ScopedRowKey.fromKey( applicationId, collectionPrefixedKey );
+        final ScopedRowKey<Id> rowKey =
+                ScopedRowKey.fromKey( applicationId, entityId );
 
         final long timestamp = version.timestamp();
 

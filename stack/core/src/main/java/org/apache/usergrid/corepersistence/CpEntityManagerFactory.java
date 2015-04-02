@@ -31,9 +31,6 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.hazelcast.core.IdGenerator;
-import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
-import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -47,9 +44,7 @@ import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.CounterUtils;
 import org.apache.usergrid.persistence.cassandra.Setup;
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
-import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
@@ -64,7 +59,9 @@ import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
+import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
@@ -156,7 +153,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                 em.getApplication();
             }
 
-            entityIndex.initialize();
             entityIndex.refresh();
 
         } catch (Exception ex) {
@@ -194,7 +190,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private EntityManager _getEntityManager( UUID applicationId ) {
 
         EntityManager em = new CpEntityManager();
-        em.init( this,entityIndex ,applicationId );
+        em.init( this ,applicationId );
 
         return em;
     }
@@ -205,7 +201,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     @Override
     public Entity createApplicationV2(String organizationName, String name) throws Exception {
-        return createApplicationV2(organizationName, name, null);
+        return createApplicationV2( organizationName, name, null );
     }
 
 
@@ -225,7 +221,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         UUID applicationId = UUIDGenerator.newTimeUUID();
 
         logger.debug( "New application orgName {} orgAppName {} id {} ",
-                new Object[] { orgName, name, applicationId.toString() } );
+            new Object[] { orgName, name, applicationId.toString() } );
 
         return initializeApplicationV2(orgName, applicationId, appName, properties);
     }
@@ -427,27 +423,19 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         Map<String, UUID> appMap = new HashMap<>();
 
-        ApplicationScope mgmtAppScope = CpNamingUtils.getApplicationScope(getManagementAppId());
-        GraphManager gm = managerCache.getGraphManager(mgmtAppScope);
+        ApplicationScope appScope = CpNamingUtils.getApplicationScope( CpNamingUtils.SYSTEM_APP_ID );
+        GraphManager gm = managerCache.getGraphManager( appScope );
 
-        EntityManager em = getEntityManager(getManagementAppId());
-        Application mgmtApp = em.getApplication();
-        Id fromEntityId = new SimpleId( mgmtApp.getUuid(), mgmtApp.getType() );
+        EntityManager em = getEntityManager( CpNamingUtils.SYSTEM_APP_ID );
+        Application app = em.getApplication();
+        Id fromEntityId = new SimpleId( app.getUuid(), app.getType() );
 
-        final String scopeName;
         final String edgeType;
 
         if ( deleted ) {
-            edgeType = CpNamingUtils.getEdgeTypeFromCollectionName(
-                CpNamingUtils.DELETED_APPLICATION_INFOS);
-            scopeName = CpNamingUtils.getCollectionScopeNameFromCollectionName(
-                CpNamingUtils.DELETED_APPLICATION_INFOS);
-
+            edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( CpNamingUtils.DELETED_APPLICATION_INFO );
         } else {
-            edgeType = CpNamingUtils.getEdgeTypeFromCollectionName(
-                CpNamingUtils.APPLICATION_INFOS );
-            scopeName = CpNamingUtils.getCollectionScopeNameFromCollectionName(
-                CpNamingUtils.APPLICATION_INFOS);
+            edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( CpNamingUtils.APPLICATION_INFOS );
         }
 
         logger.debug("getApplications(): Loading edges of edgeType {} from {}:{}",
@@ -471,13 +459,10 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                 edge.getTargetNode().getType(), edge.getTargetNode().getUuid()
             });
 
-            CollectionScope collScope = new CollectionScopeImpl(
-                mgmtAppScope.getApplication(),
-                mgmtAppScope.getApplication(),
-                scopeName);
+
 
             org.apache.usergrid.persistence.model.entity.Entity appInfo =
-                    managerCache.getEntityCollectionManager( collScope ).load( targetId )
+                    managerCache.getEntityCollectionManager(  appScope ).load( targetId )
                         .toBlocking().lastOrDefault(null);
 
             if ( appInfo == null ) {
@@ -533,7 +518,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     public boolean updateServiceProperties(Map<String, String> properties) {
 
         EntityManager em = getEntityManager(getManagementAppId());
-        Query q = Query.fromQL("select *");
+        Query q = Query.fromQL( "select *");
         Results results = null;
         try {
             results = em.searchCollection( em.getApplicationRef(), "propertymaps", q);
@@ -584,7 +569,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         EntityManager em = getEntityManager(getManagementAppId());
 
 
-        Query q = Query.fromQL("select *");
+        Query q = Query.fromQL( "select *");
         Results results = null;
         try {
             results = em.searchCollection( em.getApplicationRef(), "propertymaps", q);
@@ -754,7 +739,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     @Override
     public void addIndex(final UUID applicationId,final String indexSuffix,final int shards,final int replicas, final String writeConsistency){
-        entityIndex.addIndex(indexSuffix, shards, replicas,writeConsistency);
+        entityIndex.addIndex( indexSuffix, shards, replicas, writeConsistency);
     }
 
     @Override
@@ -762,11 +747,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         // could use any collection scope here, does not matter
         EntityCollectionManager ecm = getManagerCache().getEntityCollectionManager(
-            new CollectionScopeImpl(
-                new SimpleId( getManagementAppId(), "application"),
-                new SimpleId( getManagementAppId(), "application"),
-                "dummy"
-        ));
+            new ApplicationScopeImpl( new SimpleId( CpNamingUtils.SYSTEM_APP_ID, "application" ) ) );
 
         return ecm.getHealth();
     }
@@ -790,4 +771,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         throw new UnsupportedOperationException("Not supported in v2");
     }
 
+
+    @Override
+    public Health getIndexHealth() {
+        return entityIndex.getIndexHealth();
+    }
 }

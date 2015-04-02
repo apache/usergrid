@@ -42,32 +42,21 @@ package org.apache.usergrid.persistence.collection.util;/*
 
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
-import java.util.TreeMap;
 import java.util.UUID;
 
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
-
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.MvccLogEntry;
-import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
-import org.apache.usergrid.persistence.collection.serialization.impl.UniqueFieldEntrySerializer;
 import org.apache.usergrid.persistence.collection.serialization.impl.UniqueValueImpl;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.StringField;
-import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.fasterxml.uuid.UUIDComparator;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.when;
 
@@ -111,7 +100,7 @@ public class UniqueValueEntryMock {
      * @param scope
      * @throws com.netflix.astyanax.connectionpool.exceptions.ConnectionException
      */
-    private void initMock(  final UniqueValueSerializationStrategy uniqueValueSerializationStrategy, final  CollectionScope scope )
+    private void initMock(  final UniqueValueSerializationStrategy uniqueValueSerializationStrategy, final  ApplicationScope scope )
 
             throws ConnectionException {
 
@@ -139,7 +128,7 @@ public class UniqueValueEntryMock {
      * @throws com.netflix.astyanax.connectionpool.exceptions.ConnectionException
      */
     public static UniqueValueEntryMock createUniqueMock(
-            final UniqueValueSerializationStrategy uniqueValueSerializationStrategy, final CollectionScope scope,
+            final UniqueValueSerializationStrategy uniqueValueSerializationStrategy, final ApplicationScope scope,
             final Id entityId, final List<UUID> versions ) throws ConnectionException {
 
         UniqueValueEntryMock mock = new UniqueValueEntryMock( entityId, versions );

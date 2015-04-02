@@ -367,6 +367,8 @@ public class IteratingQueryIT {
                 expected.add( name );
             }
         }
+        app.refreshIndex();
+
 
         long stop = System.currentTimeMillis();
 

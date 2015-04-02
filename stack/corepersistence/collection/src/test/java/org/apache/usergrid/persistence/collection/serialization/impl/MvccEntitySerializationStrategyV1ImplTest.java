@@ -25,13 +25,12 @@ import java.util.UUID;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
-import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
-import org.apache.usergrid.persistence.model.util.EntityUtils;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -43,6 +42,7 @@ import org.apache.usergrid.persistence.model.field.IntegerField;
 import org.apache.usergrid.persistence.model.field.LongField;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.field.UUIDField;
+import org.apache.usergrid.persistence.model.util.EntityUtils;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.google.common.base.Optional;
@@ -73,11 +73,9 @@ public class MvccEntitySerializationStrategyV1ImplTest extends MvccEntitySeriali
     @Test
     public void writeLoadDeletePartial() throws ConnectionException {
 
-        final Id organizationId = new SimpleId( "organization" );
         final Id applicationId = new SimpleId( "application" );
-        final String name = "test";
 
-        CollectionScope context = new CollectionScopeImpl( organizationId,  applicationId, name );
+        ApplicationScope context = new ApplicationScopeImpl( applicationId );
 
 
         final UUID entityId = UUIDGenerator.newTimeUUID();

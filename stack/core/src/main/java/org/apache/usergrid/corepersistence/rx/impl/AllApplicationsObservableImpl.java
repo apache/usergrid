@@ -30,10 +30,8 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.corepersistence.AllApplicationsObservable;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
-import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
@@ -82,12 +80,8 @@ public class AllApplicationsObservableImpl implements AllApplicationsObservable 
 
         final ApplicationScope appScope = getApplicationScope( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
 
-        final CollectionScope appInfoCollectionScope =
-           new CollectionScopeImpl( appScope.getApplication(), appScope.getApplication(),
-               CpNamingUtils.getCollectionScopeNameFromCollectionName( CpNamingUtils.APPLICATION_INFOS) );
-
         final EntityCollectionManager collectionManager =
-                entityCollectionManagerFactory.createCollectionManager( appInfoCollectionScope );
+                entityCollectionManagerFactory.createCollectionManager(  appScope );
 
         final GraphManager gm = graphManagerFactory.createEdgeManager(appScope);
 

@@ -1,19 +1,18 @@
 package org.apache.usergrid.persistence.collection;
 
 
-import org.apache.usergrid.persistence.core.test.UseModules;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
-import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
+import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.test.ITRunner;
+import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 
 import com.google.inject.Inject;
-import com.google.inject.ProvisionException;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -38,7 +37,7 @@ public class EntityCollectionManagerFactoryTest {
     @Test
     public void validInput() {
 
-        CollectionScopeImpl context = new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" );
+        ApplicationScopeImpl context = new ApplicationScopeImpl(new SimpleId( "organization" ));
 
         EntityCollectionManager entityCollectionManager =
                 entityCollectionManagerFactory.createCollectionManager( context );

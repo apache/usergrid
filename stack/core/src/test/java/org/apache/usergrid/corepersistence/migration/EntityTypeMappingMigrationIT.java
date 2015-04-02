@@ -25,11 +25,11 @@ import org.junit.Test;
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.corepersistence.ManagerCache;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.migration.data.TestMigrationDataProvider;
 import org.apache.usergrid.persistence.core.migration.data.TestProgressObserver;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapScope;
 import org.apache.usergrid.persistence.map.impl.MapScopeImpl;
@@ -56,7 +56,7 @@ public class EntityTypeMappingMigrationIT  {
 
         final Id applicationId = createId("application");
 
-        final CollectionScope scope1 = new CollectionScopeImpl( applicationId, applicationId, "things" );
+        final ApplicationScope scope1 = new ApplicationScopeImpl( applicationId );
 
         final Id entityId1 = createId("thing");
 
@@ -66,9 +66,7 @@ public class EntityTypeMappingMigrationIT  {
 
 
 
-        final Id subCollectionOwner = createId("owners");
-
-        final CollectionScope scope2 = new CollectionScopeImpl( applicationId, subCollectionOwner, "foos" );
+        final ApplicationScope scope2 = new ApplicationScopeImpl( applicationId);
 
         final Id entityId2 = createId("foo");
 

@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.MvccLogEntry;
+import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Preconditions;
@@ -22,7 +22,7 @@ public class LogEntryIterator implements Iterator<MvccLogEntry> {
 
 
     private final MvccLogEntrySerializationStrategy logEntrySerializationStrategy;
-    private final CollectionScope scope;
+    private final ApplicationScope scope;
     private final Id entityId;
     private final int pageSize;
 
@@ -40,7 +40,7 @@ public class LogEntryIterator implements Iterator<MvccLogEntry> {
      * @param pageSize The fetch size to get when querying the serialization strategy
      */
     public LogEntryIterator( final MvccLogEntrySerializationStrategy logEntrySerializationStrategy,
-                             final CollectionScope scope, final Id entityId, final UUID maxVersion,
+                             final ApplicationScope scope, final Id entityId, final UUID maxVersion,
                              final int pageSize ) {
 
         Preconditions.checkArgument( pageSize > 0, "pageSize must be > 0" );

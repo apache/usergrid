@@ -24,24 +24,19 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.corepersistence.ManagerCache;
-import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
-import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.query.CandidateResult;
@@ -51,7 +46,6 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import com.fasterxml.uuid.UUIDComparator;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
-import com.google.common.collect.HashMultimap;
 
 
 public class FilteringLoader implements ResultsLoader {
@@ -67,16 +61,14 @@ public class FilteringLoader implements ResultsLoader {
 
     /**
      * Create an instance of a filter loader
+     *
      * @param managerCache The manager cache to load
-     * @param resultsVerifier  The verifier to verify the candidate results
+     * @param resultsVerifier The verifier to verify the candidate results
      * @param applicationScope The application scope to perform the load
      * @param indexScope The index scope used in the search
      */
-    protected FilteringLoader(
-            final ManagerCache managerCache,
-            final ResultsVerifier resultsVerifier,
-            final ApplicationScope applicationScope,
-            final IndexScope indexScope ) {
+    protected FilteringLoader( final ManagerCache managerCache, final ResultsVerifier resultsVerifier,
+                               final ApplicationScope applicationScope, final IndexScope indexScope ) {
 
         this.managerCache = managerCache;
         this.resultsVerifier = resultsVerifier;
@@ -93,7 +85,7 @@ public class FilteringLoader implements ResultsLoader {
     public Results loadResults( final CandidateResults crs ) {
 
 
-        if(crs.size() == 0){
+        if ( crs.size() == 0 ) {
             return new Results();
         }
 
@@ -104,11 +96,6 @@ public class FilteringLoader implements ResultsLoader {
         // Maps the entity ids to our candidates
         final Map<Id, CandidateResult> maxCandidateMapping = new HashMap<>( crs.size() );
 
-        // Groups all candidate results by types.  When search connections there will be multiple
-        // types, so we want to batch fetch them more efficiently
-
-        final HashMultimap<String, CandidateResult> groupedByScopes =
-                HashMultimap.create( crs.size(), crs.size() );
 
         final Iterator<CandidateResult> iter = crs.iterator();
 
@@ -122,9 +109,6 @@ public class FilteringLoader implements ResultsLoader {
 
             final CandidateResult currentCandidate = iter.next();
 
-            final String collectionType = CpNamingUtils.getCollectionScopeNameFromEntityType(
-                    currentCandidate.getId().getType() );
-
             final Id entityId = currentCandidate.getId();
 
             //check if we've seen this candidate by id
@@ -134,7 +118,6 @@ public class FilteringLoader implements ResultsLoader {
             if ( previousMax == null ) {
                 maxCandidateMapping.put( entityId, currentCandidate );
                 orderIndex.put( entityId, i );
-                groupedByScopes.put( collectionType, currentCandidate );
                 continue;
             }
 
@@ -149,12 +132,12 @@ public class FilteringLoader implements ResultsLoader {
             final CandidateResult toKeep;
 
             //current is newer than previous.  Remove previous and keep current
-            if(UUIDComparator.staticCompare( currentVersion, previousMaxVersion ) > 0 ){
+            if ( UUIDComparator.staticCompare( currentVersion, previousMaxVersion ) > 0 ) {
                 toRemove = previousMax;
                 toKeep = currentCandidate;
             }
             //previously seen value is newer than current.  Remove the current and keep the previously seen value
-            else{
+            else {
                 toRemove = currentCandidate;
                 toKeep = previousMax;
             }
@@ -163,17 +146,13 @@ public class FilteringLoader implements ResultsLoader {
 
 
             //de-index it
-            logger.warn( "Stale version of Entity uuid:{} type:{}, stale v:{}, latest v:{}",
-                new Object[] {
-                    entityId.getUuid(),
-                    entityId.getType(),
-                    toRemove.getVersion(),
-                    toKeep.getVersion() } );
+            logger.warn( "Stale version of Entity uuid:{} type:{}, stale v:{}, latest v:{}", new Object[] {
+                    entityId.getUuid(), entityId.getType(), toRemove.getVersion(), toKeep.getVersion()
+                } );
 
             //deindex this document, and remove the previous maxVersion
             //we have to deindex this from our ownerId, since this is what gave us the reference
             indexBatch.deindex( indexScope, toRemove );
-            groupedByScopes.remove( collectionType, toRemove );
 
 
             //TODO, fire the entity repair cleanup task here instead of de-indexing
@@ -181,7 +160,6 @@ public class FilteringLoader implements ResultsLoader {
             //replace the value with a more current version
             maxCandidateMapping.put( entityId, toKeep );
             orderIndex.put( entityId, i );
-            groupedByScopes.put( collectionType, toKeep );
         }
 
 
@@ -190,57 +168,52 @@ public class FilteringLoader implements ResultsLoader {
 
         final TreeMap<Integer, Id> sortedResults = new TreeMap<>();
 
-        for ( final String scopeName : groupedByScopes.keySet() ) {
 
-
-            final Set<CandidateResult> candidateResults = groupedByScopes.get( scopeName );
-
-            final Collection<Id> idsToLoad =
-                    Collections2.transform( candidateResults, new Function<CandidateResult, Id>() {
-                        @Nullable
-                        @Override
-                        public Id apply( @Nullable final CandidateResult input ) {
-                            //NOTE this is never null, we won't need to check
-                           return input.getId();
-                        }
-                    } );
-
-
-            //now using the scope, load the collection
-
-            // Get the collection scope and batch load all the versions.  We put all entities in
-            // app/app for easy retrieval/ unless persistence changes, we never want to read from
-            // any scope other than the app, app, scope name scope
-            final CollectionScope collScope = new CollectionScopeImpl(
-                applicationScope.getApplication(), applicationScope.getApplication(), scopeName);
-
-            final EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collScope);
-
-
-            //load the results into the loader for this scope for validation
-            resultsVerifier.loadResults( idsToLoad, ecm );
-
-            //now let the loader validate each candidate.  For instance, the "max" in this candidate
-            //could still be a stale result, so it needs validated
-            for ( final Id requestedId : idsToLoad ) {
-
-                final CandidateResult cr = maxCandidateMapping.get( requestedId );
-
-                //ask the loader if this is valid, if not discard it and de-index it
-                if ( !resultsVerifier.isValid( cr ) ) {
-                    indexBatch.deindex( indexScope, cr );
-                    continue;
+        final Collection<Id> idsToLoad =
+            Collections2.transform( maxCandidateMapping.values(), new Function<CandidateResult, Id>() {
+                @Nullable
+                @Override
+                public Id apply( @Nullable final CandidateResult input ) {
+                    //NOTE this is never null, we won't need to check
+                    return input.getId();
                 }
+            } );
 
-                //if we get here we're good, we need to add this to our results
-                final int candidateIndex = orderIndex.get( requestedId );
 
-                sortedResults.put( candidateIndex, requestedId );
+        //now using the scope, load the collection
+
+        // Get the collection scope and batch load all the versions.  We put all entities in
+        // app/app for easy retrieval/ unless persistence changes, we never want to read from
+        // any scope other than the app, app, scope name scope
+        //            final CollectionScope collScope = new CollectionScopeImpl(
+        //                applicationScope.getApplication(), applicationScope.getApplication(), scopeName);
+
+        final EntityCollectionManager ecm = managerCache.getEntityCollectionManager( applicationScope );
+
+
+        //load the results into the loader for this scope for validation
+        resultsVerifier.loadResults( idsToLoad, ecm );
+
+        //now let the loader validate each candidate.  For instance, the "max" in this candidate
+        //could still be a stale result, so it needs validated
+        for ( final Id requestedId : idsToLoad ) {
+
+            final CandidateResult cr = maxCandidateMapping.get( requestedId );
+
+            //ask the loader if this is valid, if not discard it and de-index it
+            if ( !resultsVerifier.isValid( cr ) ) {
+                indexBatch.deindex( indexScope, cr );
+                continue;
             }
+
+            //if we get here we're good, we need to add this to our results
+            final int candidateIndex = orderIndex.get( requestedId );
+
+            sortedResults.put( candidateIndex, requestedId );
         }
 
 
-         // NOTE DO NOT execute the batch here.
+        // NOTE DO NOT execute the batch here.
         // It changes the results and we need consistent paging until we aggregate all results
         return resultsVerifier.getResults( sortedResults.values() );
     }
@@ -250,6 +223,4 @@ public class FilteringLoader implements ResultsLoader {
     public void postProcess() {
         this.indexBatch.execute();
     }
-
-
 }

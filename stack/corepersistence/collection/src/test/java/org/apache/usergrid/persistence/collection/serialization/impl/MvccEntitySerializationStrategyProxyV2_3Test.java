@@ -27,7 +27,6 @@ import org.junit.runner.RunWith;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.CollectionMigrationPlugin;
-import org.apache.usergrid.persistence.core.guice.ProxyImpl;
 import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerialization;
 import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
@@ -43,7 +42,6 @@ import net.jcip.annotations.NotThreadSafe;
 public class MvccEntitySerializationStrategyProxyV2_3Test extends MvccEntitySerializationStrategyV2Test {
 
     @Inject
-    @ProxyImpl
     private MvccEntitySerializationStrategy serializationStrategy;
 
     @Inject
