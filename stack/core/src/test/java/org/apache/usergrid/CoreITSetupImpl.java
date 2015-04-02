@@ -162,6 +162,13 @@ public class CoreITSetupImpl implements CoreITSetup, TestEntityIndex {
         } catch (InterruptedException ie){
 
         }
-        getEntityIndex().refresh();
+
+        emf.refreshIndex();
+
+        try {
+            Thread.sleep(50);
+        } catch (InterruptedException ie){
+
+        }
     }
 }
