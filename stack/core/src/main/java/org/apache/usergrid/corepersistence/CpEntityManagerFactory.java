@@ -423,11 +423,13 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         Map<String, UUID> appMap = new HashMap<>();
 
-        ApplicationScope appScope = CpNamingUtils.getApplicationScope( CpNamingUtils.SYSTEM_APP_ID );
-        GraphManager gm = managerCache.getGraphManager( appScope );
+        ApplicationScope appScope = CpNamingUtils.getApplicationScope(CpNamingUtils.SYSTEM_APP_ID);
+        GraphManager gm = managerCache.getGraphManager(appScope);
 
-        EntityManager em = getEntityManager( CpNamingUtils.SYSTEM_APP_ID );
+        EntityManager em = getEntityManager(CpNamingUtils.SYSTEM_APP_ID);
         Application app = em.getApplication();
+        if(app == null)
+            throw new RuntimeException("System App "+CpNamingUtils.SYSTEM_APP_ID+" should never be null");
         Id fromEntityId = new SimpleId( app.getUuid(), app.getType() );
 
         final String edgeType;

@@ -66,22 +66,22 @@ public class FailedConnectionListener implements com.relayrides.pushy.apns.Faile
         }
         //mark all unsent notifications failed
         if (notifications != null) {
-            for (SimpleApnsPushNotification notification : notifications) {
-                if (notification instanceof APNsNotification) {
-                    try {
-                        ((APNsNotification) notification).messageSendFailed(cause);//mark failed with bad token
-                    } catch (Exception e) {
-                        logger.error("failed to track notification in failed connection listener", e);
+                notifications.forEach(notification -> {
+                    if (notification instanceof APNsNotification) {
+                        try {
+                            ((APNsNotification) notification).messageSendFailed(cause);//mark failed with bad token
+                        } catch (Exception e) {
+                            logger.error("failed to track notification in failed connection listener", e);
+                        }
                     }
-                }
-                //if test this is a problem because you can't connect
-                if (notification instanceof TestAPNsNotification) {
-                    TestAPNsNotification testAPNsNotification = ((TestAPNsNotification) notification);
-                    testAPNsNotification.setReason(cause);
-                    testAPNsNotification.countdown();
-                }
+                    //if test this is a problem because you can't connect
+                    if (notification instanceof TestAPNsNotification) {
+                        TestAPNsNotification testAPNsNotification = ((TestAPNsNotification) notification);
+                        testAPNsNotification.setReason(cause);
+                        testAPNsNotification.countdown();
+                    }
 
-            }
+                });
             pushManager.getQueue().clear();
         }
         logger.error("Failed to register push connection", cause);
