@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLHandshakeException;
+import java.nio.channels.ClosedChannelException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
@@ -40,7 +41,7 @@ public class FailedConnectionListener implements com.relayrides.pushy.apns.Faile
     @Override
     public void handleFailedConnection(PushManager<? extends SimpleApnsPushNotification> pushManager, Throwable cause) {
         List<SimpleApnsPushNotification> notifications = new ArrayList<SimpleApnsPushNotification>();
-        if (cause instanceof SSLException || cause instanceof SSLHandshakeException) { //cert is probably bad so shut it down.
+        if (cause instanceof SSLException || cause instanceof SSLHandshakeException || cause instanceof ClosedChannelException) { //cert is probably bad so shut it down.
             if (!pushManager.isShutDown()) {
                 pushManager.unregisterFailedConnectionListener(this);
 
