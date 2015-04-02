@@ -19,7 +19,6 @@
 package org.apache.usergrid.persistence.index.impl;
 
 import org.apache.usergrid.persistence.index.SearchEdge;
-import org.apache.usergrid.persistence.index.utils.IndexValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 
@@ -30,11 +29,13 @@ import org.apache.usergrid.persistence.model.entity.Id;
 public class SearchEdgeImpl implements SearchEdge {
     private final Id nodeId;
     private final String name;
+    private final NodeType nodeType;
 
 
-    public SearchEdgeImpl( final Id nodeId, final String name ) {
+    public SearchEdgeImpl( final Id nodeId, final String name, final NodeType nodeType ) {
         this.nodeId = nodeId;
         this.name = name;
+        this.nodeType = nodeType;
     }
 
 
@@ -47,5 +48,11 @@ public class SearchEdgeImpl implements SearchEdge {
     @Override
     public String getEdgeName() {
         return name;
+    }
+
+
+    @Override
+    public NodeType getNodeType() {
+        return nodeType;
     }
 }

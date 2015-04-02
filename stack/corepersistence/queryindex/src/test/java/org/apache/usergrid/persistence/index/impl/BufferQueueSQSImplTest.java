@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
+import org.apache.usergrid.persistence.index.SearchEdge;
 import org.apache.usergrid.persistence.index.SearchType;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.junit.Before;
@@ -104,9 +105,13 @@ public class BufferQueueSQSImplTest {
 
 
         //de-index request
-        final DeIndexRequest deIndexRequest1 = new DeIndexRequest( new String[]{"index1.1, index1.2"}, applicationScope, new SearchEdgeImpl(new SimpleId("testId3"),"name3"),  new SimpleId("id3"), UUID.randomUUID() );
+        final DeIndexRequest deIndexRequest1 = new DeIndexRequest( new String[]{"index1.1, index1.2"}, applicationScope, new SearchEdgeImpl(new SimpleId("testId3"),"name3",
 
-        final DeIndexRequest deIndexRequest2 = new DeIndexRequest( new String[]{"index2.1", "index2.1"}, applicationScope,  new SearchEdgeImpl(new SimpleId("testId4"),"name4"),  new SimpleId("id4"), UUID.randomUUID()  );
+
+                SearchEdge.NodeType.SOURCE ),  new SimpleId("id3"), UUID.randomUUID() );
+
+        final DeIndexRequest deIndexRequest2 = new DeIndexRequest( new String[]{"index2.1", "index2.1"}, applicationScope,  new SearchEdgeImpl(new SimpleId("testId4"),"name4",
+                SearchEdge.NodeType.SOURCE ),  new SimpleId("id4"), UUID.randomUUID()  );
 
 
 

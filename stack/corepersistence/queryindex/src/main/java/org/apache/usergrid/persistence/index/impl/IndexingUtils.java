@@ -105,8 +105,8 @@ public class IndexingUtils {
      * @param entity
      * @return
      */
-    public static String createIndexDocId(final Entity entity, final String context) {
-        return createIndexDocId(entity.getId(), entity.getVersion(), context);
+    public static String createIndexDocId(final ApplicationScope applicationScope, final Entity entity, final String context) {
+        return createIndexDocId(applicationScope, entity.getId(), entity.getVersion(), context);
     }
 
 
@@ -117,132 +117,19 @@ public class IndexingUtils {
      * @para context The context it's indexed in
      * @return
      */
-    public static String createIndexDocId( final Id entityId, final UUID version, final String context) {
+    public static String createIndexDocId( final ApplicationScope applicationScope, final Id entityId, final UUID version, final String context) {
 
-        throw new NotImplementedException("Fix me to use app scope too");
-//        StringBuilder sb = new StringBuilder();
-//        idString(sb, entityId);
-//        sb.append( SEPARATOR );
-//        sb.append( version.toString() ).append( SEPARATOR );
-//        sb.append( context);
-//        return sb.toString();
+        StringBuilder sb = new StringBuilder();
+        idString( applicationScope.getApplication() );
+        sb.append( SEPARATOR );
+        idString(sb, entityId);
+        sb.append( SEPARATOR );
+        sb.append( version.toString() ).append( SEPARATOR );
+        sb.append( context);
+        return sb.toString();
     }
 
 
-    /**
-     * Build mappings for data to be indexed. Setup String fields as not_analyzed and analyzed,
-     * where the analyzed field is named {name}_ug_analyzed
-     *
-     * @param builder Add JSON object to this builder.
-     * @param type ElasticSearch type of entity.
-     *
-     * @return Content builder with JSON for mapping.
-     *
-     * @throws java.io.IOException On JSON generation error.
-     */
-    public static XContentBuilder createDoubleStringIndexMapping(
-            XContentBuilder builder, String type ) throws IOException {
-
-        builder = builder
-
-            .startObject()
-
-                    /**  add routing  "_routing":{ "required":true,  "path":"ug_entityId" **/
-                    .startObject("_routing")
-                        .field("required", true)
-                        .field("path", ENTITYID_ID_FIELDNAME)
-                    .endObject()
-                    .startArray("dynamic_templates")
-                        // we need most specific mappings first since it's a stop on match algorithm
-                            .startObject()
-                                .startObject("application_id_template")
-                                    .field("match", APPLICATION_ID_FIELDNAME)
-                                    .field("match_mapping_type", "string")
-                                    .startObject("mapping").field("type", "string").field("index", "not_analyzed").field(DOC_VALUES_KEY, true).endObject()
-                                .endObject()
-                            .endObject()
-                            .startObject()
-                                .startObject("entity_id_template")
-                                    .field("match", IndexingUtils.ENTITYID_ID_FIELDNAME)
-                                    .field("match_mapping_type", "string")
-                                    .startObject("mapping").field("type", "string").field("index", "not_analyzed").field(DOC_VALUES_KEY, true).endObject()
-                                .endObject()
-                            .endObject()
-
-                            .startObject()
-                                .startObject("entity_context_template")
-                                    .field("match", IndexingUtils.ENTITY_CONTEXT_FIELDNAME)
-                                    .field("match_mapping_type", "string")
-                                        .startObject("mapping")
-                                            .field("type", "string").field("index", "not_analyzed").field(DOC_VALUES_KEY, true)
-                                        .endObject()
-                                .endObject()
-                            .endObject()
-
-                            .startObject()
-                                .startObject("entity_version_template")
-                                    .field("match", IndexingUtils.ENTITY_VERSION_FIELDNAME)
-                                    .field("match_mapping_type", "string")
-                                    .startObject("mapping").field("type", "long").field("index", "not_analyzed").field(DOC_VALUES_KEY, true)
-                                    .endObject()
-                                .endObject()
-                            .endObject()
-
-                            // any string with field name that starts with sa_ gets analyzed
-                            .startObject()
-                                .startObject("template_string_analyzed")
-                                    .field("match", ANALYZED_STRING_PREFIX + "*")
-                                    .field("match_mapping_type", "string")
-                                    .startObject("mapping")
-                                        .field("type", "string")
-                                        .field("index", "analyzed")
-                                    .endObject()
-                                .endObject()
-                            .endObject()
-
-                        // all other strings are not analyzed
-                        .startObject()
-                            .startObject("template_string_not_analyzed")
-                                //todo, should be string prefix, remove 2 field mapping
-                                .field("match", "*")
-                                .field("match_mapping_type", "string")
-                                .startObject("mapping")
-                                    .field("type", "string")
-                                    .field("index", "not_analyzed")
-                                .endObject()
-                            .endObject()
-                        .endObject()
-
-                        // fields names starting with go_ get geo-indexed
-                        .startObject()
-                            .startObject("template_geo")
-                                .field("match", GEO_PREFIX + "location")
-                                    .startObject("mapping").field("type", "geo_point")
-                                    .endObject()
-                            .endObject()
-                        .endObject()
-                            // all other strings are not analyzed
-                        .startObject()
-                            .startObject("template__long")
-                                .field("match", LONG_PREFIX + "*")
-                                .field("match_mapping_type", "long")
-                                .startObject("mapping").field("type", "long").field("index", "not_analyzed").field(DOC_VALUES_KEY, true).endObject()
-                            .endObject()
-                        .endObject()
-
-                        .startObject()
-                            .startObject("template__double")
-                                .field("match", DOUBLE_PREFIX + "*")
-                                .field("match_mapping_type", "double")
-                                .startObject("mapping").field("type", "double").field("index", "not_analyzed").field(DOC_VALUES_KEY, true).endObject()
-                            .endObject()
-                        .endObject()
-
-                    .endArray()
-            .endObject();
-
-        return builder;
-    }
 
 
     public static String getType(ApplicationScope applicationScope, Id entityId) {

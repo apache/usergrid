@@ -87,7 +87,6 @@ public class EntityIndexTest extends BaseIT {
     @Inject
     public EntityIndex ei;
 
-    //TODO T.N. Remove this when we move the cursor mapping back to core
     @Inject
     @Rule
     public MigrationManagerRule migrationManagerRule;
@@ -108,7 +107,7 @@ public class EntityIndexTest extends BaseIT {
 
 
         final String entityType = "thing";
-        IndexEdge searchEdge = new IndexEdgeImpl( appId, "things", 1 );
+        IndexEdge searchEdge = new IndexEdgeImpl( appId, "things", SearchEdge.NodeType.SOURCE, 1 );
         final SearchTypes searchTypes = SearchTypes.fromTypes( entityType );
 
         insertJsonBlob( entityIndex, entityType, searchEdge, "/sample-large.json", 101, 0 );
@@ -129,7 +128,7 @@ public class EntityIndexTest extends BaseIT {
         ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex( applicationScope );
 
         final String entityType = "thing";
-        IndexEdge indexEdge = new IndexEdgeImpl( appId, "things", 1 );
+        IndexEdge indexEdge = new IndexEdgeImpl( appId, "things", SearchEdge.NodeType.SOURCE,  1 );
         final SearchTypes searchTypes = SearchTypes.fromTypes( entityType );
         EntityIndexBatch batch = entityIndex.createBatch();
         Entity entity = new Entity( entityType );
@@ -179,7 +178,7 @@ public class EntityIndexTest extends BaseIT {
         final List<Object> sampleJson = mapper.readValue( is, new TypeReference<List<Object>>() {} );
         for ( int i = 0; i < threads; i++ ) {
 
-            final IndexEdge indexEdge = new IndexEdgeImpl( appId, "things", i );
+            final IndexEdge indexEdge = new IndexEdgeImpl( appId, "things",  SearchEdge.NodeType.SOURCE, i );
 
             Thread thread = new Thread( () -> {
                 try {
@@ -239,7 +238,7 @@ public class EntityIndexTest extends BaseIT {
 
 
         final String entityType = "thing";
-        IndexEdge searchEdge = new IndexEdgeImpl( appId, "things", 10 );
+        IndexEdge searchEdge = new IndexEdgeImpl( appId, "things", SearchEdge.NodeType.SOURCE,  10 );
         final SearchTypes searchTypes = SearchTypes.fromTypes( entityType );
 
         insertJsonBlob( entityIndex, entityType, searchEdge, "/sample-large.json", 101, 0 );
@@ -271,7 +270,7 @@ public class EntityIndexTest extends BaseIT {
 
 
         final String entityType = "thing";
-        IndexEdge searchEdge = new IndexEdgeImpl( appId, "things", 1 );
+        IndexEdge searchEdge = new IndexEdgeImpl( appId, "things",  SearchEdge.NodeType.SOURCE, 1 );
         final SearchTypes searchTypes = SearchTypes.fromTypes( entityType );
 
         insertJsonBlob( entityIndex, entityType, searchEdge, "/sample-large.json", 1, 0 );
@@ -351,7 +350,7 @@ public class EntityIndexTest extends BaseIT {
 
         ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
 
-        IndexEdge searchEdge = new IndexEdgeImpl( appId, "fastcars", 1 );
+        IndexEdge searchEdge = new IndexEdgeImpl( appId, "fastcars", SearchEdge.NodeType.SOURCE,  1 );
 
         ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex( applicationScope );
 
@@ -488,7 +487,7 @@ public class EntityIndexTest extends BaseIT {
 
         ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
 
-        IndexEdge indexSCope = new IndexEdgeImpl( ownerId, "user", 10 );
+        IndexEdge indexSCope = new IndexEdgeImpl( ownerId, "user",  SearchEdge.NodeType.SOURCE, 10 );
 
         ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex( applicationScope );
 
@@ -537,7 +536,7 @@ public class EntityIndexTest extends BaseIT {
         Id ownerId = new SimpleId( "multivaluedtype" );
         ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
 
-        IndexEdge indexScope = new IndexEdgeImpl( ownerId, "user", 10 );
+        IndexEdge indexScope = new IndexEdgeImpl( ownerId, "user",  SearchEdge.NodeType.SOURCE, 10 );
 
         ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex( applicationScope );
 
@@ -623,7 +622,7 @@ public class EntityIndexTest extends BaseIT {
 
         ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
 
-        IndexEdge indexEdge = new IndexEdgeImpl( ownerId, "users", 10 );
+        IndexEdge indexEdge = new IndexEdgeImpl( ownerId, "users",  SearchEdge.NodeType.SOURCE, 10 );
 
 
         ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex( applicationScope );

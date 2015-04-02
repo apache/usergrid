@@ -39,7 +39,23 @@ public interface SearchEdge {
      */
     String getEdgeName();
 
+    /**
+     * Get the edge type for this search edge.
+     *
+     * If the nodeId was the source in the edge, set this to source.  If it was the target, set this to target
+     * @return
+     */
+    NodeType getNodeType();
 
+
+    /**
+     * If the nodeId was the source in the edge, set this to source.  If it was the target, set this to target
+     *
+     */
+    enum NodeType {
+        SOURCE,
+        TARGET
+    }
 
 
 }

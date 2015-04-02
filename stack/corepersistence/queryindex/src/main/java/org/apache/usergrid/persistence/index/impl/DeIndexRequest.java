@@ -57,7 +57,7 @@ public class DeIndexRequest implements BatchRequest {
         String context = createContextName(applicationScope, searchEdge );
         this.indexes = indexes;
         this.entityTypes = SearchType.fromId(id).getTypeNames(applicationScope);
-        this.documentId =  createIndexDocId(id, version,context);
+        this.documentId =  createIndexDocId(applicationScope, id, version,context);
     }
 
 

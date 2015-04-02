@@ -29,6 +29,7 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.junit.Test;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
+import org.apache.usergrid.persistence.index.SearchEdge;
 import org.apache.usergrid.persistence.index.exceptions.QueryParseException;
 import org.apache.usergrid.persistence.index.impl.SearchEdgeImpl;
 import org.apache.usergrid.persistence.index.impl.SearchRequestBuilderStrategy;
@@ -438,7 +439,8 @@ public class GrammarTreeTest {
         SearchRequestBuilderStrategy builderStrategy =
                 new SearchRequestBuilderStrategy( null, new ApplicationScopeImpl( new SimpleId( "test" ) ), null, 100 );
         QueryBuilder qb =
-                builderStrategy.createQueryBuilder( new SearchEdgeImpl( new SimpleId( "owner" ), "app" ), query );
+                builderStrategy.createQueryBuilder( new SearchEdgeImpl( new SimpleId( "owner" ), "app",
+                        SearchEdge.NodeType.SOURCE ), query );
     }
 
 

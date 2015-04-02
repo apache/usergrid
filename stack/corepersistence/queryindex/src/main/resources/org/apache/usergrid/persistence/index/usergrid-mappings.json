@@ -1,0 +1,63 @@
+{
+  "entity": {
+    "properties": {
+      "entityId": {
+        "type": "string",
+        "index": "not_analyzed"
+      },
+      "entityVersion": {
+        "type": "string",
+        "index": "not_analyzed"
+      },
+      "entityType": {
+        "type": "string",
+        "index": "not_analyzed"
+      },
+      "applicationId": {
+        "type": "string",
+        "index": "not_analyzed"
+      },
+      "edgeNodeId": {
+        "type": "string",
+        "index": "not_analyzed"
+      },
+      "edgeName": {
+        "type": "string",
+        "index": "not_analyzed"
+      },
+      "edgeType": {
+        "type": "string",
+        "index": "not_analyzed"
+      },
+      "edgeTimestamp": {"type": "long"},
+      "edgeSearch": {
+        "type": "string",
+        "index": "not_analyzed"
+      },
+      "fields": {
+        "type": "nested",
+        "properties": {
+          "name": {
+            "type": "string",
+            "index": "not_analyzed"
+          },
+          "boolean": {"type": "boolean"},
+          "short": {"type": "short"},
+          "int": {"type": "integer"},
+          "long": {"type": "long"},
+          "float": {"type": "float"},
+          "double": {"type": "double"},
+          "string": {
+            "type": "string",
+            "fields": {
+              "exact": {
+                "type": "string",
+                "index": "not_analyzed"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

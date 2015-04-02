@@ -133,8 +133,6 @@ public class IndexLoadTestsIT extends BaseIT {
         final ApplicationScope scope = new ApplicationScopeImpl( applicationId );
 
 
-        final SearchEdge searchEdge = new SearchEdgeImpl( applicationId, "test" );
-
         batchWriteTPS = metricsFactory.getMeter( IndexLoadTestsIT.class, "write.tps" );
 
         batchWriteTimer = metricsFactory.getTimer( IndexLoadTestsIT.class, "write.timer" );
@@ -182,7 +180,7 @@ public class IndexLoadTestsIT extends BaseIT {
         final ApplicationScope scope = new ApplicationScopeImpl( applicationId );
 
 
-        final SearchEdge searchEdge = new SearchEdgeImpl( applicationId, "test" );
+        final SearchEdge searchEdge = new SearchEdgeImpl( applicationId, "test",  SearchEdge.NodeType.SOURCE );
 
         final ApplicationEntityIndex appEntityIndex = entityIndexFactory.createApplicationEntityIndex( scope );
 
@@ -328,7 +326,8 @@ public class IndexLoadTestsIT extends BaseIT {
 
                 //take our entities and roll them into a batch
                 Observable.from( entities ).collect( () -> entityIndex.createBatch(), ( entityIndexBatch, entity ) -> {
-                    IndexEdge edge = new IndexEdgeImpl( indexEdge.getNodeId(), indexEdge.getEdgeName(), edgeCounter.incrementAndGet()  );
+                    IndexEdge edge = new IndexEdgeImpl( indexEdge.getNodeId(), indexEdge.getEdgeName(),
+                            SearchEdge.NodeType.SOURCE, edgeCounter.incrementAndGet()  );
                     entityIndexBatch.index( edge, entity );
                 } ).doOnNext( entityIndexBatch -> {
                     log.info( "Indexing next {} in batch", entityIndexBatch.size() );

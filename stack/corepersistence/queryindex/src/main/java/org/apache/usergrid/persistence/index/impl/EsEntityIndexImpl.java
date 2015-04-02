@@ -20,7 +20,9 @@ package org.apache.usergrid.persistence.index.impl;
 
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.commons.lang.StringUtils;
@@ -44,8 +46,6 @@ import org.elasticsearch.action.admin.indices.refresh.RefreshResponse;
 import org.elasticsearch.client.AdminClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.index.query.MatchAllQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
@@ -54,6 +54,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -67,8 +68,6 @@ import java.util.Set;
 public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
 
     private static final Logger logger = LoggerFactory.getLogger( EsEntityIndexImpl.class );
-
-    public static final String DEFAULT_TYPE = "_default_";
 
     private final IndexAlias alias;
     private final IndexBufferProducer indexBatchBufferProducer;
@@ -86,10 +85,10 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
     //number of milliseconds to try again before sleeping
     private static final int WAIT_TIME = 250;
 
-    private static final String VERIFY_TYPE = "verification";
+    private static final String VERIFY_TYPE = "entity";
 
     private static final ImmutableMap<String, Object> DEFAULT_PAYLOAD =
-            ImmutableMap.<String, Object>builder().put( "field", "test" ).put(IndexingUtils.ENTITYID_ID_FIELDNAME, UUIDGenerator.newTimeUUID().toString()).build();
+            ImmutableMap.<String, Object>builder().put(IndexingUtils.ENTITYID_ID_FIELDNAME, UUIDGenerator.newTimeUUID().toString()).build();
 
     private static final MatchAllQueryBuilder MATCH_ALL_QUERY_BUILDER = QueryBuilders.matchAllQuery();
     private final FailureMonitorImpl.IndexIdentifier indexIdentifier;
@@ -103,8 +102,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
 
 
     @Inject
-    public EsEntityIndexImpl(
-                              final IndexBufferProducer indexBatchBufferProducer, final EsProvider provider,
+    public EsEntityIndexImpl(final IndexBufferProducer indexBatchBufferProducer, final EsProvider provider,
                               final IndexCache indexCache, final MetricsFactory metricsFactory,
                               final IndexFig indexFig, final FailureMonitorImpl.IndexIdentifier indexIdentifier ) {
         this.indexBatchBufferProducer = indexBatchBufferProducer;
@@ -123,6 +121,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
         this.refreshTimer = metricsFactory
             .getTimer(EsEntityIndexImpl.class, "refresh.timer");
         this.refreshIndexMeter = metricsFactory.getMeter(EsEntityIndexImpl.class,"refresh.meter");
+
         if(shouldInitialize()){
             initialize();
         }
@@ -133,16 +132,18 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
     public void initialize() {
         final int numberOfShards = indexFig.getNumberOfShards();
         final int numberOfReplicas = indexFig.getNumberOfReplicas();
+
         aliasCache.invalidate(alias);
+
         if (shouldInitialize()) {
-            addIndex(null, numberOfShards, numberOfReplicas, indexFig.getWriteConsistencyLevel());
+            addIndex( null, numberOfShards, numberOfReplicas, indexFig.getWriteConsistencyLevel() );
         }
     }
 
     @Override
     public boolean shouldInitialize() {
-        String[] reads = getIndexes(AliasedEntityIndex.AliasType.Read);
-        String[] writes = getIndexes(AliasedEntityIndex.AliasType.Write);
+        String[] reads = getIndexes( AliasedEntityIndex.AliasType.Read );
+        String[] writes = getIndexes( AliasedEntityIndex.AliasType.Write );
         return reads.length==0  || writes.length==0;
     }
 
@@ -158,8 +159,12 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
                 Settings settings = ImmutableSettings.settingsBuilder()
                         .put("index.number_of_shards", numberOfShards)
                         .put("index.number_of_replicas", numberOfReplicas)
-                        .put("action.write_consistency", writeConsistency )
-                    .build();
+
+                        //dont' allow unmapped queries, and don't allow dynamic mapping
+                        .put("index.query.parse.allow_unmapped_fields", false )
+                        .put("index.mapper.dynamic", false)
+                        .put( "action.write_consistency", writeConsistency )
+                        .build();
 
                 //Added For Graphite Metrics
                 Timer.Context timeNewIndexCreation = addTimer.time();
@@ -226,8 +231,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
             //add write alias
             aliasesRequestBuilder.addAlias(indexName, alias.getWriteAlias());
             isAck = aliasesRequestBuilder.execute().actionGet().isAcknowledged();
-            logger.info("Created new read and write aliases ACK=[{}]", isAck);
-            aliasCache.invalidate(alias);
+            logger.info( "Created new read and write aliases ACK=[{}]", isAck );
+            aliasCache.invalidate( alias );
 
         } catch (Exception e) {
             logger.warn("Failed to create alias ", e);
@@ -264,28 +269,23 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
 
         logger.debug("Testing new index name: read {} write {}", alias.getReadAlias(), alias.getWriteAlias());
 
-        final RetryOperation retryOperation = new RetryOperation() {
-            @Override
-            public boolean doOp() {
-                final String tempId = UUIDGenerator.newTimeUUID().toString();
+        final RetryOperation retryOperation = () -> {
+            final String tempId = UUIDGenerator.newTimeUUID().toString();
 
-                esProvider.getClient().prepareIndex( alias.getWriteAlias(), VERIFY_TYPE, tempId )
-                     .setSource(DEFAULT_PAYLOAD).get();
+            esProvider.getClient().prepareIndex( alias.getWriteAlias(), VERIFY_TYPE, tempId )
+                 .setSource(DEFAULT_PAYLOAD).get();
 
-                logger.info( "Successfully created new document with docId {} "
-                     + "in index read {} write {} and type {}",
-                        tempId, alias.getReadAlias(), alias.getWriteAlias(), VERIFY_TYPE );
+            logger.info( "Successfully created new document with docId {} "
+                 + "in index read {} write {} and type {}",
+                    tempId, alias.getReadAlias(), alias.getWriteAlias(), VERIFY_TYPE );
 
-                // delete all types, this way if we miss one it will get cleaned up
-                esProvider.getClient().prepareDeleteByQuery( alias.getWriteAlias())
-                        .setTypes(VERIFY_TYPE)
-                        .setQuery(MATCH_ALL_QUERY_BUILDER).get();
+            // delete all types, this way if we miss one it will get cleaned up
+            esProvider.getClient().prepareDelete( alias.getWriteAlias(), VERIFY_TYPE, tempId).get();
 
-                logger.info( "Successfully deleted all documents in index {} read {} write {} and type {}",
-                        alias.getReadAlias(), alias.getWriteAlias(), VERIFY_TYPE );
+            logger.info( "Successfully deleted  documents in index {} read {} write {} and type {} with id {}",
+                    alias.getReadAlias(), alias.getWriteAlias(), VERIFY_TYPE, tempId );
 
-                return true;
-            }
+            return true;
         };
 
         doInRetry( retryOperation );
@@ -298,17 +298,29 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
      */
     private void createMappings(final String indexName) throws IOException {
 
-        XContentBuilder xcb = IndexingUtils.createDoubleStringIndexMapping( XContentFactory.jsonBuilder(),
-            DEFAULT_TYPE );
-
 
         //Added For Graphite Metrics
         Timer.Context timePutIndex = mappingTimer.time();
-        PutMappingResponse  pitr = esProvider.getClient().admin().indices().preparePutMapping( indexName ).setType(
-            DEFAULT_TYPE ).setSource( xcb ).execute().actionGet();
+        PutMappingResponse  pitr = esProvider.getClient().admin().indices().preparePutMapping( indexName ).setType( "entity" ).setSource(
+                getMappingsContent() ).execute().actionGet();
         timePutIndex.stop();
         if ( !pitr.isAcknowledged() ) {
             throw new IndexException( "Unable to create default mappings" );
+        }
+    }
+
+
+    /**
+     * Get the content from our mappings file
+     * @return
+     */
+    private String getMappingsContent(){
+        URL url = Resources.getResource( "org/apache/usergrid/persistence/index/usergrid-mappings.json" );
+        try {
+            return Resources.toString(url, Charsets.UTF_8);
+        }
+        catch ( IOException e ) {
+            throw new RuntimeException( "Unable to read mappings file", e );
         }
     }
 

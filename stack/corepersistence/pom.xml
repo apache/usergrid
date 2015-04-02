@@ -132,15 +132,23 @@ limitations under the License.
             </plugin>
         </plugins>
 
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>true</filtering>
-                <includes>
-                    <include>**/*.properties</include>
-                </includes>
-            </resource>
-        </resources>
+      <resources>
+        <resource>
+          <directory>src/main/resources</directory>
+          <filtering>true</filtering>
+          <includes>
+            <include>**/*.properties</include>
+          </includes>
+        </resource>
+        <!-- include everything else without filtering -->
+        <resource>
+          <directory>src/main/resources</directory>
+          <filtering>false</filtering>
+          <includes>
+            <include>**</include>
+          </includes>
+        </resource>
+      </resources>
 
         <testResources>
             <testResource>

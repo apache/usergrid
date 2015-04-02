@@ -36,8 +36,8 @@ public class IndexEdgeImpl extends SearchEdgeImpl implements IndexEdge {
     private final long timestamp;
 
 
-    public IndexEdgeImpl( final Id nodeId, final String name, final long timestamp ) {
-        super( nodeId, name );
+    public IndexEdgeImpl( final Id nodeId, final String name, final NodeType nodeType, final long timestamp ) {
+        super( nodeId, name, nodeType );
         this.timestamp = timestamp;
     }
 

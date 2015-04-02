@@ -48,7 +48,7 @@ public class SearchTypes {
     public String[] getTypeNames( ApplicationScope applicationScope ) {
         String[] typeNames = new String[types.length];
         for ( int i = 0; i < types.length; i++ ) {
-            typeNames[i++] = IndexingUtils.getType( applicationScope, types[i] );
+            typeNames[i] = IndexingUtils.getType( applicationScope, types[i] );
         }
         return typeNames;
     }
