@@ -16,23 +16,36 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.index;
+package org.apache.usergrid.persistence.index.impl;
 
+import org.apache.usergrid.persistence.index.SearchEdge;
+import org.apache.usergrid.persistence.index.utils.IndexValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 
-public interface IndexScope {
+/**
+ * The edge to search on.  Can be either a source--> target edge or a target<-- source edge.  The entiies returned
+ * will be on the opposite side of the edge from the specified nodeId
+ */
+public class SearchEdgeImpl implements SearchEdge {
+    private final Id nodeId;
+    private final String name;
 
-    /**
-     * @return The name of the index. If you use pluralization for you names vs types,
-     * you must keep the consistent or you will be unable to load data
-     */
-    public String getName();
 
-    /**
-     * @return A uuid that is unique to this context.  It can be any uuid (time uuid preferred). 
-     * Can be an application id if this is indexed in a collection, or the collection owner.  
-     * In a graph structure, this will be the source node in the graph
-     */
-    public Id getOwner();
+    public SearchEdgeImpl( final Id nodeId, final String name ) {
+        this.nodeId = nodeId;
+        this.name = name;
+    }
+
+
+    @Override
+    public Id getNodeId() {
+        return nodeId;
+    }
+
+
+    @Override
+    public String getEdgeName() {
+        return name;
+    }
 }

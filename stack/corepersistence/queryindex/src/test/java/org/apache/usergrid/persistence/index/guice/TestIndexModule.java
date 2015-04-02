@@ -26,10 +26,10 @@ import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.IndexBufferProducer;
+import org.apache.usergrid.persistence.index.impl.IndexBufferProducer;
 import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.index.impl.EsEntityIndexImpl;
-import org.apache.usergrid.persistence.index.IndexCache;
+import org.apache.usergrid.persistence.index.impl.IndexCache;
 import org.apache.usergrid.persistence.index.impl.EsProvider;
 import org.apache.usergrid.persistence.index.migration.LegacyIndexIdentifier;
 import org.apache.usergrid.persistence.model.entity.SimpleId;

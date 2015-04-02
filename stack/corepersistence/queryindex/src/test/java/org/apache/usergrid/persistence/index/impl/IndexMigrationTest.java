@@ -21,21 +21,15 @@ package org.apache.usergrid.persistence.index.impl;
 
 import com.google.inject.Inject;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
-import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
 import org.apache.usergrid.persistence.core.migration.data.ProgressObserver;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
 import org.apache.usergrid.persistence.index.migration.EsIndexDataMigrationImpl;
 import org.apache.usergrid.persistence.index.migration.IndexDataVersions;
-import org.apache.usergrid.persistence.index.migration.LegacyIndexIdentifier;
-import org.apache.usergrid.persistence.model.entity.SimpleId;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import java.util.UUID;
 
 import static junit.framework.Assert.fail;
 import static junit.framework.TestCase.assertEquals;
@@ -51,7 +45,7 @@ public class IndexMigrationTest extends BaseIT{
     @Inject
     public IndexFig fig;
     @Inject
-    public IndexIdentifier indexIdentifier;
+    public FailureMonitorImpl.IndexIdentifier indexIdentifier;
 
     @Inject
     public IndexCache indexCache;

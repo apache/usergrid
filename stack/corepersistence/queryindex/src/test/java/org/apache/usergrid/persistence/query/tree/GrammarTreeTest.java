@@ -30,11 +30,11 @@ import org.junit.Test;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.index.exceptions.QueryParseException;
-import org.apache.usergrid.persistence.index.impl.IndexScopeImpl;
+import org.apache.usergrid.persistence.index.impl.SearchEdgeImpl;
 import org.apache.usergrid.persistence.index.impl.SearchRequestBuilderStrategy;
 import org.apache.usergrid.persistence.index.query.ParsedQuery;
 import org.apache.usergrid.persistence.index.query.ParsedQueryBuilder;
-import org.apache.usergrid.persistence.index.query.SelectFieldMapping;
+import org.apache.usergrid.persistence.index.SelectFieldMapping;
 import org.apache.usergrid.persistence.index.query.tree.AndOperand;
 import org.apache.usergrid.persistence.index.query.tree.ContainsOperand;
 import org.apache.usergrid.persistence.index.query.tree.CpQueryFilterLexer;
@@ -438,7 +438,7 @@ public class GrammarTreeTest {
         SearchRequestBuilderStrategy builderStrategy =
                 new SearchRequestBuilderStrategy( null, new ApplicationScopeImpl( new SimpleId( "test" ) ), null, 100 );
         QueryBuilder qb =
-                builderStrategy.createQueryBuilder( new IndexScopeImpl( new SimpleId( "owner" ), "app" ), query );
+                builderStrategy.createQueryBuilder( new SearchEdgeImpl( new SimpleId( "owner" ), "app" ), query );
     }
 
 

@@ -23,8 +23,6 @@ package org.apache.usergrid.persistence.index.impl;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.usergrid.persistence.index.IndexOperationMessage;
-
 
 /**
  * A temporary interface of our buffer Q to decouple of producer and consumer;
@@ -36,7 +34,7 @@ public interface BufferQueue {
      * Other queues may return the future after ack on the offer.  See the implementation documentation for details.
      * @param operation
      */
-    public void offer(final IndexOperationMessage operation);
+    public void offer(final IndexIdentifierImpl.IndexOperationMessage operation);
 
 
     /**
@@ -48,7 +46,7 @@ public interface BufferQueue {
      * @param timeUnit
      * @return A null safe lid
      */
-    public List<IndexOperationMessage> take(final int takeSize, final long timeout, final TimeUnit timeUnit );
+    public List<IndexIdentifierImpl.IndexOperationMessage> take(final int takeSize, final long timeout, final TimeUnit timeUnit );
 
 
     /**
@@ -57,12 +55,12 @@ public interface BufferQueue {
      *
      * @param messages
      */
-    public void ack(final List<IndexOperationMessage> messages);
+    public void ack(final List<IndexIdentifierImpl.IndexOperationMessage> messages);
 
     /**
      * Mark these message as failed.  Set the exception in the future on local operation
      *
      * @param messages
      */
-    public void fail(final List<IndexOperationMessage> messages, final Throwable t);
+    public void fail(final List<IndexIdentifierImpl.IndexOperationMessage> messages, final Throwable t);
 }

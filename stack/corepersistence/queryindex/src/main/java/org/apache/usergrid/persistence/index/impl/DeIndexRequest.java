@@ -24,17 +24,14 @@ import java.util.Arrays;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.index.IndexScope;
+import org.apache.usergrid.persistence.index.SearchEdge;
 import org.apache.usergrid.persistence.index.SearchType;
-import org.apache.usergrid.persistence.index.SearchTypes;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.delete.DeleteRequestBuilder;
 import org.elasticsearch.client.Client;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createContextName;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createIndexDocId;
@@ -56,8 +53,8 @@ public class DeIndexRequest implements BatchRequest {
     }
 
 
-    public DeIndexRequest(String[] indexes, ApplicationScope applicationScope, IndexScope indexScope, Id id, UUID version) {
-        String context = createContextName(applicationScope,indexScope);
+    public DeIndexRequest(String[] indexes, ApplicationScope applicationScope, SearchEdge searchEdge, Id id, UUID version) {
+        String context = createContextName(applicationScope, searchEdge );
         this.indexes = indexes;
         this.entityTypes = SearchType.fromId(id).getTypeNames(applicationScope);
         this.documentId =  createIndexDocId(id, version,context);

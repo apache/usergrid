@@ -22,12 +22,12 @@ import java.io.IOException;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.index.IndexFig;
-import org.apache.usergrid.persistence.index.IndexIdentifier;
-import org.apache.usergrid.persistence.index.IndexScope;
+import org.apache.usergrid.persistence.index.SearchEdge;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.elasticsearch.common.xcontent.XContentBuilder;
+
+import org.apache.commons.lang.NotImplementedException;
 
 
 public class IndexingUtils {
@@ -67,22 +67,16 @@ public class IndexingUtils {
       * @param scope
       * @return
       */
-     public static String createContextName(ApplicationScope applicationScope, IndexScope scope ) {
+     public static String createContextName(final ApplicationScope applicationScope, final SearchEdge scope ) {
          StringBuilder sb = new StringBuilder();
          idString(sb,applicationScope.getApplication());
          sb.append(SEPARATOR);
-         idString(sb, scope.getOwner());
+         idString(sb, scope.getNodeId());
          sb.append( SEPARATOR );
-         sb.append( scope.getName() );
+         sb.append( scope.getEdgeName() );
          return sb.toString();
      }
-    public static String createLegacyContextName(ApplicationScope applicationScope, IndexScope scope ) {
-        StringBuilder sb = new StringBuilder();
-        idString(sb, scope.getOwner());
-        sb.append( SEPARATOR );
-        sb.append( scope.getName() );
-        return sb.toString();
-    }
+
 
     /**
      * Append the id to the string
@@ -123,13 +117,15 @@ public class IndexingUtils {
      * @para context The context it's indexed in
      * @return
      */
-    public static String createIndexDocId(final Id entityId, final UUID version, final String context) {
-        StringBuilder sb = new StringBuilder();
-        idString(sb, entityId);
-        sb.append( SEPARATOR );
-        sb.append( version.toString() ).append( SEPARATOR );
-        sb.append( context);
-        return sb.toString();
+    public static String createIndexDocId( final Id entityId, final UUID version, final String context) {
+
+        throw new NotImplementedException("Fix me to use app scope too");
+//        StringBuilder sb = new StringBuilder();
+//        idString(sb, entityId);
+//        sb.append( SEPARATOR );
+//        sb.append( version.toString() ).append( SEPARATOR );
+//        sb.append( context);
+//        return sb.toString();
     }
 
 

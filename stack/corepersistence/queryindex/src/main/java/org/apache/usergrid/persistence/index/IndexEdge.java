@@ -20,36 +20,17 @@
  *  *
  *
  */
-
-package org.apache.usergrid.persistence.index.query;
-
+package org.apache.usergrid.persistence.index;
 
 /**
- * A simple object that represents a field mapping.
- *
- * Examples:
- *  "select id", which will return id
- *
- *  "select id:appfield" which will return id, but rename it appfield
+ * An edge to perform indexing on.
  */
-public class SelectFieldMapping {
+public interface IndexEdge extends SearchEdge {
 
-    private final String sourceFieldName;
-    private final String targetFieldName;
+    /**
+     * Get the timestamp on this edge
+     * @return
+     */
+    long getTimestamp();
 
-
-    public SelectFieldMapping( final String sourceFieldName, final String targetFieldName ) {
-        this.sourceFieldName = sourceFieldName;
-        this.targetFieldName = targetFieldName;
-    }
-
-
-    public String getSourceFieldName() {
-        return sourceFieldName;
-    }
-
-
-    public String getTargetFieldName() {
-        return targetFieldName;
-    }
 }

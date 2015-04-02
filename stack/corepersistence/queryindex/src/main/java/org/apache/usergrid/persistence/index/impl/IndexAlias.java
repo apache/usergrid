@@ -14,7 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence.index;
+package org.apache.usergrid.persistence.index.impl;
+
+
+import org.apache.usergrid.persistence.index.IndexFig;
+
 
 /**
  * Abstraction for Index alias names

@@ -53,7 +53,7 @@ public abstract class IndexModule extends AbstractModule {
         bind(EntityIndex.class).to(EsEntityIndexImpl.class);
         bind(IndexCache.class).to(EsIndexCacheImpl.class);
 
-        bind(IndexIdentifier.class).to(IndexIdentifierImpl.class);
+        bind(FailureMonitorImpl.IndexIdentifier.class).to(IndexIdentifierImpl.class);
 
 
         bind(IndexBufferProducer.class).to(EsIndexBufferProducerImpl.class);

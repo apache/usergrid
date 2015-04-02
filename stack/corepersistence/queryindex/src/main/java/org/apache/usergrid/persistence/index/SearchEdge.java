@@ -18,22 +18,28 @@
  */
 package org.apache.usergrid.persistence.index;
 
-
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import com.google.inject.assistedinject.Assisted;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 
-public interface EntityIndexFactory {
+/**
+ * An edge we can search from
+ */
+public interface SearchEdge {
 
     /**
-     * Create an applicationEntity index for the provided scope
-     * @param appScope
+     * Get the node id to be indexed.  In the case of a "TARGET" entity location, this would be the sourceId.  In the case of the "SOURCE" entity location, this would be the targetId.
+     * Ultimately this should be the other side of the edge from the entity getting searched
      * @return
      */
-    ApplicationEntityIndex createApplicationEntityIndex( ApplicationScope appScope );
+    Id getNodeId();
 
     /**
-     * Invalidate the cache of our factory, and force the generation of new entity index instances
+     * Get the name of the edge to be used
+     * @return
      */
-    void invalidate();
+    String getEdgeName();
+
+
+
+
 }

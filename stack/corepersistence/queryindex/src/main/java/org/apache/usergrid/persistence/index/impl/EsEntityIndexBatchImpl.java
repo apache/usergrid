@@ -27,7 +27,6 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
-import org.apache.usergrid.persistence.index.query.CandidateResult;
 import org.apache.usergrid.persistence.index.utils.IndexValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -41,18 +40,18 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
     private final ApplicationScope applicationScope;
 
     private final IndexAlias alias;
-    private final IndexIdentifier indexIdentifier;
+    private final FailureMonitorImpl.IndexIdentifier indexIdentifier;
 
     private final IndexBufferProducer indexBatchBufferProducer;
 
     private final AliasedEntityIndex entityIndex;
-    private IndexOperationMessage container;
+    private IndexIdentifierImpl.IndexOperationMessage container;
 
 
 
     public EsEntityIndexBatchImpl(final ApplicationScope applicationScope,
                                   final IndexBufferProducer indexBatchBufferProducer,
-                                  final AliasedEntityIndex entityIndex, IndexIdentifier indexIdentifier ) {
+                                  final AliasedEntityIndex entityIndex, FailureMonitorImpl.IndexIdentifier indexIdentifier ) {
 
         this.applicationScope = applicationScope;
         this.indexBatchBufferProducer = indexBatchBufferProducer;
@@ -60,26 +59,26 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         this.indexIdentifier = indexIdentifier;
         this.alias = indexIdentifier.getAlias();
         //constrained
-        this.container = new IndexOperationMessage();
+        this.container = new IndexIdentifierImpl.IndexOperationMessage();
     }
 
 
     @Override
-    public EntityIndexBatch index( final IndexScope indexScope, final Entity entity ) {
-        IndexValidationUtils.validateIndexScope( indexScope );
+    public EntityIndexBatch index( final IndexEdge indexEdge, final Entity entity ) {
+        IndexValidationUtils.validateIndexEdge( indexEdge );
         ValidationUtils.verifyEntityWrite( entity );
         ValidationUtils.verifyVersion( entity.getVersion() );
 
         //add app id for indexing
-        container.addIndexRequest(new IndexRequest(alias.getWriteAlias(), applicationScope,indexScope, entity));
+        container.addIndexRequest(new IndexRequest(alias.getWriteAlias(), applicationScope, indexEdge, entity));
         return this;
     }
 
 
     @Override
-    public EntityIndexBatch deindex( final IndexScope indexScope, final Id id, final UUID version) {
+    public EntityIndexBatch deindex( final SearchEdge searchEdge, final Id id, final UUID version) {
 
-        IndexValidationUtils.validateIndexScope( indexScope );
+        IndexValidationUtils.validateSearchEdge( searchEdge );
         ValidationUtils.verifyIdentity(id);
         ValidationUtils.verifyVersion( version );
 
@@ -89,28 +88,28 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
             indexes = new String[]{indexIdentifier.getIndex(null)};
         }
 
-        container.addDeIndexRequest(new DeIndexRequest(indexes, applicationScope,indexScope,id,version));
+        container.addDeIndexRequest(new DeIndexRequest(indexes, applicationScope, searchEdge,id,version));
 
         return this;
     }
 
 
     @Override
-    public EntityIndexBatch deindex( final IndexScope indexScope, final Entity entity ) {
-        return deindex( indexScope, entity.getId(), entity.getVersion() );
+    public EntityIndexBatch deindex( final SearchEdge searchEdge, final Entity entity ) {
+        return deindex( searchEdge, entity.getId(), entity.getVersion() );
     }
 
 
     @Override
-    public EntityIndexBatch deindex( final IndexScope indexScope, final CandidateResult entity ) {
+    public EntityIndexBatch deindex( final SearchEdge searchEdge, final CandidateResult entity ) {
 
-        return deindex( indexScope, entity.getId(), entity.getVersion() );
+        return deindex( searchEdge, entity.getId(), entity.getVersion() );
     }
 
     @Override
     public BetterFuture execute() {
-        IndexOperationMessage tempContainer = container;
-        container = new IndexOperationMessage();
+        IndexIdentifierImpl.IndexOperationMessage tempContainer = container;
+        container = new IndexIdentifierImpl.IndexOperationMessage();
 
         /**
          * No-op, just disregard it

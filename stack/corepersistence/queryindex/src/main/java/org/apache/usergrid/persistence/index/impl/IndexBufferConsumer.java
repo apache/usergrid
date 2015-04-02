@@ -17,23 +17,21 @@
  *  * directory of this distribution.
  *
  */
-package org.apache.usergrid.persistence.index;
+package org.apache.usergrid.persistence.index.impl;
 
 /**
- * Cache for index lookups
+ *  Buffer index requests
  */
-public interface IndexCache {
-    /**
-     * get index based on alias name
-     * @param alias
-     * @param aliasType
-     * @return
-     */
-    String[] getIndexes(IndexAlias alias, AliasedEntityIndex.AliasType aliasType);
+public interface IndexBufferConsumer {
+
 
     /**
-     * invalidate cache
-     * @param alias
+     * Start the consumer
      */
-    void invalidate(IndexAlias alias);
+    void start();
+
+    /**
+     * Stop the consumers
+     */
+    void stop();
 }

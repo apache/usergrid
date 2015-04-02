@@ -34,9 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
-import org.apache.usergrid.persistence.index.IndexBufferConsumer;
 import org.apache.usergrid.persistence.index.IndexFig;
-import org.apache.usergrid.persistence.index.IndexOperationMessage;
 
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Gauge;
@@ -48,7 +46,6 @@ import com.google.inject.Singleton;
 import rx.Observable;
 import rx.Subscriber;
 import rx.Subscription;
-import rx.functions.Action1;
 import rx.schedulers.Schedulers;
 
 
@@ -142,16 +139,16 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
     private void startWorker(){
         synchronized ( mutex) {
 
-            Observable<List<IndexOperationMessage>> consumer = Observable.create(
-                new Observable.OnSubscribe<List<IndexOperationMessage>>() {
+            Observable<List<IndexIdentifierImpl.IndexOperationMessage>> consumer = Observable.create(
+                new Observable.OnSubscribe<List<IndexIdentifierImpl.IndexOperationMessage>>() {
                     @Override
-                    public void call( final Subscriber<? super List<IndexOperationMessage>> subscriber ) {
+                    public void call( final Subscriber<? super List<IndexIdentifierImpl.IndexOperationMessage>> subscriber ) {
 
                         //name our thread so it's easy to see
                         Thread.currentThread().setName( "QueueConsumer_" + counter.incrementAndGet() );
 
 
-                        List<IndexOperationMessage> drainList = null;
+                        List<IndexIdentifierImpl.IndexOperationMessage> drainList = null;
 
                         do {
 
@@ -229,7 +226,7 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
     /**
      * Execute the request, check for errors, then re-init the batch for future use
      */
-    private void execute( final List<IndexOperationMessage> operationMessages ) {
+    private void execute( final List<IndexIdentifierImpl.IndexOperationMessage> operationMessages ) {
 
         if ( operationMessages == null || operationMessages.size() == 0 ) {
             return;

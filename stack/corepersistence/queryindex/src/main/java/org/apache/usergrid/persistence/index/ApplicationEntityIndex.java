@@ -20,8 +20,6 @@
 package org.apache.usergrid.persistence.index;
 
 
-import org.apache.usergrid.persistence.index.query.CandidateResults;
-
 import rx.Observable;
 
 /**
@@ -33,22 +31,33 @@ public interface ApplicationEntityIndex {
     /**
      * Create the index batch.
      */
-    public EntityIndexBatch createBatch();
+    EntityIndexBatch createBatch();
 
-    public CandidateResults search(final IndexScope indexScope, final SearchTypes searchTypes, final String query, final int limit);
+    /**
+     * Search on every document in the specified search edge.  Also search by the types if specified
+     * @param searchEdge The edge to search on
+     * @param searchTypes The search types to search
+     * @param query The query to execute
+     * @param limit The limit of values to return
+     * @return
+     */
+    CandidateResults search( final SearchEdge searchEdge, final SearchTypes searchTypes, final String query,
+                             final int limit );
 
 
 
     /**
-     * get next page of results
-     * @param cursor
-     * @return
+     * Get next page of results from a previous cursor.  Note that limit used here should be the same limit as the initial
+     * Cursor.  Failure to do so can result in strange cursor behavior on the response.
+     *
+     * @param cursor The cursor from the original search
+     * @return The next page of candidate results
      */
-    public CandidateResults getNextPage(final String cursor, final int limit);
+    CandidateResults getNextPage( final String cursor);
 
     /**
      * delete all application records
      * @return
      */
-    public Observable deleteApplication();
+    Observable deleteApplication();
 }

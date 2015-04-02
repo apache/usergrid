@@ -50,7 +50,6 @@ import org.elasticsearch.index.query.MatchAllQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.elasticsearch.indices.IndexMissingException;
-import org.elasticsearch.indices.InvalidAliasNameException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -93,7 +92,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
             ImmutableMap.<String, Object>builder().put( "field", "test" ).put(IndexingUtils.ENTITYID_ID_FIELDNAME, UUIDGenerator.newTimeUUID().toString()).build();
 
     private static final MatchAllQueryBuilder MATCH_ALL_QUERY_BUILDER = QueryBuilders.matchAllQuery();
-    private final IndexIdentifier indexIdentifier;
+    private final FailureMonitorImpl.IndexIdentifier indexIdentifier;
 
     private IndexCache aliasCache;
     private Timer mappingTimer;
@@ -107,7 +106,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
     public EsEntityIndexImpl(
                               final IndexBufferProducer indexBatchBufferProducer, final EsProvider provider,
                               final IndexCache indexCache, final MetricsFactory metricsFactory,
-                              final IndexFig indexFig, final IndexIdentifier indexIdentifier ) {
+                              final IndexFig indexFig, final FailureMonitorImpl.IndexIdentifier indexIdentifier ) {
         this.indexBatchBufferProducer = indexBatchBufferProducer;
         this.indexFig = indexFig;
         this.indexIdentifier = indexIdentifier;
@@ -320,7 +319,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
 
         refreshIndexMeter.mark();
         final Timer.Context timeRefreshIndex = refreshTimer.time();
-        BetterFuture future = indexBatchBufferProducer.put(new IndexOperationMessage());
+        BetterFuture future = indexBatchBufferProducer.put(new IndexIdentifierImpl.IndexOperationMessage());
         future.get();
         //loop through all batches and retrieve promises and call get
 

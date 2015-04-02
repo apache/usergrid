@@ -24,8 +24,8 @@ import org.apache.usergrid.persistence.core.migration.data.VersionedData;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.AliasedEntityIndex;
 import org.apache.usergrid.persistence.index.IndexFig;
-import org.apache.usergrid.persistence.index.IndexIdentifier;
-import org.apache.usergrid.persistence.index.IndexCache;
+import org.apache.usergrid.persistence.index.impl.FailureMonitorImpl;
+import org.apache.usergrid.persistence.index.impl.IndexCache;
 import org.apache.usergrid.persistence.index.impl.EsProvider;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
 import org.elasticsearch.client.AdminClient;
@@ -42,13 +42,13 @@ public class EsIndexDataMigrationImpl implements DataMigration<ApplicationScope>
     private final AliasedEntityIndex entityIndex;
     private final EsProvider provider;
     private final IndexFig indexFig;
-    private final IndexIdentifier indexIdentifier;
+    private final FailureMonitorImpl.IndexIdentifier indexIdentifier;
     private final IndexCache indexCache;
     private final VersionedData dataVersion;
     private static final Logger log = LoggerFactory.getLogger(EsIndexDataMigrationImpl.class);
 
     @Inject
-    public EsIndexDataMigrationImpl(AliasedEntityIndex entityIndex, EsProvider provider, IndexFig indexFig, IndexIdentifier indexIdentifier, IndexCache indexCache){
+    public EsIndexDataMigrationImpl(AliasedEntityIndex entityIndex, EsProvider provider, IndexFig indexFig, FailureMonitorImpl.IndexIdentifier indexIdentifier, IndexCache indexCache){
         this.entityIndex = entityIndex;
         this.provider = provider;
         this.indexFig = indexFig;

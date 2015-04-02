@@ -33,8 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.IndexAlias;
-import org.apache.usergrid.persistence.index.IndexScope;
+import org.apache.usergrid.persistence.index.SearchEdge;
 import org.apache.usergrid.persistence.index.SearchTypes;
 import org.apache.usergrid.persistence.index.exceptions.IndexException;
 import org.apache.usergrid.persistence.index.query.ParsedQuery;
@@ -48,10 +47,9 @@ import static org.apache.usergrid.persistence.index.impl.IndexingUtils.DOUBLE_PR
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.LONG_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.STRING_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createContextName;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createLegacyContextName;
 
 /**
- * Classy class class.
+ * The strategy for creating a search request from a parsed query
  */
 
 public class SearchRequestBuilderStrategy {
@@ -71,14 +69,14 @@ public class SearchRequestBuilderStrategy {
         this.cursorTimeout = cursorTimeout;
     }
 
-    public SearchRequestBuilder getBuilder(final IndexScope indexScope, final SearchTypes searchTypes, final ParsedQuery query,  final int limit) {
+    public SearchRequestBuilder getBuilder(final SearchEdge searchEdge, final SearchTypes searchTypes, final ParsedQuery query,  final int limit) {
 
         Preconditions.checkArgument(limit <= EntityIndex.MAX_LIMIT, "limit is greater than max "+ EntityIndex.MAX_LIMIT);
 
         SearchRequestBuilder srb = esProvider.getClient().prepareSearch(alias.getReadAlias())
             .setTypes(searchTypes.getTypeNames(applicationScope))
             .setScroll(cursorTimeout + "m")
-            .setQuery(createQueryBuilder( indexScope,query));
+            .setQuery(createQueryBuilder( searchEdge,query));
 
         final FilterBuilder fb = createFilterBuilder(query);
 
@@ -136,8 +134,8 @@ public class SearchRequestBuilderStrategy {
     }
 
 
-    public QueryBuilder createQueryBuilder( IndexScope indexScope, ParsedQuery query) {
-        String[] contexts = new String[]{createContextName(applicationScope, indexScope),createLegacyContextName(applicationScope,indexScope)};
+    public QueryBuilder createQueryBuilder(final  SearchEdge searchEdge, final ParsedQuery query) {
+        String context = createContextName(applicationScope, searchEdge );
 
         QueryBuilder queryBuilder = null;
 
@@ -166,19 +164,13 @@ public class SearchRequestBuilderStrategy {
 
         // TODO evaluate performance when it's an all query.
         // Do we need to put the context term first for performance?
-        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
-        for(String context : contexts){
-            boolQueryBuilder = boolQueryBuilder.should(QueryBuilders.termQuery( IndexingUtils.ENTITY_CONTEXT_FIELDNAME, context ));
-        }
-        boolQueryBuilder = boolQueryBuilder.minimumNumberShouldMatch( 1 );
-        if ( queryBuilder != null ) {
-            queryBuilder =  boolQueryBuilder.must( queryBuilder );
-        }
 
-        //nothing was specified ensure we specify the context in the search
-        else {
-            queryBuilder = boolQueryBuilder;
-        }
+        //make sure we have entity in the context
+        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+
+        boolQueryBuilder.must(  QueryBuilders.termQuery( IndexingUtils.ENTITY_CONTEXT_FIELDNAME, context ) );
+
+        boolQueryBuilder.must( queryBuilder );
 
         return queryBuilder;
     }

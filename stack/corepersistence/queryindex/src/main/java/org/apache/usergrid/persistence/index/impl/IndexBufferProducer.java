@@ -17,21 +17,16 @@
  *  * directory of this distribution.
  *
  */
-package org.apache.usergrid.persistence.index;
+package org.apache.usergrid.persistence.index.impl;
 
 import org.apache.usergrid.persistence.core.future.BetterFuture;
-import org.apache.usergrid.persistence.index.IndexOperationMessage;
-import rx.Observable;
-import rx.Subscriber;
 
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 
 /**
  * Produce to index buffer consumer
  */
 public interface IndexBufferProducer {
 
-    BetterFuture put(IndexOperationMessage message);
+    BetterFuture put(IndexIdentifierImpl.IndexOperationMessage message);
 
 }

@@ -23,17 +23,16 @@ package org.apache.usergrid.persistence.index.impl;
 import java.util.Map;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.index.IndexScope;
+import org.apache.usergrid.persistence.index.SearchEdge;
 import org.apache.usergrid.persistence.index.SearchType;
 import org.apache.usergrid.persistence.model.entity.Entity;
-import org.apache.usergrid.persistence.model.entity.Id;
+
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.client.Client;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.APPLICATION_ID_FIELDNAME;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createContextName;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.idString;
 
@@ -50,8 +49,8 @@ public class IndexRequest implements BatchRequest {
 
     public Map<String, Object> data;
 
-    public IndexRequest( final String writeAlias, final ApplicationScope applicationScope, IndexScope indexScope, Entity entity) {
-        this(writeAlias, applicationScope, createContextName(applicationScope, indexScope), entity);
+    public IndexRequest( final String writeAlias, final ApplicationScope applicationScope, SearchEdge searchEdge, Entity entity) {
+        this(writeAlias, applicationScope, createContextName(applicationScope, searchEdge ), entity);
     }
 
     public IndexRequest( final String writeAlias, final ApplicationScope applicationScope, String context , Entity entity) {
