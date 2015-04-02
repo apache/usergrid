@@ -91,6 +91,8 @@ public class AppInfoMigrationPluginTest {
             }
         }
 
+        setup.refreshIndex();
+
         UUID mgmtAppId = setup.getEmf().getManagementAppId();
         EntityManager rootEm = setup.getEmf().getEntityManager( mgmtAppId );
 
@@ -131,7 +133,8 @@ public class AppInfoMigrationPluginTest {
             }
         }
 
-        setup.getEmf().refreshIndex();
+        setup.refreshIndex();
+
         setup.getEmf().flushEntityManagerCaches();
 
         Thread.sleep(1000);
@@ -152,7 +155,7 @@ public class AppInfoMigrationPluginTest {
         // test that expected calls were made the to progress observer (use mock library)
 
         Mockito.verify( po, Mockito.times(10) ).update( Mockito.anyInt(), Mockito.anyString() );
-        setup.getEmf().refreshIndex();
+        setup.refreshIndex();
 
         final Results appInfoResults = rootEm.searchCollection(
             new SimpleEntityRef("application", mgmtAppId), "appinfos", Query.fromQL("select *"));
