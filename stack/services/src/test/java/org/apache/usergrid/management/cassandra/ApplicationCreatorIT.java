@@ -61,12 +61,15 @@ public class ApplicationCreatorIT {
                 uniqueEmail(), "password", true, false );
 
         ApplicationInfo appInfo = setup.getAppCreator().createSampleFor( orgOwner.getOrganization() );
+        if(appInfo == null){
+            appInfo = setup.getMgmtSvc().getApplicationInfo("sandbox");
+        }
         assertNotNull( appInfo );
-        assertEquals( expectedName, appInfo.getName() );
+        assertEquals(expectedName, appInfo.getName());
 
         Set<String> rolePerms = setup.getEmf().getEntityManager( appInfo.getId() ).getRolePermissions( "guest" );
         assertNotNull( rolePerms );
-        assertTrue( rolePerms.contains( "get,post,put,delete:/**" ) );
+        assertTrue( rolePerms.contains( "get,post,put,delete:/**") );
     }
 
 
@@ -84,6 +87,9 @@ public class ApplicationCreatorIT {
         ApplicationCreatorImpl customCreator = new ApplicationCreatorImpl( setup.getEmf(), setup.getMgmtSvc() );
         customCreator.setSampleAppName(sampleAppName);
         ApplicationInfo appInfo = customCreator.createSampleFor( orgOwner.getOrganization() );
+        if(appInfo == null){
+            setup.refreshIndex();
+        }
         assertNotNull( appInfo );
         assertEquals( expectedName, appInfo.getName() );
     }
