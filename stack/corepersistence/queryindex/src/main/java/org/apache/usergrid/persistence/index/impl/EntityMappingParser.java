@@ -63,6 +63,9 @@ public class EntityMappingParser implements FieldParser {
     private List<EntityField> fields = new ArrayList<>();
 
 
+    /**
+     * Visit al the primitive values
+     */
     private void visit( final String value ) {
         fields.add( EntityField.create( fieldStack.peek(), value ) );
     }
@@ -181,9 +184,10 @@ public class EntityMappingParser implements FieldParser {
     }
 
 
-
-
-
+    /**
+     * Iterate all entries in a map and map them
+     * @param map
+     */
     private void iterate( final Map<String, ?> map ) {
 
         for ( final Map.Entry<String, ?> jsonField : map.entrySet() ) {

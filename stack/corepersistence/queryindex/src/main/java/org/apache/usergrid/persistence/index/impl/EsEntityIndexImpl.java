@@ -122,9 +122,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
             .getTimer(EsEntityIndexImpl.class, "refresh.timer");
         this.refreshIndexMeter = metricsFactory.getMeter(EsEntityIndexImpl.class,"refresh.meter");
 
-        if(shouldInitialize()){
-            initialize();
-        }
+        initialize();
 
     }
 
@@ -192,6 +190,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
             //may have been set via other administrative endpoint
 
             addAlias(indexSuffix);
+
+
 
             testNewIndex();
 

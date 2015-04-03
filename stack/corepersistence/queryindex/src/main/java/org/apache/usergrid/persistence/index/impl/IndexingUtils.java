@@ -39,6 +39,11 @@ public class IndexingUtils {
 
 
     /**
+     * Entity type in ES we put everything into
+     */
+    public static final String ES_ENTITY_TYPE = "entity";
+
+    /**
      *  Reserved UG fields in the document
      */
     public static final String APPLICATION_ID_FIELDNAME = "applicationId";

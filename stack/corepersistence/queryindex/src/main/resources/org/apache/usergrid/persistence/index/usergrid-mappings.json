@@ -84,9 +84,10 @@
             "fields": {
               "exact": {
                 "type": "string",
-                "index": "not_analyzed"
-              },
-              "doc_values": true
+                "index": "not_analyzed",
+                "doc_values": true
+              }
+
             }
           }
         }

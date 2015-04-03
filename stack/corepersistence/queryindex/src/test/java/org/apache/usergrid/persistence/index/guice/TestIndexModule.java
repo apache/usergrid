@@ -63,25 +63,15 @@ public class TestIndexModule extends TestModule {
 
     public static class TestAllApplicationsObservable implements MigrationDataProvider<ApplicationScope>{
 
-        final ApplicationScope appScope =  new ApplicationScopeImpl(new SimpleId(UUID.randomUUID(),"application"));
-
         @Inject
-        public TestAllApplicationsObservable(
-                                             final IndexBufferProducer indexBatchBufferProducer, final EsProvider provider,
-                                             final IndexCache indexCache, final MetricsFactory metricsFactory,
-                                             final IndexFig indexFig){
-            LegacyIndexIdentifier legacyIndexIdentifier = new  LegacyIndexIdentifier(indexFig,appScope);
-            EntityIndex entityIndex = new EsEntityIndexImpl(indexBatchBufferProducer,provider,indexCache,metricsFactory,indexFig,legacyIndexIdentifier);
-            entityIndex.addIndex(null, 1, 0, indexFig.getWriteConsistencyLevel());
+        public TestAllApplicationsObservable(){
+
         }
 
 
         @Override
         public Observable<ApplicationScope> getData() {
-            ApplicationScope[] scopes = new ApplicationScope[]{
-               appScope
-            };
-            return Observable.from(scopes);
+          return Observable.empty();
         }
     }
 

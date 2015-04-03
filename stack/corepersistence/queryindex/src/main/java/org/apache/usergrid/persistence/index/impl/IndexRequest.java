@@ -45,7 +45,6 @@ import static org.apache.usergrid.persistence.index.impl.IndexingUtils.idString;
 public class IndexRequest implements BatchRequest {
 
     public String writeAlias;
-    public String entityType;
     public String documentId;
 
     public Map<String, Object> data;
@@ -57,7 +56,6 @@ public class IndexRequest implements BatchRequest {
 
     public IndexRequest( final String writeAlias, final ApplicationScope applicationScope, SearchType searchType, String documentId,  Map<String, Object> data) {
         this.writeAlias = writeAlias;
-        this.entityType = searchType.getTypeName(applicationScope);
         this.data = data;
         this.documentId = documentId;
     }
@@ -70,31 +68,12 @@ public class IndexRequest implements BatchRequest {
 
 
     public void doOperation( final Client client, final BulkRequestBuilder bulkRequest ) {
-        IndexRequestBuilder builder = client.prepareIndex( writeAlias, entityType, documentId ).setSource( data );
+        IndexRequestBuilder builder = client.prepareIndex( writeAlias, IndexingUtils.ES_ENTITY_TYPE, documentId ).setSource( data );
 
 
         bulkRequest.add( builder );
     }
 
-
-    public String getWriteAlias() {
-        return writeAlias;
-    }
-
-
-    public String getEntityType() {
-        return entityType;
-    }
-
-
-    public String getDocumentId() {
-        return documentId;
-    }
-
-
-    public Map<String, Object> getData() {
-        return data;
-    }
 
 
     @Override
@@ -114,9 +93,7 @@ public class IndexRequest implements BatchRequest {
         if ( !documentId.equals( that.documentId ) ) {
             return false;
         }
-        if ( !entityType.equals( that.entityType ) ) {
-            return false;
-        }
+
         if ( !writeAlias.equals( that.writeAlias ) ) {
             return false;
         }
@@ -128,7 +105,6 @@ public class IndexRequest implements BatchRequest {
     @Override
     public int hashCode() {
         int result = writeAlias.hashCode();
-        result = 31 * result + entityType.hashCode();
         result = 31 * result + documentId.hashCode();
         result = 31 * result + data.hashCode();
         return result;

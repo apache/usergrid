@@ -28,7 +28,6 @@ import org.apache.usergrid.persistence.index.*;
 import com.google.inject.AbstractModule;
 
 import org.apache.usergrid.persistence.index.impl.*;
-import org.apache.usergrid.persistence.index.migration.EsIndexDataMigrationImpl;
 import org.apache.usergrid.persistence.index.migration.EsIndexMigrationPlugin;
 import org.apache.usergrid.persistence.index.migration.IndexMigration;
 import org.apache.usergrid.persistence.map.guice.MapModule;
@@ -48,9 +47,9 @@ public abstract class IndexModule extends AbstractModule {
         install(new MapModule());
         install(new QueueModule());
 
-        bind(EntityIndexFactory.class).to(EsEntityIndexFactoryImpl.class);
+        bind( EntityIndexFactory.class ).to( EsEntityIndexFactoryImpl.class );
         bind(AliasedEntityIndex.class).to(EsEntityIndexImpl.class);
-        bind(EntityIndex.class).to(EsEntityIndexImpl.class);
+        bind(EntityIndex.class).to(EsEntityIndexImpl.class).asEagerSingleton();
         bind(IndexCache.class).to(EsIndexCacheImpl.class);
 
         bind(FailureMonitorImpl.IndexIdentifier.class).to(IndexIdentifierImpl.class);
@@ -62,12 +61,10 @@ public abstract class IndexModule extends AbstractModule {
 
         bind( BufferQueue.class).toProvider( QueueProvider.class );
 
-        //wire up the edg migration
+        //wire up the edg migration. A no-op ATM, but retained for future development
         Multibinder<DataMigration<ApplicationScope>> dataMigrationMultibinder =
                 Multibinder.newSetBinder( binder(), new TypeLiteral<DataMigration<ApplicationScope>>() {}, IndexMigration.class );
 
-
-        dataMigrationMultibinder.addBinding().to(EsIndexDataMigrationImpl.class);
 
 
         //wire up the collection migration plugin
