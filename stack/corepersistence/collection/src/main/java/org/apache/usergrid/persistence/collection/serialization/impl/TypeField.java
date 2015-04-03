@@ -22,7 +22,7 @@ package org.apache.usergrid.persistence.collection.serialization.impl;
 import org.apache.usergrid.persistence.model.field.Field;
 
 /**
- * Classy class class.
+ *  unique value serialization structure so a composite key can be built
  */
 public class TypeField {
     private final String type;

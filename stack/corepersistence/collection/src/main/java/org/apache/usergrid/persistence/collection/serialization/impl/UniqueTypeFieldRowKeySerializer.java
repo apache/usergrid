@@ -25,7 +25,7 @@ import org.apache.usergrid.persistence.core.astyanax.CompositeFieldSerializer;
 import org.apache.usergrid.persistence.model.field.Field;
 
 /**
- * Classy class class.
+ * Row key implementation for unique type fields.  Used by uniquevalueserializationstratv2
  */
 public class UniqueTypeFieldRowKeySerializer  implements CompositeFieldSerializer<TypeField>{
 
