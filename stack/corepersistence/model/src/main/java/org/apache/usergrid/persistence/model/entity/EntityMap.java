@@ -25,7 +25,7 @@ public class EntityMap extends HashMap<String,Object> {
     public EntityMap(Id id,UUID version){
         super();
         setId(id);
-        setVersion(version);
+        setVersion( version );
     }
 
     @JsonIgnore
@@ -56,6 +56,20 @@ public class EntityMap extends HashMap<String,Object> {
 
     public static EntityMap fromEntity(Entity entity) {
         return entityToMapConverter.toMap(entity);
+    }
+
+
+    /**
+     * Return true if the value is a location field
+     * @param fieldValue
+     * @return
+     */
+    public static boolean isLocationField(Map<String, ?> fieldValue){
+        if(fieldValue.size() != 2){
+            return false;
+        }
+
+        return fieldValue.containsKey( EntityToMapConverter.LAT ) && fieldValue.containsKey( EntityToMapConverter.LON );
     }
 
     public void clearFields() {

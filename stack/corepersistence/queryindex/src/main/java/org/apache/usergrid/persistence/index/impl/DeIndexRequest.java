@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.index.IndexEdge;
 import org.apache.usergrid.persistence.index.SearchEdge;
 import org.apache.usergrid.persistence.index.SearchType;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -54,10 +55,9 @@ public class DeIndexRequest implements BatchRequest {
 
 
     public DeIndexRequest(String[] indexes, ApplicationScope applicationScope, SearchEdge searchEdge, Id id, UUID version) {
-        String context = createContextName(applicationScope, searchEdge );
         this.indexes = indexes;
         this.entityTypes = SearchType.fromId(id).getTypeNames(applicationScope);
-        this.documentId =  createIndexDocId(applicationScope, id, version,context);
+        this.documentId =  createIndexDocId(applicationScope, id, version,searchEdge);
     }
 
 

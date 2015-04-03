@@ -55,4 +55,10 @@ public abstract class ListField<T> extends AbstractField<List<T>> {
         return FieldTypeName.LIST;
 
     }
+
+    public int size(){
+        return this.value.size();
+    }
+
+
 }

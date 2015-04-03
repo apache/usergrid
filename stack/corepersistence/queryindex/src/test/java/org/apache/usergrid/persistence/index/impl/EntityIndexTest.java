@@ -133,7 +133,7 @@ public class EntityIndexTest extends BaseIT {
         EntityIndexBatch batch = entityIndex.createBatch();
         Entity entity = new Entity( entityType );
         EntityUtils.setVersion( entity, UUIDGenerator.newTimeUUID() );
-        entity.setField( new UUIDField( IndexingUtils.ENTITYID_ID_FIELDNAME, UUID.randomUUID() ) );
+        entity.setField( new UUIDField( IndexingUtils.ENTITY_ID_FIELDNAME, UUID.randomUUID() ) );
         entity.setField( new StringField( "testfield", "test" ) );
         batch.index( indexEdge, entity );
         batch.execute().get();
@@ -327,7 +327,7 @@ public class EntityIndexTest extends BaseIT {
             Entity entity = new Entity( entityType );
             entity = EntityIndexMapUtils.fromMap( entity, item );
             EntityUtils.setVersion( entity, UUIDGenerator.newTimeUUID() );
-            entity.setField( new UUIDField( IndexingUtils.ENTITYID_ID_FIELDNAME, UUID.randomUUID() ) );
+            entity.setField( new UUIDField( IndexingUtils.ENTITY_ID_FIELDNAME, UUID.randomUUID() ) );
             batch.index( indexEdge, entity );
             batch.execute().get();
 
@@ -365,7 +365,7 @@ public class EntityIndexTest extends BaseIT {
         Entity entity = EntityIndexMapUtils.fromMap( entityMap );
         EntityUtils.setId( entity, new SimpleId( "fastcar" ) );
         EntityUtils.setVersion( entity, UUIDGenerator.newTimeUUID() );
-        entity.setField( new UUIDField( IndexingUtils.ENTITYID_ID_FIELDNAME, UUID.randomUUID() ) );
+        entity.setField( new UUIDField( IndexingUtils.ENTITY_ID_FIELDNAME, UUID.randomUUID() ) );
 
         entityIndex.createBatch().index( searchEdge, entity ).execute().get();
         ei.refresh();
@@ -653,7 +653,7 @@ public class EntityIndexTest extends BaseIT {
             EntityUtils.setId( user, userId );
             EntityUtils.setVersion( user, UUIDGenerator.newTimeUUID() );
 
-            user.setField( new UUIDField( IndexingUtils.ENTITYID_ID_FIELDNAME, UUIDGenerator.newTimeUUID() ) );
+            user.setField( new UUIDField( IndexingUtils.ENTITY_ID_FIELDNAME, UUIDGenerator.newTimeUUID() ) );
 
             entities.add( userId );
 

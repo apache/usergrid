@@ -29,6 +29,9 @@ import java.util.*;
  * abstract conversion to Map<String,Object> form EntityObject
  */
 public class EntityToMapConverter{
+    public static final String LAT = "lat";
+    public static final String LON = "lon";
+
     public static ObjectMapper objectMapper = new ObjectMapper(  );
     /**
      * Convert Entity to Map, adding version_ug_field and a {name}_ug_analyzed field for each
@@ -74,9 +77,9 @@ public class EntityToMapConverter{
                 Map<String, Object> locMap = new HashMap<String, Object>();
 
                 // field names lat and lon trigger ElasticSearch geo location
-                locMap.put("lat", locField.getValue().getLatitude());
-                locMap.put("lon", locField.getValue().getLongitude());
-                entityMap.put( field.getName(), field.getValue());
+                locMap.put( LAT, locField.getValue().getLatitude());
+                locMap.put( LON, locField.getValue().getLongitude());
+                entityMap.put( field.getName(), locMap);
 
             } else if (f instanceof ByteArrayField) {
                 ByteArrayField bf = ( ByteArrayField ) f;

@@ -175,9 +175,7 @@ public class EsQueryVistor implements QueryVisitor {
         float lon = op.getLongitude().getFloatValue();
         float distance = op.getDistance().getFloatValue();
 
-        if ( !name.startsWith( GEO_PREFIX )) {
-            name = GEO_PREFIX + name;
-        }
+
 
         FilterBuilder fb = FilterBuilders.geoDistanceFilter( name )
            .lat( lat ).lon( lon ).distance( distance, DistanceUnit.METERS );
@@ -310,41 +308,26 @@ public class EsQueryVistor implements QueryVisitor {
 
 
     private String addAnalyzedStringPrefix( String name ) {
-        if ( name.startsWith( ANALYZED_STRING_PREFIX ) ) {
-            return name;
-        }
-        return ANALYZED_STRING_PREFIX + name;
+      return name;
     }
 
 
     private String addStringPrefix( String name ) {
-        if ( name.startsWith( STRING_PREFIX ) ) {
-            return name;
-        }
-        return STRING_PREFIX + name;
+        return name;
     }
 
 
     private String addDoublePrefix( String name ) {
-        if ( name.startsWith( DOUBLE_PREFIX ) ) {
-            return name;
-        }
-        return DOUBLE_PREFIX + name;
+        return name;
     }
 
     private String addLongPrefix( String name ) {
-        if ( name.startsWith( LONG_PREFIX ) ) {
-            return name;
-        }
-        return LONG_PREFIX + name;
+        return name;
     }
 
 
     private String addBooleanPrefix( String name ) {
-        if ( name.startsWith( BOOLEAN_PREFIX ) ) {
-            return name;
-        }
-        return BOOLEAN_PREFIX + name;
+        return name;
     }
 
 

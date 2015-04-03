@@ -42,10 +42,6 @@ import org.apache.usergrid.persistence.index.query.tree.QueryVisitor;
 
 import com.google.common.base.Preconditions;
 
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.BOOLEAN_PREFIX;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.DOUBLE_PREFIX;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.LONG_PREFIX;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.STRING_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createContextName;
 
 /**
@@ -90,45 +86,46 @@ public class SearchRequestBuilderStrategy {
         srb = srb.setFrom(0).setSize(limit);
 
         for (SortPredicate sp : query.getSortPredicates()) {
+            throw new RuntimeException( "Fix me" );
 
-            final SortOrder order;
-            if (sp.getDirection().equals( SortPredicate.SortDirection.ASCENDING)) {
-                order = SortOrder.ASC;
-            } else {
-                order = SortOrder.DESC;
-            }
-
-            // we do not know the type of the "order by" property and so we do not know what
-            // type prefix to use. So, here we add an order by clause for every possible type
-            // that you can order by: string, number and boolean and we ask ElasticSearch
-            // to ignore any fields that are not present.
-
-            final String stringFieldName = STRING_PREFIX + sp.getPropertyName();
-            final FieldSortBuilder stringSort = SortBuilders.fieldSort(stringFieldName)
-                .order(order).ignoreUnmapped(true);
-            srb.addSort(stringSort);
-
-            logger.debug("   Sort: {} order by {}", stringFieldName, order.toString());
-
-            final String longFieldName = LONG_PREFIX + sp.getPropertyName();
-            final FieldSortBuilder longSort = SortBuilders.fieldSort(longFieldName)
-                .order(order).ignoreUnmapped(true);
-            srb.addSort(longSort);
-            logger.debug("   Sort: {} order by {}", longFieldName, order.toString());
-
-
-            final String doubleFieldName = DOUBLE_PREFIX + sp.getPropertyName();
-            final FieldSortBuilder doubleSort = SortBuilders.fieldSort(doubleFieldName)
-                .order(order).ignoreUnmapped(true);
-            srb.addSort(doubleSort);
-            logger.debug("   Sort: {} order by {}", doubleFieldName, order.toString());
-
-
-            final String booleanFieldName = BOOLEAN_PREFIX + sp.getPropertyName();
-            final FieldSortBuilder booleanSort = SortBuilders.fieldSort(booleanFieldName)
-                .order(order).ignoreUnmapped(true);
-            srb.addSort(booleanSort);
-            logger.debug("   Sort: {} order by {}", booleanFieldName, order.toString());
+//            final SortOrder order;
+//            if (sp.getDirection().equals( SortPredicate.SortDirection.ASCENDING)) {
+//                order = SortOrder.ASC;
+//            } else {
+//                order = SortOrder.DESC;
+//            }
+//
+//            // we do not know the type of the "order by" property and so we do not know what
+//            // type prefix to use. So, here we add an order by clause for every possible type
+//            // that you can order by: string, number and boolean and we ask ElasticSearch
+//            // to ignore any fields that are not present.
+//
+//            final String stringFieldName = STRING_PREFIX + sp.getPropertyName();
+//            final FieldSortBuilder stringSort = SortBuilders.fieldSort(stringFieldName)
+//                .order(order).ignoreUnmapped(true);
+//            srb.addSort(stringSort);
+//
+//            logger.debug("   Sort: {} order by {}", stringFieldName, order.toString());
+//
+//            final String longFieldName = LONG_PREFIX + sp.getPropertyName();
+//            final FieldSortBuilder longSort = SortBuilders.fieldSort(longFieldName)
+//                .order(order).ignoreUnmapped(true);
+//            srb.addSort(longSort);
+//            logger.debug("   Sort: {} order by {}", longFieldName, order.toString());
+//
+//
+//            final String doubleFieldName = DOUBLE_PREFIX + sp.getPropertyName();
+//            final FieldSortBuilder doubleSort = SortBuilders.fieldSort(doubleFieldName)
+//                .order(order).ignoreUnmapped(true);
+//            srb.addSort(doubleSort);
+//            logger.debug("   Sort: {} order by {}", doubleFieldName, order.toString());
+//
+//
+//            final String booleanFieldName = BOOLEAN_PREFIX + sp.getPropertyName();
+//            final FieldSortBuilder booleanSort = SortBuilders.fieldSort(booleanFieldName)
+//                .order(order).ignoreUnmapped(true);
+//            srb.addSort(booleanSort);
+//            logger.debug("   Sort: {} order by {}", booleanFieldName, order.toString());
         }
         return srb;
     }
@@ -168,7 +165,7 @@ public class SearchRequestBuilderStrategy {
         //make sure we have entity in the context
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
-        boolQueryBuilder.must(  QueryBuilders.termQuery( IndexingUtils.ENTITY_CONTEXT_FIELDNAME, context ) );
+        boolQueryBuilder.must(  QueryBuilders.termQuery( IndexingUtils.EDGE_SEARCH_FIELDNAME, context ) );
 
         boolQueryBuilder.must( queryBuilder );
 

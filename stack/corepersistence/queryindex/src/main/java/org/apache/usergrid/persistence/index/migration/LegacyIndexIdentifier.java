@@ -64,7 +64,7 @@ public class LegacyIndexIdentifier implements FailureMonitorImpl.IndexIdentifier
      */
     private String getIndexBase() {
         StringBuilder sb = new StringBuilder();
-        sb.append(config.getIndexPrefix()).append(IndexingUtils.SEPARATOR);
+        sb.append(config.getIndexPrefix()).append(IndexingUtils.FIELD_SEPERATOR );
         IndexingUtils.idString(sb, applicationScope.getApplication());
         return sb.toString();
     }

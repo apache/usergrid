@@ -88,7 +88,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
     private static final String VERIFY_TYPE = "entity";
 
     private static final ImmutableMap<String, Object> DEFAULT_PAYLOAD =
-            ImmutableMap.<String, Object>builder().put(IndexingUtils.ENTITYID_ID_FIELDNAME, UUIDGenerator.newTimeUUID().toString()).build();
+            ImmutableMap.<String, Object>builder().put(IndexingUtils.ENTITY_ID_FIELDNAME, UUIDGenerator.newTimeUUID().toString()).build();
 
     private static final MatchAllQueryBuilder MATCH_ALL_QUERY_BUILDER = QueryBuilders.matchAllQuery();
     private final FailureMonitorImpl.IndexIdentifier indexIdentifier;

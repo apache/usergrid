@@ -23,6 +23,7 @@ package org.apache.usergrid.persistence.index.impl;
 import java.util.Map;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.index.IndexEdge;
 import org.apache.usergrid.persistence.index.SearchEdge;
 import org.apache.usergrid.persistence.index.SearchType;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -49,15 +50,12 @@ public class IndexRequest implements BatchRequest {
 
     public Map<String, Object> data;
 
-    public IndexRequest( final String writeAlias, final ApplicationScope applicationScope, SearchEdge searchEdge, Entity entity) {
-        this(writeAlias, applicationScope, createContextName(applicationScope, searchEdge ), entity);
+    public IndexRequest( final String writeAlias, final ApplicationScope applicationScope, IndexEdge indexEdge, Entity entity) {
+        this(writeAlias, applicationScope, SearchType.fromId( entity.getId() ),IndexingUtils.createIndexDocId(applicationScope, entity,indexEdge), EntityToMapConverter.convert(applicationScope,indexEdge, entity));
+
     }
 
-    public IndexRequest( final String writeAlias, final ApplicationScope applicationScope, String context , Entity entity) {
-        this(writeAlias, applicationScope, SearchType.fromId(entity.getId()),IndexingUtils.createIndexDocId(applicationScope, entity,context), EntityToMapConverter.convert(applicationScope,entity, context));
-    }
-
-    public IndexRequest( final String writeAlias, final ApplicationScope applicationScope,SearchType searchType, String documentId,  Map<String, Object> data) {
+    public IndexRequest( final String writeAlias, final ApplicationScope applicationScope, SearchType searchType, String documentId,  Map<String, Object> data) {
         this.writeAlias = writeAlias;
         this.entityType = searchType.getTypeName(applicationScope);
         this.data = data;

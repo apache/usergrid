@@ -72,7 +72,7 @@ import com.google.inject.assistedinject.Assisted;
 import rx.Observable;
 
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.APPLICATION_ID_FIELDNAME;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.SPLITTER;
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.parseIndexDocId;
 
 
 /**
@@ -306,14 +306,9 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
 
         for ( SearchHit hit : hits ) {
 
-            String[] idparts = hit.getId().split( SPLITTER );
-            String id = idparts[0];
-            String type = idparts[1];
-            String version = idparts[2];
+            final CandidateResult candidateResult = parseIndexDocId( hit.getId() );
 
-            Id entityId = new SimpleId( UUID.fromString( id ), type );
-
-            candidates.add( new CandidateResult( entityId, UUID.fromString( version ) ) );
+            candidates.add( candidateResult );
         }
 
         final CandidateResults candidateResults = new CandidateResults( candidates, query.getSelectFieldMappings() );
