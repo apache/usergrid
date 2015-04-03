@@ -323,6 +323,7 @@ public class CollectionIT extends AbstractCoreIT {
         assertNotNull( user );
 
         app.refreshIndex();
+        Thread.sleep(100);
 
         // EntityRef
         Query query = new Query();

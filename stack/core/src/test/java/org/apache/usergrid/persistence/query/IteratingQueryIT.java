@@ -1126,6 +1126,7 @@ public class IteratingQueryIT {
         LOG.info( "Writes took {} ms", stop - start );
 
         app.refreshIndex();
+        app.refreshIndex();
 
         Query query = new Query();
         query.setLimit( 100 );

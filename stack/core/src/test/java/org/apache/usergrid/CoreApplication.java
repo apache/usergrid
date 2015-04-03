@@ -223,7 +223,7 @@ public class CoreApplication implements Application, TestRule {
         entityIndex.refresh();
 
         try{
-            Thread.sleep(50);
+            Thread.sleep(100);
         }catch (InterruptedException ie){}
     }
 
