@@ -38,12 +38,14 @@ import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.field.ArrayField;
 import org.apache.usergrid.persistence.model.field.BooleanField;
 import org.apache.usergrid.persistence.model.field.DoubleField;
+import org.apache.usergrid.persistence.model.field.EntityObjectField;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.model.field.FloatField;
 import org.apache.usergrid.persistence.model.field.IntegerField;
 import org.apache.usergrid.persistence.model.field.LocationField;
 import org.apache.usergrid.persistence.model.field.LongField;
 import org.apache.usergrid.persistence.model.field.StringField;
+import org.apache.usergrid.persistence.model.field.value.EntityObject;
 import org.apache.usergrid.persistence.model.field.value.Location;
 import org.apache.usergrid.persistence.model.util.EntityUtils;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -128,16 +130,14 @@ public class EntityToMapConverterTest {
 
     @Test
     public void testStringField() {
-        testSingleField( new StringField( "name", "value" ),
-                ( field, entityField ) -> assertEquals( field.getValue(),
+        testSingleField( new StringField( "name", "value" ), ( field, entityField ) -> assertEquals( field.getValue(),
                         entityField.get( IndexingUtils.FIELD_STRING ) ) );
     }
 
 
     @Test
     public void testBooleanField() {
-        testSingleField( new BooleanField( "name", true ),
-                ( field, entityField ) -> assertEquals( field.getValue(),
+        testSingleField( new BooleanField( "name", true ), ( field, entityField ) -> assertEquals( field.getValue(),
                         entityField.get( IndexingUtils.FIELD_BOOLEAN ) ) );
     }
 
@@ -145,49 +145,44 @@ public class EntityToMapConverterTest {
     @Test
     public void testIntegerField() {
         testSingleField( new IntegerField( "name", 100 ),
-                ( field, entityField ) -> assertEquals( field.getValue(),
-                        entityField.get( IndexingUtils.FIELD_INT ) ) );
+                ( field, entityField ) -> assertEquals( field.getValue(), entityField.get( IndexingUtils.FIELD_INT )
+                                                      ) );
     }
 
 
     @Test
     public void testLongField() {
-        testSingleField( new LongField( "name", 100l ),
-                ( field, entityField ) -> assertEquals( field.getValue(),
+        testSingleField( new LongField( "name", 100l ), ( field, entityField ) -> assertEquals( field.getValue(),
                         entityField.get( IndexingUtils.FIELD_LONG ) ) );
     }
 
 
     @Test
     public void testFloadField() {
-        testSingleField( new FloatField( "name", 1.10f ),
-                ( field, entityField ) -> assertEquals( field.getValue(),
+        testSingleField( new FloatField( "name", 1.10f ), ( field, entityField ) -> assertEquals( field.getValue(),
                         entityField.get( IndexingUtils.FIELD_FLOAT ) ) );
     }
 
 
     @Test
     public void testDoubleField() {
-        testSingleField( new DoubleField( "name", 2.20d ),
-                ( field, entityField ) -> assertEquals( field.getValue(),
+        testSingleField( new DoubleField( "name", 2.20d ), ( field, entityField ) -> assertEquals( field.getValue(),
                         entityField.get( IndexingUtils.FIELD_DOUBLE ) ) );
     }
 
 
     @Test
     public void testLocationField() {
-        testSingleField( new LocationField( "name", new Location( 10, 20 ) ), (field, entityField) -> {
+        testSingleField( new LocationField( "name", new Location( 10, 20 ) ), ( field, entityField ) -> {
             final Map<String, Double> latLong = ( Map<String, Double> ) entityField.get( IndexingUtils.FIELD_LOCATION );
 
-            assertEquals(Double.valueOf( 10 ), latLong.get( org.apache.usergrid.persistence.model.entity.EntityToMapConverter.LAT ));
-            assertEquals(Double.valueOf( 20 ), latLong.get( org.apache.usergrid.persistence.model.entity.EntityToMapConverter.LON ));
+            assertEquals( Double.valueOf( 10 ),
+                    latLong.get( org.apache.usergrid.persistence.model.entity.EntityToMapConverter.LAT ) );
+            assertEquals( Double.valueOf( 20 ),
+                    latLong.get( org.apache.usergrid.persistence.model.entity.EntityToMapConverter.LON ) );
         } );
     }
 
-
-    private static void assertField() {
-
-    }
 
 
     /**
@@ -347,5 +342,315 @@ public class EntityToMapConverterTest {
 
             assertEquals( array.getValue().get( i ), field.get( indexType ) );
         }
+    }
+
+
+
+    @Test
+    public void testStringFieldSubObject() {
+        testNestedField( new StringField( "name", "value" ), ( field, entityField ) -> assertEquals( field.getValue(),
+                entityField.get( IndexingUtils.FIELD_STRING ) ) );
+    }
+
+
+    @Test
+    public void testBooleanFieldSubObject() {
+        testNestedField( new BooleanField( "name", true ), ( field, entityField ) -> assertEquals( field.getValue(),
+                entityField.get( IndexingUtils.FIELD_BOOLEAN ) ) );
+    }
+
+
+    @Test
+    public void testIntegerFieldSubObject() {
+        testNestedField( new IntegerField( "name", 100 ),
+                ( field, entityField ) -> assertEquals( field.getValue(), entityField.get( IndexingUtils.FIELD_INT )
+                                                      ) );
+    }
+
+
+    @Test
+    public void testLongFieldSubObject() {
+        testNestedField( new LongField( "name", 100l ), ( field, entityField ) -> assertEquals( field.getValue(),
+                entityField.get( IndexingUtils.FIELD_LONG ) ) );
+    }
+
+
+    @Test
+    public void testFloadFieldSubObject() {
+        testNestedField( new FloatField( "name", 1.10f ), ( field, entityField ) -> assertEquals( field.getValue(),
+                entityField.get( IndexingUtils.FIELD_FLOAT ) ) );
+    }
+
+
+    @Test
+    public void testDoubleFieldSubObject() {
+        testNestedField( new DoubleField( "name", 2.20d ), ( field, entityField ) -> assertEquals( field.getValue(),
+                entityField.get( IndexingUtils.FIELD_DOUBLE ) ) );
+    }
+
+
+    @Test
+    public void testLocationFieldSubObject() {
+        testNestedField( new LocationField( "name", new Location( 10, 20 ) ), ( field, entityField ) -> {
+            final Map<String, Double> latLong = ( Map<String, Double> ) entityField.get( IndexingUtils.FIELD_LOCATION );
+
+            assertEquals( Double.valueOf( 10 ),
+                    latLong.get( org.apache.usergrid.persistence.model.entity.EntityToMapConverter.LAT ) );
+            assertEquals( Double.valueOf( 20 ),
+                    latLong.get( org.apache.usergrid.persistence.model.entity.EntityToMapConverter.LON ) );
+        } );
+    }
+
+
+     /**
+      * Test primitive arrays in the root of an object
+      *
+      * @param storedField The field stored on the nested object
+      * @param assertFunction The function
+      */
+     private <T> void testNestedField( final Field<T> storedField,   Action2<Field, EntityField> assertFunction ) {
+
+         EntityObject leafEntity = new EntityObject( );
+
+         leafEntity.setField( storedField );
+
+
+
+         final EntityObjectField nested2Field = new EntityObjectField( "nested2", leafEntity );
+
+         final EntityObject nested2 = new EntityObject();
+         nested2.setField( nested2Field );
+
+         final EntityObjectField nested1Field = new EntityObjectField( "nested1", nested2 );
+
+
+         Entity rootEntity = new Entity( "test" );
+
+
+         rootEntity.setField( nested1Field );
+
+
+         final UUID version = UUIDGenerator.newTimeUUID();
+
+         EntityUtils.setVersion( rootEntity, version );
+
+         final ApplicationScope scope = new ApplicationScopeImpl( createId( "application" ) );
+
+         final IndexEdge indexEdge =
+                 new IndexEdgeImpl( createId( "source" ), "testEdgeType", SearchEdge.NodeType.SOURCE, 1000 );
+
+
+         final Map<String, Object> entityMap = EntityToMapConverter.convert( scope, indexEdge, rootEntity );
+
+
+         final List<EntityField> fields = ( List<EntityField> ) entityMap.get( IndexingUtils.ENTITY_FIELDS );
+
+         assertEquals( 1, fields.size() );
+
+
+         for ( int i = 0; i < fields.size(); i++ ) {
+             final EntityField field = fields.get( i );
+
+             final String path = "nested1.nested2." + storedField.getName();
+
+             assertEquals( path, field.get( IndexingUtils.FIELD_NAME ) );
+
+
+             assertFunction.call( storedField, field );
+         }
+     }
+
+
+    @Test
+    public void testStringFieldSubObjectArray() {
+        testNestedFieldArraySubObject( new StringField( "name", "value" ),
+                ( field, entityField ) -> assertEquals( field.getValue(),
+                        entityField.get( IndexingUtils.FIELD_STRING ) ) );
+    }
+
+
+    @Test
+    public void testBooleanFieldSubObjectArray() {
+        testNestedFieldArraySubObject( new BooleanField( "name", true ),
+                ( field, entityField ) -> assertEquals( field.getValue(),
+                        entityField.get( IndexingUtils.FIELD_BOOLEAN ) ) );
+    }
+
+
+    @Test
+    public void testIntegerFieldSubObjectArray() {
+        testNestedFieldArraySubObject( new IntegerField( "name", 100 ),
+                ( field, entityField ) -> assertEquals( field.getValue(), entityField.get( IndexingUtils.FIELD_INT )
+                                                      ) );
+    }
+
+
+    @Test
+    public void testLongFieldSubObjectArray() {
+        testNestedFieldArraySubObject( new LongField( "name", 100l ),
+                ( field, entityField ) -> assertEquals( field.getValue(),
+                        entityField.get( IndexingUtils.FIELD_LONG ) ) );
+    }
+
+
+    @Test
+    public void testFloadFieldSubObjectArray() {
+        testNestedFieldArraySubObject( new FloatField( "name", 1.10f ),
+                ( field, entityField ) -> assertEquals( field.getValue(),
+                        entityField.get( IndexingUtils.FIELD_FLOAT ) ) );
+    }
+
+
+    @Test
+    public void testDoubleFieldSubObjectArray() {
+        testNestedFieldArraySubObject( new DoubleField( "name", 2.20d ),
+                ( field, entityField ) -> assertEquals( field.getValue(),
+                        entityField.get( IndexingUtils.FIELD_DOUBLE ) ) );
+    }
+
+
+    @Test
+    public void testLocationFieldSubObjectArray() {
+        testNestedFieldArraySubObject( new LocationField( "name", new Location( 10, 20 ) ), ( field, entityField ) -> {
+            final Map<String, Double> latLong = ( Map<String, Double> ) entityField.get( IndexingUtils.FIELD_LOCATION );
+
+            assertEquals( Double.valueOf( 10 ),
+                    latLong.get( org.apache.usergrid.persistence.model.entity.EntityToMapConverter.LAT ) );
+            assertEquals( Double.valueOf( 20 ),
+                    latLong.get( org.apache.usergrid.persistence.model.entity.EntityToMapConverter.LON ) );
+        } );
+    }
+
+
+     /**
+      * Test primitive arrays in the root of an object
+      *
+      * @param storedField The field stored on the nested object
+      * @param assertFunction The function
+      */
+     private <T> void testNestedFieldArraySubObject( final Field<T> storedField,
+                                                     Action2<Field, EntityField> assertFunction ) {
+
+         EntityObject leafEntity = new EntityObject( );
+
+         leafEntity.setField( storedField );
+
+
+
+         final EntityObjectField nested2Field = new EntityObjectField( "nested2", leafEntity );
+
+         final EntityObject nested2 = new EntityObject();
+         nested2.setField( nested2Field );
+
+         final EntityObjectField nested1Field = new EntityObjectField( "nested1", nested2 );
+
+         final EntityObject nested1 = new EntityObject();
+         nested1.setField( nested1Field );
+
+
+
+         final ArrayField<EntityObject> array = new ArrayField<>( "array" );
+
+         array.add( nested1 );
+
+         Entity rootEntity = new Entity( "test" );
+
+         rootEntity.setField( array );
+
+
+         final UUID version = UUIDGenerator.newTimeUUID();
+
+         EntityUtils.setVersion( rootEntity, version );
+
+         final ApplicationScope scope = new ApplicationScopeImpl( createId( "application" ) );
+
+         final IndexEdge indexEdge =
+                 new IndexEdgeImpl( createId( "source" ), "testEdgeType", SearchEdge.NodeType.SOURCE, 1000 );
+
+
+         final Map<String, Object> entityMap = EntityToMapConverter.convert( scope, indexEdge, rootEntity );
+
+
+         final List<EntityField> fields = ( List<EntityField> ) entityMap.get( IndexingUtils.ENTITY_FIELDS );
+
+         assertEquals( 1, fields.size() );
+
+
+         for ( int i = 0; i < fields.size(); i++ ) {
+             final EntityField field = fields.get( i );
+
+             final String path = "array.nested1.nested2." + storedField.getName();
+
+             assertEquals( path, field.get( IndexingUtils.FIELD_NAME ) );
+
+
+             assertFunction.call( storedField, field );
+         }
+     }
+
+
+    /**
+     * 2d + arrays aren't supported, ensure we drop elements with a depth > 1
+     *
+     */
+    @Test
+    public void testNDimensionalArray() {
+
+
+
+        //create an object with a string value in it, this should be indexed
+        final StringField string = new StringField( "string", "value" );
+
+        final EntityObject nested1 = new EntityObject();
+        nested1.setField( string );
+
+
+        //create a sub array, this shouldn't get indexed
+        final ArrayField<String> subArray = new ArrayField<>( "subArray" );
+
+        subArray.add( "test2" );
+
+        final ArrayField<Object> array = new ArrayField<>( "array" );
+
+        //not indexed
+        array.add( subArray);
+
+        //indexed
+        array.add( nested1 );
+
+
+
+        Entity rootEntity = new Entity( "test" );
+
+        rootEntity.setField( array );
+
+
+        final UUID version = UUIDGenerator.newTimeUUID();
+
+        EntityUtils.setVersion( rootEntity, version );
+
+        final ApplicationScope scope = new ApplicationScopeImpl( createId( "application" ) );
+
+        final IndexEdge indexEdge =
+                new IndexEdgeImpl( createId( "source" ), "testEdgeType", SearchEdge.NodeType.SOURCE, 1000 );
+
+
+        final Map<String, Object> entityMap = EntityToMapConverter.convert( scope, indexEdge, rootEntity );
+
+
+        final List<EntityField> fields = ( List<EntityField> ) entityMap.get( IndexingUtils.ENTITY_FIELDS );
+
+        assertEquals( 1, fields.size() );
+
+
+        final EntityField field = fields.get( 0 );
+
+        final String path = "array.string";
+
+        assertEquals( path, field.get( IndexingUtils.FIELD_NAME ) );
+
+
+       assertEquals("value", field.get( IndexingUtils.FIELD_STRING ));
+
     }
 }

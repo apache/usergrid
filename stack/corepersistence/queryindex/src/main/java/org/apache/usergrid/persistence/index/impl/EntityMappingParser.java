@@ -30,8 +30,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.persistence.model.entity.EntityMap;
-import org.apache.usergrid.persistence.model.field.value.Location;
 
 
 /**
@@ -42,12 +44,22 @@ import org.apache.usergrid.persistence.model.field.value.Location;
  */
 public class EntityMappingParser implements FieldParser {
 
+    private static final Logger log = LoggerFactory.getLogger( EntityMappingParser.class );
+
 
     /**
      * Our stack for fields
      */
     private Stack<String> fieldStack = new Stack();
 
+    /**
+     * Keeps track fo our last field type.  Used for nested objects and nested collections
+     */
+    private Stack<Object> lastCollection = new Stack();
+
+    /**
+     * List of all field tuples to return
+     */
     private List<EntityField> fields = new ArrayList<>();
 
 
@@ -84,31 +96,25 @@ public class EntityMappingParser implements FieldParser {
 
 
 
-    private void visit( final Map<String, ?> value ) {
-        //it's a location field, index it as such
-        if ( EntityMap.isLocationField( value ) ) {
-//            fields.add( EntityField.create( fieldStack.peek(), value ) );
-            return;
-        }
-
-        iterate( value );
-    }
-
-
     /**
      * Iterate over a collection
      */
     private void iterate( final Collection value ) {
 
-        //no op
-        if ( value.size() == 0 ) {
+        //we don't support indexing 2 dimensional arrays.  Short circuit with a warning so we can track operationally
+        if(!lastCollection.isEmpty() && lastCollection.peek() instanceof Collection){
+            log.warn( "Encountered 2 collections consecutively.  N+1 dimensional arrays are unsupported, only arrays of depth 1 are supported" );
             return;
         }
+
+        lastCollection.push( value );
 
         //fisit all the object element
         for ( final Object element : value ) {
             visitValue( element );
         }
+
+        lastCollection.pop();
     }
 
 
@@ -117,7 +123,7 @@ public class EntityMappingParser implements FieldParser {
      */
     private void visitValue( final Object value ) {
 
-        if ( isMap( value ) ) {
+        if ( value instanceof Map ) {
             //if it's a location, then create a location field.
             if ( EntityMap.isLocationField( (Map)value ) ) {
                 fields.add( EntityField.create( fieldStack.peek(), ( Map ) value ) );
@@ -128,7 +134,7 @@ public class EntityMappingParser implements FieldParser {
         }
 
         //TODO figure out our nested array structure
-        else if ( isCollection( value ) ) {
+        else if ( value instanceof Collection) {
             iterate( ( Collection ) value );
         }
         else {
@@ -185,30 +191,6 @@ public class EntityMappingParser implements FieldParser {
             visitValue( jsonField.getValue() );
             popField();
         }
-    }
-
-
-    /**
-     * Return true if it's a map
-     */
-    private boolean isMap( final Object value ) {
-        return value instanceof Map;
-    }
-
-
-    /**
-     * Return true if it's a collection
-     */
-    private boolean isCollection( final Object value ) {
-        return value instanceof Collection;
-    }
-
-
-    /**
-     * Return true if this is a primitive (inverse of isMap and isCollection)
-     */
-    private boolean isPrimitive( final Object value ) {
-        return !isMap( value ) && !isCollection( value );
     }
 
 
