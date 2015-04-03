@@ -46,15 +46,15 @@ import com.netflix.astyanax.Keyspace;
  * V1 impl with unique value serialization strategy with the collection scope
  */
 @Singleton
-public class UniqueValueSerializationStrategyV2Impl  extends UniqueValueSerializationStrategyImpl<Field, Id> {
+public class UniqueValueSerializationStrategyV2Impl  extends UniqueValueSerializationStrategyImpl<TypeField, Id> {
 
 
-    private static final ScopedRowKeySerializer<Field>  ROW_KEY_SER = new ScopedRowKeySerializer<>( UniqueFieldRowKeySerializer.get() );
+    private static final ScopedRowKeySerializer<TypeField>  ROW_KEY_SER = new ScopedRowKeySerializer<>( UniqueTypeFieldRowKeySerializer.get() );
 
 
     private static final EntityVersionSerializer ENTITY_VERSION_SER = new EntityVersionSerializer();
 
-    private static final MultiTennantColumnFamily<ScopedRowKey<Field>, EntityVersion>
+    private static final MultiTennantColumnFamily<ScopedRowKey<TypeField>, EntityVersion>
         CF_UNIQUE_VALUES = new MultiTennantColumnFamily<>( "Unique_Values_V2", ROW_KEY_SER, ENTITY_VERSION_SER );
 
 
@@ -102,7 +102,7 @@ public class UniqueValueSerializationStrategyV2Impl  extends UniqueValueSerializ
 
 
     @Override
-    protected MultiTennantColumnFamily<ScopedRowKey<Field>, EntityVersion> getUniqueValuesCF() {
+    protected MultiTennantColumnFamily<ScopedRowKey<TypeField>, EntityVersion> getUniqueValuesCF() {
         return CF_UNIQUE_VALUES;
     }
 
@@ -115,14 +115,14 @@ public class UniqueValueSerializationStrategyV2Impl  extends UniqueValueSerializ
 
 
     @Override
-    protected Field createUniqueValueKey( final Id applicationId,  final String type, final Field field) {
-        return field;
+    protected TypeField createUniqueValueKey( final Id applicationId,  final String type, final Field field) {
+        return new TypeField(type,field);
     }
 
 
     @Override
-    protected Field parseRowKey( final ScopedRowKey<Field> rowKey ) {
-        return rowKey.getKey();
+    protected Field parseRowKey( final ScopedRowKey<TypeField> rowKey ) {
+        return rowKey.getKey().getField();
     }
 
 
