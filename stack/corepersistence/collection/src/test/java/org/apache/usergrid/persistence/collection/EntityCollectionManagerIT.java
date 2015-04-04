@@ -201,7 +201,7 @@ public class EntityCollectionManagerIT {
         //load may return null, use last or default
         loadReturned = loadObservable.toBlocking().lastOrDefault( null );
 
-        assertNull( "Entity was deleted", loadReturned );
+        assertNull("Entity was deleted", loadReturned);
     }
 
 
@@ -217,36 +217,36 @@ public class EntityCollectionManagerIT {
 
         Observable<Entity> observable = manager.write( newEntity );
 
-        Entity createReturned = observable.toBlocking().lastOrDefault( null );
+        Entity createReturned = observable.toBlocking().lastOrDefault(null);
 
 
         assertNotNull( "Id was assigned", createReturned.getId() );
 
-        Observable<Entity> loadObservable = manager.load( createReturned.getId() );
+        Observable<Entity> loadObservable = manager.load(createReturned.getId());
 
         Entity loadReturned = loadObservable.toBlocking().lastOrDefault( null );
 
         assertEquals( "Same value", createReturned, loadReturned );
 
 
-        assertEquals( "Field value correct", createReturned.getField( "counter" ), loadReturned.getField( "counter" ) );
+        assertEquals("Field value correct", createReturned.getField("counter"), loadReturned.getField("counter"));
 
 
         //update the field to 2
         createReturned.setField( new IntegerField( "counter", 2 ) );
 
         //wait for the write to complete
-        manager.write( createReturned ).toBlocking().lastOrDefault( null );
+        manager.write( createReturned ).toBlocking().lastOrDefault(null);
 
 
         loadObservable = manager.load( createReturned.getId() );
 
-        loadReturned = loadObservable.toBlocking().lastOrDefault( null );
+        loadReturned = loadObservable.toBlocking().lastOrDefault(null);
 
         assertEquals( "Same value", createReturned, loadReturned );
 
 
-        assertEquals( "Field value correct", createReturned.getField( "counter" ), loadReturned.getField( "counter" ) );
+        assertEquals("Field value correct", createReturned.getField("counter"), loadReturned.getField("counter"));
     }
 
 
@@ -259,22 +259,22 @@ public class EntityCollectionManagerIT {
 
         Entity newEntity = new Entity( new SimpleId( "test" ) );
 
-        EntityCollectionManager manager = factory.createCollectionManager( collectionScope1 );
+        EntityCollectionManager manager = factory.createCollectionManager(collectionScope1);
 
-        Observable<Entity> observable = manager.write( newEntity );
+        Observable<Entity> observable = manager.write(newEntity);
 
         Entity createReturned = observable.toBlocking().lastOrDefault( null );
 
 
-        assertNotNull( "Id was assigned", createReturned.getId() );
-        assertNotNull( "Version was assigned", createReturned.getVersion() );
+        assertNotNull("Id was assigned", createReturned.getId());
+        assertNotNull("Version was assigned", createReturned.getVersion());
 
 
         Observable<Entity> loadObservable = manager.load( createReturned.getId() );
 
         Entity loadReturned = loadObservable.toBlocking().lastOrDefault( null );
 
-        assertEquals( "Same value", createReturned, loadReturned );
+        assertEquals("Same value", createReturned, loadReturned);
 
 
         ApplicationScope collectionScope2 = new ApplicationScopeImpl(new SimpleId("organization"));
@@ -286,7 +286,7 @@ public class EntityCollectionManagerIT {
 
         Entity loaded = manager2.load( createReturned.getId() ).toBlocking().lastOrDefault( null );
 
-        assertNull( "CollectionScope works correctly", loaded );
+        assertNull("CollectionScope works correctly", loaded);
 
 
     }
@@ -300,17 +300,17 @@ public class EntityCollectionManagerIT {
 
         Entity newEntity = new Entity( new SimpleId( "test" ) );
         Field field = new StringField( "testField", "unique", true );
-        newEntity.setField( field );
+        newEntity.setField(field);
 
         EntityCollectionManager manager = factory.createCollectionManager( collectionScope1 );
 
-        Observable<Entity> observable = manager.write( newEntity );
+        Observable<Entity> observable = manager.write(newEntity);
 
         Entity createReturned = observable.toBlocking().lastOrDefault( null );
 
 
         assertNotNull( "Id was assigned", createReturned.getId() );
-        assertNotNull( "Version was assigned", createReturned.getVersion() );
+        assertNotNull("Version was assigned", createReturned.getVersion());
 
         Id id = manager.getIdField( newEntity.getId().getType(), field ).toBlocking().lastOrDefault( null );
         assertNotNull( id );
@@ -334,7 +334,7 @@ public class EntityCollectionManagerIT {
         ApplicationScope context = new ApplicationScopeImpl(new SimpleId("organization"));
 
         EntityCollectionManager manager = factory.createCollectionManager( context );
-        Entity returned = manager.write( origEntity ).toBlocking().lastOrDefault( null );
+        Entity returned = manager.write( origEntity ).toBlocking().lastOrDefault(null);
 
         // note its version
         UUID oldVersion = returned.getVersion();
@@ -345,7 +345,7 @@ public class EntityCollectionManagerIT {
         // partial update entity but we don't have version number
         Entity updateEntity = new Entity( origEntity.getId() );
         updateEntity.setField( new StringField( "addedField", "other value" ) );
-        manager.write( updateEntity ).toBlocking().lastOrDefault( null );
+        manager.write( updateEntity ).toBlocking().lastOrDefault(null);
 
         // get entity now, it must have a new version
         returned = manager.load( origEntity.getId() ).toBlocking().lastOrDefault( null );
@@ -354,7 +354,7 @@ public class EntityCollectionManagerIT {
         assertNotNull( "A new version must be assigned", newVersion );
 
         // new Version should be > old version
-        assertTrue( UUIDComparator.staticCompare( newVersion, oldVersion ) > 0 );
+        assertTrue(UUIDComparator.staticCompare(newVersion, oldVersion) > 0);
     }
 
 
@@ -381,10 +381,10 @@ public class EntityCollectionManagerIT {
 
         final EntitySet entitySet = manager.load( entityIds ).toBlocking().lastOrDefault( null );
 
-        assertNotNull( entitySet );
+        assertNotNull(entitySet);
 
         assertEquals( multigetSize, entitySet.size() );
-        assertFalse( entitySet.isEmpty() );
+        assertFalse(entitySet.isEmpty());
 
         /**
          * Validate every element exists
@@ -444,7 +444,7 @@ public class EntityCollectionManagerIT {
 
             assertEquals( "Same entity returned", expected, returned.getEntity().get() );
 
-            assertTrue( ( Boolean ) returned.getEntity().get().getField( "updated" ).getValue() );
+            assertTrue((Boolean) returned.getEntity().get().getField("updated").getValue());
         }
     }
 
@@ -529,10 +529,10 @@ public class EntityCollectionManagerIT {
 
         final UUID v1Version = v1Created.getVersion();
 
-        final VersionSet resultsV1 = manager.getLatestVersion( Arrays.asList( v1Created.getId() ) ).toBlocking().last();
+        final VersionSet resultsV1 = manager.getLatestVersion(Arrays.asList(v1Created.getId())).toBlocking().last();
 
 
-        final MvccLogEntry version1Log = resultsV1.getMaxVersion( v1Created.getId() );
+        final MvccLogEntry version1Log = resultsV1.getMaxVersion(v1Created.getId());
         assertEquals( v1Created.getId(), version1Log.getEntityId() );
         assertEquals( v1Version, version1Log.getVersion() );
         assertEquals( MvccLogEntry.State.COMPLETE, version1Log.getState() );
@@ -543,7 +543,7 @@ public class EntityCollectionManagerIT {
         final UUID v2Version = v2Created.getVersion();
 
 
-        assertTrue( "Newer version in v2", UUIDComparator.staticCompare( v2Version, v1Version ) > 0 );
+        assertTrue("Newer version in v2", UUIDComparator.staticCompare(v2Version, v1Version) > 0);
 
 
         final VersionSet resultsV2 = manager.getLatestVersion( Arrays.asList( v1Created.getId() ) ).toBlocking().last();
@@ -730,7 +730,7 @@ public class EntityCollectionManagerIT {
         manager = factory.createCollectionManager( context );
         manager.write( entity2 ).toBlocking().last();
 
-        final Observable<Id> id2Obs = manager.getIdField("item", new StringField("unique_id", "1"));
+        final Observable<Id> id2Obs = manager.getIdField("deleted_item", new StringField("unique_id", "1"));
         Id id2 = id2Obs.toBlocking().lastOrDefault(null);
         assertEquals(entity2.getId(), id2);
     }
