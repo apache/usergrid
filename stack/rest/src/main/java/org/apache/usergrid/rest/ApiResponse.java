@@ -23,27 +23,27 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize.Inclusion;
+import org.apache.commons.lang.ClassUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.usergrid.persistence.AggregateCounterSet;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.entities.Application;
+import org.apache.usergrid.rest.exceptions.UncaughtException;
+import org.apache.usergrid.security.oauth.ClientCredentialsInfo;
+import org.apache.usergrid.services.ServiceRequest;
+import org.apache.usergrid.services.ServiceResults;
+import org.apache.usergrid.utils.InflectionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.xml.bind.annotation.XmlAnyElement;
+import javax.xml.bind.annotation.XmlRootElement;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
-
-import javax.xml.bind.annotation.XmlAnyElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.apache.usergrid.persistence.AggregateCounterSet;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.entities.Application;
-import org.apache.usergrid.security.oauth.ClientCredentialsInfo;
-import org.apache.usergrid.services.ServiceRequest;
-import org.apache.usergrid.services.ServiceResults;
-import org.apache.usergrid.utils.InflectionUtils;
-
-import org.apache.commons.lang.ClassUtils;
-import org.apache.commons.lang.StringUtils;
 
 import static org.apache.usergrid.utils.InflectionUtils.pluralize;
 
@@ -62,6 +62,7 @@ public class ApiResponse {
     private String errorUri;
     private String exception;
     private String callback;
+    private UUID errorId;
 
     private String path;
     private String uri;
@@ -163,12 +164,18 @@ public class ApiResponse {
             code = exceptionToErrorCode( e );
         }
         error = code;
-        errorDescription = description;
-        if ( e != null ) {
-            if ( description == null ) {
-                errorDescription = e.getMessage();
+        if ( e instanceof UncaughtException ) {
+            errorId = ((UncaughtException) e).getTimeUUID();
+            errorDescription = "Internal Server Error";
+            exception = UncaughtException.class.getName();
+        } else {
+            errorDescription = description;
+            if (e != null) {
+                if (description == null) {
+                    errorDescription = e.getMessage();
+                }
+                exception = e.getClass().getName();
             }
-            exception = e.getClass().getName();
         }
     }
 
@@ -204,6 +211,15 @@ public class ApiResponse {
         this.errorUri = errorUri;
     }
 
+    @JsonProperty( "error_id" )
+    @JsonSerialize( include = Inclusion.NON_NULL )
+    public UUID getErrorId() {
+        return errorId;
+    }
+
+    public void setErrorId(UUID errorId) {
+        this.errorId = errorId;
+    }
 
     @JsonSerialize( include = Inclusion.NON_NULL )
     public String getException() {
