@@ -229,7 +229,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
 
     private String buildAppName( String organizationName, String name ) {
-        return StringUtils.lowerCase( name.contains( "/" ) ? name : organizationName + "/" + name );
+        return StringUtils.lowerCase(name.contains("/") ? name : organizationName + "/" + name);
     }
 
 
@@ -333,13 +333,11 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             }
         }
 
-        // delete the app from the application_info collection and delete its index
+        // delete the app from the application_info collection
 
         em.delete(appInfoToDelete);
 
-        final ApplicationEntityIndex entityIndex = managerCache.getEntityIndex(
-            new ApplicationScopeImpl(new SimpleId(applicationId, TYPE_APPLICATION)));
-        entityIndex.deleteApplication();
+        // TODO: what do we need to do about cleaning up graph edges from deleted app to its connected entities?
 
         applicationIdCache.evictAppId(appInfoToDelete.getName());
     }
@@ -423,13 +421,16 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         Map<String, UUID> appMap = new HashMap<>();
 
-        ApplicationScope appScope = CpNamingUtils.getApplicationScope(CpNamingUtils.SYSTEM_APP_ID);
+        ApplicationScope appScope =
+            CpNamingUtils.getApplicationScope(CpNamingUtils.MANAGEMENT_APPLICATION_ID );
         GraphManager gm = managerCache.getGraphManager(appScope);
 
-        EntityManager em = getEntityManager(CpNamingUtils.SYSTEM_APP_ID);
+        EntityManager em = getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
         Application app = em.getApplication();
-        if(app == null)
-            throw new RuntimeException("System App "+CpNamingUtils.SYSTEM_APP_ID+" should never be null");
+        if( app == null ) {
+            throw new RuntimeException("Management App "
+                + CpNamingUtils.MANAGEMENT_APPLICATION_ID + " should never be null");
+        }
         Id fromEntityId = new SimpleId( app.getUuid(), app.getType() );
 
         final String edgeType;
@@ -443,9 +444,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         logger.debug("getApplications(): Loading edges of edgeType {} from {}:{}",
             new Object[] { edgeType, fromEntityId.getType(), fromEntityId.getUuid() } );
 
-        Observable<Edge> edges = gm.loadEdgesFromSource( new SimpleSearchByEdgeType(
-                fromEntityId, edgeType, Long.MAX_VALUE,
-                SearchByEdgeType.Order.DESCENDING, null ));
+        Observable<Edge> edges = gm.loadEdgesFromSource(new SimpleSearchByEdgeType(
+            fromEntityId, edgeType, Long.MAX_VALUE,
+            SearchByEdgeType.Order.DESCENDING, null));
 
         // TODO This is wrong, and will result in OOM if there are too many applications.
         // This needs to stream properly with a buffer
@@ -460,8 +461,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                 edge.getSourceNode().getType(), edge.getSourceNode().getUuid(),
                 edge.getTargetNode().getType(), edge.getTargetNode().getUuid()
             });
-
-
 
             org.apache.usergrid.persistence.model.entity.Entity appInfo =
                     managerCache.getEntityCollectionManager(  appScope ).load( targetId )
@@ -559,7 +558,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     @Override
     public boolean setServiceProperty(final String name, final String value) {
-        return updateServiceProperties( new HashMap<String, String>() {{
+        return updateServiceProperties(new HashMap<String, String>() {{
             put(name, value);
         }});
     }
@@ -694,6 +693,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     @Override
     public void rebuildInternalIndexes( ProgressObserver po ) throws Exception {
+
+        // TODO: remove this after appinfo migration done
         rebuildApplicationIndexes( CpNamingUtils.SYSTEM_APP_ID, po);
         rebuildApplicationIndexes( CpNamingUtils.MANAGEMENT_APPLICATION_ID, po );
     }
@@ -749,7 +750,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         // could use any collection scope here, does not matter
         EntityCollectionManager ecm = getManagerCache().getEntityCollectionManager(
-            new ApplicationScopeImpl( new SimpleId( CpNamingUtils.SYSTEM_APP_ID, "application" ) ) );
+            new ApplicationScopeImpl( new SimpleId( CpNamingUtils.MANAGEMENT_APPLICATION_ID, "application" ) ) );
 
         return ecm.getHealth();
     }

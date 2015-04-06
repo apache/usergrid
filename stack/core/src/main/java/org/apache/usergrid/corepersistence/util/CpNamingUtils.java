@@ -52,7 +52,8 @@ public class CpNamingUtils {
     public static final  UUID MANAGEMENT_APPLICATION_ID =
             UUID.fromString("b6768a08-b5d5-11e3-a495-11ddb1de66c8");
 
-    /** Old and deprecated SYSTEM_APP */
+    /** Old and deprecated SYSTEM_APP. TODO: remove after app info migration done. */
+    @Deprecated
     public static final UUID SYSTEM_APP_ID =
         UUID.fromString("b6768a08-b5d5-11e3-a495-10ddb1de66c3");
 
