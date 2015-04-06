@@ -74,6 +74,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import rx.Observable;
+import rx.observables.BlockingObservable;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -316,7 +317,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             managementAppId, edgeType, Long.MAX_VALUE,
             SearchByEdgeType.Order.DESCENDING, null));
 
-        appInfoEdges.flatMap(appInfoEdge -> {
+        final Observable<Edge> observable = appInfoEdges.flatMap(appInfoEdge -> {
             try {
                 Entity appInfoToDelete = managementEm.get(appInfoEdge.getTargetNode().getUuid());
                 final Id deletedAppId = new SimpleId(appInfoToDelete.getUuid(), appInfoToDelete.getType());
@@ -324,6 +325,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                 final ApplicationEntityIndex aei = entityIndexFactory.createApplicationEntityIndex(deletedAppScope);
 
                 // ensure that there is not already a deleted app with the same name
+
                 final EntityRef alias = managementEm.getAlias(
                     CpNamingUtils.DELETED_APPLICATION_INFO, appInfoToDelete.getName());
                 if (alias != null) {
@@ -334,6 +336,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
                 final Entity deletedApp = managementEm.create(
                     CpNamingUtils.DELETED_APPLICATION_INFO, appInfoToDelete.getProperties());
+
                 // copy its connections too
 
                 final Set<String> connectionTypes = managementEm.getConnectionTypes(appInfoToDelete);
@@ -358,17 +361,18 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
                 return Observable.concat(copyConnections, deleteNodeGraph, deleteAppFromIndex)
                     .doOnCompleted(() -> {
-                    try {
-                        managementEm.delete(appInfoToDelete);
-                        applicationIdCache.evictAppId(appInfoToDelete.getName());
-                    }catch (Exception e){
-                        throw  new RuntimeException(e);
-                    }
-                });
+                        try {
+                            managementEm.delete(appInfoToDelete);
+                            applicationIdCache.evictAppId(appInfoToDelete.getName());
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-        }).toBlocking().lastOrDefault(null);
+        });
+        observable.toBlocking().lastOrDefault(null);
 
     }
 
