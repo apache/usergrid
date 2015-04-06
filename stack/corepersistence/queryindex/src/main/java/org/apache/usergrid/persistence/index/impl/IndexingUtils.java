@@ -146,7 +146,7 @@ public class IndexingUtils {
                                            final UUID version, final SearchEdge searchEdge ) {
 
         StringBuilder sb = new StringBuilder();
-        idString( applicationScope.getApplication() );
+        idString( sb, applicationScope.getApplication() );
         sb.append( FIELD_SEPERATOR );
         idString( sb, entityId );
         sb.append( FIELD_SEPERATOR );

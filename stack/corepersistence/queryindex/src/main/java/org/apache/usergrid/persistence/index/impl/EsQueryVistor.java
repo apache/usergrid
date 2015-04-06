@@ -20,9 +20,13 @@ package org.apache.usergrid.persistence.index.impl;
 
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
 import java.util.UUID;
+
+import javax.swing.text.html.Option;
 
 import org.elasticsearch.common.unit.DistanceUnit;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -49,8 +53,7 @@ import org.apache.usergrid.persistence.index.query.tree.QueryVisitor;
 import org.apache.usergrid.persistence.index.query.tree.WithinOperand;
 
 import com.google.common.base.Joiner;
-
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.*;
+import com.google.common.base.Optional;
 
 
 /**
@@ -332,31 +335,40 @@ public class EsQueryVistor implements QueryVisitor {
 
 
     @Override
-    public QueryBuilder getQueryBuilder() {
-        if ( stack.isEmpty() ) {
-            return null;
-        }
-        return stack.pop();
+    public Optional<QueryBuilder> getQueryBuilder() {
+//        if ( stack.isEmpty() ) {
+            return Optional.absent();
+//        }
+//        return stack.pop();
+
+
     }
 
 
     @Override
-	public FilterBuilder getFilterBuilder() {
-
-		if ( filterBuilders.size() >  1 ) {
-
-			FilterBuilder andFilter = null;
-			for ( FilterBuilder fb : filterBuilders ) {
-				if ( andFilter == null ) {
-					andFilter = FilterBuilders.andFilter( fb );
-				} else {
-					andFilter = FilterBuilders.andFilter( andFilter, fb );
-				}
-			}
-
-		} else if ( !filterBuilders.isEmpty() ) {
-			return filterBuilders.get(0);
-		}
-		return null;
+	public Optional<FilterBuilder> getFilterBuilder() {
+        return Optional.absent();
+//
+//		if ( filterBuilders.size() >  1 ) {
+//
+//			FilterBuilder andFilter = null;
+//			for ( FilterBuilder fb : filterBuilders ) {
+//				if ( andFilter == null ) {
+//					andFilter = FilterBuilders.andFilter( fb );
+//				} else {
+//					andFilter = FilterBuilders.andFilter( andFilter, fb );
+//				}
+//			}
+//
+//		} else if ( !filterBuilders.isEmpty() ) {
+//			return filterBuilders.get(0);
+//		}
+//		return null;
 	}
+
+
+    @Override
+    public Collection<String> getGeoSelectFields() {
+        return Collections.EMPTY_LIST;
+    }
 }

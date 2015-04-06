@@ -97,11 +97,11 @@ public class BufferQueueSQSImplTest {
         assumeTrue( ugProvider.getCredentials().getAWSSecretKey() != null );
 
         final Map<String, Object> request1Data  = new HashMap<String, Object>() {{put("test", "testval1");}};
-        final IndexRequest indexRequest1 =  new IndexRequest( "testAlias1", applicationScope, SearchType.fromType("testType1"), "testDoc1",request1Data );
+        final IndexRequest indexRequest1 =  new IndexRequest( "testAlias1", "testDoc1",request1Data );
 
 
         final Map<String, Object> request2Data  = new HashMap<String, Object>() {{put("test", "testval2");}};
-        final IndexRequest indexRequest2 =  new IndexRequest( "testAlias2", applicationScope, SearchType.fromType( "testType2"), "testDoc2",request2Data );
+        final IndexRequest indexRequest2 =  new IndexRequest( "testAlias2", "testDoc2",request2Data );
 
 
         //de-index request

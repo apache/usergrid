@@ -42,6 +42,7 @@ import org.apache.usergrid.persistence.index.query.ParsedQuery;
 import org.apache.usergrid.persistence.index.query.SortPredicate;
 import org.apache.usergrid.persistence.index.query.tree.QueryVisitor;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createContextName;
@@ -77,18 +78,22 @@ public class SearchRequestBuilderStrategy {
         Preconditions
                 .checkArgument( limit <= EntityIndex.MAX_LIMIT, "limit is greater than max " + EntityIndex.MAX_LIMIT );
 
-        SearchRequestBuilder srb = esProvider.getClient().prepareSearch( alias.getReadAlias() )
-                                             .setTypes( searchTypes.getTypeNames( applicationScope ) )
-                                             .setScroll( cursorTimeout + "m" );
+        SearchRequestBuilder srb =
+                esProvider.getClient().prepareSearch( alias.getReadAlias() ).setTypes( IndexingUtils.ES_ENTITY_TYPE )
+                          .setScroll( cursorTimeout + "m" );
 
+        //TODO, make this work
+        //        searchTypes.getTypeNames( applicationScope )
 
-        final QueryVisitor visitor = visitParsedQuery(query);
+        final QueryVisitor visitor = visitParsedQuery( query );
 
-        srb.setQuery(  createQueryBuilder( searchEdge, visitor ) );
+        srb.setQuery( createQueryBuilder( searchEdge, visitor, searchTypes ) );
 
-        final FilterBuilder fb = visitor.getFilterBuilder();
+        final Optional<FilterBuilder> fb = visitor.getFilterBuilder();
 
-        srb.setPostFilter( fb );
+        if ( fb.isPresent() ) {
+            srb.setPostFilter( fb.get() );
+        }
 
 
         srb = srb.setFrom( 0 ).setSize( limit );
@@ -128,17 +133,14 @@ public class SearchRequestBuilderStrategy {
             srb.addSort( createSort( order, IndexingUtils.SORT_FIELD_LONG, propertyName ) );
 
             srb.addSort( createSort( order, IndexingUtils.SORT_FIELD_FLOAT, propertyName ) );
-
-
         }
         return srb;
     }
 
 
-    public QueryBuilder createQueryBuilder( final SearchEdge searchEdge, final QueryVisitor visitor ) {
+    public QueryBuilder createQueryBuilder( final SearchEdge searchEdge, final QueryVisitor visitor,
+                                            final SearchTypes searchTypes ) {
         String context = createContextName( applicationScope, searchEdge );
-
-        QueryBuilder queryBuilder = visitor.getQueryBuilder();
 
 
         // Add our filter for context to our query for fast execution.
@@ -153,20 +155,32 @@ public class SearchRequestBuilderStrategy {
 
         boolQueryBuilder.must( QueryBuilders.termQuery( IndexingUtils.EDGE_SEARCH_FIELDNAME, context ) );
 
-        boolQueryBuilder.must( queryBuilder );
 
-        return queryBuilder;
+        /**
+         * Get the scopes and add them
+         */
+
+
+        final String[] sourceTypes = searchTypes.getTypeNames( applicationScope );
+
+        //add all our types, 1 type must match per query
+        boolQueryBuilder.must( QueryBuilders.termsQuery( IndexingUtils.ENTITY_TYPE_FIELDNAME, sourceTypes )
+                                            .minimumMatch( 1 ) );
+
+        Optional<QueryBuilder> queryBuilder = visitor.getQueryBuilder();
+
+        if ( queryBuilder.isPresent() ) {
+            boolQueryBuilder.must( queryBuilder.get() );
+        }
+
+        return boolQueryBuilder;
     }
-
-
 
 
     /**
      * Perform our visit of the query once for efficiency
-     * @param parsedQuery
-     * @return
      */
-    private QueryVisitor visitParsedQuery(final ParsedQuery parsedQuery){
+    private QueryVisitor visitParsedQuery( final ParsedQuery parsedQuery ) {
         QueryVisitor v = new EsQueryVistor();
 
         if ( parsedQuery.getRootOperand() != null ) {
@@ -177,7 +191,6 @@ public class SearchRequestBuilderStrategy {
             catch ( IndexException ex ) {
                 throw new RuntimeException( "Error building ElasticSearch query", ex );
             }
-
         }
 
         return v;
@@ -186,10 +199,10 @@ public class SearchRequestBuilderStrategy {
 
     /**
      * Create a sort for the property name and field name specified
+     *
      * @param sortOrder The sort order
      * @param fieldName The name of the field for the type
      * @param propertyName The property name the user specified for the sort
-     * @return
      */
     private FieldSortBuilder createSort( final SortOrder sortOrder, final String fieldName,
                                          final String propertyName ) {
@@ -197,6 +210,7 @@ public class SearchRequestBuilderStrategy {
         final TermFilterBuilder propertyFilter = FilterBuilders.termFilter( IndexingUtils.FIELD_NAME, propertyName );
 
 
-        return SortBuilders.fieldSort( fieldName ).order( sortOrder ).ignoreUnmapped( true ).setNestedFilter( propertyFilter );
+        return SortBuilders.fieldSort( fieldName ).order( sortOrder ).ignoreUnmapped( true )
+                           .setNestedFilter( propertyFilter );
     }
 }
