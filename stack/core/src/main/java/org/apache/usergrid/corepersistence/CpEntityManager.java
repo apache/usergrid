@@ -616,6 +616,7 @@ public class CpEntityManager implements EntityManager {
         //delete from our UUID index
         MapManager mm = getMapManagerForTypes();
         mm.delete( entityRef.getUuid().toString() );
+
     }
 
 
@@ -640,7 +641,6 @@ public class CpEntityManager implements EntityManager {
         if ( entity != null ) {
 
             decrementEntityCollection( Schema.defaultCollectionName( entityId.getType() ) );
-
             // and finally...
             return ecm.delete( entityId );
         }

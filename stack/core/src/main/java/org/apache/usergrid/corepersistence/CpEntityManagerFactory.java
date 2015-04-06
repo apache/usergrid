@@ -31,6 +31,7 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -302,46 +303,73 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         // find application_info for application to delete
 
-        final EntityManager em = getEntityManager(getManagementAppId());
 
-        final Results results = em.searchCollection(em.getApplicationRef(), CpNamingUtils.APPLICATION_INFOS,
-            Query.fromQL("select * where " + PROPERTY_APPLICATION_ID + " = " + applicationId.toString()));
-        Entity appInfoToDelete = results.getEntity();
+        final EntityManager managementEm = getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+        final Application app = managementEm.getApplication();
+        final Id managementAppId = new SimpleId( app.getUuid(), app.getType() );
+        final ApplicationScope managementAppScope = new ApplicationScopeImpl(managementAppId);
+        final GraphManager managementGraphManager = managerCache.getGraphManager(managementAppScope);
 
-        // ensure that there is not already a deleted app with the same name
+        String edgeType = CpNamingUtils.getEdgeTypeFromCollectionName(CpNamingUtils.APPLICATION_INFOS);
 
-        final EntityRef alias = em.getAlias(
-            CpNamingUtils.DELETED_APPLICATION_INFO, appInfoToDelete.getName());
-        if ( alias != null ) {
-            throw new ConflictException("Cannot delete app with same name as already deleted app");
-        }
+        Observable<Edge> appInfoEdges = managementGraphManager.loadEdgesFromSource(new SimpleSearchByEdgeType(
+            managementAppId, edgeType, Long.MAX_VALUE,
+            SearchByEdgeType.Order.DESCENDING, null));
 
-        // make a copy of the app to delete application_info entity
-        // and put it in a deleted_application_info collection
+        appInfoEdges.flatMap(appInfoEdge -> {
+            try {
+                Entity appInfoToDelete = managementEm.get(appInfoEdge.getTargetNode().getUuid());
+                final Id deletedAppId = new SimpleId(appInfoToDelete.getUuid(), appInfoToDelete.getType());
+                final ApplicationScope deletedAppScope = new ApplicationScopeImpl(deletedAppId);
+                final ApplicationEntityIndex aei = entityIndexFactory.createApplicationEntityIndex(deletedAppScope);
 
-        Entity deletedApp = em.create(
-            CpNamingUtils.DELETED_APPLICATION_INFO, appInfoToDelete.getProperties());
+                // ensure that there is not already a deleted app with the same name
+                final EntityRef alias = managementEm.getAlias(
+                    CpNamingUtils.DELETED_APPLICATION_INFO, appInfoToDelete.getName());
+                if (alias != null) {
+                    throw new ConflictException("Cannot delete app with same name as already deleted app");
+                }
+                // make a copy of the app to delete application_info entity
+                // and put it in a deleted_application_info collection
 
-        // copy its connections too
+                final Entity deletedApp = managementEm.create(
+                    CpNamingUtils.DELETED_APPLICATION_INFO, appInfoToDelete.getProperties());
+                // copy its connections too
 
-        final Set<String> connectionTypes = em.getConnectionTypes(appInfoToDelete);
-        for ( String connType : connectionTypes ) {
-            final Results connResults =
-                em.getConnectedEntities(appInfoToDelete, connType, null, Query.Level.ALL_PROPERTIES);
-            for ( Entity entity : connResults.getEntities() ) {
-                em.createConnection( deletedApp, connType, entity );
+                final Set<String> connectionTypes = managementEm.getConnectionTypes(appInfoToDelete);
+                Observable copyConnections = Observable.from(connectionTypes).doOnNext(connType -> {
+                    try {
+                        final Results connResults =
+                            managementEm.getConnectedEntities(appInfoToDelete, connType, null, Query.Level.ALL_PROPERTIES);
+                        connResults.getEntities().forEach(entity -> {
+                            try {
+                                managementEm.createConnection(deletedApp, connType, entity);
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+
+                final Observable deleteNodeGraph = managementGraphManager.deleteNode(deletedAppId, Long.MAX_VALUE);
+                final Observable deleteAppFromIndex = aei.deleteApplication();
+
+                return Observable.concat(copyConnections, deleteNodeGraph, deleteAppFromIndex)
+                    .doOnCompleted(() -> {
+                    try {
+                        managementEm.delete(appInfoToDelete);
+                        applicationIdCache.evictAppId(appInfoToDelete.getName());
+                    }catch (Exception e){
+                        throw  new RuntimeException(e);
+                    }
+                });
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
-        }
+        }).toBlocking().lastOrDefault(null);
 
-        // delete the app from the application_info collection
-
-        em.delete(appInfoToDelete);
-        applicationIdCache.evictAppId(appInfoToDelete.getName());
-
-
-        // TODO: clean up all graph edges from application_info to connected entities
-
-        // TODO: purge application indexes?
     }
 
 
@@ -453,31 +481,28 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         // TODO This is wrong, and will result in OOM if there are too many applications.
         // This needs to stream properly with a buffer
 
-        Iterator<Edge> iter = edges.toBlocking().getIterator();
-        while ( iter.hasNext() ) {
-
-            Edge edge = iter.next();
+        edges.doOnNext(edge -> {
             Id targetId = edge.getTargetNode();
 
-            logger.debug("getApplications(): Processing edge from {}:{} to {}:{}", new Object[] {
+            logger.debug("getApplications(): Processing edge from {}:{} to {}:{}", new Object[]{
                 edge.getSourceNode().getType(), edge.getSourceNode().getUuid(),
                 edge.getTargetNode().getType(), edge.getTargetNode().getUuid()
             });
 
             org.apache.usergrid.persistence.model.entity.Entity appInfo =
-                    managerCache.getEntityCollectionManager(  appScope ).load( targetId )
-                        .toBlocking().lastOrDefault(null);
+                managerCache.getEntityCollectionManager(appScope).load(targetId)
+                    .toBlocking().lastOrDefault(null);
 
-            if ( appInfo == null ) {
-                logger.warn("Application {} in index but not found in collections", targetId );
-                continue;
+            if (appInfo == null) {
+                logger.warn("Application {} has edge but not found in em", targetId);
+                return;
             }
 
             UUID applicationId = UUIDUtils.tryExtractUUID(
-                appInfo.getField( PROPERTY_APPLICATION_ID ).getValue().toString() );
+                appInfo.getField(PROPERTY_APPLICATION_ID).getValue().toString());
 
-            appMap.put( (String)appInfo.getField( PROPERTY_NAME ).getValue(), applicationId);
-        }
+            appMap.put((String) appInfo.getField(PROPERTY_NAME).getValue(), applicationId);
+        }).toBlocking().lastOrDefault(null);
 
         return appMap;
     }
@@ -669,7 +694,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         return Arrays.asList(
             managerCache.getEntityIndex( // management app
-                new ApplicationScopeImpl(new SimpleId(getManagementAppId(), "application"))));
+                CpNamingUtils.getApplicationScope(getManagementAppId())));
     }
 
 
