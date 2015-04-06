@@ -35,6 +35,7 @@ import org.apache.usergrid.persistence.entities.Role;
 import org.apache.usergrid.persistence.index.query.CounterResolution;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.index.query.Query.Level;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 
 /**
@@ -93,6 +94,15 @@ public interface EntityManager {
     public Entity create( UUID importId, String entityType, Map<String, Object> properties )
             throws Exception;
 
+    /**
+     * Creates an entity of the specified type attached to the specified application.
+     * @param id
+     * @param properties
+     * @return
+     * @throws Exception
+     */
+    public Entity create(Id id, Map<String, Object> properties )
+        throws Exception;
     public void createApplicationCollection( String entityType ) throws Exception;
 
     public EntityRef getAlias( String aliasType, String alias ) throws Exception;

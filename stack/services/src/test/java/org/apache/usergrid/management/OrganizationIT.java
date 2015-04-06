@@ -79,8 +79,8 @@ public class OrganizationIT {
             organization.getOrganization().getUuid() );
         assertEquals( "wrong number of users", 1, users.size() );
 
-        UUID applicationId = setup.getMgmtSvc().createApplication( organization.getOrganization().getUuid(), "ed-application" ).getId();
-        assertNotNull( applicationId );
+        ApplicationInfo applicationInfo = setup.getMgmtSvc().createApplication(organization.getOrganization().getUuid(), "ed-application");
+        assertNotNull( applicationInfo.getId() );
 
 
         setup.getEntityIndex().refresh();
@@ -88,7 +88,7 @@ public class OrganizationIT {
         Map<UUID, String> applications = setup.getMgmtSvc().getApplicationsForOrganization( organization.getOrganization().getUuid() );
         assertEquals( "wrong number of applications", 1, applications.size() );
 
-        OrganizationInfo organization2 = setup.getMgmtSvc().getOrganizationForApplication( applicationId );
+        OrganizationInfo organization2 = setup.getMgmtSvc().getOrganizationForApplication( applicationInfo.getId() );
         assertNotNull( organization2 );
         assertEquals( "wrong organization name", organization.getOrganization().getName(), organization2.getName() );
 

@@ -32,6 +32,9 @@ import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.exception.ConflictException;
 import org.apache.usergrid.management.exceptions.*;
 import org.apache.usergrid.persistence.*;
+import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.graph.SearchByEdgeType;
+import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -144,6 +147,8 @@ import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_OBJECT_
 import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_TITLE;
 import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_VERB;
 import org.apache.usergrid.persistence.index.query.Query.Level;
+import rx.Observable;
+
 import static org.apache.usergrid.security.AuthPrincipalType.ADMIN_USER;
 import static org.apache.usergrid.security.AuthPrincipalType.APPLICATION;
 import static org.apache.usergrid.security.AuthPrincipalType.APPLICATION_USER;
@@ -1611,8 +1616,6 @@ public class ManagementServiceImpl implements ManagementService {
             properties = new HashMap<>();
         }
 
-        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-
         OrganizationInfo organizationInfo = getOrganizationByUuid( organizationId );
         Entity appInfo = emf.createApplicationV2(
             organizationInfo.getName(), applicationName, properties);
@@ -1711,7 +1714,7 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
 
-        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
+        final EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
 
         Results r = em.getConnectingEntities(
                 new SimpleEntityRef(CpNamingUtils.APPLICATION_INFO, applicationInfoId),
@@ -1786,8 +1789,7 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public UUID addApplicationToOrganization(UUID organizationId, Entity appInfo) throws Exception {
 
-        UUID applicationId = UUIDUtils.tryExtractUUID(
-            appInfo.getProperty(PROPERTY_APPLICATION_ID).toString());
+        UUID applicationId = appInfo.getUuid();
 
         if ( ( organizationId == null ) || ( applicationId == null ) ) {
             return null;

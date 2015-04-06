@@ -36,7 +36,9 @@ import java.util.UUID;
 
 import javax.annotation.Resource;
 
+import org.apache.usergrid.exception.NotImplementedException;
 import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.model.entity.Id;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -704,6 +706,11 @@ public class EntityManagerImpl implements EntityManager {
     public Entity create( UUID importId, String entityType, Map<String, Object> properties )
             throws Exception {
         return create( entityType, null, properties, importId );
+    }
+
+    @Override
+    public Entity create(Id id, Map<String, Object> properties) throws Exception {
+        throw new NotImplementedException();
     }
 
 

@@ -244,7 +244,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         // Ensure our management system exists before creating our application
         init();
 
-        EntityManager em = getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
+        EntityManager managementEm = getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
 
         final String appName = buildAppName( organizationName, name );
 
@@ -274,7 +274,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         Entity appInfo;
         try {
-            appInfo = em.create(CpNamingUtils.APPLICATION_INFO, appInfoMap);
+            appInfo = managementEm.create(applicationId,CpNamingUtils.APPLICATION_INFO, appInfoMap);
         } catch (DuplicateUniquePropertyExistsException e) {
             throw new ApplicationAlreadyExistsException(appName);
         }
@@ -312,11 +312,16 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         String edgeType = CpNamingUtils.getEdgeTypeFromCollectionName(CpNamingUtils.APPLICATION_INFOS);
 
+        //TODO: this could be due to app info issue
         Observable<Edge> appInfoEdges = managementGraphManager.loadEdgesFromSource(new SimpleSearchByEdgeType(
             managementAppId, edgeType, Long.MAX_VALUE,
             SearchByEdgeType.Order.DESCENDING, null));
 
-        appInfoEdges.flatMap(appInfoEdge -> {
+        appInfoEdges
+            .filter(appInfoEdge -> {
+                return appInfoEdge.getTargetNode().getUuid().equals(applicationId);
+            })
+            .flatMap(appInfoEdge -> {
             try {
                 Entity appInfoToDelete = managementEm.get(appInfoEdge.getTargetNode().getUuid());
                 final Id deletedAppId = new SimpleId(appInfoToDelete.getUuid(), appInfoToDelete.getType());
