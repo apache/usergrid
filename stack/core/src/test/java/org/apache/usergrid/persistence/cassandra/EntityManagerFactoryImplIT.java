@@ -23,12 +23,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.usergrid.Application;
+import org.apache.usergrid.CoreApplication;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.utils.UUIDUtils;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,6 +63,10 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
     public EntityManagerFactoryImplIT() {
         emf = ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( EntityManagerFactory.class );
     }
+
+    @Rule
+    public Application app = new CoreApplication( setup );
+
 
 
     @BeforeClass
@@ -132,9 +135,12 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
             Thread.sleep( 500 );
         }
 
+        this.app.refreshIndex();
+
         // delete the application
 
-        setup.getEmf().deleteApplication( deletedAppId );
+        setup.getEmf().deleteApplication(deletedAppId);
+        this.app.refreshIndex();
 
         // wait for it to appear in delete apps list
 
@@ -152,6 +158,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
                 return found;
             }
         };
+        this.app.refreshIndex();
 
         boolean found = false;
         for ( int i=0; i<maxRetries; i++) {
@@ -163,6 +170,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
             }
         }
         assertTrue( "Deleted app must be found in in deleted apps collection", found );
+        this.app.refreshIndex();
 
         // attempt to get entities in application's collections in various ways should all fail
 
@@ -177,6 +185,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
         assertFalse( "Lookup of deleted app must fail", found );
 
         // app must not be found in apps collection
+        this.app.refreshIndex();
 
         for ( int i=0; i<maxRetries; i++ ) {
             found = findApps.call( deletedAppId, emf.getApplications() );
@@ -186,18 +195,19 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
                 break;
             }
         }
-        assertFalse( "Deleted app must not be found in apps collection", found );
+        assertFalse("Deleted app must not be found in apps collection", found);
 
         // restore the app
 
-        emf.refreshIndex();
+        this.app.refreshIndex();
 
-        emf.restoreApplication( deletedAppId );
+
+        emf.restoreApplication(deletedAppId);
 
         emf.rebuildAllIndexes(new EntityManagerFactory.ProgressObserver() {
             @Override
             public void onProgress(EntityRef entity) {
-                logger.debug("Reindexing {}:{}", entity.getType(), entity.getUuid() );
+                logger.debug("Reindexing {}:{}", entity.getType(), entity.getUuid());
             }
         });
 
@@ -213,6 +223,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
             }
         }
         assertFalse("Restored app found in deleted apps collection", found);
+        this.app.refreshIndex();
 
         for(int i=0;i<maxRetries;i++){
             found = findApps.call(deletedAppId,setup.getEmf().getApplications());
@@ -225,7 +236,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
         assertTrue("Restored app not found in apps collection", found);
 
         // TODO: this assertion should work!
-        //assertNotNull(setup.getEmf().lookupApplication( orgName + "/" + appName ));
+        assertNotNull(setup.getEmf().lookupApplication( orgName + "/" + appName ));
     }
 
 
