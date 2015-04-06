@@ -270,7 +270,7 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
      * @param bulkRequest
      */
     private void sendRequest(BulkRequestBuilder bulkRequest) {
-        //nothing to do, we haven't added anthing to the index
+        //nothing to do, we haven't added anything to the index
         if (bulkRequest.numberOfActions() == 0) {
             return;
         }
@@ -305,8 +305,7 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
         }
 
         if ( error ) {
-            // TODO: throw error once onErrorResumeNext() implemented in startWorker()
-            //throw new RuntimeException("Error during processing of bulk index operations")
+            throw new RuntimeException("Error during processing of bulk index operations one of the responses failed.  Check previous log entries");
         }
     }
 }
