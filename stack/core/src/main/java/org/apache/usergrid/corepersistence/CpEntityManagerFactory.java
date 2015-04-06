@@ -438,7 +438,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         final String edgeType;
 
         if ( deleted ) {
-            edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( CpNamingUtils.DELETED_APPLICATION_INFO );
+            edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( CpNamingUtils.DELETED_APPLICATION_INFOS );
         } else {
             edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( CpNamingUtils.APPLICATION_INFOS );
         }
