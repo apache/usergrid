@@ -336,10 +336,12 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         // delete the app from the application_info collection
 
         em.delete(appInfoToDelete);
-
-        // TODO: what do we need to do about cleaning up graph edges from deleted app to its connected entities?
-
         applicationIdCache.evictAppId(appInfoToDelete.getName());
+
+
+        // TODO: clean up all graph edges from application_info to connected entities
+
+        // TODO: purge application indexes?
     }
 
 
@@ -436,7 +438,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         final String edgeType;
 
         if ( deleted ) {
-            edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( CpNamingUtils.DELETED_APPLICATION_INFO );
+            edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( CpNamingUtils.DELETED_APPLICATION_INFOS );
         } else {
             edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( CpNamingUtils.APPLICATION_INFOS );
         }
