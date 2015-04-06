@@ -156,7 +156,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             entityIndex.refresh();
 
         } catch (Exception ex) {
-            throw new RuntimeException("Fatal error creating system application", ex);
+            throw new RuntimeException("Fatal error creating management application", ex);
         }
     }
 
