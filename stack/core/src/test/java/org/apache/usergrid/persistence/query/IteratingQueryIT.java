@@ -291,14 +291,13 @@ public class IteratingQueryIT {
 
         for ( int i = 0; i < size; i++ ) {
             Map<String, Object> entity = new HashMap<String, Object>();
-            entity.put( "name", String.valueOf( i ) );
+            entity.put("name", String.valueOf(i));
 
-            io.writeEntity( entity );
+            io.writeEntity(entity);
             //we have to sleep, or we kill embedded cassandra
-            Thread.sleep( 10 );
 
         }
-
+        app.refreshIndex();
         long stop = System.currentTimeMillis();
 
         LOG.info( "Writes took {} ms", stop - start );
@@ -368,6 +367,7 @@ public class IteratingQueryIT {
             }
         }
         app.refreshIndex();
+        Thread.sleep(500);
 
 
         long stop = System.currentTimeMillis();
@@ -1126,7 +1126,7 @@ public class IteratingQueryIT {
         LOG.info( "Writes took {} ms", stop - start );
 
         app.refreshIndex();
-        app.refreshIndex();
+        Thread.sleep(500);
 
         Query query = new Query();
         query.setLimit( 100 );

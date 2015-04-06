@@ -353,10 +353,10 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                     }
                 });
 
-                final Observable nodes = managementGraphManager.deleteNode(deletedAppId, Long.MAX_VALUE);
-                final Observable deleteIndex = aei.deleteApplication();
+                final Observable deleteNodeGraph = managementGraphManager.deleteNode(deletedAppId, Long.MAX_VALUE);
+                final Observable deleteAppFromIndex = aei.deleteApplication();
 
-                return Observable.concat(copyConnections, nodes, deleteIndex)
+                return Observable.concat(copyConnections, deleteNodeGraph, deleteAppFromIndex)
                     .doOnCompleted(() -> {
                     try {
                         managementEm.delete(appInfoToDelete);
