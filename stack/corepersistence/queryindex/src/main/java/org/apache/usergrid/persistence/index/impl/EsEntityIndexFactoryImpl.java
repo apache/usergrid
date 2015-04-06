@@ -19,18 +19,21 @@
  */
 package org.apache.usergrid.persistence.index.impl;
 
+
+import java.util.concurrent.ExecutionException;
+
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.index.AliasedEntityIndex;
+import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndexFactory;
+import org.apache.usergrid.persistence.index.IndexFig;
+import org.apache.usergrid.persistence.map.MapManagerFactory;
+
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
-
-import com.google.inject.assistedinject.Assisted;
-import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.index.*;
-import org.apache.usergrid.persistence.map.MapManagerFactory;
-
-import java.util.concurrent.ExecutionException;
 
 /**
  * Get index from factory, adds caching
@@ -39,7 +42,6 @@ public class EsEntityIndexFactoryImpl implements EntityIndexFactory{
 
     private final IndexFig config;
     private final EsProvider provider;
-    private final IndexCache indexCache;
     private final IndexBufferProducer indexBatchBufferProducer;
     private final MetricsFactory metricsFactory;
     private final MapManagerFactory mapManagerFactory;
@@ -51,19 +53,18 @@ public class EsEntityIndexFactoryImpl implements EntityIndexFactory{
         CacheBuilder.newBuilder().maximumSize( 1000 ).build( new CacheLoader<ApplicationScope, ApplicationEntityIndex>() {
             public ApplicationEntityIndex load( ApplicationScope scope ) {
                 return new EsApplicationEntityIndexImpl(
-                    scope,entityIndex,config, indexBatchBufferProducer, provider,indexCache, metricsFactory, mapManagerFactory, indexFig, indexIdentifier
+                    scope,entityIndex,config, indexBatchBufferProducer, provider, metricsFactory, mapManagerFactory, indexFig, indexIdentifier
                 );
             }
         } );
 
     @Inject
-    public EsEntityIndexFactoryImpl( final IndexFig config, final EsProvider provider, final IndexCache indexCache,
+    public EsEntityIndexFactoryImpl( final IndexFig config, final EsProvider provider,
                                      final IndexBufferProducer indexBatchBufferProducer,
                                      final MetricsFactory metricsFactory, final MapManagerFactory mapManagerFactory,
                                      final IndexFig indexFig, final AliasedEntityIndex entityIndex, final FailureMonitorImpl.IndexIdentifier indexIdentifier ){
         this.config = config;
         this.provider = provider;
-        this.indexCache = indexCache;
         this.indexBatchBufferProducer = indexBatchBufferProducer;
         this.metricsFactory = metricsFactory;
         this.mapManagerFactory = mapManagerFactory;
@@ -75,7 +76,7 @@ public class EsEntityIndexFactoryImpl implements EntityIndexFactory{
 
 
     @Override
-    public ApplicationEntityIndex createApplicationEntityIndex(@Assisted final ApplicationScope appScope) {
+    public ApplicationEntityIndex createApplicationEntityIndex(final ApplicationScope appScope) {
         try{
             return eiCache.get(appScope);
         }catch (ExecutionException ee){

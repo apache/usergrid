@@ -23,8 +23,10 @@ package org.apache.usergrid.persistence.index.impl;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.FilterBuilder;
+import org.elasticsearch.index.query.FilterBuilders;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.TermFilterBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
@@ -44,20 +46,23 @@ import com.google.common.base.Preconditions;
 
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createContextName;
 
+
 /**
  * The strategy for creating a search request from a parsed query
  */
 
 public class SearchRequestBuilderStrategy {
 
-    private static final Logger logger = LoggerFactory.getLogger(SearchRequestBuilderStrategy.class);
+    private static final Logger logger = LoggerFactory.getLogger( SearchRequestBuilderStrategy.class );
 
     private final EsProvider esProvider;
     private final ApplicationScope applicationScope;
     private final IndexAlias alias;
     private final int cursorTimeout;
 
-    public SearchRequestBuilderStrategy(final EsProvider esProvider, final ApplicationScope applicationScope, final IndexAlias alias, int cursorTimeout){
+
+    public SearchRequestBuilderStrategy( final EsProvider esProvider, final ApplicationScope applicationScope,
+                                         final IndexAlias alias, int cursorTimeout ) {
 
         this.esProvider = esProvider;
         this.applicationScope = applicationScope;
@@ -65,94 +70,75 @@ public class SearchRequestBuilderStrategy {
         this.cursorTimeout = cursorTimeout;
     }
 
-    public SearchRequestBuilder getBuilder(final SearchEdge searchEdge, final SearchTypes searchTypes, final ParsedQuery query,  final int limit) {
 
-        Preconditions.checkArgument(limit <= EntityIndex.MAX_LIMIT, "limit is greater than max "+ EntityIndex.MAX_LIMIT);
+    public SearchRequestBuilder getBuilder( final SearchEdge searchEdge, final SearchTypes searchTypes,
+                                            final ParsedQuery query, final int limit ) {
 
-        SearchRequestBuilder srb = esProvider.getClient().prepareSearch(alias.getReadAlias())
-            .setTypes(searchTypes.getTypeNames(applicationScope))
-            .setScroll(cursorTimeout + "m")
-            .setQuery(createQueryBuilder( searchEdge,query));
+        Preconditions
+                .checkArgument( limit <= EntityIndex.MAX_LIMIT, "limit is greater than max " + EntityIndex.MAX_LIMIT );
 
-        final FilterBuilder fb = createFilterBuilder(query);
+        SearchRequestBuilder srb = esProvider.getClient().prepareSearch( alias.getReadAlias() )
+                                             .setTypes( searchTypes.getTypeNames( applicationScope ) )
+                                             .setScroll( cursorTimeout + "m" );
 
-        //we have post filters, apply them
-        if (fb != null) {
-            logger.debug("   Filter: {} ", fb.toString());
-            srb = srb.setPostFilter(fb);
+
+        final QueryVisitor visitor = visitParsedQuery(query);
+
+        srb.setQuery(  createQueryBuilder( searchEdge, visitor ) );
+
+        final FilterBuilder fb = visitor.getFilterBuilder();
+
+        srb.setPostFilter( fb );
+
+
+        srb = srb.setFrom( 0 ).setSize( limit );
+
+        //no sort predicates, sort by edge time descending, entity id second
+        if ( query.getSortPredicates().size() == 0 ) {
+            //sort by the edge timestamp
+            srb.addSort( SortBuilders.fieldSort( IndexingUtils.EDGE_TIMESTAMP_FIELDNAME ).order( SortOrder.DESC ) );
+
+            //sort by the entity id if our times are equal
+            srb.addSort( SortBuilders.fieldSort( IndexingUtils.ENTITY_ID_FIELDNAME ).order( SortOrder.ASC ) );
         }
 
+        //we have sort predicates, sort them
+        for ( SortPredicate sp : query.getSortPredicates() ) {
 
-        srb = srb.setFrom(0).setSize(limit);
 
-        for (SortPredicate sp : query.getSortPredicates()) {
-            throw new RuntimeException( "Fix me" );
+            // we do not know the type of the "order by" property and so we do not know what
+            // type prefix to use. So, here we add an order by clause for every possible type
+            // that you can order by: string, number and boolean and we ask ElasticSearch
+            // to ignore any fields that are not present.
 
-//            final SortOrder order;
-//            if (sp.getDirection().equals( SortPredicate.SortDirection.ASCENDING)) {
-//                order = SortOrder.ASC;
-//            } else {
-//                order = SortOrder.DESC;
-//            }
-//
-//            // we do not know the type of the "order by" property and so we do not know what
-//            // type prefix to use. So, here we add an order by clause for every possible type
-//            // that you can order by: string, number and boolean and we ask ElasticSearch
-//            // to ignore any fields that are not present.
-//
-//            final String stringFieldName = STRING_PREFIX + sp.getPropertyName();
-//            final FieldSortBuilder stringSort = SortBuilders.fieldSort(stringFieldName)
-//                .order(order).ignoreUnmapped(true);
-//            srb.addSort(stringSort);
-//
-//            logger.debug("   Sort: {} order by {}", stringFieldName, order.toString());
-//
-//            final String longFieldName = LONG_PREFIX + sp.getPropertyName();
-//            final FieldSortBuilder longSort = SortBuilders.fieldSort(longFieldName)
-//                .order(order).ignoreUnmapped(true);
-//            srb.addSort(longSort);
-//            logger.debug("   Sort: {} order by {}", longFieldName, order.toString());
-//
-//
-//            final String doubleFieldName = DOUBLE_PREFIX + sp.getPropertyName();
-//            final FieldSortBuilder doubleSort = SortBuilders.fieldSort(doubleFieldName)
-//                .order(order).ignoreUnmapped(true);
-//            srb.addSort(doubleSort);
-//            logger.debug("   Sort: {} order by {}", doubleFieldName, order.toString());
-//
-//
-//            final String booleanFieldName = BOOLEAN_PREFIX + sp.getPropertyName();
-//            final FieldSortBuilder booleanSort = SortBuilders.fieldSort(booleanFieldName)
-//                .order(order).ignoreUnmapped(true);
-//            srb.addSort(booleanSort);
-//            logger.debug("   Sort: {} order by {}", booleanFieldName, order.toString());
+            final SortOrder order = sp.getDirection().toEsSort();
+            final String propertyName = sp.getPropertyName();
+
+
+            srb.addSort( createSort( order, IndexingUtils.SORT_FIELD_STRING, propertyName ) );
+
+
+            srb.addSort( createSort( order, IndexingUtils.SORT_FIELD_INT, propertyName ) );
+
+            srb.addSort( createSort( order, IndexingUtils.SORT_FIELD_DOUBLE, propertyName ) );
+
+            srb.addSort( createSort( order, IndexingUtils.SORT_FIELD_BOOLEAN, propertyName ) );
+
+
+            srb.addSort( createSort( order, IndexingUtils.SORT_FIELD_LONG, propertyName ) );
+
+            srb.addSort( createSort( order, IndexingUtils.SORT_FIELD_FLOAT, propertyName ) );
+
+
         }
         return srb;
     }
 
 
-    public QueryBuilder createQueryBuilder(final  SearchEdge searchEdge, final ParsedQuery query) {
-        String context = createContextName(applicationScope, searchEdge );
+    public QueryBuilder createQueryBuilder( final SearchEdge searchEdge, final QueryVisitor visitor ) {
+        String context = createContextName( applicationScope, searchEdge );
 
-        QueryBuilder queryBuilder = null;
-
-        //we have a root operand.  Translate our AST into an ES search
-        if ( query.getRootOperand() != null ) {
-            // In the case of geo only queries, this will return null into the query builder.
-            // Once we start using tiles, we won't need this check any longer, since a geo query
-            // will return a tile query + post filter
-            QueryVisitor v = new EsQueryVistor();
-
-            try {
-                query.getRootOperand().visit( v );
-            }
-            catch ( IndexException ex ) {
-                throw new RuntimeException( "Error building ElasticSearch query", ex );
-            }
-
-
-            queryBuilder = v.getQueryBuilder();
-        }
+        QueryBuilder queryBuilder = visitor.getQueryBuilder();
 
 
         // Add our filter for context to our query for fast execution.
@@ -165,7 +151,7 @@ public class SearchRequestBuilderStrategy {
         //make sure we have entity in the context
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
-        boolQueryBuilder.must(  QueryBuilders.termQuery( IndexingUtils.EDGE_SEARCH_FIELDNAME, context ) );
+        boolQueryBuilder.must( QueryBuilders.termQuery( IndexingUtils.EDGE_SEARCH_FIELDNAME, context ) );
 
         boolQueryBuilder.must( queryBuilder );
 
@@ -173,21 +159,44 @@ public class SearchRequestBuilderStrategy {
     }
 
 
-    public FilterBuilder createFilterBuilder(ParsedQuery query) {
-        FilterBuilder filterBuilder = null;
 
-        if ( query.getRootOperand() != null ) {
-            QueryVisitor v = new EsQueryVistor();
+
+    /**
+     * Perform our visit of the query once for efficiency
+     * @param parsedQuery
+     * @return
+     */
+    private QueryVisitor visitParsedQuery(final ParsedQuery parsedQuery){
+        QueryVisitor v = new EsQueryVistor();
+
+        if ( parsedQuery.getRootOperand() != null ) {
+
             try {
-                query.getRootOperand().visit( v );
-
-            } catch ( IndexException ex ) {
+                parsedQuery.getRootOperand().visit( v );
+            }
+            catch ( IndexException ex ) {
                 throw new RuntimeException( "Error building ElasticSearch query", ex );
             }
-            filterBuilder = v.getFilterBuilder();
+
         }
 
-        return filterBuilder;
+        return v;
     }
 
+
+    /**
+     * Create a sort for the property name and field name specified
+     * @param sortOrder The sort order
+     * @param fieldName The name of the field for the type
+     * @param propertyName The property name the user specified for the sort
+     * @return
+     */
+    private FieldSortBuilder createSort( final SortOrder sortOrder, final String fieldName,
+                                         final String propertyName ) {
+
+        final TermFilterBuilder propertyFilter = FilterBuilders.termFilter( IndexingUtils.FIELD_NAME, propertyName );
+
+
+        return SortBuilders.fieldSort( fieldName ).order( sortOrder ).ignoreUnmapped( true ).setNestedFilter( propertyFilter );
+    }
 }

@@ -26,6 +26,8 @@ package org.apache.usergrid.persistence.index.query;
 
 import java.io.Serializable;
 
+import org.elasticsearch.search.sort.SortOrder;
+
 
 /**
  * An object that represents a sort predicate
@@ -100,7 +102,23 @@ public final class SortPredicate implements Serializable {
 
 
     public enum SortDirection {
-        ASCENDING, DESCENDING;
+        ASCENDING(SortOrder.ASC), DESCENDING(SortOrder.DESC);
+
+        private final SortOrder esOrder;
+
+
+        SortDirection( final SortOrder esOrder ) {this.esOrder = esOrder;}
+
+
+        /**
+         * Get the ES sort direction
+         * @return
+         */
+        public SortOrder toEsSort(){
+            return esOrder;
+        }
+
+
 
 
         public static SortDirection find( String s ) {

@@ -38,65 +38,66 @@ public interface QueryVisitor {
      * @param op
      * @throws IndexException
      */
-    public void visit( AndOperand op ) throws IndexException;
+    void visit( AndOperand op ) throws IndexException;
 
     /**
      * @param op
      * @throws IndexException
      */
-    public void visit( OrOperand op ) throws IndexException;
+    void visit( OrOperand op ) throws IndexException;
 
     /**
      * @param op
      * @throws IndexException
      */
-    public void visit( NotOperand op ) throws IndexException;
+    void visit( NotOperand op ) throws IndexException;
 
     /**
      * @param op
      * @throws NoIndexException
      */
-    public void visit( LessThan op ) throws NoIndexException;
+    void visit( LessThan op ) throws NoIndexException;
 
     /**
      * @param op
      * @throws NoFullTextIndexException
      */
-    public void visit( ContainsOperand op ) throws NoFullTextIndexException;
+    void visit( ContainsOperand op ) throws NoFullTextIndexException;
 
     /**
      * @param op
      */
-    public void visit( WithinOperand op );
-
-    /**
-     * @param op
-     * @throws NoIndexException
-     */
-    public void visit( LessThanEqual op ) throws NoIndexException;
+    void visit( WithinOperand op );
 
     /**
      * @param op
      * @throws NoIndexException
      */
-    public void visit( Equal op ) throws NoIndexException;
+    void visit( LessThanEqual op ) throws NoIndexException;
 
     /**
      * @param op
      * @throws NoIndexException
      */
-    public void visit( GreaterThan op ) throws NoIndexException;
+    void visit( Equal op ) throws NoIndexException;
 
     /**
      * @param op
      * @throws NoIndexException
      */
-    public void visit( GreaterThanEqual op ) throws NoIndexException;
+    void visit( GreaterThan op ) throws NoIndexException;
+
+    /**
+     * @param op
+     * @throws NoIndexException
+     */
+    void visit( GreaterThanEqual op ) throws NoIndexException;
 
     /** 
      * Returns resulting query builder.
      */
-    public QueryBuilder getQueryBuilder();
+    QueryBuilder getQueryBuilder();
 
-	public FilterBuilder getFilterBuilder();
+
+	FilterBuilder getFilterBuilder();
 }

@@ -20,6 +20,7 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -90,7 +91,6 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
     private final MapManager mapManager;
     private final AliasedEntityIndex entityIndex;
     private final IndexBufferProducer indexBatchBufferProducer;
-    private final IndexCache indexCache;
     private final IndexFig indexFig;
     private final EsProvider esProvider;
     private final IndexAlias alias;
@@ -102,15 +102,14 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
 
 
     @Inject
-    public EsApplicationEntityIndexImpl( @Assisted ApplicationScope appScope, final AliasedEntityIndex entityIndex,
+    public EsApplicationEntityIndexImpl(  ApplicationScope appScope, final AliasedEntityIndex entityIndex,
                                          final IndexFig config, final IndexBufferProducer indexBatchBufferProducer,
-                                         final EsProvider provider, final IndexCache indexCache,
+                                         final EsProvider provider,
                                          final MetricsFactory metricsFactory, final MapManagerFactory mapManagerFactory,
                                          final IndexFig indexFig,
                                          final FailureMonitorImpl.IndexIdentifier indexIdentifier ) {
         this.entityIndex = entityIndex;
         this.indexBatchBufferProducer = indexBatchBufferProducer;
-        this.indexCache = indexCache;
         this.indexFig = indexFig;
         this.indexIdentifier = indexIdentifier;
         ValidationUtils.validateApplicationScope( appScope );
@@ -314,8 +313,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
         final CandidateResults candidateResults = new CandidateResults( candidates, query.getSelectFieldMappings() );
         final String esScrollCursor = searchResponse.getScrollId();
 
-        // >= seems odd.  However if our user reduces expectedSize (limit) on subsequent requests, we can't do that
-        //therefor we need to account for the overflow
+        // >= seems odd.  However if we get an overflow, we need to account for it.
         if ( esScrollCursor != null && length >= limit ) {
             final String cursor = candidateResults.initializeCursor();
 
@@ -340,7 +338,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
     /**
      * Class to encapsulate our serialized state
      */
-    private static final class QueryState {
+    private static final class QueryState implements Serializable{
 
         /**
          * Our reserved character for constructing our storage string

@@ -44,7 +44,7 @@ public class IndexingUtils {
     public static final String ES_ENTITY_TYPE = "entity";
 
     /**
-     *  Reserved UG fields in the document
+     * Reserved UG fields in the document
      */
     public static final String APPLICATION_ID_FIELDNAME = "applicationId";
 
@@ -78,6 +78,19 @@ public class IndexingUtils {
     public static final String FIELD_DOUBLE = "double";
     public static final String FIELD_LOCATION = "location";
     public static final String FIELD_STRING = "string";
+
+
+    /**
+     * All possible sort values
+     */
+    public static final String SORT_FIELD_BOOLEAN = ENTITY_FIELDS + ".boolean";
+    public static final String SORT_FIELD_INT = ENTITY_FIELDS + ".int";
+    public static final String SORT_FIELD_LONG = ENTITY_FIELDS + ".long";
+    public static final String SORT_FIELD_FLOAT = ENTITY_FIELDS + ".float";
+    public static final String SORT_FIELD_DOUBLE = ENTITY_FIELDS + ".double";
+    public static final String SORT_FIELD_LOCATION = ENTITY_FIELDS + ".location";
+    public static final String SORT_FIELD_STRING = ENTITY_FIELDS + ".string";
+
 
     //The value appended to the string field when it's an exact match.  Should only be used on search, never index
     public static final String FIELD_STRING_EQUALS = FIELD_STRING + ".exact";
@@ -154,8 +167,6 @@ public class IndexingUtils {
 
     /**
      * Parse the document id into a candidate result
-     * @param documentId
-     * @return
      */
     public static CandidateResult parseIndexDocId( final String documentId ) {
 

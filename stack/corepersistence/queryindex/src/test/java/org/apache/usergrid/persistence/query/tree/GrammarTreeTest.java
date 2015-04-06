@@ -436,11 +436,7 @@ public class GrammarTreeTest {
         assertEquals( 37f, withinOperand.getLatitude().getFloatValue(), 0 );
         assertEquals( -75f, withinOperand.getLongitude().getFloatValue(), 0 );
 
-        SearchRequestBuilderStrategy builderStrategy =
-                new SearchRequestBuilderStrategy( null, new ApplicationScopeImpl( new SimpleId( "test" ) ), null, 100 );
-        QueryBuilder qb =
-                builderStrategy.createQueryBuilder( new SearchEdgeImpl( new SimpleId( "owner" ), "app",
-                        SearchEdge.NodeType.SOURCE ), query );
+
     }
 
 
