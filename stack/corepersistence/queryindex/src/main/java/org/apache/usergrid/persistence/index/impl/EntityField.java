@@ -76,7 +76,7 @@ public class EntityField extends HashMap<String, Object> {
     public static EntityField create( final String fieldName, final int value ) {
         EntityField field = new EntityField();
         field.put( IndexingUtils.FIELD_NAME, fieldName );
-        field.put( IndexingUtils.FIELD_INT, value );
+        field.put( IndexingUtils.FIELD_LONG, value );
 
         return field;
     }
@@ -100,7 +100,7 @@ public class EntityField extends HashMap<String, Object> {
     public static EntityField create( final String fieldName, final float value ) {
         EntityField field = new EntityField();
         field.put( IndexingUtils.FIELD_NAME, fieldName );
-        field.put( IndexingUtils.FIELD_FLOAT, value );
+        field.put( IndexingUtils.FIELD_DOUBLE, value );
 
         return field;
     }

@@ -57,16 +57,8 @@
             "type": "boolean",
             "doc_values": true
           },
-          "int": {
-            "type": "integer",
-            "doc_values": true
-          },
           "long": {
             "type": "long",
-            "doc_values": true
-          },
-          "float": {
-            "type": "float",
             "doc_values": true
           },
           "double": {

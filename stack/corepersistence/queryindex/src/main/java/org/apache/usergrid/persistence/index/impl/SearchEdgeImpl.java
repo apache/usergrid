@@ -27,9 +27,9 @@ import org.apache.usergrid.persistence.model.entity.Id;
  * will be on the opposite side of the edge from the specified nodeId
  */
 public class SearchEdgeImpl implements SearchEdge {
-    private final Id nodeId;
-    private final String name;
-    private final NodeType nodeType;
+    protected final Id nodeId;
+    protected final String name;
+    protected final NodeType nodeType;
 
 
     public SearchEdgeImpl( final Id nodeId, final String name, final NodeType nodeType ) {
@@ -54,5 +54,45 @@ public class SearchEdgeImpl implements SearchEdge {
     @Override
     public NodeType getNodeType() {
         return nodeType;
+    }
+
+
+    @Override
+    public boolean equals( final Object o ) {
+        if ( this == o ) {
+            return true;
+        }
+        if ( !( o instanceof SearchEdgeImpl ) ) {
+            return false;
+        }
+
+        final SearchEdgeImpl that = ( SearchEdgeImpl ) o;
+
+        if ( !nodeId.equals( that.nodeId ) ) {
+            return false;
+        }
+        if ( !name.equals( that.name ) ) {
+            return false;
+        }
+        return nodeType == that.nodeType;
+    }
+
+
+    @Override
+    public int hashCode() {
+        int result = nodeId.hashCode();
+        result = 31 * result + name.hashCode();
+        result = 31 * result + nodeType.hashCode();
+        return result;
+    }
+
+
+    @Override
+    public String toString() {
+        return "SearchEdgeImpl{" +
+                "nodeId=" + nodeId +
+                ", name='" + name + '\'' +
+                ", nodeType=" + nodeType +
+                '}';
     }
 }

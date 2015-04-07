@@ -67,7 +67,7 @@ public class EntityMappingParser implements FieldParser {
      * Visit al the primitive values
      */
     private void visit( final String value ) {
-        fields.add( EntityField.create( fieldStack.peek(), value ) );
+        fields.add( EntityField.create( fieldStack.peek(), value.toLowerCase() ) );
     }
 
 

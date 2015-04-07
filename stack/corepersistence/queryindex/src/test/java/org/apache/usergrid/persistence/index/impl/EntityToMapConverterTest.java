@@ -145,7 +145,7 @@ public class EntityToMapConverterTest {
     @Test
     public void testIntegerField() {
         testSingleField( new IntegerField( "name", 100 ),
-                ( field, entityField ) -> assertEquals( field.getValue(), entityField.get( IndexingUtils.FIELD_INT )
+                ( field, entityField ) -> assertEquals( field.getValue(), entityField.get( IndexingUtils.FIELD_LONG )
                                                       ) );
     }
 
@@ -160,7 +160,7 @@ public class EntityToMapConverterTest {
     @Test
     public void testFloadField() {
         testSingleField( new FloatField( "name", 1.10f ), ( field, entityField ) -> assertEquals( field.getValue(),
-                        entityField.get( IndexingUtils.FIELD_FLOAT ) ) );
+                        entityField.get( IndexingUtils.FIELD_DOUBLE ) ) );
     }
 
 
@@ -258,7 +258,7 @@ public class EntityToMapConverterTest {
         array.add( 2 );
         array.add( 3 );
 
-        testPrimitiveArray( array, IndexingUtils.FIELD_INT );
+        testPrimitiveArray( array, IndexingUtils.FIELD_LONG );
     }
 
 
@@ -286,7 +286,7 @@ public class EntityToMapConverterTest {
         array.add( 2.0f );
         array.add( 3.0f );
 
-        testPrimitiveArray( array, IndexingUtils.FIELD_FLOAT );
+        testPrimitiveArray( array, IndexingUtils.FIELD_DOUBLE );
     }
 
 
@@ -363,7 +363,7 @@ public class EntityToMapConverterTest {
     @Test
     public void testIntegerFieldSubObject() {
         testNestedField( new IntegerField( "name", 100 ),
-                ( field, entityField ) -> assertEquals( field.getValue(), entityField.get( IndexingUtils.FIELD_INT )
+                ( field, entityField ) -> assertEquals( field.getValue(), entityField.get( IndexingUtils.FIELD_LONG )
                                                       ) );
     }
 
@@ -378,7 +378,7 @@ public class EntityToMapConverterTest {
     @Test
     public void testFloadFieldSubObject() {
         testNestedField( new FloatField( "name", 1.10f ), ( field, entityField ) -> assertEquals( field.getValue(),
-                entityField.get( IndexingUtils.FIELD_FLOAT ) ) );
+                entityField.get( IndexingUtils.FIELD_DOUBLE ) ) );
     }
 
 
@@ -480,7 +480,7 @@ public class EntityToMapConverterTest {
     @Test
     public void testIntegerFieldSubObjectArray() {
         testNestedFieldArraySubObject( new IntegerField( "name", 100 ),
-                ( field, entityField ) -> assertEquals( field.getValue(), entityField.get( IndexingUtils.FIELD_INT )
+                ( field, entityField ) -> assertEquals( field.getValue(), entityField.get( IndexingUtils.FIELD_LONG )
                                                       ) );
     }
 
@@ -497,7 +497,7 @@ public class EntityToMapConverterTest {
     public void testFloadFieldSubObjectArray() {
         testNestedFieldArraySubObject( new FloatField( "name", 1.10f ),
                 ( field, entityField ) -> assertEquals( field.getValue(),
-                        entityField.get( IndexingUtils.FIELD_FLOAT ) ) );
+                        entityField.get( IndexingUtils.FIELD_DOUBLE ) ) );
     }
 
 

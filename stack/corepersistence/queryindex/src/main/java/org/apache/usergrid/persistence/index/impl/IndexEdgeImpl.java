@@ -33,7 +33,7 @@ import org.apache.usergrid.persistence.model.entity.Id;
  */
 public class IndexEdgeImpl extends SearchEdgeImpl implements IndexEdge {
 
-    private final long timestamp;
+    protected final long timestamp;
 
 
     public IndexEdgeImpl( final Id nodeId, final String name, final NodeType nodeType, final long timestamp ) {
@@ -46,4 +46,39 @@ public class IndexEdgeImpl extends SearchEdgeImpl implements IndexEdge {
     public long getTimestamp() {
         return timestamp;
     }
+
+
+    @Override
+    public boolean equals( final Object o ) {
+        if ( this == o ) {
+            return true;
+        }
+        if ( !( o instanceof IndexEdgeImpl ) ) {
+            return false;
+        }
+        if ( !super.equals( o ) ) {
+            return false;
+        }
+
+        final IndexEdgeImpl indexEdge = ( IndexEdgeImpl ) o;
+
+        return timestamp == indexEdge.timestamp;
+    }
+
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + ( int ) ( timestamp ^ ( timestamp >>> 32 ) );
+        return result;
+    }
+
+
+    @Override
+    public String toString() {
+        return "IndexEdgeImpl{" +
+                "timestamp=" + timestamp +
+                "} " + super.toString();
+    }
 }
+

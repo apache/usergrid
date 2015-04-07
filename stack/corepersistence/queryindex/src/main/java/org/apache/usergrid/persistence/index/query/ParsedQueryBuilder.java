@@ -73,7 +73,7 @@ public class ParsedQueryBuilder {
 
             //junk, bail
             else {
-               outputQuery = "select * where" + trimmedLowercaseQuery;
+               outputQuery = "select * where " + trimmedLowercaseQuery;
             }
         }
         else {

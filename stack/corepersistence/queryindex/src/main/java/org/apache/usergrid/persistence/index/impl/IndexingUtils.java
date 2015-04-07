@@ -69,31 +69,34 @@ public class IndexingUtils {
 
     /**
      * Reserved field types in our document
+     *
+     * We use longs for ints, and doubles for floats to avoid runtime type conflicts
      */
     public static final String FIELD_NAME = "name";
     public static final String FIELD_BOOLEAN = "boolean";
-    public static final String FIELD_INT = "int";
     public static final String FIELD_LONG = "long";
-    public static final String FIELD_FLOAT = "float";
     public static final String FIELD_DOUBLE = "double";
     public static final String FIELD_LOCATION = "location";
     public static final String FIELD_STRING = "string";
 
 
+
+
+
     /**
-     * All possible sort values
+     * All search/sort values
      */
-    public static final String SORT_FIELD_BOOLEAN = ENTITY_FIELDS + ".boolean";
-    public static final String SORT_FIELD_INT = ENTITY_FIELDS + ".int";
-    public static final String SORT_FIELD_LONG = ENTITY_FIELDS + ".long";
-    public static final String SORT_FIELD_FLOAT = ENTITY_FIELDS + ".float";
-    public static final String SORT_FIELD_DOUBLE = ENTITY_FIELDS + ".double";
-    public static final String SORT_FIELD_LOCATION = ENTITY_FIELDS + ".location";
-    public static final String SORT_FIELD_STRING = ENTITY_FIELDS + ".string";
+    public static final String FIELD_NAME_NESTED = ENTITY_FIELDS + "." + FIELD_NAME;
+    public static final String FIELD_BOOLEAN_NESTED = ENTITY_FIELDS + "." + FIELD_BOOLEAN;
+    public static final String FIELD_LONG_NESTED = ENTITY_FIELDS + "." + FIELD_LONG;
+    public static final String FIELD_DOUBLE_NESTED = ENTITY_FIELDS + "." + FIELD_DOUBLE;
+    public static final String SORT_FIELD_LOCATION = ENTITY_FIELDS + "." + FIELD_LOCATION;
+    public static final String FIELD_STRING_NESTED = ENTITY_FIELDS + "." + FIELD_STRING;
+    public static final String FIELD_STRING_EQUALS_NESTED = FIELD_STRING_NESTED + ".exact";
 
 
-    //The value appended to the string field when it's an exact match.  Should only be used on search, never index
-    public static final String FIELD_STRING_EQUALS = FIELD_STRING + ".exact";
+
+
 
 
     /**

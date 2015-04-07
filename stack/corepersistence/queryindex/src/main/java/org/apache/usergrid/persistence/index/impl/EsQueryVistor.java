@@ -19,21 +19,23 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Stack;
-import java.util.UUID;
-
-import javax.swing.text.html.Option;
 
 import org.elasticsearch.common.unit.DistanceUnit;
+import org.elasticsearch.index.query.BoolFilterBuilder;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.FilterBuilders;
+import org.elasticsearch.index.query.MatchQueryBuilder;
+import org.elasticsearch.index.query.NestedFilterBuilder;
+import org.elasticsearch.index.query.NestedQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.RangeFilterBuilder;
+import org.elasticsearch.index.query.TermFilterBuilder;
+import org.elasticsearch.index.query.WildcardQueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,19 +54,26 @@ import org.apache.usergrid.persistence.index.query.tree.OrOperand;
 import org.apache.usergrid.persistence.index.query.tree.QueryVisitor;
 import org.apache.usergrid.persistence.index.query.tree.WithinOperand;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 
 
 /**
- * Visits tree of  parsed Query operands and populates
- * ElasticSearch QueryBuilder that represents the query.
+ * Visits tree of  parsed Query operands and populates ElasticSearch QueryBuilder that represents the query.
  */
 public class EsQueryVistor implements QueryVisitor {
     private static final Logger logger = LoggerFactory.getLogger( EsQueryVistor.class );
 
-    Stack<QueryBuilder> stack = new Stack<QueryBuilder>();
-    List<FilterBuilder> filterBuilders = new ArrayList<FilterBuilder>();
+    /**
+     * Our queryBuilders for query operations
+     */
+    private final Stack<QueryBuilder> queryBuilders = new Stack<>();
+
+    /**
+     * Our queryBuilders for filter operations
+     */
+    private final Stack<FilterBuilder> filterBuilders = new Stack<>();
+
+    private final Set<String> geoFields = new HashSet<String>();
 
 
     @Override
@@ -72,43 +81,68 @@ public class EsQueryVistor implements QueryVisitor {
 
 
         op.getLeft().visit( this );
-        QueryBuilder left = null;
-
-        // special handling for WithinOperand because ElasticSearch wants us to use
-        // a filter and not have WithinOperand as part of the actual query itself
-        if ( !(op.getLeft() instanceof WithinOperand) ) {
-            left = stack.peek();
-        }
-
         op.getRight().visit( this );
-        QueryBuilder right = null;
 
-        // special handling for WithinOperand on the right too
-        if ( !(op.getRight()instanceof WithinOperand) ) {
-            right = stack.peek();
+        //get all the right
+        final QueryBuilder rightQuery = queryBuilders.pop();
+        final FilterBuilder rightFilter = filterBuilders.pop();
+
+
+        //get all the left
+        final QueryBuilder leftQuery = queryBuilders.pop();
+        final FilterBuilder leftFilter = filterBuilders.pop();
+
+
+        //push our boolean filters
+
+
+        final boolean useLeftQuery = use( leftQuery );
+        final boolean useRightQuery = use( rightQuery );
+
+        /**
+         * We use a left and a right, add our boolean query
+         */
+        if ( useLeftQuery && useRightQuery ) {
+            final BoolQueryBuilder qb = QueryBuilders.boolQuery().must( leftQuery ).must( rightQuery );
+            queryBuilders.push( qb );
+        }
+        //only use the left
+        else if ( useLeftQuery ) {
+            queryBuilders.push( leftQuery );
+        }
+        //only use the right
+        else if ( useRightQuery ) {
+            queryBuilders.push( rightQuery );
+        }
+        //put in an empty in case we're not the root.  I.E X and Y and Z
+        else{
+            queryBuilders.push( NoOpQueryBuilder.INSTANCE );
         }
 
-        if ( left == right ) {
-            return;
+        //possibly use neither if the is a no-op
+
+
+        final boolean useLeftFilter = use( leftFilter );
+        final boolean useRightFilter = use( rightFilter );
+
+        //use left and right
+        if ( useLeftFilter && useRightFilter ) {
+            final BoolFilterBuilder fb = FilterBuilders.boolFilter().must( leftFilter ).must( rightFilter );
+            filterBuilders.push( fb );
         }
 
-        if ( !(op.getLeft() instanceof WithinOperand) ) {
-            left = stack.pop();
+        //only use left
+        else if ( useLeftFilter ) {
+            filterBuilders.push( leftFilter );
         }
-
-        if ( !(op.getRight()instanceof WithinOperand) ) {
-            right = stack.pop();
+        //only use right
+        else if ( useRightFilter ) {
+            filterBuilders.push( rightFilter );
         }
-
-        BoolQueryBuilder qb = QueryBuilders.boolQuery();
-        if ( left != null ) {
-            qb = qb.must( left );
+        //push in a no-op in case we're not the root   I.E X and Y and Z
+        else{
+            filterBuilders.push( NoOpFilterBuilder.INSTANCE );
         }
-        if ( right != null ) {
-            qb = qb.must( right );
-        }
-
-        stack.push( qb );
     }
 
 
@@ -118,24 +152,58 @@ public class EsQueryVistor implements QueryVisitor {
         op.getLeft().visit( this );
         op.getRight().visit( this );
 
-        QueryBuilder left = null;
-        if ( !(op.getLeft()instanceof WithinOperand) ) {
-            left = stack.pop();
+        final QueryBuilder rightQuery = queryBuilders.pop();
+        final FilterBuilder rightFilter = filterBuilders.pop();
+
+
+        //get all the left
+        final QueryBuilder leftQuery = queryBuilders.pop();
+        final FilterBuilder leftFilter = filterBuilders.pop();
+
+
+        final boolean useLeftQuery = use( leftQuery );
+        final boolean useRightQuery = use( rightQuery );
+
+        //push our boolean filters
+        if ( useLeftQuery && useRightQuery ) {
+            final BoolQueryBuilder qb = QueryBuilders.boolQuery().should( leftQuery ).should( rightQuery );
+            queryBuilders.push( qb );
         }
-        QueryBuilder right = null;
-        if ( !(op.getRight()instanceof WithinOperand) ) {
-            right = stack.pop();
+        else if ( useLeftQuery ) {
+            queryBuilders.push( leftQuery );
+        }
+        else if ( useRightQuery ) {
+            queryBuilders.push( rightQuery );
         }
 
-        BoolQueryBuilder qb = QueryBuilders.boolQuery();
-        if ( left != null ) {
-            qb = qb.should( left );
-        }
-        if ( right != null ) {
-            qb = qb.should( right );
+         //put in an empty in case we're not the root.  I.E X or Y or Z
+        else{
+            queryBuilders.push( NoOpQueryBuilder.INSTANCE );
         }
 
-        stack.push( qb );
+
+        final boolean useLeftFilter = use( leftFilter );
+        final boolean useRightFilter = use( rightFilter );
+
+        //use left and right
+        if ( useLeftFilter && useRightFilter ) {
+            final BoolFilterBuilder fb = FilterBuilders.boolFilter().should( leftFilter ).should( rightFilter );
+            filterBuilders.push( fb );
+        }
+
+        //only use left
+        else if ( useLeftFilter ) {
+            filterBuilders.push( leftFilter );
+        }
+        //only use right
+        else if ( useRightFilter ) {
+            filterBuilders.push( rightFilter );
+        }
+         //put in an empty in case we're not the root.  I.E X or Y or Z
+        else{
+            queryBuilders.push( NoOpQueryBuilder.INSTANCE );
+        }
+
     }
 
 
@@ -143,232 +211,306 @@ public class EsQueryVistor implements QueryVisitor {
     public void visit( NotOperand op ) throws IndexException {
         op.getOperation().visit( this );
 
-        if ( !(op.getOperation() instanceof WithinOperand) ) {
-            stack.push( QueryBuilders.boolQuery().mustNot( stack.pop() ));
+        //push our not operation into our query
+
+        final QueryBuilder notQueryBuilder = queryBuilders.pop();
+
+        if ( use( notQueryBuilder ) ) {
+            queryBuilders.push( QueryBuilders.boolQuery().mustNot( notQueryBuilder ) );
+        }
+        else{
+            queryBuilders.push( NoOpQueryBuilder.INSTANCE );
+        }
+
+        final FilterBuilder notFilterBuilder = filterBuilders.pop();
+
+        //push the filter in
+        if ( use( notFilterBuilder ) ) {
+            filterBuilders.push( FilterBuilders.boolFilter().mustNot( notFilterBuilder ) );
+        }
+        else{
+            filterBuilders.push( NoOpFilterBuilder.INSTANCE );
         }
     }
 
 
     @Override
     public void visit( ContainsOperand op ) throws NoFullTextIndexException {
-        String name = op.getProperty().getValue();
-        name = name.toLowerCase();
-        Object value = op.getLiteral().getValue();
+        final String name = op.getProperty().getValue().toLowerCase();
+        final String value = op.getLiteral().getValue().toString().toLowerCase();
 
-        BoolQueryBuilder qb = QueryBuilders.boolQuery(); // let's do a boolean OR
-        qb.minimumNumberShouldMatch(1);
 
-        // field is an entity/array that needs no name prefix
-        qb = qb.should( QueryBuilders.matchQuery( name, value ) );
+        // or field is just a string that does need a prefix
+        if ( value.indexOf( "*" ) != -1 ) {
+            final WildcardQueryBuilder wildcardQuery =
+                    QueryBuilders.wildcardQuery( IndexingUtils.FIELD_STRING_NESTED, value );
+            queryBuilders.push( fieldNameTerm( name, wildcardQuery ) );
+        }
+        else {
+            final MatchQueryBuilder termQuery = QueryBuilders.matchQuery( IndexingUtils.FIELD_STRING_NESTED, value );
 
-        // OR field is a string and needs the prefix on the name
-        qb = qb.should( QueryBuilders.matchQuery( addPrefix( value.toString(), name, true), value));
+            queryBuilders.push( fieldNameTerm( name, termQuery ) );
+        }
 
-        stack.push( qb );
+
+        //no op for filters, push an empty operation
+
+        //TODO, validate this works
+        filterBuilders.push( NoOpFilterBuilder.INSTANCE );
     }
 
 
     @Override
     public void visit( WithinOperand op ) {
 
-        String name = op.getProperty().getValue();
-        name = name.toLowerCase();
+        final String name = op.getProperty().getValue().toLowerCase();
+
+        geoFields.add( name );
 
         float lat = op.getLatitude().getFloatValue();
         float lon = op.getLongitude().getFloatValue();
         float distance = op.getDistance().getFloatValue();
 
 
+        final FilterBuilder fb = FilterBuilders.geoDistanceFilter( name ).lat( lat ).lon( lon )
+                                               .distance( distance, DistanceUnit.METERS );
+        filterBuilders.push( fb );
 
-        FilterBuilder fb = FilterBuilders.geoDistanceFilter( name )
-           .lat( lat ).lon( lon ).distance( distance, DistanceUnit.METERS );
-        filterBuilders.add( fb );
+        //no op for query, push
+
+        queryBuilders.push( NoOpQueryBuilder.INSTANCE );
     }
 
 
     @Override
     public void visit( LessThan op ) throws NoIndexException {
-        String name = op.getProperty().getValue();
-        name = name.toLowerCase();
-        Object value = op.getLiteral().getValue();
-        name = addPrefix( value, name );
-        stack.push( QueryBuilders.rangeQuery( name ).lt( value ));
+        final String name = op.getProperty().getValue().toLowerCase();
+        final Object value = op.getLiteral().getValue();
+
+
+        final RangeFilterBuilder termQuery =
+                FilterBuilders.rangeFilter( getFieldNameForType( value ) ).lt( sanitize( value ) );
+
+
+        queryBuilders.push( NoOpQueryBuilder.INSTANCE );
+
+        //we do this by query, push empty
+
+        filterBuilders.push( fieldNameTerm( name, termQuery ) );
     }
 
 
     @Override
     public void visit( LessThanEqual op ) throws NoIndexException {
-        String name = op.getProperty().getValue();
-        name = name.toLowerCase();
-        Object value = op.getLiteral().getValue();
-        name = addPrefix( value, name );
-        stack.push( QueryBuilders.rangeQuery( name ).lte( value ));
+        final String name = op.getProperty().getValue().toLowerCase();
+        final Object value = op.getLiteral().getValue();
+
+
+        final RangeFilterBuilder termQuery =
+                FilterBuilders.rangeFilter( getFieldNameForType( value ) ).lte( sanitize( value ) );
+
+
+        queryBuilders.push( NoOpQueryBuilder.INSTANCE );
+
+        filterBuilders.push( fieldNameTerm( name, termQuery ) );
     }
 
 
     @Override
     public void visit( Equal op ) throws NoIndexException {
-        String name = op.getProperty().getValue();
-        name = name.toLowerCase();
-        Object value = op.getLiteral().getValue();
+        final String name = op.getProperty().getValue().toLowerCase();
+        final Object value = op.getLiteral().getValue();
 
+        //special case so we support our '*' char with wildcard
         if ( value instanceof String ) {
-            String svalue = (String)value;
+            final String svalue = ( String ) value;
 
-            BoolQueryBuilder qb = QueryBuilders.boolQuery();  // let's do a boolean OR
-            qb.minimumNumberShouldMatch(1);
+            final NestedQueryBuilder qb;  // let's do a boolean OR
 
-            // field is an entity/array that does not need a prefix on its name
-            // TODO is this right now that we've updated our doc structure?
-            // Should this be "must" instead of should?
-            qb = qb.should( QueryBuilders.wildcardQuery( name, svalue ) );
+            // or field is just a string that does need a prefix us a query
+            if ( svalue.indexOf( "*" ) != -1 ) {
 
-            // or field is just a string that does need a prefix
-            if ( svalue.indexOf("*") != -1 ) {
-                qb = qb.should( QueryBuilders.wildcardQuery( addPrefix( value, name ), svalue ) );
-            } else {
-                qb = qb.should( QueryBuilders.termQuery(     addPrefix( value, name ), value ));
+                final WildcardQueryBuilder wildcardQuery =
+                        QueryBuilders.wildcardQuery( IndexingUtils.FIELD_STRING_NESTED, svalue.toLowerCase() );
+                queryBuilders.push( fieldNameTerm( name, wildcardQuery ) );
+                filterBuilders.push( NoOpFilterBuilder.INSTANCE );
+                return;
             }
-            stack.push( qb );
+
+            //it's an exact match, use a filter
+            final TermFilterBuilder termFilter =
+                    FilterBuilders.termFilter( IndexingUtils.FIELD_STRING_EQUALS_NESTED, svalue.toLowerCase() );
+
+            queryBuilders.push( NoOpQueryBuilder.INSTANCE );
+            filterBuilders.push( fieldNameTerm( name, termFilter ) );
+
             return;
         }
 
         // assume all other types need prefix
-        stack.push( QueryBuilders.termQuery( addPrefix( value, name ), value ));
+
+        final TermFilterBuilder termQuery =
+                FilterBuilders.termFilter( getFieldNameForType( value ), sanitize( value ) );
+
+        filterBuilders.push( fieldNameTerm( name, termQuery ) );
+
+        queryBuilders.push( NoOpQueryBuilder.INSTANCE );
     }
 
 
     @Override
     public void visit( GreaterThan op ) throws NoIndexException {
-        String name = op.getProperty().getValue();
-        name = name.toLowerCase();
-        Object value = op.getLiteral().getValue();
-        name = addPrefix( value, name );
-        stack.push( QueryBuilders.rangeQuery( name ).gt( value ) );
+        final String name = op.getProperty().getValue().toLowerCase();
+        final Object value = op.getLiteral().getValue();
+
+
+        final RangeFilterBuilder rangeQuery =
+                FilterBuilders.rangeFilter( getFieldNameForType( value ) ).gt( sanitize( value ) );
+
+        filterBuilders.push( fieldNameTerm( name, rangeQuery ) );
+
+        queryBuilders.push( NoOpQueryBuilder.INSTANCE );
     }
 
 
     @Override
     public void visit( GreaterThanEqual op ) throws NoIndexException {
-        String name = op.getProperty().getValue();
-        name = name.toLowerCase();
+        String name = op.getProperty().getValue().toLowerCase();
         Object value = op.getLiteral().getValue();
-        name = addPrefix( value, name );
-        stack.push( QueryBuilders.rangeQuery( name ).gte( value ) );
+
+
+        final RangeFilterBuilder rangeQuery =
+                FilterBuilders.rangeFilter( getFieldNameForType( value ) ).gte( sanitize( value ) );
+
+        filterBuilders.push( fieldNameTerm( name, rangeQuery ) );
+
+        queryBuilders.push( NoOpQueryBuilder.INSTANCE );
     }
 
 
-    private String addPrefix( Object value, String origname ) {
-        return addPrefix(value, origname, false);
-    }
-
-
-    private String addPrefix( Object value, String origname, boolean analyzed ) {
-
-        String name = origname;
-
-        // logic to deal with nested property names
-        // only add prefix to last name in property
-        String[] parts = origname.split("\\.");
-        if ( parts.length > 1 ) {
-            name = parts[ parts.length - 1 ];
+    @Override
+    public Optional<FilterBuilder> getFilterBuilder() {
+        if ( filterBuilders.empty() ) {
+            return Optional.absent();
         }
 
-        if ( value instanceof String && analyzed ) {
-            name = addAnalyzedStringPrefix( name );
+        final FilterBuilder builder = filterBuilders.peek();
 
-        } else if ( value instanceof String ) {
-            name = addStringPrefix( name );
-
-        }else if ( value instanceof Integer ) {
-            name = addLongPrefix(name);
-
-        }else if ( value instanceof Long ) {
-            name = addLongPrefix(name);
-
-        } else if ( value instanceof Float ) {
-            name = addDoublePrefix(name);
-
-        }else if ( value instanceof Float ) {
-            name = addDoublePrefix(name);
-
-        } else if ( value instanceof Boolean ) {
-            name = addBooleanPrefix(name);
-
-        } else if ( value instanceof UUID ) {
-            name = addStringPrefix(name);
+        if ( !use( builder ) ) {
+            return Optional.absent();
         }
 
-        // re-create nested property name
-        if ( parts.length > 1 ) {
-            parts[parts.length - 1] = name;
-            Joiner joiner = Joiner.on(".").skipNulls();
-            return joiner.join(parts);
-        }
-
-        return name;
-    }
-
-
-    private String addAnalyzedStringPrefix( String name ) {
-      return name;
-    }
-
-
-    private String addStringPrefix( String name ) {
-        return name;
-    }
-
-
-    private String addDoublePrefix( String name ) {
-        return name;
-    }
-
-    private String addLongPrefix( String name ) {
-        return name;
-    }
-
-
-    private String addBooleanPrefix( String name ) {
-        return name;
+        return Optional.of( builder );
     }
 
 
     @Override
     public Optional<QueryBuilder> getQueryBuilder() {
-//        if ( stack.isEmpty() ) {
+        if ( queryBuilders.isEmpty() ) {
             return Optional.absent();
-//        }
-//        return stack.pop();
+        }
+
+        final QueryBuilder builder = queryBuilders.peek();
+
+        if ( !use( builder ) ) {
+            return Optional.absent();
+        }
 
 
+        return Optional.of( builder );
+    }
+
+
+
+    /**
+     * Generate the field name term for the field name  for queries
+     */
+    private NestedQueryBuilder fieldNameTerm( final String fieldName, final QueryBuilder fieldValueQuery ) {
+
+        final BoolQueryBuilder booleanQuery = QueryBuilders.boolQuery();
+
+        booleanQuery.must( QueryBuilders.termQuery( IndexingUtils.FIELD_NAME_NESTED, fieldName ) );
+
+        booleanQuery.must( fieldValueQuery );
+
+
+        return QueryBuilders.nestedQuery( IndexingUtils.ENTITY_FIELDS, booleanQuery );
+    }
+
+
+    /**
+     * Generate the field name term for the field name for filters
+     */
+    private NestedFilterBuilder fieldNameTerm( final String fieldName, final FilterBuilder fieldValueBuilder ) {
+
+        final BoolFilterBuilder booleanQuery = FilterBuilders.boolFilter();
+
+        booleanQuery.must( FilterBuilders.termFilter( IndexingUtils.FIELD_NAME_NESTED, fieldName ) );
+
+        booleanQuery.must( fieldValueBuilder );
+
+
+        return FilterBuilders.nestedFilter( IndexingUtils.ENTITY_FIELDS, booleanQuery );
+    }
+
+
+    /**
+     * Get the field name for the primitive type
+     */
+    private String getFieldNameForType( final Object object ) {
+        if ( object instanceof String ) {
+            return IndexingUtils.FIELD_STRING_NESTED;
+        }
+
+        if ( object instanceof Boolean ) {
+            return IndexingUtils.FIELD_BOOLEAN_NESTED;
+        }
+
+
+        if ( object instanceof Integer || object instanceof Long ) {
+            return IndexingUtils.FIELD_LONG_NESTED;
+        }
+
+        if ( object instanceof Float || object instanceof Double ) {
+            return IndexingUtils.FIELD_DOUBLE_NESTED;
+        }
+
+
+        throw new UnsupportedOperationException(
+                "Unkown search type of " + object.getClass().getName() + " encountered" );
+    }
+
+
+    /**
+     * Lowercase our input
+     */
+    private Object sanitize( final Object input ) {
+        if ( input instanceof String ) {
+            return ( ( String ) input ).toLowerCase();
+        }
+
+        return input;
+    }
+
+
+    /**
+     * Return false if our element is a no-op, true otherwise
+     */
+    private boolean use( final QueryBuilder queryBuilder ) {
+        return queryBuilder != NoOpQueryBuilder.INSTANCE;
+    }
+
+
+    /**
+     * Return false if our element is a no-op, true otherwise
+     */
+    private boolean use( final FilterBuilder filterBuilder ) {
+        return filterBuilder != NoOpFilterBuilder.INSTANCE;
     }
 
 
     @Override
-	public Optional<FilterBuilder> getFilterBuilder() {
-        return Optional.absent();
-//
-//		if ( filterBuilders.size() >  1 ) {
-//
-//			FilterBuilder andFilter = null;
-//			for ( FilterBuilder fb : filterBuilders ) {
-//				if ( andFilter == null ) {
-//					andFilter = FilterBuilders.andFilter( fb );
-//				} else {
-//					andFilter = FilterBuilders.andFilter( andFilter, fb );
-//				}
-//			}
-//
-//		} else if ( !filterBuilders.isEmpty() ) {
-//			return filterBuilders.get(0);
-//		}
-//		return null;
-	}
-
-
-    @Override
-    public Collection<String> getGeoSelectFields() {
-        return Collections.EMPTY_LIST;
+    public Set<String> getGeoSelectFields() {
+        return geoFields;
     }
 }

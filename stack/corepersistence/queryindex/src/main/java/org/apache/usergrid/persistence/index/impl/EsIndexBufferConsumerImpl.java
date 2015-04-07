@@ -277,6 +277,7 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
 
         final BulkResponse responses;
 
+
         try {
             responses = bulkRequest.execute().actionGet();
         } catch (Throwable t) {

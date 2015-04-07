@@ -21,6 +21,7 @@ package org.apache.usergrid.persistence.index.impl;
 
 
 import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.index.query.BoolFilterBuilder;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.FilterBuilders;
@@ -87,13 +88,13 @@ public class SearchRequestBuilderStrategy {
 
         final QueryVisitor visitor = visitParsedQuery( query );
 
-        srb.setQuery( createQueryBuilder( searchEdge, visitor, searchTypes ) );
+        final Optional<QueryBuilder> queryBuilder = visitor.getQueryBuilder();
 
-        final Optional<FilterBuilder> fb = visitor.getFilterBuilder();
-
-        if ( fb.isPresent() ) {
-            srb.setPostFilter( fb.get() );
+        if(queryBuilder.isPresent()){
+          srb.setQuery( queryBuilder.get() );
         }
+
+        srb.setPostFilter(createFilterBuilder( searchEdge, visitor, searchTypes ) );
 
 
         srb = srb.setFrom( 0 ).setSize( limit );
@@ -120,26 +121,24 @@ public class SearchRequestBuilderStrategy {
             final String propertyName = sp.getPropertyName();
 
 
-            srb.addSort( createSort( order, IndexingUtils.SORT_FIELD_STRING, propertyName ) );
+            srb.addSort( createSort( order, IndexingUtils.FIELD_STRING_NESTED, propertyName ) );
 
 
-            srb.addSort( createSort( order, IndexingUtils.SORT_FIELD_INT, propertyName ) );
+            srb.addSort( createSort( order, IndexingUtils.FIELD_DOUBLE_NESTED, propertyName ) );
 
-            srb.addSort( createSort( order, IndexingUtils.SORT_FIELD_DOUBLE, propertyName ) );
-
-            srb.addSort( createSort( order, IndexingUtils.SORT_FIELD_BOOLEAN, propertyName ) );
+            srb.addSort( createSort( order, IndexingUtils.FIELD_BOOLEAN_NESTED, propertyName ) );
 
 
-            srb.addSort( createSort( order, IndexingUtils.SORT_FIELD_LONG, propertyName ) );
+            srb.addSort( createSort( order, IndexingUtils.FIELD_LONG_NESTED, propertyName ) );
 
-            srb.addSort( createSort( order, IndexingUtils.SORT_FIELD_FLOAT, propertyName ) );
         }
         return srb;
     }
 
 
-    public QueryBuilder createQueryBuilder( final SearchEdge searchEdge, final QueryVisitor visitor,
-                                            final SearchTypes searchTypes ) {
+
+    public BoolFilterBuilder createFilterBuilder( final SearchEdge searchEdge, final QueryVisitor visitor,
+                                                  final SearchTypes searchTypes ) {
         String context = createContextName( applicationScope, searchEdge );
 
 
@@ -151,29 +150,36 @@ public class SearchRequestBuilderStrategy {
         // Do we need to put the context term first for performance?
 
         //make sure we have entity in the context
-        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+        BoolFilterBuilder boolQueryFilter = FilterBuilders.boolFilter();
 
-        boolQueryBuilder.must( QueryBuilders.termQuery( IndexingUtils.EDGE_SEARCH_FIELDNAME, context ) );
+        //add our edge search
+        boolQueryFilter.must( FilterBuilders.termFilter( IndexingUtils.EDGE_SEARCH_FIELDNAME, context ) );
 
 
         /**
-         * Get the scopes and add them
+         * For the types the user specified, add them to an OR so 1 of them must match
          */
-
-
         final String[] sourceTypes = searchTypes.getTypeNames( applicationScope );
 
-        //add all our types, 1 type must match per query
-        boolQueryBuilder.must( QueryBuilders.termsQuery( IndexingUtils.ENTITY_TYPE_FIELDNAME, sourceTypes )
-                                            .minimumMatch( 1 ) );
 
-        Optional<QueryBuilder> queryBuilder = visitor.getQueryBuilder();
+        final FilterBuilder[] typeTerms = new FilterBuilder[sourceTypes.length];
 
-        if ( queryBuilder.isPresent() ) {
-            boolQueryBuilder.must( queryBuilder.get() );
+        for(int i = 0; i < sourceTypes.length; i ++){
+            typeTerms[i] = FilterBuilders.termFilter(  IndexingUtils.ENTITY_TYPE_FIELDNAME, sourceTypes[i]  );
         }
 
-        return boolQueryBuilder;
+        //add all our types, 1 type must match per query
+        boolQueryFilter.must( FilterBuilders.orFilter( typeTerms ) );
+
+        //if we have a filter from our visitor, add it
+
+        Optional<FilterBuilder> queryBuilder = visitor.getFilterBuilder();
+
+        if ( queryBuilder.isPresent() ) {
+            boolQueryFilter.must( queryBuilder.get() );
+        }
+
+        return boolQueryFilter;
     }
 
 

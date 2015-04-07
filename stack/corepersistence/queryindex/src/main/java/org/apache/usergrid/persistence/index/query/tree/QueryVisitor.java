@@ -20,6 +20,7 @@ package org.apache.usergrid.persistence.index.query.tree;
 
 
 import java.util.Collection;
+import java.util.Set;
 
 import org.apache.usergrid.persistence.index.exceptions.NoFullTextIndexException;
 import org.apache.usergrid.persistence.index.exceptions.NoIndexException;
@@ -99,11 +100,6 @@ public interface QueryVisitor {
      */
     void visit( GreaterThanEqual op ) throws NoIndexException;
 
-    /** 
-     * Returns resulting query builder.
-     */
-    Optional<QueryBuilder> getQueryBuilder();
-
 
     /**
      * Return any filters created during parsing
@@ -111,11 +107,19 @@ public interface QueryVisitor {
      */
 	Optional<FilterBuilder> getFilterBuilder();
 
+
+
+    /**
+     * Return any querybuilders
+     * @return
+     */
+	Optional<QueryBuilder> getQueryBuilder();
+
     /**
      * Some searches, such as geo have a side effect of adding a geo sort.  Get any sorts that are side effects
      * of the query terms, in the order they should be applied.  Note that user specified sort orders will trump
      * these sorts
      * @return
      */
-    Collection<String> getGeoSelectFields();
+    Set<String> getGeoSelectFields();
 }
