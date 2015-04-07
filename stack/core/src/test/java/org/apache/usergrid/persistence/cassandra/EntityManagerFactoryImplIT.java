@@ -320,4 +320,21 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 		 */
         traceTagReporter.report( traceTagManager.detach() );
     }
+
+
+    @Test
+    public void testCreateAndImmediateGet() throws Exception {
+
+        String random = RandomStringUtils.randomAlphabetic(10);
+        String orgName = "org_" + random;
+        String appName = "app_" + random;
+        String orgAppName = orgName + "/" + appName;
+
+        UUID appId = setup.createApplication(orgName, appName);
+
+        UUID lookedUpId = setup.getEmf().lookupApplication( orgAppName );
+
+        Assert.assertEquals(appId, lookedUpId);
+    }
+
 }

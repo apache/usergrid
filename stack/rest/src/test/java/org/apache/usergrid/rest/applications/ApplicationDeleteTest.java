@@ -20,9 +20,6 @@ package org.apache.usergrid.rest.applications;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.jersey.api.client.UniformInterfaceException;
-import org.apache.usergrid.corepersistence.ApplicationIdCacheImpl;
-import org.apache.usergrid.corepersistence.util.CpNamingUtils;
-import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.ManagementResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.*;
@@ -31,15 +28,16 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.ws.rs.core.MediaType;
-import java.io.StringReader;
 import java.util.*;
-import java.util.regex.Pattern;
 
 import static org.junit.Assert.fail;
 
 
-public class ApplicationDeleteTest  extends AbstractRestIT {
+public class ApplicationDeleteTest extends AbstractRestIT {
+
     private static final Logger logger = LoggerFactory.getLogger(ApplicationDeleteTest.class);
+
+    public static final int INDEXING_WAIT = 3000;
 
 
     /**
@@ -180,15 +178,15 @@ public class ApplicationDeleteTest  extends AbstractRestIT {
     }
 
 
-   /**
-    * Test restore of deleted app.
-    * <pre>
-    *  - create app with collection of things
-    *  - delete the app
-    *  - restore the app
-    *  - test that we can get the app, its collections and an entity
-    * </pre>
-    */
+    /**
+     * Test restore of deleted app.
+     * <pre>
+     *  - create app with collection of things
+     *  - delete the app
+     *  - restore the app
+     *  - test that we can get the app, its collections and an entity
+     * </pre>
+     */
     @Test
     public void testAppRestore() throws Exception {
 
@@ -212,7 +210,7 @@ public class ApplicationDeleteTest  extends AbstractRestIT {
             .queryParam("app_delete_confirm", "confirm_delete_of_application_and_data")
             .delete();
 
-        Thread.sleep(1000);
+        Thread.sleep(INDEXING_WAIT);
 
         // restore the app
 
@@ -222,6 +220,8 @@ public class ApplicationDeleteTest  extends AbstractRestIT {
             .org(orgName).app( appToDeleteId.toString() ).getResource()
             .queryParam("access_token", orgAdminToken.getAccessToken() )
             .put();
+
+        Thread.sleep(INDEXING_WAIT);
 
         // test that we can see the application in the list of applications
 
@@ -364,6 +364,8 @@ public class ApplicationDeleteTest  extends AbstractRestIT {
             .type( MediaType.APPLICATION_JSON )
             .post( ApiResponse.class, new Application( appName ) );
         UUID appId = appCreateResponse.getEntities().get(0).getUuid();
+
+        try { Thread.sleep(INDEXING_WAIT); } catch (InterruptedException ignored ) { }
 
         for ( int i=0; i<10; i++ ) {
 

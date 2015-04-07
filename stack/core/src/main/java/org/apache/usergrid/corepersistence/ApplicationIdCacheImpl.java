@@ -20,20 +20,27 @@
 package org.apache.usergrid.corepersistence;
 
 
-import java.util.UUID;
-import java.util.concurrent.ExecutionException;
-
-import org.apache.usergrid.corepersistence.util.CpNamingUtils;
-import org.apache.usergrid.persistence.*;
-
-import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.apache.usergrid.persistence.Schema;
+import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
+import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rx.Observable;
+
+import java.util.UUID;
+
+import static org.apache.usergrid.persistence.Schema.PROPERTY_APPLICATION_ID;
 
 
 /**
@@ -48,6 +55,7 @@ public class ApplicationIdCacheImpl implements ApplicationIdCache {
      * Cache the pointer to our root entity manager for reference
      */
     private final EntityManager rootEm;
+    private final CpEntityManagerFactory emf;
 
     private final LoadingCache<String, UUID> appCache =
         CacheBuilder.newBuilder().maximumSize( 10000 ).build( new CacheLoader<String, UUID>() {
@@ -59,6 +67,7 @@ public class ApplicationIdCacheImpl implements ApplicationIdCache {
 
 
     public ApplicationIdCacheImpl(final EntityManagerFactory emf) {
+        this.emf = (CpEntityManagerFactory)emf;
         this.rootEm = emf.getEntityManager( emf.getManagementAppId());
     }
 
@@ -68,8 +77,7 @@ public class ApplicationIdCacheImpl implements ApplicationIdCache {
             UUID optionalUuid = appCache.get( applicationName.toLowerCase() );
             logger.debug("Returning for key {} value {}", applicationName, optionalUuid );
             return optionalUuid;
-        }
-        catch ( Exception e ) {
+        } catch (Exception e) {
             logger.debug("Returning for key {} value null", applicationName );
             return null;
         }
@@ -81,37 +89,30 @@ public class ApplicationIdCacheImpl implements ApplicationIdCache {
      */
     private UUID fetchApplicationId( final String applicationName ) {
 
-        UUID value = null;
+        final UUID value;
+
+        EntityCollectionManager ecm = emf.getManagerCache().getEntityCollectionManager(
+            new ApplicationScopeImpl(
+                new SimpleId( CpNamingUtils.MANAGEMENT_APPLICATION_ID, Schema.TYPE_APPLICATION ) ) );
 
         try {
             if ( rootEm.getApplication() == null ) {
                 return null;
             }
         } catch ( Exception e ) {
-            logger.error("Error looking up app", e);
+            logger.error("Error looking up management app", e);
         }
 
         try {
-            Query q = Query.fromQL( Schema.PROPERTY_NAME + " = '" + applicationName.toLowerCase() + "'" );
 
-            Results results = rootEm.searchCollection(
-                rootEm.getApplicationRef(), CpNamingUtils.APPLICATION_INFOS, q);
+            // look up application_info ID for application using unique "name" field
+            final Observable<Id> idObs = ecm.getIdField(
+                CpNamingUtils.APPLICATION_INFO, new StringField(Schema.PROPERTY_NAME, applicationName));
 
-            if ( !results.isEmpty() ) {
+            Id id = idObs.toBlocking().lastOrDefault(null);
+            value = id.getUuid();
 
-                Entity entity = results.iterator().next();
-                Object uuidObject = entity.getProperty(Schema.PROPERTY_APPLICATION_ID);
-
-                if (uuidObject instanceof UUID) {
-                    value = (UUID) uuidObject;
-                } else {
-                    value = UUIDUtils.tryExtractUUID(
-                        entity.getProperty(Schema.PROPERTY_APPLICATION_ID).toString());
-                }
-
-            }
-
-            logger.debug("Loaded    for key {} value {}", applicationName, value );
+            logger.debug("Loaded for key {} value {}", applicationName, value );
             return value;
         }
         catch ( Exception e ) {
