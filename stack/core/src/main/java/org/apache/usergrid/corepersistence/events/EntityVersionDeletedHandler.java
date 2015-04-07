@@ -124,7 +124,7 @@ public class EntityVersionDeletedHandler implements EntityVersionDeleted {
 
 
         //execute the batches
-        batches.doOnNext( batch -> batch.execute() ).toBlocking().last();
+        batches.doOnNext( batch -> batch.execute() ).toBlocking().lastOrDefault(null);
 
     }
 

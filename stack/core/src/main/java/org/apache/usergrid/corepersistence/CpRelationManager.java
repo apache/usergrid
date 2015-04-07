@@ -242,7 +242,7 @@ public class CpRelationManager implements RelationManager {
         this.cpHeadEntity = ((CpEntityManager) em).load(entityId);
 
         // commented out because it is possible that CP entity has not been created yet
-        Assert.notNull(cpHeadEntity, "cpHeadEntity cannot be null for app id " + applicationScope.getApplication().getUuid());
+        Assert.notNull(cpHeadEntity, String.format("cpHeadEntity cannot be null for entity id %s, app id %s" , entityId.getUuid(),applicationId));
 
         return this;
     }

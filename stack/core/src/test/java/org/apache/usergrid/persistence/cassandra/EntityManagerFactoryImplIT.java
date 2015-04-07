@@ -141,6 +141,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
         setup.getEmf().deleteApplication(deletedAppId);
         this.app.refreshIndex();
+        this.app.refreshIndex();
 
         // wait for it to appear in delete apps list
 
@@ -158,81 +159,37 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
                 return found;
             }
         };
-        this.app.refreshIndex();
 
-        boolean found = false;
-        for ( int i=0; i<maxRetries; i++) {
-            found = findApps.call( deletedAppId, emf.getDeletedApplications() );
-            if ( found ) {
-                break;
-            } else {
-                Thread.sleep( 500 );
-            }
-        }
-        assertTrue( "Deleted app must be found in in deleted apps collection", found );
-        this.app.refreshIndex();
+        boolean found = findApps.call( deletedAppId, emf.getDeletedApplications() );
+
+        assertTrue("Deleted app must be found in in deleted apps collection", found);
 
         // attempt to get entities in application's collections in various ways should all fail
+        found =  setup.getEmf().lookupApplication( orgName + "/" + appName ) != null ;
 
-        for ( int i=0; i<maxRetries; i++ ) {
-            found = ( setup.getEmf().lookupApplication( orgName + "/" + appName ) != null );
-            if ( found ) {
-                Thread.sleep( 500 );
-            } else {
-                break;
-            }
-        }
-        assertFalse( "Lookup of deleted app must fail", found );
+        assertFalse("Lookup of deleted app must fail", found);
 
         // app must not be found in apps collection
-        this.app.refreshIndex();
-
-        for ( int i=0; i<maxRetries; i++ ) {
-            found = findApps.call( deletedAppId, emf.getApplications() );
-            if ( found ) {
-                Thread.sleep( 500 );
-            } else {
-                break;
-            }
-        }
+        found = findApps.call( deletedAppId, emf.getApplications());
         assertFalse("Deleted app must not be found in apps collection", found);
 
         // restore the app
-
-        this.app.refreshIndex();
-
-
         emf.restoreApplication(deletedAppId);
-
         emf.rebuildAllIndexes(new EntityManagerFactory.ProgressObserver() {
             @Override
             public void onProgress(EntityRef entity) {
                 logger.debug("Reindexing {}:{}", entity.getType(), entity.getUuid());
             }
         });
+        this.app.refreshIndex();
 
         // test to see that app now works and is happy
 
         // it should not be found in the deleted apps collection
-        for ( int i=0; i<maxRetries; i++ ) {
-            found = findApps.call( deletedAppId, emf.getDeletedApplications() );
-            if ( !found ) {
-                break;
-            } else {
-                Thread.sleep( 500 );
-            }
-        }
+        found = findApps.call( deletedAppId, emf.getDeletedApplications());
         assertFalse("Restored app found in deleted apps collection", found);
-        this.app.refreshIndex();
-
-        for(int i=0;i<maxRetries;i++){
-            found = findApps.call(deletedAppId,setup.getEmf().getApplications());
-            if(!found){
-                break;
-            } else{
-                Thread.sleep(500);
-            }
-        }
+        Map<String,UUID> apps = setup.getEmf().getApplications();
+        found = findApps.call(deletedAppId, apps);
         assertTrue("Restored app not found in apps collection", found);
 
         // TODO: this assertion should work!

@@ -89,7 +89,7 @@ public class ApplicationIdCacheImpl implements ApplicationIdCache {
      */
     private UUID fetchApplicationId( final String applicationName ) {
 
-        final UUID value;
+        UUID value = null;
 
         EntityCollectionManager ecm = emf.getManagerCache().getEntityCollectionManager(
             new ApplicationScopeImpl(
@@ -110,9 +110,12 @@ public class ApplicationIdCacheImpl implements ApplicationIdCache {
                 CpNamingUtils.APPLICATION_INFO, new StringField(Schema.PROPERTY_NAME, applicationName));
 
             Id id = idObs.toBlocking().lastOrDefault(null);
-            value = id.getUuid();
-
-            logger.debug("Loaded for key {} value {}", applicationName, value );
+            if(id != null) {
+                value = id.getUuid();
+                logger.debug("Loaded for key {} value {}", applicationName, value );
+            }else{
+                logger.debug("Could not load value for key {} ", applicationName );
+            }
             return value;
         }
         catch ( Exception e ) {

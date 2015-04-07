@@ -326,8 +326,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             // make a copy of the app to delete application_info entity
             // and put it in a deleted_application_info collection
 
-            final Entity deletedApp = managementEm.create(
-                CpNamingUtils.DELETED_APPLICATION_INFO, appInfoToDelete.getProperties());
+            final Entity deletedApp = managementEm.create(new SimpleId(appInfoToDelete.getUuid(),
+                CpNamingUtils.DELETED_APPLICATION_INFO), appInfoToDelete.getProperties());
             // copy its connections too
 
             final Set<String> connectionTypes = managementEm.getConnectionTypes(appInfoToDelete);
@@ -369,36 +369,34 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         // get the deleted_application_info for the deleted app
 
-        EntityManager em = getEntityManager(getManagementAppId());
+        final EntityManager managementEm = getEntityManager(getManagementAppId());
 
-        final Results results = em.searchCollection(
-            em.getApplicationRef(), CpNamingUtils.DELETED_APPLICATION_INFOS,
-            Query.fromQL("select * where " + PROPERTY_APPLICATION_ID + " = '" + applicationId.toString() + "'"));
-        Entity deletedAppInfo = results.getEntity();
+        final Entity deletedAppInfo = managementEm.get(new SimpleEntityRef(CpNamingUtils.DELETED_APPLICATION_INFO,applicationId));
 
         if ( deletedAppInfo == null ) {
             throw new EntityNotFoundException("Cannot restore. Deleted Application not found: " + applicationId );
         }
 
+
         // create application_info for restored app
 
-        Entity restoredAppInfo = em.create(
-            deletedAppInfo.getUuid(), CpNamingUtils.APPLICATION_INFO, deletedAppInfo.getProperties());
+        Entity restoredAppInfo = managementEm.create(new SimpleId( deletedAppInfo.getUuid(),CpNamingUtils.APPLICATION_INFO)
+            , deletedAppInfo.getProperties());
 
         // copy connections from deleted app entity
 
-        final Set<String> connectionTypes = em.getConnectionTypes(deletedAppInfo);
+        final Set<String> connectionTypes = managementEm.getConnectionTypes(deletedAppInfo);
         for ( String connType : connectionTypes ) {
             final Results connResults =
-                em.getConnectedEntities(deletedAppInfo, connType, null, Query.Level.ALL_PROPERTIES);
+                managementEm.getConnectedEntities(deletedAppInfo, connType, null, Query.Level.ALL_PROPERTIES);
             for ( Entity entity : connResults.getEntities() ) {
-                em.createConnection( restoredAppInfo, connType, entity );
+                managementEm.createConnection( restoredAppInfo, connType, entity );
             }
         }
 
         // delete the deleted app entity rebuild the app index
+        managementEm.delete(deletedAppInfo);
 
-        em.delete(deletedAppInfo);
         entityIndex.refresh();
 
         this.rebuildApplicationIndexes(applicationId, new ProgressObserver() {
@@ -407,6 +405,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                 logger.info("Restored entity {}:{}", entity.getType(), entity.getUuid());
             }
         });
+        applicationIdCache.evictAppId(restoredAppInfo.getName());
 
         return restoredAppInfo;
     }
