@@ -275,7 +275,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         Entity appInfo;
         try {
-            appInfo = managementEm.create(applicationId,CpNamingUtils.APPLICATION_INFO, appInfoMap);
+            appInfo = managementEm.create(new SimpleId(applicationId,CpNamingUtils.APPLICATION_INFO), appInfoMap);
         } catch (DuplicateUniquePropertyExistsException e) {
             throw new ApplicationAlreadyExistsException(appName);
         }
