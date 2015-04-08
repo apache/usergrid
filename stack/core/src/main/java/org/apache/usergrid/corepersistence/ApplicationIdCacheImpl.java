@@ -51,7 +51,6 @@ import static org.apache.usergrid.persistence.Schema.PROPERTY_APPLICATION_ID;
  * Implements the org app cache for faster runtime lookups.  These values are immutable, so this LRU cache can stay
  * full for the duration of the execution
  */
-@Singleton
 public class ApplicationIdCacheImpl implements ApplicationIdCache {
     private static final Logger logger = LoggerFactory.getLogger(ApplicationIdCacheImpl.class);
 
@@ -59,17 +58,15 @@ public class ApplicationIdCacheImpl implements ApplicationIdCache {
     /**
      * Cache the pointer to our root entity manager for reference
      */
-    private final EntityManager rootEm;
-    private final CpEntityManagerFactory emf;
 
     private final LoadingCache<String, Optional<UUID>> appCache;
+    private final EntityManager managementEnityManager;
+    private final ManagerCache managerCache;
 
 
-
-    @Inject
-    public ApplicationIdCacheImpl(final EntityManagerFactory emf, ApplicationIdCacheFig fig) {
-        this.emf = (CpEntityManagerFactory)emf;
-        this.rootEm = emf.getEntityManager(emf.getManagementAppId());
+    public ApplicationIdCacheImpl(final EntityManager managementEnityManager, ManagerCache managerCache, ApplicationIdCacheFig fig) {
+        this.managementEnityManager = managementEnityManager;
+        this.managerCache = managerCache;
         appCache = CacheBuilder.newBuilder()
             .maximumSize(fig.getCacheSize())
             .expireAfterWrite(fig.getCacheTimeout(), TimeUnit.MILLISECONDS)
@@ -101,12 +98,12 @@ public class ApplicationIdCacheImpl implements ApplicationIdCache {
 
         UUID value = null;
 
-        EntityCollectionManager ecm = emf.getManagerCache().getEntityCollectionManager(
+        EntityCollectionManager ecm = managerCache.getEntityCollectionManager(
             new ApplicationScopeImpl(
                 new SimpleId( CpNamingUtils.MANAGEMENT_APPLICATION_ID, Schema.TYPE_APPLICATION ) ) );
 
         try {
-            if ( rootEm.getApplication() == null ) {
+            if ( managementEnityManager.getApplication() == null ) {
                 return Optional.empty();
             }
         } catch ( Exception e ) {
