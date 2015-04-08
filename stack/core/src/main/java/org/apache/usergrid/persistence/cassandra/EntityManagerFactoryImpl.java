@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
 
+import com.google.common.base.Optional;
 import org.apache.usergrid.exception.NotImplementedException;
 import org.apache.usergrid.persistence.Entity;
 import org.slf4j.Logger;
@@ -237,7 +238,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
 
         String appName = buildAppName( organizationName, name );
         // check for pre-existing
-        if ( lookupApplication( appName ) != null ) {
+        if ( lookupApplication( appName ).isPresent()) {
             throw new ApplicationAlreadyExistsException( appName );
         }
         if ( properties == null ) {
@@ -286,12 +287,12 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
 
 
     @Override
-    public UUID lookupApplication( String name ) throws Exception {
+    public Optional<UUID> lookupApplication( String name ) throws Exception {
         name = name.toLowerCase();
         HColumn<String, ByteBuffer> column =
                 cass.getColumn( cass.getUsergridApplicationKeyspace(), APPLICATIONS_CF, name, PROPERTY_UUID );
         if ( column != null ) {
-            return uuid( column.getValue() );
+            return Optional.fromNullable( uuid( column.getValue() ));
         }
         return null;
     }

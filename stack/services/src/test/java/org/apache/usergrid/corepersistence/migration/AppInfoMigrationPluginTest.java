@@ -19,6 +19,7 @@
 
 package org.apache.usergrid.corepersistence.migration;
 
+import com.google.common.base.Optional;
 import org.apache.usergrid.NewOrgAppAdminRule;
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
@@ -187,10 +188,10 @@ public class AppInfoMigrationPluginTest {
         for ( Entity applicationInfo : deletedApps ) {
 
             String appName = applicationInfo.getName();
-            UUID uuid = setup.getEmf().lookupApplication( appName );
+            boolean isPresent = setup.getEmf().lookupApplication( appName ).isPresent();
 
             // missing application_info does not completely break applications, but we...
-            assertNull("Should not be able to lookup deleted application by name" + appName, uuid);
+            assertFalse("Should not be able to lookup deleted application by name" + appName, isPresent);
         }
     }
 
@@ -202,10 +203,11 @@ public class AppInfoMigrationPluginTest {
 
             String appName = orgName + "/application" + i;
 
-            UUID uuid = setup.getEmf().lookupApplication( appName );
-            assertNotNull("Should be able to get application", uuid );
+            Optional<UUID> uuid = setup.getEmf().lookupApplication(appName);
 
-            EntityManager em = setup.getEmf().getEntityManager( uuid );
+            assertTrue ("Should be able to get application", uuid.isPresent() );
+
+            EntityManager em = setup.getEmf().getEntityManager( uuid.get() );
 
             Application app = em.getApplication();
             assertEquals( appName, app.getName() );

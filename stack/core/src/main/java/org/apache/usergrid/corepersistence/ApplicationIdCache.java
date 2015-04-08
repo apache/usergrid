@@ -22,7 +22,6 @@ package org.apache.usergrid.corepersistence;
 
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.Entity;
 
 import com.google.common.base.Optional;
 
@@ -36,7 +35,7 @@ public interface ApplicationIdCache {
     /**
      * Evict the application by name
      */
-    public UUID getApplicationId(final String applicationName);
+    public Optional<UUID> getApplicationId(final String applicationName);
 
 
     /**

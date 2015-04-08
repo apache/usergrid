@@ -23,28 +23,22 @@ package org.apache.usergrid.corepersistence;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
-import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.StringField;
-import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
 
-import java.util.Optional;
+import com.google.common.base.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import static org.apache.usergrid.persistence.Schema.PROPERTY_APPLICATION_ID;
 
 
 /**
@@ -73,20 +67,20 @@ public class ApplicationIdCacheImpl implements ApplicationIdCache {
             .build(new CacheLoader<String, Optional<UUID>>() {
                 @Override
                 public Optional<UUID> load(final String key) throws Exception {
-                    return Optional.of(fetchApplicationId(key));
+                    return Optional.fromNullable(fetchApplicationId(key));
                 }
             });
     }
 
     @Override
-    public UUID getApplicationId( final String applicationName ) {
+    public  Optional<UUID> getApplicationId( final String applicationName ) {
         try {
             Optional<UUID> optionalUuid = appCache.get( applicationName.toLowerCase() );
             if(!optionalUuid.isPresent()){
                 appCache.invalidate(applicationName.toLowerCase());
             }
             logger.debug("Returning for key {} value {}", applicationName, optionalUuid );
-            return optionalUuid.get();
+            return optionalUuid;
         } catch (Exception e) {
             logger.debug("Returning for key {} value null", applicationName );
             return null;

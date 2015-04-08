@@ -27,6 +27,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
+import com.google.common.base.Optional;
 import org.apache.usergrid.persistence.EntityManager;
 
 import org.slf4j.Logger;
@@ -65,20 +67,6 @@ public class RefreshIndexResource extends AbstractContextResource {
 
             // refresh the system apps or app lookup below may fail
             getEntityIndex().refresh();
-
-            UUID appId;
-            if ( orgName != null && appName != null ) {
-                appId = emf.lookupApplication( orgName + "/" + appName );
-            } else {
-                appId = UUID.fromString(appIdString);
-            }
-
-            if ( appId != null ) {
-                // found an app, then refresh it!
-                EntityManager em = emf.getEntityManager( appId );
-                getEntityIndex().refresh();
-
-            }
 
         } catch (Exception e) {
             logger.error("Error in refresh", e);

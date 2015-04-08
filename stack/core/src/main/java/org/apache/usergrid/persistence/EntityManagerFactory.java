@@ -20,6 +20,7 @@ package org.apache.usergrid.persistence;
 import java.util.Map;
 import java.util.UUID;
 
+import com.google.common.base.Optional;
 import org.apache.usergrid.persistence.core.util.Health;
 import rx.Observable;
 
@@ -124,7 +125,7 @@ public interface EntityManagerFactory {
      *
      * @throws Exception the exception
      */
-    UUID lookupApplication( String name ) throws Exception;
+    Optional<UUID> lookupApplication( String name ) throws Exception;
 
     /**
      * Returns all the applications in the system.

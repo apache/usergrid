@@ -15,6 +15,8 @@
  */
 package org.apache.usergrid.corepersistence;
 
+import com.google.common.base.*;
+import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -205,9 +207,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         String appName = buildAppName( orgName, name );
 
 
-        final UUID appId = applicationIdCache.getApplicationId( appName );
+        final Optional<UUID> appId = applicationIdCache.getApplicationId( appName );
 
-        if ( appId != null ) {
+        if ( appId.isPresent()) {
             throw new ApplicationAlreadyExistsException( name );
         }
 
@@ -242,7 +244,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         // check for pre-existing application
 
-        if ( lookupApplication( appName ) != null ) {
+        if ( lookupApplication( appName ).isPresent()) {
             throw new ApplicationAlreadyExistsException( appName );
         }
 
@@ -392,7 +394,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     }
 
 
-    public UUID lookupApplication( String orgAppName ) throws Exception {
+    public Optional<UUID> lookupApplication( String orgAppName ) throws Exception {
         return applicationIdCache.getApplicationId(orgAppName);
     }
 
