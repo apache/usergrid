@@ -665,18 +665,20 @@ public class EntityIndexTest extends BaseIT {
 
         final int size = 10;
 
-        final List<Id> entities = new ArrayList<>( size );
+        final List<Id> entityIds = new ArrayList<>( size );
 
 
         for ( int i = 0; i < size; i++ ) {
 
             final String middleName = "middleName" + UUIDUtils.newTimeUUID();
 
+            final int ordinal = i;
+
             Map entityMap = new HashMap() {{
                 put( "username", "edanuff" );
                 put( "email", "ed@anuff.com" );
                 put( "middlename", middleName );
-                put( "created", System.nanoTime() );
+                put( "ordinal", ordinal );
             }};
 
             final Id userId = new SimpleId( "user" );
@@ -685,9 +687,7 @@ public class EntityIndexTest extends BaseIT {
             EntityUtils.setId( user, userId );
             EntityUtils.setVersion( user, UUIDGenerator.newTimeUUID() );
 
-            user.setField( new UUIDField( IndexingUtils.ENTITY_ID_FIELDNAME, UUIDGenerator.newTimeUUID() ) );
-
-            entities.add( userId );
+            entityIds.add( userId );
 
 
             batch.index( indexEdge, user );
@@ -695,6 +695,7 @@ public class EntityIndexTest extends BaseIT {
 
 
         batch.execute().get();
+
         ei.refresh();
 
 
@@ -708,7 +709,7 @@ public class EntityIndexTest extends BaseIT {
 
         for ( int i = 0; i < expectedPages; i++ ) {
             //**
-            final String query = "select * order by created";
+            final String query = "select * order by ordinal asc";
 
             final CandidateResults results =
                     cursor == null ? entityIndex.search( indexEdge, SearchTypes.allTypes(), query, limit ) :
@@ -723,7 +724,7 @@ public class EntityIndexTest extends BaseIT {
             assertEquals( 1, results.size() );
 
 
-            assertEquals( results.get( 0 ).getId(), entities.get( i ) );
+            assertEquals( results.get( 0 ).getId(), entityIds.get( i ) );
         }
     }
 

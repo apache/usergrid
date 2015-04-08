@@ -103,7 +103,7 @@ public class GeoPagingTest extends BaseIT {
      * Test that geo-query returns co-located entities in expected order.
      */
     @Test
-    public void groupQueriesWithDistanceOrderedResults() throws IOException {
+    public void groupQueriesWithDistanceOrderedResults() throws Exception {
 
         int maxRangeLimit = 9;
         Entity[] cats = new Entity[maxRangeLimit + 1];
@@ -131,8 +131,10 @@ public class GeoPagingTest extends BaseIT {
 
         }
 
-        batch.execute();
+        batch.execute().get();
+
         ei.refresh();
+
 
 
         final String query =  "select * where location within 1500000 of 37, -75" ;

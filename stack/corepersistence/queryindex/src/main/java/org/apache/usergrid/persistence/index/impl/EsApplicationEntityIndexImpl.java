@@ -319,16 +319,17 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
 
             //now set this into our map module
             final int minutes = indexFig.getQueryCursorTimeout();
+            //just truncate it, we'll never hit a long value anyway
+
+            final int storageSeconds = ( int ) TimeUnit.MINUTES.toSeconds( minutes );
 
             final QueryState state = new QueryState( query.getOriginalQuery(), limit, esScrollCursor );
 
             final String queryStateSerialized = state.serialize();
 
-            //just truncate it, we'll never hit a long value anyway
-            mapManager.putString( candidateResults.getCursor(), queryStateSerialized,
-                    ( int ) TimeUnit.MINUTES.toSeconds( minutes ) );
+            mapManager.putString( candidateResults.getCursor(), queryStateSerialized, storageSeconds );
 
-            logger.debug( " User cursor = {},  Cursor = {} ", candidateResults.getCursor(), esScrollCursor );
+            logger.debug( " User cursor = {},  Cursor = {} ", cursor, esScrollCursor );
         }
 
         return candidateResults;

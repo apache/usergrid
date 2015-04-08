@@ -134,6 +134,7 @@ public class SearchRequestBuilderStrategy {
 
             //sort by the entity id if our times are equal
             srb.addSort( SortBuilders.fieldSort( IndexingUtils.ENTITY_ID_FIELDNAME ).order( SortOrder.ASC ) );
+
             return;
         }
 
@@ -142,7 +143,7 @@ public class SearchRequestBuilderStrategy {
 
         for ( String geoField : geoFields.fields() ) {
 
-            final GeoDistanceSortBuilder geoSort = geoFields.applyOrder(geoField,  SortOrder.ASC);
+            final GeoDistanceSortBuilder geoSort = geoFields.applyOrder( geoField, SortOrder.ASC );
 
             srb.addSort( geoSort );
         }
@@ -168,25 +169,26 @@ public class SearchRequestBuilderStrategy {
             final String propertyName = sp.getPropertyName();
 
 
-            //if the user specified a geo field in their sort, then honor their sort order
+            //if the user specified a geo field in their sort, then honor their sort order and use the point they specified
             if ( geoFields.contains( propertyName ) ) {
                 final GeoDistanceSortBuilder geoSort = geoFields.applyOrder(propertyName,  SortOrder.ASC);
-
                 srb.addSort( geoSort );
             }
 
             //apply regular sort logic, since this is not a geo point
             else {
 
-                srb.addSort( createSort( order, IndexingUtils.FIELD_STRING_NESTED, propertyName ) );
 
+                //sort order is arbitrary if the user changes data types.  Double, long, string, boolean are supported
+                //default sort types
 
                 srb.addSort( createSort( order, IndexingUtils.FIELD_DOUBLE_NESTED, propertyName ) );
 
-                srb.addSort( createSort( order, IndexingUtils.FIELD_BOOLEAN_NESTED, propertyName ) );
-
-
                 srb.addSort( createSort( order, IndexingUtils.FIELD_LONG_NESTED, propertyName ) );
+
+                srb.addSort( createSort( order, IndexingUtils.FIELD_STRING_NESTED, propertyName ) );
+
+                srb.addSort( createSort( order, IndexingUtils.FIELD_BOOLEAN_NESTED, propertyName ) );
             }
         }
     }
@@ -221,14 +223,16 @@ public class SearchRequestBuilderStrategy {
         final String[] sourceTypes = searchTypes.getTypeNames( applicationScope );
 
 
-        final FilterBuilder[] typeTerms = new FilterBuilder[sourceTypes.length];
+        if(sourceTypes.length > 0 ) {
+            final FilterBuilder[] typeTerms = new FilterBuilder[sourceTypes.length];
 
-        for ( int i = 0; i < sourceTypes.length; i++ ) {
-            typeTerms[i] = FilterBuilders.termFilter( IndexingUtils.ENTITY_TYPE_FIELDNAME, sourceTypes[i] );
+            for ( int i = 0; i < sourceTypes.length; i++ ) {
+                typeTerms[i] = FilterBuilders.termFilter( IndexingUtils.ENTITY_TYPE_FIELDNAME, sourceTypes[i] );
+            }
+
+            //add all our types, 1 type must match per query
+            boolQueryFilter.must( FilterBuilders.orFilter( typeTerms ) );
         }
-
-        //add all our types, 1 type must match per query
-        boolQueryFilter.must( FilterBuilders.orFilter( typeTerms ) );
 
         //if we have a filter from our visitor, add it
 
@@ -276,7 +280,7 @@ public class SearchRequestBuilderStrategy {
         final TermFilterBuilder propertyFilter = sortPropertyTermFilter( propertyName );
 
 
-        return SortBuilders.fieldSort( fieldName ).order( sortOrder ).ignoreUnmapped( true )
+        return SortBuilders.fieldSort( fieldName ).order( sortOrder )
                            .setNestedFilter( propertyFilter );
     }
 }
