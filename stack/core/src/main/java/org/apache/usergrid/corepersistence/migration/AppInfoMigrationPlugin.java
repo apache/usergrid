@@ -149,14 +149,12 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
             final String orgName = name.split("/")[0];
             final String appName = name.split("/")[1];
             UUID applicationId = getUuid(oldAppInfoMap,"applicationUuid");
-            UUID originalUuid = getUuid(oldAppInfoMap,"uuid");
 
             //get app info from graph to see if it has been migrated already
             Entity appInfo = getApplicationInfo(applicationId);
             if (appInfo == null) {
                 // create and connect new APPLICATION_INFO oldAppInfo to Organization
                 appInfo = createNewAppInfo(managementEm, name, applicationId);
-                deleteOldAppInfo(originalUuid);
                 observer.update(getMaxVersion(), "Created application_info for " + appName);
                 // create org->app connections, but not for apps in dummy "usergrid" internal organization
                 if (!orgName.equals("usergrid")) {

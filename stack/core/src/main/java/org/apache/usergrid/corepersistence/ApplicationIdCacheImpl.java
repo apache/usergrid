@@ -73,7 +73,7 @@ public class ApplicationIdCacheImpl implements ApplicationIdCache {
             .build(new CacheLoader<String, Optional<UUID>>() {
                 @Override
                 public Optional<UUID> load(final String key) throws Exception {
-                    return fetchApplicationId(key);
+                    return Optional.of(fetchApplicationId(key));
                 }
             });
     }
@@ -82,6 +82,9 @@ public class ApplicationIdCacheImpl implements ApplicationIdCache {
     public UUID getApplicationId( final String applicationName ) {
         try {
             Optional<UUID> optionalUuid = appCache.get( applicationName.toLowerCase() );
+            if(!optionalUuid.isPresent()){
+                appCache.invalidate(applicationName.toLowerCase());
+            }
             logger.debug("Returning for key {} value {}", applicationName, optionalUuid );
             return optionalUuid.get();
         } catch (Exception e) {
@@ -94,7 +97,7 @@ public class ApplicationIdCacheImpl implements ApplicationIdCache {
     /**
      * Fetch our application id
      */
-    private Optional<UUID> fetchApplicationId( final String applicationName ) {
+    private UUID fetchApplicationId( final String applicationName ) {
 
         UUID value = null;
 
@@ -104,7 +107,7 @@ public class ApplicationIdCacheImpl implements ApplicationIdCache {
 
         try {
             if ( managementEnityManager.getApplication() == null ) {
-                return Optional.empty();
+                return null;
             }
         } catch ( Exception e ) {
             logger.error("Error looking up management app", e);
@@ -123,7 +126,7 @@ public class ApplicationIdCacheImpl implements ApplicationIdCache {
             }else{
                 logger.debug("Could not load value for key {} ", applicationName );
             }
-            return value == null ? Optional.<UUID>empty() : Optional.of(value);
+            return value;
         }
         catch ( Exception e ) {
             throw new RuntimeException( "Unable to retrieve application id", e );
