@@ -33,9 +33,9 @@ import java.util.*;
 import static org.junit.Assert.fail;
 
 
-public class ApplicationDeleteTest extends AbstractRestIT {
+public class ApplicationDeleteIT extends AbstractRestIT {
 
-    private static final Logger logger = LoggerFactory.getLogger(ApplicationDeleteTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(ApplicationDeleteIT.class);
 
     public static final int INDEXING_WAIT = 3000;
 
