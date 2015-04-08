@@ -118,7 +118,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.entityIndexFactory = injector.getInstance(EntityIndexFactory.class);
         this.managerCache = injector.getInstance( ManagerCache.class );
         this.metricsFactory = injector.getInstance( MetricsFactory.class );
-        this.applicationIdCache = new ApplicationIdCacheImpl( this );
+        this.applicationIdCache = injector.getInstance(ApplicationIdCache.class);
     }
 
 

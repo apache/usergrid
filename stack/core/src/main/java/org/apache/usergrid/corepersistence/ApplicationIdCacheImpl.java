@@ -23,6 +23,8 @@ package org.apache.usergrid.corepersistence;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
@@ -49,6 +51,7 @@ import static org.apache.usergrid.persistence.Schema.PROPERTY_APPLICATION_ID;
  * Implements the org app cache for faster runtime lookups.  These values are immutable, so this LRU cache can stay
  * full for the duration of the execution
  */
+@Singleton
 public class ApplicationIdCacheImpl implements ApplicationIdCache {
     private static final Logger logger = LoggerFactory.getLogger(ApplicationIdCacheImpl.class);
 
@@ -63,6 +66,7 @@ public class ApplicationIdCacheImpl implements ApplicationIdCache {
 
 
 
+    @Inject
     public ApplicationIdCacheImpl(final EntityManagerFactory emf, ApplicationIdCacheFig fig) {
         this.emf = (CpEntityManagerFactory)emf;
         this.rootEm = emf.getEntityManager(emf.getManagementAppId());

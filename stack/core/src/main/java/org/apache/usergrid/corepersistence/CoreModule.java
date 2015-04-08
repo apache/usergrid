@@ -143,6 +143,7 @@ public class CoreModule  extends AbstractModule {
         bind(AllApplicationsObservable.class).to(AllApplicationsObservableImpl.class);
 
         install(new GuicyFigModule(ApplicationIdCacheFig.class));
+        bind(ApplicationIdCache.class).to(ApplicationIdCacheImpl.class);
 
     }
 
