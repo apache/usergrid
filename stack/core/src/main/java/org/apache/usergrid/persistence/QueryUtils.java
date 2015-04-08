@@ -22,7 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.Query;
 import static org.apache.usergrid.utils.ClassUtils.cast;
 import org.apache.usergrid.utils.JsonUtils;
 

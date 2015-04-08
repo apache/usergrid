@@ -23,7 +23,7 @@ package org.apache.usergrid.corepersistence.results;
 import org.apache.usergrid.corepersistence.ManagerCache;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.IndexScope;
-import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.Query;
 
 
 /**

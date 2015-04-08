@@ -18,12 +18,12 @@ package org.apache.usergrid.persistence;
 
 
 import java.nio.ByteBuffer;
-import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.Query;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import org.apache.usergrid.persistence.index.query.Query.Level;
+import org.apache.usergrid.persistence.Query.Level;
 
 import me.prettyprint.hector.api.mutation.Mutator;
 

@@ -31,10 +31,7 @@ import java.util.UUID;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.usergrid.corepersistence.results.QueryExecutor;
-import org.apache.usergrid.persistence.cassandra.QueryProcessor;
-import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.index.query.Query.Level;
-import org.apache.usergrid.persistence.query.ir.SearchVisitor;
+import org.apache.usergrid.persistence.Query.Level;
 import org.apache.usergrid.utils.MapUtils;
 import org.apache.usergrid.utils.StringUtils;
 
