@@ -37,8 +37,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 
-public class ApplicationCreateTest extends AbstractRestIT {
-    private static final Logger logger = LoggerFactory.getLogger(ApplicationCreateTest.class);
+public class ApplicationCreateIT extends AbstractRestIT {
+    private static final Logger logger = LoggerFactory.getLogger(ApplicationCreateIT.class);
 
 
     /**

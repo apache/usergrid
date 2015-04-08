@@ -23,6 +23,8 @@ package org.apache.usergrid.corepersistence;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
@@ -38,7 +40,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
 
+import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import static org.apache.usergrid.persistence.Schema.PROPERTY_APPLICATION_ID;
 
@@ -54,29 +58,32 @@ public class ApplicationIdCacheImpl implements ApplicationIdCache {
     /**
      * Cache the pointer to our root entity manager for reference
      */
-    private final EntityManager rootEm;
-    private final CpEntityManagerFactory emf;
 
-    private final LoadingCache<String, UUID> appCache =
-        CacheBuilder.newBuilder().maximumSize( 10000 ).build( new CacheLoader<String, UUID>() {
-            @Override
-            public UUID load( final String key ) throws Exception {
-                return fetchApplicationId( key );
-            }
-        } );
+    private final LoadingCache<String, Optional<UUID>> appCache;
+    private final EntityManager managementEnityManager;
+    private final ManagerCache managerCache;
 
 
-    public ApplicationIdCacheImpl(final EntityManagerFactory emf) {
-        this.emf = (CpEntityManagerFactory)emf;
-        this.rootEm = emf.getEntityManager( emf.getManagementAppId());
+    public ApplicationIdCacheImpl(final EntityManager managementEnityManager, ManagerCache managerCache, ApplicationIdCacheFig fig) {
+        this.managementEnityManager = managementEnityManager;
+        this.managerCache = managerCache;
+        appCache = CacheBuilder.newBuilder()
+            .maximumSize(fig.getCacheSize())
+            .expireAfterWrite(fig.getCacheTimeout(), TimeUnit.MILLISECONDS)
+            .build(new CacheLoader<String, Optional<UUID>>() {
+                @Override
+                public Optional<UUID> load(final String key) throws Exception {
+                    return fetchApplicationId(key);
+                }
+            });
     }
 
     @Override
     public UUID getApplicationId( final String applicationName ) {
         try {
-            UUID optionalUuid = appCache.get( applicationName.toLowerCase() );
+            Optional<UUID> optionalUuid = appCache.get( applicationName.toLowerCase() );
             logger.debug("Returning for key {} value {}", applicationName, optionalUuid );
-            return optionalUuid;
+            return optionalUuid.get();
         } catch (Exception e) {
             logger.debug("Returning for key {} value null", applicationName );
             return null;
@@ -87,17 +94,17 @@ public class ApplicationIdCacheImpl implements ApplicationIdCache {
     /**
      * Fetch our application id
      */
-    private UUID fetchApplicationId( final String applicationName ) {
+    private Optional<UUID> fetchApplicationId( final String applicationName ) {
 
         UUID value = null;
 
-        EntityCollectionManager ecm = emf.getManagerCache().getEntityCollectionManager(
+        EntityCollectionManager ecm = managerCache.getEntityCollectionManager(
             new ApplicationScopeImpl(
                 new SimpleId( CpNamingUtils.MANAGEMENT_APPLICATION_ID, Schema.TYPE_APPLICATION ) ) );
 
         try {
-            if ( rootEm.getApplication() == null ) {
-                return null;
+            if ( managementEnityManager.getApplication() == null ) {
+                return Optional.empty();
             }
         } catch ( Exception e ) {
             logger.error("Error looking up management app", e);
@@ -116,7 +123,7 @@ public class ApplicationIdCacheImpl implements ApplicationIdCache {
             }else{
                 logger.debug("Could not load value for key {} ", applicationName );
             }
-            return value;
+            return value == null ? Optional.<UUID>empty() : Optional.of(value);
         }
         catch ( Exception e ) {
             throw new RuntimeException( "Unable to retrieve application id", e );

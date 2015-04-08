@@ -27,8 +27,11 @@ import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.management.OrganizationOwnerInfo;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerialization;
 import org.apache.usergrid.persistence.core.migration.data.ProgressObserver;
 import org.apache.usergrid.persistence.entities.Application;
+import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -65,6 +68,12 @@ public class AppInfoMigrationPluginTest {
 
     @Test
     public void testRun() throws Exception {
+        MigrationInfoSerialization serialization = Mockito.mock(MigrationInfoSerialization.class);
+        Mockito.when(serialization.getVersion(Mockito.any())).thenReturn(0);
+        EntityCollectionManagerFactory ecmf = setup.getInjector().getInstance(EntityCollectionManagerFactory.class);
+        GraphManagerFactory gmf = setup.getInjector().getInstance(GraphManagerFactory.class);
+
+        AppInfoMigrationPlugin appInfoMigrationPlugin = new AppInfoMigrationPlugin(setup.getEmf(),serialization,ecmf,gmf);
 
        // create 10 applications, each with 10 entities
 
@@ -148,7 +157,7 @@ public class AppInfoMigrationPluginTest {
         logger.debug("\n\nRun the migration\n");
 
         ProgressObserver po = Mockito.mock(ProgressObserver.class);
-        setup.getAppInfoMigrationPlugin().run(po);
+        appInfoMigrationPlugin.run(po);
 
         logger.debug("\n\nVerify migration results\n");
 
