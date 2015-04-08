@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.core.util.Health;
+import rx.Observable;
 
 
 /**
@@ -39,21 +40,28 @@ public interface EntityManagerFactory {
      *
      * @return EntityDao for the specified parameters
      */
-    public abstract EntityManager getEntityManager( UUID applicationId );
+    EntityManager getEntityManager( UUID applicationId );
 
     /**
-     * Creates a new application.
-     *
-     * @param name a unique application name.
-     *
-     * @return Entity of type application_info that represents the newly created Application
-     *
-     * @throws Exception the exception
+     * get management app em
+     * @return
      */
-    public abstract Entity createApplicationV2( String organizationName, String name ) throws Exception;
+    EntityManager getManagementEntityManager();
+
+
+        /**
+         * Creates a new application.
+         *
+         * @param name a unique application name.
+         *
+         * @return Entity of type application_info that represents the newly created Application
+         *
+         * @throws Exception the exception
+         */
+    Entity createApplicationV2( String organizationName, String name ) throws Exception;
 
     @Deprecated
-    public abstract UUID createApplication( String organizationName, String name ) throws Exception;
+    UUID createApplication( String organizationName, String name ) throws Exception;
 
     /**
      * Creates a Application entity. All entities except for applications must be attached to a
@@ -66,11 +74,11 @@ public interface EntityManagerFactory {
      *
      * @throws Exception the exception
      */
-    public abstract Entity createApplicationV2(
+    Entity createApplicationV2(
         String organizationName, String name, Map<String, Object> properties ) throws Exception;
 
     @Deprecated
-    public abstract UUID createApplication(
+    UUID createApplication(
         String organizationName, String name, Map<String, Object> properties ) throws Exception;
 
     /**
@@ -78,14 +86,33 @@ public interface EntityManagerFactory {
      *
      * @param applicationId UUID of Application to be deleted.
      */
-    public abstract void deleteApplication( UUID applicationId ) throws Exception;
+    void deleteApplication( UUID applicationId ) throws Exception;
+
+    /**
+     *
+     * @param applicationUUID
+     * @param collectionFromName
+     * @param collectionToName
+     * @return
+     * @throws Exception
+     */
+    Observable migrateAppInfo( UUID applicationUUID, String collectionFromName, String collectionToName) throws Exception;
 
     /**
      * Restore deleted application.
      */
-    public Entity restoreApplication( UUID applicationId) throws Exception;
+    Entity restoreApplication( UUID applicationId) throws Exception;
 
-    public abstract UUID importApplication( String organization, UUID applicationId, String name,
+    /**
+     *
+     * @param organization
+     * @param applicationId
+     * @param name
+     * @param properties
+     * @return
+     * @throws Exception
+     */
+    UUID importApplication( String organization, UUID applicationId, String name,
                                             Map<String, Object> properties ) throws Exception;
 
     /**
@@ -97,7 +124,7 @@ public interface EntityManagerFactory {
      *
      * @throws Exception the exception
      */
-    public abstract UUID lookupApplication( String name ) throws Exception;
+    UUID lookupApplication( String name ) throws Exception;
 
     /**
      * Returns all the applications in the system.
@@ -106,19 +133,19 @@ public interface EntityManagerFactory {
      *
      * @throws Exception the exception
      */
-    public abstract Map<String, UUID> getApplications() throws Exception;
+    Map<String, UUID> getApplications() throws Exception;
 
     public Map<String, UUID> getDeletedApplications() throws Exception;
 
-    public abstract void setup() throws Exception;
+    void setup() throws Exception;
 
-    public abstract Map<String, String> getServiceProperties();
+    Map<String, String> getServiceProperties();
 
-    public abstract boolean updateServiceProperties( Map<String, String> properties );
+    boolean updateServiceProperties( Map<String, String> properties );
 
-    public abstract boolean setServiceProperty( String name, String value );
+    boolean setServiceProperty( String name, String value );
 
-    public abstract boolean deleteServiceProperty( String name );
+    boolean deleteServiceProperty( String name );
 
     /**
      * @return Entity of type application_info that represents the newly created application.

@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
 
+import org.apache.usergrid.exception.NotImplementedException;
 import org.apache.usergrid.persistence.Entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,6 +69,7 @@ import static org.apache.usergrid.persistence.cassandra.CassandraService.RETRY_C
 import static org.apache.usergrid.utils.ConversionUtils.uuid;
 import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 import org.apache.usergrid.persistence.core.util.Health;
+import rx.Observable;
 
 
 /**
@@ -131,6 +133,11 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
             ex.printStackTrace();
         }
         return _getEntityManager( applicationId );
+    }
+
+    @Override
+    public EntityManager getManagementEntityManager() {
+        throw new NotImplementedException();
     }
 
 
@@ -211,6 +218,11 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
     @Override
     public void deleteApplication(UUID applicationId) throws Exception {
         // TODO implement deleteApplication in Usergrid 1 code base (master branch?)
+        throw new UnsupportedOperationException("Not supported.");
+    }
+
+    @Override
+    public Observable migrateAppInfo(UUID applicationUUID, String collectionFromName, String collectionToName) throws Exception {
         throw new UnsupportedOperationException("Not supported.");
     }
 
