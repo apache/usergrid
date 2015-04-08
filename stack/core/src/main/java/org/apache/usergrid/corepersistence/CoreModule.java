@@ -18,6 +18,7 @@ package org.apache.usergrid.corepersistence;
 
 import org.apache.usergrid.corepersistence.migration.*;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.safehaus.guicyfig.GuicyFigModule;
 import org.springframework.context.ApplicationContext;
 
 import org.apache.usergrid.corepersistence.events.EntityDeletedHandler;
@@ -139,7 +140,10 @@ public class CoreModule  extends AbstractModule {
         plugins.addBinding().to( AppInfoMigrationPlugin.class );
         plugins.addBinding().to( MigrationModuleVersionPlugin.class );
 
-        bind( AllApplicationsObservable.class).to(AllApplicationsObservableImpl.class);
+        bind(AllApplicationsObservable.class).to(AllApplicationsObservableImpl.class);
+
+        install(new GuicyFigModule(ApplicationIdCacheFig.class));
+
     }
 
 
