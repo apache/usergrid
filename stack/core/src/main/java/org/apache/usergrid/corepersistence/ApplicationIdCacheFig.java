@@ -20,7 +20,7 @@
 package org.apache.usergrid.corepersistence;
 
 /**
- * Classy class class.
+ * Application id cache fig
  */
 
 import org.safehaus.guicyfig.Default;
@@ -38,7 +38,7 @@ public interface ApplicationIdCacheFig extends GuicyFig {
     int getCacheSize();
 
     @Key( "usergrid.applicationid_cache_timeout_ms" )
-    @Default( "1000" )
+    @Default( "60000" )
     int getCacheTimeout();
 
 
