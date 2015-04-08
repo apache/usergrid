@@ -19,16 +19,13 @@
  */
 package org.apache.usergrid.corepersistence;
 
-/**
- * Application id cache fig
- */
 
 import org.safehaus.guicyfig.Default;
 import org.safehaus.guicyfig.GuicyFig;
 import org.safehaus.guicyfig.Key;
 
 /**
- * The config for the entity cache
+ * Application id cache fig
  */
 public interface ApplicationIdCacheFig extends GuicyFig {
 
