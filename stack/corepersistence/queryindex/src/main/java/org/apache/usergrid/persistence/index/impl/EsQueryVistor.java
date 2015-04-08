@@ -19,10 +19,12 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
+import org.elasticsearch.common.geo.GeoDistance;
 import org.elasticsearch.common.unit.DistanceUnit;
 import org.elasticsearch.index.query.BoolFilterBuilder;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -36,6 +38,8 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.RangeFilterBuilder;
 import org.elasticsearch.index.query.TermFilterBuilder;
 import org.elasticsearch.index.query.WildcardQueryBuilder;
+import org.elasticsearch.search.sort.GeoDistanceSortBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,6 +60,8 @@ import org.apache.usergrid.persistence.index.query.tree.WithinOperand;
 
 import com.google.common.base.Optional;
 
+import static org.apache.usergrid.persistence.index.impl.SortBuilder.sortPropertyTermFilter;
+
 
 /**
  * Visits tree of  parsed Query operands and populates ElasticSearch QueryBuilder that represents the query.
@@ -73,7 +79,8 @@ public class EsQueryVistor implements QueryVisitor {
      */
     private final Stack<FilterBuilder> filterBuilders = new Stack<>();
 
-    private final Set<String> geoFields = new HashSet<String>();
+    private final GeoSortFields geoSortFields = new GeoSortFields();
+
 
 
     @Override
@@ -265,18 +272,35 @@ public class EsQueryVistor implements QueryVisitor {
 
         final String name = op.getProperty().getValue().toLowerCase();
 
-        geoFields.add( name );
 
         float lat = op.getLatitude().getFloatValue();
         float lon = op.getLongitude().getFloatValue();
         float distance = op.getDistance().getFloatValue();
 
 
-        final FilterBuilder fb = FilterBuilders.geoDistanceFilter( name ).lat( lat ).lon( lon )
+        final FilterBuilder fb = FilterBuilders.geoDistanceFilter( IndexingUtils.FIELD_LOCATION_NESTED ).lat( lat ).lon( lon )
                                                .distance( distance, DistanceUnit.METERS );
-        filterBuilders.push( fb );
 
+
+        filterBuilders.push( fieldNameTerm( name, fb ) );
+
+
+        //create our geo-sort based off of this point specified
+
+        //this geoSort won't has a sort on it
+
+        final GeoDistanceSortBuilder geoSort =
+                      SortBuilders.geoDistanceSort( IndexingUtils.FIELD_LOCATION_NESTED )
+                                  .unit( DistanceUnit.METERS ).geoDistance( GeoDistance.SLOPPY_ARC ).point( lat, lon );
+
+        final TermFilterBuilder sortPropertyName = sortPropertyTermFilter( name );
+
+        geoSort.setNestedFilter( sortPropertyName );
+
+
+        geoSortFields.addField( name, geoSort );
         //no op for query, push
+
 
         queryBuilders.push( NoOpQueryBuilder.INSTANCE );
     }
@@ -421,6 +445,11 @@ public class EsQueryVistor implements QueryVisitor {
     }
 
 
+    @Override
+    public GeoSortFields getGeoSorts() {
+        return geoSortFields;
+    }
+
 
     /**
      * Generate the field name term for the field name  for queries
@@ -508,9 +537,4 @@ public class EsQueryVistor implements QueryVisitor {
         return filterBuilder != NoOpFilterBuilder.INSTANCE;
     }
 
-
-    @Override
-    public Set<String> getGeoSelectFields() {
-        return geoFields;
-    }
 }

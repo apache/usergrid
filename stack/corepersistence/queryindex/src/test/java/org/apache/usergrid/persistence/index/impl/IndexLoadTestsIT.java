@@ -104,9 +104,6 @@ public class IndexLoadTestsIT extends BaseIT {
     public EntityIndexFactory entityIndexFactory;
 
     @Inject
-    public EntityIndex entityIndex;
-
-    @Inject
     public MetricsFactory metricsFactory;
 
     private Meter batchWriteTPS;
@@ -130,7 +127,6 @@ public class IndexLoadTestsIT extends BaseIT {
         final UUID applicationUUID = UUID.fromString( userAppId );
 
         final Id applicationId = new SimpleId( applicationUUID, "application" );
-        final ApplicationScope scope = new ApplicationScopeImpl( applicationId );
 
 
         batchWriteTPS = metricsFactory.getMeter( IndexLoadTestsIT.class, "write.tps" );

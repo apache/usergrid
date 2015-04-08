@@ -20,15 +20,18 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
+import java.util.Set;
+
 import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.common.geo.GeoDistance;
+import org.elasticsearch.common.unit.DistanceUnit;
 import org.elasticsearch.index.query.BoolFilterBuilder;
-import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.FilterBuilders;
 import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.TermFilterBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.GeoDistanceSortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
@@ -47,6 +50,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createContextName;
+import static org.apache.usergrid.persistence.index.impl.SortBuilder.sortPropertyTermFilter;
 
 
 /**
@@ -73,6 +77,9 @@ public class SearchRequestBuilderStrategy {
     }
 
 
+    /**
+     * Get the search request builder
+     */
     public SearchRequestBuilder getBuilder( final SearchEdge searchEdge, final SearchTypes searchTypes,
                                             final ParsedQuery query, final int limit ) {
 
@@ -83,30 +90,71 @@ public class SearchRequestBuilderStrategy {
                 esProvider.getClient().prepareSearch( alias.getReadAlias() ).setTypes( IndexingUtils.ES_ENTITY_TYPE )
                           .setScroll( cursorTimeout + "m" );
 
-        //TODO, make this work
-        //        searchTypes.getTypeNames( applicationScope )
-
         final QueryVisitor visitor = visitParsedQuery( query );
 
         final Optional<QueryBuilder> queryBuilder = visitor.getQueryBuilder();
 
-        if(queryBuilder.isPresent()){
-          srb.setQuery( queryBuilder.get() );
+        if ( queryBuilder.isPresent() ) {
+            srb.setQuery( queryBuilder.get() );
         }
 
-        srb.setPostFilter(createFilterBuilder( searchEdge, visitor, searchTypes ) );
+        srb.setPostFilter( createFilterBuilder( searchEdge, visitor, searchTypes ) );
 
 
         srb = srb.setFrom( 0 ).setSize( limit );
 
+
+        //if we have a geo field, sort by closest to farthest by default
+        final GeoSortFields geoFields = visitor.getGeoSorts();
+
+
         //no sort predicates, sort by edge time descending, entity id second
         if ( query.getSortPredicates().size() == 0 ) {
+            applyDefaultSortPredicates( srb, geoFields );
+        }
+        else {
+            applySortPredicates( srb, query, geoFields );
+        }
+
+
+        return srb;
+    }
+
+
+    /**
+     * Apply our default sort predicate logic
+     */
+    private void applyDefaultSortPredicates( final SearchRequestBuilder srb, final GeoSortFields geoFields ) {
+
+
+        if ( geoFields.isEmpty() ) {
+
             //sort by the edge timestamp
             srb.addSort( SortBuilders.fieldSort( IndexingUtils.EDGE_TIMESTAMP_FIELDNAME ).order( SortOrder.DESC ) );
 
             //sort by the entity id if our times are equal
             srb.addSort( SortBuilders.fieldSort( IndexingUtils.ENTITY_ID_FIELDNAME ).order( SortOrder.ASC ) );
+            return;
         }
+
+        //we have geo fields, sort through them in visit order
+
+
+        for ( String geoField : geoFields.fields() ) {
+
+            final GeoDistanceSortBuilder geoSort = geoFields.applyOrder(geoField,  SortOrder.ASC);
+
+            srb.addSort( geoSort );
+        }
+    }
+
+
+    /**
+     * Invoked when there are sort predicates
+     */
+    private void applySortPredicates( final SearchRequestBuilder srb, final ParsedQuery query,
+                                      final GeoSortFields geoFields ) {
+
 
         //we have sort predicates, sort them
         for ( SortPredicate sp : query.getSortPredicates() ) {
@@ -116,29 +164,40 @@ public class SearchRequestBuilderStrategy {
             // type prefix to use. So, here we add an order by clause for every possible type
             // that you can order by: string, number and boolean and we ask ElasticSearch
             // to ignore any fields that are not present.
-
             final SortOrder order = sp.getDirection().toEsSort();
             final String propertyName = sp.getPropertyName();
 
 
-            srb.addSort( createSort( order, IndexingUtils.FIELD_STRING_NESTED, propertyName ) );
+            //if the user specified a geo field in their sort, then honor their sort order
+            if ( geoFields.contains( propertyName ) ) {
+                final GeoDistanceSortBuilder geoSort = geoFields.applyOrder(propertyName,  SortOrder.ASC);
+
+                srb.addSort( geoSort );
+            }
+
+            //apply regular sort logic, since this is not a geo point
+            else {
+
+                srb.addSort( createSort( order, IndexingUtils.FIELD_STRING_NESTED, propertyName ) );
 
 
-            srb.addSort( createSort( order, IndexingUtils.FIELD_DOUBLE_NESTED, propertyName ) );
+                srb.addSort( createSort( order, IndexingUtils.FIELD_DOUBLE_NESTED, propertyName ) );
 
-            srb.addSort( createSort( order, IndexingUtils.FIELD_BOOLEAN_NESTED, propertyName ) );
+                srb.addSort( createSort( order, IndexingUtils.FIELD_BOOLEAN_NESTED, propertyName ) );
 
 
-            srb.addSort( createSort( order, IndexingUtils.FIELD_LONG_NESTED, propertyName ) );
-
+                srb.addSort( createSort( order, IndexingUtils.FIELD_LONG_NESTED, propertyName ) );
+            }
         }
-        return srb;
     }
 
 
-
-    public BoolFilterBuilder createFilterBuilder( final SearchEdge searchEdge, final QueryVisitor visitor,
-                                                  final SearchTypes searchTypes ) {
+    /**
+     * Create our filter builder.  We need to restrict our results on edge search, as well as on types, and any filters
+     * that came from the grammar.
+     */
+    private FilterBuilder createFilterBuilder( final SearchEdge searchEdge, final QueryVisitor visitor, final
+    SearchTypes searchTypes ) {
         String context = createContextName( applicationScope, searchEdge );
 
 
@@ -164,8 +223,8 @@ public class SearchRequestBuilderStrategy {
 
         final FilterBuilder[] typeTerms = new FilterBuilder[sourceTypes.length];
 
-        for(int i = 0; i < sourceTypes.length; i ++){
-            typeTerms[i] = FilterBuilders.termFilter(  IndexingUtils.ENTITY_TYPE_FIELDNAME, sourceTypes[i]  );
+        for ( int i = 0; i < sourceTypes.length; i++ ) {
+            typeTerms[i] = FilterBuilders.termFilter( IndexingUtils.ENTITY_TYPE_FIELDNAME, sourceTypes[i] );
         }
 
         //add all our types, 1 type must match per query
@@ -203,6 +262,7 @@ public class SearchRequestBuilderStrategy {
     }
 
 
+
     /**
      * Create a sort for the property name and field name specified
      *
@@ -213,7 +273,7 @@ public class SearchRequestBuilderStrategy {
     private FieldSortBuilder createSort( final SortOrder sortOrder, final String fieldName,
                                          final String propertyName ) {
 
-        final TermFilterBuilder propertyFilter = FilterBuilders.termFilter( IndexingUtils.FIELD_NAME, propertyName );
+        final TermFilterBuilder propertyFilter = sortPropertyTermFilter( propertyName );
 
 
         return SortBuilders.fieldSort( fieldName ).order( sortOrder ).ignoreUnmapped( true )

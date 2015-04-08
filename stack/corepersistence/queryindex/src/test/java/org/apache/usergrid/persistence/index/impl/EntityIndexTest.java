@@ -29,7 +29,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,6 +43,7 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
+import org.apache.usergrid.persistence.index.CandidateResult;
 import org.apache.usergrid.persistence.index.CandidateResults;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexBatch;
@@ -58,6 +58,7 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.ArrayField;
 import org.apache.usergrid.persistence.model.field.EntityObjectField;
+import org.apache.usergrid.persistence.model.field.IntegerField;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.field.UUIDField;
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
@@ -118,8 +119,11 @@ public class EntityIndexTest extends BaseIT {
     }
 
 
+    /**
+     * Tests that when types conflict, but should match queries they work
+     * @throws IOException
+     */
     @Test
-    @Ignore( "this is a problem i will work on when i can breathe" )
     public void testIndexVariations() throws IOException {
         Id appId = new SimpleId( "application" );
 
@@ -128,33 +132,62 @@ public class EntityIndexTest extends BaseIT {
         ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex( applicationScope );
 
         final String entityType = "thing";
-        IndexEdge indexEdge = new IndexEdgeImpl( appId, "things", SearchEdge.NodeType.SOURCE,  1 );
+        IndexEdge indexEdge = new IndexEdgeImpl( appId, "things", SearchEdge.NodeType.SOURCE, 1 );
         final SearchTypes searchTypes = SearchTypes.fromTypes( entityType );
         EntityIndexBatch batch = entityIndex.createBatch();
-        Entity entity = new Entity( entityType );
-        EntityUtils.setVersion( entity, UUIDGenerator.newTimeUUID() );
-        entity.setField( new UUIDField( IndexingUtils.ENTITY_ID_FIELDNAME, UUID.randomUUID() ) );
-        entity.setField( new StringField( "testfield", "test" ) );
-        batch.index( indexEdge, entity );
+
+
+        Entity entity1 = new Entity( entityType );
+        EntityUtils.setVersion( entity1, UUIDGenerator.newTimeUUID() );
+        entity1.setField( new UUIDField( IndexingUtils.ENTITY_ID_FIELDNAME, UUID.randomUUID() ) );
+        entity1.setField( new StringField( "testfield", "test" ) );
+        entity1.setField( new IntegerField( "ordinal", 0 ) );
+
+
+        batch.index( indexEdge, entity1 );
         batch.execute().get();
 
-        EntityUtils.setVersion( entity, UUIDGenerator.newTimeUUID() );
+
+
+
+        Entity entity2 = new Entity( entityType );
+        EntityUtils.setVersion( entity2, UUIDGenerator.newTimeUUID() );
+
+
         List<String> list = new ArrayList<>();
         list.add( "test" );
-        entity.setField( new ArrayField<String>( "testfield", list ) );
-        batch.index( indexEdge, entity );
-        batch.execute().get();
+        entity2.setField( new ArrayField<>( "testfield", list ) );
+        entity2.setField( new IntegerField( "ordinal", 1 ) );
 
-        EntityUtils.setVersion( entity, UUIDGenerator.newTimeUUID() );
-        EntityObject testObj = new EntityObject();
-        testObj.setField( new StringField( "test", "testFiedl" ) );
-        entity.setField( new EntityObjectField( "testfield", testObj ) );
-        batch.index( indexEdge, entity );
+
+        batch.index( indexEdge, entity2 );
         batch.execute().get();
 
         ei.refresh();
 
-        testQueries( indexEdge, searchTypes, entityIndex );
+
+        StopWatch timer = new StopWatch();
+        timer.start();
+        CandidateResults candidateResults =
+                entityIndex.search( indexEdge, searchTypes, "select * where testfield = 'test' order by ordinal", 100 );
+
+        timer.stop();
+
+        assertEquals( 2, candidateResults.size() );
+        log.debug( "Query time {}ms", timer.getTime() );
+
+        final CandidateResult candidate1 = candidateResults.get( 0 );
+
+        //check the id and version
+        assertEquals( entity1.getId(), candidate1.getId() );
+        assertEquals( entity1.getVersion(), candidate1.getVersion() );
+
+
+        final CandidateResult candidate2 = candidateResults.get( 1 );
+
+        //check the id and version
+        assertEquals( entity2.getId(), candidate2.getId() );
+        assertEquals( entity2.getVersion(), candidate2.getVersion() );
     }
 
 
@@ -178,11 +211,10 @@ public class EntityIndexTest extends BaseIT {
         final List<Object> sampleJson = mapper.readValue( is, new TypeReference<List<Object>>() {} );
         for ( int i = 0; i < threads; i++ ) {
 
-            final IndexEdge indexEdge = new IndexEdgeImpl( appId, "things",  SearchEdge.NodeType.SOURCE, i );
+            final IndexEdge indexEdge = new IndexEdgeImpl( appId, "things", SearchEdge.NodeType.SOURCE, i );
 
             Thread thread = new Thread( () -> {
                 try {
-
 
 
                     EntityIndexBatch batch = entityIndex.createBatch();
@@ -238,7 +270,7 @@ public class EntityIndexTest extends BaseIT {
 
 
         final String entityType = "thing";
-        IndexEdge searchEdge = new IndexEdgeImpl( appId, "things", SearchEdge.NodeType.SOURCE,  10 );
+        IndexEdge searchEdge = new IndexEdgeImpl( appId, "things", SearchEdge.NodeType.SOURCE, 10 );
         final SearchTypes searchTypes = SearchTypes.fromTypes( entityType );
 
         insertJsonBlob( entityIndex, entityType, searchEdge, "/sample-large.json", 101, 0 );
@@ -270,7 +302,7 @@ public class EntityIndexTest extends BaseIT {
 
 
         final String entityType = "thing";
-        IndexEdge searchEdge = new IndexEdgeImpl( appId, "things",  SearchEdge.NodeType.SOURCE, 1 );
+        IndexEdge searchEdge = new IndexEdgeImpl( appId, "things", SearchEdge.NodeType.SOURCE, 1 );
         final SearchTypes searchTypes = SearchTypes.fromTypes( entityType );
 
         insertJsonBlob( entityIndex, entityType, searchEdge, "/sample-large.json", 1, 0 );
@@ -350,7 +382,7 @@ public class EntityIndexTest extends BaseIT {
 
         ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
 
-        IndexEdge searchEdge = new IndexEdgeImpl( appId, "fastcars", SearchEdge.NodeType.SOURCE,  1 );
+        IndexEdge searchEdge = new IndexEdgeImpl( appId, "fastcars", SearchEdge.NodeType.SOURCE, 1 );
 
         ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex( applicationScope );
 
@@ -487,7 +519,7 @@ public class EntityIndexTest extends BaseIT {
 
         ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
 
-        IndexEdge indexSCope = new IndexEdgeImpl( ownerId, "user",  SearchEdge.NodeType.SOURCE, 10 );
+        IndexEdge indexSCope = new IndexEdgeImpl( ownerId, "user", SearchEdge.NodeType.SOURCE, 10 );
 
         ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex( applicationScope );
 
@@ -536,7 +568,7 @@ public class EntityIndexTest extends BaseIT {
         Id ownerId = new SimpleId( "multivaluedtype" );
         ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
 
-        IndexEdge indexScope = new IndexEdgeImpl( ownerId, "user",  SearchEdge.NodeType.SOURCE, 10 );
+        IndexEdge indexScope = new IndexEdgeImpl( ownerId, "user", SearchEdge.NodeType.SOURCE, 10 );
 
         ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex( applicationScope );
 
@@ -622,7 +654,7 @@ public class EntityIndexTest extends BaseIT {
 
         ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
 
-        IndexEdge indexEdge = new IndexEdgeImpl( ownerId, "users",  SearchEdge.NodeType.SOURCE, 10 );
+        IndexEdge indexEdge = new IndexEdgeImpl( ownerId, "users", SearchEdge.NodeType.SOURCE, 10 );
 
 
         ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex( applicationScope );
@@ -688,13 +720,14 @@ public class EntityIndexTest extends BaseIT {
 
             assertEquals( "Should be 16 bytes as hex", 32, cursor.length() );
 
-
             assertEquals( 1, results.size() );
 
 
             assertEquals( results.get( 0 ).getId(), entities.get( i ) );
         }
     }
+
+
 }
 
 

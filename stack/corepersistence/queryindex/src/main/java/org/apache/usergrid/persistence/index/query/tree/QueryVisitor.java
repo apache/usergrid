@@ -20,15 +20,18 @@ package org.apache.usergrid.persistence.index.query.tree;
 
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.usergrid.persistence.index.exceptions.NoFullTextIndexException;
 import org.apache.usergrid.persistence.index.exceptions.NoIndexException;
 import org.apache.usergrid.persistence.index.exceptions.IndexException;
+import org.apache.usergrid.persistence.index.impl.GeoSortFields;
 import org.apache.usergrid.persistence.index.query.SortPredicate;
 
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.search.sort.GeoDistanceSortBuilder;
 
 import com.google.common.base.Optional;
 
@@ -119,7 +122,8 @@ public interface QueryVisitor {
      * Some searches, such as geo have a side effect of adding a geo sort.  Get any sorts that are side effects
      * of the query terms, in the order they should be applied.  Note that user specified sort orders will trump
      * these sorts
-     * @return
+     *
+     * @return The GeoSortFields  null safe
      */
-    Set<String> getGeoSelectFields();
+    GeoSortFields getGeoSorts();
 }
