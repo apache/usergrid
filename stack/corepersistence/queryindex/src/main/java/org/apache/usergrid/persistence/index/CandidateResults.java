@@ -89,6 +89,11 @@ public class CandidateResults implements Iterable<CandidateResult> {
     }
 
 
+    public Collection<SelectFieldMapping> getGetFieldMappings() {
+        return getFieldMappings;
+    }
+
+
     /**
      * Get the candidates
      * @return

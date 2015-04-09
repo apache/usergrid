@@ -377,9 +377,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
         EntityManager em = emf.getEntityManager( emf.getManagementAppId() );
 
 
-        Query query = new Query();
-        query.addEqualityFilter( JOB_NAME, jobName );
-        query.addEqualityFilter( JOB_ID, jobId );
+        Query query = Query.fromQL( "select * where " + JOB_NAME + " = '" + jobName + "' AND " + JOB_ID + " = " + jobId );
 
         Results r = em.searchCollection( em.getApplicationRef(), "job_stats", query );
 

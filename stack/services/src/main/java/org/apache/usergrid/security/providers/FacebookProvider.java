@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.index.query.Identifier;
-import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.security.tokens.exceptions.BadTokenException;

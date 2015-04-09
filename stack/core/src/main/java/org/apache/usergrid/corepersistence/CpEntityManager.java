@@ -79,8 +79,10 @@ import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsE
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
 import org.apache.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
+import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexBatch;
+import org.apache.usergrid.persistence.index.IndexEdge;
 import org.apache.usergrid.persistence.index.query.CounterResolution;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.map.MapManager;
@@ -123,7 +125,7 @@ import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import static org.apache.commons.lang.StringUtils.capitalize;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.usergrid.corepersistence.util.CpEntityMapUtils.entityToCpEntity;
-import static org.apache.usergrid.corepersistence.util.CpNamingUtils.generateScopeFromCollection;
+import static org.apache.usergrid.corepersistence.util.CpNamingUtils.generateScopeFromSource;
 import static org.apache.usergrid.persistence.Schema.COLLECTION_ROLES;
 import static org.apache.usergrid.persistence.Schema.COLLECTION_USERS;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_PERMISSIONS;
@@ -2697,11 +2699,6 @@ public class CpEntityManager implements EntityManager {
         boolean entityHasDictionary = Schema.getDefaultSchema()
                 .hasDictionary( entity.getType(), dictionaryName );
 
-        // Don't index dynamic dictionaries not defined by the schema
-        if ( entityHasDictionary ) {
-            getRelationManager( entity ).batchUpdateSetIndexes(
-                    batch, dictionaryName, elementValue, removeFromDictionary, timestampUuid );
-        }
 
         ApplicationCF dictionary_cf = entityHasDictionary
                 ? ENTITY_DICTIONARIES : ENTITY_COMPOSITE_DICTIONARIES;
@@ -2876,16 +2873,14 @@ public class CpEntityManager implements EntityManager {
     }
 
 
-    void indexEntityIntoCollection( org.apache.usergrid.persistence.model.entity.Entity collectionEntity,
-                                    org.apache.usergrid.persistence.model.entity.Entity memberEntity,
-                                    String collName ) {
+    void indexEntityIntoCollection( final Edge edge,  final  org.apache.usergrid.persistence.model.entity.Entity collectionMember) {
 
         final ApplicationEntityIndex aie = getManagerCache().getEntityIndex( getApplicationScope() );
         final EntityIndexBatch batch = aie.createBatch();
 
         // index member into entity collection | type scope
-        IndexScope collectionIndexScope = generateScopeFromCollection( collectionEntity.getId(), collName );
-        batch.index( collectionIndexScope, memberEntity );
+        final IndexEdge collectionIndexScope = generateScopeFromSource( edge );
+        batch.index( collectionIndexScope, collectionMember );
 
         //TODO REMOVE INDEX CODE
         //        // index member into entity | all-types scope

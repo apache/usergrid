@@ -38,9 +38,9 @@ import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexBatch;
-import org.apache.usergrid.persistence.index.IndexScope;
-import org.apache.usergrid.persistence.index.query.CandidateResult;
-import org.apache.usergrid.persistence.index.query.CandidateResults;
+import org.apache.usergrid.persistence.index.SearchEdge;
+import org.apache.usergrid.persistence.index.CandidateResult;
+import org.apache.usergrid.persistence.index.CandidateResults;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.fasterxml.uuid.UUIDComparator;
@@ -55,7 +55,7 @@ public class FilteringLoader implements ResultsLoader {
     private final ManagerCache managerCache;
     private final ResultsVerifier resultsVerifier;
     private final ApplicationScope applicationScope;
-    private final IndexScope indexScope;
+    private final SearchEdge indexScope;
     private final EntityIndexBatch indexBatch;
 
 
@@ -68,7 +68,7 @@ public class FilteringLoader implements ResultsLoader {
      * @param indexScope The index scope used in the search
      */
     protected FilteringLoader( final ManagerCache managerCache, final ResultsVerifier resultsVerifier,
-                               final ApplicationScope applicationScope, final IndexScope indexScope ) {
+                               final ApplicationScope applicationScope, final SearchEdge indexScope ) {
 
         this.managerCache = managerCache;
         this.resultsVerifier = resultsVerifier;

@@ -19,61 +19,43 @@
 package org.apache.usergrid.persistence;
 
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.io.IOException;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.UUID;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.IOException;
-import org.antlr.runtime.ANTLRStringStream;
-import org.antlr.runtime.ClassicToken;
-import org.antlr.runtime.CommonTokenStream;
-import org.antlr.runtime.RecognitionException;
-import org.antlr.runtime.Token;
-import org.antlr.runtime.TokenRewriteStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
-import org.apache.usergrid.persistence.index.exceptions.IndexException;
+
+import org.apache.usergrid.persistence.index.SelectFieldMapping;
 import org.apache.usergrid.persistence.index.exceptions.QueryParseException;
-import org.apache.usergrid.persistence.index.impl.EsQueryVistor;
-import org.apache.usergrid.persistence.index.impl.IndexingUtils;
 import org.apache.usergrid.persistence.index.query.CounterResolution;
 import org.apache.usergrid.persistence.index.query.Identifier;
-import org.apache.usergrid.persistence.index.query.tree.AndOperand;
-import org.apache.usergrid.persistence.index.query.tree.ContainsOperand;
-import org.apache.usergrid.persistence.index.query.tree.CpQueryFilterLexer;
-import org.apache.usergrid.persistence.index.query.tree.CpQueryFilterParser;
-import org.apache.usergrid.persistence.index.query.tree.Equal;
-import org.apache.usergrid.persistence.index.query.tree.EqualityOperand;
-import org.apache.usergrid.persistence.index.query.tree.GreaterThan;
-import org.apache.usergrid.persistence.index.query.tree.GreaterThanEqual;
-import org.apache.usergrid.persistence.index.query.tree.LessThan;
-import org.apache.usergrid.persistence.index.query.tree.LessThanEqual;
 import org.apache.usergrid.persistence.index.query.tree.Operand;
-import org.apache.usergrid.persistence.index.query.tree.QueryVisitor;
 import org.apache.usergrid.persistence.index.utils.ClassUtils;
 import org.apache.usergrid.persistence.index.utils.ConversionUtils;
 import org.apache.usergrid.persistence.index.utils.ListUtils;
 import org.apache.usergrid.persistence.index.utils.MapUtils;
-import org.elasticsearch.index.query.FilterBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 
 public class Query {
     private static final Logger logger = LoggerFactory.getLogger( Query.class );
+
+
+
 
     public enum Level {
         IDS, REFS, CORE_PROPERTIES, ALL_PROPERTIES, LINKED_PROPERTIES
@@ -105,6 +87,7 @@ public class Query {
     private List<CounterFilterPredicate> counterFilters;
     private String collection;
     private String ql;
+    private Collection<SelectFieldMapping> selectFields;
 
     private static ObjectMapper mapper = new ObjectMapper();
 
@@ -336,6 +319,31 @@ public class Query {
 
     public boolean hasQueryPredicates() {
         return rootOperand != null;
+    }
+
+
+    /**
+     * Return true if the query generated select subjects
+     * @return
+     */
+    public boolean hasSelectSubjects() {
+        return this.selectFields != null || this.selectFields.size() > 0;
+    }
+
+
+    /**
+     * Set the select subjects from our query results
+     */
+    public void setSelectSubjects( final Collection<SelectFieldMapping> selectFields ) {
+        this.selectFields = selectFields;
+    }
+
+
+    /**
+     * Get the select assignments from our resetus if they were set
+     */
+    public Collection<SelectFieldMapping> getSelectAssignments() {
+        return this.selectFields;
     }
 
 

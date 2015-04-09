@@ -21,9 +21,9 @@ package org.apache.usergrid.corepersistence.results;
 
 
 import org.apache.usergrid.corepersistence.ManagerCache;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.index.SearchEdge;
 
 
 /**
@@ -40,7 +40,7 @@ public class CollectionResultsLoaderFactoryImpl implements ResultsLoaderFactory 
 
 
     @Override
-    public ResultsLoader getLoader( final ApplicationScope applicationScope, final IndexScope scope, final Query.Level resultsLevel ) {
+    public ResultsLoader getLoader( final ApplicationScope applicationScope, final SearchEdge scope, final Query.Level resultsLevel ) {
 
         ResultsVerifier verifier;
 

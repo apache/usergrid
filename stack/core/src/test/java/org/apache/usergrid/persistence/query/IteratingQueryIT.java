@@ -37,7 +37,7 @@ import org.apache.usergrid.CoreITSetup;
 import org.apache.usergrid.CoreITSetupImpl;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.Query;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -303,8 +303,7 @@ public class IteratingQueryIT {
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        Query query = new Query();
-        query.addSort( "created" );
+        Query query = Query.fromQL("sort by  created" );
         query.setLimit( queryLimit );
 
         int count = 0;
@@ -374,9 +373,7 @@ public class IteratingQueryIT {
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        Query query = new Query();
-        query.addSort( "created" );
-        query.addEqualityFilter( "intersect", true );
+        Query query = Query.fromQL( "select * where intersect = true sort by  created" );
         query.setLimit( queryLimit );
 
         int count = 0;
@@ -446,10 +443,7 @@ public class IteratingQueryIT {
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        Query query = new Query();
-        query.addSort( "created" );
-        query.addEqualityFilter( "intersect", true );
-        query.addEqualityFilter( "intersect2", true );
+        Query query = Query.fromQL( "select * where intersect = true AND intersect2 = true sort by  created" );
         query.setLimit( queryLimit );
 
         int count = 0;
@@ -506,11 +500,7 @@ public class IteratingQueryIT {
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        Query query = new Query();
-        query.addSort( "created" );
-        // nothing will ever match this, the search should short circuit
-        query.addEqualityFilter( "intersect", true );
-        query.addEqualityFilter( "intersect2", true );
+        Query query = Query.fromQL( "select * where intersect = true AND intersect2 = true sort by  created" );
         query.setLimit( queryLimit );
 
         start = System.currentTimeMillis();
@@ -701,10 +691,8 @@ public class IteratingQueryIT {
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        Query query = new Query();
-        query.addSort( "created" );
+        Query query = Query.fromQL( "select * where searched = true sort by  created" );
         query.setLimit( queryLimit );
-        query.addEqualityFilter( "searched", true );
 
         int count = 0;
 
@@ -756,9 +744,7 @@ public class IteratingQueryIT {
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        Query query = new Query();
-        query.addSort( "index desc" );
-        query.addLessThanEqualFilter( "index", startValue );
+        Query query = Query.fromQL( "select * where index = "+ startValue + " sort by index desc" );
         query.setLimit( queryLimit );
 
         int count = 0;
@@ -818,9 +804,7 @@ public class IteratingQueryIT {
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        Query query = new Query();
-        query.addSort( "index desc" );
-        query.addLessThanFilter( "index", startValue );
+        Query query = Query.fromQL( "select * where index = "+ startValue + " sort by index desc" );
         query.setLimit( queryLimit );
 
         int count = 0;
@@ -880,9 +864,7 @@ public class IteratingQueryIT {
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        Query query = new Query();
-        query.addSort( "index desc" );
-        query.addGreaterThanEqualFilter( "index", startValue );
+        Query query = Query.fromQL( "select * where index = "+ startValue + " sort by index desc" );
         query.setLimit( queryLimit );
 
         int count = 0;
@@ -941,9 +923,7 @@ public class IteratingQueryIT {
 
         LOG.info( "Writes took {} ms", stop - start );
 
-        Query query = new Query();
-        query.addSort( "index desc" );
-        query.addGreaterThanFilter( "index", startValue );
+        Query query = Query.fromQL( "select * where index = "+ startValue + " sort by index desc" );
         query.setLimit( queryLimit );
 
         int count = 0;

@@ -20,7 +20,7 @@ import com.relayrides.pushy.apns.util.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.entities.*;
-import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.queue.DefaultQueueManager;
 import org.apache.usergrid.services.notifications.*;
 import org.junit.*;

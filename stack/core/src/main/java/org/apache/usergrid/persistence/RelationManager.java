@@ -116,6 +116,5 @@ public interface RelationManager {
 
     public Set<String> getConnectionIndexes( String connectionType ) throws Exception;
 
-    public void batchUpdateSetIndexes( Mutator<ByteBuffer> batch, String setName, Object elementValue,
-                                       boolean removeFromSet, UUID timestampUuid ) throws Exception;
+
 }

@@ -18,15 +18,16 @@ package org.apache.usergrid.persistence;
 
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import org.apache.usergrid.persistence.Query;
-import static org.apache.usergrid.utils.ClassUtils.cast;
-import org.apache.usergrid.utils.JsonUtils;
 
+import org.apache.usergrid.persistence.index.SelectFieldMapping;
+import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.ListUtils;
+
+import static org.apache.usergrid.utils.ClassUtils.cast;
 
 
 /**
@@ -54,6 +55,13 @@ public class QueryUtils {
         return null;
     }
 
+
+    /**
+     * When a query has select fields, parse the results into a result set by the field mappings
+     * @param q
+     * @param rs
+     * @return
+     */
     public static List<Object> getSelectionResults( Query q, Results rs ) {
 
         List<Entity> entities = rs.getEntities();
@@ -68,33 +76,14 @@ public class QueryUtils {
         List<Object> results = new ArrayList<Object>();
 
         for ( Entity entity : entities ) {
-            if ( q.isMergeSelectResults() ) {
-                boolean include = false;
-                Map<String, Object> result = new LinkedHashMap<String, Object>();
-                Map<String, String> selects = q.getSelectAssignments();
-                for ( Map.Entry<String, String> select : selects.entrySet() ) {
-                    Object obj = JsonUtils.select( entity, select.getValue(), false );
-                    if ( obj != null ) {
-                        include = true;
-                    }
-                    result.put( select.getKey(), obj );
-                }
-                if ( include ) {
-                    results.add( result );
-                }
-            }
-            else {
-                boolean include = false;
-                List<Object> result = new ArrayList<Object>();
-                Set<String> selects = q.getSelectSubjects();
-                for ( String select : selects ) {
-                    Object obj = JsonUtils.select( entity, select );
-                    if ( obj != null ) {
-                        include = true;
-                    }
-                    result.add( obj );
-                }
-                if ( include ) {
+
+
+            Collection<SelectFieldMapping> selects = q.getSelectAssignments();
+            for ( SelectFieldMapping select : selects ) {
+                Object obj = JsonUtils.select( entity, select.getSourceFieldName(), false );
+                if ( obj != null ) {
+                    Map<String, Object> result = new LinkedHashMap<String, Object>();
+                    result.put( select.getTargetFieldName(), obj );
                     results.add( result );
                 }
             }
@@ -106,14 +95,4 @@ public class QueryUtils {
 
         return results;
     }
-
-
-    public static Object getSelectionResult( Query q, Results rs ) {
-        List<Object> r = QueryUtils.getSelectionResults( q, rs );
-        if ( ( r != null ) && ( r.size() > 0 ) ) {
-            return r.get( 0 );
-        }
-        return null;
-    }
-
 }
