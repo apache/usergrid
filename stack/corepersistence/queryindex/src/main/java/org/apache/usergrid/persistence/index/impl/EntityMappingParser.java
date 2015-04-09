@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,6 +69,15 @@ public class EntityMappingParser implements FieldParser {
      */
     private void visit( final String value ) {
         fields.add( EntityField.create( fieldStack.peek(), value.toLowerCase() ) );
+    }
+
+
+
+    /**
+     * Visit al the primitive values
+     */
+    private void visit( final UUID value ) {
+        fields.add( EntityField.create( fieldStack.peek(), value ) );
     }
 
 
@@ -152,6 +162,11 @@ public class EntityMappingParser implements FieldParser {
     private void visitPrimitive( final Object object ) {
         if ( object instanceof String ) {
             visit( ( String ) object );
+            return;
+        }
+
+        if(object instanceof  UUID){
+            visit((UUID) object);
             return;
         }
 

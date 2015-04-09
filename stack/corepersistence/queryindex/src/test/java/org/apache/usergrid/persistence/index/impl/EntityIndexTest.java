@@ -729,6 +729,51 @@ public class EntityIndexTest extends BaseIT {
     }
 
 
+
+    @Test
+    public void queryByUUID() throws Throwable {
+
+        Id appId = new SimpleId( "application" );
+        Id ownerId = new SimpleId( "owner" );
+
+        ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
+
+        IndexEdge indexSCope = new IndexEdgeImpl( ownerId, "user", SearchEdge.NodeType.SOURCE, 10 );
+
+        ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex( applicationScope );
+
+
+        final UUID searchUUID = UUIDGenerator.newTimeUUID();
+
+        Map entityMap = new HashMap() {{
+            put( "searchUUID", searchUUID );
+        }};
+
+        Entity user = EntityIndexMapUtils.fromMap( entityMap );
+
+        final Id entityId = new SimpleId( "entitytype" );
+
+        EntityUtils.setId( user, entityId );
+        EntityUtils.setVersion( user, UUIDGenerator.newTimeUUID() );
+
+
+        EntityIndexBatch batch = entityIndex.createBatch();
+
+        batch.index( indexSCope, user );
+        batch.execute().get();
+        ei.refresh();
+
+        final String query = "where searchUUID = " + searchUUID;
+
+        final CandidateResults r = entityIndex.search( indexSCope, SearchTypes.fromTypes( entityId.getType() ), query, 10 );
+        assertEquals( user.getId(), r.get( 0 ).getId() );
+
+        batch.deindex( indexSCope, user.getId(), user.getVersion() );
+        batch.execute().get();
+        ei.refresh();
+    }
+
+
 }
 
 

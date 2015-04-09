@@ -26,6 +26,7 @@ package org.apache.usergrid.persistence.index.impl;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 
 /**
@@ -49,8 +50,20 @@ public class EntityField extends HashMap<String, Object> {
      */
     public static EntityField create( final String fieldName, final String value ) {
         EntityField field = new EntityField();
-        field.put( IndexingUtils.FIELD_NAME, fieldName );
+        field.put( IndexingUtils.FIELD_NAME, fieldName.toLowerCase() );
         field.put( IndexingUtils.FIELD_STRING, value );
+
+        return field;
+    }
+
+
+    /**
+     * Set a uuid value into the field
+     */
+    public static EntityField create( final String fieldName, final UUID value ) {
+        EntityField field = new EntityField();
+        field.put( IndexingUtils.FIELD_NAME, fieldName.toLowerCase() );
+        field.put( IndexingUtils.FIELD_UUID, value.toString() );
 
         return field;
     }
@@ -61,7 +74,7 @@ public class EntityField extends HashMap<String, Object> {
      */
     public static EntityField create( final String fieldName, final boolean value ) {
         EntityField field = new EntityField();
-        field.put( IndexingUtils.FIELD_NAME, fieldName );
+        field.put( IndexingUtils.FIELD_NAME, fieldName.toLowerCase() );
         field.put( IndexingUtils.FIELD_BOOLEAN, value );
 
         return field;
@@ -75,7 +88,7 @@ public class EntityField extends HashMap<String, Object> {
      */
     public static EntityField create( final String fieldName, final int value ) {
         EntityField field = new EntityField();
-        field.put( IndexingUtils.FIELD_NAME, fieldName );
+        field.put( IndexingUtils.FIELD_NAME, fieldName.toLowerCase() );
         field.put( IndexingUtils.FIELD_LONG, value );
 
         return field;
@@ -87,7 +100,7 @@ public class EntityField extends HashMap<String, Object> {
      */
     public static EntityField create( final String fieldName, final long value ) {
         EntityField field = new EntityField();
-        field.put( IndexingUtils.FIELD_NAME, fieldName );
+        field.put( IndexingUtils.FIELD_NAME, fieldName.toLowerCase() );
         field.put( IndexingUtils.FIELD_LONG, value );
 
         return field;
@@ -99,7 +112,7 @@ public class EntityField extends HashMap<String, Object> {
      */
     public static EntityField create( final String fieldName, final float value ) {
         EntityField field = new EntityField();
-        field.put( IndexingUtils.FIELD_NAME, fieldName );
+        field.put( IndexingUtils.FIELD_NAME, fieldName.toLowerCase() );
         field.put( IndexingUtils.FIELD_DOUBLE, value );
 
         return field;
@@ -111,7 +124,7 @@ public class EntityField extends HashMap<String, Object> {
      */
     public static EntityField create( final String fieldName, final double value ) {
         EntityField field = new EntityField();
-        field.put( IndexingUtils.FIELD_NAME, fieldName );
+        field.put( IndexingUtils.FIELD_NAME, fieldName.toLowerCase() );
         field.put( IndexingUtils.FIELD_DOUBLE, value );
 
         return field;
@@ -125,7 +138,7 @@ public class EntityField extends HashMap<String, Object> {
      */
     public static EntityField create( final String fieldName, final Map location) {
         EntityField field = new EntityField();
-        field.put( IndexingUtils.FIELD_NAME, fieldName );
+        field.put( IndexingUtils.FIELD_NAME, fieldName.toLowerCase() );
         field.put( IndexingUtils.FIELD_LOCATION, location );
 
         return field;

@@ -66,7 +66,6 @@ public class IndexingUtils {
 
     public static final String ENTITY_FIELDS = "fields";
 
-
     /**
      * Reserved field types in our document
      *
@@ -78,9 +77,7 @@ public class IndexingUtils {
     public static final String FIELD_DOUBLE = "double";
     public static final String FIELD_LOCATION = "location";
     public static final String FIELD_STRING = "string";
-
-
-
+    public static final String FIELD_UUID = "uuid";
 
 
     /**
@@ -92,6 +89,7 @@ public class IndexingUtils {
     public static final String FIELD_DOUBLE_NESTED = ENTITY_FIELDS + "." + FIELD_DOUBLE;
     public static final String FIELD_LOCATION_NESTED = ENTITY_FIELDS + "." + FIELD_LOCATION;
     public static final String FIELD_STRING_NESTED = ENTITY_FIELDS + "." + FIELD_STRING;
+    public static final String FIELD_UUID_NESTED = ENTITY_FIELDS + "." + FIELD_UUID;
     public static final String FIELD_STRING_EQUALS_NESTED = FIELD_STRING_NESTED + ".exact";
 
 

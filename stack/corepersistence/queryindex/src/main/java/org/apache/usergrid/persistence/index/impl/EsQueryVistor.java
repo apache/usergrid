@@ -19,10 +19,8 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 import java.util.Stack;
+import java.util.UUID;
 
 import org.elasticsearch.common.geo.GeoDistance;
 import org.elasticsearch.common.unit.DistanceUnit;
@@ -82,7 +80,6 @@ public class EsQueryVistor implements QueryVisitor {
     private final GeoSortFields geoSortFields = new GeoSortFields();
 
 
-
     @Override
     public void visit( AndOperand op ) throws IndexException {
 
@@ -122,7 +119,7 @@ public class EsQueryVistor implements QueryVisitor {
             queryBuilders.push( rightQuery );
         }
         //put in an empty in case we're not the root.  I.E X and Y and Z
-        else{
+        else {
             queryBuilders.push( NoOpQueryBuilder.INSTANCE );
         }
 
@@ -147,7 +144,7 @@ public class EsQueryVistor implements QueryVisitor {
             filterBuilders.push( rightFilter );
         }
         //push in a no-op in case we're not the root   I.E X and Y and Z
-        else{
+        else {
             filterBuilders.push( NoOpFilterBuilder.INSTANCE );
         }
     }
@@ -183,8 +180,8 @@ public class EsQueryVistor implements QueryVisitor {
             queryBuilders.push( rightQuery );
         }
 
-         //put in an empty in case we're not the root.  I.E X or Y or Z
-        else{
+        //put in an empty in case we're not the root.  I.E X or Y or Z
+        else {
             queryBuilders.push( NoOpQueryBuilder.INSTANCE );
         }
 
@@ -206,11 +203,10 @@ public class EsQueryVistor implements QueryVisitor {
         else if ( useRightFilter ) {
             filterBuilders.push( rightFilter );
         }
-         //put in an empty in case we're not the root.  I.E X or Y or Z
-        else{
+        //put in an empty in case we're not the root.  I.E X or Y or Z
+        else {
             queryBuilders.push( NoOpQueryBuilder.INSTANCE );
         }
-
     }
 
 
@@ -225,7 +221,7 @@ public class EsQueryVistor implements QueryVisitor {
         if ( use( notQueryBuilder ) ) {
             queryBuilders.push( QueryBuilders.boolQuery().mustNot( notQueryBuilder ) );
         }
-        else{
+        else {
             queryBuilders.push( NoOpQueryBuilder.INSTANCE );
         }
 
@@ -235,7 +231,7 @@ public class EsQueryVistor implements QueryVisitor {
         if ( use( notFilterBuilder ) ) {
             filterBuilders.push( FilterBuilders.boolFilter().mustNot( notFilterBuilder ) );
         }
-        else{
+        else {
             filterBuilders.push( NoOpFilterBuilder.INSTANCE );
         }
     }
@@ -278,8 +274,9 @@ public class EsQueryVistor implements QueryVisitor {
         float distance = op.getDistance().getFloatValue();
 
 
-        final FilterBuilder fb = FilterBuilders.geoDistanceFilter( IndexingUtils.FIELD_LOCATION_NESTED ).lat( lat ).lon( lon )
-                                               .distance( distance, DistanceUnit.METERS );
+        final FilterBuilder fb =
+                FilterBuilders.geoDistanceFilter( IndexingUtils.FIELD_LOCATION_NESTED ).lat( lat ).lon( lon )
+                              .distance( distance, DistanceUnit.METERS );
 
 
         filterBuilders.push( fieldNameTerm( name, fb ) );
@@ -290,8 +287,8 @@ public class EsQueryVistor implements QueryVisitor {
         //this geoSort won't has a sort on it
 
         final GeoDistanceSortBuilder geoSort =
-                      SortBuilders.geoDistanceSort( IndexingUtils.FIELD_LOCATION_NESTED )
-                                  .unit( DistanceUnit.METERS ).geoDistance( GeoDistance.SLOPPY_ARC ).point( lat, lon );
+                SortBuilders.geoDistanceSort( IndexingUtils.FIELD_LOCATION_NESTED ).unit( DistanceUnit.METERS )
+                            .geoDistance( GeoDistance.SLOPPY_ARC ).point( lat, lon );
 
         final TermFilterBuilder sortPropertyName = sortPropertyTermFilter( name );
 
@@ -505,6 +502,11 @@ public class EsQueryVistor implements QueryVisitor {
         }
 
 
+        if ( object instanceof UUID ) {
+            return IndexingUtils.FIELD_UUID_NESTED;
+        }
+
+
         throw new UnsupportedOperationException(
                 "Unkown search type of " + object.getClass().getName() + " encountered" );
     }
@@ -516,6 +518,10 @@ public class EsQueryVistor implements QueryVisitor {
     private Object sanitize( final Object input ) {
         if ( input instanceof String ) {
             return ( ( String ) input ).toLowerCase();
+        }
+
+        if ( input instanceof UUID ) {
+            return input.toString();
         }
 
         return input;
@@ -536,5 +542,4 @@ public class EsQueryVistor implements QueryVisitor {
     private boolean use( final FilterBuilder filterBuilder ) {
         return filterBuilder != NoOpFilterBuilder.INSTANCE;
     }
-
 }
