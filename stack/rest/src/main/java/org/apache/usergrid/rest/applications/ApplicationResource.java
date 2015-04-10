@@ -31,6 +31,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
 import org.slf4j.Logger;
@@ -501,7 +502,16 @@ public class ApplicationResource extends ServiceResource {
             throw new IllegalArgumentException("Application ID not specified in request");
         }
 
-        management.restoreApplication( applicationId );
+        ApplicationInfo app = management.getApplicationInfo( applicationId );
+        if ( app == null ) {
+            throw new EntityNotFoundException("Application ID " + applicationId + " not found");
+        }
+
+        try {
+            emf.restoreApplication(applicationId);
+        } catch (EntityNotFoundException enfe){
+            logger.warn("Attempt to restore %s failed: %s", applicationId, enfe.getMessage());
+        }
 
         ApiResponse response = createApiResponse();
         response.setAction( "restore" );
