@@ -508,8 +508,11 @@ public class ApplicationResource extends ServiceResource {
             throw new EntityNotFoundException("Application ID " + applicationId + " not found");
         }
 
-        emf.restoreApplication( applicationId );
-
+        try {
+            emf.restoreApplication(applicationId);
+        } catch (EntityNotFoundException enfe){
+            logger.warn("Attempt to restore %s failed: %s", applicationId, enfe.getMessage());
+        }
         ApiResponse response = createApiResponse();
         response.setAction( "restore" );
         response.setApplication( services.getApplication() );
