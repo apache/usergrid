@@ -30,10 +30,15 @@ import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
+import org.apache.usergrid.services.ServiceAction;
+import org.apache.usergrid.services.ServicePayload;
+import org.apache.usergrid.utils.JsonUtils;
+import org.jclouds.json.Json;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -502,21 +507,28 @@ public class ApplicationResource extends ServiceResource {
             throw new IllegalArgumentException("Application ID not specified in request");
         }
 
-        ApplicationInfo app = management.getApplicationInfo( applicationId );
+        ApplicationInfo app = management.getApplicationInfo(applicationId);
         if ( app == null ) {
-            throw new EntityNotFoundException("Application ID " + applicationId + " not found");
-        }
-
-        try {
-            emf.restoreApplication(applicationId);
-        } catch (EntityNotFoundException enfe){
-            logger.warn("Attempt to restore %s failed: %s", applicationId, enfe.getMessage());
+//
+            app=management.getDeletedApplicationInfo(applicationId);
+            if(app==null) {
+                throw new EntityNotFoundException("Application ID " + applicationId + " not found");
+            }else{
+                emf.restoreApplication(applicationId);
+            }
         }
 
         ApiResponse response = createApiResponse();
-        response.setAction( "restore" );
-        response.setApplication( services.getApplication() );
-        response.setParams( ui.getQueryParameters() );
+        response.setAction("restore");
+        response.setApplication(services.getApplication());
+        response.setParams(ui.getQueryParameters());
+
+        ObjectMapper mapper = new ObjectMapper();
+        Map<String, Object> json = mapper.readValue(body, mapTypeReference);
+
+        ServicePayload payload = getPayload(json);
+
+        executeServiceRequest( ui, response, ServiceAction.PUT, payload );
 
         return new JSONWithPadding( response, callback );
     }
@@ -548,14 +560,14 @@ public class ApplicationResource extends ServiceResource {
 
         management.deleteApplication( applicationId );
 
-        LOG.debug( "ApplicationResource.delete() deleted appId = {}", applicationId);
+        LOG.debug("ApplicationResource.delete() deleted appId = {}", applicationId);
 
         ApiResponse response = createApiResponse();
         response.setAction( "delete" );
         response.setApplication(services.getApplication());
         response.setParams(ui.getQueryParameters());
 
-        LOG.debug( "ApplicationResource.delete() sending response ");
+        LOG.debug("ApplicationResource.delete() sending response ");
 
         return new JSONWithPadding( response, callback );
     }
