@@ -227,4 +227,17 @@ public interface IndexFig extends GuicyFig {
     @Key( ELASTICSEARCH_CLIENT_TYPE )
     @Default( "NODE")
     String getClientType();
+
+    @Key("elasticsearch.refresh_search_max")
+    @Default("10")
+    int maxRefreshSearches();
+
+    @Key("elasticsearch.refresh_sleep_ms")
+    @Default("200")
+    long refreshSleep();
+
+
+    @Key("elasticsearch.refresh_wait_ms")
+    @Default("5000")
+    long refreshWaitTime();
 }
