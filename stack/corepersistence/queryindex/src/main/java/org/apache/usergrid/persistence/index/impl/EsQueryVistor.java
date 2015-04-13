@@ -170,7 +170,9 @@ public class EsQueryVistor implements QueryVisitor {
 
         //push our boolean filters
         if ( useLeftQuery && useRightQuery ) {
-            final BoolQueryBuilder qb = QueryBuilders.boolQuery().should( leftQuery ).should( rightQuery );
+            //when we issue an OR query in usergrid, 1 or more of the terms should match.  When doing bool query in ES, there is no requirement for more than 1 to match, where as in a filter more than 1 must match
+            final BoolQueryBuilder qb = QueryBuilders.boolQuery().should( leftQuery ).should( rightQuery ).minimumNumberShouldMatch(
+                1 );
             queryBuilders.push( qb );
         }
         else if ( useLeftQuery ) {
@@ -205,7 +207,7 @@ public class EsQueryVistor implements QueryVisitor {
         }
         //put in an empty in case we're not the root.  I.E X or Y or Z
         else {
-            queryBuilders.push( NoOpQueryBuilder.INSTANCE );
+            filterBuilders.push( NoOpFilterBuilder.INSTANCE );
         }
     }
 
@@ -360,7 +362,7 @@ public class EsQueryVistor implements QueryVisitor {
 
             //it's an exact match, use a filter
             final TermFilterBuilder termFilter =
-                    FilterBuilders.termFilter( IndexingUtils.FIELD_STRING_EQUALS_NESTED, svalue.toLowerCase() );
+                    FilterBuilders.termFilter( IndexingUtils.FIELD_STRING_NESTED_UNANALYZED, svalue.toLowerCase() );
 
             queryBuilders.push( NoOpQueryBuilder.INSTANCE );
             filterBuilders.push( fieldNameTerm( name, termFilter ) );

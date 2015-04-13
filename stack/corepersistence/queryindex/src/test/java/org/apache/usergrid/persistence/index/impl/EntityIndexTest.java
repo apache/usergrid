@@ -28,7 +28,6 @@ import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -57,11 +56,9 @@ import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.ArrayField;
-import org.apache.usergrid.persistence.model.field.EntityObjectField;
 import org.apache.usergrid.persistence.model.field.IntegerField;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.field.UUIDField;
-import org.apache.usergrid.persistence.model.field.value.EntityObject;
 import org.apache.usergrid.persistence.model.util.EntityUtils;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
@@ -99,8 +96,6 @@ public class EntityIndexTest extends BaseIT {
     public ElasticSearchRule elasticSearchRule;
 
 
-
-
     @Test
     public void testIndex() throws IOException, InterruptedException {
         Id appId = new SimpleId( "application" );
@@ -123,7 +118,6 @@ public class EntityIndexTest extends BaseIT {
 
     /**
      * Tests that when types conflict, but should match queries they work
-     * @throws IOException
      */
     @Test
     public void testIndexVariations() throws IOException {
@@ -150,8 +144,6 @@ public class EntityIndexTest extends BaseIT {
         batch.execute().get();
 
 
-
-
         Entity entity2 = new Entity( entityType );
         EntityUtils.setVersion( entity2, UUIDGenerator.newTimeUUID() );
 
@@ -171,7 +163,7 @@ public class EntityIndexTest extends BaseIT {
         StopWatch timer = new StopWatch();
         timer.start();
         CandidateResults candidateResults =
-                entityIndex.search( indexEdge, searchTypes, "select * where testfield = 'test' order by ordinal", 100 );
+            entityIndex.search( indexEdge, searchTypes, "select * where testfield = 'test' order by ordinal", 100 );
 
         timer.stop();
 
@@ -373,7 +365,7 @@ public class EntityIndexTest extends BaseIT {
 
         timer.stop();
         log.info( "Total time to index {} entries {}ms, average {}ms/entry",
-                new Object[] { count, timer.getTime(), timer.getTime() / count } );
+            new Object[] { count, timer.getTime(), timer.getTime() / count } );
     }
 
 
@@ -405,8 +397,7 @@ public class EntityIndexTest extends BaseIT {
         ei.refresh();
 
         CandidateResults candidateResults = entityIndex
-                .search( searchEdge, SearchTypes.fromTypes( entity.getId().getType() ), "name contains 'Ferrari*'",
-                        10 );
+            .search( searchEdge, SearchTypes.fromTypes( entity.getId().getType() ), "name contains 'Ferrari*'", 10 );
         assertEquals( 1, candidateResults.size() );
 
         EntityIndexBatch batch = entityIndex.createBatch();
@@ -415,8 +406,7 @@ public class EntityIndexTest extends BaseIT {
         ei.refresh();
 
         candidateResults = entityIndex
-                .search( searchEdge, SearchTypes.fromTypes( entity.getId().getType() ), "name contains 'Ferrari*'",
-                        10 );
+            .search( searchEdge, SearchTypes.fromTypes( entity.getId().getType() ), "name contains 'Ferrari*'", 10 );
         assertEquals( 0, candidateResults.size() );
     }
 
@@ -714,8 +704,8 @@ public class EntityIndexTest extends BaseIT {
             final String query = "select * order by ordinal asc";
 
             final CandidateResults results =
-                    cursor == null ? entityIndex.search( indexEdge, SearchTypes.allTypes(), query, limit ) :
-                    entityIndex.getNextPage( cursor );
+                cursor == null ? entityIndex.search( indexEdge, SearchTypes.allTypes(), query, limit ) :
+                entityIndex.getNextPage( cursor );
 
             assertTrue( results.hasCursor() );
 
@@ -732,10 +722,9 @@ public class EntityIndexTest extends BaseIT {
         //get our next page, we shouldn't get a cursor
         final CandidateResults results = entityIndex.getNextPage( cursor );
 
-        assertEquals(0, results.size());
-        assertNull(results.getCursor());
+        assertEquals( 0, results.size() );
+        assertNull( results.getCursor() );
     }
-
 
 
     @Test
@@ -773,7 +762,8 @@ public class EntityIndexTest extends BaseIT {
 
         final String query = "where searchUUID = " + searchUUID;
 
-        final CandidateResults r = entityIndex.search( indexSCope, SearchTypes.fromTypes( entityId.getType() ), query, 10 );
+        final CandidateResults r =
+            entityIndex.search( indexSCope, SearchTypes.fromTypes( entityId.getType() ), query, 10 );
         assertEquals( user.getId(), r.get( 0 ).getId() );
 
         batch.deindex( indexSCope, user.getId(), user.getVersion() );
@@ -782,6 +772,152 @@ public class EntityIndexTest extends BaseIT {
     }
 
 
+    @Test
+    public void sortyByString() throws Throwable {
+
+        Id appId = new SimpleId( "application" );
+        Id ownerId = new SimpleId( "owner" );
+
+        ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
+
+        IndexEdge indexSCope = new IndexEdgeImpl( ownerId, "user", SearchEdge.NodeType.SOURCE, 10 );
+
+        ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex( applicationScope );
+
+
+        /**
+         * Ensures sort ordering is correct when more than 1 token is present.  Should order by the unanalyzed field,
+         * not the analyzed field
+         */
+
+        final Entity first = new Entity( "search" );
+
+        first.setField( new StringField( "string", "alpha long string" ) );
+
+
+        EntityUtils.setVersion( first, UUIDGenerator.newTimeUUID() );
+
+
+        final Entity second = new Entity( "search" );
+
+        second.setField( new StringField( "string", "bravo long string" ) );
+
+
+        EntityUtils.setVersion( second, UUIDGenerator.newTimeUUID() );
+
+
+        EntityIndexBatch batch = entityIndex.createBatch();
+        batch.index( indexSCope, first );
+        batch.index( indexSCope, second );
+        batch.execute().get();
+        ei.refresh();
+
+
+        final String ascQuery = "order by string";
+
+        final CandidateResults ascResults =
+            entityIndex.search( indexSCope, SearchTypes.fromTypes( first.getId().getType() ), ascQuery, 10 );
+
+
+        assertEquals( first.getId(), ascResults.get( 0 ).getId() );
+        assertEquals( second.getId(), ascResults.get( 1 ).getId() );
+
+
+        //search in reversed
+        final String descQuery = "order by string desc";
+
+        final CandidateResults descResults =
+            entityIndex.search( indexSCope, SearchTypes.fromTypes( first.getId().getType() ), descQuery, 10 );
+
+
+        assertEquals( second.getId(), descResults.get( 0 ).getId() );
+        assertEquals( first.getId(), descResults.get( 1 ).getId() );
+    }
+
+
+    @Test
+    public void unionString() throws Throwable {
+
+        Id appId = new SimpleId( "application" );
+        Id ownerId = new SimpleId( "owner" );
+
+        ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
+
+
+
+
+        ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex( applicationScope );
+
+
+        /**
+         * Ensures sort ordering is correct when more than 1 token is present.  Should order by the unanalyzed field,
+         * not the analyzed field
+         */
+
+        final Entity first = new Entity( "search" );
+
+        first.setField( new StringField( "string", "alpha long string" ) );
+
+
+        EntityUtils.setVersion( first, UUIDGenerator.newTimeUUID() );
+
+
+        final Entity second = new Entity( "search" );
+
+        second.setField( new StringField( "string", "bravo long string" ) );
+
+
+        EntityUtils.setVersion( second, UUIDGenerator.newTimeUUID() );
+
+
+        EntityIndexBatch batch = entityIndex.createBatch();
+
+
+        //get ordering, so 2 is before 1 when both match
+        IndexEdge indexScope1 = new IndexEdgeImpl( ownerId, "searches", SearchEdge.NodeType.SOURCE, 10 );
+        batch.index( indexScope1, first );
+
+
+        IndexEdge indexScope2 = new IndexEdgeImpl( ownerId, "searches", SearchEdge.NodeType.SOURCE, 11 );
+        batch.index( indexScope2, second );
+
+
+        batch.execute().get();
+        ei.refresh();
+
+
+        final String singleMatchQuery = "string contains 'alpha' OR string contains 'foo'";
+
+        final CandidateResults singleResults =
+            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), singleMatchQuery, 10 );
+
+
+        assertEquals( 1, singleResults.size() );
+        assertEquals( first.getId(), singleResults.get( 0 ).getId() );
+
+
+        //search in reversed
+        final String bothKeywordsMatch = "string contains 'alpha' OR string contains 'bravo'";
+
+        final CandidateResults singleKeywordUnion =
+            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), bothKeywordsMatch, 10 );
+
+
+        assertEquals( 2, singleKeywordUnion.size() );
+        assertEquals( second.getId(), singleKeywordUnion.get( 0 ).getId() );
+        assertEquals( first.getId(), singleKeywordUnion.get( 1 ).getId() );
+
+
+        final String twoKeywordMatches = "string contains 'alpha' OR string contains 'long'";
+
+        final CandidateResults towMatchResults =
+            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), twoKeywordMatches, 10 );
+
+
+        assertEquals( 2, towMatchResults.size() );
+        assertEquals( second.getId(), towMatchResults.get( 0 ).getId() );
+        assertEquals( first.getId(), towMatchResults.get( 1 ).getId() );
+    }
 }
 
 

@@ -1071,8 +1071,9 @@ public class CollectionIT extends AbstractCoreIT {
 
         Results r = null;
 
-        // check they're all the same before deletion
-        for ( int i = 2; i < size / pageSize; i++ ) {
+
+        //2 rounds of iterations since we should get 20->40
+        for ( int i = 0; i < 2 ; i++ ) {
 
             r = em.searchCollection( em.getApplicationRef(), "pages", query );
 
@@ -1081,7 +1082,11 @@ public class CollectionIT extends AbstractCoreIT {
             assertEquals( pageSize, r.size() );
 
             for ( int j = 0; j < pageSize; j++ ) {
-                assertEquals( entityIds.get( i * pageSize + j ), r.getEntities().get( j ).getUuid() );
+
+                final int indexToCheck = size - (i * pageSize + j ) - 1;
+                final UUID entityId = entityIds.get( indexToCheck );
+
+                assertEquals( entityId, r.getEntities().get( j ).getUuid() );
             }
 
             query.setCursor( r.getCursor() );
