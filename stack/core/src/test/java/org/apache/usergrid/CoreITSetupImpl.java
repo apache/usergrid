@@ -43,7 +43,6 @@ public class CoreITSetupImpl implements CoreITSetup, TestEntityIndex {
 
     protected EntityManagerFactory emf;
     protected QueueManagerFactory qmf;
-    protected IndexBucketLocator indexBucketLocator;
     protected CassandraService cassandraService;
 
     protected SpringResource springResource;
@@ -55,7 +54,6 @@ public class CoreITSetupImpl implements CoreITSetup, TestEntityIndex {
         cassandraService = springResource.getBean( CassandraService.class );
         emf = springResource.getBean( EntityManagerFactory.class );
         qmf = springResource.getBean( QueueManagerFactory.class );
-        indexBucketLocator = springResource.getBean( IndexBucketLocator.class );
         injector = springResource.getBean(Injector.class);
 
 
@@ -115,12 +113,6 @@ public class CoreITSetupImpl implements CoreITSetup, TestEntityIndex {
     @Override
     public QueueManagerFactory getQmf() {
          return qmf;
-    }
-
-
-    @Override
-    public IndexBucketLocator getIbl() {
-          return indexBucketLocator;
     }
 
 

@@ -107,6 +107,7 @@ public class Query {
             return;
         }
 
+        ql = q.ql;
         type = q.type;
         startResult = q.startResult;
         cursor = q.cursor;

@@ -122,8 +122,6 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
             .getTimer(EsEntityIndexImpl.class, "refresh.timer");
         this.refreshIndexMeter = metricsFactory.getMeter(EsEntityIndexImpl.class,"refresh.meter");
 
-        initialize();
-
     }
 
     @Override
@@ -138,8 +136,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
         }
     }
 
-    @Override
-    public boolean shouldInitialize() {
+    private boolean shouldInitialize() {
         String[] reads = getIndexes( AliasedEntityIndex.AliasType.Read );
         String[] writes = getIndexes( AliasedEntityIndex.AliasType.Write );
         return reads.length==0  || writes.length==0;
@@ -373,23 +370,6 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
         doInRetry(retryOperation);
     }
 
-    /**
-     * Completely delete an index.
-     */
-    public void deleteIndex() {
-        AdminClient adminClient = esProvider.getClient().admin();
-
-        DeleteIndexResponse response = adminClient.indices()
-            .prepareDelete(indexIdentifier.getIndex(null)).get();
-
-        if (response.isAcknowledged()) {
-            logger.info("Deleted index: read {} write {}", alias.getReadAlias(), alias.getWriteAlias());
-            //invalidate the alias
-            aliasCache.invalidate(alias);
-        } else {
-            logger.info("Failed to delete index: read {} write {}", alias.getReadAlias(), alias.getWriteAlias());
-        }
-    }
 
 
     public String[] getUniqueIndexes() {

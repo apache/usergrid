@@ -30,24 +30,24 @@ public interface AliasedEntityIndex extends EntityIndex{
      * @param aliasType name of alias
      * @return list of index names
      */
-    public String[] getIndexes(final AliasType aliasType);
+    String[] getIndexes( final AliasType aliasType );
 
     /**
      * get all unique indexes
      * @return
      */
-    public String[] getUniqueIndexes();
+    String[] getUniqueIndexes();
 
     /**
      * Add alias to index, will remove old index from write alias
      * @param indexSuffix must be different than current index
      */
-    public void addAlias(final String indexSuffix);
+    void addAlias( final String indexSuffix );
 
     /**
      * type of alias
      */
-    public enum AliasType {
+    enum AliasType {
         Read, Write
     }
 }

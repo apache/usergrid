@@ -92,10 +92,13 @@ public class GeoPagingTest extends BaseIT {
     public MigrationManagerRule migrationManagerRule;
 
 
-    @Before
-    public void setup() {
-        ei.initialize();
-    }
+
+
+    @Inject
+    @Rule
+    public ElasticSearchRule elasticSearchRule;
+
+
 
 
 

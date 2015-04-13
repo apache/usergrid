@@ -60,9 +60,12 @@ public interface EntityIndex extends CPManager {
      Health getIndexHealth();
 
 
+    /**
+     * Initialize the index if necessary.  This is an idempotent operation and should not create an index
+     * if a write and read alias already exist
+     */
     void initialize();
 
-    boolean shouldInitialize();
 }
 
 

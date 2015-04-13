@@ -73,7 +73,6 @@ public class CpSetup implements Setup {
 
     private final EntityManagerFactory emf;
     private final EntityIndex entityIndex;
-    private final EntityIndexFactory entityIndexFactory;
 
 
     /**
@@ -86,7 +85,6 @@ public class CpSetup implements Setup {
         this.cass = cassandraService;
         this.injector = injector;
         this.entityIndex = injector.getInstance(EntityIndex.class);
-        this.entityIndexFactory = injector.getInstance(EntityIndexFactory.class);
 
     }
 
@@ -94,6 +92,8 @@ public class CpSetup implements Setup {
     @Override
     public void init() throws Exception {
         //a no op, creating the injector creates the connections
+        //init our index if required
+        this.entityIndex.initialize();
         setupStaticKeyspace();
         setupSystemKeyspace();
         createDefaultApplications();

@@ -93,9 +93,6 @@ public class IndexLoadTestsIT extends BaseIT {
     @Rule
     public MigrationManagerRule migrationManagerRule;
 
-    @ClassRule
-    public static ElasticSearchResource es = new ElasticSearchResource();
-
 
     @Inject
     public IndexTestFig indexTestFig;
@@ -113,6 +110,13 @@ public class IndexLoadTestsIT extends BaseIT {
     private Timer queryTimer;
 
     private Slf4jReporter reporter;
+
+
+    @Inject
+    @Rule
+    public ElasticSearchRule elasticSearchRule;
+
+
 
 
     @Before

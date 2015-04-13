@@ -913,8 +913,9 @@ public class CollectionIT extends AbstractCoreIT {
         LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         assertEquals( 2, r.size() );
 
-        assertEquals( secondGame.getUuid(), r.getEntities().get( 0 ).getUuid() );
-        assertEquals( thirdGame.getUuid(), r.getEntities().get( 1 ).getUuid() );
+        assertEquals( thirdGame.getUuid(), r.getEntities().get( 0 ).getUuid() );
+        assertEquals( secondGame.getUuid(), r.getEntities().get( 1 ).getUuid() );
+
     }
 
 

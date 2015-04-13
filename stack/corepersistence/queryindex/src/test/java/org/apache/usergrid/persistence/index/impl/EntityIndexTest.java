@@ -85,6 +85,7 @@ public class EntityIndexTest extends BaseIT {
 
     @Inject
     public EntityIndexFactory eif;
+
     @Inject
     public EntityIndex ei;
 
@@ -92,11 +93,11 @@ public class EntityIndexTest extends BaseIT {
     @Rule
     public MigrationManagerRule migrationManagerRule;
 
+    @Inject
+    @Rule
+    public ElasticSearchRule elasticSearchRule;
 
-    @Before
-    public void setup() {
-        ei.initialize();
-    }
+
 
 
     @Test
