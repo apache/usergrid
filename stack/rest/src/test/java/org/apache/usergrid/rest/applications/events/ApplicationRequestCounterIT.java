@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.index.query.CounterResolution;
 import org.apache.usergrid.rest.AbstractRestIT;

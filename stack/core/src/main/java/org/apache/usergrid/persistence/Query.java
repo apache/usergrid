@@ -161,6 +161,17 @@ public class Query {
     }
 
 
+    /**
+     * Create a query from a property equals
+     * @param propertyName
+     * @param value
+     * @return
+     */
+    public static Query fromEquals(final String propertyName, final String value){
+        return fromQL( propertyName + " = '" + value + "'" );
+    }
+
+
     private static Query newQueryIfNull( Query query ) {
         if ( query == null ) {
             query = new Query();
@@ -840,6 +851,12 @@ public class Query {
 
     // may be null
     public String getQl() {
+
+        //if a query exists, but with no ql, we select all
+        if(ql == null){
+            return "select *";
+        }
+
         return ql;
     }
 

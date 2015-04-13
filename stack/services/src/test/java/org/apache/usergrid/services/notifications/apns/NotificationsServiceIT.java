@@ -168,8 +168,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
                 payload);
 
         // verify Query for CREATED state
-        Query query = new Query();
-        query.addEqualityFilter("state", Notification.State.STARTED.toString());
+        Query query =  Query.fromEquals( "state", Notification.State.STARTED.toString() );
         Results results = app.getEntityManager().searchCollection(
                 app.getEntityManager().getApplicationRef(), "notifications", query);
         Entity entity = results.getEntitiesMap().get(notification.getUuid());
@@ -182,8 +181,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
                 setup.getEntityIndex().refresh();
 
         // verify Query for FINISHED state
-        query = new Query();
-        query.addEqualityFilter("state", Notification.State.FINISHED.toString());
+        query = Query.fromEquals("state", Notification.State.FINISHED.toString());
         results = app.getEntityManager().searchCollection(app.getEntityManager().getApplicationRef(),
                 "notifications", query);
         entity = results.getEntitiesMap().get(notification.getUuid());
@@ -244,8 +242,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
 
         // verify Query for CREATED state
-        Query query = new Query();
-        query.addEqualityFilter("state", Notification.State.FINISHED.toString());
+        Query query =  Query.fromEquals( "state", Notification.State.FINISHED.toString() );
         Results results = app.getEntityManager().searchCollection(app.getEntityManager().getApplicationRef(), "notifications", query);
         Entity entity = results.getEntitiesMap().get(notification.getUuid());
         assertNotNull(entity);
@@ -258,8 +255,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         notification = app.getEntityManager().get(e.getUuid(), Notification.class);
 
         // verify Query for FINISHED state
-        query = new Query();
-        query.addEqualityFilter("state", Notification.State.FINISHED.toString());
+        query = Query.fromEquals("state", Notification.State.FINISHED.toString());
         results = app.getEntityManager().searchCollection(app.getEntityManager().getApplicationRef(),
                 "notifications", query);
         entity = results.getEntitiesMap().get(notification.getUuid());
@@ -300,8 +296,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         Thread.sleep(500);
 
         // verify Query for SCHEDULED state
-        Query query = new Query();
-        query.addEqualityFilter("state",
+        Query query = Query.fromEquals("state",
                 Notification.State.SCHEDULED.toString());
         Results results = app.getEntityManager().searchCollection(
                 app.getEntityManager().getApplicationRef(), "notifications", query);
@@ -646,8 +641,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         }
 
         // verify Query for FAILED state
-        Query query = new Query();
-        query.addEqualityFilter("state", Notification.State.FAILED.toString());
+        Query query = Query.fromEquals("state", Notification.State.FAILED.toString());
         Results results = app.getEntityManager().searchCollection(
                 app.getEntityManager().getApplicationRef(), "notifications", query);
         Entity entity = results.getEntitiesMap().get(notification.getUuid());
@@ -743,8 +737,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
                 payload);
 
         // verify Query for CREATED state
-        Query query = new Query();
-        query.addEqualityFilter("state", Notification.State.STARTED.toString());
+        Query query = Query.fromEquals("state", Notification.State.STARTED.toString());
         Results results = app.getEntityManager().searchCollection(
                 app.getEntityManager().getApplicationRef(), "notifications", query);
         Entity entity = results.getEntitiesMap().get(notification.getUuid());
@@ -757,8 +750,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
                 setup.getEntityIndex().refresh();
 
         // verify Query for FINISHED state
-        query = new Query();
-        query.addEqualityFilter("state", Notification.State.FINISHED.toString());
+        query = Query.fromEquals("state", Notification.State.FINISHED.toString());
         results = app.getEntityManager().searchCollection(app.getEntityManager().getApplicationRef(),
                 "notifications", query);
         entity = results.getEntitiesMap().get(notification.getUuid());

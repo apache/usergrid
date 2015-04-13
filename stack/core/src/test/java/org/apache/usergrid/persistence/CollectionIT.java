@@ -528,11 +528,12 @@ public class CollectionIT extends AbstractCoreIT {
 
         Entity returned = r.getEntities().get( 0 );
 
-        assertEquals( user.getUuid(), returned.getUuid() );
+        assertEquals( user2.getUuid(), returned.getUuid() );
 
         returned = r.getEntities().get( 1 );
 
-        assertEquals( user2.getUuid(), returned.getUuid() );
+        assertEquals( user.getUuid(), returned.getUuid() );
+
     }
 
 
@@ -1064,7 +1065,7 @@ public class CollectionIT extends AbstractCoreIT {
 
         app.refreshIndex();
 
-        Query query = Query.fromQL("select * where index >= " + size / 2 + " + sort by index asc");
+        Query query = Query.fromQL("select * where index >= " + size / 2 + " sort by index asc");
         query.setLimit( pageSize );
 
         Results r = null;

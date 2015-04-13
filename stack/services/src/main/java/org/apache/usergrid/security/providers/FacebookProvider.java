@@ -117,8 +117,8 @@ public class FacebookProvider extends AbstractProvider {
 
             Results r = null;
             try {
-                r = entityManager.searchCollection( entityManager.getApplicationRef(), "users",
-                        Query.findForProperty( "facebook.id", fb_user_id ) );
+                final Query query = Query.fromEquals( "facebook.id",  fb_user_id );
+                r = entityManager.searchCollection( entityManager.getApplicationRef(), "users", query );
             }
             catch ( Exception ex ) {
                 throw new BadTokenException( "Could not lookup user for that Facebook ID", ex );

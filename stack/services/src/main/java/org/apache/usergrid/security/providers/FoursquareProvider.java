@@ -125,8 +125,8 @@ public class FoursquareProvider extends AbstractProvider {
         try {
             if ( ( fq_user != null ) && !anyNull( fq_user_id, fq_user_name ) ) {
 
-                Results r = entityManager.searchCollection( entityManager.getApplicationRef(), "users",
-                        Query.findForProperty( "foursquare.id", fq_user_id ) );
+                final Query query = Query.fromEquals(  "foursquare.id" ,   fq_user_id );
+                Results r = entityManager.searchCollection( entityManager.getApplicationRef(), "users", query );
 
                 if ( r.size() > 1 ) {
                     logger.error( "Multiple users for FQ ID: " + fq_user_id );
