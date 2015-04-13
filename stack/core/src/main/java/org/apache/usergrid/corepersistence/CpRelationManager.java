@@ -1103,7 +1103,7 @@ public class CpRelationManager implements RelationManager {
 
                 //TODO, this shouldn't even come from ES, it should look up the entity directly
                 final String newQuery =
-                        "select * where uuid='" + query.getSingleUuidIdentifier() + "'" ;
+                        "select * where uuid=" + query.getSingleUuidIdentifier() + "" ;
                 query.setQl( newQuery );
             }
         }
