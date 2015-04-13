@@ -1370,7 +1370,7 @@ public class IteratingQueryIT {
         for ( int i = 0; i < size; i++ ) {
             Map<String, Object> entity = new HashMap<String, Object>();
             entity.put( "name", String.valueOf( i ) );
-            entity.put( "boolean", !(i % 2 == 0));
+            entity.put( "boolean", (i % 2 == 0));
             entity.put( "index", i);
 
             io.writeEntity( entity );
@@ -1396,8 +1396,8 @@ public class IteratingQueryIT {
             results = io.getResults( query );
 
             for ( int i = 0; i < results.size(); i++ ) {
-//                assertEquals( String.valueOf( index ), results.getEntities().get( i ).getName() );
-//                index +=2;
+                assertEquals( String.valueOf( index ), results.getEntities().get( i ).getName() );
+                index +=2;
                 count++;
             }
 

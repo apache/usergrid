@@ -94,9 +94,10 @@ public class ElasticSearchQueryExecutor implements QueryExecutor {
 
         while ( queryCount++ < maxQueries ) {
 
-            crs = entityIndex.search( indexScope, types, query.getQl(), query.getLimit() );
+            crs = getCandidateResults( query );
 
-            logger.debug( "Calling build results 1" );
+
+            logger.debug( "Calling build results with crs {}", crs );
             results = buildResults( indexScope, query, crs );
 
             /**
@@ -142,6 +143,22 @@ public class ElasticSearchQueryExecutor implements QueryExecutor {
 
         //set our current results and the flag
         this.currentResults = results;
+    }
+
+
+    /**
+     * Get the candidates or load the cursor, whichever we require
+     * @param query
+     * @return
+     */
+    private CandidateResults getCandidateResults(final Query query){
+        final String cursor = query.getCursor();
+
+        if(cursor == null){
+            return  entityIndex.search( indexScope, types, query.getQl(), query.getLimit() );
+        }
+
+        return entityIndex.getNextPage( cursor );
     }
 
 

@@ -73,6 +73,7 @@ import com.google.inject.Inject;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -727,6 +728,12 @@ public class EntityIndexTest extends BaseIT {
 
             assertEquals( results.get( 0 ).getId(), entityIds.get( i ) );
         }
+
+        //get our next page, we shouldn't get a cursor
+        final CandidateResults results = entityIndex.getNextPage( cursor );
+
+        assertEquals(0, results.size());
+        assertNull(results.getCursor());
     }
 
 
