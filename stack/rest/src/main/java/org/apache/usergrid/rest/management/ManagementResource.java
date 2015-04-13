@@ -32,14 +32,14 @@ import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
 import org.apache.commons.lang.RandomStringUtils;
+import org.apache.usergrid.management.ApplicationCreator;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.OrganizationOwnerInfo;
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
-import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
-import org.apache.usergrid.utils.UUIDUtils;
 import org.codehaus.jackson.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -98,6 +98,9 @@ public class ManagementResource extends AbstractContextResource {
      */
 
     private static final Logger logger = LoggerFactory.getLogger( ManagementResource.class );
+
+    @Autowired
+    private ApplicationCreator applicationCreator;
 
     public static final String USERGRID_CENTRAL_URL = "usergrid.central.url";
 
@@ -561,7 +564,6 @@ public class ManagementResource extends AbstractContextResource {
         // good. user was found in central Usergrid
 
         JsonNode userNode = accessInfoNode.get( "user" );
-        UUID userId     = UUIDUtils.tryExtractUUID( userNode.get( "uuid" ).getTextValue() );
         String username = userNode.get( "username" ).getTextValue();
         String name     = userNode.get( "name" ).getTextValue();
         String email    = userNode.get( "email" ).getTextValue();
@@ -572,13 +574,23 @@ public class ManagementResource extends AbstractContextResource {
 
         // if user does not exist locally then we need to fix that
 
+        final UUID userId;
+
         final OrganizationInfo organizationInfo = management.getOrganizationByName(username);
         if ( organizationInfo == null ) {
 
             // create local user and personal organization, activate user.
 
             OrganizationOwnerInfo ownerOrgInfo = management.createOwnerAndOrganization(
-                    username, username, name, email, dummyPassword, true, true);
+                    username, username, name, email, dummyPassword, true, true );
+            userId = ownerOrgInfo.getOwner().getUuid();
+
+            management.activateOrganization( ownerOrgInfo.getOrganization() );
+
+            applicationCreator.createSampleFor( ownerOrgInfo.getOrganization() );
+
+        } else {
+            userId = management.getAdminUserByUsername( username ).getUuid();
         }
 
         // store the external access_token as if it were one of our own
