@@ -34,23 +34,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.tools.bean.ExportOrg;
-
-
-
-import java.io.File;
-import java.io.UnsupportedEncodingException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.UUID;
-
 import org.codehaus.jackson.JsonEncoding;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.persistence.ConnectionRef;
@@ -141,8 +128,10 @@ public class ExportAdmins extends ExportingToolBase {
 
           //  logger.info( application.getValue() + " : " + application.getKey() );
 
-            // Get the JSon serializer.
-            JsonGenerator jg = getJsonGenerator( createOutputFile( "application", "admin_user") );
+        EntityManager em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
+
+        // Get the JSon serializer.
+            JsonGenerator jg = getJsonGenerator( createOutputFile( "application", em.getApplication().getName()) );
 //
 //            // load the dictionary
 //            EntityManager rootEm = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
@@ -162,7 +151,6 @@ public class ExportAdmins extends ExportingToolBase {
 //                dictionaries.put( dictionary, dict );
 //            }
 ////
-            EntityManager em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
 //
 //            // Get application
 //            Entity nsEntity = em.get( application.getKey() );
@@ -183,7 +171,7 @@ public class ExportAdmins extends ExportingToolBase {
 //            jg.writeObject( nsEntity );
 
             // Create a GENERATOR for the application collections.
-            JsonGenerator collectionsJg = getJsonGenerator( createOutputFile( "collections", "admin_users" ) );
+            JsonGenerator collectionsJg = getJsonGenerator( createOutputFile( "collections", em.getApplication().getName() ) );
             collectionsJg.writeStartObject();
 
             Map<String, Object> metadata = em.getApplicationCollectionMetadata();
