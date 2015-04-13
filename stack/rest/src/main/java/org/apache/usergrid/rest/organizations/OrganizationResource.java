@@ -17,6 +17,7 @@
 package org.apache.usergrid.rest.organizations;
 
 
+import com.google.common.base.Optional;
 import com.google.common.collect.BiMap;
 import com.sun.jersey.api.json.JSONWithPadding;
 import java.util.UUID;
@@ -142,19 +143,21 @@ public class OrganizationResource extends AbstractContextResource {
         }
 
         String orgAppName = PathingUtils.assembleAppName( organizationName, applicationName );
-        UUID applicationId = emf.lookupApplication( orgAppName );
+        Optional<UUID> optionalAppId = emf.lookupApplication( orgAppName );
 
-        if ( applicationId == null ) {
+        if ( !optionalAppId.isPresent()) {
 
             // TODO: fix this hacky work-around for apparent Jersey issue
-            applicationId = UUIDUtils.tryExtractUUID( applicationName );
+            UUID applicationId = UUIDUtils.tryExtractUUID( applicationName );
 
             if ( applicationId == null ) {
                 throw new OrganizationApplicationNotFoundException( orgAppName, uriInfo, properties );
+            }else{
+                optionalAppId = Optional.fromNullable(applicationId);
             }
         }
 
-        return appResourceFor( applicationId );
+        return appResourceFor( optionalAppId.get() );
     }
 
 

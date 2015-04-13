@@ -85,8 +85,8 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
 
 
     protected void after( Description description ) {
-        super.after( description );
-        logger.info( "Test {}: finish with application", description.getDisplayName() );
+        super.after(description);
+        logger.info("Test {}: finish with application", description.getDisplayName());
     }
 
 
@@ -166,7 +166,7 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
 
     @Override
     public String get( String key ) {
-        return properties.getProperty( key );
+        return properties.getProperty(key);
     }
 
 
@@ -178,5 +178,10 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
     @Override
     public AppInfoMigrationPlugin getAppInfoMigrationPlugin() {
         return appInfoMigrationPlugin;
+    }
+
+    @Override
+    public void refreshIndex(){
+        this.getEntityIndex().refresh();
     }
 }

@@ -19,6 +19,7 @@
 
 package org.apache.usergrid.corepersistence.migration;
 
+import com.google.common.base.Optional;
 import org.apache.usergrid.NewOrgAppAdminRule;
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
@@ -27,9 +28,11 @@ import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.management.OrganizationOwnerInfo;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerialization;
 import org.apache.usergrid.persistence.core.migration.data.ProgressObserver;
 import org.apache.usergrid.persistence.entities.Application;
-import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -65,6 +68,12 @@ public class AppInfoMigrationPluginTest {
 
     @Test
     public void testRun() throws Exception {
+        MigrationInfoSerialization serialization = Mockito.mock(MigrationInfoSerialization.class);
+        Mockito.when(serialization.getVersion(Mockito.any())).thenReturn(0);
+        EntityCollectionManagerFactory ecmf = setup.getInjector().getInstance(EntityCollectionManagerFactory.class);
+        GraphManagerFactory gmf = setup.getInjector().getInstance(GraphManagerFactory.class);
+
+        AppInfoMigrationPlugin appInfoMigrationPlugin = new AppInfoMigrationPlugin(setup.getEmf(),serialization,ecmf,gmf);
 
        // create 10 applications, each with 10 entities
 
@@ -90,6 +99,8 @@ public class AppInfoMigrationPluginTest {
                 }});
             }
         }
+
+        setup.refreshIndex();
 
         UUID mgmtAppId = setup.getEmf().getManagementAppId();
         EntityManager rootEm = setup.getEmf().getEntityManager( mgmtAppId );
@@ -131,7 +142,8 @@ public class AppInfoMigrationPluginTest {
             }
         }
 
-        setup.getEmf().refreshIndex();
+        setup.refreshIndex();
+
         setup.getEmf().flushEntityManagerCaches();
 
         Thread.sleep(1000);
@@ -145,14 +157,14 @@ public class AppInfoMigrationPluginTest {
         logger.debug("\n\nRun the migration\n");
 
         ProgressObserver po = Mockito.mock(ProgressObserver.class);
-        setup.getAppInfoMigrationPlugin().run(po);
+        appInfoMigrationPlugin.run(po);
 
         logger.debug("\n\nVerify migration results\n");
 
         // test that expected calls were made the to progress observer (use mock library)
 
         Mockito.verify( po, Mockito.times(10) ).update( Mockito.anyInt(), Mockito.anyString() );
-        setup.getEmf().refreshIndex();
+        setup.refreshIndex();
 
         final Results appInfoResults = rootEm.searchCollection(
             new SimpleEntityRef("application", mgmtAppId), "appinfos", Query.fromQL("select *"));
@@ -175,10 +187,10 @@ public class AppInfoMigrationPluginTest {
         for ( Entity applicationInfo : deletedApps ) {
 
             String appName = applicationInfo.getName();
-            UUID uuid = setup.getEmf().lookupApplication( appName );
+            boolean isPresent = setup.getEmf().lookupApplication( appName ).isPresent();
 
             // missing application_info does not completely break applications, but we...
-            assertNull("Should not be able to lookup deleted application by name" + appName, uuid);
+            assertFalse("Should not be able to lookup deleted application by name" + appName, isPresent);
         }
     }
 
@@ -190,10 +202,11 @@ public class AppInfoMigrationPluginTest {
 
             String appName = orgName + "/application" + i;
 
-            UUID uuid = setup.getEmf().lookupApplication( appName );
-            assertNotNull("Should be able to get application", uuid );
+            Optional<UUID> uuid = setup.getEmf().lookupApplication(appName);
 
-            EntityManager em = setup.getEmf().getEntityManager( uuid );
+            assertTrue ("Should be able to get application", uuid.isPresent() );
+
+            EntityManager em = setup.getEmf().getEntityManager( uuid.get() );
 
             Application app = em.getApplication();
             assertEquals( appName, app.getName() );

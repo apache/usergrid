@@ -17,6 +17,10 @@
 package org.apache.usergrid.rest.exceptions;
 
 
+import org.apache.usergrid.rest.ApiResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
@@ -24,14 +28,9 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.usergrid.rest.ApiResponse;
-
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import static javax.ws.rs.core.Response.Status.OK;
-
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.usergrid.rest.utils.JSONPUtils.isJavascript;
 import static org.apache.usergrid.rest.utils.JSONPUtils.wrapJSONPResponse;
@@ -57,7 +56,7 @@ public abstract class AbstractExceptionMapper<E extends java.lang.Throwable> imp
     @Override
     public Response toResponse( E e ) {
         // if we don't know what type of error it is then it's a 500
-        return toResponse( INTERNAL_SERVER_ERROR, e );
+        return toResponse( INTERNAL_SERVER_ERROR, (E) new UncaughtException(e) );
     }
 
 

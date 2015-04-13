@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLHandshakeException;
+import java.nio.channels.ClosedChannelException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
@@ -40,7 +41,7 @@ public class FailedConnectionListener implements com.relayrides.pushy.apns.Faile
     @Override
     public void handleFailedConnection(PushManager<? extends SimpleApnsPushNotification> pushManager, Throwable cause) {
         List<SimpleApnsPushNotification> notifications = new ArrayList<SimpleApnsPushNotification>();
-        if (cause instanceof SSLException || cause instanceof SSLHandshakeException) { //cert is probably bad so shut it down.
+        if (cause instanceof SSLException || cause instanceof SSLHandshakeException || cause instanceof ClosedChannelException) { //cert is probably bad so shut it down.
             if (!pushManager.isShutDown()) {
                 pushManager.unregisterFailedConnectionListener(this);
 
@@ -65,22 +66,22 @@ public class FailedConnectionListener implements com.relayrides.pushy.apns.Faile
         }
         //mark all unsent notifications failed
         if (notifications != null) {
-            for (SimpleApnsPushNotification notification : notifications) {
-                if (notification instanceof APNsNotification) {
-                    try {
-                        ((APNsNotification) notification).messageSendFailed(cause);//mark failed with bad token
-                    } catch (Exception e) {
-                        logger.error("failed to track notification in failed connection listener", e);
+                notifications.forEach(notification -> {
+                    if (notification instanceof APNsNotification) {
+                        try {
+                            ((APNsNotification) notification).messageSendFailed(cause);//mark failed with bad token
+                        } catch (Exception e) {
+                            logger.error("failed to track notification in failed connection listener", e);
+                        }
                     }
-                }
-                //if test this is a problem because you can't connect
-                if (notification instanceof TestAPNsNotification) {
-                    TestAPNsNotification testAPNsNotification = ((TestAPNsNotification) notification);
-                    testAPNsNotification.setReason(cause);
-                    testAPNsNotification.countdown();
-                }
+                    //if test this is a problem because you can't connect
+                    if (notification instanceof TestAPNsNotification) {
+                        TestAPNsNotification testAPNsNotification = ((TestAPNsNotification) notification);
+                        testAPNsNotification.setReason(cause);
+                        testAPNsNotification.countdown();
+                    }
 
-            }
+                });
             pushManager.getQueue().clear();
         }
         logger.error("Failed to register push connection", cause);

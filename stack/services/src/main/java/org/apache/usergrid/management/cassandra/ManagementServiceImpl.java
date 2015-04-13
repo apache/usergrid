@@ -28,6 +28,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 
+import com.google.common.base.Optional;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.exception.ConflictException;
 import org.apache.usergrid.management.exceptions.*;
@@ -1611,8 +1612,6 @@ public class ManagementServiceImpl implements ManagementService {
             properties = new HashMap<>();
         }
 
-        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-
         OrganizationInfo organizationInfo = getOrganizationByUuid( organizationId );
         Entity appInfo = emf.createApplicationV2(
             organizationInfo.getName(), applicationName, properties);
@@ -1659,7 +1658,7 @@ public class ManagementServiceImpl implements ManagementService {
             throw new EntityNotFoundException("Deleted application ID " + applicationId + " not found");
         }
 
-        if ( emf.lookupApplication( app.getName() ) != null ) {
+        if ( emf.lookupApplication( app.getName() ).isPresent()) {
             throw new ConflictException("Cannot restore application, one with that name already exists.");
         }
 
@@ -1711,7 +1710,7 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
 
-        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
+        final EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
 
         Results r = em.getConnectingEntities(
                 new SimpleEntityRef(CpNamingUtils.APPLICATION_INFO, applicationInfoId),
@@ -1786,8 +1785,7 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public UUID addApplicationToOrganization(UUID organizationId, Entity appInfo) throws Exception {
 
-        UUID applicationId = UUIDUtils.tryExtractUUID(
-            appInfo.getProperty(PROPERTY_APPLICATION_ID).toString());
+        UUID applicationId = appInfo.getUuid();
 
         if ( ( organizationId == null ) || ( applicationId == null ) ) {
             return null;
@@ -1819,11 +1817,11 @@ public class ManagementServiceImpl implements ManagementService {
         if ( applicationName == null ) {
             return null;
         }
-        UUID applicationId = emf.lookupApplication( applicationName );
-        if ( applicationId == null ) {
+        Optional<UUID> applicationId = emf.lookupApplication(applicationName);
+        if ( !applicationId.isPresent() ) {
             return null;
         }
-        return new ApplicationInfo( applicationId, applicationName.toLowerCase() );
+        return new ApplicationInfo( applicationId.get(), applicationName.toLowerCase() );
     }
 
 

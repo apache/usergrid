@@ -137,15 +137,13 @@ public class CpRelationManager implements RelationManager {
             IndexBucketLocator indexBucketLocator,
             MetricsFactory metricsFactory) {
 
-        Assert.notNull( em, "Entity manager cannot be null" );
-        Assert.notNull( emf, "Entity manager factory cannot be null" );
-        Assert.notNull( applicationId, "Application Id cannot be null" );
-        Assert.notNull( headEntity, "Head entity cannot be null" );
-        Assert.notNull( headEntity.getUuid(), "Head entity uuid cannot be null" );
-
+        Assert.notNull(em, "Entity manager cannot be null");
+        Assert.notNull(emf, "Entity manager factory cannot be null");
+        Assert.notNull(applicationId, "Application Id cannot be null");
+        Assert.notNull(headEntity, "Head entity cannot be null");
+        Assert.notNull(headEntity.getUuid(), "Head entity uuid cannot be null");
         // TODO: this assert should not be failing
         //Assert.notNull( indexBucketLocator, "indexBucketLocator cannot be null" );
-
         this.em = em;
         this.emf = emf;
         this.applicationId = applicationId;
@@ -157,28 +155,21 @@ public class CpRelationManager implements RelationManager {
         this.updateCollectionTimer = metricsFactory
             .getTimer( CpRelationManager.class, "relation.manager.es.update.collection" );
 
-
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( "Loading head entity {}:{} from app {}",
-                new Object[] {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Loading head entity {}:{} from app {}",
+                new Object[]{
                     headEntity.getType(),
                     headEntity.getUuid(),
                     applicationScope
-                } );
+                });
         }
 
-        Id entityId = new SimpleId( headEntity.getUuid(), headEntity.getType() );
+        Id entityId = new SimpleId(headEntity.getUuid(), headEntity.getType());
 
-//        if(headEntity instanceof Entity){
-//            cpHeadEntity = entityToCpEntity( (Entity)headEntity, headEntity.getUuid() );
-//        }else {
-            this.cpHeadEntity =
-                ( ( CpEntityManager ) em ).load( entityId );
-//        }
+        this.cpHeadEntity = ((CpEntityManager) em).load(entityId);
 
         // commented out because it is possible that CP entity has not been created yet
-        Assert.notNull( cpHeadEntity, "cpHeadEntity cannot be null" );
-
+        Assert.notNull(cpHeadEntity, String.format("cpHeadEntity cannot be null for entity id %s, app id %s" , entityId.getUuid(),applicationId));
 
         return this;
     }

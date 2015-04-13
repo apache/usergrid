@@ -344,11 +344,25 @@ public class CpEntityManager implements EntityManager {
     public Entity create( UUID importId, String entityType, Map<String, Object> properties ) throws Exception {
 
         UUID timestampUuid = importId != null ? importId : UUIDUtils.newTimeUUID();
+        Keyspace ko = cass.getApplicationKeyspace( applicationId );
+        Mutator<ByteBuffer> m = createMutator( ko, be );
+
+        Entity entity = batchCreate( m,entityType, null, properties, importId, timestampUuid );
+
+        //Adding graphite metrics
+        Timer.Context timeCassCreation = entCreateTimer.time();
+        m.execute();
+        timeCassCreation.stop();
+        return entity;
+    }
+
+    @Override
+    public Entity create( Id id, Map<String, Object> properties ) throws Exception {
 
         Keyspace ko = cass.getApplicationKeyspace( applicationId );
         Mutator<ByteBuffer> m = createMutator( ko, be );
 
-        Entity entity = batchCreate( m, entityType, null, properties, importId, timestampUuid );
+        Entity entity = batchCreate( m, id.getType(), null, properties, id.getUuid(), UUIDUtils.newTimeUUID() );
 
         //Adding graphite metrics
         Timer.Context timeCassCreation = entCreateTimer.time();
@@ -612,6 +626,7 @@ public class CpEntityManager implements EntityManager {
         //delete from our UUID index
         MapManager mm = getMapManagerForTypes();
         mm.delete( entityRef.getUuid().toString() );
+
     }
 
 
@@ -636,7 +651,6 @@ public class CpEntityManager implements EntityManager {
         if ( entity != null ) {
 
             decrementEntityCollection( Schema.defaultCollectionName( entityId.getType() ) );
-
             // and finally...
             return ecm.delete( entityId );
         }
@@ -717,9 +731,10 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public RelationManager getRelationManager( EntityRef entityRef ) {
-        Preconditions.checkNotNull( entityRef, "entityRef cannot be null" );
-        CpRelationManager rmi = new CpRelationManager();
-        rmi.init( this, emf, applicationId, entityRef, null, metricsFactory );
+        Preconditions.checkNotNull(entityRef, "entityRef cannot be null");
+        CpRelationManager rmi = CpRelationManagerFactory.get(
+            this, emf, applicationId, entityRef, null, metricsFactory
+        );
         return rmi;
     }
 

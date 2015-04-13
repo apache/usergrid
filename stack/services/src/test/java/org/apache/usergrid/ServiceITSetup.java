@@ -44,6 +44,8 @@ public interface ServiceITSetup extends CoreITSetup {
 
     ImportService getImportService();
 
+    void refreshIndex();
+
     /**
      * Convenience method to set a property in the Properties object returned by getProps();
      *
