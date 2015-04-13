@@ -48,7 +48,7 @@ import org.apache.usergrid.persistence.index.utils.MapUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
+import com.google.common.base.Optional;
 
 
 public class Query {
@@ -88,6 +88,7 @@ public class Query {
     private String collection;
     private String ql;
     private Collection<SelectFieldMapping> selectFields;
+
 
     private static ObjectMapper mapper = new ObjectMapper();
 
@@ -850,14 +851,10 @@ public class Query {
 
 
     // may be null
-    public String getQl() {
+    public Optional<String> getQl() {
 
         //if a query exists, but with no ql, we select all
-        if(ql == null){
-            return "select *";
-        }
-
-        return ql;
+       return Optional.fromNullable( ql );
     }
 
 

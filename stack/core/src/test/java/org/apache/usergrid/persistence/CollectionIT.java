@@ -314,7 +314,7 @@ public class CollectionIT extends AbstractCoreIT {
         assertNotNull( user );
 
         app.refreshIndex();
-        Thread.sleep(100);
+        Thread.sleep( 100 );
 
         // EntityRef
         final Query query = Query.fromQL( "lastname = '" + lastName + "'" );
@@ -1015,7 +1015,7 @@ public class CollectionIT extends AbstractCoreIT {
         int pageSize = 10;
 
         app.refreshIndex();
-        final Query query = Query.fromQL( "index < " + size * 2 );
+        final Query query = Query.fromQL( "index < " + size * 2 + " order by index asc" );
 
         Results r = null;
 
@@ -1168,7 +1168,7 @@ public class CollectionIT extends AbstractCoreIT {
 
         int pageSize = 10;
 
-        Query query = Query.fromQL("select * where index >= 10 and index <= 29 sort by index asc");
+        Query query = Query.fromQL("select * where index >= 10 and index <= 29 order by index asc");
         query.setLimit( pageSize );
 
         Results r = em.searchCollection( em.getApplicationRef(), "pages", query );
@@ -1181,7 +1181,12 @@ public class CollectionIT extends AbstractCoreIT {
             assertEquals( pageSize, r.size() );
 
             for ( int j = 0; j < pageSize; j++ ) {
-                assertEquals( entityIds.get( i * pageSize + j ), r.getEntities().get( j ).getUuid() );
+                final int expectedIndex =  i * pageSize + j;
+                final UUID entityId = entityIds.get( expectedIndex );
+
+                final UUID returnedId = r.getEntities().get( j ).getUuid();
+
+                assertEquals( entityId, returnedId );
             }
 
             r = r.getNextPageResults();

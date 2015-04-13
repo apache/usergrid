@@ -34,6 +34,8 @@ import org.apache.usergrid.persistence.index.CandidateResults;
 import org.apache.usergrid.persistence.index.SearchEdge;
 import org.apache.usergrid.persistence.index.SearchTypes;
 
+import com.google.common.base.Optional;
+
 
 public class ElasticSearchQueryExecutor implements QueryExecutor {
 
@@ -155,7 +157,12 @@ public class ElasticSearchQueryExecutor implements QueryExecutor {
         final String cursor = query.getCursor();
 
         if(cursor == null){
-            return  entityIndex.search( indexScope, types, query.getQl(), query.getLimit() );
+            //since query is a nasty stateful builder object, we have to default to select * if a query is issued
+            //from legacy code with no QL set.  An empty query is functionally equivalent to select all with default
+            //sort ordering
+            final String queryToExecute = query.getQl().or( "select *" );
+
+            return  entityIndex.search( indexScope, types, queryToExecute, query.getLimit() );
         }
 
         return entityIndex.getNextPage( cursor );

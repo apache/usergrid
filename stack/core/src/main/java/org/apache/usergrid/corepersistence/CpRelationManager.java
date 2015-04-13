@@ -1073,7 +1073,7 @@ public class CpRelationManager implements RelationManager {
     private Query adjustQuery( Query query ) {
 
         // handle the select by identifier case
-        if(query.getQl() == null){
+        if(!query.getQl().isPresent()){
 
         // a name alias or email alias was specified
             if ( query.containsSingleNameOrEmailIdentifier() ) {
