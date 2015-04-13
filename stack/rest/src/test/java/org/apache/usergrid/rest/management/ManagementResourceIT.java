@@ -17,17 +17,14 @@
 package org.apache.usergrid.rest.management;
 
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import javax.ws.rs.core.MediaType;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import org.apache.usergrid.rest.test.resource2point0.model.*;
+import org.apache.usergrid.rest.test.resource2point0.model.Collection;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -58,11 +55,7 @@ import static org.junit.Assert.assertTrue;
  * @author tnine
  */
 
-public class ManagementResourceIT extends AbstractRestIT {
-
-    @Rule
-    public TestContextSetup context = new TestContextSetup( this );
-
+public class ManagementResourceIT extends org.apache.usergrid.rest.test.resource2point0.AbstractRestIT {
 
     public ManagementResourceIT() throws Exception {
 
@@ -81,22 +74,19 @@ public class ManagementResourceIT extends AbstractRestIT {
         String password = "password";
         String orgName = username;
 
-        Map payload =
-                hashMap( "email", email ).map( "username", username ).map( "name", name ).map( "password", password )
-                                         .map( "organization", orgName ).map( "company", "Apigee" );
+        Entity payload =
+                new Entity().chainPut("company", "Apigee" );
 
-        JsonNode node = mapper.readTree(
-                resource().path( "/management/organizations" ).accept( MediaType.APPLICATION_JSON )
-                          .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ) );
+        Organization organization = new Organization(orgName,username,email,name,password,payload);
+
+        Organization node = management().orgs().post(  organization );
 
         // check that the test admin cannot access the new org info
 
         Status status = null;
 
         try {
-            resource().path( String.format( "/management/orgs/%s", orgName ) )
-                      .queryParam( "access_token", context.getActiveUser().getToken() )
-                      .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( String.class );
+            this.management().orgs().organization(this.clientSetup.getOrganizationName()).get(String.class);
         }
         catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
@@ -108,9 +98,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         // this admin should have access to test org
         status = null;
         try {
-            resource().path( "/management/orgs/" + context.getOrgName() )
-                      .queryParam( "access_token", context.getActiveUser().getToken() )
-                      .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( String.class );
+            this.management().orgs().organization(this.clientSetup.getOrganizationName()).get( String.class );
         }
         catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
@@ -122,9 +110,7 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         status = null;
         try {
-            resource().path( String.format( "/management/orgs/%s", context.getOrgUuid() ) )
-                      .queryParam( "access_token", context.getActiveUser().getToken() )
-                      .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( String.class );
+            this.management().orgs().organization(this.clientSetup.getOrganizationName()).get( String.class );
         }
         catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
@@ -146,7 +132,7 @@ public class ManagementResourceIT extends AbstractRestIT {
             users1.add( "follower" + Integer.toString( i ) );
         }
 
-        refreshIndex( context.getOrgName(), context.getAppName() );
+        refreshIndex(  );
 
         checkFeed( "leader1", users1 );
         //try with 11
@@ -159,24 +145,24 @@ public class ManagementResourceIT extends AbstractRestIT {
 
 
     private void checkFeed( String leader, List<String> followers ) throws IOException {
-        JsonNode userFeed;
+        List<Entity> userFeed;
 
         //create user
         createUser( leader );
-        refreshIndex( context.getOrgName(), context.getAppName() );
+        refreshIndex(   );
 
         String preFollowContent = leader + ": pre-something to look for " + UUID.randomUUID().toString();
 
         addActivity( leader, leader + " " + leader + "son", preFollowContent );
-        refreshIndex( context.getOrgName(), context.getAppName() );
+        refreshIndex(  );
 
         String lastUser = followers.get( followers.size() - 1 );
         int i = 0;
         for ( String user : followers ) {
             createUser( user );
-            refreshIndex( context.getOrgName(), context.getAppName() );
+            refreshIndex( );
             follow( user, leader );
-            refreshIndex( context.getOrgName(), context.getAppName() );
+            refreshIndex(  );
         }
         userFeed = getUserFeed( lastUser );
         assertTrue( userFeed.size() == 1 );
@@ -187,7 +173,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         String postFollowContent = leader + ": something to look for " + UUID.randomUUID().toString();
         addActivity( leader, leader + " " + leader + "son", postFollowContent );
 
-        refreshIndex( context.getOrgName(), context.getAppName() );
+        refreshIndex(  );
 
         //check feed
         userFeed = getUserFeed( lastUser );
@@ -202,28 +188,19 @@ public class ManagementResourceIT extends AbstractRestIT {
     private void createUser( String username ) {
         Map<String, Object> payload = new LinkedHashMap<String, Object>();
         payload.put( "username", username );
-        resource().path( "" + context.getOrgName() + "/" + context.getAppName() + "/users" )
-                  .queryParam( "access_token", context.getActiveUser().getToken() ).accept( MediaType.APPLICATION_JSON )
-                  .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload );
+       this.app().collection("users").post(String.class, payload);
     }
 
 
-    private JsonNode getUserFeed( String username ) throws IOException {
-        JsonNode userFeed = mapper.readTree( resource()
-                .path( "/" + context.getOrgName() + "/" + context.getAppName() + "/users/" + username + "/feed" )
-                .queryParam( "access_token", context.getActiveUser().getToken() ).accept( MediaType.APPLICATION_JSON )
-                .get( String.class ) );
-        return userFeed.get( "entities" );
+    private List<Entity> getUserFeed( String username ) throws IOException {
+        Collection collection = this.app().collection("users").entity(username).collection("feed").get();
+        return collection.getResponse().getEntities();
     }
 
 
     private void follow( String user, String followUser ) {
         //post follow
-        resource()
-                .path( "/" + context.getOrgName() + "/" + context.getAppName() + "/users/" + user + "/following/users/"
-                        + followUser ).queryParam( "access_token", context.getActiveUser().getToken() )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                .post( String.class, new HashMap<String, String>() );
+        Entity entity = this.app().collection("users").entity(user).collection("following").collection("users").entity(followUser).post();
     }
 
 
@@ -234,58 +211,54 @@ public class ManagementResourceIT extends AbstractRestIT {
         Map<String, String> actorMap = new HashMap<String, String>();
         actorMap.put( "displayName", name );
         actorMap.put( "username", user );
-        activityPayload.put( "actor", actorMap );
-        resource().path( "/" + context.getOrgName() + "/" + context.getAppName() + "/users/" + user + "/activities" )
-                  .queryParam( "access_token", context.getActiveUser().getToken() ).accept( MediaType.APPLICATION_JSON )
-                  .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, activityPayload );
+        activityPayload.put("actor", actorMap);
+        Entity entity = this.app().collection("users").entity(user).collection("activities").post(new Entity(activityPayload));
+
     }
 
 
     @Test
     public void mgmtCreateAndGetApplication() throws Exception {
 
-        Map<String, String> data = new HashMap<String, String>();
-        data.put( "name", "mgmt-org-app" );
 
-        String orgName = context.getOrgName();
 
         // POST /applications
-        JsonNode appdata = mapper.readTree( resource().path( "/management/orgs/" + orgName + "/applications" )
-                                                      .queryParam( "access_token", context.getActiveUser().getToken() )
-                                                      .accept( MediaType.APPLICATION_JSON )
-                                                      .type( MediaType.APPLICATION_JSON_TYPE )
-                                                      .post( String.class, data ) );
-        logNode( appdata );
-        appdata = getEntity( appdata, 0 );
+        ApiResponse apiResponse = management().orgs().organization(clientSetup.getOrganizationName()).app().post(new Application("mgmt-org-app"));
 
-        refreshIndex( orgName, context.getAppName() );
 
-        assertEquals( orgName.toLowerCase() + "/mgmt-org-app", appdata.get( "name" ).asText() );
-        assertNotNull( appdata.get( "metadata" ) );
-        assertNotNull( appdata.get( "metadata" ).get( "collections" ) );
-        assertNotNull( appdata.get( "metadata" ).get( "collections" ).get( "roles" ) );
-        assertNotNull( appdata.get( "metadata" ).get( "collections" ).get( "roles" ).get( "title" ) );
-        assertEquals( "Roles", appdata.get( "metadata" ).get( "collections" ).get( "roles" ).get( "title" ).asText() );
-        assertEquals( 3, appdata.get( "metadata" ).get( "collections" ).get( "roles" ).get( "count" ).asInt() );
+        refreshIndex();
 
-        refreshIndex( orgName, context.getAppName() );
+        Entity appdata = apiResponse.getEntities().get(0);
+        assertEquals((clientSetup.getOrganizationName() + "/mgmt-org-app").toLowerCase(), appdata.get("name").toString().toLowerCase());
+        assertNotNull(appdata.get("metadata"));
+        Map metadata =(Map) appdata.get( "metadata" );
+        assertNotNull(metadata.get("collections"));
+        Map collections =  ((Map)metadata.get("collections"));
+        assertNotNull(collections.get("roles"));
+        Map roles =(Map) collections.get("roles");
+        assertNotNull(roles.get("title"));
+        assertEquals("Roles", roles.get("title").toString());
+        assertEquals(3, roles.size());
+
+        refreshIndex(   );
 
         // GET /applications/mgmt-org-app
-        appdata = mapper.readTree(
-                resource().path( "/management/orgs/" + context.getOrgUuid() + "/applications/mgmt-org-app" )
-                          .queryParam( "access_token", context.getActiveUser().getToken() )
-                          .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                          .get( String.class ) );
-        logNode( appdata );
 
-        assertEquals( orgName.toLowerCase(), appdata.get( "organization" ).asText() );
-        assertEquals( "mgmt-org-app", appdata.get( "applicationName" ).asText() );
-        assertEquals( "http://sometestvalue/" + orgName.toLowerCase() + "/mgmt-org-app",
-                appdata.get( "uri" ).textValue() );
-        appdata = getEntity( appdata, 0 );
 
-        assertEquals( orgName.toLowerCase() + "/mgmt-org-app", appdata.get( "name" ).asText() );
-        assertEquals( "Roles", appdata.get( "metadata" ).get( "collections" ).get( "roles" ).get( "title" ).asText() );
-        assertEquals( 3, appdata.get( "metadata" ).get( "collections" ).get( "roles" ).get( "count" ).asInt() );
+        Entity app = management().orgs().organization(clientSetup.getOrganizationName()).app().addToPath("mgmt-org-app").get();
+
+
+        assertEquals(this.clientSetup.getOrganizationName().toLowerCase(), app.get("organization").toString());
+        assertEquals( "mgmt-org-app", app.get( "applicationName" ).toString() );
+        assertEquals( "http://sometestvalue/" + this.clientSetup.getOrganizationName().toLowerCase() + "/mgmt-org-app",
+            app.get( "uri" ).toString() );
+
+        assertEquals( clientSetup.getOrganizationName().toLowerCase() + "/mgmt-org-app", app.get( "name" ).toString() );
+        metadata =(Map) appdata.get( "metadata" );
+        collections =  ((Map)metadata.get("collections"));
+        roles =(Map) collections.get("roles");
+
+        assertEquals( "Roles", roles.get("title").toString() );
+        assertEquals(3, roles.size());
     }
 }
