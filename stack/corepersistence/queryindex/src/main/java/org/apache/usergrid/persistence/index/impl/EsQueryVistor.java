@@ -360,7 +360,7 @@ public class EsQueryVistor implements QueryVisitor {
 
             //it's an exact match, use a filter
             final TermFilterBuilder termFilter =
-                    FilterBuilders.termFilter( IndexingUtils.FIELD_STRING_EQUALS_NESTED, svalue.toLowerCase() );
+                    FilterBuilders.termFilter( IndexingUtils.FIELD_STRING_NESTED_UNANALYZED, svalue.toLowerCase() );
 
             queryBuilders.push( NoOpQueryBuilder.INSTANCE );
             filterBuilders.push( fieldNameTerm( name, termFilter ) );

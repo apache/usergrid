@@ -186,7 +186,10 @@ public class SearchRequestBuilderStrategy {
 
                 srb.addSort( createSort( order, IndexingUtils.FIELD_LONG_NESTED, propertyName ) );
 
-                srb.addSort( createSort( order, IndexingUtils.FIELD_STRING_NESTED, propertyName ) );
+                /**
+                 * We always want to sort by the unanalyzed string field to ensure correct ordering
+                 */
+                srb.addSort( createSort( order, IndexingUtils.FIELD_STRING_NESTED_UNANALYZED, propertyName ) );
 
                 srb.addSort( createSort( order, IndexingUtils.FIELD_BOOLEAN_NESTED, propertyName ) );
             }

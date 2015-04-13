@@ -90,7 +90,7 @@ public class IndexingUtils {
     public static final String FIELD_LOCATION_NESTED = ENTITY_FIELDS + "." + FIELD_LOCATION;
     public static final String FIELD_STRING_NESTED = ENTITY_FIELDS + "." + FIELD_STRING;
     public static final String FIELD_UUID_NESTED = ENTITY_FIELDS + "." + FIELD_UUID;
-    public static final String FIELD_STRING_EQUALS_NESTED = FIELD_STRING_NESTED + ".exact";
+    public static final String FIELD_STRING_NESTED_UNANALYZED = FIELD_STRING_NESTED + ".exact";
 
 
 
