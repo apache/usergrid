@@ -833,6 +833,91 @@ public class EntityIndexTest extends BaseIT {
         assertEquals( second.getId(), descResults.get( 0 ).getId() );
         assertEquals( first.getId(), descResults.get( 1 ).getId() );
     }
+
+
+    @Test
+    public void unionString() throws Throwable {
+
+        Id appId = new SimpleId( "application" );
+        Id ownerId = new SimpleId( "owner" );
+
+        ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
+
+
+
+
+        ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex( applicationScope );
+
+
+        /**
+         * Ensures sort ordering is correct when more than 1 token is present.  Should order by the unanalyzed field,
+         * not the analyzed field
+         */
+
+        final Entity first = new Entity( "search" );
+
+        first.setField( new StringField( "string", "alpha long string" ) );
+
+
+        EntityUtils.setVersion( first, UUIDGenerator.newTimeUUID() );
+
+
+        final Entity second = new Entity( "search" );
+
+        second.setField( new StringField( "string", "bravo long string" ) );
+
+
+        EntityUtils.setVersion( second, UUIDGenerator.newTimeUUID() );
+
+
+        EntityIndexBatch batch = entityIndex.createBatch();
+
+
+        //get ordering, so 2 is before 1 when both match
+        IndexEdge indexScope1 = new IndexEdgeImpl( ownerId, "searches", SearchEdge.NodeType.SOURCE, 10 );
+        batch.index( indexScope1, first );
+
+
+        IndexEdge indexScope2 = new IndexEdgeImpl( ownerId, "searches", SearchEdge.NodeType.SOURCE, 11 );
+        batch.index( indexScope2, second );
+
+
+        batch.execute().get();
+        ei.refresh();
+
+
+        final String singleMatchQuery = "string contains 'alpha' OR string contains 'foo'";
+
+        final CandidateResults singleResults =
+            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), singleMatchQuery, 10 );
+
+
+        assertEquals( 1, singleResults.size() );
+        assertEquals( first.getId(), singleResults.get( 0 ).getId() );
+
+
+        //search in reversed
+        final String bothKeywordsMatch = "string contains 'alpha' OR string contains 'bravo'";
+
+        final CandidateResults singleKeywordUnion =
+            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), bothKeywordsMatch, 10 );
+
+
+        assertEquals( 2, singleKeywordUnion.size() );
+        assertEquals( second.getId(), singleKeywordUnion.get( 0 ).getId() );
+        assertEquals( first.getId(), singleKeywordUnion.get( 1 ).getId() );
+
+
+        final String twoKeywordMatches = "string contains 'alpha' OR string contains 'long'";
+
+        final CandidateResults towMatchResults =
+            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), twoKeywordMatches, 10 );
+
+
+        assertEquals( 2, towMatchResults.size() );
+        assertEquals( second.getId(), towMatchResults.get( 0 ).getId() );
+        assertEquals( first.getId(), towMatchResults.get( 1 ).getId() );
+    }
 }
 
 
