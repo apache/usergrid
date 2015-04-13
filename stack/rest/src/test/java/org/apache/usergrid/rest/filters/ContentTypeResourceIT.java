@@ -25,6 +25,9 @@ import java.util.Map;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.usergrid.rest.test.resource2point0.endpoints.TokenResource;
+import org.apache.usergrid.rest.test.resource2point0.model.Token;
+import org.apache.usergrid.rest.test.resource2point0.model.User;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -57,10 +60,9 @@ import static org.apache.usergrid.utils.MapUtils.hashMap;
 
 // @Ignore("Client login is causing tests to fail due to socket closure by grizzly.  Need to re-enable once we're not
 // using grizzly to test")
-public class ContentTypeResourceIT extends AbstractRestIT {
+public class ContentTypeResourceIT extends org.apache.usergrid.rest.test.resource2point0.AbstractRestIT {
 
-    @Rule
-    public TestContextSetup context = new TestContextSetup( this );
+
 
 
     /**
@@ -70,20 +72,23 @@ public class ContentTypeResourceIT extends AbstractRestIT {
     @Test
     public void correctHeaders() throws Exception {
 
+        User user = new User("shawn","shawn","shawn@email.com","aliensquirrel");
+        this.app().collection("users").post(user);
+        Token token = this.app().token().post(new Token("shawn","aliensquirrel"));
 
         Map<String, String> data = hashMap( "name", "Solitaire1" );
 
-        String json = JsonUtils.mapToFormattedJsonString( data );
+        String json = JsonUtils.mapToFormattedJsonString(data);
 
         DefaultHttpClient client = new DefaultHttpClient();
 
         HttpHost host = new HttpHost( super.getBaseURI().getHost(), super.getBaseURI().getPort() );
 
-        HttpPost post = new HttpPost( String.format( "/%s/%s/games", context.getOrgUuid(), context.getAppUuid() ) );
-        post.setEntity( new StringEntity( json ) );
-        post.setHeader( HttpHeaders.AUTHORIZATION, "Bearer " + context.getActiveUser().getToken() );
-        post.setHeader( HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON );
-        post.setHeader( HttpHeaders.CONTENT_TYPE, "*/*" );
+        HttpPost post = new HttpPost( String.format("/%s/%s/games", this.clientSetup.getOrganization().getName(), this.clientSetup.getAppName()) );
+        post.setEntity(new StringEntity(json));
+        post.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token.getAccessToken());
+        post.setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON);
+        post.setHeader(HttpHeaders.CONTENT_TYPE, "*/*");
 
         HttpResponse rsp = client.execute( host, post );
 
@@ -105,6 +110,9 @@ public class ContentTypeResourceIT extends AbstractRestIT {
      */
     @Test
     public void textPlainContentType() throws Exception {
+        User user = new User("shawn","shawn","shawn@email.com","aliensquirrel");
+        this.app().collection("users").post(user);
+        Token token = this.app().token().post(new Token("shawn","aliensquirrel"));
         Map<String, String> data = hashMap( "name", "Solitaire2" );
 
         String json = JsonUtils.mapToFormattedJsonString( data );
@@ -113,9 +121,10 @@ public class ContentTypeResourceIT extends AbstractRestIT {
 
         HttpHost host = new HttpHost( super.getBaseURI().getHost(), super.getBaseURI().getPort() );
 
-        HttpPost post = new HttpPost( String.format( "/%s/%s/games", context.getOrgUuid(), context.getAppUuid() ) );
+        HttpPost post = new HttpPost( String.format("/%s/%s/games", this.clientSetup.getOrganization().getName(), this.clientSetup.getAppName()) );
+
         post.setEntity( new StringEntity( json ) );
-        post.setHeader( HttpHeaders.AUTHORIZATION, "Bearer " + context.getActiveUser().getToken() );
+        post.setHeader( HttpHeaders.AUTHORIZATION, "Bearer " + token.getAccessToken() );
         post.setHeader( HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON );
         post.setHeader( HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN );
 
@@ -214,7 +223,9 @@ public class ContentTypeResourceIT extends AbstractRestIT {
      */
     @Test
     public void missingAcceptAndContent() throws Exception {
-
+        User user = new User("shawn","shawn","shawn@email.com","aliensquirrel");
+        this.app().collection("users").post(user);
+        Token token = this.app().token().post(new Token("shawn","aliensquirrel"));
         Map<String, String> data = hashMap( "name", "Solitaire3" );
 
         String json = JsonUtils.mapToFormattedJsonString( data );
@@ -223,9 +234,10 @@ public class ContentTypeResourceIT extends AbstractRestIT {
 
         HttpHost host = new HttpHost( super.getBaseURI().getHost(), super.getBaseURI().getPort() );
 
-        HttpPost post = new HttpPost( String.format( "/%s/%s/games", context.getOrgUuid(), context.getAppUuid() ) );
+        HttpPost post = new HttpPost( String.format("/%s/%s/games", this.clientSetup.getOrganization().getName(), this.clientSetup.getAppName()) );
+
         post.setEntity( new StringEntity( json ) );
-        post.setHeader( HttpHeaders.AUTHORIZATION, "Bearer " + context.getActiveUser().getToken() );
+        post.setHeader( HttpHeaders.AUTHORIZATION, "Bearer " + token.getAccessToken() );
 
         HttpResponse rsp = client.execute( host, post );
 
@@ -247,7 +259,10 @@ public class ContentTypeResourceIT extends AbstractRestIT {
      */
     @Test
     public void noAcceptGet() throws Exception {
-        Map<String, String> data = hashMap( "name", "bar" );
+        User user = new User("shawn","shawn","shawn@email.com","aliensquirrel");
+        this.app().collection("users").post(user);
+        Token token = this.app().token().post(new Token("shawn", "aliensquirrel"));
+        Map<String, String> data = hashMap("name", "bar");
 
         String json = JsonUtils.mapToFormattedJsonString( data );
 
@@ -255,9 +270,10 @@ public class ContentTypeResourceIT extends AbstractRestIT {
 
         HttpHost host = new HttpHost( super.getBaseURI().getHost(), super.getBaseURI().getPort() );
 
-        HttpPost post = new HttpPost( String.format( "/%s/%s/games", context.getOrgUuid(), context.getAppUuid() ) );
+        HttpPost post = new HttpPost( String.format("/%s/%s/games", this.clientSetup.getOrganization().getName(), this.clientSetup.getAppName()) );
+
         post.setEntity( new StringEntity( json ) );
-        post.setHeader( HttpHeaders.AUTHORIZATION, "Bearer " + context.getActiveUser().getToken() );
+        post.setHeader( HttpHeaders.AUTHORIZATION, "Bearer " + token.getAccessToken() );
         post.setHeader( HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON );
         post.setHeader( HttpHeaders.CONTENT_TYPE, "*/*" );
 
@@ -274,8 +290,9 @@ public class ContentTypeResourceIT extends AbstractRestIT {
         assertEquals( MediaType.APPLICATION_JSON, headers[0].getValue() );
 
         //do the get with no content type, it should get set to application/json
-        HttpGet get = new HttpGet( String.format( "/%s/%s/games", context.getOrgUuid(), context.getAppUuid() ) );
-        get.setHeader( HttpHeaders.AUTHORIZATION, "Bearer " + context.getActiveUser().getToken() );
+        HttpPost get = new HttpPost( String.format("/%s/%s/games", this.clientSetup.getOrganization().getName(), this.clientSetup.getAppName()) );
+
+        get.setHeader( HttpHeaders.AUTHORIZATION, "Bearer " + token.getAccessToken() );
 
         rsp = client.execute( host, get );
 
