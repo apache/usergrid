@@ -19,8 +19,6 @@ package org.apache.usergrid.tools;
 
 import java.io.File;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
@@ -32,24 +30,20 @@ import org.codehaus.jackson.JsonToken;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.management.ApplicationInfo;
-import org.apache.usergrid.management.OrganizationInfo;
-import org.apache.usergrid.management.UserInfo;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.entities.Application;
-import org.apache.usergrid.persistence.exceptions.ApplicationAlreadyExistsException;
-import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
-import org.apache.usergrid.tools.bean.ExportOrg;
-import org.apache.usergrid.utils.JsonUtils;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.io.filefilter.PrefixFileFilter;
-import org.apache.commons.lang.NullArgumentException;
+
+import org.apache.usergrid.management.OrganizationInfo;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.entities.Application;
+import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
+import org.apache.usergrid.utils.JsonUtils;
 
 import static org.apache.usergrid.persistence.Schema.PROPERTY_TYPE;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
@@ -63,7 +57,9 @@ public class ImportAdmins extends ToolBase {
 
     private static final Logger logger = LoggerFactory.getLogger( ImportAdmins.class );
 
-    /** Input directory where the .json export files are */
+    /**
+     * Input directory where the .json export files are
+     */
     static final String INPUT_DIR = "inputDir";
 
     static File importDir;
@@ -74,7 +70,7 @@ public class ImportAdmins extends ToolBase {
 
 
     @Override
-    @SuppressWarnings("static-access")
+    @SuppressWarnings( "static-access" )
     public Options createOptions() {
 
         Option hostOption =
@@ -114,7 +110,9 @@ public class ImportAdmins extends ToolBase {
     }
 
 
-    /** Import applications */
+    /**
+     * Import applications
+     */
     private void importApplications() throws Exception {
         String[] nanemspaceFileNames = importDir.list( new PrefixFileFilter( "application." ) );
         logger.info( "Applications to read: " + nanemspaceFileNames.length );
@@ -153,21 +151,7 @@ public class ImportAdmins extends ToolBase {
 
         Application application = jp.readValueAs( Application.class );
 
-
         UUID appId = MANAGEMENT_APPLICATION_ID;
-
-//        try {
-//            appId = managementService.importApplication( info.getUuid(), application );
-//        }
-//        catch ( ApplicationAlreadyExistsException aaee ) {
-//            ApplicationInfo appInfo = managementService.getApplicationInfo( application.getName() );
-//
-//            if ( appInfo != null ) {
-//                appId = appInfo.getId();
-//            }
-//        }
-//
-//        echo( application );
 
         EntityManager em = emf.getEntityManager( appId );
 
@@ -178,7 +162,7 @@ public class ImportAdmins extends ToolBase {
         }
 
         //load all the dictionaries
-        @SuppressWarnings("unchecked") Map<String, Object> dictionaries =
+        @SuppressWarnings( "unchecked" ) Map<String, Object> dictionaries =
                 ( Map<String, Object> ) application.getMetadata( "dictionaries" );
 
         if ( dictionaries != null ) {
@@ -188,42 +172,15 @@ public class ImportAdmins extends ToolBase {
 
 
             for ( Entry<String, Object> dictionary : dictionaries.entrySet() ) {
-                @SuppressWarnings("unchecked") Map<Object, Object> value =
+                @SuppressWarnings( "unchecked" ) Map<Object, Object> value =
                         ( Map<Object, Object> ) dictionary.getValue();
 
                 em.addMapToDictionary( appEntity, dictionary.getKey(), value );
             }
         }
 
-
-        //load all counts and stats
-        //        @SuppressWarnings("unchecked")
-        //        Map<String, Object> stats = (Map<String, Object>) application.getMetadata("counters");
-        //
-        //        for(Entry<String, Object> stat: stats.entrySet()){
-        //            String entryName = stat.getKey();
-        //            long amount = Long.parseLong(stat.getValue().toString());
-        //
-        //
-        //            //anything that deals with collections or entities, we set to 0 since they'll be incremented
-        // during import
-        //            if(!entryName.startsWith("application.collection") && !entryName.equals("application.entities")){
-        //                em.incrementApplicationCounter(entryName, amount);
-        //            }
-        //
-        //        }
-
-        //explicity import all collections
-//        @SuppressWarnings("unchecked") List<String> collections =
-//                ( List<String> ) application.getMetadata( "collections" );
-//
-//        for ( String collectionName : collections ) {
-//            em.createApplicationCollection( collectionName );
-//        }
-
-
         while ( jp.nextValue() != JsonToken.END_ARRAY ) {
-            @SuppressWarnings("unchecked") Map<String, Object> entityProps = jp.readValueAs( HashMap.class );
+            @SuppressWarnings( "unchecked" ) Map<String, Object> entityProps = jp.readValueAs( HashMap.class );
             // Import/create the entity
             UUID uuid = getId( entityProps );
             String type = getType( entityProps );
@@ -268,6 +225,7 @@ public class ImportAdmins extends ToolBase {
         }
     }
 
+
     private JsonParser getJsonParserForFile( File organizationFile ) throws Exception {
         JsonParser jp = jsonFactory.createJsonParser( organizationFile );
         jp.setCodec( new ObjectMapper() );
@@ -275,7 +233,9 @@ public class ImportAdmins extends ToolBase {
     }
 
 
-    /** Import collections. Collections files are named: collections.<application_name>.Timestamp.json */
+    /**
+     * Import collections. Collections files are named: collections.<application_name>.Timestamp.json
+     */
     private void importCollections() throws Exception {
         String[] collectionsFileNames = importDir.list( new PrefixFileFilter( "collections." ) );
         logger.info( "Collections to read: " + collectionsFileNames.length );
@@ -326,7 +286,7 @@ public class ImportAdmins extends ToolBase {
 
             jp.close();
 
-            @SuppressWarnings("unchecked") String orgName =
+            @SuppressWarnings( "unchecked" ) String orgName =
                     ( ( Map<String, String> ) application.getMetadata( "organization" ) ).get( "value" );
 
             OrganizationInfo info = managementService.getOrganizationByName( orgName );
@@ -360,8 +320,9 @@ public class ImportAdmins extends ToolBase {
 
         while ( jp.nextToken() != JsonToken.END_OBJECT ) {
             try {
-             importEntitysStuff( jp, em );
-            }catch(NullPointerException nae){
+                importEntitysStuff( jp, em );
+            }
+            catch ( NullPointerException nae ) {
                 //consume the read of the value so we can move on to process the next token.
                 jp.readValueAs( JsonNode.class );
             }
@@ -383,13 +344,12 @@ public class ImportAdmins extends ToolBase {
         EntityRef ownerEntityRef = em.getRef( UUID.fromString( entityOwnerId ) );
 
 
-
         jp.nextToken(); // start object
 
         //this is done after getting the next token so that we only capture the JsonNode object
         // and not the entire file response.
-        if(ownerEntityRef==null){
-            throw new NullPointerException("Couldn't retrieve entity ref from: "+entityOwnerId );
+        if ( ownerEntityRef == null ) {
+            throw new NullPointerException( "Couldn't retrieve entity ref from: " + entityOwnerId );
         }
 
         // Go inside the value after getting the owner entity id.
@@ -421,7 +381,7 @@ public class ImportAdmins extends ToolBase {
 
                     jp.nextToken();
 
-                    @SuppressWarnings("unchecked") Map<String, Object> dictionary = jp.readValueAs( HashMap.class );
+                    @SuppressWarnings( "unchecked" ) Map<String, Object> dictionary = jp.readValueAs( HashMap.class );
 
                     em.addMapToDictionary( ownerEntityRef, dictionaryName, dictionary );
                 }
@@ -469,7 +429,9 @@ public class ImportAdmins extends ToolBase {
     }
 
 
-    /** Open up the import directory based on <code>importDir</code> */
+    /**
+     * Open up the import directory based on <code>importDir</code>
+     */
     private void openImportDirectory( CommandLine line ) {
 
         boolean hasInputDir = line.hasOption( INPUT_DIR );
