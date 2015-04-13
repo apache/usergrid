@@ -495,7 +495,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
             //use latch to wait for timeout
             CountDownLatch latch = new CountDownLatch(1);
             //launch a thread to hunt for item
-            Thread thread = new Thread(() ->  {
+            final Runnable runnable = () ->  {
                     try {
                         boolean found = false;
                         for (int i = 0; i < indexFig.maxRefreshSearches() && !found; i++) {
@@ -514,14 +514,19 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
                     }finally {
                         latch.countDown();
                     }
-            });
+            };
+            Thread thread = new Thread(runnable);
             //set name so we can find it if there's an issue
-            thread.setName("Refresh_Search_"+uuid.toString());
-            thread.run();
+            thread.setName("Refresh_Search_" + uuid.toString());
             try {
+                thread.run();
                 latch.await(indexFig.refreshWaitTime(), TimeUnit.MILLISECONDS);
             }catch (InterruptedException ie){
                 logger.error("Refresh timed out on "+uuid.toString(),ie);
+            }finally {
+                if(thread != null ){
+                    thread.interrupt();
+                }
             }
             timeRefreshIndex.stop();
 
