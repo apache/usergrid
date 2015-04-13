@@ -19,6 +19,7 @@ package org.apache.usergrid.rest.management;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -217,22 +218,27 @@ public class OrganizationsIT extends AbstractRestIT {
         queryParameters.setKeyValue( "name",organization.getName() );
         queryParameters.setKeyValue( "password",organization.getPassword() );
 
-        //Post the organization and verify it worked
-        Organization organizationReturned = clientSetup.getRestClient().management().orgs().post( queryParameters );
+        //Post the organization and verify it worked --> old behavior now we get a bad request
+        try{
+            Organization organizationReturned = clientSetup.getRestClient().management().orgs().post(queryParameters);
+            fail();
+        }catch (UniformInterfaceException e){
+            assertEquals("ensure bad request",e.getResponse().getStatus(), 400);
+        }
 
-        assertNotNull( organizationReturned );
-        assertEquals( organization.getOrganization(), organizationReturned.getName());
-
-        //get token from organization that was created to verify it exists. also sets the current context.
-        Token tokenPayload = new Token( "password", organization.getName(), organization.getPassword() );
-        Token tokenReturned = clientSetup.getRestClient().management().token().post(Token.class, tokenPayload );
-
-        assertNotNull( tokenReturned );
-
-        //Assert that the get returns the correct org and owner.
-        Organization returnedOrg = clientSetup.getRestClient().management().orgs().organization( organization.getOrganization() ).get();
-
-        assertTrue( returnedOrg != null && returnedOrg.getName().equals(organization.getOrganization()) );
+//        assertNotNull( organizationReturned );
+//        assertEquals( organization.getOrganization(), organizationReturned.getName());
+//
+//        //get token from organization that was created to verify it exists. also sets the current context.
+//        Token tokenPayload = new Token( "password", organization.getName(), organization.getPassword() );
+//        Token tokenReturned = clientSetup.getRestClient().management().token().post(Token.class, tokenPayload );
+//
+//        assertNotNull( tokenReturned );
+//
+//        //Assert that the get returns the correct org and owner.
+//        Organization returnedOrg = clientSetup.getRestClient().management().orgs().organization( organization.getOrganization() ).get();
+//
+//        assertTrue( returnedOrg != null && returnedOrg.getName().equals(organization.getOrganization()) );
 
     }
 
@@ -249,28 +255,28 @@ public class OrganizationsIT extends AbstractRestIT {
         //create the form to hold the organization
         Form form = new Form();
         form.add( "organization", organization.getOrganization() );
-        form.add( "username", organization.getUsername() );
+        form.add("username", organization.getUsername());
         form.add( "grant_type", "password" );
         form.add( "email", organization.getEmail() );
         form.add( "name", organization.getName() );
-        form.add( "password", organization.getPassword() );
+        form.add("password", organization.getPassword());
 
         //Post the organization and verify it worked.
         Organization organizationReturned = clientSetup.getRestClient().management().orgs().post( form );
 
         assertNotNull( organizationReturned );
-        assertEquals( organization.getOrganization(),organizationReturned.getName() );
+        assertEquals(organization.getOrganization(), organizationReturned.getName());
 
         //get token from organization that was created to verify it exists. also sets the current context.
         Token tokenPayload = new Token( "password", organization.getName(), organization.getPassword() );
-        Token tokenReturned = clientSetup.getRestClient().management().token().post(Token.class, tokenPayload );
+        Token tokenReturned = clientSetup.getRestClient().management().token().post(Token.class, tokenPayload);
 
         assertNotNull( tokenReturned );
 
         //Assert that the get returns the correct org and owner.
         Organization returnedOrg = clientSetup.getRestClient().management().orgs().organization( organization.getOrganization() ).get();
 
-        assertTrue( returnedOrg != null && returnedOrg.getName().equals(organization.getOrganization()) );
+        assertTrue(returnedOrg != null && returnedOrg.getName().equals(organization.getOrganization()));
 
     }
 
@@ -306,24 +312,26 @@ public class OrganizationsIT extends AbstractRestIT {
         String username = "testCreateOrgUserAndReturnCorrectUsername"+UUIDUtils.newTimeUUID();
         adminUserPayload.put( "username", username );
         adminUserPayload.put( "name", username );
-        adminUserPayload.put( "email", username+"@usergrid.com" );
-        adminUserPayload.put( "password", username );
+        adminUserPayload.put("email", username + "@usergrid.com");
+        adminUserPayload.put("password", username);
 
         //create adminUser
-        Entity adminUserResponse = restClient.management().orgs().organization( clientSetup.getOrganizationName() ).users().post(Entity.class, adminUserPayload );
+        Entity adminUserResponse = management().orgs().organization( clientSetup.getOrganizationName() ).users().postWithToken(Entity.class, adminUserPayload );
 
+        LinkedHashMap user = ((LinkedHashMap)((LinkedHashMap)adminUserResponse.get("data")).get("user"));
         //verify that the response contains the correct data
         assertNotNull( adminUserResponse );
-        assertEquals( username, adminUserResponse.get( "username" ) );
+        assertEquals(username, user.get("username"));
 
         //fetch the stored response
-        adminUserResponse = restClient.management().users().entity( username ).get(this.getAdminToken(username,username));
+        adminUserResponse = management().users().entity( username ).get(this.getAdminToken(username,username));
+        // user = ((LinkedHashMap)((LinkedHashMap)adminUserResponse.get("data")).get("user"));
 
         //verify that values match stored response
         assertNotNull( adminUserResponse );
         assertEquals( username , adminUserResponse.get( "username" ) );
         assertEquals( username, adminUserResponse.get( "name" ) );
-        assertEquals( username+"@usergrid.com", adminUserResponse.get( "email" ));
+        assertEquals(username + "@usergrid.com", adminUserResponse.get("email"));
 
     }
 
@@ -345,25 +353,25 @@ public class OrganizationsIT extends AbstractRestIT {
         orgPayload.put( "properties", properties );
 
         //update the organization.
-        restClient.management().orgs().organization( clientSetup.getOrganizationName() ).put(orgPayload);
+        management().orgs().organization( clientSetup.getOrganizationName() ).put(orgPayload);
 
         this.refreshIndex();
 
         //retrieve the organization
-        Organization orgResponse = restClient.management().orgs().organization( clientSetup.getOrganizationName() ).get();
+        Organization orgResponse = management().orgs().organization( clientSetup.getOrganizationName() ).get();
 
-        assertEquals( 5, orgResponse.getProperties().get( "puppies" ));
+        assertEquals(5, orgResponse.getProperties().get("puppies" ));
 
         //update the value added to the organization
         properties.put( "puppies", 6 );
-        orgPayload.put( "properties", properties );
+        orgPayload.put("properties", properties );
 
         //update the organization.
-        restClient.management().orgs().organization( clientSetup.getOrganizationName() ).put(orgPayload);
+        management().orgs().organization( clientSetup.getOrganizationName()).put(orgPayload);
 
         this.refreshIndex();
 
-        orgResponse = restClient.management().orgs().organization( clientSetup.getOrganizationName() ).get();
+        orgResponse = management().orgs().organization( clientSetup.getOrganizationName() ).get();
 
         assertEquals( 6, orgResponse.getProperties().get( "puppies" ));
 
