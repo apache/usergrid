@@ -705,7 +705,7 @@ public class EntityIndexTest extends BaseIT {
 
             final CandidateResults results =
                 cursor == null ? entityIndex.search( indexEdge, SearchTypes.allTypes(), query, limit ) :
-                entityIndex.getNextPage( cursor );
+                    entityIndex.getNextPage( cursor );
 
             assertTrue( results.hasCursor() );
 
@@ -799,13 +799,12 @@ public class EntityIndexTest extends BaseIT {
         batch.execute().get();
         ei.refreshAsync().toBlocking().last();
 
-
         final String query = "where string = 'I am*'";
 
         final CandidateResults r =
             entityIndex.search( indexSCope, SearchTypes.fromTypes( entityId.getType() ), query, 10 );
 
-        assertEquals( user.getId(), r.get( 0 ).getId() );
+        assertEquals(user.getId(), r.get(0).getId() );
 
         //shouldn't match
         final String queryNoWildCard = "where string = 'I am'";
@@ -1001,7 +1000,7 @@ public class EntityIndexTest extends BaseIT {
 
 
         batch.execute().get();
-        ei.refresh();
+        ei.refreshAsync().toBlocking().last();
 
 
         final String notFirst = "NOT int = 1";
@@ -1111,7 +1110,7 @@ public class EntityIndexTest extends BaseIT {
 
 
         batch.execute().get();
-        ei.refresh();
+        ei.refreshAsync().toBlocking().last();
 
 
         final String notFirst = "NOT string = 'I ate a sammich'";
