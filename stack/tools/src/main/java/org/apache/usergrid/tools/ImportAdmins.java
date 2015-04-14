@@ -52,6 +52,8 @@ import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEM
 
 /**
  * TODO: REFACTOR EVERYTHING TO USE JSON NODES
+ * Example on how to run:
+ * java -jar usergrid-tools.jar ImportAdmins -host cassandraHost -v -inputDir exportFilesDirectory
  */
 public class ImportAdmins extends ToolBase {
 
@@ -443,7 +445,7 @@ public class ImportAdmins extends ToolBase {
             importDir = new File( DEFAULT_INPUT_DIR );
         }
 
-        System.out.println( "Importing from:" + importDir.getAbsolutePath() );
-        System.out.println( "Status. Exists: " + importDir.exists() + " - Readable: " + importDir.canRead() );
+        logger.info( "Importing from:" + importDir.getAbsolutePath() );
+        logger.info( "Status. Exists: " + importDir.exists() + " - Readable: " + importDir.canRead() );
     }
 }
