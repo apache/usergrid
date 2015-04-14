@@ -32,6 +32,7 @@ import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
 import org.apache.commons.lang.RandomStringUtils;
+import org.apache.usergrid.exception.NotImplementedException;
 import org.apache.usergrid.management.ApplicationCreator;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.OrganizationOwnerInfo;
@@ -471,11 +472,14 @@ public class ManagementResource extends AbstractContextResource {
      */
     @POST
     @Path( "/externaltoken" )
-    //@RequireSystemAccess TODO: should this be required
     public Response validateExternalToken(
             @Context UriInfo ui,
             Map<String, Object> json,
             @QueryParam( "callback" ) @DefaultValue( "" ) String callback )  throws Exception {
+
+        if ( StringUtils.isEmpty( properties.getProperty( USERGRID_CENTRAL_URL ))) {
+            throw new NotImplementedException( "External Token Validation Service is not configured" );
+        }
 
         Object extAccessTokenObj = json.get("ext_access_token");
         if ( extAccessTokenObj == null ) {
@@ -520,7 +524,6 @@ public class ManagementResource extends AbstractContextResource {
      */
     @GET
     @Path( "/externaltoken" )
-    //@RequireSystemAccess TODO: should this be required
     public Response validateExternalToken(
                                 @Context UriInfo ui,
                                 @QueryParam( "ext_access_token" ) String extAccessToken,
@@ -528,6 +531,10 @@ public class ManagementResource extends AbstractContextResource {
                                 @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
             throws Exception {
 
+
+        if ( StringUtils.isEmpty( properties.getProperty( USERGRID_CENTRAL_URL ))) {
+            throw new NotImplementedException( "External Token Validation Service is not configured" );
+        }
 
         if ( extAccessToken == null ) {
             throw new IllegalArgumentException("ext_access_token must be specified");
@@ -537,31 +544,9 @@ public class ManagementResource extends AbstractContextResource {
             throw new IllegalArgumentException("ttl must be specified");
         }
 
-        // create URL of central Usergrid's /management/me endpoint
+        // look up user via UG Central's /management/me endpoint.
 
-        String externalUrl = properties.getProperty( USERGRID_CENTRAL_URL ).trim();
-        // be lenient about trailing slash
-        externalUrl = !externalUrl.endsWith( "/" ) ? externalUrl + "/" : externalUrl;
-        String me = externalUrl + "management/me?access_token=" + extAccessToken;
-
-        // use our favorite HTTP client to GET /management/me
-
-        ClientConfig clientConfig = new DefaultClientConfig();
-        clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
-        Client client = Client.create(clientConfig);
-        final JsonNode accessInfoNode;
-        try {
-            accessInfoNode = client.resource( me )
-                    .type(MediaType.APPLICATION_JSON_TYPE)
-                    .get(JsonNode.class);
-
-        } catch ( Exception e ) {
-            // user not found 404
-            String msg = "Cannot find Admin User associated with " + extAccessToken;
-            throw new EntityNotFoundException( msg, e );
-        }
-
-        // good. user was found in central Usergrid
+        JsonNode accessInfoNode = getMeFromUgCentral( extAccessToken );
 
         JsonNode userNode = accessInfoNode.get( "user" );
         String username = userNode.get( "username" ).getTextValue();
@@ -575,8 +560,8 @@ public class ManagementResource extends AbstractContextResource {
         // if user does not exist locally then we need to fix that
 
         final UUID userId;
-
         final OrganizationInfo organizationInfo = management.getOrganizationByName(username);
+
         if ( organizationInfo == null ) {
 
             // create local user and personal organization, activate user.
@@ -602,6 +587,42 @@ public class ManagementResource extends AbstractContextResource {
                 .withAccessToken( extAccessToken );
 
         return Response.status( SC_OK ).type( jsonMediaType( callback ) ).entity( accessInfo ).build();
+    }
+
+
+    /**
+     * Look up Admin User via UG Central's /management/me endpoint.
+     *
+     * @param extAccessToken Access token issued by UG Central of Admin User
+     * @return JsonNode representation of AccessInfo object for Admin User
+     * @throws EntityNotFoundException if access_token is not valid.
+     */
+    private JsonNode getMeFromUgCentral( String extAccessToken )  throws EntityNotFoundException {
+
+        // create URL of central Usergrid's /management/me endpoint
+
+        String externalUrl = properties.getProperty( USERGRID_CENTRAL_URL ).trim();
+        // be lenient about trailing slash
+        externalUrl = !externalUrl.endsWith( "/" ) ? externalUrl + "/" : externalUrl;
+        String me = externalUrl + "management/me?access_token=" + extAccessToken;
+
+        // use our favorite HTTP client to GET /management/me
+
+        ClientConfig clientConfig = new DefaultClientConfig();
+        clientConfig.getFeatures().put( JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
+        Client client = Client.create(clientConfig);
+        final JsonNode accessInfoNode;
+        try {
+            accessInfoNode = client.resource( me )
+                    .type( MediaType.APPLICATION_JSON_TYPE)
+                    .get(JsonNode.class);
+
+        } catch ( Exception e ) {
+            // user not found 404
+            String msg = "Cannot find Admin User associated with " + extAccessToken;
+            throw new EntityNotFoundException( msg, e );
+        }
+        return accessInfoNode;
     }
 
 
