@@ -26,6 +26,7 @@ import java.util.UUID;
 
 import javax.ws.rs.core.MediaType;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.codehaus.jackson.JsonNode;
 import org.junit.Test;
 
@@ -40,12 +41,13 @@ import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
 import com.sun.jersey.api.client.ClientResponse.Status;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.representation.Form;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.apache.usergrid.utils.MapUtils.hashMap;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+
+import static org.apache.usergrid.rest.management.ManagementResource.USERGRID_CENTRAL_URL;
+import static org.junit.Assert.*;
 
 
 /**
@@ -53,6 +55,8 @@ import static org.junit.Assert.assertTrue;
  */
 @Concurrent()
 public class ManagementResourceIT extends AbstractRestIT {
+
+    private static final Logger logger = LoggerFactory.getLogger(ManagementResourceIT.class);
 
     public ManagementResourceIT() throws Exception {
 
@@ -638,6 +642,65 @@ public class ManagementResourceIT extends AbstractRestIT {
         }
 
         assertEquals( Status.OK, status );
+    }
+
+
+    @Test
+    public void validateExternalToken() throws Exception {
+
+        // set the Usergrid Central SSO URL becuase Tomcat port is dynamically assigned
+
+        String suToken = superAdminToken();
+
+        Map<String, String> props = new HashMap<String, String>();
+        props.put( USERGRID_CENTRAL_URL, getBaseURI().toURL().toExternalForm());
+        resource().path( "/testproperties" )
+                .queryParam( "access_token", suToken)
+                .accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE )
+                .post( props );
+
+        // create a new admin user, get access token
+
+        String rand = RandomStringUtils.randomAlphanumeric(10);
+        final String username = "user_" + rand;
+        OrganizationOwnerInfo orgInfo = setup.getMgmtSvc().createOwnerAndOrganization(
+                username, username, "Test User", username + "@example.com", "password" );
+
+        Map<String, Object> loginInfo = new HashMap<String, Object>() {{
+            put("username", username );
+            put("password", "password");
+            put("grant_type", "password");
+        }};
+        JsonNode accessInfoNode = resource().path("/management/token")
+            .type( MediaType.APPLICATION_JSON_TYPE )
+            .post( JsonNode.class, loginInfo );
+        String accessToken = accessInfoNode.get( "access_token" ).getTextValue();
+
+        // attempt to validate the token, must be valid
+
+        JsonNode validatedNode = resource().path( "/management/externaltoken" )
+            .queryParam( "access_token", suToken ) // as superuser
+            .queryParam( "ext_access_token", accessToken )
+            .queryParam( "ttl", "1000" )
+            .get( JsonNode.class );
+        String validatedAccessToken = validatedNode.get( "access_token" ).getTextValue();
+        assertEquals( accessToken, validatedAccessToken );
+
+        // attempt to validate an invalid token, must fail
+
+        try {
+            JsonNode invalidNode = resource().path( "/management/externaltoken" )
+                .queryParam( "access_token", suToken ) // as superuser
+                .queryParam( "ext_access_token", "rubbish_token")
+                .queryParam( "ttl", "1000" )
+                .get( JsonNode.class );
+            fail("Validation should have failed");
+        } catch ( Exception expected ) {}
+
+
+        // TODO: how do we test the create new user and organization case?
+
     }
 
 }
