@@ -765,10 +765,54 @@ public class EntityIndexTest extends BaseIT {
         final CandidateResults r =
             entityIndex.search( indexSCope, SearchTypes.fromTypes( entityId.getType() ), query, 10 );
         assertEquals( user.getId(), r.get( 0 ).getId() );
+    }
 
-        batch.deindex( indexSCope, user.getId(), user.getVersion() );
+
+    @Test
+    public void queryByStringWildCardSpaces() throws Throwable {
+
+        Id appId = new SimpleId( "application" );
+        Id ownerId = new SimpleId( "owner" );
+
+        ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
+
+        IndexEdge indexSCope = new IndexEdgeImpl( ownerId, "user", SearchEdge.NodeType.SOURCE, 10 );
+
+        ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex( applicationScope );
+
+
+        Map entityMap = new HashMap() {{
+            put( "string", "I am a search string" );
+        }};
+
+        Entity user = EntityIndexMapUtils.fromMap( entityMap );
+
+        final Id entityId = new SimpleId( "entitytype" );
+
+        EntityUtils.setId( user, entityId );
+        EntityUtils.setVersion( user, UUIDGenerator.newTimeUUID() );
+
+
+        EntityIndexBatch batch = entityIndex.createBatch();
+
+        batch.index( indexSCope, user );
         batch.execute().get();
         ei.refresh();
+
+        final String query = "where string = 'I am*'";
+
+        final CandidateResults r =
+            entityIndex.search( indexSCope, SearchTypes.fromTypes( entityId.getType() ), query, 10 );
+
+        assertEquals( user.getId(), r.get( 0 ).getId() );
+
+        //shouldn't match
+        final String queryNoWildCard = "where string = 'I am'";
+
+        final CandidateResults noWildCardResults =
+            entityIndex.search( indexSCope, SearchTypes.fromTypes( entityId.getType() ), queryNoWildCard, 10 );
+
+        assertEquals( 0, noWildCardResults.size() );
     }
 
 
@@ -844,15 +888,7 @@ public class EntityIndexTest extends BaseIT {
         ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
 
 
-
-
         ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex( applicationScope );
-
-
-        /**
-         * Ensures sort ordering is correct when more than 1 token is present.  Should order by the unanalyzed field,
-         * not the analyzed field
-         */
 
         final Entity first = new Entity( "search" );
 
@@ -917,6 +953,278 @@ public class EntityIndexTest extends BaseIT {
         assertEquals( 2, towMatchResults.size() );
         assertEquals( second.getId(), towMatchResults.get( 0 ).getId() );
         assertEquals( first.getId(), towMatchResults.get( 1 ).getId() );
+    }
+
+
+    /**
+     * Tests that when NOT is the only query term, it functions correctly
+     */
+    @Test
+    public void notRootOperandFilter() throws Throwable {
+
+        Id appId = new SimpleId( "application" );
+        Id ownerId = new SimpleId( "owner" );
+
+        ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
+
+
+        ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex( applicationScope );
+
+
+        final Entity first = new Entity( "search" );
+
+        first.setField( new IntegerField( "int", 1 ) );
+
+
+        EntityUtils.setVersion( first, UUIDGenerator.newTimeUUID() );
+
+
+        final Entity second = new Entity( "search" );
+
+        second.setField( new IntegerField( "int", 2 ) );
+
+
+        EntityUtils.setVersion( second, UUIDGenerator.newTimeUUID() );
+
+
+        EntityIndexBatch batch = entityIndex.createBatch();
+
+
+        //get ordering, so 2 is before 1 when both match
+        IndexEdge indexScope1 = new IndexEdgeImpl( ownerId, "searches", SearchEdge.NodeType.SOURCE, 10 );
+        batch.index( indexScope1, first );
+
+
+        IndexEdge indexScope2 = new IndexEdgeImpl( ownerId, "searches", SearchEdge.NodeType.SOURCE, 11 );
+        batch.index( indexScope2, second );
+
+
+        batch.execute().get();
+        ei.refresh();
+
+
+        final String notFirst = "NOT int = 1";
+
+        final CandidateResults notFirstResults =
+            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), notFirst, 10 );
+
+
+        assertEquals( 1, notFirstResults.size() );
+        assertEquals( second.getId(), notFirstResults.get( 0 ).getId() );
+
+
+        //search in reversed
+        final String notSecond = "NOT int = 2";
+
+        final CandidateResults notSecondUnion =
+            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), notSecond, 10 );
+
+
+        assertEquals( 1, notSecondUnion.size() );
+        assertEquals( first.getId(), notSecondUnion.get( 0 ).getId() );
+
+
+        final String notBothReturn = "NOT int = 3";
+
+        final CandidateResults notBothReturnResults =
+            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), notBothReturn, 10 );
+
+
+        assertEquals( 2, notBothReturnResults.size() );
+        assertEquals( second.getId(), notBothReturnResults.get( 0 ).getId() );
+        assertEquals( first.getId(), notBothReturnResults.get( 1 ).getId() );
+
+
+        final String notFilterBoth = "(NOT int = 1) AND (NOT int = 2) ";
+
+        final CandidateResults filterBoth =
+            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), notFilterBoth, 10 );
+
+
+        assertEquals( 0, filterBoth.size() );
+
+        final String noMatchesAnd = "(NOT int = 3) AND (NOT int = 4)";
+
+        final CandidateResults noMatchesAndResults =
+            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), noMatchesAnd, 10 );
+
+
+        assertEquals( 2, noMatchesAndResults.size() );
+        assertEquals( second.getId(), noMatchesAndResults.get( 0 ).getId() );
+        assertEquals( first.getId(), noMatchesAndResults.get( 1 ).getId() );
+
+
+        final String noMatchesOr = "(NOT int = 3) AND (NOT int = 4)";
+
+        final CandidateResults noMatchesOrResults =
+            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), noMatchesOr, 10 );
+
+
+        assertEquals( 2, noMatchesOrResults.size() );
+        assertEquals( second.getId(), noMatchesOrResults.get( 0 ).getId() );
+        assertEquals( first.getId(), noMatchesOrResults.get( 1 ).getId() );
+    }
+
+
+    /**
+     * Tests that when NOT is the only query term, it functions correctly
+     */
+    @Test
+    public void notRootOperandQuery() throws Throwable {
+
+        Id appId = new SimpleId( "application" );
+        Id ownerId = new SimpleId( "owner" );
+
+        ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
+
+
+        ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex( applicationScope );
+
+
+        final Entity first = new Entity( "search" );
+
+        first.setField( new StringField( "string", "I ate a sammich" ) );
+
+
+        EntityUtils.setVersion( first, UUIDGenerator.newTimeUUID() );
+
+
+        final Entity second = new Entity( "search" );
+
+        second.setField( new StringField( "string", "I drank a beer" ) );
+
+
+        EntityUtils.setVersion( second, UUIDGenerator.newTimeUUID() );
+
+
+        EntityIndexBatch batch = entityIndex.createBatch();
+
+
+        //get ordering, so 2 is before 1 when both match
+        IndexEdge indexScope1 = new IndexEdgeImpl( ownerId, "searches", SearchEdge.NodeType.SOURCE, 10 );
+        batch.index( indexScope1, first );
+
+
+        IndexEdge indexScope2 = new IndexEdgeImpl( ownerId, "searches", SearchEdge.NodeType.SOURCE, 11 );
+        batch.index( indexScope2, second );
+
+
+        batch.execute().get();
+        ei.refresh();
+
+
+        final String notFirst = "NOT string = 'I ate a sammich'";
+
+        final CandidateResults notFirstResults =
+            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), notFirst, 10 );
+
+
+        assertEquals( 1, notFirstResults.size() );
+        assertEquals( second.getId(), notFirstResults.get( 0 ).getId() );
+
+
+        final String notFirstWildCard = "NOT string = 'I ate*'";
+
+        final CandidateResults notFirstWildCardResults =
+            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), notFirstWildCard, 10 );
+
+
+        assertEquals( 1, notFirstWildCardResults.size() );
+        assertEquals( second.getId(), notFirstWildCardResults.get( 0 ).getId() );
+
+
+        final String notFirstContains = "NOT string contains 'sammich'";
+
+        final CandidateResults notFirstContainsResults =
+            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), notFirstContains, 10 );
+
+
+        assertEquals( 1, notFirstContainsResults.size() );
+        assertEquals( second.getId(), notFirstContainsResults.get( 0 ).getId() );
+
+
+        //search in reversed
+        final String notSecond = "NOT string = 'I drank a beer'";
+
+        final CandidateResults notSecondUnion =
+            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), notSecond, 10 );
+
+
+        assertEquals( 1, notSecondUnion.size() );
+        assertEquals( first.getId(), notSecondUnion.get( 0 ).getId() );
+
+
+        final String notSecondWildcard = "NOT string = 'I drank*'";
+
+        final CandidateResults notSecondWildcardUnion =
+            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), notSecondWildcard, 10 );
+
+
+        assertEquals( 1, notSecondWildcardUnion.size() );
+        assertEquals( first.getId(), notSecondWildcardUnion.get( 0 ).getId() );
+
+
+        final String notSecondContains = "NOT string contains 'beer'";
+
+        final CandidateResults notSecondContainsUnion =
+            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), notSecondContains, 10 );
+
+
+        assertEquals( 1, notSecondContainsUnion.size() );
+        assertEquals( first.getId(), notSecondContainsUnion.get( 0 ).getId() );
+
+
+        final String notBothReturn = "NOT string = 'I'm a foodie'";
+
+        final CandidateResults notBothReturnResults =
+            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), notBothReturn, 10 );
+
+
+        assertEquals( 2, notBothReturnResults.size() );
+        assertEquals( second.getId(), notBothReturnResults.get( 0 ).getId() );
+        assertEquals( first.getId(), notBothReturnResults.get( 1 ).getId() );
+
+
+        final String notFilterBoth = "(NOT string = 'I ate a sammich') AND (NOT string = 'I drank a beer') ";
+
+        final CandidateResults filterBoth =
+            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), notFilterBoth, 10 );
+
+
+        assertEquals( 0, filterBoth.size() );
+
+        final String noMatchesAnd = "(NOT string = 'I ate*') AND (NOT string = 'I drank*')";
+
+        final CandidateResults noMatchesAndResults =
+            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), noMatchesAnd, 10 );
+
+
+        assertEquals( 0, noMatchesAndResults.size() );
+
+        final String noMatchesContainsAnd = "(NOT string contains 'ate') AND (NOT string contains 'drank')";
+
+        final CandidateResults noMatchesContainsAndResults = entityIndex
+            .search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), noMatchesContainsAnd, 10 );
+
+
+        assertEquals( 0, noMatchesContainsAndResults.size() );
+
+
+        final String noMatchesOr = "(NOT string = 'I ate*') AND (NOT string = 'I drank*')";
+
+        final CandidateResults noMatchesOrResults =
+            entityIndex.search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), noMatchesOr, 10 );
+
+
+        assertEquals( 0, noMatchesOrResults.size() );
+
+        final String noMatchesContainsOr = "(NOT string contains 'ate') AND (NOT string contains 'drank')";
+
+        final CandidateResults noMatchesContainsOrResults = entityIndex
+            .search( indexScope1, SearchTypes.fromTypes( first.getId().getType() ), noMatchesContainsOr, 10 );
+
+
+        assertEquals( 0, noMatchesContainsOrResults.size() );
     }
 }
 

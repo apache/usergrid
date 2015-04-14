@@ -75,9 +75,6 @@ public interface CassandraFig extends GuicyFig {
     @Default( "RING_DESCRIBE" )
     String getDiscoveryType();
 
-    @Key("cassandra.embedded")
-    @Default( "false" )
-    boolean isEmbedded();
 
     @Default("CL_LOCAL_ONE")
     @Key(READ_CL)
