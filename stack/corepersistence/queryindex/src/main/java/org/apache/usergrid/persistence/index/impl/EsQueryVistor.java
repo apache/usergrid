@@ -363,13 +363,15 @@ public class EsQueryVistor implements QueryVisitor {
 
         //special case so we support our '*' char with wildcard
         if ( value instanceof String ) {
-            final String svalue = ( String ) value;
+            final String stringValue = (( String ) value).toLowerCase().trim();
 
             // or field is just a string that does need a prefix us a query
-            if ( svalue.indexOf( "*" ) != -1 ) {
+            if ( stringValue.contains( "*" ) ) {
 
+                //Because of our legacy behavior, where we match CCCC*, we need to use the unanalyzed string to ensure that
+                //we start
                 final WildcardQueryBuilder wildcardQuery =
-                        QueryBuilders.wildcardQuery( IndexingUtils.FIELD_STRING_NESTED, svalue.toLowerCase() );
+                        QueryBuilders.wildcardQuery( IndexingUtils.FIELD_STRING_NESTED_UNANALYZED, stringValue );
                 queryBuilders.push( fieldNameTerm( name, wildcardQuery ) );
                 filterBuilders.push( NoOpFilterBuilder.INSTANCE );
                 return;
@@ -377,7 +379,7 @@ public class EsQueryVistor implements QueryVisitor {
 
             //it's an exact match, use a filter
             final TermFilterBuilder termFilter =
-                    FilterBuilders.termFilter( IndexingUtils.FIELD_STRING_NESTED_UNANALYZED, svalue.toLowerCase() );
+                    FilterBuilders.termFilter( IndexingUtils.FIELD_STRING_NESTED_UNANALYZED, stringValue );
 
             queryBuilders.push( NoOpQueryBuilder.INSTANCE );
             filterBuilders.push( fieldNameTerm( name, termFilter ) );
