@@ -258,6 +258,34 @@ AppServices.Services.factory('ug', function(configuration, $rootScope, utility,
 
       });
     },
+    createCollectionWithEntity: function(collectionName, entityData) {
+      try{
+        entityData=JSON.parse(entityData)
+        entityData.type=collectionName;
+      }catch(e){
+        $rootScope.$broadcast('alert', 'error', 'JSON is not valid');
+        return;
+      }
+      var self = this;
+      self.client().createEntity(entityData, function(err, entity) {
+        if (err) {
+          console.error(err);
+          return $rootScope.$broadcast('alert', 'error',
+            'error creating collection');
+        }
+        entity.destroy(function() {
+          self.getTopCollections(function(err, collections) {
+            if (err) {
+              $rootScope.$broadcast('alert', 'error',
+                'error creating collection');
+            } else {
+              $rootScope.$broadcast('collection-created',
+                collections);
+            }
+          });
+        });
+      });
+    },
     getApplications: function() {
       this.client().getApplications(function(err, applications) {
         if (err) {
@@ -449,7 +477,7 @@ AppServices.Services.factory('ug', function(configuration, $rootScope, utility,
 
           var queryPath = data.path;
           //remove preceeding slash
-          queryPath = queryPath.replace(/^\//, ''); 
+          queryPath = queryPath.replace(/^\//, '');
           self.getCollection('query', queryPath, null, 'order by modified DESC', null);
 
         }
