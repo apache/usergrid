@@ -48,6 +48,7 @@ import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
 
 import rx.Observable;
+import rx.schedulers.Schedulers;
 import rx.util.async.Async;
 
 
@@ -138,7 +139,7 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
                 logger.error( "Failed during refresh search for " + uuid, ee );
                 throw new RuntimeException( "Failed during refresh search for " + uuid, ee );
             }
-        } ).call();
+        }, Schedulers.io() ).call();
 
 
         return future.doOnNext( found -> {

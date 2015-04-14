@@ -33,6 +33,8 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
+import static org.apache.usergrid.persistence.index.utils.StringUtils.sanitizeUUID;
+
 
 /**
  * Internal results class, should not be returned as results to a user.
@@ -57,7 +59,7 @@ public class CandidateResults implements Iterable<CandidateResult> {
 
 
     public String initializeCursor(){
-        cursor = org.apache.usergrid.persistence.index.utils.StringUtils.sanitizeUUID( UUIDGenerator.newTimeUUID());
+        cursor = sanitizeUUID( UUIDGenerator.newTimeUUID() );
         return cursor;
     }
 

@@ -130,7 +130,7 @@ public interface IndexFig extends GuicyFig {
     @Key( ELASTICSEARCH_ALIAS_POSTFIX )
     String getAliasPostfix();
 
-    @Default( "5" ) // TODO: does this timeout get extended on each query?
+    @Default( "2" ) // TODO: does this timeout get extended on each query?
     @Key( QUERY_CURSOR_TIMEOUT_MINUTES )
     int getQueryCursorTimeout();
 

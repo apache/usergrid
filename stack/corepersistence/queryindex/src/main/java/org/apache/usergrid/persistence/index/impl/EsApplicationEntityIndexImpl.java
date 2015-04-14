@@ -327,7 +327,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
 
             final String queryStateSerialized = state.serialize();
 
-            mapManager.putString( candidateResults.getCursor(), queryStateSerialized, storageSeconds );
+            mapManager.putString (cursor , queryStateSerialized, storageSeconds );
 
             logger.debug( " User cursor = {},  Cursor = {} ", cursor, esScrollCursor );
         }
