@@ -22,6 +22,7 @@ package org.apache.usergrid.persistence.index;
 
 import org.apache.usergrid.persistence.core.CPManager;
 import org.apache.usergrid.persistence.core.util.Health;
+import rx.Observable;
 
 
 /**
@@ -45,7 +46,7 @@ public interface EntityIndex extends CPManager {
     /**
      * Refresh the index.
      */
-     void refresh();
+     Observable<Boolean> refreshAsync();
 
 
 

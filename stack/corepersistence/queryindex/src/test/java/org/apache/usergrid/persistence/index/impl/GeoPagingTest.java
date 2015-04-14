@@ -136,7 +136,7 @@ public class GeoPagingTest extends BaseIT {
 
         batch.execute().get();
 
-        ei.refresh();
+        ei.refreshAsync().toBlocking().last();
 
 
 

@@ -110,7 +110,7 @@ public class EntityIndexTest extends BaseIT {
 
         insertJsonBlob( entityIndex, entityType, searchEdge, "/sample-large.json", 101, 0 );
 
-        ei.refresh();
+        ei.refreshAsync().toBlocking().last();
 
         testQueries( searchEdge, searchTypes, entityIndex );
     }
@@ -157,7 +157,7 @@ public class EntityIndexTest extends BaseIT {
         batch.index( indexEdge, entity2 );
         batch.execute().get();
 
-        ei.refresh();
+        ei.refreshAsync().toBlocking().last();
 
 
         StopWatch timer = new StopWatch();
@@ -269,7 +269,7 @@ public class EntityIndexTest extends BaseIT {
 
         insertJsonBlob( entityIndex, entityType, searchEdge, "/sample-large.json", 101, 0 );
 
-        ei.refresh();
+        ei.refreshAsync().toBlocking().last();
 
         testQueries( searchEdge, searchTypes, entityIndex );
 
@@ -277,7 +277,7 @@ public class EntityIndexTest extends BaseIT {
 
         insertJsonBlob( entityIndex, entityType, searchEdge, "/sample-large.json", 101, 100 );
 
-        ei.refresh();
+        ei.refreshAsync().toBlocking().last();
 
         //Hilda Youn
         testQuery( searchEdge, searchTypes, entityIndex, "name = 'Hilda Young'", 1 );
@@ -301,20 +301,20 @@ public class EntityIndexTest extends BaseIT {
 
         insertJsonBlob( entityIndex, entityType, searchEdge, "/sample-large.json", 1, 0 );
 
-        ei.refresh();
+        ei.refreshAsync().toBlocking().last();
 
         ei.addIndex( "v2", 1, 0, "one" );
 
         insertJsonBlob( entityIndex, entityType, searchEdge, "/sample-large.json", 1, 0 );
 
-        ei.refresh();
+        ei.refreshAsync().toBlocking().last();
         CandidateResults crs = testQuery( searchEdge, searchTypes, entityIndex, "name = 'Bowers Oneil'", 2 );
 
         EntityIndexBatch entityIndexBatch = entityIndex.createBatch();
         entityIndexBatch.deindex( searchEdge, crs.get( 0 ) );
         entityIndexBatch.deindex( searchEdge, crs.get( 1 ) );
         entityIndexBatch.execute().get();
-        ei.refresh();
+        ei.refreshAsync().toBlocking().last();
 
         //Hilda Youn
         testQuery( searchEdge, searchTypes, entityIndex, "name = 'Bowers Oneil'", 0 );
@@ -329,7 +329,7 @@ public class EntityIndexTest extends BaseIT {
         EntityIndexBatch batch = entityIndex.createBatch();
         insertJsonBlob( sampleJson, batch, entityType, indexEdge, max, startIndex );
         batch.execute().get();
-        ei.refresh();
+        ei.refreshAsync().toBlocking().last();
     }
 
 
@@ -394,7 +394,7 @@ public class EntityIndexTest extends BaseIT {
         entity.setField( new UUIDField( IndexingUtils.ENTITY_ID_FIELDNAME, UUID.randomUUID() ) );
 
         entityIndex.createBatch().index( searchEdge, entity ).execute().get();
-        ei.refresh();
+        ei.refreshAsync().toBlocking().last();
 
         CandidateResults candidateResults = entityIndex
             .search( searchEdge, SearchTypes.fromTypes( entity.getId().getType() ), "name contains 'Ferrari*'", 10 );
@@ -403,7 +403,7 @@ public class EntityIndexTest extends BaseIT {
         EntityIndexBatch batch = entityIndex.createBatch();
         batch.deindex( searchEdge, entity ).execute().get();
         batch.execute().get();
-        ei.refresh();
+        ei.refreshAsync().toBlocking().last();
 
         candidateResults = entityIndex
             .search( searchEdge, SearchTypes.fromTypes( entity.getId().getType() ), "name contains 'Ferrari*'", 10 );
@@ -533,7 +533,7 @@ public class EntityIndexTest extends BaseIT {
 
         batch.index( indexSCope, user );
         batch.execute().get();
-        ei.refresh();
+        ei.refreshAsync().toBlocking().last();
 
         final String query = "where username = 'edanuff'";
 
@@ -542,7 +542,7 @@ public class EntityIndexTest extends BaseIT {
 
         batch.deindex( indexSCope, user.getId(), user.getVersion() );
         batch.execute().get();
-        ei.refresh();
+        ei.refreshAsync().toBlocking().last();
 
         // EntityRef
 
@@ -603,7 +603,7 @@ public class EntityIndexTest extends BaseIT {
         batch.index( indexScope, fred );
 
         batch.execute().get();
-        ei.refresh();
+        ei.refreshAsync().toBlocking().last();
 
         final SearchTypes searchTypes = SearchTypes.fromTypes( "user" );
 
@@ -631,7 +631,7 @@ public class EntityIndexTest extends BaseIT {
         assertEquals( "index should be ready", Health.GREEN, ei.getIndexHealth() );
         ApplicationEntityIndex entityIndex = eif.createApplicationEntityIndex( applicationScope );
 
-        ei.refresh();
+        ei.refreshAsync().toBlocking().last();
 
         assertNotEquals( "cluster should be fine", Health.RED, ei.getIndexHealth() );
         assertNotEquals( "cluster should be ready now", Health.RED, ei.getClusterHealth() );
@@ -688,7 +688,7 @@ public class EntityIndexTest extends BaseIT {
 
         batch.execute().get();
 
-        ei.refresh();
+        ei.refreshAsync().toBlocking().last();
 
 
         final int limit = 1;
@@ -758,7 +758,7 @@ public class EntityIndexTest extends BaseIT {
 
         batch.index( indexSCope, user );
         batch.execute().get();
-        ei.refresh();
+        ei.refreshAsync().toBlocking().last();
 
         final String query = "where searchUUID = " + searchUUID;
 
@@ -768,7 +768,7 @@ public class EntityIndexTest extends BaseIT {
 
         batch.deindex( indexSCope, user.getId(), user.getVersion() );
         batch.execute().get();
-        ei.refresh();
+        ei.refreshAsync().toBlocking().last();
     }
 
 
@@ -810,7 +810,7 @@ public class EntityIndexTest extends BaseIT {
         batch.index( indexSCope, first );
         batch.index( indexSCope, second );
         batch.execute().get();
-        ei.refresh();
+        ei.refreshAsync().toBlocking().last();
 
 
         final String ascQuery = "order by string";
@@ -883,7 +883,7 @@ public class EntityIndexTest extends BaseIT {
 
 
         batch.execute().get();
-        ei.refresh();
+        ei.refreshAsync().toBlocking().last();
 
 
         final String singleMatchQuery = "string contains 'alpha' OR string contains 'foo'";
