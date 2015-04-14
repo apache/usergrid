@@ -33,7 +33,6 @@ import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerializ
 import org.apache.usergrid.persistence.core.migration.data.ProgressObserver;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
-import org.apache.usergrid.persistence.index.query.Query;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;

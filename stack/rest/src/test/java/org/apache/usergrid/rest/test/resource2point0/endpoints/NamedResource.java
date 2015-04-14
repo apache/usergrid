@@ -60,7 +60,7 @@ public abstract class NamedResource implements UrlResource {
 
     @Override
     public String getPath() {
-        return name;
+        return name + getMatrix();
     }
 
     @Override
@@ -113,6 +113,47 @@ public abstract class NamedResource implements UrlResource {
             }
         }
         return resource;
+    }
+
+    protected String getMatrixValue(final QueryParameters parameters) {
+
+        StringBuilder sb = new StringBuilder();
+        if (parameters == null) {
+            return null;
+        }
+        if (parameters.getQuery() != null) {
+            sb.append(";");
+            sb.append("ql").append("=").append(parameters.getQuery());
+        }
+
+        if (parameters.getCursor() != null) {
+            sb.append(";");
+            sb.append("cursor").append("=").append(parameters.getCursor());
+        }
+        if (parameters.getStart() != null) {
+            sb.append(";");
+            sb.append("start").append("=").append(parameters.getStart());
+        }
+        if (parameters.getLimit() != null) {
+            sb.append(";");
+            sb.append("limit").append("=").append(parameters.getLimit());
+        }
+        //We can also post the params as queries
+        if (parameters.getFormPostData().size() > 0) {
+            Map<String, String> formData = parameters.getFormPostData();
+            Set<String> keySet = formData.keySet();
+            Iterator<String> keyIterator = keySet.iterator();
+
+
+            while (keyIterator.hasNext()) {
+                if (sb.length() > 0)
+                    sb.append(";");
+                String key = keyIterator.next();
+                String value = formData.get(key);
+                sb.append(key).append("=").append(value);
+            }
+        }
+        return sb.toString();
     }
 
     //Post Resources
@@ -182,19 +223,19 @@ public abstract class NamedResource implements UrlResource {
     public <T> T post(Class<T> type, Form requestEntity) {
         GenericType<T> gt = new GenericType<>((Class) type);
         return getResource()
-        .accept( MediaType.APPLICATION_JSON )
-        .type( MediaType.APPLICATION_FORM_URLENCODED_TYPE )
-        .entity( requestEntity, MediaType.APPLICATION_FORM_URLENCODED_TYPE )
-        .post( gt.getRawClass() );
+        .accept(MediaType.APPLICATION_JSON)
+        .type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
+        .entity(requestEntity, MediaType.APPLICATION_FORM_URLENCODED_TYPE)
+        .post(gt.getRawClass());
 
     }
 
     //For edge cases like Organizations and Tokens without any payload
     public <T> T get(Class<T> type) {
         GenericType<T> gt = new GenericType<>((Class) type);
-        return getResource( true ).type(MediaType.APPLICATION_JSON_TYPE)
-                                  .accept( MediaType.APPLICATION_JSON )
-                                  .get( gt.getRawClass() );
+        return getResource(true).type(MediaType.APPLICATION_JSON_TYPE)
+                                  .accept(MediaType.APPLICATION_JSON)
+                                  .get(gt.getRawClass());
 
     }
 
@@ -216,4 +257,7 @@ public abstract class NamedResource implements UrlResource {
 
     }
 
+    public String getMatrix() {
+        return "";
+    }
 }

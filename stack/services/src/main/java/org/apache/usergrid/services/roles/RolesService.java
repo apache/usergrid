@@ -24,7 +24,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.services.AbstractCollectionService;
 import org.apache.usergrid.services.ServiceContext;
@@ -59,7 +59,7 @@ public class RolesService extends AbstractCollectionService {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * org.apache.usergrid.services.AbstractService#getEntityDictionary(org.apache.usergrid
      * .services.ServiceContext, java.util.List, java.lang.String)
@@ -89,7 +89,7 @@ public class RolesService extends AbstractCollectionService {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * org.apache.usergrid.services.AbstractService#putEntityDictionary(org.apache.usergrid
      * .services.ServiceContext, java.util.List, java.lang.String,
@@ -105,7 +105,7 @@ public class RolesService extends AbstractCollectionService {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * org.apache.usergrid.services.AbstractService#postEntityDictionary(org.apache.usergrid
      * .services.ServiceContext, java.util.List, java.lang.String,
@@ -144,7 +144,7 @@ public class RolesService extends AbstractCollectionService {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * org.apache.usergrid.services.AbstractService#deleteEntityDictionary(org.apache.usergrid
      * .services.ServiceContext, java.util.List, java.lang.String)

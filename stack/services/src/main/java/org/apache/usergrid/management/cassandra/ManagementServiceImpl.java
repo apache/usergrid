@@ -33,10 +33,7 @@ import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.exception.ConflictException;
 import org.apache.usergrid.management.exceptions.*;
 import org.apache.usergrid.persistence.*;
-import org.apache.usergrid.persistence.graph.Edge;
-import org.apache.usergrid.persistence.graph.SearchByEdgeType;
-import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
-import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -147,9 +144,7 @@ import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_OBJECT_
 import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_OBJECT_TYPE;
 import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_TITLE;
 import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_VERB;
-import org.apache.usergrid.persistence.index.query.Query.Level;
-import rx.Observable;
-
+import org.apache.usergrid.persistence.Query.Level;
 import static org.apache.usergrid.security.AuthPrincipalType.ADMIN_USER;
 import static org.apache.usergrid.security.AuthPrincipalType.APPLICATION;
 import static org.apache.usergrid.security.AuthPrincipalType.APPLICATION_USER;

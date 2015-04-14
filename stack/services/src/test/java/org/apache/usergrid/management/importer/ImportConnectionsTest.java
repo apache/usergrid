@@ -37,7 +37,7 @@ import org.apache.usergrid.persistence.PagingResultsIterator;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.entities.FileImport;
 import org.apache.usergrid.persistence.entities.Import;
-import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.Query;
 
 import static org.junit.Assert.assertEquals;
 

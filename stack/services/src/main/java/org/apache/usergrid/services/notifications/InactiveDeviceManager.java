@@ -24,7 +24,7 @@ import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.entities.Notifier;
-import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.services.notifications.impl.ApplicationQueueManagerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,15 +57,13 @@ public class InactiveDeviceManager {
             for (Map.Entry<String, Date> entry : inactiveDeviceMap.entrySet()) {
                 try {
                     // name
-                    Query query = new Query();
-                    query.addEqualityFilter(notifier.getName() + notfierPostFix, entry.getKey());
+                    Query query = Query.fromQL( notifier.getName() + notfierPostFix  + " = '" + entry.getKey() + "'");
                     Results results = entityManager.searchCollection(entityManager.getApplication(), "devices", query);
                     for (Entity e : results.getEntities()) {
                         entityManager.updateProperties(e, clearPushtokenMap);
                     }
                     // uuid
-                    query = new Query();
-                    query.addEqualityFilter(notifier.getUuid() + notfierPostFix, entry.getKey());
+                    query = Query.fromQL( notifier.getName() + notfierPostFix  + " = " + entry.getKey() + "");
                     results = entityManager.searchCollection(entityManager.getApplication(),  "devices", query);
                     for (Entity e : results.getEntities()) {
                         entityManager.updateProperties(e, clearPushtokenMap);

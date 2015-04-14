@@ -24,20 +24,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.corepersistence.CpEntityManagerFactory;
-import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.collection.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.serialization.EdgesObservable;
 import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexBatch;
-import org.apache.usergrid.persistence.index.IndexBatchBuffer;
-import org.apache.usergrid.persistence.index.IndexScope;
-import org.apache.usergrid.persistence.index.impl.IndexScopeImpl;
+import org.apache.usergrid.persistence.index.IndexEdge;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.inject.Inject;
@@ -99,12 +95,12 @@ public class EntityVersionDeletedHandler implements EntityVersionDeleted {
 
         //create an observable of all scopes to deIndex
         //remove all indexes pointing to this
-        final Observable<IndexScope> targetScopes =  edgesObservable.edgesToTarget( gm, entityId ).map(
+        final Observable<IndexEdge> targetScopes =  edgesObservable.edgesToTarget( gm, entityId ).map(
             edge -> generateScopeFromSource( edge) );
 
 
         //Remove all double indexes
-        final Observable<IndexScope> sourceScopes = edgesObservable.edgesFromSource( gm, entityId ).map(
+        final Observable<IndexEdge> sourceScopes = edgesObservable.edgesFromSource( gm, entityId ).map(
                     edge -> generateScopeToTarget( edge ) );
 
 
@@ -133,11 +129,11 @@ public class EntityVersionDeletedHandler implements EntityVersionDeleted {
 
 
     private static final class IndexScopeVersion{
-        private final IndexScope scope;
+        private final IndexEdge scope;
         private final MvccLogEntry version;
 
 
-        private IndexScopeVersion( final IndexScope scope, final MvccLogEntry version ) {
+        private IndexScopeVersion( final IndexEdge scope, final MvccLogEntry version ) {
             this.scope = scope;
             this.version = version;
         }

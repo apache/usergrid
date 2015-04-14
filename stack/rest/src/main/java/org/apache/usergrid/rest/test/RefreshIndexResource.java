@@ -66,7 +66,7 @@ public class RefreshIndexResource extends AbstractContextResource {
             }
 
             // refresh the system apps or app lookup below may fail
-            getEntityIndex().refresh();
+            getEntityIndex().refreshAsync().toBlocking().last();
 
         } catch (Exception e) {
             logger.error("Error in refresh", e);

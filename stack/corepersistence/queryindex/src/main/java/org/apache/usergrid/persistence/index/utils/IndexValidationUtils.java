@@ -19,12 +19,11 @@
 package org.apache.usergrid.persistence.index.utils;
 
 
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.index.IndexScope;
+import org.apache.usergrid.persistence.index.IndexEdge;
+import org.apache.usergrid.persistence.index.SearchEdge;
 
 import com.google.common.base.Preconditions;
 
-import static org.apache.usergrid.persistence.core.util.ValidationUtils.validateApplicationScope;
 import static org.apache.usergrid.persistence.core.util.ValidationUtils.verifyIdentity;
 import static org.apache.usergrid.persistence.core.util.ValidationUtils.verifyString;
 
@@ -37,16 +36,25 @@ public class IndexValidationUtils {
 
 
     /**
-     * Validate the collection scope
+     * Validate the search edge is correct
+     * @param searchEdge
      */
-    public static void validateIndexScope( final IndexScope scope ) {
+    public static void validateSearchEdge(final SearchEdge searchEdge){
+        Preconditions.checkNotNull(searchEdge, "searchEdge is required");
+        org.apache.usergrid.persistence.core.util.ValidationUtils.verifyIdentity( searchEdge.getNodeId() );
+        Preconditions.checkArgument( searchEdge.getEdgeName() != null && searchEdge.getEdgeName().length() > 0, "search edge name is required" );
 
-        Preconditions.checkNotNull( scope, "Index scope is required" );
+    }
 
-        verifyIdentity( scope.getOwner() );
 
-        verifyString( scope.getName(), "name" );
 
+    /**
+     * Validate the search edge is correct
+     * @param indexEdge
+     */
+    public static void validateIndexEdge(final IndexEdge indexEdge){
+        //we don't care about timestamp.  It's a primitive so always present
+        validateSearchEdge( indexEdge );
     }
 
 

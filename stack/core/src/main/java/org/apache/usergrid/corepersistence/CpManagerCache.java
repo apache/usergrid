@@ -40,8 +40,6 @@ public class CpManagerCache implements ManagerCache {
     // TODO: consider making these cache sizes and timeouts configurable
 
 
-
-
     @Inject
     public CpManagerCache( final EntityCollectionManagerFactory ecmf, final EntityIndexFactory eif,
                            final GraphManagerFactory gmf, final MapManagerFactory mmf ) {
@@ -62,22 +60,21 @@ public class CpManagerCache implements ManagerCache {
 
     @Override
     public ApplicationEntityIndex getEntityIndex( ApplicationScope appScope ) {
-
-            return eif.createApplicationEntityIndex( appScope );
-
+        return eif.createApplicationEntityIndex( appScope );
     }
 
 
     @Override
     public GraphManager getGraphManager( ApplicationScope appScope ) {
-        return gmf.createEdgeManager(appScope);
+        return gmf.createEdgeManager( appScope );
     }
 
 
     @Override
     public MapManager getMapManager( MapScope mapScope ) {
-        return mmf.createMapManager(mapScope);
+        return mmf.createMapManager( mapScope );
     }
+
 
     @Override
     public void invalidate() {

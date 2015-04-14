@@ -63,7 +63,7 @@ import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
-import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -148,7 +148,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                 em.getApplication();
             }
 
-            entityIndex.refresh();
+            entityIndex.refreshAsync().toBlocking().last();
 
         } catch (Exception ex) {
             throw new RuntimeException("Fatal error creating management application", ex);
@@ -257,7 +257,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         EntityManager appEm = getEntityManager( applicationId);
         appEm.create(applicationId, TYPE_APPLICATION, properties);
         appEm.resetRoles();
-        entityIndex.refresh();
+        entityIndex.refreshAsync().toBlocking().last();
+
 
         // create application info entity in the management app
 
@@ -376,7 +377,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                     if (oldAppEntity != null) {
                         managementEm.delete(oldAppEntity);
                         applicationIdCache.evictAppId(oldAppEntity.getName());
-                        entityIndex.refresh();
+                        entityIndex.refreshAsync().toBlocking().last();
                     }
                 } catch (Exception e) {
                     throw new RuntimeException(e);
@@ -647,7 +648,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         // refresh special indexes without calling EntityManager refresh because stack overflow
         maybeCreateIndexes();
 
-        entityIndex.refresh();
+        entityIndex.refreshAsync().toBlocking().last();
     }
 
     private void maybeCreateIndexes() {

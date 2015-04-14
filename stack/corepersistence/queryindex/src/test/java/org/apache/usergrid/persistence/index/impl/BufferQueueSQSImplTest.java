@@ -25,9 +25,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
-import org.apache.usergrid.persistence.index.IndexScope;
+import org.apache.usergrid.persistence.index.SearchEdge;
 import org.apache.usergrid.persistence.index.SearchType;
-import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.junit.Before;
 import org.junit.Rule;
@@ -38,7 +37,6 @@ import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.index.IndexFig;
-import org.apache.usergrid.persistence.index.IndexOperationMessage;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
 import org.apache.usergrid.persistence.map.MapManagerFactory;
 import org.apache.usergrid.persistence.queue.NoAWSCredsRule;
@@ -99,22 +97,26 @@ public class BufferQueueSQSImplTest {
         assumeTrue( ugProvider.getCredentials().getAWSSecretKey() != null );
 
         final Map<String, Object> request1Data  = new HashMap<String, Object>() {{put("test", "testval1");}};
-        final IndexRequest indexRequest1 =  new IndexRequest( "testAlias1", applicationScope, SearchType.fromType("testType1"), "testDoc1",request1Data );
+        final IndexRequest indexRequest1 =  new IndexRequest( "testAlias1", "testDoc1",request1Data );
 
 
         final Map<String, Object> request2Data  = new HashMap<String, Object>() {{put("test", "testval2");}};
-        final IndexRequest indexRequest2 =  new IndexRequest( "testAlias2", applicationScope, SearchType.fromType( "testType2"), "testDoc2",request2Data );
+        final IndexRequest indexRequest2 =  new IndexRequest( "testAlias2", "testDoc2",request2Data );
 
 
         //de-index request
-        final DeIndexRequest deIndexRequest1 = new DeIndexRequest( new String[]{"index1.1, index1.2"}, applicationScope, new IndexScopeImpl(new SimpleId("testId3"),"name3"),  new SimpleId("id3"), UUID.randomUUID() );
-
-        final DeIndexRequest deIndexRequest2 = new DeIndexRequest( new String[]{"index2.1", "index2.1"}, applicationScope,  new IndexScopeImpl(new SimpleId("testId4"),"name4"),  new SimpleId("id4"), UUID.randomUUID()  );
+        final DeIndexRequest deIndexRequest1 = new DeIndexRequest( new String[]{"index1.1, index1.2"}, applicationScope, new SearchEdgeImpl(new SimpleId("testId3"),"name3",
 
 
+                SearchEdge.NodeType.SOURCE ),  new SimpleId("id3"), UUID.randomUUID() );
+
+        final DeIndexRequest deIndexRequest2 = new DeIndexRequest( new String[]{"index2.1", "index2.1"}, applicationScope,  new SearchEdgeImpl(new SimpleId("testId4"),"name4",
+                SearchEdge.NodeType.SOURCE ),  new SimpleId("id4"), UUID.randomUUID()  );
 
 
-        IndexOperationMessage indexOperationMessage = new IndexOperationMessage();
+
+
+        IndexIdentifierImpl.IndexOperationMessage indexOperationMessage = new IndexIdentifierImpl.IndexOperationMessage();
         indexOperationMessage.addIndexRequest( indexRequest1);
         indexOperationMessage.addIndexRequest( indexRequest2);
 
@@ -128,11 +130,11 @@ public class BufferQueueSQSImplTest {
 
         //now get it back
 
-        final List<IndexOperationMessage> ops = getResults( 20, TimeUnit.SECONDS );
+        final List<IndexIdentifierImpl.IndexOperationMessage> ops = getResults( 20, TimeUnit.SECONDS );
 
         assertTrue(ops.size() > 0);
 
-        final IndexOperationMessage returnedOperation = ops.get( 0 );
+        final IndexIdentifierImpl.IndexOperationMessage returnedOperation = ops.get( 0 );
 
          //get the operations out
 
@@ -155,10 +157,10 @@ public class BufferQueueSQSImplTest {
 
     }
 
-    private List<IndexOperationMessage> getResults(final long timeout, final TimeUnit timeUnit){
+    private List<IndexIdentifierImpl.IndexOperationMessage> getResults(final long timeout, final TimeUnit timeUnit){
         final long endTime = System.currentTimeMillis() + timeUnit.toMillis( timeout );
 
-        List<IndexOperationMessage> ops;
+        List<IndexIdentifierImpl.IndexOperationMessage> ops;
 
         do{
             ops = bufferQueueSQS.take( 10,  20, TimeUnit.SECONDS );

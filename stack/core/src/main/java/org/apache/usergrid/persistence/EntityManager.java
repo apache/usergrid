@@ -17,25 +17,22 @@
 package org.apache.usergrid.persistence;
 
 
-import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.query.Query;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import me.prettyprint.hector.api.mutation.Mutator;
 
+import org.apache.usergrid.persistence.Query.Level;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
-import org.apache.usergrid.persistence.cassandra.GeoIndexManager;
-import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.Role;
 import org.apache.usergrid.persistence.index.query.CounterResolution;
 import org.apache.usergrid.persistence.index.query.Identifier;
-import org.apache.usergrid.persistence.index.query.Query.Level;
 import org.apache.usergrid.persistence.model.entity.Id;
+
+import me.prettyprint.hector.api.mutation.Mutator;
 
 
 /**
@@ -45,8 +42,6 @@ import org.apache.usergrid.persistence.model.entity.Id;
 public interface EntityManager {
 
 //    public void setApplicationId( UUID applicationId );
-
-    public GeoIndexManager getGeoIndexManager();
 
     public EntityRef getApplicationRef();
 

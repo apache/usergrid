@@ -63,7 +63,7 @@ import java.util.UUID;
 import static javax.servlet.http.HttpServletResponse.*;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.index.query.Query.Level;
+import org.apache.usergrid.persistence.Query.Level;
 
 
 @Component("org.apache.usergrid.rest.management.organizations.OrganizationResource")

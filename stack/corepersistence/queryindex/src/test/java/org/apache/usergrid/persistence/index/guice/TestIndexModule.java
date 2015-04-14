@@ -26,10 +26,10 @@ import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.IndexBufferProducer;
+import org.apache.usergrid.persistence.index.impl.IndexBufferProducer;
 import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.index.impl.EsEntityIndexImpl;
-import org.apache.usergrid.persistence.index.IndexCache;
+import org.apache.usergrid.persistence.index.impl.IndexCache;
 import org.apache.usergrid.persistence.index.impl.EsProvider;
 import org.apache.usergrid.persistence.index.migration.LegacyIndexIdentifier;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
@@ -63,25 +63,15 @@ public class TestIndexModule extends TestModule {
 
     public static class TestAllApplicationsObservable implements MigrationDataProvider<ApplicationScope>{
 
-        final ApplicationScope appScope =  new ApplicationScopeImpl(new SimpleId(UUID.randomUUID(),"application"));
-
         @Inject
-        public TestAllApplicationsObservable(
-                                             final IndexBufferProducer indexBatchBufferProducer, final EsProvider provider,
-                                             final IndexCache indexCache, final MetricsFactory metricsFactory,
-                                             final IndexFig indexFig){
-            LegacyIndexIdentifier legacyIndexIdentifier = new  LegacyIndexIdentifier(indexFig,appScope);
-            EntityIndex entityIndex = new EsEntityIndexImpl(indexBatchBufferProducer,provider,indexCache,metricsFactory,indexFig,legacyIndexIdentifier);
-            entityIndex.addIndex(null, 1, 0, indexFig.getWriteConsistencyLevel());
+        public TestAllApplicationsObservable(){
+
         }
 
 
         @Override
         public Observable<ApplicationScope> getData() {
-            ApplicationScope[] scopes = new ApplicationScope[]{
-               appScope
-            };
-            return Observable.from(scopes);
+          return Observable.empty();
         }
     }
 

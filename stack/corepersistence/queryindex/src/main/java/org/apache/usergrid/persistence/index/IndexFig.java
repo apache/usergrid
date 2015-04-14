@@ -24,6 +24,8 @@ import org.safehaus.guicyfig.FigSingleton;
 import org.safehaus.guicyfig.GuicyFig;
 import org.safehaus.guicyfig.Key;
 
+import org.apache.usergrid.persistence.index.impl.EsProvider;
+
 
 @FigSingleton
 public interface IndexFig extends GuicyFig {
@@ -100,6 +102,14 @@ public interface IndexFig extends GuicyFig {
 
     public static final String QUERY_LIMIT_DEFAULT = "index.query.limit.default";
 
+
+
+    /**
+     * The client type to use.  Valid values are NODE or TRANSPORT
+     */
+    public static final String ELASTICSEARCH_CLIENT_TYPE = "elasticsearch.client.type";
+
+
     @Default( "127.0.0.1" )
     @Key( ELASTICSEARCH_HOSTS )
     String getHosts();
@@ -120,7 +130,7 @@ public interface IndexFig extends GuicyFig {
     @Key( ELASTICSEARCH_ALIAS_POSTFIX )
     String getAliasPostfix();
 
-    @Default( "5" ) // TODO: does this timeout get extended on each query?
+    @Default( "2" ) // TODO: does this timeout get extended on each query?
     @Key( QUERY_CURSOR_TIMEOUT_MINUTES )
     int getQueryCursorTimeout();
 
@@ -209,4 +219,21 @@ public interface IndexFig extends GuicyFig {
     @Default( "1000" )
     @Key( ELASTICSEARCH_QUEUE_OFFER_TIMEOUT )
     long getQueueOfferTimeout();
+
+    /**
+     * Return the type of client.  Valid values or NODE or TRANSPORT
+     * @return
+     */
+    @Key( ELASTICSEARCH_CLIENT_TYPE )
+    @Default( "NODE")
+    String getClientType();
+
+    @Key("elasticsearch.refresh_search_max")
+    @Default("10")
+    int maxRefreshSearches();
+
+    @Key("elasticsearch.refresh_sleep_ms")
+    @Default("200")
+    long refreshSleep();
+
 }

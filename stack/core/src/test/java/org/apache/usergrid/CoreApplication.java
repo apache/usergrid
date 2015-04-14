@@ -25,14 +25,7 @@ import java.util.concurrent.ExecutionException;
 
 import com.google.inject.Injector;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
-import org.apache.usergrid.persistence.*;
-import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
-import org.apache.usergrid.persistence.geo.GeoIndexSearcher;
 import org.apache.usergrid.persistence.index.*;
-import org.apache.usergrid.persistence.index.impl.IndexScopeImpl;
-import org.apache.usergrid.persistence.index.impl.IndexingUtils;
-import org.apache.usergrid.persistence.index.query.CandidateResults;
-import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.junit.rules.TestRule;
@@ -42,7 +35,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.mq.QueueManager;
-import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.SimpleEntityRef;
+import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import static junit.framework.Assert.assertNotNull;
@@ -229,25 +227,7 @@ public class CoreApplication implements Application, TestRule {
     @Override
     public synchronized void refreshIndex() {
         //Insert test entity and find it
-        String type = "unittests";
-        Id id = new SimpleId(UUID.randomUUID(), type);
-        Map<String, Object> fields = new HashMap<>();
-        fields.put("name", "unit" + id.getUuid());
-        try {
-            Entity find = em.create(id, fields);
-            Query query = new Query().fromQL("name='" + find.getName() + "'");
-            for (int i = 0; i < 20; i++) {
-                Results results = em.searchCollection(em.getApplicationRef(), type, query);
-                if (results.size() > 0) {
-                    break;
-                }
-                entityIndex.refresh();
-                Thread.sleep(200);
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
+        entityIndex.refreshAsync().toBlocking().last();
     }
 
 

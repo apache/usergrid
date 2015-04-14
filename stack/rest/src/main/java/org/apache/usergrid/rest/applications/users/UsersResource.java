@@ -44,7 +44,7 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.index.query.Identifier;
-import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RootResource;
@@ -219,7 +219,7 @@ public class UsersResource extends ServiceResource {
         String password = null;
         String pin = null;
 
-        Boolean confRequred = (Boolean)this.getServices().getEntityManager().getProperty( 
+        Boolean confRequred = (Boolean)this.getServices().getEntityManager().getProperty(
             this.getServices().getApplicationRef(), "registration_requires_email_confirmation" );
 
         boolean activated = !( ( confRequred != null ) && confRequred );

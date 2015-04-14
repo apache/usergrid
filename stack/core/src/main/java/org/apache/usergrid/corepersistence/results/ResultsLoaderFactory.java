@@ -20,10 +20,9 @@
 package org.apache.usergrid.corepersistence.results;
 
 
-import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.index.IndexScope;
-import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.index.SearchEdge;
 
 
 /**
@@ -37,6 +36,6 @@ public interface ResultsLoaderFactory {
      * @param indexScope The index scope used in the search
      * @param
      */
-    ResultsLoader getLoader( final ApplicationScope applicationScope, final IndexScope indexScope,
+    ResultsLoader getLoader( final ApplicationScope applicationScope, final SearchEdge indexScope,
                              final Query.Level resultsLevel );
 }

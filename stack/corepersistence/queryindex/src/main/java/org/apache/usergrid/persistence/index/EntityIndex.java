@@ -19,18 +19,10 @@
 
 package org.apache.usergrid.persistence.index;
 
-import java.util.UUID;
 
 import org.apache.usergrid.persistence.core.CPManager;
 import org.apache.usergrid.persistence.core.util.Health;
-import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.index.query.CandidateResults;
-import org.apache.usergrid.persistence.model.entity.Id;
-import org.elasticsearch.action.ListenableActionFuture;
 import rx.Observable;
-
-import java.util.Map;
-import java.util.concurrent.Future;
 
 
 /**
@@ -54,7 +46,7 @@ public interface EntityIndex extends CPManager {
     /**
      * Refresh the index.
      */
-     void refresh();
+     Observable<Boolean> refreshAsync();
 
 
 
@@ -69,9 +61,12 @@ public interface EntityIndex extends CPManager {
      Health getIndexHealth();
 
 
+    /**
+     * Initialize the index if necessary.  This is an idempotent operation and should not create an index
+     * if a write and read alias already exist
+     */
     void initialize();
 
-    boolean shouldInitialize();
 }
 
 

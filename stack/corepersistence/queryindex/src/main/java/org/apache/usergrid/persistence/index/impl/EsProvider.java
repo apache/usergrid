@@ -25,7 +25,10 @@ import java.net.UnknownHostException;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.node.Node;
+import org.elasticsearch.node.NodeBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,6 +53,7 @@ public class EsProvider {
 
     public static String LOCAL_ES_PORT_PROPNAME = "EMBEDDED_ES_PORT";
 
+
     @Inject
     public EsProvider( IndexFig fig ) {
         this.indexFig = fig;
@@ -62,37 +66,67 @@ public class EsProvider {
     public Client getClient() {
         if ( client == null ) {
             //synchronize on creating the client so we don't create too many
-            createClient( indexFig );
+            createClient();
         }
         return client;
     }
 
 
     /**
-     * Reset the client instnace
+     * Reset the client instance
      */
-    public void releaseClient() {
+    public synchronized void releaseClient() {
         //reset our static variables
         if ( client != null ) {
-            client = null;
+            try {
+                client.close();
+            }
+            //if we fail for any reason, null it so the next request creates a new client
+            finally {
+                client = null;
+            }
         }
     }
 
 
-    private synchronized void createClient( IndexFig fig ) {
+    /**
+     * Create our client
+     */
+    private synchronized void createClient() {
 
-        if ( client != null) {
+        if ( client != null ) {
             return;
         }
 
-        final String clusterName = fig.getClusterName();
-        final int port = fig.getPort();
 
-        ImmutableSettings.Builder settings = ImmutableSettings.settingsBuilder()
-                 .put( "cluster.name", clusterName )
-                 .put( "client.transport.sniff", true );
+        final ClientType clientType = ClientType.valueOf( indexFig.getClientType() );
 
-        String nodeName = fig.getNodeName();
+        switch ( clientType ) {
+            case NODE:
+                client = createNodeClient();
+                break;
+
+            case TRANSPORT:
+                client = createTransportClient();
+                break;
+            default:
+                throw new RuntimeException( "Only client types of NODE and TRANSPORT are supported" );
+        }
+    }
+
+
+    /**
+     * Create the transport client
+     * @return
+     */
+    private Client createTransportClient() {
+        final String clusterName = indexFig.getClusterName();
+        final int port = indexFig.getPort();
+
+        ImmutableSettings.Builder settings = ImmutableSettings.settingsBuilder().put( "cluster.name", clusterName )
+                                                              .put( "client.transport.sniff", true );
+
+        String nodeName = indexFig.getNodeName();
 
         if ( "default".equals( nodeName ) ) {
             // no nodeName was specified, use hostname
@@ -105,17 +139,76 @@ public class EsProvider {
             }
         }
 
-        settings.put( "node.name", nodeName);
+        settings.put( "node.name", nodeName );
+
 
         TransportClient transportClient = new TransportClient( settings.build() );
 
-            // we will connect to ES on all configured hosts
-            for ( String host : fig.getHosts().split( "," ) ) {
-                transportClient.addTransportAddress( new InetSocketTransportAddress(host, port));
-            }
-       client =  transportClient;
+        // we will connect to ES on all configured hosts
+        for ( String host : indexFig.getHosts().split( "," ) ) {
+            transportClient.addTransportAddress( new InetSocketTransportAddress( host, port ) );
+        }
+
+        return transportClient;
     }
 
 
+    /**
+     * Create a node client
+     * @return
+     */
+    public Client createNodeClient() {
 
+        // we will connect to ES on all configured hosts
+
+
+        final String clusterName = indexFig.getClusterName();
+        final String nodeName = indexFig.getNodeName();
+        final int port = indexFig.getPort();
+
+        /**
+         * Create our hosts
+         */
+        final StringBuffer hosts = new StringBuffer();
+
+        for ( String host : indexFig.getHosts().split( "," ) ) {
+            hosts.append( host ).append( ":" ).append( port ).append( "," );
+        }
+
+        //remove the last comma
+        hosts.deleteCharAt( hosts.length() - 1 );
+
+        final String hostString = hosts.toString();
+
+
+        Settings settings = ImmutableSettings.settingsBuilder()
+
+                .put( "cluster.name", clusterName )
+
+                        // this assumes that we're using zen for host discovery.  Putting an
+                        // explicit set of bootstrap hosts ensures we connect to a valid cluster.
+                .put( "discovery.zen.ping.unicast.hosts", hostString )
+                .put( "discovery.zen.ping.multicast.enabled", "false" ).put( "http.enabled", false )
+
+                .put( "client.transport.ping_timeout", 2000 ) // milliseconds
+                .put( "client.transport.nodes_sampler_interval", 100 ).put( "network.tcp.blocking", true )
+                .put( "node.client", true ).put( "node.name", nodeName )
+
+                .build();
+
+        log.debug( "Creating ElasticSearch client with settings: {}",  settings.getAsMap() );
+
+        Node node = NodeBuilder.nodeBuilder().settings( settings ).client( true ).data( false ).node();
+
+        return node.client();
+    }
+
+
+    /**
+     *
+     */
+    public enum ClientType {
+        TRANSPORT,
+        NODE
+    }
 }

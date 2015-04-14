@@ -27,7 +27,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.usergrid.persistence.core.future.BetterFuture;
 import org.apache.usergrid.persistence.index.IndexFig;
-import org.apache.usergrid.persistence.index.IndexOperationMessage;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -38,7 +37,7 @@ public class BufferQueueInMemoryImpl implements BufferQueue {
 
 
     private final IndexFig fig;
-    private final ArrayBlockingQueue<IndexOperationMessage> messages;
+    private final ArrayBlockingQueue<IndexIdentifierImpl.IndexOperationMessage> messages;
 
 
     @Inject
@@ -49,7 +48,7 @@ public class BufferQueueInMemoryImpl implements BufferQueue {
 
 
     @Override
-    public void offer( final IndexOperationMessage operation ) {
+    public void offer( final IndexIdentifierImpl.IndexOperationMessage operation ) {
         try {
             messages.offer( operation, fig.getQueueOfferTimeout(), TimeUnit.MILLISECONDS );
         }
@@ -60,9 +59,9 @@ public class BufferQueueInMemoryImpl implements BufferQueue {
 
 
     @Override
-    public List<IndexOperationMessage> take( final int takeSize, final long timeout, final TimeUnit timeUnit ) {
+    public List<IndexIdentifierImpl.IndexOperationMessage> take( final int takeSize, final long timeout, final TimeUnit timeUnit ) {
 
-        final List<IndexOperationMessage> response = new ArrayList<>( takeSize );
+        final List<IndexIdentifierImpl.IndexOperationMessage> response = new ArrayList<>( takeSize );
         try {
 
 
@@ -74,7 +73,7 @@ public class BufferQueueInMemoryImpl implements BufferQueue {
             }
 
 
-            final IndexOperationMessage polled = messages.poll( timeout, timeUnit );
+            final IndexIdentifierImpl.IndexOperationMessage polled = messages.poll( timeout, timeUnit );
 
             if ( polled != null ) {
                 response.add( polled );
@@ -93,20 +92,20 @@ public class BufferQueueInMemoryImpl implements BufferQueue {
 
 
     @Override
-    public void ack( final List<IndexOperationMessage> messages ) {
+    public void ack( final List<IndexIdentifierImpl.IndexOperationMessage> messages ) {
         //if we have a future ack it
-        for ( final IndexOperationMessage op : messages ) {
+        for ( final IndexIdentifierImpl.IndexOperationMessage op : messages ) {
             op.done();
         }
     }
 
 
     @Override
-    public void fail( final List<IndexOperationMessage> messages, final Throwable t ) {
+    public void fail( final List<IndexIdentifierImpl.IndexOperationMessage> messages, final Throwable t ) {
 
 
-        for ( final IndexOperationMessage op : messages ) {
-            final BetterFuture<IndexOperationMessage> future = op.getFuture();
+        for ( final IndexIdentifierImpl.IndexOperationMessage op : messages ) {
+            final BetterFuture<IndexIdentifierImpl.IndexOperationMessage> future = op.getFuture();
 
             if ( future != null ) {
                 future.setError( t );

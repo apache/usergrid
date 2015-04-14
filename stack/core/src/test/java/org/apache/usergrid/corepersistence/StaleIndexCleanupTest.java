@@ -46,12 +46,11 @@ import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
+import org.apache.usergrid.persistence.index.CandidateResults;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
-import org.apache.usergrid.persistence.index.IndexScope;
+import org.apache.usergrid.persistence.index.SearchEdge;
 import org.apache.usergrid.persistence.index.SearchTypes;
-import org.apache.usergrid.persistence.index.impl.IndexScopeImpl;
-import org.apache.usergrid.persistence.index.query.CandidateResults;
-import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 
@@ -61,7 +60,6 @@ import com.google.inject.Injector;
 import net.jcip.annotations.NotThreadSafe;
 
 import static org.apache.usergrid.corepersistence.CoreModule.EVENTS_DISABLED;
-import static org.apache.usergrid.corepersistence.util.CpNamingUtils.generateScopeFromCollection;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 import static org.apache.usergrid.persistence.core.util.IdGenerator.createId;
 import static org.junit.Assert.assertEquals;
@@ -494,13 +492,10 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         ApplicationEntityIndex ei = eif.createApplicationEntityIndex(as);
 
         final Id rootId = createId(em.getApplicationId(), TYPE_APPLICATION);
-        IndexScope is = generateScopeFromCollection(rootId, collName );
-        Query rcq = Query.fromQL( query );
+        SearchEdge is = CpNamingUtils.createCollectionSearchEdge( rootId, collName );
 
-        // TODO: why does this have no effect; max we ever get is 1000 entities
-        rcq.setLimit( 10000 ); // no paging
 
-        return ei.search( is, SearchTypes.fromTypes( type ), rcq );
+        return ei.search( is, SearchTypes.fromTypes( type ), query, 10000 );
     }
 
     /**

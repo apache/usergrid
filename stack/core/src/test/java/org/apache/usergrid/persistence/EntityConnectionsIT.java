@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.persistence.entities.User;
-import org.apache.usergrid.persistence.index.query.Query.Level;
+import org.apache.usergrid.persistence.Query.Level;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

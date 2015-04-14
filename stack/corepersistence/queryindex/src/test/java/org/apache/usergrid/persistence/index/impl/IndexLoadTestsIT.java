@@ -38,14 +38,14 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
+import org.apache.usergrid.persistence.index.CandidateResults;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
-import org.apache.usergrid.persistence.index.IndexScope;
+import org.apache.usergrid.persistence.index.IndexEdge;
+import org.apache.usergrid.persistence.index.SearchEdge;
 import org.apache.usergrid.persistence.index.SearchTypes;
 import org.apache.usergrid.persistence.index.guice.IndexTestFig;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
-import org.apache.usergrid.persistence.index.query.CandidateResults;
-import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
@@ -93,18 +93,12 @@ public class IndexLoadTestsIT extends BaseIT {
     @Rule
     public MigrationManagerRule migrationManagerRule;
 
-    @ClassRule
-    public static ElasticSearchResource es = new ElasticSearchResource();
-
 
     @Inject
     public IndexTestFig indexTestFig;
 
     @Inject
     public EntityIndexFactory entityIndexFactory;
-
-    @Inject
-    public EntityIndex entityIndex;
 
     @Inject
     public MetricsFactory metricsFactory;
@@ -116,6 +110,13 @@ public class IndexLoadTestsIT extends BaseIT {
     private Timer queryTimer;
 
     private Slf4jReporter reporter;
+
+
+    @Inject
+    @Rule
+    public ElasticSearchRule elasticSearchRule;
+
+
 
 
     @Before
@@ -130,10 +131,7 @@ public class IndexLoadTestsIT extends BaseIT {
         final UUID applicationUUID = UUID.fromString( userAppId );
 
         final Id applicationId = new SimpleId( applicationUUID, "application" );
-        final ApplicationScope scope = new ApplicationScopeImpl( applicationId );
 
-
-        final IndexScope indexScope = new IndexScopeImpl( applicationId, "test" );
 
         batchWriteTPS = metricsFactory.getMeter( IndexLoadTestsIT.class, "write.tps" );
 
@@ -182,7 +180,7 @@ public class IndexLoadTestsIT extends BaseIT {
         final ApplicationScope scope = new ApplicationScopeImpl( applicationId );
 
 
-        final IndexScope indexScope = new IndexScopeImpl( applicationId, "test" );
+        final SearchEdge searchEdge = new SearchEdgeImpl( applicationId, "test",  SearchEdge.NodeType.SOURCE );
 
         final ApplicationEntityIndex appEntityIndex = entityIndexFactory.createApplicationEntityIndex( scope );
 
@@ -191,7 +189,7 @@ public class IndexLoadTestsIT extends BaseIT {
 
         //delay our verification for indexing to happen
         final Observable<DataLoadResult> dataLoadResults =
-            createStreamFromWorkers( appEntityIndex, indexScope, uniqueIdentifier ).buffer( indexTestFig.getBufferSize() )
+            createStreamFromWorkers( appEntityIndex, searchEdge, uniqueIdentifier ).buffer( indexTestFig.getBufferSize() )
                 //perform a delay to let ES index from our batches
                 .delay( indexTestFig.getValidateWait(), TimeUnit.MILLISECONDS )
                     //do our search in parallel, otherwise this test will take far too long
@@ -208,10 +206,10 @@ public class IndexLoadTestsIT extends BaseIT {
 
                         //execute our search
                         final CandidateResults results = appEntityIndex
-                            .search( indexScope, SearchTypes.fromTypes( indexScope.getName() ), Query.fromQLNullSafe(
+                            .search( searchEdge, SearchTypes.fromTypes( searchEdge.getEdgeName() ),
                                 "select * where " + FIELD_WORKER_INDEX + "  = " + workerIndex + " AND " + FIELD_ORDINAL
                                     + " = " + ordinal + " AND " + FIELD_UNIQUE_IDENTIFIER + " = '" + uniqueIdentifier
-                                    + "'" ) );
+                                    + "'" , 100 );
 
                         queryTps.mark();
                         queryTimerContext.stop();
@@ -258,17 +256,17 @@ public class IndexLoadTestsIT extends BaseIT {
     }
 
 
-    public Observable<Entity> createStreamFromWorkers( final ApplicationEntityIndex entityIndex, final IndexScope indexScope,
+    public Observable<Entity> createStreamFromWorkers( final ApplicationEntityIndex entityIndex, final SearchEdge indexEdge,
                                                        final String uniqueIdentifier ) {
 
         //create a sequence of observables.  Each index will be it's own worker thread using the Schedulers.newthread()
         return Observable.range( 0, indexTestFig.getNumberOfWorkers() ).flatMap(
-            integer -> createWriteObservable( entityIndex, indexScope, uniqueIdentifier, integer )
+            integer -> createWriteObservable( entityIndex, indexEdge, uniqueIdentifier, integer )
                 .subscribeOn( Schedulers.newThread() ) );
     }
 
 
-    private Observable<Entity> createWriteObservable( final ApplicationEntityIndex entityIndex, final IndexScope indexScope,
+    private Observable<Entity> createWriteObservable( final ApplicationEntityIndex entityIndex, final SearchEdge indexEdge,
                                                       final String uniqueIdentifier, final int workerIndex ) {
 
 
@@ -276,7 +274,7 @@ public class IndexLoadTestsIT extends BaseIT {
 
             //create our entity
             .map( integer -> {
-                final Entity entity = new Entity( indexScope.getName() );
+                final Entity entity = new Entity( indexEdge.getEdgeName() );
 
                 entity.setField( new IntegerField( FIELD_WORKER_INDEX, workerIndex ) );
                 entity.setField( new IntegerField( FIELD_ORDINAL, integer ) );
@@ -323,9 +321,14 @@ public class IndexLoadTestsIT extends BaseIT {
                 //buffer up a batch size
             .buffer( indexTestFig.getBufferSize() ).doOnNext( entities -> {
 
+
+               AtomicLong edgeCounter = new AtomicLong(  );
+
                 //take our entities and roll them into a batch
                 Observable.from( entities ).collect( () -> entityIndex.createBatch(), ( entityIndexBatch, entity ) -> {
-                    entityIndexBatch.index( indexScope, entity );
+                    IndexEdge edge = new IndexEdgeImpl( indexEdge.getNodeId(), indexEdge.getEdgeName(),
+                            SearchEdge.NodeType.SOURCE, edgeCounter.incrementAndGet()  );
+                    entityIndexBatch.index( edge, entity );
                 } ).doOnNext( entityIndexBatch -> {
                     log.info( "Indexing next {} in batch", entityIndexBatch.size() );
                     //gather the metrics

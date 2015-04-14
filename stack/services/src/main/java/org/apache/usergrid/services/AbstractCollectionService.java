@@ -27,12 +27,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
-import org.apache.usergrid.persistence.index.query.Query.Level;
+import org.apache.usergrid.persistence.Query.Level;
 import org.apache.usergrid.services.ServiceResults.Type;
 import org.apache.usergrid.services.exceptions.ForbiddenServiceOperationException;
 import org.apache.usergrid.services.exceptions.ServiceResourceNotFoundException;
@@ -206,9 +206,7 @@ public class AbstractCollectionService extends AbstractService {
             query.setReversed( isCollectionReversed( context ) );
         }
 
-        if ( !query.isSortSet() ) {
-            query.addSort( getCollectionSort( context ) );
-        }
+
     /*
      * if (count > 0) { query.setMaxResults(count); }
      */
@@ -323,9 +321,6 @@ public class AbstractCollectionService extends AbstractService {
         query.setLimit( 1000 );
         if ( !query.isReversedSet() ) {
             query.setReversed( isCollectionReversed( context ) );
-        }
-        if ( !query.isSortSet() ) {
-            query.addSort( getCollectionSort( context ) );
         }
 
         Results r = em.searchCollection( context.getOwner(), context.getCollectionName(), query );
@@ -516,10 +511,6 @@ public class AbstractCollectionService extends AbstractService {
 
         if ( !query.isReversedSet() ) {
             query.setReversed( isCollectionReversed( context ) );
-        }
-
-        if ( !query.isSortSet() ) {
-            query.addSort( getCollectionSort( context ) );
         }
 
 

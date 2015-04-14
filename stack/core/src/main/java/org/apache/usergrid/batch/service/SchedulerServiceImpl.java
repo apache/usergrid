@@ -37,7 +37,7 @@ import org.apache.usergrid.mq.QueueResults;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.SimpleEntityRef;
@@ -377,9 +377,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
         EntityManager em = emf.getEntityManager( emf.getManagementAppId() );
 
 
-        Query query = new Query();
-        query.addEqualityFilter( JOB_NAME, jobName );
-        query.addEqualityFilter( JOB_ID, jobId );
+        Query query = Query.fromQL( "select * where " + JOB_NAME + " = '" + jobName + "' AND " + JOB_ID + " = " + jobId );
 
         Results r = em.searchCollection( em.getApplicationRef(), "job_stats", query );
 
@@ -437,6 +435,6 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
     @Override
     public void refreshIndex() {
         this.entityIndex = entityIndex == null ? injector.getInstance(EntityIndex.class) : entityIndex;
-        entityIndex.refresh();
+        entityIndex.refreshAsync().toBlocking().last();
     }
 }

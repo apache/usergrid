@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.VersionSet;
-import org.apache.usergrid.persistence.index.query.CandidateResult;
+import org.apache.usergrid.persistence.index.CandidateResult;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.fasterxml.uuid.UUIDComparator;
@@ -59,7 +59,7 @@ public abstract class VersionVerifier implements ResultsVerifier {
 
         //version wasn't found ,deindex
         if ( version == null ) {
-            logger.warn( "Version for Entity {}:{} not found", 
+            logger.warn( "Version for Entity {}:{} not found",
                     entityId.getUuid(), entityId.getUuid() );
 
             return false;
@@ -69,10 +69,10 @@ public abstract class VersionVerifier implements ResultsVerifier {
 
         if ( UUIDComparator.staticCompare( savedVersion, candidateResult.getVersion() ) > 0 ) {
             logger.debug( "Stale version of Entity uuid:{} type:{}, stale v:{}, latest v:{}",
-                new Object[] { 
-                    entityId.getUuid(), 
-                    entityId.getType(), 
-                    candidateResult.getVersion(), 
+                new Object[] {
+                    entityId.getUuid(),
+                    entityId.getType(),
+                    candidateResult.getVersion(),
                     savedVersion
             } );
 

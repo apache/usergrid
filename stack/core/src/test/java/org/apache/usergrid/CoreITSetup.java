@@ -35,8 +35,6 @@ public interface CoreITSetup extends TestRule {
 
     QueueManagerFactory getQmf();
 
-    IndexBucketLocator getIbl();
-
     CassandraService getCassSvc();
 
     UUID createApplication( String organizationName, String applicationName ) throws Exception;

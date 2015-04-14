@@ -19,37 +19,40 @@
 package org.apache.usergrid.persistence.query.tree;
 
 
-import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
-import org.apache.usergrid.persistence.index.impl.IndexScopeImpl;
-import org.apache.usergrid.persistence.index.impl.SearchRequestBuilderStrategy;
-import org.apache.usergrid.persistence.index.query.tree.LongLiteral;
-import org.apache.usergrid.persistence.index.query.tree.CpQueryFilterLexer;
-import org.apache.usergrid.persistence.index.query.tree.CpQueryFilterParser;
-import org.apache.usergrid.persistence.index.query.tree.ContainsOperand;
-import org.apache.usergrid.persistence.index.query.tree.NotOperand;
-import org.apache.usergrid.persistence.index.query.tree.LessThan;
-import org.apache.usergrid.persistence.index.query.tree.AndOperand;
-import org.apache.usergrid.persistence.index.query.tree.GreaterThan;
-import org.apache.usergrid.persistence.index.query.tree.LessThanEqual;
-import org.apache.usergrid.persistence.index.query.tree.UUIDLiteral;
-import org.apache.usergrid.persistence.index.query.tree.Operand;
-import org.apache.usergrid.persistence.index.query.tree.WithinOperand;
-import org.apache.usergrid.persistence.index.query.tree.OrOperand;
-import org.apache.usergrid.persistence.index.query.tree.StringLiteral;
-import org.apache.usergrid.persistence.index.query.tree.GreaterThanEqual;
-import org.apache.usergrid.persistence.index.query.tree.Equal;
-import java.util.Map;
-import java.util.Set;
+import java.util.Collection;
 import java.util.UUID;
 
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.RecognitionException;
 import org.antlr.runtime.TokenRewriteStream;
-import org.apache.usergrid.persistence.index.exceptions.QueryParseException;
-import org.apache.usergrid.persistence.model.entity.SimpleId;
-import org.junit.Test;
-import org.apache.usergrid.persistence.index.query.Query;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.junit.Test;
+
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
+import org.apache.usergrid.persistence.index.SearchEdge;
+import org.apache.usergrid.persistence.index.exceptions.QueryParseException;
+import org.apache.usergrid.persistence.index.impl.SearchEdgeImpl;
+import org.apache.usergrid.persistence.index.impl.SearchRequestBuilderStrategy;
+import org.apache.usergrid.persistence.index.query.ParsedQuery;
+import org.apache.usergrid.persistence.index.query.ParsedQueryBuilder;
+import org.apache.usergrid.persistence.index.SelectFieldMapping;
+import org.apache.usergrid.persistence.index.query.tree.AndOperand;
+import org.apache.usergrid.persistence.index.query.tree.ContainsOperand;
+import org.apache.usergrid.persistence.index.query.tree.CpQueryFilterLexer;
+import org.apache.usergrid.persistence.index.query.tree.CpQueryFilterParser;
+import org.apache.usergrid.persistence.index.query.tree.Equal;
+import org.apache.usergrid.persistence.index.query.tree.GreaterThan;
+import org.apache.usergrid.persistence.index.query.tree.GreaterThanEqual;
+import org.apache.usergrid.persistence.index.query.tree.LessThan;
+import org.apache.usergrid.persistence.index.query.tree.LessThanEqual;
+import org.apache.usergrid.persistence.index.query.tree.LongLiteral;
+import org.apache.usergrid.persistence.index.query.tree.NotOperand;
+import org.apache.usergrid.persistence.index.query.tree.Operand;
+import org.apache.usergrid.persistence.index.query.tree.OrOperand;
+import org.apache.usergrid.persistence.index.query.tree.StringLiteral;
+import org.apache.usergrid.persistence.index.query.tree.UUIDLiteral;
+import org.apache.usergrid.persistence.index.query.tree.WithinOperand;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -71,7 +74,7 @@ public class GrammarTreeTest {
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
         CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
-        Query query = parser.ql().query;
+        ParsedQuery query = parser.ql().parsedQuery;
 
         Operand root = query.getRootOperand();
 
@@ -94,7 +97,7 @@ public class GrammarTreeTest {
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
         CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
-        Query query = parser.ql().query;
+        ParsedQuery query = parser.ql().parsedQuery;
 
         Operand root = query.getRootOperand();
 
@@ -111,7 +114,7 @@ public class GrammarTreeTest {
         tokens = new TokenRewriteStream( lexer );
         parser = new CpQueryFilterParser( tokens );
 
-        query = parser.ql().query;
+        query = parser.ql().parsedQuery;
 
         root = query.getRootOperand();
 
@@ -134,7 +137,7 @@ public class GrammarTreeTest {
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
         CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
-        Query query = parser.ql().query;
+        ParsedQuery query = parser.ql().parsedQuery;
 
         Operand root = query.getRootOperand();
 
@@ -151,7 +154,7 @@ public class GrammarTreeTest {
         tokens = new TokenRewriteStream( lexer );
         parser = new CpQueryFilterParser( tokens );
 
-        query = parser.ql().query;
+        query = parser.ql().parsedQuery;
 
         root = query.getRootOperand();
 
@@ -174,7 +177,7 @@ public class GrammarTreeTest {
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
         CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
-        Query query = parser.ql().query;
+        ParsedQuery query = parser.ql().parsedQuery;
 
         Operand root = query.getRootOperand();
 
@@ -191,7 +194,7 @@ public class GrammarTreeTest {
         tokens = new TokenRewriteStream( lexer );
         parser = new CpQueryFilterParser( tokens );
 
-        query = parser.ql().query;
+        query = parser.ql().parsedQuery;
 
         root = query.getRootOperand();
 
@@ -214,7 +217,7 @@ public class GrammarTreeTest {
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
         CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
-        Query query = parser.ql().query;
+        ParsedQuery query = parser.ql().parsedQuery;
 
         Operand root = query.getRootOperand();
 
@@ -231,7 +234,7 @@ public class GrammarTreeTest {
         tokens = new TokenRewriteStream( lexer );
         parser = new CpQueryFilterParser( tokens );
 
-        query = parser.ql().query;
+        query = parser.ql().parsedQuery;
 
         root = query.getRootOperand();
 
@@ -254,7 +257,7 @@ public class GrammarTreeTest {
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
         CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
-        Query query = parser.ql().query;
+        ParsedQuery query = parser.ql().parsedQuery;
 
         Operand root = query.getRootOperand();
 
@@ -284,7 +287,7 @@ public class GrammarTreeTest {
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
         CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
-        Query query = parser.ql().query;
+        ParsedQuery query = parser.ql().parsedQuery;
 
         Operand root = query.getRootOperand();
 
@@ -314,7 +317,7 @@ public class GrammarTreeTest {
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
         CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
-        Query query = parser.ql().query;
+        ParsedQuery query = parser.ql().parsedQuery;
 
         Operand root = query.getRootOperand();
 
@@ -339,7 +342,7 @@ public class GrammarTreeTest {
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
         CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
-        Query query = parser.ql().query;
+        ParsedQuery query = parser.ql().parsedQuery;
 
         Operand root = query.getRootOperand();
 
@@ -364,9 +367,9 @@ public class GrammarTreeTest {
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
         CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
-        Query query = parser.ql().query;
+        ParsedQuery query = parser.ql().parsedQuery;
 
-        Set<String> identifiers = query.getSelectSubjects();
+        Collection<SelectFieldMapping> identifiers = query.getSelectFieldMappings();
 
         assertEquals( 0, identifiers.size() );
     }
@@ -381,7 +384,7 @@ public class GrammarTreeTest {
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
         CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
-        Query query = parser.ql().query;
+        ParsedQuery query = parser.ql().parsedQuery;
 
         WithinOperand operand = ( WithinOperand ) query.getRootOperand();
 
@@ -401,7 +404,7 @@ public class GrammarTreeTest {
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
         CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
-        Query query = parser.ql().query;
+        ParsedQuery query = parser.ql().parsedQuery;
 
         WithinOperand operand = ( WithinOperand ) query.getRootOperand();
 
@@ -422,7 +425,7 @@ public class GrammarTreeTest {
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
         CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
-        Query query = parser.ql().query;
+        ParsedQuery query = parser.ql().parsedQuery;
 
         AndOperand andOp1 = ( AndOperand ) query.getRootOperand();
         AndOperand andOp2 = ( AndOperand ) andOp1.getLeft();
@@ -433,8 +436,6 @@ public class GrammarTreeTest {
         assertEquals( 37f, withinOperand.getLatitude().getFloatValue(), 0 );
         assertEquals( -75f, withinOperand.getLongitude().getFloatValue(), 0 );
 
-        SearchRequestBuilderStrategy builderStrategy = new SearchRequestBuilderStrategy(null,new ApplicationScopeImpl(new SimpleId("test")),null,100);
-        QueryBuilder qb =builderStrategy.createQueryBuilder(new IndexScopeImpl(new SimpleId("owner"),"app"),query);
 
     }
 
@@ -448,7 +449,7 @@ public class GrammarTreeTest {
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
         CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
-        Query query = parser.ql().query;
+        ParsedQuery query = parser.ql().parsedQuery;
 
         ContainsOperand operand = ( ContainsOperand ) query.getRootOperand();
 
@@ -467,11 +468,14 @@ public class GrammarTreeTest {
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
         CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
-        Query query = parser.ql().query;
+        ParsedQuery query = parser.ql().parsedQuery;
 
-        Set<String> identifiers = query.getSelectSubjects();
+        Collection<SelectFieldMapping> identifiers = query.getSelectFieldMappings();
 
-        assertTrue( identifiers.contains( "c" ) );
+        final SelectFieldMapping fieldMapping = identifiers.iterator().next();
+
+        assertEquals( "c", fieldMapping.getSourceFieldName() );
+        assertEquals( "c", fieldMapping.getTargetFieldName() );
     }
 
 
@@ -485,11 +489,15 @@ public class GrammarTreeTest {
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
         CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
-        Query query = parser.ql().query;
+        ParsedQuery query = parser.ql().parsedQuery;
 
-        Map<String, String> identifiers = query.getSelectAssignments();
+        Collection<SelectFieldMapping> identifiers = query.getSelectFieldMappings();
 
-        assertEquals( "target", identifiers.get( "source" ) );
+        final SelectFieldMapping fieldMapping = identifiers.iterator().next();
+
+        assertEquals( "source", fieldMapping.getSourceFieldName() );
+        assertEquals( "target", fieldMapping.getTargetFieldName() );
+
     }
 
 
@@ -502,7 +510,7 @@ public class GrammarTreeTest {
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
         CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
-        Query query = parser.ql().query;
+        ParsedQuery query = parser.ql().parsedQuery;
 
         OrOperand rootNode = ( OrOperand ) query.getRootOperand();
 
@@ -534,7 +542,7 @@ public class GrammarTreeTest {
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
         CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
-        Query query = parser.ql().query;
+        ParsedQuery query = parser.ql().parsedQuery;
 
         Equal rootNode = ( Equal ) query.getRootOperand();
 
@@ -553,7 +561,7 @@ public class GrammarTreeTest {
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
         CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
-        Query query = parser.ql().query;
+        ParsedQuery query = parser.ql().parsedQuery;
 
         AndOperand rootNode = ( AndOperand ) query.getRootOperand();
 
@@ -586,7 +594,7 @@ public class GrammarTreeTest {
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
         CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
-        Query query = parser.ql().query;
+        ParsedQuery query = parser.ql().parsedQuery;
 
         Equal rootNode = ( Equal ) query.getRootOperand();
 
@@ -601,7 +609,7 @@ public class GrammarTreeTest {
 
         String s = "select * where name = 'bob' order by name asc";
 
-        Query query = Query.fromQL( s );
+        ParsedQuery query = ParsedQueryBuilder.build( s );
 
         assertEquals( 1, query.getSortPredicates().size() );
     }
@@ -615,34 +623,35 @@ public class GrammarTreeTest {
         String error = null;
 
         try {
-            Query.fromQL( s );
+            ParsedQueryBuilder.build ( s );
         }
         catch ( QueryParseException qpe ) {
             error = qpe.getMessage();
         }
 
-        assertTrue( error.startsWith("The query cannot be parsed") );
+        assertTrue( error.startsWith( "The query cannot be parsed" ) );
     }
 
+
     @Test
-       public void badOperand() throws QueryParseException {
-           // from isn't allowed
-           String s = "select * where name != 'bob'";
+    public void badOperand() throws QueryParseException {
+        // from isn't allowed
+        String s = "select * where name != 'bob'";
 
-           String error = null;
+        String error = null;
 
-           try {
-               Query.fromQL( s );
-               fail("should throw an exception");
-           }
-           catch ( RuntimeException qpe ) {
-               error = qpe.getMessage();
-           }
+        try {
+            ParsedQueryBuilder.build( s );
+            fail( "should throw an exception" );
+        }
+        catch ( RuntimeException qpe ) {
+            error = qpe.getMessage();
+        }
 
-           assertEquals( "NoViableAltException('!'@[1:1: Tokens : ( T__31 | T__32 | T__33 | T__34 | T__35 | T__36 | T__37 | T__38 | T__39 | T__40 | LT | LTE | EQ | GT | GTE | BOOLEAN | AND | OR | NOT | ASC | DESC | CONTAINS | WITHIN | OF | UUID | ID | LONG | FLOAT | STRING | WS );])",
-                   error );
-       }
-
-
-
+        assertEquals(
+                "NoViableAltException('!'@[1:1: Tokens : ( T__31 | T__32 | T__33 | T__34 | T__35 | T__36 | T__37 | "
+                        + "T__38 | T__39 | T__40 | LT | LTE | EQ | GT | GTE | BOOLEAN | AND | OR | NOT | ASC | DESC |"
+                        + " CONTAINS | WITHIN | OF | UUID | ID | LONG | FLOAT | STRING | WS );])",
+                error );
+    }
 }

@@ -33,10 +33,6 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
 
-import com.codahale.metrics.Meter;
-import org.apache.usergrid.persistence.collection.FieldSet;
-import org.apache.usergrid.persistence.core.future.BetterFuture;
-import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
@@ -54,6 +50,8 @@ import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.IndexBucketLocator;
+import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.Query.Level;
 import org.apache.usergrid.persistence.RelationManager;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.Schema;
@@ -65,7 +63,6 @@ import org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.ConnectionRefImpl;
 import org.apache.usergrid.persistence.cassandra.CounterUtils;
-import org.apache.usergrid.persistence.cassandra.GeoIndexManager;
 import org.apache.usergrid.persistence.cassandra.util.TraceParticipant;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.FieldSet;
@@ -82,13 +79,12 @@ import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsE
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
 import org.apache.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
+import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexBatch;
-import org.apache.usergrid.persistence.index.IndexScope;
+import org.apache.usergrid.persistence.index.IndexEdge;
 import org.apache.usergrid.persistence.index.query.CounterResolution;
 import org.apache.usergrid.persistence.index.query.Identifier;
-import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.index.query.Query.Level;
 import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapScope;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -129,7 +125,7 @@ import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import static org.apache.commons.lang.StringUtils.capitalize;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.usergrid.corepersistence.util.CpEntityMapUtils.entityToCpEntity;
-import static org.apache.usergrid.corepersistence.util.CpNamingUtils.generateScopeFromCollection;
+import static org.apache.usergrid.corepersistence.util.CpNamingUtils.generateScopeFromSource;
 import static org.apache.usergrid.persistence.Schema.COLLECTION_ROLES;
 import static org.apache.usergrid.persistence.Schema.COLLECTION_USERS;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_PERMISSIONS;
@@ -702,12 +698,6 @@ public class CpEntityManager implements EntityManager {
     //        this.applicationId = applicationId;
     //    }
 
-
-    @Override
-    public GeoIndexManager getGeoIndexManager() {
-
-        throw new UnsupportedOperationException( "GeoIndexManager no longer supported." );
-    }
 
 
     @Override
@@ -1938,7 +1928,7 @@ public class CpEntityManager implements EntityManager {
     @Override
     public EntityRef getGroupRoleRef( UUID groupId, String roleName ) throws Exception {
         Results results = this.searchCollection( new SimpleEntityRef( Group.ENTITY_TYPE, groupId ),
-                Schema.defaultCollectionName( Role.ENTITY_TYPE ), Query.findForProperty( "roleName", roleName ) );
+                Schema.defaultCollectionName( Role.ENTITY_TYPE ), Query.fromQL( "roleName = '" + roleName + "'" ) );
         Iterator<Entity> iterator = results.iterator();
         EntityRef roleRef = null;
         while ( iterator.hasNext() ) {
@@ -1950,7 +1940,7 @@ public class CpEntityManager implements EntityManager {
 
     private EntityRef getRoleRef( String roleName ) throws Exception {
         Results results = this.searchCollection( new SimpleEntityRef( Application.ENTITY_TYPE, applicationId ),
-            Schema.defaultCollectionName( Role.ENTITY_TYPE ), Query.findForProperty( "roleName", roleName ) );
+            Schema.defaultCollectionName( Role.ENTITY_TYPE ), Query.fromQL( "roleName = '" + roleName + "'" ));
         Iterator<Entity> iterator = results.iterator();
         EntityRef roleRef = null;
         while ( iterator.hasNext() ) {
@@ -2724,11 +2714,6 @@ public class CpEntityManager implements EntityManager {
         boolean entityHasDictionary = Schema.getDefaultSchema()
                 .hasDictionary( entity.getType(), dictionaryName );
 
-        // Don't index dynamic dictionaries not defined by the schema
-        if ( entityHasDictionary ) {
-            getRelationManager( entity ).batchUpdateSetIndexes(
-                    batch, dictionaryName, elementValue, removeFromDictionary, timestampUuid );
-        }
 
         ApplicationCF dictionary_cf = entityHasDictionary
                 ? ENTITY_DICTIONARIES : ENTITY_COMPOSITE_DICTIONARIES;
@@ -2903,16 +2888,14 @@ public class CpEntityManager implements EntityManager {
     }
 
 
-    void indexEntityIntoCollection( org.apache.usergrid.persistence.model.entity.Entity collectionEntity,
-                                    org.apache.usergrid.persistence.model.entity.Entity memberEntity,
-                                    String collName ) {
+    void indexEntityIntoCollection( final Edge edge,  final  org.apache.usergrid.persistence.model.entity.Entity collectionMember) {
 
         final ApplicationEntityIndex aie = getManagerCache().getEntityIndex( getApplicationScope() );
         final EntityIndexBatch batch = aie.createBatch();
 
         // index member into entity collection | type scope
-        IndexScope collectionIndexScope = generateScopeFromCollection( collectionEntity.getId(), collName );
-        batch.index( collectionIndexScope, memberEntity );
+        final IndexEdge collectionIndexScope = generateScopeFromSource( edge );
+        batch.index( collectionIndexScope, collectionMember );
 
         //TODO REMOVE INDEX CODE
         //        // index member into entity | all-types scope

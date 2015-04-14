@@ -37,8 +37,8 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.entities.User;
-import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.index.query.Query.Level;
+import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.Query.Level;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.utils.UUIDUtils;
 
@@ -79,7 +79,7 @@ public class EntityManagerIT extends AbstractCoreIT {
         user = em.get( user );
         assertNotNull( user );
         assertEquals( "user.username not expected value", "edanuff", user.getProperty( "username"));
-        assertEquals( "user.email not expected value", "ed@anuff.com", user.getProperty( "email" ));
+        assertEquals( "user.email not expected value", "ed@anuff.com", user.getProperty( "email" ) );
 
         app.refreshIndex();
 
@@ -93,20 +93,22 @@ public class EntityManagerIT extends AbstractCoreIT {
         LOG.info( "user.username: " + user.getProperty( "username" ) );
         LOG.info( "user.email: " + user.getProperty( "email" ) );
 
-        Results results = em.searchCollection( em.getApplicationRef(), "users",
-                new Query().addEqualityFilter( "username", "edanuff" ) );
+        final Query query = Query.fromQL("username = 'edanuff'");
+
+        Results results = em.searchCollection( em.getApplicationRef(), "users", query );
         assertNotNull( results );
         assertEquals( 1, results.size() );
         user = results.getEntity();
         assertNotNull( user );
-        assertEquals( "user.username not expected value", "edanuff", user.getProperty( "username"));
-        assertEquals( "user.email not expected value", "ed@anuff.com", user.getProperty( "email"));
+        assertEquals( "user.username not expected value", "edanuff", user.getProperty( "username" ) );
+        assertEquals( "user.email not expected value", "ed@anuff.com", user.getProperty( "email" ) );
 
         LOG.info( "user.username: " + user.getProperty( "username" ) );
         LOG.info( "user.email: " + user.getProperty( "email" ) );
 
-        results = em.searchCollection( em.getApplicationRef(), "users",
-                new Query().addEqualityFilter( "email", "ed@anuff.com" ) );
+        final Query emailQuery = Query.fromQL( "email = 'ed@anuff.com'" );
+
+        results = em.searchCollection( em.getApplicationRef(), "users", emailQuery );
         assertNotNull( results );
         assertEquals( 1, results.size() );
         user = results.getEntity();
@@ -287,8 +289,12 @@ public class EntityManagerIT extends AbstractCoreIT {
 
         // now search by username, no results should be returned
 
+
+        final Query emailQuery = Query.fromQL( "name = '" + name +"'" );
+
+
         Results r = em.searchCollection( em.getApplicationRef(), "thing",
-                new Query().addEqualityFilter( "name", name ) );
+               emailQuery );
 
         assertEquals( 0, r.size() );
     }
@@ -320,8 +326,9 @@ public class EntityManagerIT extends AbstractCoreIT {
 
         // now search by username, no results should be returned
 
+        final Query query = Query.fromQL( "username = '" + name + "'" );
         Results r = em.searchCollection( em.getApplicationRef(), "users",
-            new Query().addEqualityFilter( "username", name ) );
+            query );
 
         assertEquals( 0, r.size() );
 
@@ -337,8 +344,9 @@ public class EntityManagerIT extends AbstractCoreIT {
 
         app.refreshIndex();
 
-        r = em.searchCollection( em.getApplicationRef(), "users",
-                new Query().addEqualityFilter( "username", name ) );
+        final Query userNameQuery = Query.fromQL( "username = '" + name + "'" );
+
+        r = em.searchCollection( em.getApplicationRef(), "users", userNameQuery);
 
         assertEquals( 1, r.size() );
 
