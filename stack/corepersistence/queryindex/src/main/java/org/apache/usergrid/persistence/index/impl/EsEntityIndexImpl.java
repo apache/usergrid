@@ -29,12 +29,22 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.persistence.core.future.BetterFuture;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.migration.data.VersionedData;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.persistence.index.exceptions.IndexException;
 import org.apache.usergrid.persistence.index.migration.IndexDataVersions;
+import org.apache.usergrid.persistence.index.query.ParsedQuery;
+import org.apache.usergrid.persistence.index.utils.UUIDUtils;
+import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.model.util.EntityUtils;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.elasticsearch.action.ActionFuture;
+import org.elasticsearch.action.ActionListener;
+import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.ShardOperationFailedException;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
@@ -43,6 +53,10 @@ import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
 import org.elasticsearch.action.admin.indices.refresh.RefreshResponse;
+import org.elasticsearch.action.index.*;
+import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.AdminClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
@@ -52,13 +66,14 @@ import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.elasticsearch.indices.IndexMissingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rx.*;
+import rx.Observable;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
 /**
@@ -79,6 +94,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
      * We purposefully make this per instance. Some indexes may work, while others may fail
      */
     private final EsProvider esProvider;
+    private final IndexBufferProducer producer;
 
     //number of times to wait for the index to refresh properly.
     private static final int MAX_WAITS = 10;
@@ -104,12 +120,14 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
     @Inject
     public EsEntityIndexImpl(final IndexBufferProducer indexBatchBufferProducer, final EsProvider provider,
                               final IndexCache indexCache, final MetricsFactory metricsFactory,
-                              final IndexFig indexFig, final FailureMonitorImpl.IndexIdentifier indexIdentifier ) {
+                              final IndexFig indexFig, final FailureMonitorImpl.IndexIdentifier indexIdentifier,
+                             final IndexBufferProducer producer) {
         this.indexBatchBufferProducer = indexBatchBufferProducer;
         this.indexFig = indexFig;
         this.indexIdentifier = indexIdentifier;
 
         this.esProvider = provider;
+        this.producer = producer;
         this.alias = indexIdentifier.getAlias();
         this.aliasCache = indexCache;
         this.addTimer = metricsFactory
@@ -137,8 +155,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
     }
 
     private boolean shouldInitialize() {
-        String[] reads = getIndexes( AliasedEntityIndex.AliasType.Read );
-        String[] writes = getIndexes( AliasedEntityIndex.AliasType.Write );
+        String[] reads = getIndexes(AliasedEntityIndex.AliasType.Read);
+        String[] writes = getIndexes(AliasedEntityIndex.AliasType.Write);
         return reads.length==0  || writes.length==0;
     }
 
@@ -228,8 +246,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
             //add write alias
             aliasesRequestBuilder.addAlias(indexName, alias.getWriteAlias());
             isAck = aliasesRequestBuilder.execute().actionGet().isAcknowledged();
-            logger.info( "Created new read and write aliases ACK=[{}]", isAck );
-            aliasCache.invalidate( alias );
+            logger.info("Created new read and write aliases ACK=[{}]", isAck);
+            aliasCache.invalidate(alias);
 
         } catch (Exception e) {
             logger.warn("Failed to create alias ", e);
@@ -249,8 +267,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
      * @return
      */
     public String[] getIndexesFromEs(final AliasType aliasType){
-        aliasCache.invalidate( alias );
-        return getIndexes( aliasType );
+        aliasCache.invalidate(alias);
+        return getIndexes(aliasType);
     }
 
     /**
@@ -285,7 +303,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
             return true;
         };
 
-        doInRetry( retryOperation );
+        doInRetry(retryOperation);
     }
 
 
@@ -312,7 +330,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
      * @return
      */
     private String getMappingsContent(){
-        URL url = Resources.getResource( "org/apache/usergrid/persistence/index/usergrid-mappings.json" );
+        URL url = Resources.getResource("org/apache/usergrid/persistence/index/usergrid-mappings.json");
         try {
             return Resources.toString(url, Charsets.UTF_8);
         }
@@ -330,43 +348,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
         final Timer.Context timeRefreshIndex = refreshTimer.time();
         BetterFuture future = indexBatchBufferProducer.put(new IndexIdentifierImpl.IndexOperationMessage());
         future.get();
-        //loop through all batches and retrieve promises and call get
-
-        final RetryOperation retryOperation = new RetryOperation() {
-            @Override
-            public boolean doOp() {
-                try {
-
-                    final String[] indexes = getUniqueIndexes();
-
-                    if ( indexes.length == 0 ) {
-                        logger.debug( "Not refreshing indexes. none found");
-                        return true;
-                    }
-                    //Added For Graphite Metrics
-                    RefreshResponse response = esProvider.getClient().admin().indices().prepareRefresh( indexes ).execute().actionGet();
-                    int failedShards = response.getFailedShards();
-                    int successfulShards = response.getSuccessfulShards();
-                    ShardOperationFailedException[] sfes = response.getShardFailures();
-                    if(sfes!=null) {
-                        for (ShardOperationFailedException sfe : sfes) {
-                            logger.error("Failed to refresh index:{} reason:{}", sfe.index(), sfe.reason());
-                        }
-                    }
-                    logger.debug("Refreshed indexes: {},success:{} failed:{} ", StringUtils.join(indexes, ", "),successfulShards,failedShards);
-                    timeRefreshIndex.stop();
-                    if(failedShards>0){
-                        throw new RuntimeException("Failed to update all shards in refresh operation");
-                    }
-                    return true;
-                }
-                catch ( IndexMissingException e ) {
-                    logger.error( "Unable to refresh index. Waiting before sleeping.", e );
-                    throw e;
-                }
-            }
-        };
-
+        final RetryOperation retryOperation = new IndexRefreshOperation(alias,esProvider,indexBatchBufferProducer,indexFig,timeRefreshIndex);
         doInRetry(retryOperation);
     }
 
@@ -465,5 +447,90 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
          * Return true if done, false if there should be a retry.
          */
         public boolean doOp();
+    }
+
+    public static class IndexRefreshOperation implements RetryOperation{
+        private final IndexAlias alias;
+        private final EsProvider esProvider;
+        private final IndexBufferProducer producer;
+        private final IndexFig indexFig;
+        private final Timer.Context timeRefreshIndex;
+
+        public IndexRefreshOperation(IndexAlias alias, EsProvider esProvider,IndexBufferProducer producer,IndexFig indexFig,Timer.Context timeRefreshIndex){
+
+            this.alias = alias;
+            this.esProvider = esProvider;
+            this.producer = producer;
+            this.indexFig = indexFig;
+            this.timeRefreshIndex = timeRefreshIndex;
+        }
+        @Override
+        public boolean doOp() {
+            //id to hunt for
+            final UUID uuid = UUIDUtils.newTimeUUID();
+
+            final Entity entity = new Entity(new SimpleId(uuid,"ug_refresh_index_type"));
+            EntityUtils.setVersion(entity, UUIDGenerator.newTimeUUID());
+            final Id appId = new SimpleId("ug_refresh_index");
+            final ApplicationScope appScope = new ApplicationScopeImpl(appId);
+            final IndexEdge edge = new IndexEdgeImpl(appId,"refresh", SearchEdge.NodeType.SOURCE,uuid.timestamp());
+
+            //add a tracer record
+            org.apache.usergrid.persistence.index.impl.IndexRequest indexRequest =
+                new org.apache.usergrid.persistence.index.impl.IndexRequest(
+                    alias.getWriteAlias(),appScope,edge,entity
+                );
+
+            //save the item
+            IndexIdentifierImpl.IndexOperationMessage message = new IndexIdentifierImpl.IndexOperationMessage();
+            message.addIndexRequest(indexRequest);
+            producer.put(message);
+
+            //initialize search for item
+            SearchRequestBuilderStrategy srb = new SearchRequestBuilderStrategy(esProvider,appScope,alias,0);
+            ParsedQuery query = new ParsedQuery();
+            query.addSelect(String.format("select * where uuid='{}'", uuid.toString()));
+            SearchRequestBuilder builder = srb.getBuilder(edge, SearchTypes.fromTypes(entity.getId().getType()), query, 1);
+
+            //use latch to wait for timeout
+            CountDownLatch latch = new CountDownLatch(1);
+            //launch a thread to hunt for item
+            final Runnable runnable = () ->  {
+                    try {
+                        boolean found = false;
+                        for (int i = 0; i < indexFig.maxRefreshSearches() && !found; i++) {
+                            SearchResponse response = builder.execute().get();
+                            if (response.getHits().hits().length > 0) {
+                                found = true;
+                            } else {
+                                Thread.sleep(indexFig.refreshSleep());
+                            }
+                        }
+                        if (!found) {
+                            logger.error("Couldn't find record during refresh uuid" + uuid);
+                        }
+                    }catch (Exception ee) {
+                        logger.error("Failed during refresh search for " + uuid.toString(), ee);
+                    }finally {
+                        latch.countDown();
+                    }
+            };
+            Thread thread = new Thread(runnable);
+            //set name so we can find it if there's an issue
+            thread.setName("Refresh_Search_" + uuid.toString());
+            try {
+                thread.run();
+                latch.await(indexFig.refreshWaitTime(), TimeUnit.MILLISECONDS);
+            }catch (InterruptedException ie){
+                logger.error("Refresh timed out on "+uuid.toString(),ie);
+            }finally {
+                if(thread != null ){
+                    thread.interrupt();
+                }
+            }
+            timeRefreshIndex.stop();
+
+            return true;
+        }
     }
 }
