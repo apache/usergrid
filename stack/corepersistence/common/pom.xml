@@ -113,6 +113,12 @@
       <version>1.0.0</version>
     </dependency>
 
+      <dependency>
+          <groupId>io.reactivex</groupId>
+          <artifactId>rxjava-async-util</artifactId>
+          <version>0.21.0</version>
+      </dependency>
+
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>

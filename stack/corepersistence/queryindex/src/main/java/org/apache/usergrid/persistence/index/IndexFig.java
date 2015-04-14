@@ -236,8 +236,4 @@ public interface IndexFig extends GuicyFig {
     @Default("200")
     long refreshSleep();
 
-
-    @Key("elasticsearch.refresh_wait_ms")
-    @Default("5000")
-    long refreshWaitTime();
 }
