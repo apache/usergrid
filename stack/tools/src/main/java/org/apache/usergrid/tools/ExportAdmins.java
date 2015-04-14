@@ -42,6 +42,9 @@ import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.utils.JsonUtils;
 
 
+/**
+ * java -jar usergrid-tools.jar ExportAdmins
+ */
 public class ExportAdmins extends ExportingToolBase {
 
     static final Logger logger = LoggerFactory.getLogger( Export.class );
