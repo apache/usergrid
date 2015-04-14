@@ -214,6 +214,10 @@ public class EsQueryVistor implements QueryVisitor {
 
     @Override
     public void visit( NotOperand op ) throws IndexException {
+
+        //we need to know if we're the root entry for building our queries correctly
+        final boolean rootNode = queryBuilders.empty() && filterBuilders.isEmpty();
+
         op.getOperation().visit( this );
 
         //push our not operation into our query
@@ -221,7 +225,8 @@ public class EsQueryVistor implements QueryVisitor {
         final QueryBuilder notQueryBuilder = queryBuilders.pop();
 
         if ( use( notQueryBuilder ) ) {
-            queryBuilders.push( QueryBuilders.boolQuery().mustNot( notQueryBuilder ) );
+            final QueryBuilder notQuery = QueryBuilders.boolQuery().mustNot( notQueryBuilder );
+            queryBuilders.push( notQuery  );
         }
         else {
             queryBuilders.push( NoOpQueryBuilder.INSTANCE );
@@ -231,7 +236,19 @@ public class EsQueryVistor implements QueryVisitor {
 
         //push the filter in
         if ( use( notFilterBuilder ) ) {
-            filterBuilders.push( FilterBuilders.boolFilter().mustNot( notFilterBuilder ) );
+
+            final FilterBuilder notFilter = FilterBuilders.boolFilter().mustNot( notFilterBuilder ) ;
+
+            //just the root node
+            if(!rootNode) {
+                filterBuilders.push( notFilter );
+            }
+            //not the root node, we have to select all to subtract from with the NOT statement
+            else{
+                final FilterBuilder selectAllFilter = FilterBuilders.boolFilter().must( FilterBuilders.matchAllFilter()) .must( notFilter );
+                filterBuilders.push( selectAllFilter );
+            }
+
         }
         else {
             filterBuilders.push( NoOpFilterBuilder.INSTANCE );
@@ -347,8 +364,6 @@ public class EsQueryVistor implements QueryVisitor {
         //special case so we support our '*' char with wildcard
         if ( value instanceof String ) {
             final String svalue = ( String ) value;
-
-            final NestedQueryBuilder qb;  // let's do a boolean OR
 
             // or field is just a string that does need a prefix us a query
             if ( svalue.indexOf( "*" ) != -1 ) {

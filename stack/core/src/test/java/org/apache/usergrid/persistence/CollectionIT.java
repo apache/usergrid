@@ -836,7 +836,7 @@ public class CollectionIT extends AbstractCoreIT {
         r = em.searchCollection( em.getApplicationRef(), "games", query );
         assertEquals( 1, r.size() );
         assertNotNull( r.getCursor() );
-        assertEquals( entity1, r.getEntities().get( 0 ) );
+        assertEquals( entity2, r.getEntities().get( 0 ) );
 
 
         query = Query.fromQL( "select * where NOT subObjectArray.subField = 'Bar'" ).withLimit( 1 )
@@ -844,7 +844,7 @@ public class CollectionIT extends AbstractCoreIT {
         r = em.searchCollection( em.getApplicationRef(), "games", query );
         assertEquals( 1, r.size() );
         assertNotNull( r.getCursor() );
-        assertEquals( entity2, r.getEntities().get( 0 ) );
+        assertEquals( entity1, r.getEntities().get( 0 ) );
 
         query = Query.fromQL( "select * where NOT subObjectArray.subField = 'Bar'" ).withLimit( 1 )
                      .withCursor( r.getCursor() );
