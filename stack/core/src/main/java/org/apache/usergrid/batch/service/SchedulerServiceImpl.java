@@ -435,6 +435,6 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
     @Override
     public void refreshIndex() {
         this.entityIndex = entityIndex == null ? injector.getInstance(EntityIndex.class) : entityIndex;
-        entityIndex.refresh();
+        entityIndex.refreshAsync().toBlocking().last();
     }
 }

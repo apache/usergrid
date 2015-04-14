@@ -300,7 +300,7 @@ public class IndexResource extends AbstractContextResource {
         logger.info( "Reindexing for app id: {} and collection {}", applicationId, collectionName );
 
         emf.rebuildCollectionIndex(applicationId, collectionName, reverse, po);
-        getEntityIndex().refresh();
+        getEntityIndex().refreshAsync().toBlocking().last();
     }
 
 }

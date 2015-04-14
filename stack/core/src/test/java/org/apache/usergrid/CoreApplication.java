@@ -227,25 +227,7 @@ public class CoreApplication implements Application, TestRule {
     @Override
     public synchronized void refreshIndex() {
         //Insert test entity and find it
-        String type = "unittests";
-        Id id = new SimpleId(UUID.randomUUID(), type);
-        Map<String, Object> fields = new HashMap<>();
-        fields.put("name", "unit" + id.getUuid());
-        try {
-            Entity find = em.create(id, fields);
-            Query query = new Query().fromQL("name='" + find.getName() + "'");
-            for (int i = 0; i < 20; i++) {
-                Results results = em.searchCollection(em.getApplicationRef(), type, query);
-                if (results.size() > 0) {
-                    break;
-                }
-                entityIndex.refresh();
-                Thread.sleep(200);
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
+        entityIndex.refreshAsync().toBlocking().last();
     }
 
 
