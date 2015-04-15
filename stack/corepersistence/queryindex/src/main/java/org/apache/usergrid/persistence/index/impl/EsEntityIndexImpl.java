@@ -25,57 +25,33 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.sun.org.apache.xpath.internal.operations.Bool;
-import org.apache.commons.lang.StringUtils;
+
 import org.apache.usergrid.persistence.core.future.BetterFuture;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.migration.data.VersionedData;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.persistence.index.exceptions.IndexException;
 import org.apache.usergrid.persistence.index.migration.IndexDataVersions;
-import org.apache.usergrid.persistence.index.query.ParsedQuery;
-import org.apache.usergrid.persistence.index.utils.UUIDUtils;
-import org.apache.usergrid.persistence.model.entity.Entity;
-import org.apache.usergrid.persistence.model.entity.Id;
-import org.apache.usergrid.persistence.model.entity.SimpleId;
-import org.apache.usergrid.persistence.model.util.EntityUtils;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.elasticsearch.action.ActionFuture;
-import org.elasticsearch.action.ActionListener;
-import org.elasticsearch.action.ListenableActionFuture;
-import org.elasticsearch.action.ShardOperationFailedException;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
-import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
-import org.elasticsearch.action.admin.indices.refresh.RefreshResponse;
-import org.elasticsearch.action.index.*;
-import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.search.SearchRequestBuilder;
-import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.AdminClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.index.query.MatchAllQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
-import org.elasticsearch.indices.IndexMissingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import rx.*;
+
 import rx.Observable;
-import rx.functions.Action1;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.*;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 
 /**
@@ -87,8 +63,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
     private static final Logger logger = LoggerFactory.getLogger( EsEntityIndexImpl.class );
 
     private final IndexAlias alias;
-    private final IndexBufferProducer indexBatchBufferProducer;
-    private final MetricsFactory metricsFactory;
+    private final IndexBufferConsumer producer;
     private final IndexFig indexFig;
     private final Timer addTimer;
     private final Timer updateAliasTimer;
@@ -97,7 +72,6 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
      * We purposefully make this per instance. Some indexes may work, while others may fail
      */
     private final EsProvider esProvider;
-    private final IndexBufferProducer producer;
     private final IndexRefreshCommand indexRefreshCommand;
 
     //number of times to wait for the index to refresh properly.
@@ -110,8 +84,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
     private static final ImmutableMap<String, Object> DEFAULT_PAYLOAD =
             ImmutableMap.<String, Object>builder().put(IndexingUtils.ENTITY_ID_FIELDNAME, UUIDGenerator.newTimeUUID().toString()).build();
 
-    private static final MatchAllQueryBuilder MATCH_ALL_QUERY_BUILDER = QueryBuilders.matchAllQuery();
-    private final FailureMonitorImpl.IndexIdentifier indexIdentifier;
+
+    private final IndexIdentifier indexIdentifier;
 
     private IndexCache aliasCache;
     private Timer mappingTimer;
@@ -121,12 +95,12 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
 
 
     @Inject
-    public EsEntityIndexImpl(final IndexBufferProducer indexBatchBufferProducer, final EsProvider provider,
-                              final IndexCache indexCache, final MetricsFactory metricsFactory,
-                              final IndexFig indexFig, final FailureMonitorImpl.IndexIdentifier indexIdentifier,
-                             final IndexBufferProducer producer, IndexRefreshCommand indexRefreshCommand) {
-        this.indexBatchBufferProducer = indexBatchBufferProducer;
-        this.metricsFactory = metricsFactory;
+    public EsEntityIndexImpl( final EsProvider provider,
+                              final IndexCache indexCache,
+                              final IndexFig indexFig, final IndexIdentifier indexIdentifier,
+                             final IndexBufferConsumer producer, final IndexRefreshCommand indexRefreshCommand,
+                              final MetricsFactory metricsFactory) {
+
         this.indexFig = indexFig;
         this.indexIdentifier = indexIdentifier;
 
@@ -349,7 +323,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
     public Observable<Boolean> refreshAsync() {
 
         refreshIndexMeter.mark();
-        BetterFuture future = indexBatchBufferProducer.put(new IndexIdentifierImpl.IndexOperationMessage());
+        BetterFuture future = producer.put(new IndexOperationMessage());
         future.get();
         return indexRefreshCommand.execute();
     }

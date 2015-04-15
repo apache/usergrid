@@ -157,7 +157,7 @@ public class CpNamingUtils {
      */
     public static SearchEdge createCollectionSearchEdge( final Id sourceId, final String connectionType ) {
         return new SearchEdgeImpl( sourceId, getEdgeTypeFromCollectionName( connectionType ),
-            SearchEdge.NodeType.SOURCE );
+            SearchEdge.NodeType.TARGET );
     }
 
 
@@ -181,7 +181,7 @@ public class CpNamingUtils {
      */
     public static SearchEdge createConnectionSearchEdge( final Id sourceId, final String connectionType ) {
         return new SearchEdgeImpl( sourceId, getEdgeTypeFromConnectionType( connectionType ),
-            SearchEdge.NodeType.SOURCE );
+            SearchEdge.NodeType.TARGET );
     }
 
 

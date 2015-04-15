@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.usergrid.persistence.index.impl;
+package org.apache.usergrid.corepersistence.index;
 
 
 import java.io.IOException;
@@ -31,7 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
-import org.apache.usergrid.persistence.index.IndexFig;
+import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
 import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapManagerFactory;
 import org.apache.usergrid.persistence.map.MapScope;
@@ -88,7 +88,7 @@ public class BufferQueueSQSImpl implements BufferQueue {
 
     private final QueueManager queue;
     private final MapManager mapManager;
-    private final IndexFig indexFig;
+    private final QueryFig queryFig;
     private final ObjectMapper mapper;
     private final Meter readMeter;
     private final Timer readTimer;
@@ -97,13 +97,13 @@ public class BufferQueueSQSImpl implements BufferQueue {
 
 
     @Inject
-    public BufferQueueSQSImpl( final QueueManagerFactory queueManagerFactory, final IndexFig indexFig,
+    public BufferQueueSQSImpl( final QueueManagerFactory queueManagerFactory, final QueryFig queryFig,
                                final MapManagerFactory mapManagerFactory, final MetricsFactory metricsFactory ) {
         final QueueScope queueScope =
             new QueueScopeImpl( QUEUE_NAME );
 
         this.queue = queueManagerFactory.getQueueManager( queueScope );
-        this.indexFig = indexFig;
+        this.queryFig = queryFig;
 
         final MapScope scope = new MapScopeImpl( new SimpleId( MANAGEMENT_APPLICATION_ID, "application" ), MAP_NAME );
 
@@ -124,7 +124,7 @@ public class BufferQueueSQSImpl implements BufferQueue {
 
 
     @Override
-    public void offer( final IndexIdentifierImpl.IndexOperationMessage operation ) {
+    public void offer( final IndexOperationMessage operation ) {
 
         //no op
         if(operation.isEmpty()){
@@ -158,7 +158,7 @@ public class BufferQueueSQSImpl implements BufferQueue {
 
 
     @Override
-    public List<IndexIdentifierImpl.IndexOperationMessage> take( final int takeSize, final long timeout, final TimeUnit timeUnit ) {
+    public List<IndexOperationMessage> take( final int takeSize, final long timeout, final TimeUnit timeUnit ) {
 
         //SQS doesn't support more than 10
 
@@ -169,12 +169,12 @@ public class BufferQueueSQSImpl implements BufferQueue {
         try {
 
             List<QueueMessage> messages = queue
-                .getMessages( actualTake, indexFig.getIndexQueueTimeout(), ( int ) timeUnit.toMillis( timeout ),
+                .getMessages( actualTake, queryFig.getIndexQueueTimeout(), ( int ) timeUnit.toMillis( timeout ),
                     String.class );
 
 
 
-            final List<IndexIdentifierImpl.IndexOperationMessage> response = new ArrayList<>( messages.size() );
+            final List<IndexOperationMessage> response = new ArrayList<>( messages.size() );
 
             final List<String> mapEntries = new ArrayList<>( messages.size() );
 
@@ -207,7 +207,7 @@ public class BufferQueueSQSImpl implements BufferQueue {
                     continue;
                 }
 
-                final IndexIdentifierImpl.IndexOperationMessage messageBody;
+                final IndexOperationMessage messageBody;
 
                 try {
                     messageBody = fromString( payload );
@@ -233,7 +233,7 @@ public class BufferQueueSQSImpl implements BufferQueue {
 
 
     @Override
-    public void ack( final List<IndexIdentifierImpl.IndexOperationMessage> messages ) {
+    public void ack( final List<IndexOperationMessage> messages ) {
 
         //nothing to do
         if ( messages.size() == 0 ) {
@@ -242,7 +242,7 @@ public class BufferQueueSQSImpl implements BufferQueue {
 
         List<QueueMessage> toAck = new ArrayList<>( messages.size() );
 
-        for ( IndexIdentifierImpl.IndexOperationMessage ioe : messages ) {
+        for ( IndexOperationMessage ioe : messages ) {
 
 
             final SqsIndexOperationMessage sqsIndexOperationMessage =   ( SqsIndexOperationMessage ) ioe;
@@ -260,20 +260,20 @@ public class BufferQueueSQSImpl implements BufferQueue {
 
 
     @Override
-    public void fail( final List<IndexIdentifierImpl.IndexOperationMessage> messages, final Throwable t ) {
+    public void fail( final List<IndexOperationMessage> messages, final Throwable t ) {
         //no op, just let it retry after the queue timeout
     }
 
 
     /** Read the object from Base64 string. */
-    private IndexIdentifierImpl.IndexOperationMessage fromString( String s ) throws IOException {
-        IndexIdentifierImpl.IndexOperationMessage o = mapper.readValue( s, IndexIdentifierImpl.IndexOperationMessage.class );
+    private IndexOperationMessage fromString( String s ) throws IOException {
+        IndexOperationMessage o = mapper.readValue( s, IndexOperationMessage.class );
         return o;
     }
 
 
     /** Write the object to a Base64 string. */
-    private String toString( IndexIdentifierImpl.IndexOperationMessage o ) throws IOException {
+    private String toString( IndexOperationMessage o ) throws IOException {
         return mapper.writeValueAsString( o );
     }
 
@@ -284,12 +284,12 @@ public class BufferQueueSQSImpl implements BufferQueue {
     /**
      * The message that subclasses our IndexOperationMessage.  holds a pointer to the original message
      */
-    public class SqsIndexOperationMessage extends IndexIdentifierImpl.IndexOperationMessage {
+    public class SqsIndexOperationMessage extends IndexOperationMessage {
 
         private final QueueMessage message;
 
 
-        public SqsIndexOperationMessage( final QueueMessage message, final IndexIdentifierImpl.IndexOperationMessage source ) {
+        public SqsIndexOperationMessage( final QueueMessage message, final IndexOperationMessage source ) {
             this.message = message;
             this.addAllDeIndexRequest( source.getDeIndexRequests() );
             this.addAllIndexRequest( source.getIndexRequests() );

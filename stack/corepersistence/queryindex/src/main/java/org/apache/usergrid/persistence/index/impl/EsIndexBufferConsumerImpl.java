@@ -20,7 +20,6 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -33,19 +32,19 @@ import org.elasticsearch.client.Client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.usergrid.persistence.core.future.BetterFuture;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.index.IndexFig;
 
 import com.codahale.metrics.Counter;
-import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import rx.Observable;
 import rx.Subscriber;
-import rx.Subscription;
 import rx.schedulers.Schedulers;
 
 
@@ -54,179 +53,110 @@ import rx.schedulers.Schedulers;
  */
 @Singleton
 public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
-    private static final Logger log = LoggerFactory.getLogger(EsIndexBufferConsumerImpl.class);
+    private static final Logger log = LoggerFactory.getLogger( EsIndexBufferConsumerImpl.class );
 
     private final IndexFig config;
     private final FailureMonitorImpl failureMonitor;
     private final Client client;
 
     private final Timer flushTimer;
-    private final Counter indexSizeCounter;
     private final Counter indexErrorCounter;
     private final Meter flushMeter;
     private final Timer produceTimer;
-    private final BufferQueue bufferQueue;
     private final IndexFig indexFig;
-    private final AtomicLong counter = new AtomicLong(  );
-
-    //the actively running subscription
-    private List<Subscription> subscriptions;
-
-    private Object mutex = new Object();
+    private final AtomicLong counter = new AtomicLong();
 
 
-    private AtomicLong inFlight = new AtomicLong(  );
+    private final Counter indexSizeCounter;
+
+    private final Timer offerTimer;
+
+
+    private final BufferProducer bufferProducer;
+
+
+    private AtomicLong inFlight = new AtomicLong();
+
 
     @Inject
-    public EsIndexBufferConsumerImpl( final IndexFig config, final EsProvider provider, final MetricsFactory
-        metricsFactory, final BufferQueue bufferQueue, final IndexFig indexFig ){
+    public EsIndexBufferConsumerImpl( final IndexFig config, final EsProvider provider,
+                                      final MetricsFactory metricsFactory, final IndexFig indexFig ) {
 
-        this.flushTimer = metricsFactory.getTimer(EsIndexBufferConsumerImpl.class, "buffer.flush");
-        this.flushMeter = metricsFactory.getMeter(EsIndexBufferConsumerImpl.class, "buffer.meter");
-        this.indexSizeCounter =  metricsFactory.getCounter(EsIndexBufferConsumerImpl.class, "buffer.size");
-        this.indexErrorCounter =  metricsFactory.getCounter(EsIndexBufferConsumerImpl.class, "error.count");
+        this.flushTimer = metricsFactory.getTimer( EsIndexBufferConsumerImpl.class, "buffer.flush" );
+        this.flushMeter = metricsFactory.getMeter( EsIndexBufferConsumerImpl.class, "buffer.meter" );
+        this.indexSizeCounter = metricsFactory.getCounter( EsIndexBufferConsumerImpl.class, "buffer.size" );
+        this.indexErrorCounter = metricsFactory.getCounter( EsIndexBufferConsumerImpl.class, "error.count" );
+        this.offerTimer = metricsFactory.getTimer( EsIndexBufferConsumerImpl.class, "index.buffer.producer.timer" );
 
         //wire up the gauge of inflight messages
-        metricsFactory.addGauge( EsIndexBufferConsumerImpl.class, "inflight.meter", new Gauge<Long>() {
-            @Override
-            public Long getValue() {
-                return inFlight.longValue();
-            }
-        } );
-
+        metricsFactory.addGauge( EsIndexBufferConsumerImpl.class, "inflight.meter", () -> inFlight.longValue() );
 
 
         this.config = config;
-        this.failureMonitor = new FailureMonitorImpl(config,provider);
+        this.failureMonitor = new FailureMonitorImpl( config, provider );
         this.client = provider.getClient();
-        this.produceTimer = metricsFactory.getTimer(EsIndexBufferConsumerImpl.class,"index.buffer.consumer.messageFetch");
-        this.bufferQueue = bufferQueue;
+        this.produceTimer =
+            metricsFactory.getTimer( EsIndexBufferConsumerImpl.class, "index.buffer.consumer.messageFetch" );
         this.indexFig = indexFig;
 
-        subscriptions = new ArrayList<>( indexFig.getWorkerCount() );
+        this.bufferProducer = new BufferProducer();
 
         //batch up sets of some size and send them in batch
-          start();
+
+        startSubscription();
+    }
+
+
+    public BetterFuture put( IndexOperationMessage message ) {
+        Preconditions.checkNotNull( message, "Message cannot be null" );
+        indexSizeCounter.inc( message.getDeIndexRequests().size() );
+        indexSizeCounter.inc( message.getIndexRequests().size() );
+        Timer.Context time = offerTimer.time();
+        bufferProducer.send( message );
+        time.stop();
+        return message.getFuture();
     }
 
 
     /**
-     * Loop throught and start the workers
+     * Start the subscription
      */
-    public void start() {
-        final int count = indexFig.getWorkerCount();
-
-        for(int i = 0; i < count; i ++){
-            startWorker();
-        }
-    }
+    private void startSubscription() {
 
 
-    /**
-     * Stop the workers
-     */
-    public void stop() {
-        synchronized ( mutex ) {
-            //stop consuming
+        Observable.create( bufferProducer )
+                  .buffer( indexFig.getIndexBufferSize(), indexFig.getIndexBufferTimeout(), TimeUnit.MILLISECONDS,
+                      Schedulers.newThread() )
 
-            for(final Subscription subscription: subscriptions){
-                subscription.unsubscribe();
-            }
-        }
-    }
+            .doOnNext( containerList -> {
+                if ( containerList.size() == 0 ) {
+                    return;
+                }
 
-
-    private void startWorker(){
-        synchronized ( mutex) {
-
-            Observable<List<IndexIdentifierImpl.IndexOperationMessage>> consumer = Observable.create(
-                new Observable.OnSubscribe<List<IndexIdentifierImpl.IndexOperationMessage>>() {
-                    @Override
-                    public void call( final Subscriber<? super List<IndexIdentifierImpl.IndexOperationMessage>> subscriber ) {
-
-                        //name our thread so it's easy to see
-                        Thread.currentThread().setName( "QueueConsumer_" + counter.incrementAndGet() );
+                flushMeter.mark( containerList.size() );
+                Timer.Context time = flushTimer.time();
 
 
-                        List<IndexIdentifierImpl.IndexOperationMessage> drainList = null;
+                execute( containerList );
 
-                        do {
-
-                            Timer.Context timer = produceTimer.time();
-
-
-                            try {
-
-
-                                drainList = bufferQueue
-                                    .take( config.getIndexBufferSize(), config.getIndexBufferTimeout(),
-                                        TimeUnit.MILLISECONDS );
-
-
-                                subscriber.onNext( drainList );
-
-                                //take since  we're in flight
-                                inFlight.addAndGet( drainList.size() );
-
-
-                                timer.stop();
-                            }
-                            //DO NOT add any doOnError* functions to this subscription.  We want the producer
-                            //to receive these exceptions and sleep before a retry
-                            catch ( Throwable t ) {
-                                final long sleepTime = config.getFailureRetryTime();
-
-                                log.error( "Failed to dequeue.  Sleeping for {} milliseconds", sleepTime, t );
-
-                                if ( drainList != null ) {
-                                    inFlight.addAndGet( -1 * drainList.size() );
-                                }
-
-                                try {
-                                    Thread.sleep( sleepTime );
-                                }
-                                catch ( InterruptedException ie ) {
-                                    //swallow
-                                }
-
-                                indexErrorCounter.inc();
-                            }
-                        }
-                        while ( true );
-                    }
-                } ).doOnNext( containerList -> {
-                    if ( containerList.size() == 0 ) {
-                        return;
-                    }
-
-                    flushMeter.mark(containerList.size());
-                    Timer.Context time = flushTimer.time();
-
-
-                    execute(containerList);
-
-                    time.stop();
-                } )
+                time.stop();
+            } )
                 //ack after we process
-                .doOnNext( indexOperationMessages -> {
-                    bufferQueue.ack( indexOperationMessages );
-                    //release  so we know we've done processing
-                    inFlight.addAndGet( -1 * indexOperationMessages.size() );
-                } ).subscribeOn( Schedulers.newThread() );
+            .doOnNext( indexOperationMessages -> {
 
-            //start in the background
+                //release  so we know we've done processing
+                inFlight.addAndGet( -1 * indexOperationMessages.size() );
+            } ).subscribe();
 
-           final Subscription subscription = consumer.subscribe();
+        //start in the background
 
-            subscriptions.add(subscription );
-        }
     }
 
 
     /**
      * Execute the request, check for errors, then re-init the batch for future use
      */
-    private void execute( final List<IndexIdentifierImpl.IndexOperationMessage> operationMessages ) {
+    private void execute( final List<IndexOperationMessage> operationMessages ) {
 
         if ( operationMessages == null || operationMessages.size() == 0 ) {
             return;
@@ -250,28 +180,28 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
             .doOnNext( bulkRequestBuilder -> sendRequest( bulkRequestBuilder ) ).toBlocking().lastOrDefault( null );
 
         //call back all futures
-        Observable.from( operationMessages ).doOnNext( operationMessage -> operationMessage.getFuture().done() ).toBlocking().lastOrDefault( null );
+        Observable.from( operationMessages ).doOnNext( operationMessage -> operationMessage.getFuture().done() )
+                  .toBlocking().lastOrDefault( null );
     }
 
 
     /**
      * initialize request
-     * @return
      */
     private BulkRequestBuilder initRequest() {
         BulkRequestBuilder bulkRequest = client.prepareBulk();
-        bulkRequest.setConsistencyLevel(WriteConsistencyLevel.fromString(config.getWriteConsistencyLevel()));
-        bulkRequest.setRefresh(config.isForcedRefresh());
+        bulkRequest.setConsistencyLevel( WriteConsistencyLevel.fromString( config.getWriteConsistencyLevel() ) );
+        bulkRequest.setRefresh( config.isForcedRefresh() );
         return bulkRequest;
     }
 
+
     /**
      * send bulk request
-     * @param bulkRequest
      */
-    private void sendRequest(BulkRequestBuilder bulkRequest) {
+    private void sendRequest( BulkRequestBuilder bulkRequest ) {
         //nothing to do, we haven't added anything to the index
-        if (bulkRequest.numberOfActions() == 0) {
+        if ( bulkRequest.numberOfActions() == 0 ) {
             return;
         }
 
@@ -280,9 +210,10 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
 
         try {
             responses = bulkRequest.execute().actionGet();
-        } catch (Throwable t) {
-            log.error("Unable to communicate with elasticsearch");
-            failureMonitor.fail("Unable to execute batch", t);
+        }
+        catch ( Throwable t ) {
+            log.error( "Unable to communicate with elasticsearch" );
+            failureMonitor.fail( "Unable to execute batch", t );
             throw t;
         }
 
@@ -290,23 +221,43 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
 
         boolean error = false;
 
-        for (BulkItemResponse response : responses) {
+        for ( BulkItemResponse response : responses ) {
 
-            if (response.isFailed()) {
+            if ( response.isFailed() ) {
                 // log error and continue processing
-                log.error("Unable to index id={}, type={}, index={}, failureMessage={} ",
-                    response.getId(),
-                    response.getType(),
-                    response.getIndex(),
-                    response.getFailureMessage()
-                );
+                log.error( "Unable to index id={}, type={}, index={}, failureMessage={} ", response.getId(),
+                    response.getType(), response.getIndex(), response.getFailureMessage() );
 
                 error = true;
             }
         }
 
         if ( error ) {
-            throw new RuntimeException("Error during processing of bulk index operations one of the responses failed.  Check previous log entries");
+            throw new RuntimeException(
+                "Error during processing of bulk index operations one of the responses failed.  Check previous log "
+                    + "entries" );
+        }
+    }
+
+
+    public static class BufferProducer implements Observable.OnSubscribe<IndexOperationMessage> {
+
+        private Subscriber<? super IndexOperationMessage> subscriber;
+
+
+        /**
+         * Send the data through the buffer
+         */
+        public void send( final IndexOperationMessage indexOp ) {
+
+            subscriber.onNext( indexOp );
+        }
+
+
+        @Override
+        public void call( final Subscriber<? super IndexOperationMessage> subscriber ) {
+            //just assigns for later use, doesn't do anything else
+            this.subscriber = subscriber;
         }
     }
 }

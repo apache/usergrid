@@ -19,6 +19,10 @@
  */
 package org.apache.usergrid.persistence.index.impl;
 
+
+import org.apache.usergrid.persistence.core.future.BetterFuture;
+
+
 /**
  *  Buffer index requests
  */
@@ -26,12 +30,9 @@ public interface IndexBufferConsumer {
 
 
     /**
-     * Start the consumer
+     * Put this operation into our collapsing bufer
+     * @param message
+     * @return
      */
-    void start();
-
-    /**
-     * Stop the consumers
-     */
-    void stop();
+    BetterFuture put(IndexOperationMessage message);
 }

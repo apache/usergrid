@@ -284,42 +284,42 @@
       <artifactId>slf4j-api</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>org.apache.usergrid</groupId>
-      <artifactId>usergrid-core</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
-      <classifier>tests</classifier>
-    </dependency>
+      <dependency>
+          <groupId>org.apache.usergrid</groupId>
+          <artifactId>usergrid-core</artifactId>
+          <version>${project.version}</version>
+          <scope>test</scope>
+          <classifier>tests</classifier>
+      </dependency>
 
       <dependency>
           <groupId>${project.parent.groupId}</groupId>
-          <artifactId>queue</artifactId>
+          <artifactId>common</artifactId>
           <version>${project.version}</version>
           <type>test-jar</type>
           <scope>test</scope>
       </dependency>
 
       <dependency>
-      <groupId>org.apache.usergrid</groupId>
-      <artifactId>usergrid-config</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
-      <classifier>tests</classifier>
-    </dependency>
+          <groupId>org.apache.usergrid</groupId>
+          <artifactId>usergrid-config</artifactId>
+          <version>${project.version}</version>
+          <scope>test</scope>
+          <classifier>tests</classifier>
+      </dependency>
 
-    <dependency>
-      <groupId>org.apache.usergrid</groupId>
-      <artifactId>usergrid-test-utils</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
-    </dependency>
+      <dependency>
+          <groupId>org.apache.usergrid</groupId>
+          <artifactId>usergrid-test-utils</artifactId>
+          <version>${project.version}</version>
+          <scope>test</scope>
+      </dependency>
 
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
+      <dependency>
+          <groupId>junit</groupId>
+          <artifactId>junit</artifactId>
+          <scope>test</scope>
+      </dependency>
 
 
 

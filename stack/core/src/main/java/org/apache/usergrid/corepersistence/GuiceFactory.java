@@ -31,8 +31,7 @@ import org.springframework.context.ApplicationContextAware;
 
 import org.apache.commons.lang.StringUtils;
 
-import org.apache.usergrid.persistence.cassandra.CassandraService;
-import org.apache.usergrid.persistence.core.guice.CommonModule;
+import org.apache.usergrid.persistence.PersistenceModule;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -47,7 +46,7 @@ import me.prettyprint.cassandra.service.CassandraHostConfigurator;
  * Factory for configuring Guice then returning it
  */
 @Singleton
-public class GuiceFactory implements FactoryBean<Injector>, ApplicationContextAware {
+public class GuiceFactory implements FactoryBean<Injector> {
 
     private static final Logger logger = LoggerFactory.getLogger( GuiceFactory.class );
 
@@ -55,16 +54,16 @@ public class GuiceFactory implements FactoryBean<Injector>, ApplicationContextAw
 
     private final Properties systemProperties;
 
-
     private ApplicationContext applicationContext;
 
     private Injector injector;
 
 
 
-    public GuiceFactory( final CassandraHostConfigurator chc, final Properties systemProperties  ) {
+    public GuiceFactory( final ApplicationContext applicationContext, final CassandraHostConfigurator chc, final Properties systemProperties  ) {
         this.chc = chc;
         this.systemProperties = systemProperties;
+        this.applicationContext = applicationContext;
     }
 
 
@@ -128,8 +127,10 @@ public class GuiceFactory implements FactoryBean<Injector>, ApplicationContextAw
             throw new RuntimeException( "Fatal error loading configuration.", e );
         }
 
-        //this is seriously fugly, and needs removed
-        injector = Guice.createInjector( new CoreModule( applicationContext ) );
+
+
+        //this is seriously fugly, and needs removed we shouldn't be mixing spring and guice
+        injector = Guice.createInjector( new CoreModule(  ), new PersistenceModule( applicationContext ) );
 
         return injector;
     }
@@ -147,8 +148,4 @@ public class GuiceFactory implements FactoryBean<Injector>, ApplicationContextAw
     }
 
 
-    @Override
-    public void setApplicationContext( final ApplicationContext applicationContext ) throws BeansException {
-        this.applicationContext = applicationContext;
-    }
 }

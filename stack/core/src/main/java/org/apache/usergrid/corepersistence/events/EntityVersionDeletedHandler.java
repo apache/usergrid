@@ -30,9 +30,11 @@ import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphManager;
+import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.graph.serialization.EdgesObservable;
 import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexBatch;
+import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexEdge;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -56,17 +58,20 @@ public class EntityVersionDeletedHandler implements EntityVersionDeleted {
     private static final Logger logger = LoggerFactory.getLogger( EntityVersionDeletedHandler.class );
 
 
-    private final EntityManagerFactory emf;
     private final EdgesObservable edgesObservable;
     private final SerializationFig serializationFig;
+    private final EntityIndexFactory entityIndexFactory;
+    private final GraphManagerFactory graphManagerFactory;
 
 
     @Inject
-    public EntityVersionDeletedHandler( final EntityManagerFactory emf, final EdgesObservable edgesObservable,
-                                        final SerializationFig serializationFig ) {
-        this.emf = emf;
+    public EntityVersionDeletedHandler( final EdgesObservable edgesObservable, final SerializationFig serializationFig,
+                                        final EntityIndexFactory entityIndexFactory,
+                                        final GraphManagerFactory graphManagerFactory ) {
         this.edgesObservable = edgesObservable;
         this.serializationFig = serializationFig;
+        this.entityIndexFactory = entityIndexFactory;
+        this.graphManagerFactory = graphManagerFactory;
     }
 
 
@@ -87,10 +92,8 @@ public class EntityVersionDeletedHandler implements EntityVersionDeleted {
             } );
         }
 
-        CpEntityManagerFactory cpemf = ( CpEntityManagerFactory ) emf;
-
-        final ApplicationEntityIndex ei = cpemf.getManagerCache().getEntityIndex( scope );
-        final GraphManager gm = cpemf.getManagerCache().getGraphManager( scope );
+        final ApplicationEntityIndex ei = entityIndexFactory.createApplicationEntityIndex( scope );
+        final GraphManager gm = graphManagerFactory.createEdgeManager(  scope );
 
 
         //create an observable of all scopes to deIndex

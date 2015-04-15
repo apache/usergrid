@@ -17,14 +17,10 @@
  * under the License.
  */
 
-package org.apache.usergrid.persistence.index.guice;
+package org.apache.usergrid.corepersistence.index;
 
 
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
-import org.apache.usergrid.persistence.index.IndexFig;
-import org.apache.usergrid.persistence.index.impl.BufferQueue;
-import org.apache.usergrid.persistence.index.impl.BufferQueueInMemoryImpl;
-import org.apache.usergrid.persistence.index.impl.BufferQueueSQSImpl;
 import org.apache.usergrid.persistence.map.MapManagerFactory;
 import org.apache.usergrid.persistence.queue.QueueManagerFactory;
 
@@ -39,7 +35,7 @@ import com.google.inject.Singleton;
 @Singleton
 public class QueueProvider implements Provider<BufferQueue> {
 
-    private final IndexFig indexFig;
+    private final QueryFig queryFig;
 
     private final QueueManagerFactory queueManagerFactory;
     private final MapManagerFactory mapManagerFactory;
@@ -49,9 +45,9 @@ public class QueueProvider implements Provider<BufferQueue> {
 
 
     @Inject
-    public QueueProvider( final IndexFig indexFig, final QueueManagerFactory queueManagerFactory,
+    public QueueProvider( final QueryFig queryFig, final QueueManagerFactory queueManagerFactory,
                           final MapManagerFactory mapManagerFactory, final MetricsFactory metricsFactory ) {
-        this.indexFig = indexFig;
+        this.queryFig = queryFig;
 
 
         this.queueManagerFactory = queueManagerFactory;
@@ -73,15 +69,15 @@ public class QueueProvider implements Provider<BufferQueue> {
 
 
     private BufferQueue getQueue() {
-        final String value = indexFig.getQueueImplementation();
+        final String value = queryFig.getQueueImplementation();
 
         final Implementations impl = Implementations.valueOf( value );
 
         switch ( impl ) {
             case LOCAL:
-                return new BufferQueueInMemoryImpl( indexFig );
+                return new BufferQueueInMemoryImpl( queryFig );
             case SQS:
-                return new BufferQueueSQSImpl( queueManagerFactory, indexFig, mapManagerFactory, metricsFactory );
+                return new BufferQueueSQSImpl( queueManagerFactory, queryFig, mapManagerFactory, metricsFactory );
             default:
                 throw new IllegalArgumentException( "Configuration value of " + getErrorValues() + " are allowed" );
         }

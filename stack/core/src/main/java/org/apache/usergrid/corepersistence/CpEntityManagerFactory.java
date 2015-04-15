@@ -156,14 +156,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     }
 
 
-    public ManagerCache getManagerCache() {
-
-        if ( managerCache == null ) {
-            managerCache = injector.getInstance( ManagerCache.class );
-        }
-        return managerCache;
-    }
-
     private Observable<EntityIdScope> getAllEntitiesObservable(){
       return injector.getInstance( Key.get(new TypeLiteral< MigrationDataProvider<EntityIdScope>>(){})).getData();
     }
@@ -184,14 +176,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     private EntityManager _getEntityManager( UUID applicationId ) {
 
-        EntityManager em = new CpEntityManager();
-        em.init( this ,applicationId );
-
+        EntityManager em = new CpEntityManager(cassandraService, counterUtils, managerCache, metricsFactory, applicationId );
         return em;
-    }
-
-    public MetricsFactory getMetricsFactory(){
-        return metricsFactory;
     }
 
     @Override
@@ -746,7 +732,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     public Health getEntityStoreHealth() {
 
         // could use any collection scope here, does not matter
-        EntityCollectionManager ecm = getManagerCache().getEntityCollectionManager(
+        EntityCollectionManager ecm = managerCache.getEntityCollectionManager(
             new ApplicationScopeImpl( new SimpleId( CpNamingUtils.MANAGEMENT_APPLICATION_ID, "application" ) ) );
 
         return ecm.getHealth();

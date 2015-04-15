@@ -16,7 +16,13 @@
 package org.apache.usergrid.corepersistence;
 
 
+import org.apache.usergrid.corepersistence.index.BufferQueue;
+import org.apache.usergrid.corepersistence.index.IndexService;
+import org.apache.usergrid.corepersistence.index.IndexServiceImpl;
+import org.apache.usergrid.corepersistence.index.QueryFig;
+import org.apache.usergrid.corepersistence.index.QueueProvider;
 import org.apache.usergrid.corepersistence.migration.*;
+import org.apache.usergrid.persistence.PersistenceModule;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.safehaus.guicyfig.GuicyFigModule;
 import org.springframework.context.ApplicationContext;
@@ -56,25 +62,18 @@ import com.google.inject.multibindings.Multibinder;
  */
 public class CoreModule  extends AbstractModule {
 
-    /**
-     * TODO this is a circular dependency, and should be refactored
-     */
-    private LazyEntityManagerFactoryProvider lazyEntityManagerFactoryProvider;
+
 
     public static final String EVENTS_DISABLED = "corepersistence.events.disabled";
 
 
 
-    public CoreModule( final ApplicationContext context ) {
-        this.lazyEntityManagerFactoryProvider = new LazyEntityManagerFactoryProvider( context );
-    }
-
     @Override
     protected void configure() {
 
 
-        //See TODO, this is fugly
-        bind(EntityManagerFactory.class).toProvider( lazyEntityManagerFactoryProvider );
+//        //See TODO, this is fugly
+//        bind(EntityManagerFactory.class).toProvider( lazyEntityManagerFactoryProvider );
 
         install( new CommonModule());
         install( new CollectionModule() {
@@ -141,31 +140,24 @@ public class CoreModule  extends AbstractModule {
         plugins.addBinding().to( AppInfoMigrationPlugin.class );
         plugins.addBinding().to( MigrationModuleVersionPlugin.class );
 
-        bind(AllApplicationsObservable.class).to(AllApplicationsObservableImpl.class);
-
-        install(new GuicyFigModule(ApplicationIdCacheFig.class));
-
-    }
+        bind( AllApplicationsObservable.class ).to( AllApplicationsObservableImpl.class );
 
 
-    /**
-     * TODO, this is a hack workaround due to the guice/spring EMF circular dependency
-     * Once the entity managers have been refactored and moved into guice, remove this dependency.
-     *
-     */
-    public static class LazyEntityManagerFactoryProvider implements Provider<EntityManagerFactory>{
-
-        private final ApplicationContext context;
+        /*****
+         * Indexing service
+         *****/
 
 
-        public LazyEntityManagerFactoryProvider( final ApplicationContext context ) {this.context = context;}
+        bind(IndexService.class).to(IndexServiceImpl.class);
+        //bind the queue provider
+
+        bind( BufferQueue.class).toProvider( QueueProvider.class );
+
+        install( new GuicyFigModule( QueryFig.class ) );
 
 
+        install( new GuicyFigModule( ApplicationIdCacheFig.class ) );
 
-        @Override
-        public EntityManagerFactory get() {
-            return this.context.getBean( EntityManagerFactory.class );
-        }
     }
 
 }

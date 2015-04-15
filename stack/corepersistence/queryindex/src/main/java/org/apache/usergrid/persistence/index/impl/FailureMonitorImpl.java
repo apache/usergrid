@@ -98,30 +98,4 @@ public class FailureMonitorImpl implements FailureMonitor {
     public void success() {
         failCounter.set( 0 );
     }
-
-
-    /**
-     * Identifier for where an index is in underlying server
-     */
-    public static interface IndexIdentifier {
-
-        /**
-         * get the alias name
-         * @return
-         */
-        IndexAlias getAlias();
-
-        /**
-         * get index name from suffix
-         * @param suffix
-         * @return
-         */
-        String getIndex( String suffix );
-
-        /**
-         * return unique string
-         * @return
-         */
-        String toString();
-    }
 }

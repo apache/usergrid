@@ -61,14 +61,14 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
     private final IndexAlias alias;
     private final IndexCache indexCache;
     private final EsProvider esProvider;
-    private final IndexBufferProducer producer;
+    private final IndexBufferConsumer producer;
     private final IndexFig indexFig;
     private final Timer timer;
 
 
     @Inject
-    public IndexRefreshCommandImpl( FailureMonitorImpl.IndexIdentifier indexIdentifier, EsProvider esProvider,
-                                    IndexBufferProducer producer, IndexFig indexFig, MetricsFactory metricsFactory,
+    public IndexRefreshCommandImpl( IndexIdentifier indexIdentifier, EsProvider esProvider,
+                                    IndexBufferConsumer producer, IndexFig indexFig, MetricsFactory metricsFactory,
                                     final IndexCache indexCache ) {
 
 
@@ -105,7 +105,7 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
         IndexRequest indexRequest = new IndexRequest( alias.getWriteAlias(), docId, entityData );
 
         //save the item
-        IndexIdentifierImpl.IndexOperationMessage message = new IndexIdentifierImpl.IndexOperationMessage();
+        IndexOperationMessage message = new IndexOperationMessage();
         message.addIndexRequest( indexRequest );
         producer.put( message );
 
@@ -153,8 +153,8 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
                 new DeIndexRequest( aliases, appScope, edge, entity.getId(), entity.getVersion() );
 
             //delete the item
-            IndexIdentifierImpl.IndexOperationMessage indexOperationMessage =
-                new IndexIdentifierImpl.IndexOperationMessage();
+            IndexOperationMessage indexOperationMessage =
+                new IndexOperationMessage();
             indexOperationMessage.addDeIndexRequest( deIndexRequest );
             producer.put( indexOperationMessage );
 

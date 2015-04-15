@@ -689,8 +689,6 @@ public interface EntityManager {
     /** @return the cass */
     CassandraService getCass();
 
-    public void init( EntityManagerFactory emf,  UUID applicationId);
-
     /** For testing purposes */
     public void flushManagerCaches();
 

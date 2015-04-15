@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.usergrid.persistence.queue;
+package org.apache.usergrid.persistence.core.aws;
 
 
 import org.junit.Assume;

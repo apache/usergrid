@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.usergrid.persistence.index.impl;
+package org.apache.usergrid.corepersistence.index;
 
 
 import java.util.ArrayList;
@@ -27,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.usergrid.persistence.core.future.BetterFuture;
 import org.apache.usergrid.persistence.index.IndexFig;
+import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -36,19 +37,19 @@ import com.google.inject.Singleton;
 public class BufferQueueInMemoryImpl implements BufferQueue {
 
 
-    private final IndexFig fig;
-    private final ArrayBlockingQueue<IndexIdentifierImpl.IndexOperationMessage> messages;
+    private final QueryFig fig;
+    private final ArrayBlockingQueue<IndexOperationMessage> messages;
 
 
     @Inject
-    public BufferQueueInMemoryImpl( final IndexFig fig ) {
+    public BufferQueueInMemoryImpl( final QueryFig fig ) {
         this.fig = fig;
         messages = new ArrayBlockingQueue<>( fig.getIndexQueueSize() );
     }
 
 
     @Override
-    public void offer( final IndexIdentifierImpl.IndexOperationMessage operation ) {
+    public void offer( final IndexOperationMessage operation ) {
         try {
             messages.offer( operation, fig.getQueueOfferTimeout(), TimeUnit.MILLISECONDS );
         }
@@ -59,9 +60,9 @@ public class BufferQueueInMemoryImpl implements BufferQueue {
 
 
     @Override
-    public List<IndexIdentifierImpl.IndexOperationMessage> take( final int takeSize, final long timeout, final TimeUnit timeUnit ) {
+    public List<IndexOperationMessage> take( final int takeSize, final long timeout, final TimeUnit timeUnit ) {
 
-        final List<IndexIdentifierImpl.IndexOperationMessage> response = new ArrayList<>( takeSize );
+        final List<IndexOperationMessage> response = new ArrayList<>( takeSize );
         try {
 
 
@@ -73,7 +74,7 @@ public class BufferQueueInMemoryImpl implements BufferQueue {
             }
 
 
-            final IndexIdentifierImpl.IndexOperationMessage polled = messages.poll( timeout, timeUnit );
+            final IndexOperationMessage polled = messages.poll( timeout, timeUnit );
 
             if ( polled != null ) {
                 response.add( polled );
@@ -92,20 +93,20 @@ public class BufferQueueInMemoryImpl implements BufferQueue {
 
 
     @Override
-    public void ack( final List<IndexIdentifierImpl.IndexOperationMessage> messages ) {
+    public void ack( final List<IndexOperationMessage> messages ) {
         //if we have a future ack it
-        for ( final IndexIdentifierImpl.IndexOperationMessage op : messages ) {
+        for ( final IndexOperationMessage op : messages ) {
             op.done();
         }
     }
 
 
     @Override
-    public void fail( final List<IndexIdentifierImpl.IndexOperationMessage> messages, final Throwable t ) {
+    public void fail( final List<IndexOperationMessage> messages, final Throwable t ) {
 
 
-        for ( final IndexIdentifierImpl.IndexOperationMessage op : messages ) {
-            final BetterFuture<IndexIdentifierImpl.IndexOperationMessage> future = op.getFuture();
+        for ( final IndexOperationMessage op : messages ) {
+            final BetterFuture<IndexOperationMessage> future = op.getFuture();
 
             if ( future != null ) {
                 future.setError( t );

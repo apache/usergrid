@@ -20,15 +20,15 @@
 package org.apache.usergrid.persistence.index.migration;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.index.impl.FailureMonitorImpl;
 import org.apache.usergrid.persistence.index.impl.IndexAlias;
 import org.apache.usergrid.persistence.index.IndexFig;
+import org.apache.usergrid.persistence.index.impl.IndexIdentifier;
 import org.apache.usergrid.persistence.index.impl.IndexingUtils;
 
 /**
  * Class is used to generate an index name and alias name the old way via app name
  */
-public class LegacyIndexIdentifier implements FailureMonitorImpl.IndexIdentifier {
+public class LegacyIndexIdentifier implements IndexIdentifier {
     private final IndexFig config;
     private final ApplicationScope applicationScope;
 

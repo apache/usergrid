@@ -17,11 +17,13 @@
  * under the License.
  */
 
-package org.apache.usergrid.persistence.index.impl;
+package org.apache.usergrid.corepersistence.index;
 
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
 
 
 /**
@@ -34,7 +36,7 @@ public interface BufferQueue {
      * Other queues may return the future after ack on the offer.  See the implementation documentation for details.
      * @param operation
      */
-    public void offer(final IndexIdentifierImpl.IndexOperationMessage operation);
+    public void offer(final IndexOperationMessage operation);
 
 
     /**
@@ -46,7 +48,7 @@ public interface BufferQueue {
      * @param timeUnit
      * @return A null safe lid
      */
-    public List<IndexIdentifierImpl.IndexOperationMessage> take(final int takeSize, final long timeout, final TimeUnit timeUnit );
+    public List<IndexOperationMessage> take(final int takeSize, final long timeout, final TimeUnit timeUnit );
 
 
     /**
@@ -55,12 +57,12 @@ public interface BufferQueue {
      *
      * @param messages
      */
-    public void ack(final List<IndexIdentifierImpl.IndexOperationMessage> messages);
+    public void ack(final List<IndexOperationMessage> messages);
 
     /**
      * Mark these message as failed.  Set the exception in the future on local operation
      *
      * @param messages
      */
-    public void fail(final List<IndexIdentifierImpl.IndexOperationMessage> messages, final Throwable t);
+    public void fail(final List<IndexOperationMessage> messages, final Throwable t);
 }

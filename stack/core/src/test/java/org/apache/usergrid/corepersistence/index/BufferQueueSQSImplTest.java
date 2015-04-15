@@ -17,16 +17,21 @@
  * under the License.
  */
 
-package org.apache.usergrid.persistence.index.impl;
+package org.apache.usergrid.corepersistence.index;
 
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.usergrid.corepersistence.TestIndexModule;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.index.SearchEdge;
-import org.apache.usergrid.persistence.index.SearchType;
+import org.apache.usergrid.persistence.index.impl.DeIndexRequest;
+import org.apache.usergrid.persistence.index.impl.EsRunner;
+import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
+import org.apache.usergrid.persistence.index.impl.IndexRequest;
+import org.apache.usergrid.persistence.index.impl.SearchEdgeImpl;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.junit.Before;
 import org.junit.Rule;
@@ -36,10 +41,8 @@ import org.junit.runner.RunWith;
 import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.test.UseModules;
-import org.apache.usergrid.persistence.index.IndexFig;
-import org.apache.usergrid.persistence.index.guice.TestIndexModule;
 import org.apache.usergrid.persistence.map.MapManagerFactory;
-import org.apache.usergrid.persistence.queue.NoAWSCredsRule;
+import org.apache.usergrid.persistence.core.aws.NoAWSCredsRule;
 import org.apache.usergrid.persistence.queue.QueueManagerFactory;
 import org.apache.usergrid.persistence.queue.impl.UsergridAwsCredentialsProvider;
 
@@ -69,7 +72,7 @@ public class BufferQueueSQSImplTest {
     public QueueManagerFactory queueManagerFactory;
 
     @Inject
-    public IndexFig indexFig;
+    public QueryFig queryFig;
 
     @Inject
     public MapManagerFactory mapManagerFactory;
@@ -82,7 +85,7 @@ public class BufferQueueSQSImplTest {
 
     @Before
     public void setup(){
-        bufferQueueSQS = new BufferQueueSQSImpl( queueManagerFactory, indexFig, mapManagerFactory, metricsFactory );
+        bufferQueueSQS = new BufferQueueSQSImpl( queueManagerFactory, queryFig, mapManagerFactory, metricsFactory );
     }
 
 
@@ -105,7 +108,8 @@ public class BufferQueueSQSImplTest {
 
 
         //de-index request
-        final DeIndexRequest deIndexRequest1 = new DeIndexRequest( new String[]{"index1.1, index1.2"}, applicationScope, new SearchEdgeImpl(new SimpleId("testId3"),"name3",
+        final DeIndexRequest
+            deIndexRequest1 = new DeIndexRequest( new String[]{"index1.1, index1.2"}, applicationScope, new SearchEdgeImpl(new SimpleId("testId3"),"name3",
 
 
                 SearchEdge.NodeType.SOURCE ),  new SimpleId("id3"), UUID.randomUUID() );
@@ -116,7 +120,7 @@ public class BufferQueueSQSImplTest {
 
 
 
-        IndexIdentifierImpl.IndexOperationMessage indexOperationMessage = new IndexIdentifierImpl.IndexOperationMessage();
+        IndexOperationMessage indexOperationMessage = new IndexOperationMessage();
         indexOperationMessage.addIndexRequest( indexRequest1);
         indexOperationMessage.addIndexRequest( indexRequest2);
 
@@ -130,11 +134,11 @@ public class BufferQueueSQSImplTest {
 
         //now get it back
 
-        final List<IndexIdentifierImpl.IndexOperationMessage> ops = getResults( 20, TimeUnit.SECONDS );
+        final List<IndexOperationMessage> ops = getResults( 20, TimeUnit.SECONDS );
 
         assertTrue(ops.size() > 0);
 
-        final IndexIdentifierImpl.IndexOperationMessage returnedOperation = ops.get( 0 );
+        final IndexOperationMessage returnedOperation = ops.get( 0 );
 
          //get the operations out
 
@@ -157,10 +161,10 @@ public class BufferQueueSQSImplTest {
 
     }
 
-    private List<IndexIdentifierImpl.IndexOperationMessage> getResults(final long timeout, final TimeUnit timeUnit){
+    private List<IndexOperationMessage> getResults(final long timeout, final TimeUnit timeUnit){
         final long endTime = System.currentTimeMillis() + timeUnit.toMillis( timeout );
 
-        List<IndexIdentifierImpl.IndexOperationMessage> ops;
+        List<IndexOperationMessage> ops;
 
         do{
             ops = bufferQueueSQS.take( 10,  20, TimeUnit.SECONDS );
