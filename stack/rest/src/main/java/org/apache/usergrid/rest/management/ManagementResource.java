@@ -18,6 +18,7 @@ package org.apache.usergrid.rest.management;
 
 
 import java.net.URLEncoder;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 
@@ -105,8 +106,25 @@ public class ManagementResource extends AbstractContextResource {
 
     public static final String USERGRID_CENTRAL_URL = "usergrid.central.url";
 
+    private boolean superuserAllowed;
+
+    private boolean externalTokensEnabled;
+
+    private String superuserName;
+
 
     public ManagementResource() {
+
+        String superuserAllowedStr =  properties.getProperty( "usergrid.sysadmin.login.allowed" );
+
+        superuserName = properties.getProperty( "usergrid.sysadmin.login.name" );
+
+        superuserAllowed = !StringUtils.isEmpty( superuserAllowedStr )
+                && superuserAllowedStr.trim().equalsIgnoreCase( "true" );
+
+        externalTokensEnabled =
+                !StringUtils.isEmpty( properties.getProperty( USERGRID_CENTRAL_URL ));
+
         logger.info( "ManagementResource initialized" );
     }
 
@@ -181,6 +199,17 @@ public class ManagementResource extends AbstractContextResource {
     private Response getAccessTokenInternal( UriInfo ui, String authorization, String grant_type, String username,
                                              String password, String client_id, String client_secret, long ttl,
                                              String callback, boolean loadAdminData ) throws Exception {
+
+
+        // if external tokens are enabled for Usegrid central authentication,
+        // then only the superuser can login via this Usergrid instance.
+        if ( externalTokensEnabled && !username.equalsIgnoreCase( superuserName )) {
+
+            // cause an HTTP 400 response with a useful message
+            throw  new IllegalArgumentException("Admin Users must login via " +
+                properties.getProperty( USERGRID_CENTRAL_URL ));
+        }
+
         UserInfo user = null;
 
         try {
@@ -481,7 +510,7 @@ public class ManagementResource extends AbstractContextResource {
             throw new NotImplementedException( "External Token Validation Service is not configured" );
         }
 
-        Object extAccessTokenObj = json.get("ext_access_token");
+        Object extAccessTokenObj = json.get( "ext_access_token" );
         if ( extAccessTokenObj == null ) {
             throw new IllegalArgumentException("ext_access_token must be specified");
         }
@@ -505,9 +534,10 @@ public class ManagementResource extends AbstractContextResource {
     /**
      * <p>
      * Validates access token from other or "external" Usergrid system.
-     * Calls other system's /management/me endpoint to get the User associated with the access token.
-     * If user does not exist locally, then user and organization with the same name of user is created.
-     * If no user is returned from the other cluster, then this endpoint will return 401.
+     * Calls other system's /management/me endpoint to get the User
+     * associated with the access token. If user does not exist locally,
+     * then user and organizations will be created. If no user is returned
+     * from the other cluster, then this endpoint will return 401.
      * </p>
      *
      * <p> Part of Usergrid Central SSO feature.
@@ -550,29 +580,55 @@ public class ManagementResource extends AbstractContextResource {
 
         JsonNode userNode = accessInfoNode.get( "user" );
         String username = userNode.get( "username" ).getTextValue();
-        String name     = userNode.get( "name" ).getTextValue();
-        String email    = userNode.get( "email" ).getTextValue();
-
-        // set dummy password to random string that nobody can guess, in SSO setup
-        // admin users should never be able to login directly to this Usergrid system
-        String dummyPassword = RandomStringUtils.randomAlphanumeric( 40 );
 
         // if user does not exist locally then we need to fix that
 
-        final UUID userId;
+        UUID userId = null;
         final OrganizationInfo organizationInfo = management.getOrganizationByName(username);
 
         if ( organizationInfo == null ) {
 
             // create local user and personal organization, activate user.
 
-            OrganizationOwnerInfo ownerOrgInfo = management.createOwnerAndOrganization(
-                    username, username, name, email, dummyPassword, true, true );
-            userId = ownerOrgInfo.getOwner().getUuid();
+            String name     = userNode.get( "name" ).getTextValue();
+            String email    = userNode.get( "email" ).getTextValue();
 
-            management.activateOrganization( ownerOrgInfo.getOrganization() );
+            // set dummy password to random string that nobody can guess, in SSO setup
+            // admin users should never be able to login directly to this Usergrid system
+            String dummyPassword = RandomStringUtils.randomAlphanumeric( 40 );
 
-            applicationCreator.createSampleFor( ownerOrgInfo.getOrganization() );
+            JsonNode orgsNode = userNode.get( "organizations" );
+            final Iterator<String> fieldNames = orgsNode.getFieldNames();
+
+            UserInfo userInfo = null;
+
+            // create user and any organizations that user is supposed to have
+
+            while ( fieldNames.hasNext() ) {
+
+                String orgName = fieldNames.next();
+
+                if ( userId == null ) {
+
+                    // haven't created user yet so do that now
+                    OrganizationOwnerInfo ownerOrgInfo = management.createOwnerAndOrganization(
+                            orgName, username, name, email, dummyPassword, true, true );
+
+                    management.activateOrganization( ownerOrgInfo.getOrganization() ); // redundant?
+                    applicationCreator.createSampleFor( ownerOrgInfo.getOrganization() );
+
+                    userId = ownerOrgInfo.getOwner().getUuid();
+                    userInfo = ownerOrgInfo.getOwner();
+
+                } else {
+
+                    // already created user, so just create an org
+                    final OrganizationInfo organization = management.createOrganization( orgName, userInfo, true );
+
+                    management.activateOrganization( organization ); // redundant?
+                    applicationCreator.createSampleFor( organization );
+                }
+            }
 
         } else {
             userId = management.getAdminUserByUsername( username ).getUuid();
@@ -602,6 +658,7 @@ public class ManagementResource extends AbstractContextResource {
         // create URL of central Usergrid's /management/me endpoint
 
         String externalUrl = properties.getProperty( USERGRID_CENTRAL_URL ).trim();
+
         // be lenient about trailing slash
         externalUrl = !externalUrl.endsWith( "/" ) ? externalUrl + "/" : externalUrl;
         String me = externalUrl + "management/me?access_token=" + extAccessToken;
