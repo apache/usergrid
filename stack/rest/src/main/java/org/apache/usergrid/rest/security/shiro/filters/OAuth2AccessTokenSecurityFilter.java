@@ -104,7 +104,12 @@ public class OAuth2AccessTokenSecurityFilter extends SecurityFilter {
                 catch ( InvalidTokenException ite ) {
                     throw mappableSecurityException( INVALID_AUTH_ERROR );
                 }
+                catch ( IndexOutOfBoundsException ioobe ) {
+                    // token is just some rubbish string
+                    throw mappableSecurityException( BAD_ACCESS_TOKEN_ERROR );
+                }
                 catch ( Exception e ) {
+                    // unexpected so we log it
                     LOG.error( "unable to verify oauth token", e );
                     throw mappableSecurityException( UNVERIFIED_OAUTH_ERROR );
                 }
