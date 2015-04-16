@@ -201,9 +201,9 @@ public class ManagementResource extends AbstractContextResource {
                                              String callback, boolean loadAdminData ) throws Exception {
 
 
-        // if external tokens are enabled for Usegrid central authentication,
-        // then only the superuser can login via this Usergrid instance.
-        if ( externalTokensEnabled && !username.equalsIgnoreCase( superuserName )) {
+        // when external tokens (Usergrid Central SSO) are enabled only superuser can login as Admin User.
+        if ( externalTokensEnabled &&
+                superuserAllowed && !username.equalsIgnoreCase( superuserName )) {
 
             // cause an HTTP 400 response with a useful message
             throw  new IllegalArgumentException("Admin Users must login via " +
@@ -583,17 +583,16 @@ public class ManagementResource extends AbstractContextResource {
 
         // if user does not exist locally then we need to fix that
 
-        UUID userId = null;
-        final OrganizationInfo organizationInfo = management.getOrganizationByName(username);
+        UUID userId = management.getAdminUserByUsername( username ).getUuid();
 
-        if ( organizationInfo == null ) {
+        if ( userId == null ) {
 
-            // create local user and personal organization, activate user.
+            // create local user and and organizations they have on the central Usergrid instance
 
             String name     = userNode.get( "name" ).getTextValue();
             String email    = userNode.get( "email" ).getTextValue();
 
-            // set dummy password to random string that nobody can guess, in SSO setup
+            // set dummy password to random string that nobody can guess, in central SSO setup
             // admin users should never be able to login directly to this Usergrid system
             String dummyPassword = RandomStringUtils.randomAlphanumeric( 40 );
 
@@ -630,8 +629,6 @@ public class ManagementResource extends AbstractContextResource {
                 }
             }
 
-        } else {
-            userId = management.getAdminUserByUsername( username ).getUuid();
         }
 
         // store the external access_token as if it were one of our own
