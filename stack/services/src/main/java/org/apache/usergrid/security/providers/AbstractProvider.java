@@ -19,6 +19,7 @@ package org.apache.usergrid.security.providers;
 
 import java.util.Map;
 
+import com.sun.jersey.core.util.MultivaluedMapImpl;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.persistence.EntityManager;
 
@@ -26,6 +27,8 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
+
+import javax.ws.rs.core.MultivaluedMap;
 
 
 /** @author zznate */
@@ -53,6 +56,9 @@ public abstract class AbstractProvider implements SignInAsProvider {
 
     public abstract void saveToConfiguration( Map<String, Object> config );
 
+    protected MultivaluedMap getMultivaluedMapImpl() {
+      return new MultivaluedMapImpl();
+    }
 
     /** Encapsulates the dictionary lookup for any configuration required */
     protected Map<Object, Object> loadConfigurationFor( String providerKey ) {

@@ -61,6 +61,7 @@ public interface AccountCreationProps {
     public static final String PROPERTIES_ADMIN_CONFIRMATION_URL = "usergrid.admin.confirmation.url";
     public static final String PROPERTIES_ORGANIZATION_ACTIVATION_URL = "usergrid.organization.activation.url";
     public static final String PROPERTIES_ADMIN_RESETPW_URL = "usergrid.admin.resetpw.url";
+    public static final String PROPERTIES_USERGRID_SYSADMIN_LOGIN_FETCH_ORGS = "usergrid.sysadmin.login.fetch_orgs";
 
     public static final String PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION =
             "usergrid.management.admin_users_require_confirmation";
@@ -110,11 +111,21 @@ public interface AccountCreationProps {
 
     public boolean notifyAdminOfActivation();
 
+    /**
+     * Retrieves the maximum number of organizations to show when the admin logs in.
+     * Default is 10
+     *
+     * @return
+     */
+    public int getMaxOrganizationsForSuperUserLogin();
+
     public String getProperty( String name );
 
     public String getProperty( String name, String defaultValue );
 
     public boolean isProperty( String name );
+
+    public int intProperty( String name, String defaultValue );
 
     public void setProperty( String name, String value );
 
