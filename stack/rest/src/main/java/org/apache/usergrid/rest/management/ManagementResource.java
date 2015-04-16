@@ -18,24 +18,30 @@ package org.apache.usergrid.rest.management;
 
 
 import java.net.URLEncoder;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.UUID;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.config.ClientConfig;
+import com.sun.jersey.api.client.config.DefaultClientConfig;
+import com.sun.jersey.api.json.JSONConfiguration;
+import org.apache.commons.lang.RandomStringUtils;
+import org.apache.usergrid.exception.NotImplementedException;
+import org.apache.usergrid.management.ApplicationCreator;
+import org.apache.usergrid.management.OrganizationInfo;
+import org.apache.usergrid.management.OrganizationOwnerInfo;
+import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
+import org.codehaus.jackson.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -95,8 +101,30 @@ public class ManagementResource extends AbstractContextResource {
 
     private static final Logger logger = LoggerFactory.getLogger( ManagementResource.class );
 
+    @Autowired
+    private ApplicationCreator applicationCreator;
+
+    public static final String USERGRID_CENTRAL_URL = "usergrid.central.url";
+
+    private boolean superuserAllowed;
+
+    private boolean externalTokensEnabled;
+
+    private String superuserName;
+
 
     public ManagementResource() {
+
+        String superuserAllowedStr =  properties.getProperty( "usergrid.sysadmin.login.allowed" );
+
+        superuserName = properties.getProperty( "usergrid.sysadmin.login.name" );
+
+        superuserAllowed = !StringUtils.isEmpty( superuserAllowedStr )
+                && superuserAllowedStr.trim().equalsIgnoreCase( "true" );
+
+        externalTokensEnabled =
+                !StringUtils.isEmpty( properties.getProperty( USERGRID_CENTRAL_URL ));
+
         logger.info( "ManagementResource initialized" );
     }
 
@@ -171,6 +199,17 @@ public class ManagementResource extends AbstractContextResource {
     private Response getAccessTokenInternal( UriInfo ui, String authorization, String grant_type, String username,
                                              String password, String client_id, String client_secret, long ttl,
                                              String callback, boolean loadAdminData ) throws Exception {
+
+
+        // if external tokens are enabled for Usegrid central authentication,
+        // then only the superuser can login via this Usergrid instance.
+        if ( externalTokensEnabled && !username.equalsIgnoreCase( superuserName )) {
+
+            // cause an HTTP 400 response with a useful message
+            throw  new IllegalArgumentException("Admin Users must login via " +
+                properties.getProperty( USERGRID_CENTRAL_URL ));
+        }
+
         UserInfo user = null;
 
         try {
@@ -438,6 +477,209 @@ public class ManagementResource extends AbstractContextResource {
         catch ( Exception e ) {
             return handleViewable( "error", e );
         }
+    }
+
+
+    /**
+     * <p>
+     * Validates access token from other or "external" Usergrid system.
+     * Calls other system's /management/me endpoint to get the User associated with the access token.
+     * If user does not exist locally, then user and organization with the same name of user is created.
+     * If no user is returned from the other cluster, then this endpoint will return 401.
+     * <p>
+     *
+     * <p>
+     * See <a href="https://issues.apache.org/jira/browse/USERGRID-567">USERGRID-567</a>
+     * for details about Usergrid Central SSO.
+     * </p>
+     *
+     * @param ui             Information about calling URI.
+     * @param json           JSON object with fields: ext_access_token, ttl
+     * @param callback       For JSONP support.
+     * @return               Returns JSON object with access_token field.
+     * @throws Exception     Returns 401 if access token cannot be validated
+     */
+    @POST
+    @Path( "/externaltoken" )
+    public Response validateExternalToken(
+            @Context UriInfo ui,
+            Map<String, Object> json,
+            @QueryParam( "callback" ) @DefaultValue( "" ) String callback )  throws Exception {
+
+        if ( StringUtils.isEmpty( properties.getProperty( USERGRID_CENTRAL_URL ))) {
+            throw new NotImplementedException( "External Token Validation Service is not configured" );
+        }
+
+        Object extAccessTokenObj = json.get( "ext_access_token" );
+        if ( extAccessTokenObj == null ) {
+            throw new IllegalArgumentException("ext_access_token must be specified");
+        }
+        String extAccessToken = json.get("ext_access_token").toString();
+
+        Object ttlObj = json.get("ttl");
+        if ( ttlObj == null ) {
+            throw new IllegalArgumentException("ttl must be specified");
+        }
+        long ttl;
+        try {
+            ttl = Long.parseLong(ttlObj.toString());
+        } catch ( NumberFormatException e ) {
+            throw new IllegalArgumentException("ttl must be specified as a long");
+        }
+
+        return validateExternalToken( ui, extAccessToken, ttl, callback );
+    }
+
+
+    /**
+     * <p>
+     * Validates access token from other or "external" Usergrid system.
+     * Calls other system's /management/me endpoint to get the User
+     * associated with the access token. If user does not exist locally,
+     * then user and organizations will be created. If no user is returned
+     * from the other cluster, then this endpoint will return 401.
+     * </p>
+     *
+     * <p> Part of Usergrid Central SSO feature.
+     * See <a href="https://issues.apache.org/jira/browse/USERGRID-567">USERGRID-567</a>
+     * for details about Usergrid Central SSO.
+     * </p>
+     *
+     * @param ui             Information about calling URI.
+     * @param extAccessToken Access token from external Usergrid system.
+     * @param ttl            Time to live for token.
+     * @param callback       For JSONP support.
+     * @return               Returns JSON object with access_token field.
+     * @throws Exception     Returns 401 if access token cannot be validated
+     */
+    @GET
+    @Path( "/externaltoken" )
+    public Response validateExternalToken(
+                                @Context UriInfo ui,
+                                @QueryParam( "ext_access_token" ) String extAccessToken,
+                                @QueryParam( "ttl" ) @DefaultValue("-1") long ttl,
+                                @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
+            throws Exception {
+
+
+        if ( StringUtils.isEmpty( properties.getProperty( USERGRID_CENTRAL_URL ))) {
+            throw new NotImplementedException( "External Token Validation Service is not configured" );
+        }
+
+        if ( extAccessToken == null ) {
+            throw new IllegalArgumentException("ext_access_token must be specified");
+        }
+
+        if ( ttl == -1 ) {
+            throw new IllegalArgumentException("ttl must be specified");
+        }
+
+        // look up user via UG Central's /management/me endpoint.
+
+        JsonNode accessInfoNode = getMeFromUgCentral( extAccessToken );
+
+        JsonNode userNode = accessInfoNode.get( "user" );
+        String username = userNode.get( "username" ).getTextValue();
+
+        // if user does not exist locally then we need to fix that
+
+        UUID userId = null;
+        final OrganizationInfo organizationInfo = management.getOrganizationByName(username);
+
+        if ( organizationInfo == null ) {
+
+            // create local user and personal organization, activate user.
+
+            String name     = userNode.get( "name" ).getTextValue();
+            String email    = userNode.get( "email" ).getTextValue();
+
+            // set dummy password to random string that nobody can guess, in SSO setup
+            // admin users should never be able to login directly to this Usergrid system
+            String dummyPassword = RandomStringUtils.randomAlphanumeric( 40 );
+
+            JsonNode orgsNode = userNode.get( "organizations" );
+            final Iterator<String> fieldNames = orgsNode.getFieldNames();
+
+            UserInfo userInfo = null;
+
+            // create user and any organizations that user is supposed to have
+
+            while ( fieldNames.hasNext() ) {
+
+                String orgName = fieldNames.next();
+
+                if ( userId == null ) {
+
+                    // haven't created user yet so do that now
+                    OrganizationOwnerInfo ownerOrgInfo = management.createOwnerAndOrganization(
+                            orgName, username, name, email, dummyPassword, true, true );
+
+                    management.activateOrganization( ownerOrgInfo.getOrganization() ); // redundant?
+                    applicationCreator.createSampleFor( ownerOrgInfo.getOrganization() );
+
+                    userId = ownerOrgInfo.getOwner().getUuid();
+                    userInfo = ownerOrgInfo.getOwner();
+
+                } else {
+
+                    // already created user, so just create an org
+                    final OrganizationInfo organization = management.createOrganization( orgName, userInfo, true );
+
+                    management.activateOrganization( organization ); // redundant?
+                    applicationCreator.createSampleFor( organization );
+                }
+            }
+
+        } else {
+            userId = management.getAdminUserByUsername( username ).getUuid();
+        }
+
+        // store the external access_token as if it were one of our own
+        management.importTokenForAdminUser( userId, extAccessToken, ttl );
+
+        // success! return JSON object with access_token field
+        AccessInfo accessInfo = new AccessInfo()
+                .withExpiresIn( tokens.getMaxTokenAgeInSeconds(extAccessToken ) )
+                .withAccessToken( extAccessToken );
+
+        return Response.status( SC_OK ).type( jsonMediaType( callback ) ).entity( accessInfo ).build();
+    }
+
+
+    /**
+     * Look up Admin User via UG Central's /management/me endpoint.
+     *
+     * @param extAccessToken Access token issued by UG Central of Admin User
+     * @return JsonNode representation of AccessInfo object for Admin User
+     * @throws EntityNotFoundException if access_token is not valid.
+     */
+    private JsonNode getMeFromUgCentral( String extAccessToken )  throws EntityNotFoundException {
+
+        // create URL of central Usergrid's /management/me endpoint
+
+        String externalUrl = properties.getProperty( USERGRID_CENTRAL_URL ).trim();
+
+        // be lenient about trailing slash
+        externalUrl = !externalUrl.endsWith( "/" ) ? externalUrl + "/" : externalUrl;
+        String me = externalUrl + "management/me?access_token=" + extAccessToken;
+
+        // use our favorite HTTP client to GET /management/me
+
+        ClientConfig clientConfig = new DefaultClientConfig();
+        clientConfig.getFeatures().put( JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
+        Client client = Client.create(clientConfig);
+        final JsonNode accessInfoNode;
+        try {
+            accessInfoNode = client.resource( me )
+                    .type( MediaType.APPLICATION_JSON_TYPE)
+                    .get(JsonNode.class);
+
+        } catch ( Exception e ) {
+            // user not found 404
+            String msg = "Cannot find Admin User associated with " + extAccessToken;
+            throw new EntityNotFoundException( msg, e );
+        }
+        return accessInfoNode;
     }
 
 
