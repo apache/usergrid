@@ -1,0 +1,31 @@
+Usergrid 1.0.1
+--------------------------------------------------------------------------------
+
+
+Usergrid 1.0.1
+--------------------------------------------------------------------------------
+
+Except for our shiny new PHP5 SDK, Usergrid 1.0.1 is mostly a bug fix release.
+Here are the highlights:
+
+* New PHP5 SDK - new SDK is a Guzzle Web service descriptor so any Usergrid API 
+  calls can be added with ease.
+
+* Original PHP SDK - added URL endpoint update functionality.
+
+* Node.js SDK - Bug fix: calcTimeDiff changed to return seconds correctly
+* Node.js SDK - Bug fix: getOnExist was sending wrong data value to server.
+
+* Android SDK Updated from Apigee source. Numerous bug fixes and enhancements.
+
+* Docs moved to readthedocs.org: http://usergrid.readthedocs.org/en/latest/.
+
+* Admin portal - Changed default config to point to localhost.
+* Admin portal - Build now created as zip file during build process.
+
+* Stack - Bug fix: Launcher now works, uses Admin portal hosted on ASF Infra.
+* Stack - Bug fix: reset password will now work with or without reCaptcha keys.
+* Stack - Build now works with latest versions of Maven.
+* Stack - Build now supports property for configurable argline parameters. 
+* Stack - Build now sets java.awt.headless to prevent forkedbooter popups.
+

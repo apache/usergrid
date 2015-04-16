@@ -193,6 +193,7 @@ var AUTH_NONE = 'NONE';
    */
   Usergrid.Client.prototype.createGroup = function(options, callback) {
     var getOnExist = options.getOnExist || false;
+    delete options.getOnExist;
 
     var options = {
       path: options.path,
@@ -244,6 +245,8 @@ var AUTH_NONE = 'NONE';
     });
     */
     var getOnExist = options.getOnExist || false; //if true, will return entity if one already exists
+    delete options.getOnExist;
+
     var options = {
       client:this,
       data:options
@@ -467,12 +470,8 @@ var AUTH_NONE = 'NONE';
   *  A private method to get call timing of last call
   */
   Usergrid.Client.prototype.calcTimeDiff = function () {
-   var seconds = 0;
    var time = this._end - this._start;
-   try {
-      seconds = ((time/10) / 60).toFixed(2);
-   } catch(e) { return 0; }
-   return seconds;
+   return (time/1000).toFixed(2);
   }
 
   /*
@@ -1359,30 +1358,30 @@ var AUTH_NONE = 'NONE';
   }
 
   Usergrid.Client.prototype.createRole = function(roleName, permissions, callback) {
-      
+
       var self = this;
       var options = {
           type: 'role',
-          name: roleName        
+          name: roleName
       };
 
       this.createEntity(options, function(err, entity, response) {
           if (err) {
-              callback (err, response, self);    
+              callback (err, response, self);
           } else {
               entity.assignPermissions(permissions, function (err, data) {
                   if (err) {
-                      callback (err, response, self);    
+                      callback (err, response, self);
                   } else {
                       callback (err, data, data.data);
                   }
               })
-          }        
+          }
       });
 
   };
   Usergrid.Entity.prototype.assignRole = function(roleName, callback) {
-      
+
       var self = this;
       var type = self.get('type');
       var collection = type + 's';
@@ -1403,20 +1402,20 @@ var AUTH_NONE = 'NONE';
       var endpoint = 'roles/' + roleName + '/' + collection + '/' + entityID;
       var options = {
           method: 'POST',
-          endpoint: endpoint        
+          endpoint: endpoint
       };
 
       this._client.request(options, function(err, response) {
           if (err) {
               console.log('Could not assign role.');
-          }        
+          }
           callback (err, response, self);
       });
 
   };
 
   Usergrid.Entity.prototype.removeRole = function(roleName, callback) {
-      
+
       var self = this;
       var type = self.get('type');
       var collection = type + 's';
@@ -1437,13 +1436,13 @@ var AUTH_NONE = 'NONE';
       var endpoint = 'roles/' + roleName + '/' + collection + '/' + entityID;
       var options = {
           method: 'DELETE',
-          endpoint: endpoint        
+          endpoint: endpoint
       };
 
       this._client.request(options, function(err, response) {
           if (err) {
               console.log('Could not assign role.');
-          }        
+          }
           callback (err, response, self);
       });
 

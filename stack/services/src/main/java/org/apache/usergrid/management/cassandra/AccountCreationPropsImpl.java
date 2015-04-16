@@ -26,6 +26,7 @@ import org.apache.usergrid.management.AccountCreationProps;
 
 import static java.lang.Boolean.parseBoolean;
 
+import static java.lang.Integer.parseInt;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.usergrid.utils.ListUtils.anyNull;
 
@@ -77,6 +78,10 @@ public class AccountCreationPropsImpl implements AccountCreationProps {
         return isProperty( PROPERTIES_NOTIFY_ADMIN_OF_ACTIVATION );
     }
 
+    public int getMaxOrganizationsForSuperUserLogin() {
+        return intProperty( PROPERTIES_USERGRID_SYSADMIN_LOGIN_FETCH_ORGS, "10" );
+    }
+
 
     public String getProperty( String name ) {
         String propertyValue = properties.getProperty( name );
@@ -97,6 +102,9 @@ public class AccountCreationPropsImpl implements AccountCreationProps {
         return parseBoolean( getProperty( name ) );
     }
 
+    public int intProperty( String name, String defaultValue ) {
+        return parseInt( getProperty( name, defaultValue ) );
+    }
 
     public void setProperty( String name, String value ) {
         properties.setProperty( name, value );
