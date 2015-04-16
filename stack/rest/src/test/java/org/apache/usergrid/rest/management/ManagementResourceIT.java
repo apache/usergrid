@@ -381,7 +381,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         assertEquals( "test@usergrid.com", userdata.get( "data" ).get( "email" ).asText() );
 
         // wait for the token to expire
-        Thread.sleep( ttl - ( System.currentTimeMillis() - startTime ) + 1000 );
+        Thread.sleep( ttl - (System.currentTimeMillis() - startTime) + 1000 );
 
         Status responseStatus = null;
         try {
@@ -646,19 +646,7 @@ public class ManagementResourceIT extends AbstractRestIT {
 
 
     @Test
-    public void validateExternalToken() throws Exception {
-
-        // set the Usergrid Central SSO URL becuase Tomcat port is dynamically assigned
-
-        String suToken = superAdminToken();
-
-        Map<String, String> props = new HashMap<String, String>();
-        props.put( USERGRID_CENTRAL_URL, getBaseURI().toURL().toExternalForm());
-        resource().path( "/testproperties" )
-                .queryParam( "access_token", suToken)
-                .accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE )
-                .post( props );
+    public void testValidateExternalToken() throws Exception {
 
         // create a new admin user, get access token
 
@@ -677,6 +665,17 @@ public class ManagementResourceIT extends AbstractRestIT {
             .post( JsonNode.class, loginInfo );
         String accessToken = accessInfoNode.get( "access_token" ).getTextValue();
 
+        // set the Usergrid Central SSO URL because Tomcat port is dynamically assigned
+
+        String suToken = superAdminToken();
+        Map<String, String> props = new HashMap<String, String>();
+        props.put( USERGRID_CENTRAL_URL, getBaseURI().toURL().toExternalForm());
+        resource().path( "/testproperties" )
+                .queryParam( "access_token", suToken)
+                .accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE )
+                .post( props );
+
         // attempt to validate the token, must be valid
 
         JsonNode validatedNode = resource().path( "/management/externaltoken" )
@@ -690,17 +689,94 @@ public class ManagementResourceIT extends AbstractRestIT {
         // attempt to validate an invalid token, must fail
 
         try {
-            JsonNode invalidNode = resource().path( "/management/externaltoken" )
+            resource().path( "/management/externaltoken" )
                 .queryParam( "access_token", suToken ) // as superuser
                 .queryParam( "ext_access_token", "rubbish_token")
                 .queryParam( "ttl", "1000" )
                 .get( JsonNode.class );
             fail("Validation should have failed");
-        } catch ( Exception expected ) {}
+        } catch ( Exception actual ) {
+            logger.debug( "error", actual );
+        }
+
 
 
         // TODO: how do we test the create new user and organization case?
 
+
+
+        // unset the Usergrid Central SSO URL so it does not interfere with other tests
+
+        props.put( USERGRID_CENTRAL_URL, "" );
+        resource().path( "/testproperties" )
+                .queryParam( "access_token", suToken)
+                .accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE )
+                .post( props );
+
+    }
+
+
+    @Test
+    public void testSuperuserOnlyWhenValidateExternalTokensEnabled() throws Exception {
+
+        // create an org and an admin user
+
+        String rand = RandomStringUtils.randomAlphanumeric(10);
+        final String username = "user_" + rand;
+        OrganizationOwnerInfo orgInfo = setup.getMgmtSvc().createOwnerAndOrganization(
+                username, username, "Test User", username + "@example.com", "password" );
+
+        // turn on validate external tokens by setting the usergrid.central.url
+
+        String suToken = superAdminToken();
+        Map<String, String> props = new HashMap<String, String>();
+        props.put( USERGRID_CENTRAL_URL, getBaseURI().toURL().toExternalForm());
+        resource().path( "/testproperties" )
+                .queryParam( "access_token", suToken)
+                .accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE )
+                .post( props );
+
+        // calls to login as an Admin User must now fail
+
+        try {
+
+            Map<String, Object> loginInfo = new HashMap<String, Object>() {{
+                                                                              put("username", username );
+                                                                              put("password", "password");
+                                                                              put("grant_type", "password");
+                                                                              }};
+            JsonNode accessInfoNode = resource().path("/management/token")
+                    .type( MediaType.APPLICATION_JSON_TYPE )
+                    .post( JsonNode.class, loginInfo );
+            fail("Login as Admin User must fail when validate external tokens is enabled");
+
+        } catch ( Exception actual ) {
+            logger.debug( "error", actual );
+        }
+
+        // login as superuser must succeed
+
+        Map<String, Object> loginInfo = new HashMap<String, Object>() {{
+            put("username", "superuser");
+            put("password", "superpassword");
+            put("grant_type", "password");
+        }};
+        JsonNode accessInfoNode = resource().path("/management/token")
+                .type( MediaType.APPLICATION_JSON_TYPE )
+                .post( JsonNode.class, loginInfo );
+        String accessToken = accessInfoNode.get( "access_token" ).getTextValue();
+        assertNotNull( accessToken );
+
+        // turn off validate external tokens by un-setting the usergrid.central.url
+
+        props.put( USERGRID_CENTRAL_URL, "" );
+        resource().path( "/testproperties" )
+                .queryParam( "access_token", suToken)
+                .accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE )
+                .post( props );
     }
 
 }
