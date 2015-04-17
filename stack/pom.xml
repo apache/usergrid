@@ -71,13 +71,6 @@
     <!-- NOTE:   </activeProfiles>                                   -->
     <!-- NOTE: </settings>                                           -->
 
-    <snapshot.repository.url>
-      https://repository.apache.org/content/repositories/snapshots
-    </snapshot.repository.url>
-    <release.repository.url>
-      https://repository.apache.org/service/local/staging/deploy/maven2
-    </release.repository.url>
-
     <!-- =================================================================== -->
     <!-- Properties: General Settings -->
     <!-- =================================================================== -->
@@ -162,23 +155,6 @@
       <name>Alex Karasulu</name>
     </developer>
   </developers>
-
-
-  <distributionManagement>
-    <!-- Versioned (non-snapshot) releases are published to this repository -->
-    <repository>
-      <id>usergrid.releases</id>
-      <name>Usergrid Releases</name>
-      <url>${release.repository.url}</url>
-    </repository>
-
-    <!-- Snapshots (not-releases) are published to this repository -->
-    <snapshotRepository>
-      <id>usergrid.snapshots</id>
-      <name>Usergrid Snapshots</name>
-      <url>${snapshot.repository.url}</url>
-    </snapshotRepository>
-  </distributionManagement>
 
   <modules>
     <module>java-sdk-old</module>
