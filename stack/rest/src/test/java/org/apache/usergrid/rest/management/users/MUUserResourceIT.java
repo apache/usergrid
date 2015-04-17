@@ -25,9 +25,14 @@ import java.util.Map;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMultipart;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.codehaus.jackson.JsonNode;
+import org.jclouds.json.Json;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -55,6 +60,7 @@ import org.apache.commons.lang.StringUtils;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.representation.Form;
 
+import static org.apache.usergrid.rest.management.ManagementResource.USERGRID_CENTRAL_URL;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -71,7 +77,7 @@ import static org.apache.usergrid.utils.MapUtils.hashMap;
 
 /** @author zznate */
 public class MUUserResourceIT extends AbstractRestIT {
-    private Logger LOG = LoggerFactory.getLogger( MUUserResourceIT.class );
+    private Logger logger = LoggerFactory.getLogger( MUUserResourceIT.class );
 
 
     @Rule
@@ -87,7 +93,7 @@ public class MUUserResourceIT extends AbstractRestIT {
     @Test
 //    @Ignore( "aok - check this please" )
     public void testCaseSensitivityAdminUser() throws Exception {
-        LOG.info( "Starting testCaseSensitivityAdminUser()" );
+        logger.info( "Starting testCaseSensitivityAdminUser()" );
         UserInfo mixcaseUser = setup.getMgmtSvc()
                                     .createAdminUser( "AKarasulu", "Alex Karasulu", "AKarasulu@Apache.org", "test",
                                             true, false );
@@ -157,7 +163,7 @@ public class MUUserResourceIT extends AbstractRestIT {
                 assertEquals( "invalid_grant", node.get( "error" ).getTextValue() );
                 assertEquals( "User must be confirmed to authenticate",
                         node.get( "error_description" ).getTextValue() );
-                LOG.info( "Unconfirmed user was not authorized to authenticate!" );
+                logger.info( "Unconfirmed user was not authorized to authenticate!" );
             }
 
             // Confirm the getting account confirmation email for unconfirmed user
@@ -174,7 +180,7 @@ public class MUUserResourceIT extends AbstractRestIT {
             // Extract the token to confirm the user
             // -------------------------------------------
             String token = getTokenFromMessage( confirmation );
-            LOG.info( token );
+            logger.info( token );
 
             ActivationState state =
                     setup.getMgmtSvc().handleConfirmationTokenForAdminUser( orgOwner.getOwner().getUuid(), token );
@@ -194,7 +200,7 @@ public class MUUserResourceIT extends AbstractRestIT {
                     .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
 
             assertNotNull( node );
-            LOG.info( "Authentication succeeded after confirmation: {}.", node.toString() );
+            logger.info( "Authentication succeeded after confirmation: {}.", node.toString() );
         }
         finally {
             setTestProperties( originalProperties );
@@ -305,7 +311,7 @@ public class MUUserResourceIT extends AbstractRestIT {
         logNode( node );
 
         payload = hashMap( "company", "Usergrid" );
-        LOG.info( "sending PUT for company update" );
+        logger.info( "sending PUT for company update" );
         node = resource().path( String.format( "/management/users/%s", userId ) ).queryParam( "access_token", token )
                 .type( MediaType.APPLICATION_JSON_TYPE ).put( JsonNode.class, payload );
         assertNotNull( node );
@@ -601,5 +607,89 @@ public class MUUserResourceIT extends AbstractRestIT {
         JsonNode adminNode = response.get( "data" ).get( 0 );
         assertEquals( context.getActiveUser().getEmail(), adminNode.get( "email" ).asText() );
         assertEquals( context.getActiveUser().getUser(), adminNode.get( "username" ).asText() );
+    }
+
+
+    @Test
+    public void testNoAdminUserSignupWhenValidateExternalTokensEnabled() throws Exception {
+
+        // turn on validate external tokens by setting the usergrid.central.url
+
+        String suToken = superAdminToken();
+        Map<String, String> props = new HashMap<String, String>();
+        props.put( USERGRID_CENTRAL_URL, getBaseURI().toURL().toExternalForm());
+        resource().path( "/testproperties" )
+                .queryParam( "access_token", suToken)
+                .accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE )
+                .post( props );
+
+        // create an admin user must fail
+
+        try {
+
+            // create an admin user
+
+            final String rand = RandomStringUtils.randomAlphanumeric( 10 );
+            Map<String, String> payload = new HashMap<String, String>() {{
+                put( "username", "user_" + rand );
+                put( "name", "Joe Userperson" );
+                put( "email", "joe_" + rand + "@example.com" );
+                put( "password", "wigglestone" );
+            }};
+            JsonNode node = resource().path( "/management/users")
+                    .accept( MediaType.APPLICATION_JSON )
+                    .type( MediaType.APPLICATION_JSON )
+                    .post( JsonNode.class, payload );
+
+            fail( "Create admin user should fail" );
+
+        } catch ( UniformInterfaceException actual ) {
+            assertEquals( 400, actual.getResponse().getStatus() );
+            String errorMsg = actual.getResponse().getEntity( JsonNode.class ).get( "error_description" ).toString();
+            assertTrue( errorMsg.startsWith( "Admin Users must signup via http://localhost:" ) );
+
+        } catch ( Exception e ) {
+            fail("We expected a UniformInterfaceException");
+        }
+
+
+        try {
+
+            // create an org and an admin user
+
+            final String rand = RandomStringUtils.randomAlphanumeric( 10 );
+            Map<String, String> payload = new HashMap<String, String>() {{
+                put( "organization", "org_" + rand );
+                put( "username", "user_" + rand );
+                put( "name", "Joe Userperson" );
+                put( "email", "joe_" + rand + "@example.com" );
+                put( "password", "wigglestone" );
+            }};
+            JsonNode node = resource().path( "/management/organizations/")
+                    .accept( MediaType.APPLICATION_JSON )
+                    .type( MediaType.APPLICATION_JSON )
+                    .post( JsonNode.class, payload );
+
+            fail( "Create org and admin user should fail" );
+
+        } catch ( UniformInterfaceException actual ) {
+            assertEquals( 400, actual.getResponse().getStatus() );
+            assertTrue( actual.getResponse().getEntity( JsonNode.class ).get( "error_description" )
+                    .toString().startsWith( "Organization / Admin Users must be created via http://localhost:" ));
+
+        } catch ( Exception e ) {
+            fail("We expected a UniformInterfaceException");
+        }
+
+
+        // turn off validate external tokens by un-setting the usergrid.central.url
+
+        props.put( USERGRID_CENTRAL_URL, "" );
+        resource().path( "/testproperties" )
+                .queryParam( "access_token", suToken)
+                .accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE )
+                .post( props );
     }
 }
