@@ -503,7 +503,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
             try {
                 //Added For Graphite Metrics
                 Timer.Context timeSearchCursor = cursorTimer.time();
-                searchResponse = ssrb.execute().actionGet();
+                searchResponse = ssrb.execute().actionGet(config.getElasticsearchTimeout());
                 timeSearchCursor.stop();
             }
             catch ( Throwable t ) {

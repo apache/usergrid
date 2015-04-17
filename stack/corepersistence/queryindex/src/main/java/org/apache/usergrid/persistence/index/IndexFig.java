@@ -100,6 +100,13 @@ public interface IndexFig extends GuicyFig {
 
     public static final String QUERY_LIMIT_DEFAULT = "index.query.limit.default";
 
+    /**
+     * Timeout calls to elasticsearch.
+     * @return
+     */
+    public static final String ELASTICSEARCH_TIMEOUT = "elasticsearch.timeout";
+
+
     @Default( "127.0.0.1" )
     @Key( ELASTICSEARCH_HOSTS )
     String getHosts();
@@ -209,4 +216,8 @@ public interface IndexFig extends GuicyFig {
     @Default( "1000" )
     @Key( ELASTICSEARCH_QUEUE_OFFER_TIMEOUT )
     long getQueueOfferTimeout();
+
+    @Default( "5000" )
+    @Key( ELASTICSEARCH_TIMEOUT )
+    long getElasticsearchTimeout();
 }
