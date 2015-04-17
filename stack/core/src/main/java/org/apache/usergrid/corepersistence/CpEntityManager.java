@@ -37,6 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
+import org.apache.usergrid.corepersistence.index.IndexService;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.AggregateCounter;
@@ -165,17 +166,19 @@ public class CpEntityManager implements EntityManager {
     public static final String APPLICATION_ENTITIES = "application.entities";
     public static final long ONE_COUNT = 1L;
 
-    private UUID applicationId;
+    private final UUID applicationId;
     private Application application;
 
 
-    private ManagerCache managerCache;
+    private final ManagerCache managerCache;
 
-    private ApplicationScope applicationScope;
+    private final ApplicationScope applicationScope;
 
-    private CassandraService cass;
+    private final CassandraService cass;
 
-    private CounterUtils counterUtils;
+    private final CounterUtils counterUtils;
+
+    private final IndexService indexService;
 
     private boolean skipAggregateCounters;
     private MetricsFactory metricsFactory;
@@ -215,16 +218,18 @@ public class CpEntityManager implements EntityManager {
      * @param metricsFactory
      * @param applicationId
      */
-    public CpEntityManager(final CassandraService cass, final CounterUtils counterUtils, final ManagerCache managerCache, final MetricsFactory metricsFactory, final UUID applicationId ) {
+    public CpEntityManager(final CassandraService cass, final CounterUtils counterUtils, final IndexService indexService, final ManagerCache managerCache, final MetricsFactory metricsFactory, final UUID applicationId ) {
 
         Preconditions.checkNotNull( cass, "cass must not be null" );
         Preconditions.checkNotNull( counterUtils, "counterUtils must not be null" );
         Preconditions.checkNotNull( managerCache, "managerCache must not be null" );
         Preconditions.checkNotNull( applicationId, "applicationId must not be null" );
+        Preconditions.checkNotNull( indexService, "indexService must not be null" );
 
 
         this.managerCache = managerCache;
         this.applicationId = applicationId;
+        this.indexService = indexService;
 
         applicationScope = CpNamingUtils.getApplicationScope( applicationId );
 
@@ -734,7 +739,7 @@ public class CpEntityManager implements EntityManager {
         Preconditions.checkNotNull( entityRef, "entityRef cannot be null" );
 
         CpRelationManager relationManager =
-            new CpRelationManager( metricsFactory, managerCache, this, applicationId, entityRef );
+            new CpRelationManager( metricsFactory, managerCache, indexService, this, applicationId, entityRef );
         return relationManager;
     }
 

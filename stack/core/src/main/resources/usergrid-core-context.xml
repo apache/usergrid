@@ -95,9 +95,13 @@
 
     <bean id="injector"
    		class="org.apache.usergrid.corepersistence.GuiceFactory">
-   		<constructor-arg ref="cassandraHostConfigurator" />
-        <constructor-arg ref="properties" />
     </bean>
+
+    <!--  <bean id="injector"
+       		class="org.apache.usergrid.corepersistence.GuiceFactory">
+       		<constructor-arg ref="cassandraHostConfigurator" />
+            <constructor-arg ref="properties" />
+        </bean>-->
 
 	<bean id="cassandraService"
 		class="org.apache.usergrid.persistence.cassandra.CassandraService" init-method="init" destroy-method="destroy">

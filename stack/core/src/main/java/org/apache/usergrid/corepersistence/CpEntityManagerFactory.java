@@ -39,6 +39,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
 import org.apache.commons.lang.StringUtils;
+
+import org.apache.usergrid.corepersistence.index.IndexService;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.exception.ConflictException;
 import org.apache.usergrid.persistence.*;
@@ -109,9 +111,10 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private Injector injector;
     private final EntityIndex entityIndex;
     private final MetricsFactory metricsFactory;
+    private final IndexService indexService;
 
-    public CpEntityManagerFactory(
-            final CassandraService cassandraService, final CounterUtils counterUtils, final Injector injector) {
+    public CpEntityManagerFactory( final CassandraService cassandraService, final CounterUtils counterUtils,
+                                   final Injector injector) {
 
         this.cassandraService = cassandraService;
         this.counterUtils = counterUtils;
@@ -120,7 +123,10 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.entityIndexFactory = injector.getInstance(EntityIndexFactory.class);
         this.managerCache = injector.getInstance( ManagerCache.class );
         this.metricsFactory = injector.getInstance( MetricsFactory.class );
-        this.applicationIdCache = injector.getInstance(ApplicationIdCacheFactory.class).getInstance(getManagementEntityManager());
+        this.indexService = injector.getInstance( IndexService.class );
+        this.applicationIdCache = injector.getInstance(ApplicationIdCacheFactory.class).getInstance(
+            getManagementEntityManager() );
+
     }
 
 
@@ -175,8 +181,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
 
     private EntityManager _getEntityManager( UUID applicationId ) {
-
-        EntityManager em = new CpEntityManager(cassandraService, counterUtils, managerCache, metricsFactory, applicationId );
+        EntityManager em = new CpEntityManager(cassandraService, counterUtils, indexService, managerCache, metricsFactory, applicationId );
         return em;
     }
 

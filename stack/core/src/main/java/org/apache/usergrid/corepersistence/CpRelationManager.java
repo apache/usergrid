@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
+import org.apache.usergrid.corepersistence.index.IndexService;
 import org.apache.usergrid.corepersistence.results.CollectionResultsLoaderFactoryImpl;
 import org.apache.usergrid.corepersistence.results.ConnectionResultsLoaderFactoryImpl;
 import org.apache.usergrid.corepersistence.results.ElasticSearchQueryExecutor;
@@ -117,18 +118,23 @@ public class CpRelationManager implements RelationManager {
 
     private org.apache.usergrid.persistence.model.entity.Entity cpHeadEntity;
 
-    private ApplicationScope applicationScope;
+    private final ApplicationScope applicationScope;
+
+    private final IndexService indexService;
 
     private MetricsFactory metricsFactory;
     private Timer updateCollectionTimer;
 
 
-    public CpRelationManager(final MetricsFactory metricsFactory, final ManagerCache managerCache, final EntityManager em, final UUID applicationId, final EntityRef headEntity ) {
+    public CpRelationManager( final MetricsFactory metricsFactory, final ManagerCache managerCache, final IndexService indexService, final EntityManager em, final UUID applicationId, final EntityRef headEntity) {
+
 
         Assert.notNull( em, "Entity manager cannot be null" );
         Assert.notNull( applicationId, "Application Id cannot be null" );
         Assert.notNull( headEntity, "Head entity cannot be null" );
         Assert.notNull( headEntity.getUuid(), "Head entity uuid cannot be null" );
+        Assert.notNull( indexService, "indexService cannot be null" );
+
         // TODO: this assert should not be failing
         //Assert.notNull( indexBucketLocator, "indexBucketLocator cannot be null" );
         this.em = em;
@@ -154,6 +160,8 @@ public class CpRelationManager implements RelationManager {
         // commented out because it is possible that CP entity has not been created yet
         Assert.notNull( cpHeadEntity, String
             .format( "cpHeadEntity cannot be null for entity id %s, app id %s", entityId.getUuid(), applicationId ) );
+
+        this.indexService = indexService;
 
 
     }
