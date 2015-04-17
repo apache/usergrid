@@ -135,18 +135,18 @@ public class UsersResource extends AbstractContextResource {
 
 	/*
      * @POST
-	 * 
+	 *
 	 * @Consumes(MediaType.MULTIPART_FORM_DATA) public JSONWithPadding
 	 * createUserFromMultipart(@Context UriInfo ui,
-	 * 
+	 *
 	 * @FormDataParam("username") String username,
-	 * 
+	 *
 	 * @FormDataParam("name") String name,
-	 * 
+	 *
 	 * @FormDataParam("email") String email,
-	 * 
+	 *
 	 * @FormDataParam("password") String password) throws Exception {
-	 * 
+	 *
 	 * return createUser(ui, username, name, email, password); }
 	 */
 
@@ -203,7 +203,7 @@ public class UsersResource extends AbstractContextResource {
                 errorMsg = "Incorrect Captcha, try again...";
                 return handleViewable("resetpw_email_form", this);
             }
-            
+
         }
         catch ( RedirectionException e ) {
             throw e;

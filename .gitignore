@@ -32,7 +32,9 @@ Icon
 .settings/
 .metadata/
 #Webstorm artifacts
+#Webstorm/IntelliJ artifacts
 .idea/
+*.iml
 stack/corepersistence/collection/nbactions.xml
 stack/corepersistence/graph/nbactions.xml
 stack/corepersistence/model/nbactions.xml
@@ -56,6 +58,7 @@ usergrid-UNIT.properties
 /portal/js/templates.js
 /portal/index.html
 /portal/index-debug.html
+/portal/dist/*
 /portal/dist/usergrid-portal/
 /portal/dist/appsvc-ui/
 /portal/nbproject/project.properties
@@ -82,3 +85,4 @@ portal/js/templates.js
 !/stack/corepersistence/common/src/test/resources/usergrid-UNIT.properties
 *.iml
 sdks/dotnet/samples/notifications/packages/*
+/sdks/html5-javascript/node_modules/

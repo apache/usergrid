@@ -1,6 +1,15 @@
-Apache Usergrid_
-Copyright 2014 The Apache Software Foundation.
+Apache Usergrid (incubating)
+Copyright (c) The Apache Software Foundation.
 
-This product bundles SSToolkit Copyright (c) 2009-2011 Sam Soffes. All rights reserved.
+This product uses the following software:
+
+
+SSToolkit Copyright (c) 2009-2011 Sam Soffes. All rights reserved.
 These files can be located within the /sdks/ios package.
+
+Intro.js (MIT licensed)
+Copyright (C) 2013 usabli.ca - A weekend project by Afshin Mehrabani (@afshinmeh)
+
+NPM MD5 (BSD-3 licensed)
+Copyright (C) 2011-2012, Paul Vorbach and Copyright (C) 2009, Jeff Mott.
  

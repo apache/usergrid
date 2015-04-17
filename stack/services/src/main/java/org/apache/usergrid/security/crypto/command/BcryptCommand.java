@@ -20,10 +20,10 @@ package org.apache.usergrid.security.crypto.command;
 import java.nio.charset.Charset;
 import java.util.UUID;
 
+import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.apache.usergrid.persistence.CredentialsInfo;
-import org.apache.usergrid.utils.BCrypt;
 
 import static org.apache.commons.codec.binary.Base64.decodeBase64;
 
@@ -51,7 +51,7 @@ public class BcryptCommand extends EncryptionCommand {
      */
     @Override
     public byte[] hash( byte[] input, CredentialsInfo info, UUID userId, UUID applicationId ) {
-        return BCrypt.hashpw( new String( input, UTF8 ), BCrypt.gensalt( defaultIterations ) ).getBytes();
+        return BCrypt.hashpw(new String(input, UTF8), BCrypt.gensalt(defaultIterations)).getBytes();
     }
 
 

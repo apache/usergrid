@@ -23,18 +23,19 @@
     <groupId>org.apache.usergrid</groupId>
     <artifactId>usergrid</artifactId>
     <version>2.0.0-SNAPSHOT</version>
+    <relativePath>../</relativePath>
   </parent>
 
   <artifactId>build-tools</artifactId>
   <name>Usergrid Build Tools</name>
   <description>Holds key configuration files for build plugins</description>
 
-  <!-- NOTES: 
+  <!-- NOTES:
         o the parent pom's checkstyle plugin configuration loads this project
           using the classpath to resolve the configLocation and headerLocation
           values
         o do not override the checkstyle plugin configuration in any sub-modules
-        o to adjust checkstyle settings or suppress reporting please us the 
+        o to adjust checkstyle settings or suppress reporting please us the
           files contained under src/main/resources/usergrid
   -->
 </project>
