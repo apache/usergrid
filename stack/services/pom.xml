@@ -22,6 +22,7 @@
     <groupId>org.apache.usergrid</groupId>
     <artifactId>usergrid</artifactId>
     <version>2.0.0-SNAPSHOT</version>
+    <relativePath>../</relativePath>
   </parent>
 
   <!-- Override these properties in your settings.xml in an active profile -->
@@ -150,6 +151,11 @@
           <artifactId>httpclient</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mindrot</groupId>
+      <artifactId>jbcrypt</artifactId>
     </dependency>
 
     <!-- Apache Dependencies -->
