@@ -720,7 +720,7 @@ public class EntityIndexTest extends BaseIT {
 
             int ordinal = 0;//i == 0 ? 0 : 1;
             assertNotEquals("Scroll matches last item from previous page",lastId, results.get(ordinal).getId().getUuid());
-            lastId = results.get((i+1)*limit-1).getId().getUuid();
+            lastId = results.get(limit -1).getId().getUuid();
             assertEquals("Failed on page "+i ,results.get( ordinal ).getId(), entityIds.get( i*limit ) );
         }
 
