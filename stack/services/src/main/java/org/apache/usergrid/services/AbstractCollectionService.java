@@ -355,7 +355,7 @@ public class AbstractCollectionService extends AbstractService {
                             p );
                 }
                 catch ( Exception e ) {
-                    logger.error( "Entity " + i + " unable to be created in collection " + context.getCollectionName(),
+                    logger.debug( "Entity " + i + " unable to be created in collection " + context.getCollectionName(),
                             e );
 
                     i++;
