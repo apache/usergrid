@@ -104,7 +104,7 @@ public interface IndexFig extends GuicyFig {
      * Timeout calls to elasticsearch.
      * @return
      */
-    public static final String ELASTICSEARCH_TIMEOUT = "elasticsearch.timeout";
+    public static final String ELASTICSEARCH_QUERY_TIMEOUT = "elasticsearch.query.timeout";
 
 
     @Default( "127.0.0.1" )
@@ -218,6 +218,6 @@ public interface IndexFig extends GuicyFig {
     long getQueueOfferTimeout();
 
     @Default( "5000" )
-    @Key( ELASTICSEARCH_TIMEOUT )
-    long getElasticsearchTimeout();
+    @Key( ELASTICSEARCH_QUERY_TIMEOUT )
+    long getElasticsearchQueryTimeout();
 }
