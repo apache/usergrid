@@ -32,6 +32,7 @@ import com.sun.jersey.api.client.WebResource;
  * 2.) Is the organization resource i.e /<orgname>/<appname>...
  * This is where top level elements are contained and managemend
  */
+//TODO: check to see if this actually ever gets called. It doesn't seem like so remove once verified.
 public class RootResource implements UrlResource {
 
 
