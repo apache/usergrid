@@ -146,21 +146,21 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
 
         return future.doOnNext( found -> {
             if ( !found.hasFinished() ) {
-                logger.error( "Couldn't find record during refresh uuid" + uuid );
+                logger.error(String.format("Couldn't find record during refresh uuid: {} took ms:{} ", uuid, found.getExecutionTime()));
             }
-        } ).doOnCompleted( () -> {
+        } ).doOnCompleted(() -> {
             //clean up our data
-            String[] aliases = indexCache.getIndexes( alias, AliasedEntityIndex.AliasType.Read );
+            String[] aliases = indexCache.getIndexes(alias, AliasedEntityIndex.AliasType.Read);
             DeIndexRequest deIndexRequest =
-                new DeIndexRequest( aliases, appScope, edge, entity.getId(), entity.getVersion() );
+                new DeIndexRequest(aliases, appScope, edge, entity.getId(), entity.getVersion());
 
             //delete the item
             IndexIdentifierImpl.IndexOperationMessage indexOperationMessage =
                 new IndexIdentifierImpl.IndexOperationMessage();
-            indexOperationMessage.addDeIndexRequest( deIndexRequest );
-            producer.put( indexOperationMessage );
+            indexOperationMessage.addDeIndexRequest(deIndexRequest);
+            producer.put(indexOperationMessage);
 
             refreshTimer.stop();
-        } );
+        });
     }
 }

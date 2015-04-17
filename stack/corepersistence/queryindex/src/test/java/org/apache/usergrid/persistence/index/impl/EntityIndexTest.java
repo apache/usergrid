@@ -655,7 +655,7 @@ public class EntityIndexTest extends BaseIT {
         final EntityIndexBatch batch = entityIndex.createBatch();
 
 
-        final int size = 100;
+        final int size = 10;
 
         final List<Id> entityIds = new ArrayList<>( size );
 
@@ -691,7 +691,7 @@ public class EntityIndexTest extends BaseIT {
         ei.refreshAsync().toBlocking().last();
 
 
-        final int limit = 10;
+        final int limit = 1;
 
 
         final int expectedPages = size / limit;
