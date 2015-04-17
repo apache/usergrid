@@ -32,6 +32,7 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.usergrid.persistence.index.IndexRefreshCommand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -635,12 +636,12 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     /**
      * TODO, these 3 methods are super janky.  During refactoring we should clean this model up
      */
-    public void refreshIndex() {
+    public IndexRefreshCommand.IndexRefreshCommandInfo refreshIndex() {
 
         // refresh special indexes without calling EntityManager refresh because stack overflow
         maybeCreateIndexes();
 
-        entityIndex.refreshAsync().toBlocking().last();
+        return entityIndex.refreshAsync().toBlocking().last();
     }
 
     private void maybeCreateIndexes() {
@@ -730,7 +731,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     }
 
     @Override
-    public void addIndex(final UUID applicationId,final String indexSuffix,final int shards,final int replicas, final String writeConsistency){
+    public void addIndex(final String indexSuffix,final int shards,final int replicas, final String writeConsistency){
         entityIndex.addIndex( indexSuffix, shards, replicas, writeConsistency);
     }
 

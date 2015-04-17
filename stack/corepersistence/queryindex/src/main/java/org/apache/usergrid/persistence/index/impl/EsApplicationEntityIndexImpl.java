@@ -306,7 +306,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
             candidates.add( candidateResult );
         }
 
-        final CandidateResults candidateResults = new CandidateResults( candidates, query.getSelectFieldMappings() );
+        final CandidateResults candidateResults = new CandidateResults( candidates, query.getSelectFieldMappings());
         final String esScrollCursor = searchResponse.getScrollId();
 
         // >= seems odd.  However if we get an overflow, we need to account for it.

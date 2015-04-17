@@ -22,6 +22,7 @@ import java.util.UUID;
 
 import com.google.common.base.Optional;
 import org.apache.usergrid.persistence.core.util.Health;
+import org.apache.usergrid.persistence.index.IndexRefreshCommand;
 import rx.Observable;
 
 
@@ -160,7 +161,7 @@ public interface EntityManagerFactory {
 
     public UUID getManagementAppId();
 
-    public void refreshIndex();
+    public IndexRefreshCommand.IndexRefreshCommandInfo refreshIndex();
 
     public void rebuildAllIndexes( ProgressObserver po ) throws Exception;
 
@@ -182,13 +183,12 @@ public interface EntityManagerFactory {
 
     /**
      * Add a new index to the application for scale
-     * @param appId application id
      * @param suffix unique indentifier for additional index
      * @param shards number of shards
      * @param replicas number of replicas
      * @param writeConsistency only "one, quorum, or all"
      */
-    public void addIndex(final UUID appId,final String suffix,final int shards,final int replicas, final String writeConsistency);
+    public void addIndex(final String suffix,final int shards,final int replicas, final String writeConsistency);
 
     public Health getEntityStoreHealth();
 

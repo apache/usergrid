@@ -82,7 +82,7 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
 
 
     @Override
-    public Observable<Boolean> execute() {
+    public Observable<IndexRefreshCommandInfo> execute() {
 
         Timer.Context refreshTimer = timer.time();
         //id to hunt for
@@ -121,19 +121,21 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
 
 
         //start our processing immediately
-        final Observable<Boolean> future = Async.toAsync( () -> {
+        final Observable<IndexRefreshCommandInfo> future = Async.toAsync( () -> {
+            long start = System.currentTimeMillis();
+            IndexRefreshCommandInfo info;
             try {
                 for ( int i = 0; i < indexFig.maxRefreshSearches(); i++ ) {
                     final SearchResponse response = builder.execute().get();
 
                     if ( response.getHits().totalHits() > 0 ) {
-                        return true;
+                        return new IndexRefreshCommandInfo(true,System.currentTimeMillis() - start);
                     }
 
                     Thread.sleep( indexFig.refreshSleep() );
                 }
 
-                return false;
+                return new IndexRefreshCommandInfo(false,System.currentTimeMillis() - start);
             }
             catch ( Exception ee ) {
                 logger.error( "Failed during refresh search for " + uuid, ee );
@@ -143,14 +145,16 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
 
 
         return future.doOnNext( found -> {
-            if ( !found ) {
-                logger.error( "Couldn't find record during refresh uuid" + uuid );
+            if ( !found.hasFinished() ) {
+                logger.error(String.format("Couldn't find record during refresh uuid: {} took ms:{} ", uuid, found.getExecutionTime()));
+            }else{
+                logger.info(String.format("found record during refresh uuid: {} took ms:{} ", uuid, found.getExecutionTime()));
             }
-        } ).doOnCompleted( () -> {
+        } ).doOnCompleted(() -> {
             //clean up our data
-            String[] aliases = indexCache.getIndexes( alias, AliasedEntityIndex.AliasType.Read );
+            String[] aliases = indexCache.getIndexes(alias, AliasedEntityIndex.AliasType.Read);
             DeIndexRequest deIndexRequest =
-                new DeIndexRequest( aliases, appScope, edge, entity.getId(), entity.getVersion() );
+                new DeIndexRequest(aliases, appScope, edge, entity.getId(), entity.getVersion());
 
             //delete the item
             IndexOperationMessage indexOperationMessage =
@@ -159,6 +163,6 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
             producer.put( indexOperationMessage );
 
             refreshTimer.stop();
-        } );
+        });
     }
 }

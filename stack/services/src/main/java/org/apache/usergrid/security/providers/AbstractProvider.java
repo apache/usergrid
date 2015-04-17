@@ -26,6 +26,9 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
+
+import javax.ws.rs.core.MultivaluedMap;
 
 
 /** @author zznate */
@@ -53,6 +56,9 @@ public abstract class AbstractProvider implements SignInAsProvider {
 
     public abstract void saveToConfiguration( Map<String, Object> config );
 
+    protected MultivaluedMap getMultivaluedMapImpl(){
+        return new MultivaluedMapImpl();
+    }
 
     /** Encapsulates the dictionary lookup for any configuration required */
     protected Map<Object, Object> loadConfigurationFor( String providerKey ) {

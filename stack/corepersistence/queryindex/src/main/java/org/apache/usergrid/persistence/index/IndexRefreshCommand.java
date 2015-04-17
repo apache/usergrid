@@ -25,5 +25,26 @@ import rx.Observable;
  * Classy class class.
  */
 public interface IndexRefreshCommand {
-    Observable<Boolean> execute();
+
+    Observable<IndexRefreshCommandInfo> execute();
+
+    public static class IndexRefreshCommandInfo{
+        private final boolean hasFinished;
+        private final long executionTime;
+
+        public IndexRefreshCommandInfo(boolean hasFinished, long executionTime){
+            this.hasFinished = hasFinished;
+            this.executionTime = executionTime;
+        }
+
+        public boolean hasFinished() {
+            return hasFinished;
+        }
+
+        public long getExecutionTime() {
+            return executionTime;
+        }
+    }
 }
+
+
