@@ -552,7 +552,34 @@
       doCallback(callback, [err, response, user]);
     });
   };
-
+  
+  Usergrid.Client.prototype.adminlogin = function(username, password, callback) {
+    var self = this;
+    var options = {
+        method: "POST",
+        endpoint:'management/token',
+        body: {
+            username: username,
+            password: password,
+            grant_type: "password"
+        },
+        mQuery:true
+    };
+    self.request(options, function(err, response) {
+        var user = {};
+        if (err) {
+            if (self.logging) console.log("error trying to log adminuser in");
+        } else {
+            var options = {
+                client: self,
+                data: response.user
+            };
+            user = new Usergrid.Entity(options);
+            self.setToken(response.access_token);
+        }
+        doCallback(callback, [ err, response, user ]);
+    });
+  };
 
   Usergrid.Client.prototype.reAuthenticateLite = function(callback) {
     var self = this;
