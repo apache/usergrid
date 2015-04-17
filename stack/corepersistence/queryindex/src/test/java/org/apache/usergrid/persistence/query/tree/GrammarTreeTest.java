@@ -19,6 +19,9 @@
 package org.apache.usergrid.persistence.query.tree;
 
 
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
+import org.apache.usergrid.persistence.index.impl.IndexScopeImpl;
+import org.apache.usergrid.persistence.index.impl.SearchRequestBuilderStrategy;
 import org.apache.usergrid.persistence.index.query.tree.LongLiteral;
 import org.apache.usergrid.persistence.index.query.tree.CpQueryFilterLexer;
 import org.apache.usergrid.persistence.index.query.tree.CpQueryFilterParser;
@@ -43,6 +46,7 @@ import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.RecognitionException;
 import org.antlr.runtime.TokenRewriteStream;
 import org.apache.usergrid.persistence.index.exceptions.QueryParseException;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.junit.Test;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -411,7 +415,7 @@ public class GrammarTreeTest {
     @Test
     public void selectGeoWithAnd() throws RecognitionException {
         String queryString = "select * where location within 20000 of 37,-75 "
-                + "and created > 1407776999925 and created < 1407777000266"; 
+                + "and created > 1407776999925 and created < 1407777000266";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
         CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
@@ -429,7 +433,9 @@ public class GrammarTreeTest {
         assertEquals( 37f, withinOperand.getLatitude().getFloatValue(), 0 );
         assertEquals( -75f, withinOperand.getLongitude().getFloatValue(), 0 );
 
-        QueryBuilder qb = query.createQueryBuilder("testcontext");
+        SearchRequestBuilderStrategy builderStrategy = new SearchRequestBuilderStrategy(null,new ApplicationScopeImpl(new SimpleId("test")),null,100);
+        QueryBuilder qb =builderStrategy.createQueryBuilder(new IndexScopeImpl(new SimpleId("owner"),"app"),query);
+
     }
 
 

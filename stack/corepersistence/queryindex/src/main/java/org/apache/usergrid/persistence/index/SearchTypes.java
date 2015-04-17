@@ -20,6 +20,10 @@ package org.apache.usergrid.persistence.index;/*
  */
 
 
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.index.impl.IndexingUtils;
+import org.apache.usergrid.persistence.model.entity.Id;
+
 import java.util.Arrays;
 
 
@@ -37,9 +41,16 @@ public class SearchTypes {
     private SearchTypes( final String... types ) {this.types = types;}
 
 
-    public String[] getTypeNames() {
-        return types;
+    public String[] getTypeNames(ApplicationScope applicationScope) {
+        String[] typeNames = new String[types.length*2];
+        int i =0 ;
+        for(String type : types){
+            typeNames[i++] = IndexingUtils.getType(applicationScope,type);
+            typeNames[i++] = type;
+        }
+        return typeNames;
     }
+
 
 
     /**

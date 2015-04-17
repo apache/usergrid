@@ -387,6 +387,12 @@ public class EdgeMetadataSerializationV1Impl implements EdgeMetadataSerializatio
     }
 
 
+    @Override
+    public int getImplementationVersion() {
+        return GraphDataVersions.INITIAL.getVersion();
+    }
+
+
     /**
      * Inner class to serialize and edgeIdTypeKey
      */

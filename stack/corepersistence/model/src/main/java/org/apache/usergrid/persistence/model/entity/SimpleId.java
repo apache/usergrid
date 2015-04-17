@@ -36,7 +36,6 @@ public class SimpleId implements Id, Serializable {
     private final UUID uuid;
     private final String type;
 
-
     public SimpleId( final UUID uuid, final String type ) {
         Preconditions.checkNotNull( uuid, "uuid is required" );
         Verify.stringExists( type, "type is required" );

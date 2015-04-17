@@ -29,7 +29,6 @@ import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
 import org.apache.usergrid.batch.service.JobSchedulerService;
 import org.apache.usergrid.management.importer.S3Upload;
-import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
@@ -52,6 +51,7 @@ import org.junit.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -87,7 +87,9 @@ public class ImportResourceIT extends AbstractRestIT {
         bucketPrefix = System.getProperty("bucketName");
 
         // start the scheduler after we're all set up
-        JobSchedulerService jobScheduler = ConcurrentProcessSingleton.getInstance().getSpringResource().getBean( JobSchedulerService.class );
+        JobSchedulerService jobScheduler = ConcurrentProcessSingleton.getInstance()
+            .getSpringResource().getBean( JobSchedulerService.class );
+
         if (jobScheduler.state() != Service.State.RUNNING) {
             jobScheduler.startAsync();
             jobScheduler.awaitRunning();
@@ -98,7 +100,7 @@ public class ImportResourceIT extends AbstractRestIT {
     @Before
     public void before() {
         configured =
-            !StringUtils.isEmpty(System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR ))
+                   !StringUtils.isEmpty(System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR ))
                 && !StringUtils.isEmpty(System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR ))
                 && !StringUtils.isEmpty(System.getProperty("bucketName"));
 
@@ -112,9 +114,9 @@ public class ImportResourceIT extends AbstractRestIT {
                 });
         }
 
-        if (!StringUtils.isEmpty(bucketPrefix)) {
-            deleteBucketsWithPrefix();
-        }
+//        if (!StringUtils.isEmpty(bucketPrefix)) {
+//            deleteBucketsWithPrefix();
+//        }
 
         bucketName = bucketPrefix + RandomStringUtils.randomAlphanumeric(10).toLowerCase();
     }
@@ -139,7 +141,7 @@ public class ImportResourceIT extends AbstractRestIT {
             .app()
             .addToPath(app)
             .addToPath("imports")
-            .post(payload);
+            .post(Entity.class,payload);
 
         assertNotNull(entity);
 
@@ -171,14 +173,10 @@ public class ImportResourceIT extends AbstractRestIT {
         Entity payload = payloadBuilder();
 
         // /management/orgs/orgname/apps/appname/import
-        Entity entity = this.management()
-            .orgs()
-            .organization(org)
-            .app()
+        Entity entity = this.management().orgs().organization(org).app()
             .addToPath(app)
             .addToPath("imports")
-            .post(payload);
-
+            .post(Entity.class,payload);
 
         assertNotNull(entity);
 
@@ -200,7 +198,7 @@ public class ImportResourceIT extends AbstractRestIT {
 
         //log into the new org/app and get a token
         Token tokenPayload = new Token("password", newOrgUsername, newOrgPassword);
-        Token newOrgToken = clientSetup.getRestClient().management().token().post(tokenPayload);
+        Token newOrgToken = clientSetup.getRestClient().management().token().post(Token.class,tokenPayload);
 
         //save the old token and set the newly issued token as current
         context().setToken(newOrgToken);
@@ -227,7 +225,7 @@ public class ImportResourceIT extends AbstractRestIT {
         Entity payload = new Entity();
 
         try {
-            this.management().orgs().organization(org).app().addToPath(app).addToPath("imports").post(payload);
+            this.management().orgs().organization(org).app().addToPath(app).addToPath("imports").post(Entity.class,payload);
         } catch (UniformInterfaceException uie) {
             responseStatus = uie.getResponse().getClientResponseStatus();
         }
@@ -246,7 +244,7 @@ public class ImportResourceIT extends AbstractRestIT {
         properties.remove("storage_info");
 
         try {
-            this.management().orgs().organization(org).app().addToPath(app).addToPath("imports").post(payload);
+            this.management().orgs().organization(org).app().addToPath(app).addToPath("imports").post(Entity.class,payload);
         } catch (UniformInterfaceException uie) {
             responseStatus = uie.getResponse().getClientResponseStatus();
         }
@@ -267,7 +265,7 @@ public class ImportResourceIT extends AbstractRestIT {
 
 
         try {
-            this.management().orgs().organization(org).app().addToPath(app).addToPath("imports").post(payload);
+            this.management().orgs().organization(org).app().addToPath(app).addToPath("imports").post(Entity.class,payload);
         } catch (UniformInterfaceException uie) {
             responseStatus = uie.getResponse().getClientResponseStatus();
         }
@@ -289,7 +287,7 @@ public class ImportResourceIT extends AbstractRestIT {
         storage_info.remove("s3_key");
 
         try {
-            this.management().orgs().organization(org).app().addToPath(app).addToPath("imports").post(payload);
+            this.management().orgs().organization(org).app().addToPath(app).addToPath("imports").post(Entity.class,payload);
         } catch (UniformInterfaceException uie) {
             responseStatus = uie.getResponse().getClientResponseStatus();
         }
@@ -302,7 +300,7 @@ public class ImportResourceIT extends AbstractRestIT {
         storage_info.remove("s3_access_id");
 
         try {
-            this.management().orgs().organization(org).app().addToPath(app).addToPath("imports").post(payload);
+            this.management().orgs().organization(org).app().addToPath(app).addToPath("imports").post(Entity.class,payload);
         } catch (UniformInterfaceException uie) {
             responseStatus = uie.getResponse().getClientResponseStatus();
         }
@@ -315,7 +313,7 @@ public class ImportResourceIT extends AbstractRestIT {
         storage_info.remove("bucket_location");
 
         try {
-            this.management().orgs().organization(org).app().addToPath(app).addToPath("imports").post(payload);
+            this.management().orgs().organization(org).app().addToPath(app).addToPath("imports").post(Entity.class,payload);
         } catch (UniformInterfaceException uie) {
             responseStatus = uie.getResponse().getClientResponseStatus();
         }
@@ -416,11 +414,12 @@ public class ImportResourceIT extends AbstractRestIT {
         String org = clientSetup.getOrganizationName();
         String app = clientSetup.getAppName();
 
+        String basePath = System.getProperty("target.directory")
+            + File.separator + "test-classes" + File.separator;
 
-        //list out all the files in the resource directory you want uploaded
-        List<String> filenames = new ArrayList<>(1);
+        List<String> filenames = new ArrayList<>( 1 );
+        filenames.add( basePath  + "testimport-correct-testcol.1.json");
 
-        filenames.add("testImportCorrect.testCol.1.json");
         // create 10 applications each with collection of 10 things, export all to S3
         S3Upload s3Upload = new S3Upload();
         s3Upload.copyToS3(
@@ -432,15 +431,20 @@ public class ImportResourceIT extends AbstractRestIT {
 
         Entity importEntity = importCollection();
 
-        Entity importGet = this.management().orgs().organization( org ).app().addToPath( app )
-            .addToPath( "imports" ).addToPath( importEntity.getUuid().toString() ).get();
-
+        Entity importGet = this.management().orgs().organization( org ).app()
+            .addToPath(app)
+            .addToPath( "imports" )
+            .addToPath(importEntity.getUuid().toString())
+            .get();
 
         refreshIndex();
 
-        Entity importGetIncludes = this.management().orgs().organization(org).app().addToPath(app)
-                                       .addToPath("imports" ).addToPath(importEntity.getUuid().toString() )
-                                       .addToPath("files" ).get();
+        Entity importGetIncludes = this.management().orgs().organization(org).app()
+            .addToPath(app)
+            .addToPath("imports")
+            .addToPath(importEntity.getUuid().toString())
+            .addToPath("files")
+            .get();
 
         ApiResponse importGetIncludesResponse = importGetIncludes.getResponse();
 
@@ -451,7 +455,8 @@ public class ImportResourceIT extends AbstractRestIT {
 
         final Entity includesEntity = importGetIncludesResponse.getEntities().get( 0 );
 
-        assertEquals( "testImportCorrect.testCol.1.json", includesEntity.getAsString( "fileName" ) );
+        assertTrue( includesEntity.getAsString("fileName").endsWith("testimport-correct-testcol.1.json"));
+
         assertEquals(1, includesEntity.get( "importedConnectionCount" ));
         assertEquals(1, includesEntity.get( "importedEntityCount" ));
 
@@ -474,18 +479,20 @@ public class ImportResourceIT extends AbstractRestIT {
      */
     @Test
     public void testImportOneGoodOneBad() throws Exception {
+
         // import from a bad JSON file
         Assume.assumeTrue(configured);
 
         String org = clientSetup.getOrganizationName();
         String app = clientSetup.getAppName();
 
+        String basePath = System.getProperty("target.directory")
+            + File.separator + "test-classes" + File.separator;
 
-        //list out all the files in the resource directory you want uploaded
-        List<String> filenames = new ArrayList<>(1);
+        List<String> filenames = new ArrayList<>( 2 );
+        filenames.add( basePath + "testimport-correct-testcol.1.json");
+        filenames.add( basePath + "testImport.testApplication.2.json");
 
-        filenames.add("testImportCorrect.testCol.1.json");
-        filenames.add("testImport.testApplication.2.json");
         // create 10 applications each with collection of 10 things, export all to S3
         S3Upload s3Upload = new S3Upload();
         s3Upload.copyToS3(
@@ -497,9 +504,10 @@ public class ImportResourceIT extends AbstractRestIT {
 
         Entity importEntity = importCollection();
 
-        Entity importGet = this.management().orgs().organization(org).app().addToPath(app)
-            .addToPath( "imports" ).addToPath(importEntity.getUuid().toString() ).get();
-
+        Entity importGet = this.management().orgs().organization(org).app()
+            .addToPath(app)
+            .addToPath("imports")
+            .addToPath(importEntity.getUuid().toString()).get();
 
         assertNotNull(importGet);
 
@@ -511,8 +519,6 @@ public class ImportResourceIT extends AbstractRestIT {
         assertNotNull(collection);
         assertEquals(1, collection.getNumOfEntities());
         assertEquals("thing0", collection.getResponse().getEntities().get(0).get("name"));
-
-
     }
 
     /**
@@ -526,11 +532,12 @@ public class ImportResourceIT extends AbstractRestIT {
         String org = clientSetup.getOrganizationName();
         String app = clientSetup.getAppName();
 
+        String basePath = System.getProperty("target.directory")
+            + File.separator + "test-classes" + File.separator;
 
-        //list out all the files in the resource directory you want uploaded
-        List<String> filenames = new ArrayList<>(1);
+        List<String> filenames = new ArrayList<>( 1 );
+        filenames.add( basePath + "testimport-bad-json.json");
 
-        filenames.add("testImport.testApplication.2.json");
         // create 10 applications each with collection of 10 things, export all to S3
         S3Upload s3Upload = new S3Upload();
         s3Upload.copyToS3(
@@ -542,15 +549,16 @@ public class ImportResourceIT extends AbstractRestIT {
 
         Entity importEntity = importCollection();
 
-        Entity importGet = this.management().orgs().organization(org).app().addToPath(app)
-            .addToPath("imports" ).addToPath(importEntity.getUuid().toString() ).get();
-
+        Entity importGet = this.management().orgs().organization(org).app()
+            .addToPath(app)
+            .addToPath("imports" )
+            .addToPath(importEntity.getUuid().toString() )
+            .get();
 
         assertNotNull(importGet);
 
         assertEquals("FAILED", importGet.get("state"));
         assertEquals(1, importGet.get("fileCount"));
-
 
         Collection collection = this.app().collection("things").get();
 
@@ -559,26 +567,30 @@ public class ImportResourceIT extends AbstractRestIT {
 
 
     }
-//export with two files and import the two files.
-    //also test the includes endpoint.
+
 
     /**
      * TODO: Test that importing bad JSON will result in an informative error message.
      */
     @Test
     public void testImportBadJson() throws Exception {
+
         // import from a bad JSON file
         Assume.assumeTrue(configured);
 
         String org = clientSetup.getOrganizationName();
         String app = clientSetup.getAppName();
 
-        //list out all the files in the resource directory you want uploaded
-        List<String> filenames = new ArrayList<>(1);
-        filenames.add("testImportInvalidJson.testApplication.3.json");
+        String basePath = System.getProperty("target.directory")
+            + File.separator + "test-classes" + File.separator;
+
+        List<String> filenames = new ArrayList<>( 1 );
+        filenames.add( basePath + "testimport-bad-json-testapp.3.json");
+
         // create 10 applications each with collection of 10 things, export all to S3
         S3Upload s3Upload = new S3Upload();
-        s3Upload.copyToS3(System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR ),
+        s3Upload.copyToS3(
+            System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR ),
             System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR ),
             bucketName, filenames);
 
@@ -588,14 +600,21 @@ public class ImportResourceIT extends AbstractRestIT {
 
         // we should now have 100 Entities in the default app
 
-        Entity importGet = this.management().orgs().organization( org ).app().addToPath( app ).addToPath("imports")
-            .addToPath( importEntity.getUuid().toString() ).get();
+        Entity importGet = this.management().orgs().organization( org ).app()
+            .addToPath( app )
+            .addToPath("imports")
+            .addToPath( importEntity.getUuid().toString() )
+            .get();
 
-        Entity importGetIncludes = this.management().orgs().organization(org).app().addToPath(app)
-            .addToPath("imports" ).addToPath(importEntity.getUuid().toString() )
-            .addToPath("files" ).get();
+        Entity importGetIncludes = this.management().orgs().organization(org).app()
+            .addToPath(app)
+            .addToPath("imports" )
+            .addToPath(importEntity.getUuid().toString() )
+            .addToPath("files" )
+            .get();
 
         assertNotNull(importGet);
+
         //TODO: needs better error checking
         assertNotNull(importGetIncludes);
 
@@ -625,21 +644,20 @@ public class ImportResourceIT extends AbstractRestIT {
             }});
         }});
 
-        Entity importEntity = this.management().orgs().organization(org).app().addToPath(app).addToPath("imports")
-                                  .post(importPayload);
+        Entity importEntity = this.management().orgs().organization(org).app()
+            .addToPath(app)
+            .addToPath("imports")
+            .post(Entity.class,importPayload);
 
         int maxRetries = 120;
         int retries = 0;
 
         while (retries++ < maxRetries) {
 
-            Entity importGet = this.management()
-                .orgs()
-                .organization(org)
-                .app()
-                .addToPath(app)
-                .addToPath("imports")
-                .addToPath(importEntity.getUuid().toString())
+            Entity importGet = this.management().orgs().organization(org).app()
+                .addToPath( app )
+                .addToPath( "imports")
+                .addToPath( importEntity.getUuid().toString() )
                 .get();
 
             if (importGet.get("state").equals("FINISHED") || importGet.get( "state" ).equals( "FAILED" )) {
@@ -753,17 +771,22 @@ public class ImportResourceIT extends AbstractRestIT {
 
     /*Creates fake payload for testing purposes.*/
     public Entity payloadBuilder() {
-        Entity payload = new Entity();
-        Entity properties = new Entity();
+
+        String accessId = System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR );
+        String secretKey = System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR );
+
         Entity storage_info = new Entity();
-        //TODO: always put dummy values here and ignore this test.
-        //TODO: add a ret for when s3 values are invalid.
-        storage_info.put("s3_key", "insert key here");
-        storage_info.put("s3_access_id", "insert access id here");
-        storage_info.put("bucket_location", "insert bucket name here");
+        storage_info.put("s3_key", secretKey);
+        storage_info.put("s3_access_id", accessId);
+        storage_info.put("bucket_location", bucketName) ;
+
+        Entity properties = new Entity();
         properties.put("storage_provider", "s3");
         properties.put("storage_info", storage_info);
+
+        Entity payload = new Entity();
         payload.put("properties", properties);
+
         return payload;
     }
 }

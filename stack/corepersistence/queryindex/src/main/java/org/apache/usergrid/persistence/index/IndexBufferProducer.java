@@ -28,7 +28,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 /**
- * Classy class class.
+ * Produce to index buffer consumer
  */
 public interface IndexBufferProducer {
 

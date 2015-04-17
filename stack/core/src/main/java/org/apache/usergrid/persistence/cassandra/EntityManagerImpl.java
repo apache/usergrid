@@ -36,6 +36,7 @@ import java.util.UUID;
 
 import javax.annotation.Resource;
 
+import org.apache.usergrid.persistence.index.EntityIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -213,7 +214,7 @@ public class EntityManagerImpl implements EntityManager {
 
 
     @Override
-    public void init(EntityManagerFactory emf, UUID applicationId) {
+    public void init(EntityManagerFactory emf, EntityIndex entityIndex, UUID applicationId) {
         init( (EntityManagerFactoryImpl)emf, null, null, applicationId, false);
     }
 
@@ -2882,22 +2883,6 @@ public class EntityManagerImpl implements EntityManager {
         return Results.fromEntities( entities );
     }
 
-    @Override
-    public void refreshIndex() {
-        // no action necessary
-    }
-
-
-    @Override
-    public void createIndex() {
-        //no op
-    }
-
-
-    @Override
-    public void deleteIndex() {
-        //no op
-    }
 
 
     @Override

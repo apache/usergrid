@@ -74,7 +74,7 @@ public class FileImportJob extends OnlyOnceJob {
 
             // update file import record
             UUID fileImportId = (UUID) jobExecution.getJobData().getProperty(FILE_IMPORT_ID);
-            EntityManager em = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+            EntityManager em = emf.getEntityManager(emf.getManagementAppId());
             FileImport fileImport = em.get(fileImportId, FileImport.class);
             fileImport.setState( FileImport.State.FAILED );
             em.update( fileImport );
@@ -82,7 +82,7 @@ public class FileImportJob extends OnlyOnceJob {
             throw t;
         }
 
-        logger.error("File Import Service completed job");
+        logger.info("File Import Service completed job: " + jobExecution.getJobName() );
     }
 
     @Override
@@ -103,7 +103,7 @@ public class FileImportJob extends OnlyOnceJob {
     public void dead( final JobExecution execution ) throws Exception {
 
         // Get the root entity manager
-        EntityManager rootEm = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+        EntityManager rootEm = emf.getEntityManager( emf.getManagementAppId() );
 
         // Mark the sub-job i.e. File Import Job as Failed
         FileImport fileImport = null;//importService.getFileImportEntity(execution);

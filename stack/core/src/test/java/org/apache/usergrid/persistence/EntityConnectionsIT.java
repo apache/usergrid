@@ -70,7 +70,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
 
         em.createConnection( firstUserEntity, "likes", secondUserEntity );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         Results r = em.getConnectedEntities( firstUserEntity, "likes", null, Level.IDS );
 
@@ -134,7 +134,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         LOG.info( "\n\nConnecting " + awardA.getUuid() + " \"awarded\" " + catB.getUuid() + "\n" );
         em.createConnection( awardA, "awarded", catB );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         // List forward connections for cat A
 
@@ -155,7 +155,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         LOG.info( "\n\nConnecting " + awardA.getUuid() + " \"awarded\" " + catA.getUuid() + "\n" );
         em.createConnection( awardA, "awarded", catA );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         // List forward connections for cat A
 // Not valid with current usages
@@ -262,7 +262,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
 
         em.createConnection( secondUserEntity, "likes", arrogantbutcher );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         Results r = em.getConnectedEntities( firstUserEntity, "likes", "restaurant", Level.IDS );
 
@@ -316,7 +316,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
 
         em.createConnection( fredEntity, "likes", wilmaEntity );
 
-        em.refreshIndex();
+        app.refreshIndex();
 
 //        // search for "likes" edges from fred
 //        assertEquals( 1,
@@ -370,7 +370,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         }
 
 
-        em.refreshIndex();
+        app.refreshIndex();
 
         Results r = em.getConnectedEntities( firstUserEntity, "likes", null, Level.ALL_PROPERTIES ) ;
 
@@ -414,7 +414,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
 //
 //        em.createConnection( fredEntity, "likes", wilmaEntity );
 //
-//        em.refreshIndex();
+//        app.refreshIndex();
 //
 ////        // search for "likes" edges from fred
 ////        assertEquals( 1,

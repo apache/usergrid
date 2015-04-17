@@ -31,13 +31,14 @@ import org.junit.Test;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
+import org.apache.usergrid.persistence.core.util.IdGenerator;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEdgeMeta;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.Shard;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardEntryGroup;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardGroupCompaction;
 
 import static junit.framework.TestCase.assertTrue;
-import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createId;
+import static org.apache.usergrid.persistence.core.util.IdGenerator.createId;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.eq;
@@ -52,8 +53,8 @@ public class ShardEntryGroupIteratorTest {
     @Test(expected = IllegalArgumentException.class)
     public void noShards() {
 
-        final ApplicationScope scope = new ApplicationScopeImpl( createId( "application" ) );
-        final DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromSourceNode( createId( "source" ), "test" );
+        final ApplicationScope scope = new ApplicationScopeImpl( IdGenerator.createId( "application" ) );
+        final DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromSourceNode( IdGenerator.createId( "source" ), "test" );
         final ShardGroupCompaction shardGroupCompaction = mock( ShardGroupCompaction.class );
         final long delta = 10000;
         final Iterator<Shard> noShards = Collections.<Shard>emptyList().iterator();
@@ -66,8 +67,8 @@ public class ShardEntryGroupIteratorTest {
     @Test
     public void existingSingleShard() {
 
-        final ApplicationScope scope = new ApplicationScopeImpl( createId( "application" ) );
-        final DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromSourceNode( createId( "source" ), "test" );
+        final ApplicationScope scope = new ApplicationScopeImpl( IdGenerator.createId( "application" ) );
+        final DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromSourceNode( IdGenerator.createId( "source" ), "test" );
 
 
         final ShardGroupCompaction shardGroupCompaction = mock( ShardGroupCompaction.class );
@@ -119,8 +120,8 @@ public class ShardEntryGroupIteratorTest {
     @Test
     public void boundedShardSets() {
 
-        final ApplicationScope scope = new ApplicationScopeImpl( createId( "application" ) );
-        final DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromSourceNode( createId( "source" ), "test" );
+        final ApplicationScope scope = new ApplicationScopeImpl( IdGenerator.createId( "application" ) );
+        final DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromSourceNode( IdGenerator.createId( "source" ), "test" );
 
         final ShardGroupCompaction shardGroupCompaction = mock( ShardGroupCompaction.class );
 

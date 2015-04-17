@@ -25,7 +25,7 @@ import java.util.List;
  * An object field that represents a list of objects. This can also be used to represent arrays
  * @param <T> Type of entity in list, must be primitive or Entity.
  */
-public class ListField<T> extends AbstractField<List<T>> {
+public abstract class ListField<T> extends AbstractField<List<T>> {
 
     /**
      * Constructor that initializes with an empty set for adding to later

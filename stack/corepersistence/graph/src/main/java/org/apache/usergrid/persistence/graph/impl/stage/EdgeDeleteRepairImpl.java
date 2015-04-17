@@ -26,7 +26,6 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.core.hystrix.HystrixCassandra;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
@@ -39,6 +38,7 @@ import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.netflix.astyanax.Keyspace;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import rx.Observable;
 import rx.functions.Action1;
@@ -94,7 +94,12 @@ public class EdgeDeleteRepairImpl implements EdgeDeleteRepair {
 
 
                                     //remove from storage
-                                    HystrixCassandra.async(storageSerialization.deleteEdge( scope, edge, timestamp ));
+                                    try {
+                                        storageSerialization.deleteEdge( scope, edge, timestamp ).execute();
+                                    }
+                                    catch ( ConnectionException e ) {
+                                        throw new RuntimeException( "Unable to connect to casandra", e );
+                                    }
                                 }
                             }
                         } );

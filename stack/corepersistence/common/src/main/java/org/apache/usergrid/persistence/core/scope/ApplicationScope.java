@@ -31,4 +31,5 @@ public interface ApplicationScope {
      * Get an Application scope
      */
     Id getApplication();
+
 }

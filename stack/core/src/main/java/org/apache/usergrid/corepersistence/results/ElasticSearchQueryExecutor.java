@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.SearchTypes;
@@ -43,7 +44,7 @@ public class ElasticSearchQueryExecutor implements QueryExecutor {
 
     private final ApplicationScope applicationScope;
 
-    private final EntityIndex entityIndex;
+    private final ApplicationEntityIndex entityIndex;
 
     private final IndexScope indexScope;
 
@@ -57,7 +58,7 @@ public class ElasticSearchQueryExecutor implements QueryExecutor {
     private boolean moreToLoad = true;
 
 
-    public ElasticSearchQueryExecutor( final ResultsLoaderFactory resultsLoaderFactory, final EntityIndex entityIndex,
+    public ElasticSearchQueryExecutor( final ResultsLoaderFactory resultsLoaderFactory, final ApplicationEntityIndex entityIndex,
                                        final ApplicationScope applicationScope, final IndexScope indexScope,
                                        final SearchTypes types, final Query query ) {
         this.resultsLoaderFactory = resultsLoaderFactory;

@@ -20,6 +20,7 @@ package org.apache.usergrid.corepersistence.events;
 
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.index.ApplicationEntityIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,7 +71,7 @@ public class EntityDeletedHandler implements EntityDeleted {
             } );
 
         CpEntityManagerFactory cpemf = ( CpEntityManagerFactory ) emf;
-        final EntityIndex ei = cpemf.getManagerCache().getEntityIndex( scope );
+        final ApplicationEntityIndex ei = cpemf.getManagerCache().getEntityIndex( scope );
 
         final IndexScope indexScope =
             new IndexScopeImpl( new SimpleId( scope.getOwner().getUuid(), scope.getOwner().getType() ),

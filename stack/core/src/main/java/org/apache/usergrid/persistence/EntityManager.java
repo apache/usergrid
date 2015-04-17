@@ -17,6 +17,7 @@
 package org.apache.usergrid.persistence;
 
 
+import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.query.Query;
 import java.nio.ByteBuffer;
 import java.util.Collection;
@@ -683,22 +684,7 @@ public interface EntityManager {
     /** @return the cass */
     CassandraService getCass();
 
-    /**
-     * Refresh the applications index -- use sparingly.
-     */
-    void refreshIndex();
-
-    /**
-     * Create the index, should ONLY ever be called the first time an application is created
-     */
-    void createIndex();
-
-    /**
-    * Create the index, should ONLY ever be called the first time an application is created
-    */
-    void deleteIndex();
-
-    public void init( EntityManagerFactory emf, UUID applicationId);
+    public void init( EntityManagerFactory emf, EntityIndex entityIndex, UUID applicationId);
 
     /** For testing purposes */
     public void flushManagerCaches();

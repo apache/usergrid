@@ -21,12 +21,17 @@ import java.io.IOException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource2point0.model.Collection;
 
+import org.apache.usergrid.rest.test.resource2point0.model.Credentials;
 import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
+import org.apache.usergrid.rest.test.resource2point0.model.Token;
+
 import org.junit.Ignore;
 import org.junit.Test;
+import org.mortbay.jetty.security.Credential;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -125,6 +130,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
     /**
      * Test posts with a user level token on a path with permissions
      */
+    //TODO: App level permissions aren't functioning.
     @Test
     public void permissionWithMeInString() throws Exception {
 
@@ -154,7 +160,9 @@ public class CollectionsResourceIT extends AbstractRestIT {
         this.app().collection("role").uniqueID("Default").delete();
 
         //log our new user in
-        this.getAppUserToken(username, password);
+        //TODO:App Level token is broken it seems. Test won't work with it.
+        Token appToken = this.getAppUserToken(username, password);
+        management().token().setToken( appToken );
 
         //now post data
         payload = new Entity();
@@ -184,8 +192,9 @@ public class CollectionsResourceIT extends AbstractRestIT {
         Entity payload = new Entity();
         payload.put("summaryOverview", summaryOverview);
         payload.put("caltype", calType);
-        Entity calendarlistOne = this.app().collection(collection).post(payload);
-        assertEquals(calendarlistOne.get("summaryOverview"), summaryOverview);
+
+        Entity calendarlistOne = this.app().collection(collection).post(payload );
+        assertEquals( calendarlistOne.get( "summaryOverview" ), summaryOverview );
         assertEquals(calendarlistOne.get("caltype"), calType);
 
         this.refreshIndex();
@@ -197,7 +206,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put("summaryOverview", summaryOverviewTwo);
         payload.put("caltype", calTypeTwo);
         Entity calendarlistTwo = this.app().collection(collection).post(payload);
-        assertEquals(calendarlistTwo.get("summaryOverview"), summaryOverviewTwo);
+        assertEquals( calendarlistTwo.get( "summaryOverview" ), summaryOverviewTwo );
         assertEquals(calendarlistTwo.get("caltype"), calTypeTwo);
 
 
@@ -205,7 +214,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         String query = "summaryOverview = 'My Summary'";
         QueryParameters queryParameters = new QueryParameters().setQuery(query);
         Collection calendarListCollection = this.app().collection(collection).get(queryParameters);
-        assertEquals(calendarListCollection.hasNext(), false);
+        assertEquals(calendarListCollection.hasNext(), true);
 
     }
 

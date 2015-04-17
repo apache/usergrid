@@ -423,9 +423,11 @@ public class ServiceResource extends AbstractContextResource {
 
     @DELETE
     @RequireApplicationAccess
-    public JSONWithPadding executeDelete( @Context UriInfo ui,
-                                          @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception {
+    public JSONWithPadding executeDelete(
+        @Context UriInfo ui,
+        @QueryParam("callback") @DefaultValue("callback") String callback,
+        @QueryParam("app_delete_confirm") String confirmAppDelete )
+        throws Exception {
 
         LOG.debug( "ServiceResource.executeDelete" );
 

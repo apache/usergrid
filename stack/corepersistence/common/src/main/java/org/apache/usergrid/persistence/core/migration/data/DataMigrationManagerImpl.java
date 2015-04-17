@@ -21,11 +21,13 @@ package org.apache.usergrid.persistence.core.migration.data;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.NavigableMap;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,9 +35,6 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.core.migration.schema.MigrationException;
 
 import com.google.common.base.Preconditions;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -45,160 +44,118 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
 
     private static final Logger LOG = LoggerFactory.getLogger( DataMigrationManagerImpl.class );
 
-    private final TreeMap<Integer, DataMigration> migrationTreeMap = new TreeMap<>();
+    private final Map<String, MigrationPlugin> migrationPlugins;
+
+    private final List<MigrationPlugin> executionOrder;
 
     private final MigrationInfoSerialization migrationInfoSerialization;
 
-    /**
-     * Cache to cache versions temporarily
-     */
-    private final LoadingCache<String, Integer> versionCache = CacheBuilder.newBuilder()
-            //cache the local value for 1 minute
-            .expireAfterWrite( 1, TimeUnit.MINUTES ).build( new CacheLoader<String, Integer>() {
-                @Override
-                public Integer load( final String key ) throws Exception {
-                    return migrationInfoSerialization.getVersion();
-                }
-            } );
 
 
     @Inject
-    public DataMigrationManagerImpl( final MigrationInfoSerialization migrationInfoSerialization,
-                                     final Set<DataMigration> migrations ) {
+    public DataMigrationManagerImpl( final Set<MigrationPlugin> plugins,
+                                     final MigrationInfoSerialization migrationInfoSerialization ) {
 
-        Preconditions.checkNotNull( migrationInfoSerialization, 
-                "migrationInfoSerialization must not be null" );
-        Preconditions.checkNotNull( migrations, "migrations must not be null" );
+
+        Preconditions.checkNotNull( plugins, "plugins must not be null" );
+        Preconditions.checkNotNull( migrationInfoSerialization, "migrationInfoSerialization must not be null" );
 
         this.migrationInfoSerialization = migrationInfoSerialization;
 
 
-        for ( DataMigration migration : migrations ) {
+        this.executionOrder = new ArrayList<>(plugins.size());
+        this.migrationPlugins = new HashMap<>();
 
-            Preconditions.checkNotNull( migration,
-                    "A migration instance in the set of migrations was null.  This is not allowed" );
 
-            final int version = migration.getVersion();
+        for ( MigrationPlugin plugin : plugins ) {
+            final String name = plugin.getName();
 
-            final DataMigration existing = migrationTreeMap.get( version );
+
+            final MigrationPlugin existing = migrationPlugins.get( name );
 
             if ( existing != null ) {
-
-                final Class<? extends DataMigration> existingClass = existing.getClass();
-
-                final Class<? extends DataMigration> currentClass = migration.getClass();
-
-
-                throw new DataMigrationException( String.format( 
-                        "Data migrations must be unique.  Both classes %s and %s have version %d", 
-                        existingClass, currentClass, version ) );
+                throw new IllegalArgumentException( "Duplicate plugin name detected.  A plugin with name " + name
+                        + " is already implemented by class '" + existing.getClass().getName() + "'.  Class '" + plugin
+                        .getClass().getName() + "' is also trying to implement this name." );
             }
 
-            migrationTreeMap.put( version, migration );
+            this.migrationPlugins.put( name, plugin );
+            this.executionOrder.add( plugin );
+
         }
+
+        //now sort based on execution order
+
+        Collections.sort(executionOrder, MigrationPluginComparator.INSTANCE);
+
+
     }
 
 
     @Override
     public void migrate() throws MigrationException {
 
-        if ( migrationTreeMap.isEmpty() ) {
-            LOG.warn( "No migrations found to run, exiting" );
-            return;
-        }
-
-
-        final int currentVersion = migrationInfoSerialization.getVersion();
-
-        LOG.info( "Saved schema version is {}, max migration version is {}", currentVersion,
-                migrationTreeMap.lastKey() );
-
-        //we have our migrations to run, execute them
-        final NavigableMap<Integer, DataMigration> migrationsToRun = 
-                migrationTreeMap.tailMap( currentVersion, false );
-
-        CassandraProgressObserver observer = new CassandraProgressObserver();
-
-
-        for ( DataMigration migration : migrationsToRun.values() ) {
-
-            migrationInfoSerialization.setStatusCode( StatusCode.RUNNING.status );
-
-            final int migrationVersion = migration.getVersion();
-
-            LOG.info( "Running migration version {}", migrationVersion );
-
-            observer.update( migrationVersion, "Starting migration" );
-
-
-            //perform this migration, if it fails, short circuit
-            try {
-                migration.migrate( observer );
-            }
-            catch ( Throwable throwable ) {
-                observer.failed( migrationVersion, "Exception thrown during migration", throwable );
-
-                LOG.error( "Unable to migrate to version {}.", migrationVersion, throwable );
-
-                return;
-            }
-
-            //we had an unhandled exception or the migration failed, short circuit
-            if ( observer.failed ) {
-                return;
-            }
-
-            //set the version
-            migrationInfoSerialization.setVersion( migrationVersion );
-
-            versionCache.invalidateAll();
-
-            //update the observer for progress so other nodes can see it
-            observer.update( migrationVersion, "Completed successfully" );
-        }
-
-        migrationInfoSerialization.setStatusCode( StatusCode.COMPLETE.status );
+        /**
+         * Invoke each plugin to attempt a migration
+         */
+        executionOrder.forEach(plugin -> {
+            final ProgressObserver observer = new CassandraProgressObserver(plugin.getName());
+            plugin.run(observer);
+        });
     }
 
 
     @Override
     public boolean isRunning() {
-        return migrationInfoSerialization.getStatusCode() == StatusCode.RUNNING.status;
-    }
 
-
-    @Override
-    public void invalidate() {
-        versionCache.invalidateAll();
-    }
-
-
-    @Override
-    public int getCurrentVersion() {
-        try {
-            return versionCache.get( "currentVersion" );
+        //we have to get our state from cassandra
+        for(final String pluginName :getPluginNames()){
+           if( migrationInfoSerialization.getStatusCode(pluginName) == StatusCode.RUNNING.status){
+               return true;
+           }
         }
-        catch ( ExecutionException e ) {
-            throw new DataMigrationException( "Unable to get current version", e );
-        }
+
+
+        return false;
+    }
+
+
+
+    @Override
+    public int getCurrentVersion( final String pluginName ) {
+        Preconditions.checkNotNull( pluginName, "pluginName cannot be null" );
+        return migrationInfoSerialization.getVersion( pluginName );
     }
 
 
     @Override
-    public void resetToVersion( final int version ) {
-        final int highestAllowed = migrationTreeMap.lastKey();
+    public void resetToVersion( final String pluginName, final int version ) {
+        Preconditions.checkNotNull( pluginName, "pluginName cannot be null" );
 
-        Preconditions.checkArgument( version <= highestAllowed, 
-                "You cannot set a version higher than the max of " + highestAllowed);
+        final MigrationPlugin plugin = migrationPlugins.get( pluginName );
+
+        Preconditions.checkArgument( plugin != null, "Plugin " + pluginName + " could not be found" );
+
+        final int highestAllowed = plugin.getMaxVersion();
+
+        Preconditions.checkArgument( version <= highestAllowed,
+                "You cannot set a version higher than the max of " + highestAllowed + " for plugin " + pluginName );
         Preconditions.checkArgument( version >= 0, "You must specify a version of 0 or greater" );
 
-        migrationInfoSerialization.setVersion( version );
+        migrationInfoSerialization.setVersion( pluginName, version );
     }
 
 
     @Override
-    public String getLastStatus() {
-        return migrationInfoSerialization.getStatusMessage();
+    public String getLastStatus( final String pluginName ) {
+        Preconditions.checkNotNull( pluginName, "pluginName cannot be null" );
+        return migrationInfoSerialization.getStatusMessage( pluginName );
+    }
+
+
+    @Override
+    public Set<String> getPluginNames() {
+        return migrationPlugins.keySet();
     }
 
 
@@ -217,16 +174,32 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
     }
 
 
-    private final class CassandraProgressObserver implements DataMigration.ProgressObserver {
+    private final class CassandraProgressObserver implements ProgressObserver {
+
+        private final String pluginName;
 
         private boolean failed = false;
+
+
+        private CassandraProgressObserver( final String pluginName ) {this.pluginName = pluginName;}
+
+
+        @Override
+        public void start() {
+            migrationInfoSerialization.setStatusCode( pluginName, StatusCode.RUNNING.status );
+        }
+
+
+        @Override
+        public void complete() {
+            migrationInfoSerialization.setStatusCode( pluginName, StatusCode.COMPLETE.status );
+        }
 
 
         @Override
         public void failed( final int migrationVersion, final String reason ) {
 
-            final String storedMessage = String.format( 
-                    "Failed to migrate, reason is appended.  Error '%s'", reason );
+            final String storedMessage = String.format( "Failed to migrate, reason is appended.  Error '%s'", reason );
 
 
             update( migrationVersion, storedMessage );
@@ -235,7 +208,7 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
 
             failed = true;
 
-            migrationInfoSerialization.setStatusCode( StatusCode.ERROR.status );
+            migrationInfoSerialization.setStatusCode( pluginName, StatusCode.ERROR.status );
         }
 
 
@@ -245,30 +218,28 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
             throwable.printStackTrace( new PrintWriter( stackTrace ) );
 
 
-            final String storedMessage = String.format( 
-                "Failed to migrate, reason is appended.  Error '%s' %s", reason, stackTrace.toString() );
+            final String storedMessage = String.format( "Failed to migrate, reason is appended.  Error '%s' %s", reason,
+                    stackTrace.toString() );
 
             update( migrationVersion, storedMessage );
 
 
-            LOG.error( "Unable to migrate version {} due to reason {}.", 
-                    migrationVersion, reason, throwable );
+            LOG.error( "Unable to migrate version {} due to reason {}.", migrationVersion, reason, throwable );
 
             failed = true;
 
-            migrationInfoSerialization.setStatusCode( StatusCode.ERROR.status );
+            migrationInfoSerialization.setStatusCode( pluginName, StatusCode.ERROR.status );
         }
 
 
         @Override
         public void update( final int migrationVersion, final String message ) {
-            final String formattedOutput = String.format( 
-                    "Migration version %d.  %s", migrationVersion, message );
+            final String formattedOutput = String.format( "Migration version %d.  %s", migrationVersion, message );
 
             //Print this to the info log
             LOG.info( formattedOutput );
 
-            migrationInfoSerialization.setStatusMessage( formattedOutput );
+            migrationInfoSerialization.setStatusMessage( pluginName, formattedOutput );
         }
 
 
@@ -277,6 +248,28 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
          */
         public boolean isFailed() {
             return failed;
+        }
+    }
+
+    private final static class MigrationPluginComparator implements Comparator<MigrationPlugin> {
+
+        public static  final MigrationPluginComparator INSTANCE = new MigrationPluginComparator();
+
+        @Override
+        public int compare( final MigrationPlugin o1, final MigrationPlugin o2 ) {
+
+            //first one is less
+            if(o1.getPhase().ordinal() < o2.getPhase().ordinal()){
+                return -1;
+            }
+
+            //second one is first
+            if(o2.getPhase().ordinal() < o2.getPhase().ordinal()){
+                return 1;
+            }
+
+            //if our phase for
+            return o1.getName().compareTo( o2.getName() );
         }
     }
 }

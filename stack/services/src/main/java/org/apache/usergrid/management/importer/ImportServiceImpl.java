@@ -126,10 +126,10 @@ public class ImportServiceImpl implements ImportService {
         importEntity.setState(Import.State.SCHEDULED);
         rootEM.update(importEntity);
 
-        final EntityRef source = getApplicationEntity( rootEM, application );
+        final EntityRef appInfo = getApplicationInfoEntity(rootEM, application);
 
         //now link it to the application
-        rootEM.createConnection(source, APP_IMPORT_CONNECTION, importEntity);
+        rootEM.createConnection(appInfo, APP_IMPORT_CONNECTION, importEntity);
 
         return importEntity;
     }
@@ -141,9 +141,7 @@ public class ImportServiceImpl implements ImportService {
 
         try {
             final EntityManager rootEm = emf.getEntityManager( emf.getManagementAppId() );
-
-
-            final Entity applicationEntity = getApplicationEntity( rootEm, applicationId );
+            final Entity appInfo = getApplicationInfoEntity(rootEm, applicationId);
 
             Query query = Query.fromQLNullSafe( ql );
             query.setCursor( cursor );
@@ -151,7 +149,7 @@ public class ImportServiceImpl implements ImportService {
             //set our entity type
             query.setEntityType( Schema.getDefaultSchema().getEntityType( Import.class ) );
 
-            return rootEm.searchCollection( applicationEntity, APP_IMPORT_CONNECTION, query );
+            return rootEm.searchCollection( appInfo, APP_IMPORT_CONNECTION, query );
         }
         catch ( Exception e ) {
             throw new RuntimeException( "Unable to get import entity", e );
@@ -167,11 +165,11 @@ public class ImportServiceImpl implements ImportService {
         try {
             final EntityManager rootEm = emf.getEntityManager( emf.getManagementAppId() );
 
-            final Entity applicationEntity = getApplicationEntity( rootEm, applicationId );
+            final Entity appInfo = getApplicationInfoEntity(rootEm, applicationId);
             final Import importEntity = rootEm.get( importId, Import.class );
 
             // check if it's on the path
-            if ( !rootEm.isConnectionMember( applicationEntity, APP_IMPORT_CONNECTION, importEntity ) ) {
+            if ( !rootEm.isConnectionMember( appInfo, APP_IMPORT_CONNECTION, importEntity ) ) {
                 return null;
             }
 
@@ -183,8 +181,8 @@ public class ImportServiceImpl implements ImportService {
     }
 
 
-    private Entity getApplicationEntity(final EntityManager rootEm, final UUID applicationId) throws Exception {
-        final Entity entity = rootEm.get( new SimpleEntityRef( "application_info", applicationId ) );
+    private Entity getApplicationInfoEntity(final EntityManager rootEm, final UUID applicationId) throws Exception {
+        final Entity entity = rootEm.get( new SimpleEntityRef( CpNamingUtils.APPLICATION_INFO, applicationId ) );
 
         if(entity == null){
             throw new EntityNotFoundException( "Cound not find application with id "  + applicationId);
@@ -252,7 +250,8 @@ public class ImportServiceImpl implements ImportService {
 
 
     @Override
-    public Results getFailedImportEntities(final UUID applicationId,  final UUID importId, final UUID fileImportId,  @Nullable  final String ql, @Nullable final String cursor ) {
+    public Results getFailedImportEntities(final UUID applicationId,  final UUID importId, final UUID fileImportId,
+                                           @Nullable  final String ql, @Nullable final String cursor ) {
 
         Preconditions.checkNotNull( applicationId, "applicationId must be specified" );
         Preconditions.checkNotNull( importId, "importId must be specified" );
@@ -282,8 +281,8 @@ public class ImportServiceImpl implements ImportService {
 
 
     @Override
-    public FailedImportEntity getFailedImportEntity(final UUID applicationId, final UUID importId, final UUID fileImportId,
-                                                     final UUID failedImportId ) {
+    public FailedImportEntity getFailedImportEntity(final UUID applicationId, final UUID importId,
+                                                    final UUID fileImportId, final UUID failedImportId ) {
         try {
             final EntityManager rootEm = emf.getEntityManager( emf.getManagementAppId() );
 
@@ -326,7 +325,7 @@ public class ImportServiceImpl implements ImportService {
         EntityManager rootEM;
 
         try {
-            rootEM = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+            rootEM = emf.getEntityManager(emf.getManagementAppId());
         } catch (Exception e) {
             logger.error("application doesn't exist within the current context");
             return null;
@@ -376,7 +375,7 @@ public class ImportServiceImpl implements ImportService {
 
         try {
 
-            EntityManager rootEM = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
+            EntityManager rootEM = emf.getEntityManager( emf.getManagementAppId() );
             Query query = Query.fromQL( "select *" );
             query.setEntityType("file_import");
             query.setConnectionType( IMPORT_FILE_INCLUDES_CONNECTION );
@@ -425,7 +424,7 @@ public class ImportServiceImpl implements ImportService {
 
         Preconditions.checkNotNull( uuid, "uuid cannot be null" );
 
-        EntityManager rootEm = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+        EntityManager rootEm = emf.getEntityManager(emf.getManagementAppId());
 
         //retrieve the import entity.
         Import importUG = rootEm.get(uuid, Import.class);
@@ -451,7 +450,7 @@ public class ImportServiceImpl implements ImportService {
             return "UUID passed in cannot be null";
         }
 
-        EntityManager rootEm = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+        EntityManager rootEm = emf.getEntityManager(emf.getManagementAppId());
 
         //retrieve the import entity.
         Import importUG = rootEm.get(uuid, Import.class);
@@ -474,7 +473,7 @@ public class ImportServiceImpl implements ImportService {
     public Import getImportEntity(final JobExecution jobExecution) throws Exception {
 
         UUID importId = (UUID) jobExecution.getJobData().getProperty(IMPORT_ID);
-        EntityManager importManager = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+        EntityManager importManager = emf.getEntityManager(emf.getManagementAppId());
 
         return importManager.get(importId, Import.class);
     }
@@ -487,7 +486,7 @@ public class ImportServiceImpl implements ImportService {
     @Override
     public FileImport getFileImportEntity(final JobExecution jobExecution) throws Exception {
         UUID fileImportId = (UUID) jobExecution.getJobData().getProperty(FILE_IMPORT_ID);
-        EntityManager em = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+        EntityManager em = emf.getEntityManager(emf.getManagementAppId());
         return em.get(fileImportId, FileImport.class);
     }
 
@@ -546,7 +545,7 @@ public class ImportServiceImpl implements ImportService {
 
         // get Import Entity from the management app, update it to show that job has started
 
-        final EntityManager rootEM = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+        final EntityManager rootEM = emf.getEntityManager(emf.getManagementAppId());
         UUID importId = (UUID) jobExecution.getJobData().getProperty(IMPORT_ID);
         Import importEntity = rootEM.get(importId, Import.class);
 
@@ -587,7 +586,6 @@ public class ImportServiceImpl implements ImportService {
                 return;
 
             } else {
-
 
                 if (config.get("applicationId") == null) {
                     throw new UnsupportedOperationException("Import applications not supported");
@@ -681,7 +679,7 @@ public class ImportServiceImpl implements ImportService {
         String accessId = (String) storage_info.get( "s3_access_id");
         String secretKey = (String) storage_info.get( "s3_key" );
 
-        EntityManager rootEM = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
+        EntityManager rootEM = emf.getEntityManager( emf.getManagementAppId() );
 
        // get the file import entity
 
@@ -855,6 +853,8 @@ public class ImportServiceImpl implements ImportService {
 
             try {
                 rootEM.update( importEntity );
+                logger.debug("Updated import entity {}:{} with state {}",
+                    new Object[] { importEntity.getType(), importEntity.getUuid(), importEntity.getState() } );
             }
             catch ( Exception e ) {
                 logger.error( "Error updating import entity", e );
@@ -937,18 +937,12 @@ public class ImportServiceImpl implements ImportService {
         // potentially skip the first n if this is a resume operation
         final int entityNumSkip = (int)tracker.getTotalEntityCount();
 
-        // with this code we get asynchronous behavior and testImportWithMultipleFiles will fail
-       final int entityCount =  entityEventObservable.takeWhile( new Func1<WriteEvent, Boolean>() {
-            @Override
-            public Boolean call( final WriteEvent writeEvent ) {
-                return !tracker.shouldStopProcessingEntities();
-            }
-        } ).skip(entityNumSkip).parallel(new Func1<Observable<WriteEvent>, Observable<WriteEvent>>() {
-            @Override
-            public Observable<WriteEvent> call(Observable<WriteEvent> entityWrapperObservable) {
-                return entityWrapperObservable.doOnNext(doWork);
-            }
-        }, Schedulers.io()).reduce(0, heartbeatReducer).toBlocking().last();
+
+        entityEventObservable.takeWhile( writeEvent -> !tracker.shouldStopProcessingEntities() ).skip( entityNumSkip )
+            .flatMap( writeEvent -> {
+                return Observable.just( writeEvent ).doOnNext( doWork );
+            }, 10 ).reduce( 0, heartbeatReducer ).toBlocking().last();
+
 
         jp.close();
 
@@ -979,17 +973,11 @@ public class ImportServiceImpl implements ImportService {
         final int connectionNumSkip = (int)tracker.getTotalConnectionCount();
 
         // with this code we get asynchronous behavior and testImportWithMultipleFiles will fail
-        final int connectionCount = otherEventObservable.takeWhile( new Func1<WriteEvent, Boolean>() {
-            @Override
-            public Boolean call( final WriteEvent writeEvent ) {
-                return !tracker.shouldStopProcessingConnections();
-            }
-        } ).skip(connectionNumSkip).parallel(new Func1<Observable<WriteEvent>, Observable<WriteEvent>>() {
-            @Override
-            public Observable<WriteEvent> call(Observable<WriteEvent> entityWrapperObservable) {
-                return entityWrapperObservable.doOnNext(doWork);
-            }
-        }, Schedulers.io()).reduce(0, heartbeatReducer).toBlocking().last();
+        final int connectionCount = otherEventObservable.takeWhile(
+            writeEvent -> !tracker.shouldStopProcessingConnections() ).skip(connectionNumSkip).flatMap( entityWrapper ->{
+                return Observable.just(entityWrapper).doOnNext( doWork ).subscribeOn( Schedulers.io() );
+
+        }, 10 ).reduce(0, heartbeatReducer).toBlocking().last();
 
         jp.close();
 

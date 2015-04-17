@@ -12,6 +12,7 @@ import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.util.LogEntryMock;
+import org.apache.usergrid.persistence.collection.util.VersionGenerator;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -105,7 +106,7 @@ public class LogEntryIteratorTest {
 
 
         final LogEntryMock mockResults =
-                LogEntryMock.createLogEntryMock( logEntrySerializationStrategy, scope, entityId, toGenerate );
+                LogEntryMock.createLogEntryMock( logEntrySerializationStrategy, scope, entityId, VersionGenerator.generateVersions( toGenerate ) );
 
         Iterator<MvccLogEntry> expectedEntries = mockResults.getEntries().iterator();
 

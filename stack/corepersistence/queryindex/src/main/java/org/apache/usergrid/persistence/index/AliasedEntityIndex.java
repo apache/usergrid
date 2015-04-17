@@ -33,11 +33,16 @@ public interface AliasedEntityIndex extends EntityIndex{
     public String[] getIndexes(final AliasType aliasType);
 
     /**
+     * get all unique indexes
+     * @return
+     */
+    public String[] getUniqueIndexes();
+
+    /**
      * Add alias to index, will remove old index from write alias
      * @param indexSuffix must be different than current index
      */
     public void addAlias(final String indexSuffix);
-
 
     /**
      * type of alias
