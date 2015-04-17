@@ -40,6 +40,7 @@ import org.springframework.context.ApplicationContextAware;
 
 import org.apache.commons.lang.StringUtils;
 
+import org.apache.usergrid.corepersistence.index.AsyncIndexService;
 import org.apache.usergrid.corepersistence.index.IndexService;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.exception.ConflictException;
@@ -111,7 +112,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private Injector injector;
     private final EntityIndex entityIndex;
     private final MetricsFactory metricsFactory;
-    private final IndexService indexService;
+    private final AsyncIndexService indexService;
 
     public CpEntityManagerFactory( final CassandraService cassandraService, final CounterUtils counterUtils,
                                    final Injector injector) {
@@ -123,7 +124,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.entityIndexFactory = injector.getInstance(EntityIndexFactory.class);
         this.managerCache = injector.getInstance( ManagerCache.class );
         this.metricsFactory = injector.getInstance( MetricsFactory.class );
-        this.indexService = injector.getInstance( IndexService.class );
+        this.indexService = injector.getInstance( AsyncIndexService.class );
         this.applicationIdCache = injector.getInstance(ApplicationIdCacheFactory.class).getInstance(
             getManagementEntityManager() );
 

@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
+import org.apache.usergrid.corepersistence.index.AsyncIndexService;
 import org.apache.usergrid.corepersistence.index.IndexService;
 import org.apache.usergrid.corepersistence.results.CollectionResultsLoaderFactoryImpl;
 import org.apache.usergrid.corepersistence.results.ConnectionResultsLoaderFactoryImpl;
@@ -120,13 +121,13 @@ public class CpRelationManager implements RelationManager {
 
     private final ApplicationScope applicationScope;
 
-    private final IndexService indexService;
+    private final AsyncIndexService indexService;
 
     private MetricsFactory metricsFactory;
     private Timer updateCollectionTimer;
 
 
-    public CpRelationManager( final MetricsFactory metricsFactory, final ManagerCache managerCache, final IndexService indexService, final EntityManager em, final UUID applicationId, final EntityRef headEntity) {
+    public CpRelationManager( final MetricsFactory metricsFactory, final ManagerCache managerCache, final AsyncIndexService indexService, final EntityManager em, final UUID applicationId, final EntityRef headEntity) {
 
 
         Assert.notNull( em, "Entity manager cannot be null" );
@@ -481,7 +482,8 @@ public class CpRelationManager implements RelationManager {
             logger.debug( "Wrote edge {}", edge );
         }
 
-        ( ( CpEntityManager ) em ).indexEntityIntoCollection( edge, memberEntity );
+        indexService.queueEntityIndexUpdate( applicationScope, memberEntity.getId(), memberEntity.getVersion() );
+
 
         if ( logger.isDebugEnabled() ) {
             logger.debug( "Added entity {}:{} to collection {}", new Object[] {

@@ -20,8 +20,8 @@
 package org.apache.usergrid.corepersistence.index;
 
 
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
-import org.apache.usergrid.persistence.map.MapManagerFactory;
 import org.apache.usergrid.persistence.queue.QueueManagerFactory;
 
 import com.google.inject.Inject;
@@ -33,51 +33,53 @@ import com.google.inject.Singleton;
  * A provider to allow users to configure their queue impl via properties
  */
 @Singleton
-public class QueueProvider implements Provider<BufferQueue> {
+public class AsyncIndexProvider implements Provider<AsyncIndexService> {
 
     private final QueryFig queryFig;
 
+    private final EntityCollectionManagerFactory entityCollectionManagerFactory;
     private final QueueManagerFactory queueManagerFactory;
-    private final MapManagerFactory mapManagerFactory;
     private final MetricsFactory metricsFactory;
+    private final IndexService indexService;
 
-    private BufferQueue bufferQueue;
+    private AsyncIndexService asyncIndexService;
 
 
     @Inject
-    public QueueProvider( final QueryFig queryFig, final QueueManagerFactory queueManagerFactory,
-                          final MapManagerFactory mapManagerFactory, final MetricsFactory metricsFactory ) {
+    public AsyncIndexProvider( final QueryFig queryFig,
+                               final EntityCollectionManagerFactory entityCollectionManagerFactory,
+                               final QueueManagerFactory queueManagerFactory, final MetricsFactory metricsFactory,
+                               final IndexService indexService ) {
         this.queryFig = queryFig;
-
-
+        this.entityCollectionManagerFactory = entityCollectionManagerFactory;
         this.queueManagerFactory = queueManagerFactory;
-        this.mapManagerFactory = mapManagerFactory;
         this.metricsFactory = metricsFactory;
+        this.indexService = indexService;
     }
 
 
     @Override
     @Singleton
-    public BufferQueue get() {
-        if ( bufferQueue == null ) {
-            bufferQueue = getQueue();
+    public AsyncIndexService get() {
+        if ( asyncIndexService == null ) {
+            asyncIndexService = getIndexService();
         }
 
 
-        return bufferQueue;
+        return asyncIndexService;
     }
 
 
-    private BufferQueue getQueue() {
+    private AsyncIndexService getIndexService() {
         final String value = queryFig.getQueueImplementation();
 
         final Implementations impl = Implementations.valueOf( value );
 
         switch ( impl ) {
             case LOCAL:
-                return new BufferQueueInMemoryImpl( queryFig );
+                return new InMemoryAsyncIndexService( indexService, entityCollectionManagerFactory );
             case SQS:
-                return new BufferQueueSQSImpl( queueManagerFactory, queryFig, mapManagerFactory, metricsFactory );
+                return new SQSAsyncIndexService( queueManagerFactory, queryFig, metricsFactory );
             default:
                 throw new IllegalArgumentException( "Configuration value of " + getErrorValues() + " are allowed" );
         }

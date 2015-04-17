@@ -22,8 +22,8 @@ package org.apache.usergrid.corepersistence.index;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -31,12 +31,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
-import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
-import org.apache.usergrid.persistence.map.MapManager;
-import org.apache.usergrid.persistence.map.MapManagerFactory;
-import org.apache.usergrid.persistence.map.MapScope;
-import org.apache.usergrid.persistence.map.impl.MapScopeImpl;
-import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.queue.QueueManager;
 import org.apache.usergrid.persistence.queue.QueueManagerFactory;
@@ -52,14 +48,11 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 
-/**
- * This is experimental at best.  Our SQS size limit is a problem.  We shouldn't use this for index operation. Only for
- * performing
- */
 @Singleton
-public class BufferQueueSQSImpl implements BufferQueue {
+public class SQSAsyncIndexService implements AsyncIndexService {
 
-    private static final Logger logger = LoggerFactory.getLogger( BufferQueueSQSImpl.class );
+
+    private static final Logger logger = LoggerFactory.getLogger( SQSAsyncIndexService.class );
 
     /** Hacky, copied from CPEntityManager b/c we can't access it here */
     public static final UUID MANAGEMENT_APPLICATION_ID = UUID.fromString( "b6768a08-b5d5-11e3-a495-11ddb1de66c8" );
@@ -80,14 +73,12 @@ public class BufferQueueSQSImpl implements BufferQueue {
 
     private static SmileFactory SMILE_FACTORY = new SmileFactory();
 
-
     static {
         SMILE_FACTORY.delegateToTextual( true );
     }
 
 
     private final QueueManager queue;
-    private final MapManager mapManager;
     private final QueryFig queryFig;
     private final ObjectMapper mapper;
     private final Meter readMeter;
@@ -97,24 +88,18 @@ public class BufferQueueSQSImpl implements BufferQueue {
 
 
     @Inject
-    public BufferQueueSQSImpl( final QueueManagerFactory queueManagerFactory, final QueryFig queryFig,
-                               final MapManagerFactory mapManagerFactory, final MetricsFactory metricsFactory ) {
-        final QueueScope queueScope =
-            new QueueScopeImpl( QUEUE_NAME );
+    public SQSAsyncIndexService( final QueueManagerFactory queueManagerFactory, final QueryFig queryFig,
+                                 final MetricsFactory metricsFactory ) {
+        final QueueScope queueScope = new QueueScopeImpl( QUEUE_NAME );
 
         this.queue = queueManagerFactory.getQueueManager( queueScope );
         this.queryFig = queryFig;
 
-        final MapScope scope = new MapScopeImpl( new SimpleId( MANAGEMENT_APPLICATION_ID, "application" ), MAP_NAME );
+        this.writeTimer = metricsFactory.getTimer( SQSAsyncIndexService.class, "write.timer" );
+        this.writeMeter = metricsFactory.getMeter( SQSAsyncIndexService.class, "write.meter" );
 
-        this.mapManager = mapManagerFactory.createMapManager( scope );
-
-
-        this.writeTimer = metricsFactory.getTimer( BufferQueueSQSImpl.class, "write.timer" );
-        this.writeMeter = metricsFactory.getMeter( BufferQueueSQSImpl.class, "write.meter" );
-
-        this.readTimer = metricsFactory.getTimer( BufferQueueSQSImpl.class, "read.timer" );
-        this.readMeter = metricsFactory.getMeter( BufferQueueSQSImpl.class, "read.meter" );
+        this.readTimer = metricsFactory.getTimer( SQSAsyncIndexService.class, "read.timer" );
+        this.readMeter = metricsFactory.getMeter( SQSAsyncIndexService.class, "read.meter" );
 
         this.mapper = new ObjectMapper( SMILE_FACTORY );
         //pretty print, disabling for speed
@@ -123,15 +108,7 @@ public class BufferQueueSQSImpl implements BufferQueue {
     }
 
 
-    @Override
-    public void offer( final IndexOperationMessage operation ) {
-
-        //no op
-        if(operation.isEmpty()){
-            operation.getFuture().done();
-            return;
-        }
-
+    public void offer( final IndexEntityEvent operation ) {
         final Timer.Context timer = this.writeTimer.time();
         this.writeMeter.mark();
 
@@ -141,12 +118,8 @@ public class BufferQueueSQSImpl implements BufferQueue {
 
             final String payLoad = toString( operation );
 
-            //write to cassandra
-            this.mapManager.putString( identifier.toString(), payLoad, TTL );
-
             //signal to SQS
             this.queue.sendMessage( identifier );
-            operation.done();
         }
         catch ( IOException e ) {
             throw new RuntimeException( "Unable to queue message", e );
@@ -157,8 +130,7 @@ public class BufferQueueSQSImpl implements BufferQueue {
     }
 
 
-    @Override
-    public List<IndexOperationMessage> take( final int takeSize, final long timeout, final TimeUnit timeUnit ) {
+    public List<IndexEntityEvent> take( final int takeSize, final long timeout, final TimeUnit timeUnit ) {
 
         //SQS doesn't support more than 10
 
@@ -173,14 +145,13 @@ public class BufferQueueSQSImpl implements BufferQueue {
                     String.class );
 
 
-
-            final List<IndexOperationMessage> response = new ArrayList<>( messages.size() );
+            final List<IndexEntityEvent> response = new ArrayList<>( messages.size() );
 
             final List<String> mapEntries = new ArrayList<>( messages.size() );
 
 
-            if(messages.size() == 0){
-                return response;
+            if ( messages.size() == 0 ) {
+                return Collections.emptyList();
             }
 
             //add all our keys  for a single round trip
@@ -188,26 +159,16 @@ public class BufferQueueSQSImpl implements BufferQueue {
                 mapEntries.add( message.getBody().toString() );
             }
 
-            //look up the values
-            final Map<String, String> storedCommands = mapManager.getStrings( mapEntries );
-
 
             //load them into our response
             for ( final QueueMessage message : messages ) {
 
-                final String key = getMessageKey( message );
+                final String payload = getBody( message );
 
                 //now see if the key was there
-                final String payload = storedCommands.get( key );
 
-                //the entry was not present in cassandra, ignore this message.  Failure should eventually kick it to
-                // a DLQ
 
-                if ( payload == null ) {
-                    continue;
-                }
-
-                final IndexOperationMessage messageBody;
+                final IndexEntityEvent messageBody;
 
                 try {
                     messageBody = fromString( payload );
@@ -232,8 +193,7 @@ public class BufferQueueSQSImpl implements BufferQueue {
     }
 
 
-    @Override
-    public void ack( final List<IndexOperationMessage> messages ) {
+    public void ack( final List<IndexEntityEvent> messages ) {
 
         //nothing to do
         if ( messages.size() == 0 ) {
@@ -242,15 +202,10 @@ public class BufferQueueSQSImpl implements BufferQueue {
 
         List<QueueMessage> toAck = new ArrayList<>( messages.size() );
 
-        for ( IndexOperationMessage ioe : messages ) {
+        for ( IndexEntityEvent ioe : messages ) {
 
 
-            final SqsIndexOperationMessage sqsIndexOperationMessage =   ( SqsIndexOperationMessage ) ioe;
-
-            final String key = getMessageKey( sqsIndexOperationMessage.getMessage() );
-
-            //remove it from the map
-            mapManager.delete( key  );
+            final SqsIndexOperationMessage sqsIndexOperationMessage = ( SqsIndexOperationMessage ) ioe;
 
             toAck.add( ( ( SqsIndexOperationMessage ) ioe ).getMessage() );
         }
@@ -259,40 +214,35 @@ public class BufferQueueSQSImpl implements BufferQueue {
     }
 
 
-    @Override
-    public void fail( final List<IndexOperationMessage> messages, final Throwable t ) {
-        //no op, just let it retry after the queue timeout
-    }
-
-
     /** Read the object from Base64 string. */
-    private IndexOperationMessage fromString( String s ) throws IOException {
-        IndexOperationMessage o = mapper.readValue( s, IndexOperationMessage.class );
+    private IndexEntityEvent fromString( String s ) throws IOException {
+        IndexEntityEvent o = mapper.readValue( s, IndexEntityEvent.class );
         return o;
     }
 
 
     /** Write the object to a Base64 string. */
-    private String toString( IndexOperationMessage o ) throws IOException {
+    private String toString( IndexEntityEvent o ) throws IOException {
         return mapper.writeValueAsString( o );
     }
 
-    private String getMessageKey(final QueueMessage message){
+
+    private String getBody( final QueueMessage message ) {
         return message.getBody().toString();
     }
+
 
     /**
      * The message that subclasses our IndexOperationMessage.  holds a pointer to the original message
      */
-    public class SqsIndexOperationMessage extends IndexOperationMessage {
+    public class SqsIndexOperationMessage extends IndexEntityEvent {
 
         private final QueueMessage message;
 
 
-        public SqsIndexOperationMessage( final QueueMessage message, final IndexOperationMessage source ) {
+        public SqsIndexOperationMessage( final QueueMessage message, final IndexEntityEvent source ) {
+            super( source.getApplicationScope(), source.getEntityId(), source.getEntityVersion() );
             this.message = message;
-            this.addAllDeIndexRequest( source.getDeIndexRequests() );
-            this.addAllIndexRequest( source.getIndexRequests() );
         }
 
 
@@ -302,5 +252,12 @@ public class BufferQueueSQSImpl implements BufferQueue {
         public QueueMessage getMessage() {
             return message;
         }
+    }
+
+
+    @Override
+    public void queueEntityIndexUpdate( final ApplicationScope applicationScope, final Id entityId,
+                                        final UUID version ) {
+
     }
 }

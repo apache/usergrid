@@ -23,13 +23,25 @@ package org.apache.usergrid.corepersistence.index;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import rx.Observable;
 
-public class SQSIndexQueueServiceImpl implements IndexQueueService {
 
-    @Override
-    public void queueEntityIndex( final ApplicationScope applicationScope, final Id entityId, final UUID version ) {
+/**
+ * Low level queue service for indexing entities
+ */
+public interface AsyncIndexService {
 
-    }
+
+    /**
+     * Queue an entity to be indexed.  This will start processing immediately. For implementations that are realtime (akka, in memory)
+     * We will return a distributed future.  For SQS impls, this will return immediately, and the result will not be available.
+     * After SQS is removed, the tests should be enhanced to ensure that we're processing our queues correctly.
+     * @param applicationScope
+     * @param entityId
+     * @param version
+     */
+    void queueEntityIndexUpdate( final ApplicationScope applicationScope, final Id entityId, final UUID version );
 }

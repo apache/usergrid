@@ -16,20 +16,17 @@
 package org.apache.usergrid.corepersistence;
 
 
-import org.apache.usergrid.corepersistence.index.BufferQueue;
-import org.apache.usergrid.corepersistence.index.IndexService;
-import org.apache.usergrid.corepersistence.index.IndexServiceImpl;
-import org.apache.usergrid.corepersistence.index.QueryFig;
-import org.apache.usergrid.corepersistence.index.QueueProvider;
-import org.apache.usergrid.corepersistence.migration.*;
-import org.apache.usergrid.persistence.PersistenceModule;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.safehaus.guicyfig.GuicyFigModule;
-import org.springframework.context.ApplicationContext;
 
 import org.apache.usergrid.corepersistence.events.EntityDeletedHandler;
 import org.apache.usergrid.corepersistence.events.EntityVersionCreatedHandler;
 import org.apache.usergrid.corepersistence.events.EntityVersionDeletedHandler;
+import org.apache.usergrid.corepersistence.index.AsyncIndexProvider;
+import org.apache.usergrid.corepersistence.index.AsyncIndexService;
+import org.apache.usergrid.corepersistence.index.IndexService;
+import org.apache.usergrid.corepersistence.index.IndexServiceImpl;
+import org.apache.usergrid.corepersistence.index.QueryFig;
+import org.apache.usergrid.corepersistence.migration.AppInfoMigrationPlugin;
 import org.apache.usergrid.corepersistence.migration.CoreMigration;
 import org.apache.usergrid.corepersistence.migration.CoreMigrationPlugin;
 import org.apache.usergrid.corepersistence.migration.EntityTypeMappingMigration;
@@ -37,7 +34,6 @@ import org.apache.usergrid.corepersistence.migration.MigrationModuleVersionPlugi
 import org.apache.usergrid.corepersistence.rx.impl.AllApplicationsObservableImpl;
 import org.apache.usergrid.corepersistence.rx.impl.AllEntitiesInSystemImpl;
 import org.apache.usergrid.corepersistence.rx.impl.AllNodesInGraphImpl;
-import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.collection.event.EntityDeleted;
 import org.apache.usergrid.persistence.collection.event.EntityVersionCreated;
 import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
@@ -47,12 +43,12 @@ import org.apache.usergrid.persistence.core.guice.CommonModule;
 import org.apache.usergrid.persistence.core.migration.data.DataMigration;
 import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
 import org.apache.usergrid.persistence.core.migration.data.MigrationPlugin;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.guice.GraphModule;
 import org.apache.usergrid.persistence.graph.serialization.impl.migration.GraphNode;
 import org.apache.usergrid.persistence.index.guice.IndexModule;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Provider;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 
@@ -151,7 +147,7 @@ public class CoreModule  extends AbstractModule {
         bind(IndexService.class).to(IndexServiceImpl.class);
         //bind the queue provider
 
-        bind( BufferQueue.class).toProvider( QueueProvider.class );
+        bind( AsyncIndexService.class).toProvider( AsyncIndexProvider.class );
 
         install( new GuicyFigModule( QueryFig.class ) );
 
