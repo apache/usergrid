@@ -49,16 +49,12 @@ public class CandidateResults implements Iterable<CandidateResult> {
 
     private final List<CandidateResult> candidates;
     private final Collection<SelectFieldMapping> getFieldMappings;
-    private final String elasticSearchCursor;
 
 
     public CandidateResults( List<CandidateResult> candidates,
-                             final Collection<SelectFieldMapping> getFieldMappings,
-                             String elasticSearchCursor
-    ) {
+                             final Collection<SelectFieldMapping> getFieldMappings ) {
         this.candidates = candidates;
         this.getFieldMappings = getFieldMappings;
-        this.elasticSearchCursor = elasticSearchCursor;
     }
 
 
@@ -113,7 +109,4 @@ public class CandidateResults implements Iterable<CandidateResult> {
         return candidates.iterator();
     }
 
-    public String getElasticSearchCursor() {
-        return elasticSearchCursor;
-    }
 }

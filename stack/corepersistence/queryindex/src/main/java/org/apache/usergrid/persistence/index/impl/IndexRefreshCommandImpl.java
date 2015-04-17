@@ -147,6 +147,8 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
         return future.doOnNext( found -> {
             if ( !found.hasFinished() ) {
                 logger.error(String.format("Couldn't find record during refresh uuid: {} took ms:{} ", uuid, found.getExecutionTime()));
+            }else{
+                logger.info(String.format("found record during refresh uuid: {} took ms:{} ", uuid, found.getExecutionTime()));
             }
         } ).doOnCompleted(() -> {
             //clean up our data
