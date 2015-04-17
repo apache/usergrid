@@ -82,7 +82,7 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
 
 
     @Override
-    public Observable<Boolean> execute() {
+    public Observable<IndexRefreshCommandInfo> execute() {
 
         Timer.Context refreshTimer = timer.time();
         //id to hunt for
@@ -121,19 +121,21 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
 
 
         //start our processing immediately
-        final Observable<Boolean> future = Async.toAsync( () -> {
+        final Observable<IndexRefreshCommandInfo> future = Async.toAsync( () -> {
+            long start = System.currentTimeMillis();
+            IndexRefreshCommandInfo info;
             try {
                 for ( int i = 0; i < indexFig.maxRefreshSearches(); i++ ) {
                     final SearchResponse response = builder.execute().get();
 
                     if ( response.getHits().totalHits() > 0 ) {
-                        return true;
+                        return new IndexRefreshCommandInfo(true,System.currentTimeMillis() - start);
                     }
 
                     Thread.sleep( indexFig.refreshSleep() );
                 }
 
-                return false;
+                return new IndexRefreshCommandInfo(false,System.currentTimeMillis() - start);
             }
             catch ( Exception ee ) {
                 logger.error( "Failed during refresh search for " + uuid, ee );
@@ -143,7 +145,7 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
 
 
         return future.doOnNext( found -> {
-            if ( !found ) {
+            if ( !found.hasFinished() ) {
                 logger.error( "Couldn't find record during refresh uuid" + uuid );
             }
         } ).doOnCompleted( () -> {

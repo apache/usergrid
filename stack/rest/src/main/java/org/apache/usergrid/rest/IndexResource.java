@@ -256,14 +256,12 @@ public class IndexResource extends AbstractContextResource {
     @POST
     @Path( RootResource.APPLICATION_ID_PATH )
     public JSONWithPadding addIndex(@Context UriInfo ui,
-            @PathParam( "applicationId" ) final String applicationIdStr,
             Map<String, Object> config,
             @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback)  throws Exception{
 
         Preconditions.checkNotNull(config,"Payload for config is null, please pass {replicas:int, shards:int} in body");
 
         ApiResponse response = createApiResponse();
-        final UUID appId = UUIDUtils.tryExtractUUID(applicationIdStr);
 
         if (!config.containsKey("replicas") || !config.containsKey("shards") ||
                 !(config.get("replicas") instanceof Integer) || !(config.get("shards") instanceof Integer)){
@@ -275,7 +273,7 @@ public class IndexResource extends AbstractContextResource {
         }
 
 
-        emf.addIndex(appId, config.get("indexSuffix").toString(),
+        emf.addIndex( config.get("indexSuffix").toString(),
             (int) config.get("shards"),(int) config.get("replicas"),(String)config.get("writeConsistency"));
         response.setAction("Add index to alias");
 

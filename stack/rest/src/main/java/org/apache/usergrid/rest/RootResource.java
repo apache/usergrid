@@ -37,6 +37,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.usergrid.persistence.index.IndexRefreshCommand;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -198,16 +199,20 @@ public class RootResource extends AbstractContextResource implements MetricProce
         node.put( "version", usergridSystemMonitor.getBuildNumber() );
 
         // Hector status, for backwards compatibility
-        node.put( "cassandraAvailable", usergridSystemMonitor.getIsCassandraAlive() );
+        node.put("cassandraAvailable", usergridSystemMonitor.getIsCassandraAlive());
 
         // Core Persistence Collections module status
         node.put( "cassandraStatus", emf.getEntityStoreHealth().toString() );
 
         // Core Persistence Query Index module status for Management App Index
-        EntityManager em = emf.getEntityManager( emf.getManagementAppId() );
+        EntityManager em = emf.getEntityManager(emf.getManagementAppId());
         node.put( "managementAppIndexStatus", emf.getIndexHealth().toString() );
 
-        dumpMetrics( node );
+        IndexRefreshCommand.IndexRefreshCommandInfo didRefresh = emf.refreshIndex();
+        node.put("refreshIndexTime", didRefresh.getExecutionTime());
+        node.put("refreshIndexSuccess", didRefresh.hasFinished());
+
+        dumpMetrics(node);
         response.setProperty( "status", node );
         return new JSONWithPadding( response, callback );
     }

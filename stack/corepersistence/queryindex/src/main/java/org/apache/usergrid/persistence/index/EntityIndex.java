@@ -46,7 +46,7 @@ public interface EntityIndex extends CPManager {
     /**
      * Refresh the index.
      */
-     Observable<Boolean> refreshAsync();
+     Observable<IndexRefreshCommand.IndexRefreshCommandInfo> refreshAsync();
 
 
 

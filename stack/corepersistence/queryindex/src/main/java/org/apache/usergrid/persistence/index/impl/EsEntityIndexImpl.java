@@ -346,7 +346,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
 
 
 
-    public Observable<Boolean> refreshAsync() {
+    public Observable<IndexRefreshCommand.IndexRefreshCommandInfo> refreshAsync() {
 
         refreshIndexMeter.mark();
         BetterFuture future = indexBatchBufferProducer.put(new IndexIdentifierImpl.IndexOperationMessage());
