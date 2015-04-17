@@ -106,6 +106,8 @@ public interface IndexFig extends GuicyFig {
      */
     public static final String ELASTICSEARCH_QUERY_TIMEOUT = "elasticsearch.query.timeout";
 
+    public static final String ELASTICSEARCH_WRITE_TIMEOUT= "elasticsearch.write.timeout";
+
 
     @Default( "127.0.0.1" )
     @Key( ELASTICSEARCH_HOSTS )
@@ -219,5 +221,9 @@ public interface IndexFig extends GuicyFig {
 
     @Default( "5000" )
     @Key( ELASTICSEARCH_QUERY_TIMEOUT )
-    long getElasticsearchQueryTimeout();
+    long getQueryTimeout();
+
+    @Default( "5000" )
+    @Key( ELASTICSEARCH_WRITE_TIMEOUT )
+    long getWriteTimeout();
 }

@@ -452,7 +452,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
             try {
                 //Added For Graphite Metrics
                 Timer.Context timeSearch = searchTimer.time();
-                searchResponse = srb.execute().actionGet();
+                searchResponse = srb.execute().actionGet(config.getQueryTimeout());
                 timeSearch.stop();
             }
             catch ( Throwable t ) {
@@ -489,7 +489,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
             try {
                 //Added For Graphite Metrics
                 Timer.Context timeSearchCursor = cursorTimer.time();
-                searchResponse = ssrb.execute().actionGet(config.getElasticsearchQueryTimeout());
+                searchResponse = ssrb.execute().actionGet(config.getQueryTimeout());
                 timeSearchCursor.stop();
             }
             catch ( Throwable t ) {
