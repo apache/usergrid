@@ -8,7 +8,7 @@ We accept all contributions via our GitHub, so you can fork our repo (apache/inc
 
 ##Build awesome apps with Usergrid!
 
-Apache Usergrid provides all code necessary to build and power modern mobile applications.  This includes the the server stack, administrative portal website, SDKs in most popular languages, as well as command line tools. 
+Apache Usergrid provides all code necessary to build and power modern mobile applications.  This includes the server stack, administrative portal website, SDKs in most popular languages, as well as command line tools. 
 
 Look for much more detailed README files in their corresponding subdirectories, or check out [our website](http://usergrid.incubator.apache.org/) for more info.
 
