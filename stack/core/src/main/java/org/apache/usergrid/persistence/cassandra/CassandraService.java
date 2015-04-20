@@ -94,10 +94,6 @@ import static org.apache.usergrid.utils.MapUtils.filter;
 
 public class CassandraService {
 
-    public static String SYSTEM_KEYSPACE = "Usergrid";
-
-    public static String STATIC_APPLICATION_KEYSPACE = "Usergrid_Applications";
-
     public static final boolean USE_VIRTUAL_KEYSPACES = true;
 
     public static final String APPLICATIONS_CF = "Applications";
@@ -131,6 +127,9 @@ public class CassandraService {
 
     ConsistencyLevelPolicy consistencyLevelPolicy;
 
+    public static String SYSTEM_KEYSPACE;
+    public static String STATIC_APPLICATION_KEYSPACE;
+
     private Keyspace systemKeyspace;
 
     private Map<String, String> accessMap;
@@ -156,12 +155,16 @@ public class CassandraService {
 
 
     public void init() throws Exception {
+        SYSTEM_KEYSPACE = properties.getProperty( "cassandra.system.keyspace" ,"Usergrid");
+        STATIC_APPLICATION_KEYSPACE = properties.getProperty( "cassandra.application.keyspace","Usergrid_Applications" );
+
         if ( consistencyLevelPolicy == null ) {
             consistencyLevelPolicy = new ConfigurableConsistencyLevel();
             ( ( ConfigurableConsistencyLevel ) consistencyLevelPolicy )
                     .setDefaultReadConsistencyLevel( HConsistencyLevel.ONE );
         }
         accessMap = new HashMap<String, String>( 2 );
+
         accessMap.put( "username", properties.getProperty( "cassandra.username" ) );
         accessMap.put( "password", properties.getProperty( "cassandra.password" ) );
         systemKeyspace =
