@@ -7,7 +7,7 @@ The admin portal source is in the Usergrid repo here:
 
 <https://github.com/apache/incubator-usergrid/tree/master/portal>
 
-##About the admin portal
+##About the Admin Portal
 Use the admin portal for administrative operations, including:
 
 * Create new organizations and applications.
@@ -19,17 +19,13 @@ Use the admin portal for administrative operations, including:
 
 ##Running, Deploying, or Developing
 
-For all cases, edit the "config.js" file in the root of the portal so that it points to your Usergrid:
-
-	Usergrid.overrideUrl = 'https://api.usergrid.com/';
-
-Change 'https://api.usergrid.com/' to the url of your Usergrid.
 
 If you are just running the portal:
 
 1. Install Node.js from http://nodejs.org/download/.
 2. From the root directory, run `./build.sh dev`.
 3. This will build and run a lightweight server. Naviate to http://localhost:3000
+4. If you have problems, it is often due to having an old version of Node.js installed or a port conflict for port 3000.
 
 If you are deploying the portal to a server:
 
@@ -51,12 +47,25 @@ If you want to run the e2e tests:
 
 To version open a terminal and run 'npm version x.x.x' this will add a tag and increment the package.json.
 
-##Using a different api location
-1. You can use api from usergrid at any location by navigating to the portal and adding a querystring http://myurl/?api_url=http://someurl
-2. Another option is to change the Usergrid.overrideUrl in config.js
+If you are building via maven:
 
-##Displaying API calls as cURL commands
-You can display the equivalent cURL syntax for each API call that is made through the Admin portal. The calls are displayed in the console area of any of the following browsers: Chrome, Internet Explorer (in the debugger), Firefox (in Firebug), and Safari.
+1. The maven profile supports the default install options currently, just run `mvn clean install` to create the bundle.
+2. To override to another option, run maven via `mvn clean install -Dbuild.mode=e2e` or `mvn clean install -Dbuild.mode=dev`.
+
+##Using a Different API location
+You can change the API URL that the portal uses in several ways.  For example, if your Usergrid is not running locally or if you have changed how it runs by default.
+
+1. Edit the config.js located in the root.  Locate and change the following line to point to your Usergrid install:
+
+	Usergrid.overrideUrl = 'https://localhost:8080';
+	
+2. Append the api_url query parameter to the end of the portal's URL path.  In the example below, you are running the portal using the method above and it is running on http://localhost:3000
+
+	http://localhost:3000?api_url=http://path.to.another.usergrid.install
+
+
+##Viewing API Calls as cURL Commands
+You can view the equivalent cURL syntax for each API call that is made through the Admin portal. The calls are displayed in the console area of any of the following browsers: Chrome, Internet Explorer (in the debugger), Firefox (in Firebug), and Safari.
 
 More information on cURL can be found here:
 
@@ -72,7 +81,7 @@ You can also use the Usergrid Command Line (ugc) for terminal access to the User
 ## Contributing
 We welcome your enhancements!
 
-Like [Usergrid](http://usergrid.incubator.apache.org/), the admin portal is open source and licensed under the Apache License, Version 2.0.
+The Admin Portal is part of the [Usergrid](http://usergrid.incubator.apache.org/), project. It is open source and licensed under the Apache License, Version 2.0.
 
 1. Fork it
 2. Create your feature branch (`git checkout -b my-new-feature`)
@@ -80,7 +89,7 @@ Like [Usergrid](http://usergrid.incubator.apache.org/), the admin portal is open
 4. Push your changes to the upstream branch (`git push origin my-new-feature`)
 5. Create new Pull Request (make sure you describe what you did and why your mod is needed)
 
-## Usergrid is open source
+## Usergrid is Open Source
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at

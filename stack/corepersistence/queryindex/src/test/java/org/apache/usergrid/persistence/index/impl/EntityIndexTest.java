@@ -641,6 +641,7 @@ public class EntityIndexTest extends BaseIT {
     @Test
     public void testCursorFormat() throws Exception {
 
+        String myType = UUID.randomUUID().toString();
         Id appId = new SimpleId( "application" );
         Id ownerId = new SimpleId( "owner" );
 
@@ -655,7 +656,7 @@ public class EntityIndexTest extends BaseIT {
         final EntityIndexBatch batch = entityIndex.createBatch();
 
 
-        final int size = 10;
+        final int size = 100;
 
         final List<Id> entityIds = new ArrayList<>( size );
 
@@ -671,6 +672,7 @@ public class EntityIndexTest extends BaseIT {
                 put( "email", "ed@anuff.com" );
                 put( "middlename", middleName );
                 put( "ordinal", ordinal );
+                put( "mytype", myType);
             }};
 
             final Id userId = new SimpleId( "user" );
@@ -691,17 +693,18 @@ public class EntityIndexTest extends BaseIT {
         ei.refreshAsync().toBlocking().last();
 
 
-        final int limit = 1;
+        final int limit = 5;
 
 
         final int expectedPages = size / limit;
 
 
         String cursor = null;
+        UUID lastId = null;
 
         for ( int i = 0; i < expectedPages; i++ ) {
             //**
-            final String query = "select * order by ordinal asc";
+            final String query = "select * where mytype='"+myType+"' order by ordinal asc";
 
             final CandidateResults results =
                 cursor == null ? entityIndex.search( indexEdge, SearchTypes.allTypes(), query, limit ) :
@@ -713,10 +716,12 @@ public class EntityIndexTest extends BaseIT {
 
             assertEquals( "Should be 16 bytes as hex", 32, cursor.length() );
 
-            assertEquals( 1, results.size() );
+            assertEquals(limit, results.size());
 
-
-            assertEquals( results.get( 0 ).getId(), entityIds.get( i ) );
+            int ordinal = 0;//i == 0 ? 0 : 1;
+            assertNotEquals("Scroll matches last item from previous page",lastId, results.get(ordinal).getId().getUuid());
+            lastId = results.get(limit -1).getId().getUuid();
+            assertEquals("Failed on page "+i ,results.get( ordinal ).getId(), entityIds.get( i*limit ) );
         }
 
         //get our next page, we shouldn't get a cursor

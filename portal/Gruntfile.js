@@ -367,13 +367,24 @@ module.exports = function(grunt) {
       install: {
         options: {
           cleanup: false,
-          copy: false,
-          bowerOptions: {
-            forceLatest: true
-          }
+
+          copy: false
         }
       }
     },
+    compress: {
+      main: {
+        options: {
+          mode: 'tar',
+          archive: 'dist/' + distName + '.tar'
+        },
+        expand: true,
+        cwd: distPath + '/',
+        src: ['**/*'],
+        dest: distName + '.' + bower.version
+      }
+    },
+
     instrument: {
       files: 'js/**/*.js',
       options: {
@@ -396,6 +407,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-connect');
+  grunt.loadNpmTasks('grunt-contrib-compress');
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-angular-templates');
   grunt.loadNpmTasks('grunt-bower-task');
