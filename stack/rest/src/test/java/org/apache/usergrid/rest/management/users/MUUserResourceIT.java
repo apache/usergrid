@@ -29,7 +29,9 @@ import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 
+import com.sun.jersey.core.util.MultivaluedMapImpl;
 import org.apache.commons.lang.RandomStringUtils;
 import org.codehaus.jackson.JsonNode;
 import org.jclouds.json.Json;
@@ -631,26 +633,25 @@ public class MUUserResourceIT extends AbstractRestIT {
             // create an admin user
 
             final String rand = RandomStringUtils.randomAlphanumeric( 10 );
-            Map<String, String> payload = new HashMap<String, String>() {{
-                put( "username", "user_" + rand );
-                put( "name", "Joe Userperson" );
-                put( "email", "joe_" + rand + "@example.com" );
-                put( "password", "wigglestone" );
+            MultivaluedMap<String, String> payload = new MultivaluedMapImpl() {{
+                putSingle( "username", "user_" + rand );
+                putSingle( "name", "Joe Userperson" );
+                putSingle( "email", "joe_" + rand + "@example.com" );
+                putSingle( "password", "wigglestone" );
             }};
             JsonNode node = resource().path( "/management/users")
                     .accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON )
+                    .type( MediaType.APPLICATION_FORM_URLENCODED )
                     .post( JsonNode.class, payload );
 
             fail( "Create admin user should fail" );
 
-        } catch ( UniformInterfaceException actual ) {
-            assertEquals( 400, actual.getResponse().getStatus() );
-            String errorMsg = actual.getResponse().getEntity( JsonNode.class ).get( "error_description" ).toString();
-            assertTrue( errorMsg.startsWith( "Admin Users must signup via http://localhost:" ) );
-
-        } catch ( Exception e ) {
-            fail("We expected a UniformInterfaceException");
+        } catch ( Exception actual ) {
+            assertTrue( actual instanceof UniformInterfaceException );
+            UniformInterfaceException uie = (UniformInterfaceException)actual;
+            assertEquals( 400, uie.getResponse().getStatus() );
+            String errorMsg = uie.getResponse().getEntity( JsonNode.class ).get( "error_description" ).toString();
+            assertTrue( errorMsg.contains( "Admin Users must signup via" ) );
         }
 
 
@@ -673,15 +674,13 @@ public class MUUserResourceIT extends AbstractRestIT {
 
             fail( "Create org and admin user should fail" );
 
-        } catch ( UniformInterfaceException actual ) {
-            assertEquals( 400, actual.getResponse().getStatus() );
-            assertTrue( actual.getResponse().getEntity( JsonNode.class ).get( "error_description" )
-                    .toString().startsWith( "Organization / Admin Users must be created via http://localhost:" ));
-
-        } catch ( Exception e ) {
-            fail("We expected a UniformInterfaceException");
+        } catch ( Exception actual ) {
+            assertTrue( actual instanceof UniformInterfaceException );
+            UniformInterfaceException uie = (UniformInterfaceException)actual;
+            assertEquals( 400, uie.getResponse().getStatus() );
+            String errorMsg = uie.getResponse().getEntity( JsonNode.class ).get( "error_description" ).toString();
+            assertTrue( errorMsg.contains( "Organization / Admin Users must be created via" ) );
         }
-
 
         // turn off validate external tokens by un-setting the usergrid.central.url
 
