@@ -315,7 +315,7 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
         final BulkResponse responses;
 
         try {
-            responses = bulkRequest.execute().actionGet();
+            responses = bulkRequest.execute().actionGet(config.getWriteTimeout());
         } catch (Throwable t) {
             log.error("Unable to communicate with elasticsearch");
             failureMonitor.fail("Unable to execute batch", t);
