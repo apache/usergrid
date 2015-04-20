@@ -544,10 +544,15 @@ public class ApplicationResource extends ServiceResource {
 
         emf.deleteApplication( applicationId );
 
+        LOG.debug( "ApplicationResource.delete() deleted appId = {} appName = {}",
+            applicationId, app.getName() );
+
         ApiResponse response = createApiResponse();
         response.setAction( "delete" );
         response.setApplication( services.getApplication() );
         response.setParams( ui.getQueryParameters() );
+
+        LOG.debug( "ApplicationResource.delete() sending response ");
 
         return new JSONWithPadding( response, callback );
     }
