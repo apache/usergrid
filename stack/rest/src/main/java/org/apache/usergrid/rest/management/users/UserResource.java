@@ -33,6 +33,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.usergrid.rest.management.ManagementResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -205,6 +207,14 @@ public class UserResource extends AbstractContextResource {
     @Produces( MediaType.TEXT_HTML )
     public Viewable showPasswordResetForm( @Context UriInfo ui, @QueryParam( "token" ) String token ) {
 
+        final boolean externalTokensEnabled =
+                !StringUtils.isEmpty( properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
+
+        if ( externalTokensEnabled ) {
+            throw new IllegalArgumentException( "Admin Users must reset passwords via " +
+                    properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
+        }
+
         try {
             this.token = token;
 
@@ -233,6 +243,14 @@ public class UserResource extends AbstractContextResource {
                                              @FormParam( "password2" ) String password2,
                                              @FormParam( "recaptcha_challenge_field" ) String challenge,
                                              @FormParam( "recaptcha_response_field" ) String uresponse ) {
+
+        final boolean externalTokensEnabled =
+                !StringUtils.isEmpty( properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
+
+        if ( externalTokensEnabled ) {
+            throw new IllegalArgumentException( "Admin Users must reset passwords via " +
+                    properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
+        }
 
         try {
             this.token = token;
@@ -309,6 +327,14 @@ public class UserResource extends AbstractContextResource {
     @Produces( MediaType.TEXT_HTML )
     public Viewable activate( @Context UriInfo ui, @QueryParam( "token" ) String token ) {
 
+        final boolean externalTokensEnabled =
+                !StringUtils.isEmpty( properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
+
+        if ( externalTokensEnabled ) {
+            throw new IllegalArgumentException( "Admin Users must activate via " +
+                    properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
+        }
+
         try {
             management.handleActivationTokenForAdminUser( user.getUuid(), token );
             return handleViewable( "activate", this );
@@ -329,6 +355,14 @@ public class UserResource extends AbstractContextResource {
     @Path( "confirm" )
     @Produces( MediaType.TEXT_HTML )
     public Viewable confirm( @Context UriInfo ui, @QueryParam( "token" ) String token ) {
+
+        final boolean externalTokensEnabled =
+                !StringUtils.isEmpty( properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
+
+        if ( externalTokensEnabled ) {
+            throw new IllegalArgumentException( "Admin Users must confirm via " +
+                    properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
+        }
 
         try {
             ActivationState state = management.handleConfirmationTokenForAdminUser( user.getUuid(), token );
@@ -354,6 +388,14 @@ public class UserResource extends AbstractContextResource {
     public JSONWithPadding reactivate( @Context UriInfo ui,
                                        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
+
+        final boolean externalTokensEnabled =
+                !StringUtils.isEmpty( properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
+
+        if ( externalTokensEnabled ) {
+            throw new IllegalArgumentException( "Admin Users must reactivate via " +
+                    properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
+        }
 
         logger.info( "Send activation email for user: {}" , user.getUuid() );
 

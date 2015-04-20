@@ -669,7 +669,7 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         String suToken = superAdminToken();
         Map<String, String> props = new HashMap<String, String>();
-        props.put( USERGRID_CENTRAL_URL, getBaseURI().toURL().toExternalForm());
+        props.put( USERGRID_CENTRAL_URL, getBaseURI().toURL().toExternalForm() );
         resource().path( "/testproperties" )
                 .queryParam( "access_token", suToken)
                 .accept( MediaType.APPLICATION_JSON )
@@ -695,8 +695,11 @@ public class ManagementResourceIT extends AbstractRestIT {
                 .queryParam( "ttl", "1000" )
                 .get( JsonNode.class );
             fail("Validation should have failed");
-        } catch ( Exception actual ) {
-            logger.debug( "error", actual );
+        } catch ( UniformInterfaceException actual ) {
+            assertEquals( 404, actual.getResponse().getStatus() );
+            String errorMsg = actual.getResponse().getEntity( JsonNode.class ).get( "error_description" ).toString();
+            logger.error( "ERROR: " + errorMsg );
+            assertTrue( errorMsg.contains( "Cannot find Admin User" ) );
         }
 
 
@@ -722,7 +725,7 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         // create an org and an admin user
 
-        String rand = RandomStringUtils.randomAlphanumeric(10);
+        String rand = RandomStringUtils.randomAlphanumeric( 10 );
         final String username = "user_" + rand;
         OrganizationOwnerInfo orgInfo = setup.getMgmtSvc().createOwnerAndOrganization(
                 username, username, "Test User", username + "@example.com", "password" );
@@ -743,17 +746,23 @@ public class ManagementResourceIT extends AbstractRestIT {
         try {
 
             Map<String, Object> loginInfo = new HashMap<String, Object>() {{
-                                                                              put("username", username );
-                                                                              put("password", "password");
-                                                                              put("grant_type", "password");
-                                                                              }};
+                put("username", username );
+                put("password", "password");
+                put("grant_type", "password");
+            }};
             JsonNode accessInfoNode = resource().path("/management/token")
                     .type( MediaType.APPLICATION_JSON_TYPE )
                     .post( JsonNode.class, loginInfo );
             fail("Login as Admin User must fail when validate external tokens is enabled");
 
-        } catch ( Exception actual ) {
-            logger.debug( "error", actual );
+        } catch ( UniformInterfaceException actual ) {
+            assertEquals( 400, actual.getResponse().getStatus() );
+            String errorMsg = actual.getResponse().getEntity( JsonNode.class ).get( "error_description" ).toString();
+            logger.error( "ERROR: " + errorMsg );
+            assertTrue( errorMsg.contains( "Admin Users must login via" ));
+
+        } catch ( Exception e ) {
+            fail( "We expected a UniformInterfaceException" );
         }
 
         // login as superuser must succeed
