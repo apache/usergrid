@@ -83,8 +83,8 @@ public class IndexServiceImpl implements IndexService {
         //we always index in the target scope
         final Observable<Edge> edgesToTarget = edgesObservable.edgesToTarget( gm, entityId );
 
-        //we may have to index
-        final Observable<IndexEdge> sourceEdgesToIndex = edgesToTarget.map( edge -> generateScopeToTarget( edge ) );
+        //we may have to index  we're indexing from source->target here
+        final Observable<IndexEdge> sourceEdgesToIndex = edgesToTarget.map( edge -> generateScopeFromSource( edge ) );
 
 
         //we might or might not need to index from target-> source
@@ -141,8 +141,9 @@ public class IndexServiceImpl implements IndexService {
 
         /**
          * An observable of sizes as we execute batches
+         *
+         * we're indexing from target->source here
          */
-        return edgesObservable.getEdgesFromSource( graphManager, entityId, linkedCollection )
-                              .map( edge -> generateScopeFromSource( edge ) );
+        return edgesObservable.getEdgesFromSource( graphManager, entityId, linkedCollection ).map( edge -> generateScopeToTarget( edge ) );
     }
 }

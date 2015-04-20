@@ -620,9 +620,8 @@ public class CpEntityManager implements EntityManager {
         }
 
         // update in all containing collections and connection indexes
-        CpRelationManager rm = ( CpRelationManager ) getRelationManager( entity );
-        rm.updateContainingCollectionAndCollectionIndexes( cpEntity );
-        timer.stop();
+
+        indexService.queueEntityIndexUpdate( applicationScope, cpEntity );
     }
 
 
@@ -1067,9 +1066,7 @@ public class CpEntityManager implements EntityManager {
 
         //Adding graphite metrics
 
-        // update in all containing collections and connection indexes
-        CpRelationManager rm = ( CpRelationManager ) getRelationManager( entityRef );
-        rm.updateContainingCollectionAndCollectionIndexes( cpEntity );
+        indexService.queueEntityIndexUpdate( applicationScope, cpEntity );
     }
 
 

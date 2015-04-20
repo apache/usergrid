@@ -54,11 +54,11 @@ public class IndexingUtils {
 
     public static final String ENTITY_TYPE_FIELDNAME = "entityType";
 
-    public static final String EDGE_NODE_ID_FIELDNAME = "edgeNodeId";
+    public static final String EDGE_NODE_ID_FIELDNAME = "nodeId";
 
     public static final String EDGE_NAME_FIELDNAME = "edgeName";
 
-    public static final String EDGE_NODE_TYPE_FIELDNAME = "edgeType";
+    public static final String EDGE_NODE_TYPE_FIELDNAME = "entityNodeType";
 
     public static final String EDGE_TIMESTAMP_FIELDNAME = "edgeTimestamp";
 
@@ -107,8 +107,6 @@ public class IndexingUtils {
         idString( sb, scope.getNodeId() );
         sb.append( FIELD_SEPERATOR );
         sb.append( scope.getEdgeName() );
-        sb.append( FIELD_SEPERATOR );
-        sb.append( scope.getNodeType() );
         return sb.toString();
     }
 

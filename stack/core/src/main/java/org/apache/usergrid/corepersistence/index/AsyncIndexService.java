@@ -40,8 +40,7 @@ public interface AsyncIndexService {
      * We will return a distributed future.  For SQS impls, this will return immediately, and the result will not be available.
      * After SQS is removed, the tests should be enhanced to ensure that we're processing our queues correctly.
      * @param applicationScope
-     * @param entityId
-     * @param version
+     * @param entity The entity to index
      */
-    void queueEntityIndexUpdate( final ApplicationScope applicationScope, final Id entityId, final UUID version );
+    void queueEntityIndexUpdate( final ApplicationScope applicationScope, final Entity entity);
 }

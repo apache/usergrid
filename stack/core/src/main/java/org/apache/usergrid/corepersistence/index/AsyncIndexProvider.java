@@ -20,7 +20,7 @@
 package org.apache.usergrid.corepersistence.index;
 
 
-import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.queue.QueueManagerFactory;
 
@@ -37,24 +37,23 @@ public class AsyncIndexProvider implements Provider<AsyncIndexService> {
 
     private final QueryFig queryFig;
 
-    private final EntityCollectionManagerFactory entityCollectionManagerFactory;
     private final QueueManagerFactory queueManagerFactory;
     private final MetricsFactory metricsFactory;
     private final IndexService indexService;
+    private final RxTaskScheduler rxTaskScheduler;
 
     private AsyncIndexService asyncIndexService;
 
 
     @Inject
-    public AsyncIndexProvider( final QueryFig queryFig,
-                               final EntityCollectionManagerFactory entityCollectionManagerFactory,
-                               final QueueManagerFactory queueManagerFactory, final MetricsFactory metricsFactory,
-                               final IndexService indexService ) {
+    public AsyncIndexProvider( final QueryFig queryFig, final QueueManagerFactory queueManagerFactory, final
+    MetricsFactory metricsFactory,
+                               final IndexService indexService, final RxTaskScheduler rxTaskScheduler ) {
         this.queryFig = queryFig;
-        this.entityCollectionManagerFactory = entityCollectionManagerFactory;
         this.queueManagerFactory = queueManagerFactory;
         this.metricsFactory = metricsFactory;
         this.indexService = indexService;
+        this.rxTaskScheduler = rxTaskScheduler;
     }
 
 
@@ -77,7 +76,7 @@ public class AsyncIndexProvider implements Provider<AsyncIndexService> {
 
         switch ( impl ) {
             case LOCAL:
-                return new InMemoryAsyncIndexService( indexService, entityCollectionManagerFactory );
+                return new InMemoryAsyncIndexService( indexService, rxTaskScheduler );
             case SQS:
                 return new SQSAsyncIndexService( queueManagerFactory, queryFig, metricsFactory );
             default:

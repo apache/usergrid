@@ -20,56 +20,40 @@
 package org.apache.usergrid.corepersistence.index;
 
 
-import java.util.UUID;
-
-import org.apache.usergrid.persistence.collection.EntityCollectionManager;
-import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Entity;
-import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import rx.Observable;
-import rx.schedulers.Schedulers;
 
 
 @Singleton
 public class InMemoryAsyncIndexService implements AsyncIndexService {
 
     private final IndexService indexService;
-    private final EntityCollectionManagerFactory entityCollectionManagerFactory;
+    private final RxTaskScheduler rxTaskScheduler;
 
 
     @Inject
-    public InMemoryAsyncIndexService( final IndexService indexService,
-                                      final EntityCollectionManagerFactory entityCollectionManagerFactory ) {this.indexService = indexService;
+    public InMemoryAsyncIndexService( final IndexService indexService, final RxTaskScheduler rxTaskScheduler ) {
+        this.indexService = indexService;
 
 
-        this.entityCollectionManagerFactory = entityCollectionManagerFactory;
+        this.rxTaskScheduler = rxTaskScheduler;
     }
 
 
     @Override
-    public void queueEntityIndexUpdate( final ApplicationScope applicationScope, final Id entityId,
-                                        final UUID version ) {
-
-        final IndexEntityEvent event = new IndexEntityEvent( applicationScope, entityId, version );
+    public void queueEntityIndexUpdate( final ApplicationScope applicationScope, final Entity toIndex ) {
 
         //process the entity immediately
         //only process the same version, otherwise ignore
 
-        getEntity( applicationScope, entityId).filter( entity-> version.equals(entity.hasVersion() )).doOnNext( entity -> {
-           indexService.indexEntity( applicationScope, entity );
-        } ).subscribeOn( Schedulers.io() ).subscribe();
-
-
-    }
-
-    private Observable<Entity> getEntity( final ApplicationScope applicationScope, final Id entityId){
-
-        final EntityCollectionManager ecm = entityCollectionManagerFactory.createCollectionManager( applicationScope );
-        return ecm.load( entityId );
+        Observable.just( toIndex ).doOnNext( entity -> {
+            indexService.indexEntity( applicationScope, entity );
+        } ).subscribeOn( rxTaskScheduler.getAsyncIOScheduler() ).subscribe();
     }
 }

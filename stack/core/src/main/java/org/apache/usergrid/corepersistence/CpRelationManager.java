@@ -255,47 +255,6 @@ public class CpRelationManager implements RelationManager {
     }
 
 
-    public void updateContainingCollectionAndCollectionIndexes(
-        final org.apache.usergrid.persistence.model.entity.Entity cpEntity ) {
-
-
-        throw new UnsupportedOperationException( "Use the new interface" );
-
-//        final GraphManager gm = managerCache.getGraphManager( applicationScope );
-//
-//        // loop through all types of edge to target
-//
-//
-//        final ApplicationEntityIndex ei = managerCache.getEntityIndex( applicationScope );
-//
-//        final EntityIndexBatch entityIndexBatch = ei.createBatch();
-//
-//        final int count = gm.getEdgeTypesToTarget( new SimpleSearchEdgeType( cpHeadEntity.getId(), null, null ) )
-//
-//            // for each edge type, emit all the edges of that type
-//            .flatMap( etype -> gm.loadEdgesToTarget(
-//                new SimpleSearchByEdgeType( cpHeadEntity.getId(), etype, Long.MAX_VALUE,
-//                    SearchByEdgeType.Order.DESCENDING, null ) ) )
-//
-//                //for each edge we receive index and add to the batch
-//            .doOnNext( edge -> {
-//                // reindex the entity in the source entity's collection or connection index
-//
-//                IndexEdge indexScope = generateScopeFromSource( edge );
-//
-//                entityIndexBatch.index( indexScope, cpEntity );
-//
-//            } ).doOnCompleted( () -> {
-//                    Timer.Context timeElasticIndexBatch = updateCollectionTimer.time();
-//                    entityIndexBatch.execute();
-//                    timeElasticIndexBatch.stop();
-//              } ).count().toBlocking().lastOrDefault( 0 );
-//
-//        //Adding graphite metrics
-//
-//
-//        logger.debug( "updateContainingCollectionsAndCollections() updated {} indexes", count );
-    }
 
 
     @Override
@@ -473,8 +432,6 @@ public class CpRelationManager implements RelationManager {
         gm.writeEdge( edge ).toBlocking().last();
 
 
-        //This is broken and needs fixed updateContainingCollectionAndCollectionIndexes See USERGRID-541
-
 
         //perform indexing
 
@@ -482,7 +439,7 @@ public class CpRelationManager implements RelationManager {
             logger.debug( "Wrote edge {}", edge );
         }
 
-        indexService.queueEntityIndexUpdate( applicationScope, memberEntity.getId(), memberEntity.getVersion() );
+        indexService.queueEntityIndexUpdate( applicationScope, memberEntity);
 
 
         if ( logger.isDebugEnabled() ) {
@@ -490,17 +447,7 @@ public class CpRelationManager implements RelationManager {
                 itemRef.getUuid().toString(), itemRef.getType(), collName
             } );
         }
-        //        logger.debug("With head entity scope is {}:{}:{}", new Object[] {
-        //            headEntityScope.getApplication().toString(),
-        //            headEntityScope.getOwner().toString(),
-        //            headEntityScope.getName()});
 
-        if ( connectBack && collection != null && collection.getLinkedCollection() != null ) {
-            throw new UnsupportedOperationException( "Implement me directly in graph " );
-//            getRelationManager( itemEntity )
-//                .addToCollection( collection.getLinkedCollection(), headEntity, cpHeadEntity, false );
-//            getRelationManager( itemEntity ).addToCollection( collection.getLinkedCollection(), headEntity, false );
-        }
 
         return itemEntity;
     }

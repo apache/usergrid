@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.queue.QueueManager;
@@ -256,8 +257,7 @@ public class SQSAsyncIndexService implements AsyncIndexService {
 
 
     @Override
-    public void queueEntityIndexUpdate( final ApplicationScope applicationScope, final Id entityId,
-                                        final UUID version ) {
+    public void queueEntityIndexUpdate( final ApplicationScope applicationScope,  final Entity entity) {
 
     }
 }

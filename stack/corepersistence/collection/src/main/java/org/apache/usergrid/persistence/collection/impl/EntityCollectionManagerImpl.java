@@ -49,6 +49,7 @@ import org.apache.usergrid.persistence.collection.serialization.UniqueValueSeria
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
 import org.apache.usergrid.persistence.collection.serialization.impl.MutableFieldSet;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
+import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.task.Task;
 import org.apache.usergrid.persistence.core.task.TaskExecutor;
@@ -109,6 +110,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     private final EntityVersionTaskFactory entityVersionTaskFactory;
     private final TaskExecutor taskExecutor;
 
+    private final RxTaskScheduler rxTaskScheduler;
+
     private final Keyspace keyspace;
     private final Timer writeTimer;
     private final Meter writeMeter;
@@ -125,26 +128,21 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
 
     @Inject
-    public EntityCollectionManagerImpl(
-        final WriteStart                    writeStart,
-        final WriteUniqueVerify                    writeVerifyUnique,
-        final WriteOptimisticVerify                writeOptimisticVerify,
-        final WriteCommit                          writeCommit,
-        final RollbackAction                       rollback,
-        final MarkStart                            markStart,
-        final MarkCommit                           markCommit,
-        final MvccEntitySerializationStrategy entitySerializationStrategy,
-        final UniqueValueSerializationStrategy     uniqueValueSerializationStrategy,
-        final MvccLogEntrySerializationStrategy    mvccLogEntrySerializationStrategy,
-        final Keyspace                             keyspace,
-        final EntityVersionTaskFactory entityVersionTaskFactory,
-        @CollectionTaskExecutor final TaskExecutor taskExecutor,
-        @Assisted final ApplicationScope applicationScope,
-        final MetricsFactory metricsFactory
+    public EntityCollectionManagerImpl( final WriteStart writeStart, final WriteUniqueVerify writeVerifyUnique,
+                                        final WriteOptimisticVerify writeOptimisticVerify, final WriteCommit
+                                                writeCommit,
+                                        final RollbackAction rollback, final MarkStart markStart,
+                                        final MarkCommit markCommit, final MvccEntitySerializationStrategy entitySerializationStrategy,
+                                        final UniqueValueSerializationStrategy uniqueValueSerializationStrategy,
+                                        final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy,
+                                        final Keyspace keyspace, final EntityVersionTaskFactory entityVersionTaskFactory,
+                                        @CollectionTaskExecutor final TaskExecutor taskExecutor, @Assisted final ApplicationScope applicationScope,
+                                        final MetricsFactory metricsFactory,
 
-    ) {
+                                        final RxTaskScheduler rxTaskScheduler ) {
         this.uniqueValueSerializationStrategy = uniqueValueSerializationStrategy;
         this.entitySerializationStrategy = entitySerializationStrategy;
+        this.rxTaskScheduler = rxTaskScheduler;
 
         ValidationUtils.validateApplicationScope( applicationScope );
 
@@ -453,13 +451,13 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                     public void call( final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent ) {
 
                         Observable<CollectionIoEvent<MvccEntity>> unique =
-                                Observable.just( mvccEntityCollectionIoEvent ).subscribeOn( Schedulers.io() )
+                                Observable.just( mvccEntityCollectionIoEvent ).subscribeOn( rxTaskScheduler.getAsyncIOScheduler() )
                                           .doOnNext( writeVerifyUnique );
 
 
                         // optimistic verification
                         Observable<CollectionIoEvent<MvccEntity>> optimistic =
-                                Observable.just( mvccEntityCollectionIoEvent ).subscribeOn( Schedulers.io() )
+                                Observable.just( mvccEntityCollectionIoEvent ).subscribeOn( rxTaskScheduler.getAsyncIOScheduler() )
                                           .doOnNext( writeOptimisticVerify );
 
 

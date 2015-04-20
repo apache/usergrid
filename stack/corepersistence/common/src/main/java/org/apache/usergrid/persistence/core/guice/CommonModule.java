@@ -36,6 +36,9 @@ import org.apache.usergrid.persistence.core.migration.schema.Migration;
 import org.apache.usergrid.persistence.core.migration.schema.MigrationManager;
 import org.apache.usergrid.persistence.core.migration.schema.MigrationManagerFig;
 import org.apache.usergrid.persistence.core.migration.schema.MigrationManagerImpl;
+import org.apache.usergrid.persistence.core.rx.RxSchedulerFig;
+import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
+import org.apache.usergrid.persistence.core.rx.RxTaskSchedulerImpl;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Key;
@@ -86,6 +89,15 @@ public class CommonModule extends AbstractModule {
         //do multibindings for migrations
         //create the empty multibinder so other plugins can use it
          Multibinder.newSetBinder( binder(), MigrationPlugin.class);
+
+
+        /**
+         * RX java scheduler configuration
+         */
+
+        install ( new GuicyFigModule( RxSchedulerFig.class ));
+
+        bind( RxTaskScheduler.class).to( RxTaskSchedulerImpl.class );
     }
 
 

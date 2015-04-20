@@ -49,7 +49,6 @@ public class RollbackAction implements Action1<Throwable> {
 
     private static final Logger log = LoggerFactory.getLogger( RollbackAction.class );
 
-    private final Scheduler scheduler;
     private final UniqueValueSerializationStrategy uniqueValueStrat;
     private final MvccLogEntrySerializationStrategy logEntryStrat;
 
@@ -58,7 +57,6 @@ public class RollbackAction implements Action1<Throwable> {
     public RollbackAction(MvccLogEntrySerializationStrategy logEntryStrat,
                            UniqueValueSerializationStrategy uniqueValueStrat ) {
 
-        scheduler = Schedulers.io();
         this.uniqueValueStrat = uniqueValueStrat;
         this.logEntryStrat = logEntryStrat;
     }

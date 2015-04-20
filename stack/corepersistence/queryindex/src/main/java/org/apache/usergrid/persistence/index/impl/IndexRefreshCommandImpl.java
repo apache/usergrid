@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
+import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.index.AliasedEntityIndex;
@@ -48,7 +49,6 @@ import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
 
 import rx.Observable;
-import rx.schedulers.Schedulers;
 import rx.util.async.Async;
 
 
@@ -64,12 +64,13 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
     private final IndexBufferConsumer producer;
     private final IndexFig indexFig;
     private final Timer timer;
-
+    private final RxTaskScheduler rxTaskScheduler;
 
     @Inject
     public IndexRefreshCommandImpl( IndexIdentifier indexIdentifier, EsProvider esProvider,
                                     IndexBufferConsumer producer, IndexFig indexFig, MetricsFactory metricsFactory,
-                                    final IndexCache indexCache ) {
+                                    final IndexCache indexCache, final RxTaskScheduler rxTaskScheduler ) {
+
 
 
         this.timer = metricsFactory.getTimer( IndexRefreshCommandImpl.class, "index.refresh.timer" );
@@ -78,6 +79,7 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
         this.producer = producer;
         this.indexFig = indexFig;
         this.indexCache = indexCache;
+        this.rxTaskScheduler = rxTaskScheduler;
     }
 
 
@@ -141,14 +143,14 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
                 logger.error( "Failed during refresh search for " + uuid, ee );
                 throw new RuntimeException( "Failed during refresh search for " + uuid, ee );
             }
-        }, Schedulers.io() ).call();
+        }, rxTaskScheduler.getAsyncIOScheduler() ).call();
 
 
         return future.doOnNext( found -> {
             if ( !found.hasFinished() ) {
-                logger.error(String.format("Couldn't find record during refresh uuid: {} took ms:{} ", uuid, found.getExecutionTime()));
+                logger.error("Couldn't find record during refresh uuid: {} took ms:{} ", uuid, found.getExecutionTime());
             }else{
-                logger.info(String.format("found record during refresh uuid: {} took ms:{} ", uuid, found.getExecutionTime()));
+                logger.info("found record during refresh uuid: {} took ms:{} ", uuid, found.getExecutionTime());
             }
         } ).doOnCompleted(() -> {
             //clean up our data
