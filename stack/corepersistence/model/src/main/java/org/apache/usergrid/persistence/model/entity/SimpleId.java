@@ -33,8 +33,8 @@ import com.google.common.base.Preconditions;
 public class SimpleId implements Id, Serializable {
 
 
-    private final UUID uuid;
-    private final String type;
+    private UUID uuid;
+    private String type;
 
     public SimpleId( final UUID uuid, final String type ) {
         Preconditions.checkNotNull( uuid, "uuid is required" );
@@ -53,17 +53,28 @@ public class SimpleId implements Id, Serializable {
        this(UUIDGenerator.newTimeUUID(), type);
     }
 
+    public SimpleId(  ){
+
+    }
+
+
 
 
     @Override
     public UUID getUuid() {
         return uuid;
     }
+    public void setUuid(UUID val) {
+         uuid = val;
+    }
 
 
     @Override
     public String getType() {
         return type;
+    }
+    public String setType(String val) {
+        return type = val;
     }
 
 

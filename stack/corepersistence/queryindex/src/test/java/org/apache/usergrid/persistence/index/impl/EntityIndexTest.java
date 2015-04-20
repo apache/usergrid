@@ -642,8 +642,8 @@ public class EntityIndexTest extends BaseIT {
     public void testCursorFormat() throws Exception {
 
         String myType = UUID.randomUUID().toString();
-        Id appId = new SimpleId( "application" );
-        Id ownerId = new SimpleId( "owner" );
+        Id appId = new SimpleId(UUID.randomUUID(), "application" );
+        Id ownerId = new SimpleId( UUID.randomUUID(),"owner" );
 
         ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
 
@@ -701,31 +701,26 @@ public class EntityIndexTest extends BaseIT {
 
         String cursor = null;
         UUID lastId = null;
-
-        for ( int i = 0; i < expectedPages; i++ ) {
+        final String query = "select * where mytype='"+myType+"' order by ordinal asc";
+        int i ;
+        for ( i=0; i < expectedPages; i++ ) {
             //**
-            final String query = "select * where mytype='"+myType+"' order by ordinal asc";
 
-            final CandidateResults results =
-                cursor == null ? entityIndex.search( indexEdge, SearchTypes.allTypes(), query, limit ) :
-                    entityIndex.getNextPage( cursor );
-
-            assertTrue( results.hasCursor() );
-
-            cursor = results.getCursor();
-
-            assertEquals( "Should be 16 bytes as hex", 32, cursor.length() );
+            final CandidateResults results = cursor == null
+                ? entityIndex.search( indexEdge, SearchTypes.allTypes(), query, limit, i* limit )
+                : entityIndex.getNextPage(cursor);
 
             assertEquals(limit, results.size());
 
             int ordinal = 0;//i == 0 ? 0 : 1;
             assertNotEquals("Scroll matches last item from previous page",lastId, results.get(ordinal).getId().getUuid());
             lastId = results.get(limit -1).getId().getUuid();
+            cursor = results.getCursor();
             assertEquals("Failed on page "+i ,results.get( ordinal ).getId(), entityIds.get( i*limit ) );
         }
 
         //get our next page, we shouldn't get a cursor
-        final CandidateResults results = entityIndex.getNextPage( cursor );
+        final CandidateResults results = entityIndex.search(indexEdge, SearchTypes.allTypes(), query, limit, i * limit);
 
         assertEquals( 0, results.size() );
         assertNull( results.getCursor() );

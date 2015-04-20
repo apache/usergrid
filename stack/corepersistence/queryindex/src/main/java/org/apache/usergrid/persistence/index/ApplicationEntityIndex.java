@@ -44,7 +44,8 @@ public interface ApplicationEntityIndex {
     CandidateResults search( final SearchEdge searchEdge, final SearchTypes searchTypes, final String query,
                              final int limit );
 
-
+    CandidateResults search( final SearchEdge searchEdge, final SearchTypes searchTypes, final String query,
+                             final int limit, final int from );
 
     /**
      * Get next page of results from a previous cursor.  Note that limit used here should be the same limit as the initial
