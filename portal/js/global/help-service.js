@@ -35,7 +35,7 @@ AppServices.Services.factory('help', function($rootScope, $http, $location) {
   /** get introjs and tooltip json from s3 **/
   var getHelpJson = function(path) {
     //return $http.get('https://s3.amazonaws.com/sdk.apigee.com/portal_help' + path + '/helpJson.json');
-    return $http.get('/helpJson.json');
+    return $http.get('helpJson.json');
   };
 
   /** check if first-time user experience should launch **/

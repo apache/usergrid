@@ -124,15 +124,16 @@ public class PingIdentityProvider extends AbstractProvider {
     @Override
     Map<String, Object> userFromResource( String externalToken ) {
 
-        MultivaluedMap<String, String> formData =  getMultivaluedMapImpl();
-        formData.add("grant_type", "urn:pingidentity.com:oauth2:grant_type:validate_bearer");
-        formData.add("client_id", clientId);
-        formData.add("client_secret", clientSecret);
-        formData.add("token", externalToken);
 
-        JsonNode node = client.resource( apiUrl )
-                              .type( MediaType.APPLICATION_FORM_URLENCODED_TYPE )
-                              .post( JsonNode.class, formData );
+      MultivaluedMap<String, String> formData =  getMultivaluedMapImpl();
+      formData.add("grant_type", "urn:pingidentity.com:oauth2:grant_type:validate_bearer");
+      formData.add("client_id", clientId);
+      formData.add("client_secret", clientSecret);
+      formData.add("token", externalToken);
+
+      JsonNode node = client.resource( apiUrl )
+          .type( MediaType.APPLICATION_FORM_URLENCODED_TYPE )
+          .post( JsonNode.class, formData );
 
         String rawEmail = node.get( "access_token" ).get( "subject" ).asText();
 
