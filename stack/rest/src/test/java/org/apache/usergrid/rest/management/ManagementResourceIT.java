@@ -696,10 +696,10 @@ public class ManagementResourceIT extends AbstractRestIT {
                 .get( JsonNode.class );
             fail("Validation should have failed");
         } catch ( UniformInterfaceException actual ) {
-            assertEquals( 400, actual.getResponse().getStatus() );
+            assertEquals( 404, actual.getResponse().getStatus() );
             String errorMsg = actual.getResponse().getEntity( JsonNode.class ).get( "error_description" ).toString();
             logger.error( "ERROR: " + errorMsg );
-            assertTrue( errorMsg.contains( "Admin Users must login via" ) );
+            assertTrue( errorMsg.contains( "Cannot find Admin User" ) );
         }
 
 
