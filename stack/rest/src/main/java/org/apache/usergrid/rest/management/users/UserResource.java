@@ -393,7 +393,7 @@ public class UserResource extends AbstractContextResource {
                 !StringUtils.isEmpty( properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
 
         if ( externalTokensEnabled ) {
-            throw new IllegalArgumentException( "Admin Users must reactiveate via " +
+            throw new IllegalArgumentException( "Admin Users must reactivate via " +
                     properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
         }
 
