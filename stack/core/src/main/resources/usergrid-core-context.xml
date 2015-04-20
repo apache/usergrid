@@ -164,26 +164,8 @@
         <constructor-arg ref="properties"/>
     </bean>
 
-
-
-    <bean id="entityManager" class="org.apache.usergrid.persistence.cassandra.EntityManagerImpl" scope="prototype"/>
-
     <bean id="mailUtils" class="org.apache.usergrid.utils.MailUtils" />
-
-    <bean id="traceTagAspect" class="org.apache.usergrid.persistence.cassandra.util.TraceTagAspect"/>
-
-    <aop:config>
-      <aop:aspect id="traceParticipant" ref="traceTagAspect">
-        <!-- pointcut on the prescense of the TraceParticipant annotation only -->
-        <aop:pointcut id="emTraceParticipant"
-            expression="execution(* org.apache.usergrid.persistence.cassandra.*EntityManagerImpl.*(..)) and
-            @annotation(org.apache.usergrid.persistence.cassandra.util.TraceParticipant)"/>
-        <aop:around
-           pointcut-ref="emTraceParticipant"
-           method="applyTrace"/>
-      </aop:aspect>
-    </aop:config>
-
+    
     <!-- ============================================================== -->
     <!-- Scheduler Settings from removed Scheduler Module's app context -->
     <!-- ============================================================== -->
