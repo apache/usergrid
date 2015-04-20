@@ -31,7 +31,7 @@ import javax.ws.rs.core.MediaType;
 /**
  * Classy class class.
  */
-public class TokenResource extends NamedResource {
+public class TokenResource extends NamedResource<TokenResource> {
     public TokenResource(final ClientContext context, final UrlResource parent) {
         super("token", context, parent);
     }
@@ -86,4 +86,8 @@ public class TokenResource extends NamedResource {
         return this;
     }
 
+    @Override
+    protected TokenResource getThis() {
+        return this;
+    }
 }

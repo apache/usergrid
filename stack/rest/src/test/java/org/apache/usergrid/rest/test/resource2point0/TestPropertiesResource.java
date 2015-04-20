@@ -29,7 +29,7 @@ import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 /**
  *Adds support for changing the management properties in the rest testing framework.
  */
-public class TestPropertiesResource extends NamedResource {
+public class TestPropertiesResource extends NamedResource<TestPropertiesResource> {
     public TestPropertiesResource( final ClientContext context, final UrlResource parent ) {
         super( "testproperties", context, parent );
     }
@@ -43,5 +43,10 @@ public class TestPropertiesResource extends NamedResource {
     public ApiResponse get(){
         return getResource(true).type( MediaType.APPLICATION_JSON_TYPE )
                        .accept( MediaType.APPLICATION_JSON ).get(ApiResponse.class );
+    }
+
+    @Override
+    protected TestPropertiesResource getThis() {
+        return this;
     }
 }

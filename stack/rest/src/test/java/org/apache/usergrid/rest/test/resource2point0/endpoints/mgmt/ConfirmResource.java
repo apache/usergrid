@@ -31,7 +31,7 @@ import com.sun.jersey.api.client.WebResource;
 /**
  * For confirming users
  */
-public class ConfirmResource extends NamedResource {
+public class ConfirmResource extends NamedResource<ConfirmResource> {
     public ConfirmResource( final ClientContext context, final UrlResource parent ) {
         super( "confirm", context, parent );
     }
@@ -42,5 +42,10 @@ public class ConfirmResource extends NamedResource {
         String obj = resource.type( MediaType.TEXT_HTML_TYPE )
                                        .accept( MediaType.TEXT_HTML).get( String.class );
 
+    }
+
+    @Override
+    protected ConfirmResource getThis() {
+        return this;
     }
 }

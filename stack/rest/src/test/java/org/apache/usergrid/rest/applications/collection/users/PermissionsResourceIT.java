@@ -72,7 +72,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
     public void setup(){
 
         user = new User(USER,USER,USER+"@apigee.com","password");
-        user = new User( this.app().collection("users").post(user));
+        user = this.app().collection("users").post(user);
         refreshIndex();
     }
 

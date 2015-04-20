@@ -58,7 +58,7 @@ public class ActivityResourceIT extends AbstractRestIT {
         this.usersResource = this.app().collection("users");
         Entity entity = groupsResource.post(new Entity().chainPut("name",GROUP).chainPut("path","/"+GROUP));
         current = new User("user1","user1","user1","user1");
-        current = new User( this.app().collection("users").post(current));
+        current = this.app().collection("users").post(current);
         this.activityTitle = "testTitle" ;
         this.activityDesc = "testActivity" ;
         this.activity = new ActivityEntity().putActor(current).chainPut("title", activityTitle).chainPut("content", activityDesc).chainPut("category", "testCategory").chainPut("verb", "POST");

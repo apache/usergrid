@@ -30,7 +30,7 @@ import com.sun.jersey.api.client.WebResource;
 /**
  * Functions as the endpoint for all resources that hit /system/ * /setup
  */
-public class SetupResource extends NamedResource {
+public class SetupResource extends NamedResource<SetupResource> {
 
     public SetupResource( final ClientContext context, final UrlResource parent ) {
         super("setup",context,parent);
@@ -42,5 +42,11 @@ public class SetupResource extends NamedResource {
 
         return resource.type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
                                 .get( Entity.class );
+    }
+
+
+    @Override
+    protected SetupResource getThis() {
+        return this;
     }
 }

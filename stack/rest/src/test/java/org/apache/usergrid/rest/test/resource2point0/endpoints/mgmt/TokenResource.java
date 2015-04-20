@@ -30,7 +30,7 @@ import javax.ws.rs.core.MediaType;
 /**
  * Called by the ManagementResource. This contains anything token related that comes back to the ManagementResource.
  */
-public class TokenResource extends NamedResource {
+public class TokenResource extends NamedResource<TokenResource> {
     public TokenResource(final ClientContext context, final UrlResource parent) {
         super("token", context, parent);
     }
@@ -79,6 +79,11 @@ public class TokenResource extends NamedResource {
 
     public TokenResource setToken(Token token) {
         this.context.setToken(token);
+        return this;
+    }
+
+    @Override
+    protected TokenResource getThis() {
         return this;
     }
 }

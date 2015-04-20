@@ -379,7 +379,7 @@ public class UserResourceIT extends AbstractRestIT {
         String name = "name" + id;
         User entity = new User(username, name, id + "@usergrid.org", "password");
 
-        entity = new User(usersResource.post(entity));
+        entity = usersResource.post(entity);
 
         UUID createdId = entity.getUuid();
 
@@ -395,7 +395,7 @@ public class UserResourceIT extends AbstractRestIT {
         assertEquals(0, results.getResponse().getEntities().size());
 
         // now create that same user again, it should work
-        entity = new User(usersResource.post(entity));
+        entity = usersResource.post(entity);
 
         createdId = entity.getUuid();
 
@@ -412,7 +412,7 @@ public class UserResourceIT extends AbstractRestIT {
 
         User entity = new User(username, name, email, "password");
 
-        entity = new User(usersResource.post(entity));
+        entity = usersResource.post(entity);
         refreshIndex();
 
         UUID firstCreatedId = entity.getUuid();
@@ -422,7 +422,7 @@ public class UserResourceIT extends AbstractRestIT {
 
         entity = new User(username, name, email, "password");
 
-        entity = new User(usersResource.post(entity));
+        entity = usersResource.post(entity);
         refreshIndex();
 
         UUID secondCreatedId = entity.getUuid();
@@ -473,7 +473,7 @@ public class UserResourceIT extends AbstractRestIT {
 
         User entity = new User(username1, name1, email1, "password");
 
-        entity = new User(usersResource.post(entity));
+        entity = usersResource.post(entity);
 
         UUID firstCreatedId = entity.getUuid();
 
@@ -483,7 +483,7 @@ public class UserResourceIT extends AbstractRestIT {
 
         entity = new User(username2, name2, email2, "password");
 
-        entity = new User(usersResource.post(entity));
+        entity = usersResource.post(entity);
 
         UUID secondCreatedId = entity.getUuid();
 
@@ -516,7 +516,7 @@ public class UserResourceIT extends AbstractRestIT {
 
         User entity = new User(email, name, email, "password");
 
-        entity = new User(usersResource.post(entity));
+        entity = usersResource.post(entity);
 
         UUID userId = entity.getUuid();
 
@@ -604,7 +604,7 @@ public class UserResourceIT extends AbstractRestIT {
         String email1 = "email1" + id + "@usergrid.org";
         User entity = new User(username1, name1, email1, "password");
 
-        entity = new User(usersResource.post(entity));
+        entity = usersResource.post(entity);
 
         UUID firstCreatedId = entity.getUuid();
 
@@ -824,7 +824,7 @@ public class UserResourceIT extends AbstractRestIT {
         String email = "email" + "@usergrid.org";
 
         User user = new User(username, name, email, "password");
-        user = new User(usersResource.post(user));
+        user = usersResource.post(user);
         UUID createdId = user.getUuid();
 
         // create Role

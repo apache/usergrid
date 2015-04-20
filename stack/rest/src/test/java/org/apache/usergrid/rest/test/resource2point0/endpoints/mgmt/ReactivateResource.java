@@ -32,7 +32,7 @@ import com.sun.jersey.api.client.WebResource;
 /**
  * handles the * /reactivate endpoints
  */
-public class ReactivateResource extends NamedResource {
+public class ReactivateResource extends NamedResource<ReactivateResource> {
     public ReactivateResource(final ClientContext context, final UrlResource parent) {
         super("reactivate",context, parent);
     }
@@ -42,5 +42,10 @@ public class ReactivateResource extends NamedResource {
         ApiResponse response = resource.type( MediaType.APPLICATION_JSON_TYPE )
                                        .accept( MediaType.APPLICATION_JSON ).get( ApiResponse.class);
         return new Entity(response);
+    }
+
+    @Override
+    protected ReactivateResource getThis() {
+        return this;
     }
 }

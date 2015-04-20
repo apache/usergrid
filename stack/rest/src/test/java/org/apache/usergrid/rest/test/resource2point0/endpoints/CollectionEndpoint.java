@@ -35,10 +35,15 @@ import java.util.*;
 /**
  * //myorg/myapp/mycollection
  */
-public class CollectionEndpoint extends NamedResource {
+public class CollectionEndpoint extends NamedResource<CollectionEndpoint> {
     private static final Logger logger = LoggerFactory.getLogger(CollectionEndpoint.class);
 
     protected List<String> acceptHeaders = new ArrayList<String> ();
+
+    @Override
+    protected CollectionEndpoint getThis() {
+        return this;
+    }
 
     public CollectionEndpoint(String name, ClientContext context, UrlResource parent) {
         super(name, context, parent);
@@ -219,58 +224,58 @@ public class CollectionEndpoint extends NamedResource {
      * POST /users {"color","red"}
      * </pre>
      */
-    public Entity post(Entity payload){
-
-        String acceptHeader = MediaType.APPLICATION_JSON;
-        if (this.acceptHeaders.size() > 0) {
-            acceptHeader = StringUtils.join(this.acceptHeaders, ',');
-        }
-
-        // use string type so we can log actual response from server
-        String responseString = getResource(true)
-            .type( MediaType.APPLICATION_JSON_TYPE )
-            .accept(acceptHeader)
-            .post(String.class, payload);
-
-        logger.debug("Response from post: " + responseString);
-
-        ObjectMapper mapper = new ObjectMapper();
-        ApiResponse response;
-        try {
-            response = mapper.readValue( new StringReader(responseString), ApiResponse.class);
-        } catch (IOException e) {
-            throw new RuntimeException("Error parsing response", e);
-        }
-
-        return new Entity(response);
-    }
-
-    public Entity post() {
-
-        String acceptHeader = MediaType.APPLICATION_JSON;
-
-        if (this.acceptHeaders.size() > 0) {
-            acceptHeader = StringUtils.join(this.acceptHeaders, ',');
-        }
-
-        // use string type so we can log actual response from server
-        String responseString = getResource(true)
-            .type( MediaType.APPLICATION_JSON_TYPE )
-            .accept(acceptHeader)
-            .post(String.class);
-
-        logger.debug("Response from post: " + responseString);
-
-        ObjectMapper mapper = new ObjectMapper();
-        ApiResponse response;
-        try {
-            response = mapper.readValue( new StringReader(responseString), ApiResponse.class);
-        } catch (IOException e) {
-            throw new RuntimeException("Error parsing response", e);
-        }
-
-        return new Entity(response);
-    }
+//    public Entity post(Entity payload){
+//
+//        String acceptHeader = MediaType.APPLICATION_JSON;
+//        if (this.acceptHeaders.size() > 0) {
+//            acceptHeader = StringUtils.join(this.acceptHeaders, ',');
+//        }
+//
+//        // use string type so we can log actual response from server
+//        String responseString = getResource(true)
+//            .type( MediaType.APPLICATION_JSON_TYPE )
+//            .accept(acceptHeader)
+//            .post(String.class, payload);
+//
+//        logger.debug("Response from post: " + responseString);
+//
+//        ObjectMapper mapper = new ObjectMapper();
+//        ApiResponse response;
+//        try {
+//            response = mapper.readValue( new StringReader(responseString), ApiResponse.class);
+//        } catch (IOException e) {
+//            throw new RuntimeException("Error parsing response", e);
+//        }
+//
+//        return new Entity(response);
+//    }
+//
+//    public Entity post() {
+//
+//        String acceptHeader = MediaType.APPLICATION_JSON;
+//
+//        if (this.acceptHeaders.size() > 0) {
+//            acceptHeader = StringUtils.join(this.acceptHeaders, ',');
+//        }
+//
+//        // use string type so we can log actual response from server
+//        String responseString = getResource(true)
+//            .type( MediaType.APPLICATION_JSON_TYPE )
+//            .accept(acceptHeader)
+//            .post(String.class);
+//
+//        logger.debug("Response from post: " + responseString);
+//
+//        ObjectMapper mapper = new ObjectMapper();
+//        ApiResponse response;
+//        try {
+//            response = mapper.readValue( new StringReader(responseString), ApiResponse.class);
+//        } catch (IOException e) {
+//            throw new RuntimeException("Error parsing response", e);
+//        }
+//
+//        return new Entity(response);
+//    }
 
     public ApiResponse post(List<Entity> entityList) {
 

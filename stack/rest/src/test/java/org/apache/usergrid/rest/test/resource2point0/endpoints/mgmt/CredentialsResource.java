@@ -31,7 +31,7 @@ import javax.ws.rs.core.MediaType;
 
 /**
  */
-public class CredentialsResource extends NamedResource {
+public class CredentialsResource extends NamedResource<CredentialsResource> {
 
     public CredentialsResource(final ClientContext context, final UrlResource parent) {
         super("credentials", context, parent);
@@ -51,5 +51,10 @@ public class CredentialsResource extends NamedResource {
 
     public Credentials get() {
         return get(null, true);
+    }
+
+    @Override
+    protected CredentialsResource getThis() {
+        return this;
     }
 }

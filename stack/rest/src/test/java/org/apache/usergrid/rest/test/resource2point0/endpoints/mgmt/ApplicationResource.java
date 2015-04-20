@@ -32,9 +32,14 @@ import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 /**
  * Classy class class.
  */
-public class ApplicationResource extends NamedResource {
+public class ApplicationResource extends NamedResource<ApplicationResource> {
     public ApplicationResource(ClientContext context, UrlResource parent) {
         super("applications", context, parent);
+    }
+
+    @Override
+    protected ApplicationResource getThis() {
+        return this;
     }
 
     public ApplicationResource( final String name, final ClientContext context, final UrlResource parent ) {

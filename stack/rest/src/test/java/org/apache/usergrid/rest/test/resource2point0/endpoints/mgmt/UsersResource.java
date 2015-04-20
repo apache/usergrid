@@ -34,7 +34,7 @@ import com.sun.jersey.api.client.WebResource;
  * Handles calls to the users management endpoint
  * Example: /management/orgs/org_name/users
  */
-public class UsersResource extends NamedResource {
+public class UsersResource extends NamedResource<UsersResource> {
     public UsersResource( final ClientContext context, final UrlResource parent ) {
         super( "users", context, parent );
     }
@@ -68,5 +68,10 @@ public class UsersResource extends NamedResource {
         ApiResponse response = resource.type( MediaType.APPLICATION_JSON_TYPE )
                                        .accept( MediaType.APPLICATION_JSON ).get( ApiResponse.class);
         return new Entity(response);
+    }
+
+    @Override
+    protected UsersResource getThis() {
+        return this;
     }
 }

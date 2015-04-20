@@ -36,7 +36,7 @@ import com.sun.jersey.api.client.WebResource;
  * /management/users/"username"/password
  * Allows admin users to change their passwords
  */
-public class PasswordResource extends NamedResource {
+public class PasswordResource extends NamedResource<PasswordResource> {
 
     public PasswordResource( final ClientContext context, final UrlResource parent ) {
         super( "password", context, parent );
@@ -57,5 +57,10 @@ public class PasswordResource extends NamedResource {
 
     public Entity post(Map<String, Object> payload){
         return post( null, payload );
+    }
+
+    @Override
+    protected PasswordResource getThis() {
+        return this;
     }
 }

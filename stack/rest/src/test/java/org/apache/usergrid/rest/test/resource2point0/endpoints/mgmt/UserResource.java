@@ -32,10 +32,23 @@ import com.sun.jersey.api.client.WebResource;
  * /management/users/"username"
  * Store endpoints relating to specific users
  */
-public class UserResource extends NamedResource {
+public class UserResource extends NamedResource<UserResource> {
+
+    @Override
+    protected UserResource getThis() {
+        return this;
+    }
 
     public UserResource( final String name, final ClientContext context, final UrlResource parent ) {
         super( name, context, parent );
+    }
+
+    public DeactivateResource deactivate() {
+        return new DeactivateResource( context, this );
+    }
+
+    public RevokeTokensResource revoketokens() {
+        return new RevokeTokensResource( context, this );
     }
 
     public ReactivateResource reactivate() {

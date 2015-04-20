@@ -34,7 +34,7 @@ import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
  * Contains the REST methods to interacting with the ManagementEndpoints
  * and the user feeds
  */
-public class FeedResource extends NamedResource {
+public class FeedResource extends NamedResource<FeedResource> {
     public FeedResource(final ClientContext context, final UrlResource parent) {
         super ( "feed",context, parent);
     }
@@ -44,5 +44,10 @@ public class FeedResource extends NamedResource {
             .accept( MediaType.APPLICATION_JSON ).get( Entity.class);
 
 
+    }
+
+    @Override
+    protected FeedResource getThis() {
+        return this;
     }
 }

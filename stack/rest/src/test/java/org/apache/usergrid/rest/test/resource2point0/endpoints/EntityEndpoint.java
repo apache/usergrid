@@ -30,7 +30,12 @@ import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 import javax.ws.rs.core.MediaType;
 
-public class EntityEndpoint extends NamedResource {
+public class EntityEndpoint extends NamedResource<EntityEndpoint> {
+
+    @Override
+    protected EntityEndpoint getThis() {
+        return null;
+    }
 
     public EntityEndpoint(String identifier, ClientContext context, UrlResource parent) {
         super(identifier, context, parent);

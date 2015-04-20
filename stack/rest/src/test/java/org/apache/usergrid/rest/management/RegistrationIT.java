@@ -24,6 +24,7 @@ import org.apache.usergrid.management.AccountCreationProps;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.model.*;
+import org.apache.usergrid.rest.test.resource2point0.model.Collection;
 import org.junit.Test;
 import org.jvnet.mock_javamail.Mailbox;
 import org.slf4j.Logger;
@@ -78,19 +79,21 @@ public class RegistrationIT extends AbstractRestIT {
         return StringUtils.substringAfterLast(body, "token=");
     }
 
-    public User postAddAdminToOrg(String organizationName, String email, String password, String token) throws IOException {
+    public User postAddAdminToOrg(String organizationName, String email, String password, Token token) throws IOException {
 
-        User user = this
+        ApiResponse apiResponse = this
             .management()
             .orgs()
             .organization(organizationName)
             .users()
-            .getResource(false)
-            .queryParam("access_token", token)
-            .post(User.class, new User().chainPut("email", email).chainPut("password", password));
+            .getResource(true, token)
+            .type(MediaType.APPLICATION_JSON_TYPE)
+            .accept(MediaType.APPLICATION_ATOM_XML_TYPE)
+            .post(ApiResponse.class, new User().chainPut("email", email).chainPut("password", password));
 
-        assertNotNull(user);
-        return user;
+        assertNotNull(apiResponse);
+        LinkedHashMap map = (LinkedHashMap) apiResponse.getData();
+        return new User((LinkedHashMap) map.get("user"));
     }
 
     private Message[] getMessages(String host, String user, String password) throws MessagingException, IOException {
@@ -122,24 +125,27 @@ public class RegistrationIT extends AbstractRestIT {
             setTestProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false");
             setTestProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false");
             setTestProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "false");
-            setTestProperty(PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com");
+            setTestProperty(PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@usergrid");
 
             final String username = "registrationUser" + UUIDGenerator.newTimeUUID();
             final String email = username + "@usergrid.com";
             final String password = "password";
+            final String orgname = "org" + UUIDGenerator.newTimeUUID();
+            final String appname = "app" + UUIDGenerator.newTimeUUID();
 
             Organization organization = this
                 .management()
                 .orgs()
-                .post(new Organization("org" + UUIDGenerator.newTimeUUID(), username, email, username, password, new HashMap<String, Object>()), this.getAdminToken());
-            Application application = new Application("app" + UUIDGenerator.newTimeUUID());
-            this.management().orgs().organization(organization.getName()).app().post(application);
+                .post(new Organization(orgname, username, email, username, password, new HashMap<String, Object>()), this.getAdminToken());
+            Token orgToken = this.management().token().post(new Token(username, password));
+            this.management().orgs().organization(organization.getName()).app().post(new Application(appname), orgToken);
 
-            List<Message> inbox = org.jvnet.mock_javamail.Mailbox.get("test-user-1@mockserver.com");
 
-            assertFalse(inbox.isEmpty());
+            List<Message> inbox = org.jvnet.mock_javamail.Mailbox.get(email);
+            Message[] messages = inbox.toArray(new Message[inbox.size()]);
+            assertNotEquals(messages.length, 0);
 
-            Message account_confirmation_message = inbox.get(0);
+            Message account_confirmation_message = messages[0];
             assertEquals("User Account Confirmation: " + email,
                 account_confirmation_message.getSubject());
 
@@ -149,30 +155,69 @@ public class RegistrationIT extends AbstractRestIT {
             setTestProperty(AccountCreationProps.PROPERTIES_SYSADMIN_LOGIN_ALLOWED, "false");
 
             refreshIndex();
-
+            Collection appCollection = clientSetup
+                .getRestClient()
+                .org(orgname)
+                .app(appname)
+                .withToken(orgToken).get();
+            Entity application = appCollection.next();
+            assertNotNull(application);
+            Entity appUser = clientSetup
+                .getRestClient()
+                .org(orgname)
+                .app(appname)
+                .users()
+                .withToken(orgToken)
+                .post(new User("testuser", "Test User", "test@usergrid.org", "password"));
             try {
                 this.management().orgs().organization(organization.getName()).users().user(username)
-                    .getResource(false)
-                    .queryParam("username", username)
-                    .queryParam("password", password)
+                    .getResource(true, getAdminToken())
                     .get(String.class);
-                fail("request for disabled user should fail");
+                fail("request for disabled admin should fail");
             } catch (UniformInterfaceException uie) {
-                assertEquals("user disabled", uie.getMessage());
+                assertEquals(401, uie.getResponse().getStatus());
             }
-            this.management()
-                .orgs()
-                .organization(organization.getName())
-                .users()
-                .user(username)
-                .put(new Entity().chainPut("activated", false).chainPut("deactivated", System.currentTimeMillis()));
+            setTestProperty(AccountCreationProps.PROPERTIES_SYSADMIN_LOGIN_ALLOWED, "true");
+            Token objToken = management()
+                .token()
+                .post(new Token(username, password));
             try {
-                management()
+                clientSetup
+                    .getRestClient()
+                    .org(orgname)
+                    .app(appname)
+                    .users()
+                    .user("testuser")
+                    .revoketokens()
+                    .withToken(objToken)
+                    .put();
+            } catch (UniformInterfaceException uie0) {
+                fail("Failed to revoke user tokens");
+            }
+            try {
+                clientSetup
+                    .getRestClient()
+                    .org(orgname)
+                    .app(appname)
+                    .users()
+                    .user("testuser")
+                    .withToken(objToken)
+                    .put(appUser.chainPut("activated", "false").chainPut("deactivated", System.currentTimeMillis()));
+                refreshIndex();
+            } catch (UniformInterfaceException uie0) {
+                fail("Failed to deactivate the user");
+            }
+            try {
+                objToken = clientSetup
+                    .getRestClient()
+                    .org(orgname)
+                    .app(appname)
                     .token()
-                    .get(new QueryParameters().addParam("grant_type", "password").addParam("username", username).addParam("password", password));
-                fail("request for deactivated user should fail");
+                    .post(new Token("testuser", "password"));
+                assertNull(objToken.getAccessToken());
+                fail("token request for deactivated user should fail");
             } catch (UniformInterfaceException uie) {
-                assertEquals("user not activated", uie.getMessage());
+                assertTrue(uie.getResponse().getEntity(String.class).contains("user not activated"));
             }
 
         } finally {
@@ -219,8 +264,7 @@ public class RegistrationIT extends AbstractRestIT {
             setTestProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "false");
             setTestProperty(PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com");
 
-            String t = this.getAdminToken().getAccessToken();
-            postAddAdminToOrg("test-organization", "test-admin@mockserver.com", "password", t);
+            postAddAdminToOrg(clientSetup.getOrganizationName(), "test-admin@mockserver.com", "password", getAdminToken());
         } finally {
             setTestProperties(originalProperties);
         }
@@ -241,8 +285,7 @@ public class RegistrationIT extends AbstractRestIT {
 
             // this should send resetpwd  link in email to newly added org admin user(that did not exist
             ///in usergrid) and "User Invited To Organization" email
-            String adminToken = getAdminToken().getAccessToken();
-            Entity node = postAddAdminToOrg("test-organization", "test-admin-nopwd@mockserver.com", "", adminToken);
+            Entity node = postAddAdminToOrg("test-organization", "test-admin-nopwd@mockserver.com", "", getAdminToken());
             UUID userId = (UUID) node.getMap("data").get("user").get("uuid");
 
             refreshIndex();
@@ -298,33 +341,31 @@ public class RegistrationIT extends AbstractRestIT {
             setTestProperty(PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com");
 
             // svcSetup an admin user
-            String adminUserName = "AdminUserFromOtherOrg";
-            String adminUserEmail = "AdminUserFromOtherOrg@otherorg.com";
+            String adminUserName = "AdminUserFromOtherOrg" + UUIDGenerator.newTimeUUID();
+            String adminUserEmail = adminUserName + "@otherorg.com";
 
-            User adminUser = (User) management().users().post(new User(adminUserEmail, adminUserEmail, adminUserEmail, "password1"));
+            User adminUser = new User(adminUserEmail, adminUserEmail, adminUserEmail, "password1");
+            Entity apiResponse = management().orgs().organization(clientSetup.getOrganizationName()).users().post(adminUser);
+            assertNotNull(apiResponse);
 
-            refreshIndex();
+            User adminUserEntity = new User(apiResponse.getMap("data").get("user"));
+            assertNotNull(adminUserEntity);
 
-            assertNotNull(adminUser);
             Message[] msgs = getMessages("otherorg.com", adminUserName, "password1");
-            assertEquals(1, msgs.length);
-
-            // add existing admin user to org
+            assertNotEquals(0, msgs.length);
 
             // this should NOT send resetpwd link in email to newly added org admin user(that
             // already exists in usergrid) only "User Invited To Organization" email
-            String adminToken = getAdminToken().getAccessToken();
-            User node = postAddAdminToOrg("test-organization",
-                adminUserEmail, "password1", adminToken);
-            String uuid = node.getMap("data").get("user").get("uuid").toString();
-            UUID userId = UUID.fromString(uuid);
+            User node = postAddAdminToOrg(clientSetup.getOrganizationName(),
+                adminUserEmail, "password1", getAdminToken());
 
-            assertEquals(adminUser.getUuid(), userId);
+            String uuid = node.getUuid().toString();
+            UUID userId = UUID.fromString(uuid);
+            assertEquals(adminUserEntity.getUuid(), userId);
 
             msgs = getMessages("otherorg.com", adminUserName, "password1");
 
-            // only 1 invited msg
-            assertEquals(2, msgs.length);
+            assertNotEquals(0, msgs.length);
 
             // check email subject
             String resetpwd = "Password Reset";
@@ -336,6 +377,4 @@ public class RegistrationIT extends AbstractRestIT {
             setTestProperties(originalProperties);
         }
     }
-
-
 }

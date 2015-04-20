@@ -31,8 +31,13 @@ import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
  * Holds the information required for building and chaining organization objects to applications.
  * Should also contain the GET,PUT,POST,DELETE methods of functioning in here.
  */
-public class OrganizationResource extends NamedResource {
+public class OrganizationResource extends NamedResource<OrganizationResource> {
 
+
+    @Override
+    protected OrganizationResource getThis() {
+        return this;
+    }
 
     public OrganizationResource( final String name, final ClientContext context, final UrlResource parent ) {
         super( name, context, parent );

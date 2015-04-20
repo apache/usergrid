@@ -27,7 +27,7 @@ import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 /**
  * Contains methods pertaining to system/database/*
  */
-public class DatabaseResource extends NamedResource {
+public class DatabaseResource extends NamedResource<DatabaseResource> {
 
     public DatabaseResource( final ClientContext context, final UrlResource parent ) {
         super( "database", context, parent );
@@ -35,5 +35,10 @@ public class DatabaseResource extends NamedResource {
 
     public SetupResource setup(){
         return new SetupResource (context, this);
+    }
+
+    @Override
+    protected DatabaseResource getThis() {
+        return this;
     }
 }

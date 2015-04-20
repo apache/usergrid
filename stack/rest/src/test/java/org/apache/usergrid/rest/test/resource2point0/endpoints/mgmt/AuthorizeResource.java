@@ -27,7 +27,7 @@ import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 /**
  * OAuth authorization resource
  */
-public class AuthorizeResource extends NamedResource {
+public class AuthorizeResource extends NamedResource<AuthorizeResource> {
     public AuthorizeResource(final ClientContext context, final UrlResource parent) {
         super("authorize", context, parent);
     }
@@ -56,4 +56,8 @@ public class AuthorizeResource extends NamedResource {
 
     }
 
+    @Override
+    protected AuthorizeResource getThis() {
+        return this;
+    }
 }

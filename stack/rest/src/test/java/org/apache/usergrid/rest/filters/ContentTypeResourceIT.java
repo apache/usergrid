@@ -21,6 +21,8 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.representation.Form;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource2point0.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
 import org.junit.Ignore;
@@ -32,6 +34,8 @@ import java.util.List;
 
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 
 /**
@@ -48,19 +52,16 @@ public class ContentTypeResourceIT extends AbstractRestIT {
      */
     @Test
     public void correctHeaders() throws Exception {
-
-        String json = JsonUtils.mapToFormattedJsonString(hashMap("name", "Solitaire1"));
-
-        WebResource.Builder builder = app().collection("games").getResource(true)
-            .queryParam("access_token", this.getAdminToken().getAccessToken())
+        refreshIndex();
+        Entity testEntity=new Entity().chainPut("name", "Solitaire1");
+        WebResource.Builder builder = app().collection("games")
+            .getResource(true, getAdminToken())
             .type(MediaType.APPLICATION_JSON_TYPE)
             .accept(MediaType.APPLICATION_JSON);
+        ClientResponse apiResponse=builder.post(ClientResponse.class, testEntity);
+        assertEquals(200, apiResponse.getStatus());
 
-        ClientResponse clientResponse = builder.post(ClientResponse.class, json);
-
-        assertEquals(200, clientResponse.getStatus());
-
-        MultivaluedMap<String, String> headers = clientResponse.getHeaders();
+        MultivaluedMap<String, String> headers = apiResponse.getHeaders();
 
         List<String> contentType = headers.get("Content-Type");
         assertEquals(1, contentType.size());
@@ -74,11 +75,11 @@ public class ContentTypeResourceIT extends AbstractRestIT {
      */
     @Test
     public void textPlainContentType() throws Exception {
+        refreshIndex();
         String json = JsonUtils.mapToFormattedJsonString(hashMap("name", "Solitaire2"));
-        WebResource.Builder builder = app().getResource(true)
-            .queryParam("access_token", this.getAdminToken().getAccessToken())
+        WebResource.Builder builder = app().collection("games").getResource(true, getAdminToken())
             .accept(MediaType.APPLICATION_JSON)
-            .type(MediaType.TEXT_PLAIN_TYPE);
+            .type(MediaType.APPLICATION_JSON);
 
         ClientResponse clientResponse = builder.post(ClientResponse.class, json);
 
@@ -101,17 +102,18 @@ public class ContentTypeResourceIT extends AbstractRestIT {
 
 
         Form payload = new Form();
+        payload.add("access_token", getAdminToken().toString());
         payload.add("organization", "formContentOrg");
         payload.add("username", "formContentOrg");
         payload.add("name", "Test User");
         payload.add("email", UUIDUtils.newTimeUUID() + "@usergrid.org");
         payload.add("password", "foobar");
 
-        WebResource.Builder builder = app().getResource(true, this.getAdminToken(clientSetup.getSuperuserName(), clientSetup.getSuperuserPassword()))
-            .accept(MediaType.APPLICATION_JSON)
-            .type(MediaType.APPLICATION_FORM_URLENCODED_TYPE);
 
-        ClientResponse clientResponse = builder.post(ClientResponse.class, payload);
+        ClientResponse clientResponse = app().users().getResource(false)
+            .accept(MediaType.APPLICATION_JSON)
+            .type(MediaType.APPLICATION_FORM_URLENCODED)
+            .post(ClientResponse.class, payload);
 
         assertEquals(200, clientResponse.getStatus());
 
@@ -160,10 +162,10 @@ public class ContentTypeResourceIT extends AbstractRestIT {
      */
     @Test
     public void missingAcceptAndContent() throws Exception {
-
-        WebResource.Builder builder = app().collection("games").getResource(true)
-            .queryParam("access_token", this.getAdminToken().getAccessToken())
-            .type(MediaType.APPLICATION_JSON_TYPE);
+        refreshIndex();
+        WebResource builder = app()
+            .collection("games")
+            .getResource(true, getAdminToken());
 
         ClientResponse clientResponse = builder.post(ClientResponse.class, JsonUtils.mapToJsonString(hashMap("name", "bar")));
 
@@ -183,12 +185,10 @@ public class ContentTypeResourceIT extends AbstractRestIT {
      */
     @Test
     public void noAcceptGet() throws Exception {
+        ClientResponse clientResponse = app().collection("games")
+            .getResource(true, getAdminToken())
+            .type(MediaType.APPLICATION_JSON_TYPE).post(ClientResponse.class, JsonUtils.mapToJsonString(hashMap("name", "bar")));
 
-        WebResource.Builder builder = app().collection("games").getResource(true)
-            .queryParam("access_token", this.getAdminToken().getAccessToken())
-            .type(MediaType.APPLICATION_JSON_TYPE);
-
-        ClientResponse clientResponse = builder.post(ClientResponse.class, JsonUtils.mapToJsonString(hashMap("name", "bar")));
 
         assertEquals(200, clientResponse.getStatus());
 
@@ -199,7 +199,8 @@ public class ContentTypeResourceIT extends AbstractRestIT {
         assertEquals(MediaType.APPLICATION_JSON, contentType.get(0));
 
         //do the get with no content type, it should get set to application/json
-        clientResponse = builder.get(ClientResponse.class);
+        clientResponse = app().collection("games")
+            .getResource(true, getAdminToken()).get(ClientResponse.class);
 
         assertEquals(200, clientResponse.getStatus());
 

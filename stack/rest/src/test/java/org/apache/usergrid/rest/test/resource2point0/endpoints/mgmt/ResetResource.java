@@ -29,7 +29,7 @@ import com.sun.jersey.api.representation.Form;
 /**
  * Handles /resetpw endpoints for the user resource.
  */
-public class ResetResource extends NamedResource {
+public class ResetResource extends NamedResource<ResetResource> {
 
     public ResetResource( final ClientContext context, final UrlResource parent ) {
         super( "resetpw", context, parent );
@@ -38,5 +38,10 @@ public class ResetResource extends NamedResource {
     public String post(Form formPayload) {
         return getResource().type( MediaType.APPLICATION_FORM_URLENCODED_TYPE )
             .accept( MediaType.TEXT_HTML ).post( String.class, formPayload);
+    }
+
+    @Override
+    protected ResetResource getThis() {
+        return this;
     }
 }

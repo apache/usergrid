@@ -24,7 +24,7 @@ import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 /**
  * Handles making rest calls to system resources.
  */
-public class SystemResource extends NamedResource {
+public class SystemResource extends NamedResource<SystemResource> {
 
     public SystemResource(final ClientContext context, final UrlResource parent ) {
         super( "system",context, parent );
@@ -32,5 +32,10 @@ public class SystemResource extends NamedResource {
 
     public DatabaseResource database() {
         return new DatabaseResource(context, this);
+    }
+
+    @Override
+    protected SystemResource getThis() {
+        return this;
     }
 }

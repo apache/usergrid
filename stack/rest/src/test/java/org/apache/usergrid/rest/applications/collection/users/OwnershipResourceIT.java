@@ -61,8 +61,8 @@ public class OwnershipResourceIT extends AbstractRestIT {
         user1 = new User("testuser1","testuser1", email, "password" );
         user2 = new User("testuser2","testuser2", email2, "password" );
 
-        user1 = new User(this.usersResource.post(user1));
-        user2 = new User(this.usersResource.post(user2));
+        user1 = this.usersResource.post(user1);
+        user2 = this.usersResource.post(user2);
 
         refreshIndex();
     }

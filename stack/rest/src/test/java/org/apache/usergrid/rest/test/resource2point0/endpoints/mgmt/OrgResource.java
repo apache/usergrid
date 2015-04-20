@@ -43,7 +43,7 @@ import java.io.StringReader;
 /**
  * Manages the Management/ORG endpoint.
  */
-public class OrgResource  extends NamedResource {
+public class OrgResource  extends NamedResource<OrgResource> {
     private static final Logger logger = LoggerFactory.getLogger(OrgResource.class);
 
     public OrgResource( final ClientContext context, final UrlResource parent ) {
@@ -169,4 +169,8 @@ public class OrgResource  extends NamedResource {
         return new CredentialsResource(  context ,this );
     }
 
+    @Override
+    protected OrgResource getThis() {
+        return this;
+    }
 }

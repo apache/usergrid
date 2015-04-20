@@ -24,7 +24,7 @@ import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 /**
  * Contains the REST methods to interacting with the ManagementEndpoints
  */
-public class ManagementResource extends NamedResource {
+public class ManagementResource extends NamedResource<ManagementResource> {
     public ManagementResource( final ClientContext context, final UrlResource parent ) {
         super( "management", context, parent );
     }
@@ -49,4 +49,8 @@ public class ManagementResource extends NamedResource {
         return new EntityEndpoint(identifier, context, this);
     }
 
+    @Override
+    protected ManagementResource getThis() {
+        return this;
+    }
 }
