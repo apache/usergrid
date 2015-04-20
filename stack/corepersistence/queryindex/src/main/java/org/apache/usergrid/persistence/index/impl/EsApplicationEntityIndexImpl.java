@@ -26,6 +26,10 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.ShardOperationFailedException;
@@ -39,6 +43,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
+import org.mortbay.util.ajax.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -141,10 +146,14 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
         return batch;
     }
 
-
     @Override
     public CandidateResults search( final SearchEdge searchEdge, final SearchTypes searchTypes, final String query,
                                     final int limit ) {
+        return search(searchEdge,searchTypes,query,limit,0);
+    }
+
+    public CandidateResults search( final SearchEdge searchEdge, final SearchTypes searchTypes, final String query,
+                                    final int limit, final int from ) {
 
         IndexValidationUtils.validateSearchEdge( searchEdge );
         Preconditions.checkNotNull( searchTypes, "searchTypes cannot be null" );
@@ -156,7 +165,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
 
         final ParsedQuery parsedQuery = ParsedQueryBuilder.build( query );
 
-        final SearchRequestBuilder srb = searchRequest.getBuilder( searchEdge, searchTypes, parsedQuery, limit );
+        final SearchRequestBuilder srb = searchRequest.getBuilder( searchEdge, searchTypes, parsedQuery, limit, from );
 
         if ( logger.isDebugEnabled() ) {
             logger.debug( "Searching index (read alias): {}\n  nodeId: {}, edgeType: {},  \n type: {}\n   query: {} ",
@@ -177,14 +186,12 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
         }
         failureMonitor.success();
 
-        return parseResults( searchResponse, parsedQuery, limit );
+        return parseResults( searchResponse, searchEdge, searchTypes, parsedQuery, limit, from );
     }
 
 
     public CandidateResults getNextPage( final String cursor ) {
-        Preconditions.checkNotNull( cursor, "cursor is a required argument" );
-
-        SearchResponse searchResponse;
+        Preconditions.checkNotNull(cursor, "cursor is a required argument");
 
         String userCursorString = cursor;
 
@@ -204,37 +211,9 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
             throw new QueryException( String.format("Could not find a cursor for the value '%s' ", userCursorString ));
         }
 
-
-
         //parse the query state
         final QueryState queryState = QueryState.fromSerialized( queryStateString );
-
-        //parse the query so we can get select terms
-        final ParsedQuery parsedQuery = ParsedQueryBuilder.build( queryState.ql);
-
-
-        logger.debug( "Executing query with cursor: {} ", queryState.esCursor );
-
-
-        SearchScrollRequestBuilder ssrb =
-                esProvider.getClient().prepareSearchScroll( queryState.esCursor ).setScroll( cursorTimeout + "m" );
-
-        try {
-            //Added For Graphite Metrics
-            Timer.Context timeSearchCursor = cursorTimer.time();
-            searchResponse = ssrb.execute().actionGet();
-            timeSearchCursor.stop();
-        }
-        catch ( Throwable t ) {
-            logger.error( "Unable to communicate with elasticsearch", t );
-            failureMonitor.fail( "Unable to execute batch", t );
-            throw t;
-        }
-
-
-        failureMonitor.success();
-
-        return parseResults( searchResponse, parsedQuery, queryState.limit );
+        return search(queryState.searchEdge,queryState.searchTypes,queryState.ql,queryState.limit,queryState.from);
     }
 
 
@@ -292,8 +271,9 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
     /**
      * Parse the results and return the canddiate results
      */
-    private CandidateResults parseResults( final SearchResponse searchResponse, final ParsedQuery query,
-                                           final int limit ) {
+    private CandidateResults parseResults( final SearchResponse searchResponse, final SearchEdge searchEdge,
+                                           final SearchTypes searchTypes, final ParsedQuery query,
+                                           final int limit, final int from ) {
 
         final SearchHits searchHits = searchResponse.getHits();
         final SearchHit[] hits = searchHits.getHits();
@@ -310,11 +290,10 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
             candidates.add( candidateResult );
         }
 
-        final String esScrollCursor = searchResponse.getScrollId();
-        final CandidateResults candidateResults = new CandidateResults( candidates, query.getSelectFieldMappings(),esScrollCursor);
+        final CandidateResults candidateResults = new CandidateResults( candidates, query.getSelectFieldMappings(),from+limit);
 
         // >= seems odd.  However if we get an overflow, we need to account for it.
-        if ( esScrollCursor != null && length >= limit ) {
+        if (  length >= limit ) {
             final String cursor = candidateResults.initializeCursor();
 
             //now set this into our map module
@@ -323,13 +302,12 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
 
             final int storageSeconds = ( int ) TimeUnit.MINUTES.toSeconds( minutes );
 
-            final QueryState state = new QueryState( query.getOriginalQuery(), limit, esScrollCursor );
+            final QueryState state = new QueryState( query.getOriginalQuery(), searchEdge, searchTypes, limit, from );
 
             final String queryStateSerialized = state.serialize();
 
-            mapManager.putString (cursor , queryStateSerialized, storageSeconds );
+            mapManager.putString(cursor, queryStateSerialized, storageSeconds);
 
-            logger.debug( " User cursor = {},  Cursor = {} ", cursor, esScrollCursor );
         }
 
         return candidateResults;
@@ -341,6 +319,11 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
      */
     private static final class QueryState implements Serializable{
 
+
+        private static final JsonFactory SMILE_FACTORY = new JsonFactory();
+
+        private static final ObjectMapper MAPPER = new ObjectMapper( SMILE_FACTORY );
+
         /**
          * Our reserved character for constructing our storage string
          */
@@ -348,15 +331,18 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
 
         private final String ql;
 
+        private final SearchEdge searchEdge;
+        private final SearchTypes searchTypes;
         private final int limit;
+        private final int from;
 
-        private final String esCursor;
 
-
-        private QueryState( final String ql, final int limit, final String esCursor ) {
+        private QueryState( final String ql,final SearchEdge searchEdge, final  SearchTypes searchTypes, final int limit, final int from ) {
             this.ql = ql;
+            this.searchEdge = searchEdge;
+            this.searchTypes = searchTypes;
             this.limit = limit;
-            this.esCursor = esCursor;
+            this.from = from;
         }
 
 
@@ -365,27 +351,49 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
          */
         public static QueryState fromSerialized( final String input ) {
 
-            final String[] parts = input.split( STORAGE_DELIM );
+            final String[] parts = input.split(STORAGE_DELIM);
 
-            Preconditions.checkArgument( parts != null && parts.length == 3,
-                    "there must be 3 parts to the serialized query state" );
+            Preconditions.checkArgument(parts != null && parts.length == 7,
+                "there must be 5 parts to the serialized query state");
+            try {
 
+                String edgeName = parts[1];
+                Id edgeId = MAPPER.readValue(parts[2],SimpleId.class);
+                SearchEdge.NodeType nodeType = SearchEdge.NodeType.valueOf(parts[3]);
 
-            return new QueryState( parts[0], Integer.parseInt( parts[1] ), parts[2] );
+                String[] searchTypes = MAPPER.readValue(parts[4],String[].class);
+                SearchTypes types = searchTypes.length == 0 ? SearchTypes.allTypes() : SearchTypes.fromTypes(searchTypes);
+                return new QueryState(parts[0], new SearchEdgeImpl(edgeId,edgeName,nodeType),types , Integer.parseInt(parts[5]), Integer.parseInt(parts[6]));
+            } catch (Exception jpe) {
+                throw new RuntimeException(jpe);
+            }
         }
 
 
         public String serialize() {
+            try {
 
-            StringBuilder storageString = new StringBuilder();
+                StringBuilder storageString = new StringBuilder();
 
-            storageString.append( ql ).append( STORAGE_DELIM );
+                storageString.append(ql).append(STORAGE_DELIM);
 
-            storageString.append( limit ).append( STORAGE_DELIM );
+                String edge =searchEdge.getEdgeName();
+                storageString.append(edge).append(STORAGE_DELIM);
+                String nodeid = MAPPER.writeValueAsString(searchEdge.getNodeId());
+                storageString.append(nodeid).append(STORAGE_DELIM);
+                String nodeType = searchEdge.getNodeType().name();
+                storageString.append(nodeType).append(STORAGE_DELIM);
+                String types = MAPPER.writeValueAsString(searchTypes.getTypes());
+                storageString.append(types).append(STORAGE_DELIM);
 
-            storageString.append( esCursor );
+                storageString.append(limit).append(STORAGE_DELIM);
 
-            return storageString.toString();
+                storageString.append(from+limit);
+
+                return storageString.toString();
+            }catch (Exception jpe){
+                throw new RuntimeException(jpe);
+            }
         }
     }
 }

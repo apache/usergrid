@@ -49,16 +49,13 @@ public class CandidateResults implements Iterable<CandidateResult> {
 
     private final List<CandidateResult> candidates;
     private final Collection<SelectFieldMapping> getFieldMappings;
-    private final String esCursor;
 
 
     public CandidateResults( List<CandidateResult> candidates,
-                             final Collection<SelectFieldMapping> getFieldMappings,
-                             final String esCursor
+                             final Collection<SelectFieldMapping> getFieldMappings
     ) {
         this.candidates = candidates;
         this.getFieldMappings = getFieldMappings;
-        this.esCursor = esCursor;
     }
 
 
@@ -113,7 +110,4 @@ public class CandidateResults implements Iterable<CandidateResult> {
         return candidates.iterator();
     }
 
-    public String getEsCursor() {
-        return esCursor;
-    }
 }
