@@ -60,6 +60,7 @@ import org.elasticsearch.action.search.SearchScrollRequestBuilder;
 import org.elasticsearch.client.AdminClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.index.query.*;
@@ -452,7 +453,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
             try {
                 //Added For Graphite Metrics
                 Timer.Context timeSearch = searchTimer.time();
-                searchResponse = srb.execute().actionGet(config.getQueryTimeout());
+                searchResponse = srb.setTimeout( TimeValue.timeValueMillis(config.getQueryTimeout()) ).get();
                 timeSearch.stop();
             }
             catch ( Throwable t ) {
@@ -476,7 +477,8 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
             //now get the cursor from the map  and validate
             final String esScrollCursor  = mapManager.getString( userCursorString );
 
-            Preconditions.checkArgument(esScrollCursor != null, "Could not find a cursor for the value '{}' ",  esScrollCursor);
+            Preconditions.checkArgument( esScrollCursor != null, "Could not find a cursor for the value '{}' ",
+                esScrollCursor );
 
 
 
@@ -484,12 +486,12 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
 
             SearchScrollRequestBuilder ssrb = esProvider.getClient()
-                    .prepareSearchScroll(esScrollCursor).setScroll( cursorTimeout + "m" );
+                    .prepareSearchScroll( esScrollCursor ).setScroll( cursorTimeout + "m" );
 
             try {
                 //Added For Graphite Metrics
                 Timer.Context timeSearchCursor = cursorTimer.time();
-                searchResponse = ssrb.execute().actionGet(config.getQueryTimeout());
+                searchResponse = ssrb.execute().actionGet();
                 timeSearchCursor.stop();
             }
             catch ( Throwable t ) {
