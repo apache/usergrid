@@ -505,8 +505,11 @@ public class CpRelationManager implements RelationManager {
             addToCollection( collName, itemEntity );
 
             if ( collection != null && collection.getLinkedCollection() != null ) {
-                throw new UnsupportedOperationException( "Implement me directly in graph " );
-//                getRelationManager( getHeadEntity() ).addToCollection( collection.getLinkedCollection(), itemEntity );
+                Id itemEntityId = new SimpleId( itemEntity.getUuid(),itemEntity.getType() );
+                final Edge edge = createCollectionEdge( cpHeadEntity.getId(), collName, itemEntityId );
+
+                GraphManager gm = managerCache.getGraphManager( applicationScope );
+                gm.writeEdge( edge );
             }
         }
 
