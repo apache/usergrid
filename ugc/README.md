@@ -27,7 +27,7 @@ Note: Requires Ruby 1.9.3+ or Ruby 2.0+. If you have issues, check your version:
 	
 If necessary, install a new version of Ruby. [RVM](https://rvm.io) is recommended:
 
-	$ \curl -L https://get.rvm.io | bash -s stable --ruby
+	$ curl -L https://get.rvm.io | bash -s stable --ruby
 
 ## Usage
 
