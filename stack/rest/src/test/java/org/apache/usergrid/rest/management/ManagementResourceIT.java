@@ -695,8 +695,11 @@ public class ManagementResourceIT extends AbstractRestIT {
                 .queryParam( "ttl", "1000" )
                 .get( JsonNode.class );
             fail("Validation should have failed");
-        } catch ( Exception actual ) {
-            logger.debug( "error", actual );
+        } catch ( UniformInterfaceException actual ) {
+            assertEquals( 400, actual.getResponse().getStatus() );
+            String errorMsg = actual.getResponse().getEntity( JsonNode.class ).get( "error_description" ).toString();
+            logger.error( "ERROR: " + errorMsg );
+            assertTrue( errorMsg.contains( "Admin Users must login via" ) );
         }
 
 
