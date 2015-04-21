@@ -294,6 +294,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
 
         // >= seems odd.  However if we get an overflow, we need to account for it.
         if (  length >= limit ) {
+
             final String cursor = candidateResults.initializeCursor();
 
             //now set this into our map module
