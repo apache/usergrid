@@ -121,7 +121,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
         this.esProvider = provider;
 
         mapManager = mapManagerFactory.createMapManager( mapScope );
-        this.searchTimer = metricsFactory.getTimer( EsApplicationEntityIndexImpl.class, "search.timer" );
+        this.searchTimer = metricsFactory.getTimer(EsApplicationEntityIndexImpl.class, "search.timer");
         this.cursorTimer = metricsFactory.getTimer( EsApplicationEntityIndexImpl.class, "search.cursor.timer" );
         this.cursorTimeout = config.getQueryCursorTimeout();
         this.queryTimeout = config.getWriteTimeout();
@@ -147,13 +147,13 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
     @Override
     public CandidateResults search( final SearchEdge searchEdge, final SearchTypes searchTypes, final String query,
                                     final int limit ) {
-        return search(searchEdge,searchTypes,query,limit,0);
+        return search(searchEdge, searchTypes, query, limit, 0);
     }
 
     public CandidateResults search( final SearchEdge searchEdge, final SearchTypes searchTypes, final String query,
                                     final int limit, final int offset ) {
 
-        IndexValidationUtils.validateSearchEdge( searchEdge );
+        IndexValidationUtils.validateSearchEdge(searchEdge);
         Preconditions.checkNotNull( searchTypes, "searchTypes cannot be null" );
         Preconditions.checkNotNull( query, "query cannot be null" );
         Preconditions.checkArgument( limit > 0, "limit must be > 0" );
@@ -184,7 +184,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
         }
         failureMonitor.success();
 
-        return parseResults( searchResponse, parsedQuery, limit, offset );
+        return parseResults(searchResponse, parsedQuery, limit, offset);
     }
 
 
@@ -247,11 +247,10 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
 
         final SearchHits searchHits = searchResponse.getHits();
         final SearchHit[] hits = searchHits.getHits();
-        final int length = hits.length;
 
-        logger.debug( "   Hit count: {} Total hits: {}", length, searchHits.getTotalHits() );
+        logger.debug( "   Hit count: {} Total hits: {}", hits.length, searchHits.getTotalHits() );
 
-        List<CandidateResult> candidates = new ArrayList<>( length );
+        List<CandidateResult> candidates = new ArrayList<>( hits.length );
 
         for ( SearchHit hit : hits ) {
 
@@ -263,9 +262,9 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
         final CandidateResults candidateResults = new CandidateResults( candidates, query.getSelectFieldMappings());
 
         // >= seems odd.  However if we get an overflow, we need to account for it.
-        if (  length >= limit ) {
+        if (  hits.length >= limit ) {
 
-            candidateResults.initializeCursor(from);
+            candidateResults.initializeCursor(from+limit);
 
         }
 
