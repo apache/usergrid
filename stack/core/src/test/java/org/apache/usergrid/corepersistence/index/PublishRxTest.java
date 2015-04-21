@@ -38,7 +38,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Test to test some assumptions about RX behaviors
  */
-public class PublishRxtest {
+public class PublishRxTest {
 
     @Test
     public void testPublish() throws InterruptedException {
