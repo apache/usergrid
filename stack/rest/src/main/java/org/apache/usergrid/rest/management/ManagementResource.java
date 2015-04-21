@@ -18,9 +18,7 @@ package org.apache.usergrid.rest.management;
 
 
 import java.net.URLEncoder;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
@@ -28,6 +26,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import com.codahale.metrics.Counter;
+import com.codahale.metrics.Timer;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
@@ -37,6 +37,7 @@ import org.apache.usergrid.exception.NotImplementedException;
 import org.apache.usergrid.management.ApplicationCreator;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.OrganizationOwnerInfo;
+import org.apache.usergrid.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.codehaus.jackson.JsonNode;
@@ -92,7 +93,9 @@ public class ManagementResource extends AbstractContextResource {
 
     /*-
      * New endpoints:
-     * 
+     *
+     * /management/externaltoken?ext_access_token=<token-from-central-usergrid>&ttl=<time-to-live>
+     *
      * /management/organizations/<organization-name>/applications
      * /management/organizations/<organization-name>/users
      * /management/organizations/<organization-name>/keys
@@ -105,10 +108,18 @@ public class ManagementResource extends AbstractContextResource {
     @Autowired
     private ApplicationCreator applicationCreator;
 
+    @Autowired
+    MetricsFactory metricsFactory;
+
+    // names for metrics to be collected
+    private static final String SSO_TOKENS_REJECTED = "sso_tokens_rejected";
+    private static final String SSO_TOKENS_VALIDATED = "sso_tokens_validated";
+    private static final String SSO_CREATED_LOCAL_ADMINS = "sso_created_local_admins";
+    private static final String SSO_PROCESSING_TIME = "sso_processing_time";
+
+    // usergrid configuration property names needed
     public static final String USERGRID_CENTRAL_URL = "usergrid.central.url";
-
     public static final String USERGRID_SYSADMIN_LOGIN_NAME = "usergrid.sysadmin.login.name";
-
     public static final String USERGRID_SYSADMIN_LOGIN_ALLOWED = "usergrid.sysadmin.login.allowed";
 
 
@@ -492,7 +503,7 @@ public class ManagementResource extends AbstractContextResource {
         }
         String extAccessToken = json.get("ext_access_token").toString();
 
-        Object ttlObj = json.get("ttl");
+        Object ttlObj = json.get( "ttl" );
         if ( ttlObj == null ) {
             throw new IllegalArgumentException("ttl must be specified");
         }
@@ -551,6 +562,11 @@ public class ManagementResource extends AbstractContextResource {
         }
         AccessInfo accessInfo = null;
 
+        Timer processingTimer = metricsFactory.getTimer(
+                ManagementResource.class, SSO_PROCESSING_TIME );
+
+        Timer.Context timerContext = processingTimer.time();
+
         try {
             // look up user via UG Central's /management/me endpoint.
 
@@ -573,7 +589,12 @@ public class ManagementResource extends AbstractContextResource {
                 String dummyPassword = RandomStringUtils.randomAlphanumeric( 40 );
 
                 JsonNode orgsNode = userNode.get( "organizations" );
-                final Iterator<String> fieldNames = orgsNode.getFieldNames();
+                Iterator<String> fieldNames = orgsNode.getFieldNames();
+                if ( !fieldNames.hasNext() ) {
+                    // no organizations for user exist in response from central Usergrid SSO
+                    // so create user's personal organization and use username as organization name
+                    fieldNames = Collections.singletonList( username ).iterator();
+                }
 
                 // create user and any organizations that user is supposed to have
 
@@ -592,6 +613,10 @@ public class ManagementResource extends AbstractContextResource {
 
                         userId = ownerOrgInfo.getOwner().getUuid();
                         userInfo = ownerOrgInfo.getOwner();
+
+                        Counter createdAdminsCounter = metricsFactory.getCounter(
+                                ManagementResource.class, SSO_CREATED_LOCAL_ADMINS );
+                        createdAdminsCounter.inc();
 
                     } else {
 
@@ -614,11 +639,18 @@ public class ManagementResource extends AbstractContextResource {
                     .withAccessToken( extAccessToken );
 
         } catch (Exception e) {
+            timerContext.stop();
+            timerContext.close();
             logger.debug("Error validating external token", e);
             throw e;
         }
 
-        return Response.status( SC_OK ).type( jsonMediaType( callback ) ).entity( accessInfo ).build();
+        final Response response = Response.status( SC_OK ).type( jsonMediaType( callback ) ).entity( accessInfo ).build();
+
+        timerContext.stop();
+        timerContext.close();
+
+        return response;
     }
 
 
@@ -630,6 +662,13 @@ public class ManagementResource extends AbstractContextResource {
      * @throws EntityNotFoundException if access_token is not valid.
      */
     private JsonNode getMeFromUgCentral( String extAccessToken )  throws EntityNotFoundException {
+
+        // prepare to count tokens validated and rejected
+
+        Counter tokensRejectedCounter = metricsFactory.getCounter(
+                ManagementResource.class, SSO_TOKENS_REJECTED );
+        Counter tokensValidatedCounter = metricsFactory.getCounter(
+                ManagementResource.class, SSO_TOKENS_VALIDATED );
 
         // create URL of central Usergrid's /management/me endpoint
 
@@ -643,18 +682,23 @@ public class ManagementResource extends AbstractContextResource {
 
         ClientConfig clientConfig = new DefaultClientConfig();
         clientConfig.getFeatures().put( JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
-        Client client = Client.create(clientConfig);
+        Client client = Client.create( clientConfig );
+
         final JsonNode accessInfoNode;
         try {
             accessInfoNode = client.resource( me )
                     .type( MediaType.APPLICATION_JSON_TYPE)
                     .get(JsonNode.class);
 
+            tokensValidatedCounter.inc();
+
         } catch ( Exception e ) {
             // user not found 404
+            tokensRejectedCounter.inc();
             String msg = "Cannot find Admin User associated with " + extAccessToken;
             throw new EntityNotFoundException( msg, e );
         }
+
         return accessInfoNode;
     }
 
