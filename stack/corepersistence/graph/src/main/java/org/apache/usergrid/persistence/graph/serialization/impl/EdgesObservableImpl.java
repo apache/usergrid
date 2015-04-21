@@ -32,6 +32,8 @@ import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.graph.serialization.EdgesObservable;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.google.common.base.Optional;
+
 import rx.Observable;
 import rx.functions.Func1;
 
@@ -53,7 +55,7 @@ public class EdgesObservableImpl implements EdgesObservable {
      * Get all edges from the source
      */
     @Override
-    public Observable<Edge> edgesFromSource( final GraphManager gm, final Id sourceNode ) {
+    public Observable<Edge> edgesFromSourceAscending( final GraphManager gm, final Id sourceNode ) {
         final Observable<String> edgeTypes =
             gm.getEdgeTypesFromSource( new SimpleSearchEdgeType( sourceNode, null, null ) );
 
@@ -63,6 +65,25 @@ public class EdgesObservableImpl implements EdgesObservable {
 
                 return gm.loadEdgesFromSource(
                     new SimpleSearchByEdgeType( sourceNode, edgeType, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
+                        null ) );
+        } );
+    }
+
+
+    @Override
+    public Observable<Edge> edgesFromSourceAscending( final GraphManager gm, final Id sourceNode,
+                                                      final Optional<Long> startTimestamp ) {
+
+        final Observable<String> edgeTypes =
+                  gm.getEdgeTypesFromSource( new SimpleSearchEdgeType( sourceNode, null, null ) );
+
+
+        return edgeTypes.flatMap(  edgeType -> {
+
+                logger.debug( "Loading edges of edgeType {} from {}", edgeType, sourceNode );
+
+                return gm.loadEdgesFromSource(
+                    new SimpleSearchByEdgeType( sourceNode, edgeType, startTimestamp.or( Long.MIN_VALUE ), SearchByEdgeType.Order.ASCENDING,
                         null ) );
         } );
     }

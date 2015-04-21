@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
-import static org.apache.usergrid.persistence.index.utils.StringUtils.sanitizeUUID;
+import static org.apache.usergrid.persistence.core.util.StringUtils.sanitizeUUID;
 
 
 /**

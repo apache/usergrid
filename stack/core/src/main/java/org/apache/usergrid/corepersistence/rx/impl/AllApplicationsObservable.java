@@ -17,12 +17,13 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence;
+package org.apache.usergrid.corepersistence.rx.impl;
 
 
 import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.entities.Application;
+
+import com.amazonaws.services.opsworks.model.App;
 
 import rx.Observable;
 
@@ -31,5 +32,12 @@ import rx.Observable;
  * Interface for generating an observable of all ApplicationScope
  */
 public interface AllApplicationsObservable extends MigrationDataProvider<ApplicationScope>{
+
+
+    /**
+     * Get an observable of application scopes to be used
+     * @return
+     */
+    Observable<ApplicationScope> getData();
 
 }

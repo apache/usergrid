@@ -95,4 +95,9 @@ public interface QueryFig extends GuicyFig {
     int getIndexQueueSize();
 
 
+    @Default("30000")
+    @Key("elasticsearch.reindex.sample.interval")
+    long getReIndexSampleInterval();
+
+
 }

@@ -83,8 +83,7 @@ public class RxTaskSchedulerImpl implements RxTaskScheduler {
 
         public MaxSizeThreadPool( final BlockingQueue<Runnable> queue, final int maxPoolSize ) {
 
-            super( 1, maxPoolSize, 30, TimeUnit.SECONDS, queue, new CountingThreadFactory( ),
-                    new RejectedHandler() );
+            super( 1, maxPoolSize, 30, TimeUnit.SECONDS, queue, new CountingThreadFactory( ),  new RejectedHandler() );
         }
     }
 
@@ -118,11 +117,11 @@ public class RxTaskSchedulerImpl implements RxTaskScheduler {
 
         @Override
         public void rejectedExecution( final Runnable r, final ThreadPoolExecutor executor ) {
-            log.warn( "{} task queue full, rejecting task {}", poolName, r );
+            log.warn( "{} task queue full, rejecting task {} and running in thread {}", poolName, r, Thread.currentThread().getName() );
 
-            //TODO T.N. do we want to run this on the caller thread?
+            //We've decided we want to have a "caller runs" policy, to just invoke the task when rejected
 
-            throw new RejectedExecutionException( "Unable to run task, queue full" );
+            r.run();
         }
 
     }

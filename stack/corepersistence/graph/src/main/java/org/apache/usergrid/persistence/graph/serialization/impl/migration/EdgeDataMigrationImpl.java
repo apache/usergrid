@@ -38,8 +38,6 @@ import org.apache.usergrid.persistence.graph.serialization.impl.EdgeMetadataSeri
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
-import rx.functions.Action1;
-import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 import java.util.List;
@@ -87,9 +85,9 @@ public class EdgeDataMigrationImpl implements DataMigration<GraphNode> {
 
         final Observable<List<Edge>> observable = migrationDataProvider.getData().flatMap( graphNode -> {
             final GraphManager gm = graphManagerFactory.createEdgeManager( graphNode.applicationScope );
-            
+
             //get edges from the source
-            return edgesFromSourceObservable.edgesFromSource( gm, graphNode.entryNode ).buffer( 1000 )
+            return edgesFromSourceObservable.edgesFromSourceAscending( gm, graphNode.entryNode ).buffer( 1000 )
                                             .doOnNext( edges -> {
                                                     final MutationBatch batch = keyspace.prepareMutationBatch();
 
