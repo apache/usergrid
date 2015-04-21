@@ -30,6 +30,9 @@ import org.apache.usergrid.persistence.map.MapScope;
 import com.google.inject.Inject;
 
 
+/**
+ * Cache for managing our other managers.  Now just a delegate.  Needs refactored away
+ */
 public class CpManagerCache implements ManagerCache {
 
     private final EntityCollectionManagerFactory ecmf;

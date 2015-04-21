@@ -689,15 +689,8 @@ public interface EntityManager {
     /** @return the cass */
     CassandraService getCass();
 
-    public void init( EntityManagerFactory emf,  UUID applicationId);
-
     /** For testing purposes */
     public void flushManagerCaches();
-
-    void reindexCollection(
-        EntityManagerFactory.ProgressObserver po, String collectionName, boolean reverse) throws Exception;
-
-    public void reindex( final EntityManagerFactory.ProgressObserver po ) throws Exception;
 
 
     public Entity getUniqueEntityFromAlias( String aliasType, String aliasValue );

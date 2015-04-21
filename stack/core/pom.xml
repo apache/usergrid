@@ -164,6 +164,14 @@
 
   <dependencies>
 
+
+      <!-- dependent on wiring guice and spring -->
+      <dependency>
+          <groupId>com.google.inject.extensions</groupId>
+          <artifactId>guice-spring</artifactId>
+          <version>4.0-beta5</version>
+      </dependency>
+
     <!-- Apache Dependencies -->
 
     <dependency>

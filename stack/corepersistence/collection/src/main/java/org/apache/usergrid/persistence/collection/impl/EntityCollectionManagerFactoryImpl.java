@@ -39,6 +39,7 @@ import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerial
 import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
+import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.task.TaskExecutor;
 
@@ -74,6 +75,7 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
     private final TaskExecutor taskExecutor;
     private final EntityCacheFig entityCacheFig;
     private final MetricsFactory metricsFactory;
+    private final RxTaskScheduler rxTaskScheduler;
 
     private LoadingCache<ApplicationScope, EntityCollectionManager> ecmCache =
         CacheBuilder.newBuilder().maximumSize( 1000 )
@@ -84,7 +86,8 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
                                 writeStart, writeVerifyUnique,
                                 writeOptimisticVerify, writeCommit, rollback, markStart, markCommit,
                                 entitySerializationStrategy, uniqueValueSerializationStrategy,
-                                mvccLogEntrySerializationStrategy, keyspace,entityVersionTaskFactory, taskExecutor, scope, metricsFactory );
+                                mvccLogEntrySerializationStrategy, keyspace,entityVersionTaskFactory, taskExecutor, scope, metricsFactory,
+                                rxTaskScheduler );
 
 
                             final EntityCollectionManager proxy = new CachedEntityCollectionManager(entityCacheFig, target  );
@@ -95,8 +98,7 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
 
 
     @Inject
-    public EntityCollectionManagerFactoryImpl( final WriteStart writeStart,
-                                               final WriteUniqueVerify writeVerifyUnique,
+    public EntityCollectionManagerFactoryImpl( final WriteStart writeStart, final WriteUniqueVerify writeVerifyUnique,
                                                final WriteOptimisticVerify writeOptimisticVerify,
                                                final WriteCommit writeCommit, final RollbackAction rollback,
                                                final MarkStart markStart, final MarkCommit markCommit,
@@ -105,9 +107,9 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
                                                final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy,
                                                final Keyspace keyspace,
                                                final EntityVersionTaskFactory entityVersionTaskFactory,
-                                               @CollectionTaskExecutor final TaskExecutor taskExecutor,
-                                              final EntityCacheFig entityCacheFig,
-                                               MetricsFactory metricsFactory) {
+                                               @CollectionTaskExecutor final TaskExecutor taskExecutor, final
+                                                   EntityCacheFig entityCacheFig,
+                                               MetricsFactory metricsFactory, final RxTaskScheduler rxTaskScheduler ) {
 
         this.writeStart = writeStart;
         this.writeVerifyUnique = writeVerifyUnique;
@@ -124,6 +126,7 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
         this.taskExecutor = taskExecutor;
         this.entityCacheFig = entityCacheFig;
         this.metricsFactory = metricsFactory;
+        this.rxTaskScheduler = rxTaskScheduler;
     }
     @Override
     public EntityCollectionManager createCollectionManager(ApplicationScope applicationScope) {

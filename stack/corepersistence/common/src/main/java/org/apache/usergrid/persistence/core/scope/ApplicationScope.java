@@ -19,13 +19,15 @@
 package org.apache.usergrid.persistence.core.scope;
 
 
+import java.io.Serializable;
+
 import org.apache.usergrid.persistence.model.entity.Id;
 
 
 /**
  * A scope used for organizations
  */
-public interface ApplicationScope {
+public interface ApplicationScope extends Serializable {
 
     /**
      * Get an Application scope

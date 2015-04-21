@@ -14,41 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence.index.utils;
+package org.apache.usergrid.persistence.core.util;
 
 
-import java.util.Arrays;
 import java.util.UUID;
-
-import org.apache.commons.io.IOUtils;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import static org.apache.usergrid.persistence.index.utils.ConversionUtils.string;
 
 
 public class StringUtils extends org.apache.commons.lang.StringUtils {
-
-    private static final Logger LOG = LoggerFactory.getLogger( StringUtils.class );
-
-
-
-    public static String stringOrSubstringBeforeFirst( String str, char c ) {
-        if ( str == null ) {
-            return null;
-        }
-        int i = str.indexOf( c );
-        if ( i != -1 ) {
-            return str.substring( 0, i );
-        }
-        return str;
-    }
-
-
-    public static String toString( Object obj ) {
-        return string( obj );
-    }
 
 
     /**

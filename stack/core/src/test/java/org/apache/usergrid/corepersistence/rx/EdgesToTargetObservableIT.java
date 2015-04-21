@@ -23,7 +23,6 @@ package org.apache.usergrid.corepersistence.rx;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.usergrid.corepersistence.CpSetup;
 import org.apache.usergrid.persistence.graph.serialization.EdgesObservable;
 import org.junit.Test;
 
@@ -35,14 +34,11 @@ import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.utils.EdgeTestUtils;
 
 import com.google.inject.Injector;
-
-import rx.functions.Action1;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -93,7 +89,7 @@ public class EdgesToTargetObservableIT extends AbstractCoreIT {
 
         final GraphManager gm = managerCache.getGraphManager( scope );
 
-        edgesFromSourceObservable.edgesFromSource( gm, applicationId ).doOnNext( edge -> {
+        edgesFromSourceObservable.edgesFromSourceAscending( gm, applicationId ).doOnNext( edge -> {
             final String edgeType = edge.getType();
             final Id target = edge.getTargetNode();
 
@@ -122,7 +118,7 @@ public class EdgesToTargetObservableIT extends AbstractCoreIT {
 
         //test connections
 
-        edgesFromSourceObservable.edgesFromSource( gm, source).doOnNext( edge -> {
+        edgesFromSourceObservable.edgesFromSourceAscending( gm, source ).doOnNext( edge -> {
             final String edgeType = edge.getType();
             final Id target = edge.getTargetNode();
 

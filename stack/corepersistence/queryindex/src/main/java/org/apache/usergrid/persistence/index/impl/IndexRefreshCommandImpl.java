@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
+import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.index.AliasedEntityIndex;
@@ -48,7 +49,6 @@ import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
 
 import rx.Observable;
-import rx.schedulers.Schedulers;
 import rx.util.async.Async;
 
 
@@ -61,15 +61,16 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
     private final IndexAlias alias;
     private final IndexCache indexCache;
     private final EsProvider esProvider;
-    private final IndexBufferProducer producer;
+    private final IndexBufferConsumer producer;
     private final IndexFig indexFig;
     private final Timer timer;
-
+    private final RxTaskScheduler rxTaskScheduler;
 
     @Inject
-    public IndexRefreshCommandImpl( FailureMonitorImpl.IndexIdentifier indexIdentifier, EsProvider esProvider,
-                                    IndexBufferProducer producer, IndexFig indexFig, MetricsFactory metricsFactory,
-                                    final IndexCache indexCache ) {
+    public IndexRefreshCommandImpl( IndexIdentifier indexIdentifier, EsProvider esProvider,
+                                    IndexBufferConsumer producer, IndexFig indexFig, MetricsFactory metricsFactory,
+                                    final IndexCache indexCache, final RxTaskScheduler rxTaskScheduler ) {
+
 
 
         this.timer = metricsFactory.getTimer( IndexRefreshCommandImpl.class, "index.refresh.timer" );
@@ -78,6 +79,7 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
         this.producer = producer;
         this.indexFig = indexFig;
         this.indexCache = indexCache;
+        this.rxTaskScheduler = rxTaskScheduler;
     }
 
 
@@ -105,7 +107,7 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
         IndexRequest indexRequest = new IndexRequest( alias.getWriteAlias(), docId, entityData );
 
         //save the item
-        IndexIdentifierImpl.IndexOperationMessage message = new IndexIdentifierImpl.IndexOperationMessage();
+        IndexOperationMessage message = new IndexOperationMessage();
         message.addIndexRequest( indexRequest );
         producer.put( message );
 
@@ -141,14 +143,14 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
                 logger.error( "Failed during refresh search for " + uuid, ee );
                 throw new RuntimeException( "Failed during refresh search for " + uuid, ee );
             }
-        }, Schedulers.io() ).call();
+        }, rxTaskScheduler.getAsyncIOScheduler() ).call();
 
 
         return future.doOnNext( found -> {
             if ( !found.hasFinished() ) {
-                logger.error(String.format("Couldn't find record during refresh uuid: {} took ms:{} ", uuid, found.getExecutionTime()));
+                logger.error("Couldn't find record during refresh uuid: {} took ms:{} ", uuid, found.getExecutionTime());
             }else{
-                logger.info(String.format("found record during refresh uuid: {} took ms:{} ", uuid, found.getExecutionTime()));
+                logger.info("found record during refresh uuid: {} took ms:{} ", uuid, found.getExecutionTime());
             }
         } ).doOnCompleted(() -> {
             //clean up our data
@@ -157,10 +159,10 @@ public class IndexRefreshCommandImpl implements IndexRefreshCommand {
                 new DeIndexRequest(aliases, appScope, edge, entity.getId(), entity.getVersion());
 
             //delete the item
-            IndexIdentifierImpl.IndexOperationMessage indexOperationMessage =
-                new IndexIdentifierImpl.IndexOperationMessage();
-            indexOperationMessage.addDeIndexRequest(deIndexRequest);
-            producer.put(indexOperationMessage);
+            IndexOperationMessage indexOperationMessage =
+                new IndexOperationMessage();
+            indexOperationMessage.addDeIndexRequest( deIndexRequest );
+            producer.put( indexOperationMessage );
 
             refreshTimer.stop();
         });

@@ -29,14 +29,13 @@ import javax.mail.internet.MimeMultipart;
 
 import org.junit.Before;
 import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.mock_javamail.Mailbox;
 
 
 
 import org.apache.usergrid.management.MockImapClient;
-import org.apache.usergrid.persistence.index.utils.StringUtils;
+import org.apache.usergrid.persistence.core.util.StringUtils;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.test.resource2point0.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource2point0.endpoints.mgmt.ManagementResource;
@@ -46,7 +45,6 @@ import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource2point0.model.Token;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.representation.Form;

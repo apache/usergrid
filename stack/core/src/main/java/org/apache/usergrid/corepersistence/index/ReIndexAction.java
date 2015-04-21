@@ -17,19 +17,17 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence;
+package org.apache.usergrid.corepersistence.index;
 
 
-import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.entities.Application;
-
-import rx.Observable;
+import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 
 
 /**
- * Interface for generating an observable of all ApplicationScope
+ * Callback to perform an index operation based on an scope during bulk re-index operations
  */
-public interface AllApplicationsObservable extends MigrationDataProvider<ApplicationScope>{
+@FunctionalInterface
+public interface ReIndexAction {
 
+    void index( final EntityIdScope entityIdScope );
 }

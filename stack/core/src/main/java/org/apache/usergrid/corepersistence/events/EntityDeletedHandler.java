@@ -42,11 +42,8 @@ public class EntityDeletedHandler implements EntityDeleted {
     private static final Logger logger = LoggerFactory.getLogger( EntityDeletedHandler.class );
 
 
-    private final EntityManagerFactory emf;
-
-
     @Inject
-    public EntityDeletedHandler( final EntityManagerFactory emf ) {this.emf = emf;}
+    public EntityDeletedHandler( ) {}
 
 
     @Override

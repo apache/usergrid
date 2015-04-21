@@ -22,12 +22,50 @@ package org.apache.usergrid.persistence.graph.serialization;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.model.entity.Id;
+
+import com.google.common.base.Optional;
+
 import rx.Observable;
 
 /**
  * Get all edges from source
  */
 public interface EdgesObservable {
-    Observable<Edge> edgesFromSource( final GraphManager gm, final Id sourceNode);
+
+    /**
+     * Return an observable of all edges from a source
+     * @param gm
+     * @param sourceNode
+     * @return
+     */
+    Observable<Edge> edgesFromSourceAscending( final GraphManager gm, final Id sourceNode );
+
+
+    /**
+     * Return an observable of all edges from a source node.  Ordered ascending, from the startTimestamp if specified
+     * @param gm
+     * @param sourceNode
+     * @param edgeType The edge type if specified.  Otherwise all types will be used
+     * @param startTimestamp The start timestamp if specfiied, otherwise Long.MIN will be used
+     * @return
+     */
+    Observable<Edge> edgesFromSourceAscending( final GraphManager gm, final Id sourceNode,final Optional<String> edgeType,
+                                               final Optional<Long> startTimestamp );
+
+    /**
+     * Get all edges from the source node with the target type
+     * @param gm
+     * @param sourceNode
+     * @param targetType
+     * @return
+     */
+    Observable<Edge> getEdgesFromSource(final GraphManager gm, final Id sourceNode, final String targetType );
+
+    /**
+     * Return an observable of all edges to a target
+     * @param gm
+     * @param targetNode
+     * @return
+     */
     Observable<Edge> edgesToTarget(final GraphManager gm,  final Id targetNode);
 }

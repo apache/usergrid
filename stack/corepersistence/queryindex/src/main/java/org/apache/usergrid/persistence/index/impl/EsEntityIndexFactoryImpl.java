@@ -42,12 +42,12 @@ public class EsEntityIndexFactoryImpl implements EntityIndexFactory{
 
     private final IndexFig config;
     private final EsProvider provider;
-    private final IndexBufferProducer indexBatchBufferProducer;
+    private final IndexBufferConsumer indexBatchBufferProducer;
     private final MetricsFactory metricsFactory;
     private final MapManagerFactory mapManagerFactory;
     private final IndexFig indexFig;
     private final AliasedEntityIndex entityIndex;
-    private final FailureMonitorImpl.IndexIdentifier indexIdentifier;
+    private final IndexIdentifier indexIdentifier;
 
     private LoadingCache<ApplicationScope, ApplicationEntityIndex> eiCache =
         CacheBuilder.newBuilder().maximumSize( 1000 ).build( new CacheLoader<ApplicationScope, ApplicationEntityIndex>() {
@@ -60,9 +60,9 @@ public class EsEntityIndexFactoryImpl implements EntityIndexFactory{
 
     @Inject
     public EsEntityIndexFactoryImpl( final IndexFig config, final EsProvider provider,
-                                     final IndexBufferProducer indexBatchBufferProducer,
+                                     final IndexBufferConsumer indexBatchBufferProducer,
                                      final MetricsFactory metricsFactory, final MapManagerFactory mapManagerFactory,
-                                     final IndexFig indexFig, final AliasedEntityIndex entityIndex, final FailureMonitorImpl.IndexIdentifier indexIdentifier ){
+                                     final IndexFig indexFig, final AliasedEntityIndex entityIndex, final IndexIdentifier indexIdentifier ){
         this.config = config;
         this.provider = provider;
         this.indexBatchBufferProducer = indexBatchBufferProducer;

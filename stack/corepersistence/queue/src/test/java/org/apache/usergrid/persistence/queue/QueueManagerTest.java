@@ -27,16 +27,15 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import org.apache.usergrid.persistence.core.aws.NoAWSCredsRule;
 import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.queue.guice.TestQueueModule;
 import org.apache.usergrid.persistence.queue.impl.QueueScopeImpl;
-import org.apache.usergrid.persistence.queue.impl.UsergridAwsCredentialsProvider;
 
 import com.google.inject.Inject;
 
