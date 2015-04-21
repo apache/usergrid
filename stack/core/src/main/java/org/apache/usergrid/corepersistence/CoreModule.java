@@ -34,6 +34,8 @@ import org.apache.usergrid.corepersistence.migration.MigrationModuleVersionPlugi
 import org.apache.usergrid.corepersistence.rx.impl.AllApplicationsObservable;
 import org.apache.usergrid.corepersistence.rx.impl.AllApplicationsObservableImpl;
 import org.apache.usergrid.corepersistence.rx.impl.AllEntitiesInSystemImpl;
+import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservable;
+import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservableImpl;
 import org.apache.usergrid.corepersistence.rx.impl.AllNodesInGraphImpl;
 import org.apache.usergrid.persistence.core.rx.RxSchedulerFig;
 import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
@@ -102,7 +104,7 @@ public class CoreModule  extends AbstractModule {
             @Override
             public void configureMigrationProvider() {
                 bind( new TypeLiteral<MigrationDataProvider<ApplicationScope>>() {} ).to(
-                    AllApplicationsObservable.class );
+                    AllApplicationsObservableImpl.class );
             }
         });
        //        install(new MapModule());   TODO, re-enable when index module doesn't depend on queue
@@ -141,6 +143,7 @@ public class CoreModule  extends AbstractModule {
         plugins.addBinding().to( MigrationModuleVersionPlugin.class );
 
         bind( AllApplicationsObservable.class ).to( AllApplicationsObservableImpl.class );
+        bind( AllEntityIdsObservable.class).to( AllEntityIdsObservableImpl.class );
 
 
         /*****
@@ -148,7 +151,7 @@ public class CoreModule  extends AbstractModule {
          *****/
 
 
-        bind(IndexService.class).to( IndexServiceImpl.class );
+        bind( IndexService.class ).to( IndexServiceImpl.class );
         //bind the queue provider
 
         bind( AsyncIndexService.class).toProvider( AsyncIndexProvider.class );

@@ -275,7 +275,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex,VersionedData {
             // delete all types, this way if we miss one it will get cleaned up
             esProvider.getClient().prepareDelete( alias.getWriteAlias(), VERIFY_TYPE, tempId).get();
 
-            logger.info( "Successfully deleted  documents in index {} read {} write {} and type {} with id {}",
+            logger.info( "Successfully deleted  documents in read {} write {} and type {} with id {}",
                     alias.getReadAlias(), alias.getWriteAlias(), VERIFY_TYPE, tempId );
 
             return true;
