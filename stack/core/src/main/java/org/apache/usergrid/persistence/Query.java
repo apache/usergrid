@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -30,6 +31,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
 
+import com.netflix.astyanax.serializers.IntegerSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,7 +55,7 @@ import com.google.common.base.Optional;
 
 public class Query {
     private static final Logger logger = LoggerFactory.getLogger( Query.class );
-
+    private static final IntegerSerializer INTEGER_SERIALIZER = IntegerSerializer.get();
 
 
 
@@ -70,7 +72,7 @@ public class Query {
     private String type;
     private Operand rootOperand;
     private UUID startResult;
-    private String cursor;
+    private Optional<Integer> offset;
     private int limit = 0;
 
     private boolean mergeSelectResults = false;
@@ -111,7 +113,7 @@ public class Query {
         ql = q.ql;
         type = q.type;
         startResult = q.startResult;
-        cursor = q.cursor;
+        offset = q.offset;
         limit = q.limit;
         mergeSelectResults = q.mergeSelectResults;
         //level = q.level;
@@ -206,12 +208,13 @@ public class Query {
         List<Identifier> identifiers = null;
         List<CounterFilterPredicate> counterFilters = null;
 
-        String ql = QueryUtils.queryStrFrom( params );
-        String type = ListUtils.first( params.get( "type" ) );
-        Boolean reversed = ListUtils.firstBoolean( params.get( "reversed" ) );
-        String connection = ListUtils.first( params.get( "connectionType" ) );
-        UUID start = ListUtils.firstUuid( params.get( "start" ) );
-        String cursor = ListUtils.first( params.get( "cursor" ) );
+        String ql = QueryUtils.queryStrFrom(params);
+        String type = ListUtils.first(params.get("type"));
+        Boolean reversed = ListUtils.firstBoolean(params.get("reversed"));
+        String connection = ListUtils.first(params.get("connectionType"));
+        UUID start = ListUtils.firstUuid(params.get("start"));
+        String cursor = ListUtils.first(params.get("cursor"));
+
         Integer limit = ListUtils.firstInteger( params.get( "limit" ) );
         List<String> permissions = params.get( "permission" );
         Long startTime = ListUtils.firstLong( params.get( "start_time" ) );
@@ -267,9 +270,9 @@ public class Query {
             q.setStartResult( start );
         }
 
-        if ( cursor != null ) {
+        if ( cursor != null) {
             q = newQueryIfNull( q );
-            q.setCursor( cursor );
+            q.setOffsetFromCursor(cursor);
         }
 
         if ( limit != null ) {
@@ -325,7 +328,7 @@ public class Query {
 
     public static Query fromIdentifier( Object id ) {
         Query q = new Query();
-        q.addIdentifier( Identifier.from( id ) );
+        q.addIdentifier( Identifier.from(id) );
         return q;
     }
 
@@ -504,28 +507,43 @@ public class Query {
 
 
     public UUID getStartResult() {
-        if ( ( startResult == null ) && ( cursor != null ) ) {
-            byte[] cursorBytes = Base64.decodeBase64( cursor );
-            if ( ( cursorBytes != null ) && ( cursorBytes.length == 16 ) ) {
-                startResult = ConversionUtils.uuid( cursorBytes );
-            }
-        }
         return startResult;
     }
 
 
-    public String getCursor() {
+    public Optional<Integer> getOffset() {
+        return offset;
+    }
+
+    public String getOffsetCursor() {
+        String cursor = "";
+        if(offset.isPresent()){
+            ByteBuffer buffer = INTEGER_SERIALIZER.toByteBuffer(offset.get());
+            cursor = Base64.encodeBase64String(buffer.array());
+        }
         return cursor;
     }
 
-
-    public void setCursor( String cursor ) {
-        this.cursor = cursor;
+    public void setOffsetFromCursor(String cursor) {
+        byte[] bytes = Base64.decodeBase64(cursor);
+        ByteBuffer buffer = ByteBuffer.wrap(bytes);
+        Integer number = INTEGER_SERIALIZER.fromByteBuffer(buffer);
+        setOffset(number);
     }
 
 
-    public Query withCursor( String cursor ) {
-        setCursor( cursor );
+    public void setOffset( int offset ) {
+        this.offset = Optional.of(offset);
+    }
+
+
+    public Query withOffset( int offset ) {
+        setOffset(offset);
+        return this;
+    }
+
+    public Query withOffsetFromCursor( String cursor ) {
+        setOffsetFromCursor(cursor);
         return this;
     }
 

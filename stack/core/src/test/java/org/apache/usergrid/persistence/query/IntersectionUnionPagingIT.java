@@ -169,7 +169,7 @@ public class IntersectionUnionPagingIT {
                 newSets.remove( name );
             }
 
-            query.setCursor( results.getCursor() );
+            query.setOffsetFromCursor( results.getCursor() );
         }
         while ( results.getCursor() != null );
 

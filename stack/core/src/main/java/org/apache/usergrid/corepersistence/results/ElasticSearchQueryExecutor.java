@@ -107,7 +107,7 @@ public class ElasticSearchQueryExecutor implements QueryExecutor {
              * This will only occur once during the repair phase.
              * We need to ensure that we short circuit before we overflow the requested limit during a repair.
              */
-            if ( crs.isEmpty() || !crs.hasCursor() || results.size() > 0 ) { // no results, no cursor, can't get more
+            if ( crs.isEmpty() || !crs.hasOffset() || results.size() > 0 ) { // no results, no cursor, can't get more
                 break;
             }
 
@@ -118,7 +118,7 @@ public class ElasticSearchQueryExecutor implements QueryExecutor {
 
             // need to query for more
             // ask for just what we need to satisfy, don't want to exceed limit
-            query.setCursor( results.getCursor() );
+            query.setOffsetFromCursor( results.getCursor() );
             query.setLimit( originalLimit - results.size() );
 
             logger.warn( "Satisfy query limit {}, new limit {} query count {}", new Object[] {
@@ -128,7 +128,7 @@ public class ElasticSearchQueryExecutor implements QueryExecutor {
 
         //now set our cursor if we have one for the next iteration
         if ( results.hasCursor() ) {
-            query.setCursor( results.getCursor() );
+            query.setOffsetFromCursor( results.getCursor() );
             moreToLoad = true;
         }
 
@@ -154,18 +154,18 @@ public class ElasticSearchQueryExecutor implements QueryExecutor {
      * @return
      */
     private CandidateResults getCandidateResults(final Query query){
-        final String cursor = query.getCursor();
+        final Optional<Integer> cursor = query.getOffset();
+        final String queryToExecute = query.getQl().or("select *");
 
-        if(cursor == null){
+        if(cursor.isPresent()){
             //since query is a nasty stateful builder object, we have to default to select * if a query is issued
             //from legacy code with no QL set.  An empty query is functionally equivalent to select all with default
             //sort ordering
-            final String queryToExecute = query.getQl().or( "select *" );
 
             return  entityIndex.search( indexScope, types, queryToExecute, query.getLimit() );
         }
 
-        return entityIndex.getNextPage( cursor );
+        return entityIndex.search( indexScope, types, queryToExecute, query.getLimit(),cursor.get() );
     }
 
 
@@ -189,8 +189,7 @@ public class ElasticSearchQueryExecutor implements QueryExecutor {
         //signal for post processing
         resultsLoader.postProcess();
 
-
-        results.setCursor( crs.getCursor() );
+        results.setCursor( query.getOffsetCursor() );
 
         //ugly and tight coupling, but we don't have a choice until we finish some refactoring
         results.setQueryExecutor( this );

@@ -36,7 +36,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Validates the Rx scheduler works as expected with publish
  */
-public class PublishRxTest {
+public class PublishRxtest {
 
     @Test
     public void testPublish() throws InterruptedException {
