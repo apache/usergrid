@@ -71,6 +71,13 @@ public interface IndexFig extends GuicyFig {
     String QUERY_LIMIT_DEFAULT = "index.query.limit.default";
 
 
+    /**
+     * Timeout calls to elasticsearch.
+     * @return
+     */
+    public static final String ELASTICSEARCH_QUERY_TIMEOUT = "elasticsearch.query.timeout";
+
+    public static final String ELASTICSEARCH_WRITE_TIMEOUT= "elasticsearch.write.timeout";
 
     /**
      * The client type to use.  Valid values are NODE or TRANSPORT
@@ -177,5 +184,13 @@ public interface IndexFig extends GuicyFig {
     @Key("elasticsearch.refresh_sleep_ms")
     @Default("200")
     long refreshSleep();
+    
+    @Default( "5000" )
+    @Key( ELASTICSEARCH_QUERY_TIMEOUT )
+    long getQueryTimeout();
+
+    @Default( "5000" )
+    @Key( ELASTICSEARCH_WRITE_TIMEOUT )
+    long getWriteTimeout();
 
 }
