@@ -98,6 +98,7 @@ public class Query {
     List<Operand> filterClauses = new ArrayList<Operand>();
 
     public Query() {
+        offset = Optional.absent();
     }
 
 
@@ -273,6 +274,8 @@ public class Query {
         if ( cursor != null) {
             q = newQueryIfNull( q );
             q.setOffsetFromCursor(cursor);
+        }else{
+            q.offset = Optional.absent();
         }
 
         if ( limit != null ) {

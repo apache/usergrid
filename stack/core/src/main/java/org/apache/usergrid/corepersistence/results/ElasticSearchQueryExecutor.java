@@ -162,10 +162,10 @@ public class ElasticSearchQueryExecutor implements QueryExecutor {
             //from legacy code with no QL set.  An empty query is functionally equivalent to select all with default
             //sort ordering
 
-            return  entityIndex.search( indexScope, types, queryToExecute, query.getLimit() );
+            return  entityIndex.search( indexScope, types, queryToExecute, query.getLimit() , cursor.get());
         }
 
-        return entityIndex.search( indexScope, types, queryToExecute, query.getLimit(),cursor.get() );
+        return entityIndex.search( indexScope, types, queryToExecute, query.getLimit());
     }
 
 
