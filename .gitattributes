@@ -1,0 +1,17 @@
+target/ export-ignore
+*.log export-ignore
+.idea/ export-ignore
+._* export-ignore
+._*/ export-ignore
+.repository/ export-ignore
+.classpath export-ignore
+.project export-ignore
+.settings/ export-ignore
+bower_compoments/ export-ignore
+node_modules/ export-ignore
+dist/ export-ignore
+dist_cov/ export-ignore
+portal/index.html</> export-ignore
+portal/index-debug.html export-ignore
+*.nupkg export-ignore
+*.dll export-ignore

@@ -24,7 +24,6 @@ Usergrid.showNotifcations = true;
 
 // used only if hostname does not match a real server name
 Usergrid.overrideUrl = 'http://localhost:8080/';
-//Usergrid.overrideUrl = 'https://api.usergrid.com/';
 
 Usergrid.options = {
   client: {
@@ -104,7 +103,7 @@ Usergrid.regex = {
     "^(([0-9a-zA-Z]+[_\+.-]?)+@[0-9a-zA-Z]+[0-9,a-z,A-Z,.,-]*(.){1}[a-zA-Z]{2,4})+$"
   ),
   passwordRegex: /(?=^.{8,}$)((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/,
-  pathRegex: new RegExp("^/[a-zA-Z0-9\.\*_~-]+(\/[a-zA-Z0-9\.\*_~-]+)*$"),
+  pathRegex: new RegExp("^/[a-zA-Z0-9\.\*_\$\{\}~-]+(\/[a-zA-Z0-9\.\*_\$\{\}~-]+)*$"),
   titleRegex: new RegExp("[a-zA-Z0-9.!-?]+[\/]?"),
   urlRegex: new RegExp(
     "^(http?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$"),
