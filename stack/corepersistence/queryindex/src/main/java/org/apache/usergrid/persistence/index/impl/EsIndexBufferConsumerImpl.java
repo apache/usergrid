@@ -209,7 +209,7 @@ public class EsIndexBufferConsumerImpl implements IndexBufferConsumer {
 
 
         try {
-            responses = bulkRequest.execute().actionGet();
+            responses = bulkRequest.execute().actionGet(indexFig.getWriteTimeout());
         }
         catch ( Throwable t ) {
             log.error( "Unable to communicate with elasticsearch" );

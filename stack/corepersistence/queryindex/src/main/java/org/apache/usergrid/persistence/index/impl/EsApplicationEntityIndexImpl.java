@@ -95,6 +95,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
     private final SearchRequestBuilderStrategy searchRequest;
     private FailureMonitor failureMonitor;
     private final int cursorTimeout;
+    private final long queryTimeout;
 
 
     @Inject
@@ -118,6 +119,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
         this.searchTimer = metricsFactory.getTimer( EsApplicationEntityIndexImpl.class, "search.timer" );
         this.cursorTimer = metricsFactory.getTimer( EsApplicationEntityIndexImpl.class, "search.cursor.timer" );
         this.cursorTimeout = config.getQueryCursorTimeout();
+        this.queryTimeout = config.getWriteTimeout();
 
         this.deleteApplicationTimer =
                 metricsFactory.getTimer( EsApplicationEntityIndexImpl.class, "delete.application" );
@@ -163,7 +165,7 @@ public class EsApplicationEntityIndexImpl implements ApplicationEntityIndex {
         try {
             //Added For Graphite Metrics
             Timer.Context timeSearch = searchTimer.time();
-            searchResponse = srb.execute().actionGet();
+            searchResponse = srb.execute().actionGet(queryTimeout);
             timeSearch.stop();
         }
         catch ( Throwable t ) {
