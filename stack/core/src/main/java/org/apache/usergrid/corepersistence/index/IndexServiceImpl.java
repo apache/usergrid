@@ -20,6 +20,8 @@
 package org.apache.usergrid.corepersistence.index;
 
 
+import java.util.Collection;
+
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.graph.Edge;
@@ -40,6 +42,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import rx.Observable;
+import rx.observables.ConnectableObservable;
 
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.generateScopeFromSource;
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.generateScopeToTarget;
@@ -69,7 +72,7 @@ public class IndexServiceImpl implements IndexService {
 
 
     @Override
-    public Observable<Integer> indexEntity( final ApplicationScope applicationScope, final Entity entity ) {
+    public Observable<Long> indexEntity( final ApplicationScope applicationScope, final Entity entity ) {
 
 
         //bootstrap the lower modules from their caches
@@ -93,7 +96,8 @@ public class IndexServiceImpl implements IndexService {
         final Observable<IndexEdge> targetSizes = getIndexEdgesToTarget( gm, entityId );
 
 
-        final Observable<IndexOperationMessage> observable =
+        //start the observable via publish
+        final ConnectableObservable<IndexOperationMessage> observable =
             //try to send a whole batch if we can
             Observable.merge( sourceEdgesToIndex, targetSizes ).buffer( indexFig.getIndexBatchSize() )
 
@@ -101,12 +105,11 @@ public class IndexServiceImpl implements IndexService {
                 .flatMap( buffer -> Observable.from( buffer ).collect( () -> ei.createBatch(),
                     ( batch, indexEdge ) -> batch.index( indexEdge, entity ) )
                     //return the future from the batch execution
-                    .flatMap( batch -> Observable.from( batch.execute() ) ) );
-
-        observable.toBlocking().last();
+                    .flatMap( batch -> Observable.from( batch.execute() ) ) ).publish();
 
 
-        return Observable.just( 0 );
+
+        return observable.countLong();
     }
 
 

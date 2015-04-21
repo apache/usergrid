@@ -21,7 +21,10 @@ package org.apache.usergrid.corepersistence.rx.impl;
 
 
 
+
 import  com.google.common.base.Optional;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -37,12 +40,14 @@ import rx.Observable;
 /**
  * An implementation that will provide all entityId scopes in the system
  */
+@Singleton
 public class AllEntityIdsObservableImpl implements AllEntityIdsObservable {
     private final GraphManagerFactory graphManagerFactory;
     private final TargetIdObservable targetIdObservable;
     private final EdgesObservable edgesObservable;
 
 
+    @Inject
     public AllEntityIdsObservableImpl( final GraphManagerFactory graphManagerFactory,
                                        final TargetIdObservable targetIdObservable,
                                        final EdgesObservable edgesObservable ) {
