@@ -305,6 +305,8 @@ public interface ManagementService {
 
     public abstract void provisionSuperuser() throws Exception;
 
+    public void resetSuperUser(String username, String password, String email) throws Exception;
+
     public List<OrganizationInfo> getOrganizations( UUID startResult, int count ) throws Exception;
 
     /** Add the properties to the organization */

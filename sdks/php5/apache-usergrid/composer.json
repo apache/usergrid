@@ -1,0 +1,40 @@
+{
+    "name": "apache/usergrid",
+    "description": "Apache Usergrid PHP SDK guzzle web service client and service descriptor to interact with usergrid management and application api",
+    "minimum-stability": "stable",
+    "license": "Apache",
+    "authors": [
+        {
+            "name": "Jason Kristian",
+            "email": "jasonk@apps4u.com.au"
+        }
+    ],
+    "repositories": [
+        {
+            "type" : "vcs",
+            "url" : "https://apps4u@bitbucket.org/apps4u/apache-usergrid.git"
+        }
+    ],
+    "require": {
+        "guzzle/guzzle": "3.9.*",
+        "illuminate/support": "~4.2",
+        "nesbot/carbon": "~1.0"
+
+    },
+    "require-dev": {
+        "mockery/mockery": "~0.9",
+        "phpunit/phpunit": "~4.0"
+    },
+    "autoload": {
+        "classmap": [],
+        "psr-4": {
+            "Apache\\Usergrid\\": "src/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "master"
+        }
+    }
+
+}

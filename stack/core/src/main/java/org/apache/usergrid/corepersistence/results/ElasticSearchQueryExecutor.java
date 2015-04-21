@@ -208,4 +208,9 @@ public class ElasticSearchQueryExecutor implements QueryExecutor {
 
         return toReturn;
     }
+
+    @Override
+    public void remove() {
+        throw new RuntimeException("Remove not implemented!!");
+    }
 }
